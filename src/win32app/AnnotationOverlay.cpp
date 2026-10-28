@@ -263,12 +263,8 @@ void AnnotationOverlay::OnAgentBridgeDisconnected()
 
 bool AnnotationOverlay::IsAgentBridgeHealthy() const
 {
-    if (!m_ide) {
-        return false;
-    }
-    
-    // Check via Win32IDE atomic flag
-    return m_ide->m_agentBridgeReady.load();
+    // Overlay-owned flag (Win32IDE has no m_agentBridgeReady member).
+    return m_ide != nullptr && m_agentBridgeReady;
 }
 
 // ============================================================================
@@ -799,18 +795,18 @@ void AnnotationOverlay::RenderTooltip(HDC hdc, const AnnotationItem& item)
     textRect.right += padding * 2;
     textRect.bottom += padding * 2;
     
-    // Position tooltip near annotation
-    int tooltipX = item.rect.left + 10;
-    int tooltipY = item.rect.bottom + 5;
+    // Position tooltip near annotation (AnnotationItem::screenRect)
+    int tooltipX = item.screenRect.left + 10;
+    int tooltipY = item.screenRect.bottom + 5;
     
     // Ensure tooltip stays on screen
-    RECT screenRect;
-    SystemParametersInfoA(SPI_GETWORKAREA, 0, &screenRect, 0);
-    if (tooltipX + textRect.right > screenRect.right) {
-        tooltipX = screenRect.right - textRect.right - 5;
+    RECT workArea;
+    SystemParametersInfoA(SPI_GETWORKAREA, 0, &workArea, 0);
+    if (tooltipX + textRect.right > workArea.right) {
+        tooltipX = workArea.right - textRect.right - 5;
     }
-    if (tooltipY + textRect.bottom > screenRect.bottom) {
-        tooltipY = item.rect.top - textRect.bottom - 5;
+    if (tooltipY + textRect.bottom > workArea.bottom) {
+        tooltipY = item.screenRect.top - textRect.bottom - 5;
     }
     
     OffsetRect(&textRect, tooltipX, tooltipY);

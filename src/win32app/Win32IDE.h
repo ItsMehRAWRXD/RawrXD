@@ -2541,6 +2541,19 @@ class Win32IDE
     bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId = 0);
     void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel = true);
 
+    // Feature-probe / multi-model GhostText surface (Ollama nano cert)
+    bool isGhostTextVisible() const { return m_ghostTextVisible && m_ghostSource == 1; }
+    std::string getGhostTextContent() const { return m_ghostTextContent; }
+    void setOllamaModelOverride(const std::string& model) { m_ollamaModelOverride = model; }
+    uint64_t editorDocGen() const { return m_editorDocGen; }
+    std::string requestGhostTextCompletion(const std::string& context, const std::string& language,
+                                           const std::string& suffix, const std::string& filePath,
+                                           int cursorLine, int cursorCol, uint64_t expectedSeq = 0);
+    bool applyProductGhost(const char* text, uint64_t gen, uint64_t id, int line, int col);
+    bool handleGhostTextKey(UINT vk);
+    void triggerGhostTextCompletion();
+    void dismissGhostText();
+
   private:
     std::vector<std::string> getModelsFromDirectory(const std::string& directory);
     std::string makeHttpRequest(const std::string& url, const std::string& method, const std::string& body,
@@ -2606,18 +2619,11 @@ class Win32IDE
     // ========================================================================
     void initGhostText();
     void shutdownGhostText();
-    void triggerGhostTextCompletion();
     void onGhostTextTimer();
     std::string requestGhostTextCompletion(const std::string& context, const std::string& language);
-    std::string requestGhostTextCompletion(const std::string& context, const std::string& language,
-                                           const std::string& suffix, const std::string& filePath, int cursorLine,
-                                           int cursorCol, uint64_t expectedSeq = 0);
     void onGhostTextReady(int requestedCursorPos, const char* completionText);
-    bool applyProductGhost(const char* text, uint64_t gen, uint64_t id, int line, int col);
-    void dismissGhostText();
     void acceptGhostText();
     void renderGhostText(HDC hdc);
-    bool handleGhostTextKey(UINT vk);
     void toggleGhostText();
     std::string trimGhostText(const std::string& raw);
 
@@ -2713,13 +2719,15 @@ class Win32IDE
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;
-    
-    // Thread-safe model path accessors
+
+  public:
+    // Thread-safe model path accessors (AgenticComposerUX / product session bind)
     void setLoadedModelPath(const std::string& path);
     void setLoadedModelPath(std::string&& path);
     std::string getLoadedModelPath() const;
     void clearLoadedModelPath();
 
+  private:
     // Agentic mode (Plan/Agent/Ask) — agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);
     void onAgenticModeChanged(RawrXD::AgenticMode mode);

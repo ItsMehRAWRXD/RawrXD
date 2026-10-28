@@ -1,0 +1,11 @@
+?BENCH model=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf decode=32 runs=1 backend=vulkan-native prefill=PrefillBatch wide_dot_batch=1
+bound ops=311 (bind 3437.2 ms)
+Selected device: AMD Radeon AI PRO R9700
+RUN1: bind_ms=3437.2 prefill_ms=942.5 decode_ms=7136.9 e2e_ms=8079.3
+RUN1: ACCOUNT positions=33 decode_forward_passes=31 prefill_submits_per_pos=122.0 decode_submits_per_fwd=89.0
+RUN1: gpu_time_share=82.1% of the measured window (gpu 6636.8 ms of prefill+decode 8079.3 ms)
+RUN1: BOUNDARY bind_ms=3437.2 (model load+bind, excluded from TPS)
+RUN1: BOUNDARY prefill wall=942.5 ms gpu=392.7 ms host_wait=450.8 ms submit=4.7 ms submits=244
+RUN1: BOUNDARY decode wall=7136.9 ms gpu=6244.1 ms host_wait=6544.3 ms submit=48.4 ms submits=2759
+RUN1: device_bytes_peak=600.8 MB device_bytes_live=600.8 MB weight_cache_hits=4959 misses=155 upload=653.9 MB
+RUN1 VERDICT: PASS

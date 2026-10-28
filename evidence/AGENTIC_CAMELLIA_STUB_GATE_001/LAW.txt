@@ -1,0 +1,75 @@
+AGENTIC_CAMELLIA_STUB_GATE_001 / LAW
+===================================
+ASOF_UTC=2026-10-28T08:30:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+G06_REOPEN=0
+
+MISSION
+-------
+Eliminate unguarded Camellia fake-success stubs in
+src/win32app/Win32IDE_AgenticFeatures.cpp that returned 0 and could
+steal product symbols from RawrXD_Camellia256*.obj under RAWR_HAS_MASM.
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+OBJECT_SMOKE != PROMOTE
+Do not invent PASS. Do not reopen sealed tetrad as PASS.
+
+CMAKE MEMBERSHIP
+----------------
+WIN32IDE_SOURCES: AgenticFeatures.cpp NOT listed (GATED_OMIT).
+CMakeLists.txt ~5712 comment (LORA_KERNEL_STUB_GATE_001):
+  do NOT add Win32IDE_AgenticFeatures.cpp to Win32IDE.
+build_win32ide_link001/build.ninja: AF_LINK001=0 (not in sealed product link).
+build-master/build.ninja: AF_MASTER=2 (STALE — still builds/links orphan TU).
+
+OWNERSHIP (RAWR_HAS_MASM=1)
+---------------------------
+asm_camellia256_{init,set_key,encrypt_*,decrypt_*,get_status,shutdown,
+  self_test,get_hmac_key} -> RawrXD_Camellia256.obj
+asm_camellia256_auth_*     -> RawrXD_Camellia256_Auth.obj
+  (CAMELLIA_AUTH_ASM_BIND_001)
+AgenticFeatures Camellia stubs -> OMITTED when RAWR_HAS_MASM=1
+
+GATE (source)
+-------------
+#if !defined(RAWR_HAS_MASM) || !RAWR_HAS_MASM
+  // fail-closed stubs return -1 (never 0)
+#endif
+Matches batch_005 / gold_link B01: Win32IDE defines RAWR_HAS_MASM=0|1,
+so value-gate is required (!defined alone would keep stubs under =1).
+
+SIBLING COORDINATION
+--------------------
+LORA_KERNEL_STUB_GATE_001: owns LoRA/WAL/ghost fail-close + CMake GATED_OMIT.
+IDE_BRIDGE_STUB_GATE_001: bridge sweep omit list.
+This seal: Camellia MASM omit + dumpbin proof only. Do not fight siblings.
+LoRAKernel_Initialize -> return false (sibling)
+runAgentWalCliSmokeTest -> return -1 (sibling)
+runGhostPipelineProbeCli -> return -1 (sibling)
+
+EXE / TETRAD
+------------
+PRIOR_SEALED_SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+  (CAMELLIA_AUTH_ASM_BIND_001 / LIVE_TETRAD_POST_CAMELLIA_001)
+CURRENT_ONDISK_EXE_SHA256=32C28BF7A46F919B6D5ED4FF1C4AEBF99776273CF1AE38672ECB92406CCF55D7
+  build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+THIS_TURN_RELINK=0
+CURRENT_EXE_NE_SEALED=1
+TETRAD_VS_CURRENT_EXE=INVALIDATED (SHA drift observed; not rewritten here)
+No invented PASS. PROMOTE=0.
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1 (Camellia stubs MASM-gated + fail-closed)
+OBJECT_SMOKE=1 (dumpbin MASM1_CAM_COUNT=0; MASM0_CAM_COUNT=12)
+PREPROC_REAL_TU=1 (RAWR_HAS_MASM=1 .i: FUNC_BODY_DEFS=0 GateStub cam=0)
+FULL_WIN32IDE_RELINK=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

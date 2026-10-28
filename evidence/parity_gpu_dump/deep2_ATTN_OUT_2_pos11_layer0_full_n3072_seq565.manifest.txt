@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_OUT_2
+pos=11
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=7a7434bc3422979c
+l2=1.8821151754434939
+seq=565
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_ATTN_OUT_2_pos11_layer0_full_n3072_seq565.bin

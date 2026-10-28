@@ -1,0 +1,33 @@
+WIN32IDE_BINARY_PROVENANCE_003 / map_excerpt.txt
+ASOF_UTC=2026-10-28T10:22:00Z
+MAP=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.map
+MAP_SHA256=7D2045D031AE43014555518876EF44FB4DE29328CBF704E67C1BB5747BA69626
+TIP_SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+
+SYMBOL_HITS
+-----------
+appendLocalOllamaHttpTags=7
+resolveSwarmModelOrchPlan=7
+GateStub=7
+GateFiction=1
+
+OBJ_HITS
+--------
+Win32IDE_SwarmModelSelector.cpp.obj=560
+Win32IDE_SwarmOllamaHttpTags.cpp.obj=95
+Win32IDE_SubAgent.cpp.obj=2164
+Win32IDE_ToolActionStatus.cpp.obj=31
+Win32IDE_AgenticComposerUX.cpp.obj=259
+rawrengine_command_handlers.cpp.obj=913
+command_handlers_comprehensive.cpp.obj=339
+
+EXCERPT (primary symbols)
+-------------------------
+0001:007d25e0       ?resolveSwarmModelOrchPlan@Win32App@RawrXD@@YA?AUSwarmModelOrchPlan@12@I@Z 00000001407d35e0 f   Win32IDE_SwarmModelSelector.cpp.obj
+0001:007d2b00       ?appendLocalOllamaHttpTags@Win32App@RawrXD@@YAXAEAV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@I@Z 00000001407d3b00 f   Win32IDE_SwarmOllamaHttpTags.cpp.obj
+0001:0192e4b0       ?HandleToolActionStatus@@YAXPEAX@Z 000000014192f4b0 f   Win32IDE_ToolActionStatus.cpp.obj
+
+LINKED
+------
+HTTPTAGS_appendLocalOllamaHttpTags=1
+SELECTOR_resolveSwarmModelOrchPlan=1

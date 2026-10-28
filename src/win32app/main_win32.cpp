@@ -828,18 +828,21 @@ static void parseCmdLine(LPSTR lpCmdLine, int& argc, char**& argv)
         std::string token;
         while (iss >> token)
         {
-            // Handle quoted arguments
+            /* Quoted args: one closing " only. A while+getline loop used to
+             * re-read past the closer and swallow --max-tokens / trailing flags
+             * into --prompt (TOKEN64 saw default 2048 instead of CLI 64). */
             if (!token.empty() && token.front() == '"')
             {
-                token = token.substr(1);
-                std::string rest;
-                while (!token.empty() && token.back() != '"' && std::getline(iss, rest, '"'))
+                if (token.size() >= 2 && token.back() == '"')
                 {
-                    token += " " + rest;
+                    token = token.substr(1, token.size() - 2);
                 }
-                if (!token.empty() && token.back() == '"')
+                else
                 {
-                    token.pop_back();
+                    token = token.substr(1);
+                    std::string rest;
+                    if (std::getline(iss, rest, '"'))
+                        token += rest;
                 }
             }
             args.push_back(token);
@@ -1062,7 +1065,9 @@ static void ensureMainWindowVisible(HWND hMain)
 static EngineManager* s_engine_mgr = nullptr;
 static CodexUltimate* s_codex = nullptr;
 
-// SEH wrapper for createWindow - must be in separate function without C++ object unwinding
+// SEH wrapper for createWindow - must be in separate function without C++ object unwinding.
+// TIP_GUI_CREATEWINDOW_FIX_001: surface real exception code (was silent → misleading
+// "no interactive window station" stderr on ANY createWindow false).
 static bool createWindowWithSEH(Win32IDE& ide)
 {
     __try
@@ -1071,6 +1076,13 @@ static bool createWindowWithSEH(Win32IDE& ide)
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
+        const DWORD code = GetExceptionCode();
+        fprintf(stderr, "[main_win32] createWindow SEH abort code=0x%08lX (not window-station)\n",
+                (unsigned long)code);
+        fflush(stderr);
+        char ods[128];
+        snprintf(ods, sizeof(ods), "[main_win32] createWindow SEH code=0x%08lX\n", (unsigned long)code);
+        OutputDebugStringA(ods);
         return false;
     }
 }
@@ -1702,16 +1714,43 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
     if (!setProbeWorkspaceRoot())
         fprintf(stderr, "[feature-probe] WARN: could not set workspace root from exe path\n");
 
+    // Breadcrumb survives AllocConsole/freopen steal of redirected pipes.
+    {
+        std::ofstream bc("feature_probe_breadcrumb.txt", std::ios::trunc | std::ios::binary);
+        if (bc)
+            bc << "phase=enter cmdline=" << (lpCmdLine ? lpCmdLine : "") << "\n";
+    }
+
     auto* ide = new Win32IDE(hInstance);
+    {
+        std::ofstream bc("feature_probe_breadcrumb.txt", std::ios::app | std::ios::binary);
+        if (bc)
+            bc << "phase=after_new_ide\n";
+    }
     if (!ide->createWindow())
     {
         fprintf(stderr, "[feature-probe] FAIL: createWindow failed\n");
+        std::ofstream bc("feature_probe_breadcrumb.txt", std::ios::app | std::ios::binary);
+        if (bc)
+            bc << "phase=createWindow_FAIL\n";
         return 2;
+    }
+    {
+        std::ofstream bc("feature_probe_breadcrumb.txt", std::ios::app | std::ios::binary);
+        if (bc)
+            bc << "phase=createWindow_OK\n";
     }
     ide->showWindow();
     ensureMainWindowVisible(ide->getMainWindow());
+    // Feature probes must not dispatch WM_APP_RESTORE_SESSION / WM_APP+201 —
+    // those hang or /GS-abort headless. Use the same skip pump as post-create.
     for (int i = 0; i < 6; ++i)
-        pumpMessages();
+        pumpMessagesTraced("feature_probe");
+    {
+        std::ofstream bc("feature_probe_breadcrumb.txt", std::ios::app | std::ios::binary);
+        if (bc)
+            bc << "phase=after_show_pump\n";
+    }
 
     HWND mainWnd = ide->getMainWindow();
     HWND editor = ide->getEditor();
@@ -1811,12 +1850,107 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
             SendMessageA(editor, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
             SendMessageA(editor, EM_REPLACESEL, TRUE, (LPARAM) "i");
             for (int i = 0; i < 6; ++i)
-                pumpMessages();
+                pumpMessagesTraced("feature_probe_ghost");
         }
         BOOL hadGhostTimer = KillTimer(mainWnd, 8888);
         assertBehavior(hadGhostTimer != 0, "ghost_text_timer_started");
         if (hadGhostTimer)
             SetTimer(mainWnd, 8888, 120, nullptr);
+
+        // Real Ollama GhostText. Env-gated; AGENTIC_EDIT != GhostText. PROMOTE=0.
+        // RAWRXD_GHOST_OLLAMA=1
+        // RAWRXD_GHOST_OLLAMA_MODEL=<tag> (default nemotron-3-nano:4b)
+        // RAWRXD_GHOST_OLLAMA_MODEL_B=<tag> (optional model-switch peer)
+        const char* ghostOllama = std::getenv("RAWRXD_GHOST_OLLAMA");
+        if (ghostOllama && ghostOllama[0] == '1' && editor)
+        {
+            const char* modelEnv = std::getenv("RAWRXD_GHOST_OLLAMA_MODEL");
+            const std::string model =
+                (modelEnv && modelEnv[0]) ? std::string(modelEnv) : "nemotron-3-nano:4b";
+            const char* modelBEnv = std::getenv("RAWRXD_GHOST_OLLAMA_MODEL_B");
+            ide->setOllamaModelOverride(model);
+            const std::string prefix = "int main() {\n    retur";
+            SetWindowTextA(editor, prefix.c_str());
+            SendMessageA(editor, EM_SETSEL, (WPARAM)prefix.size(), (LPARAM)prefix.size());
+            char beforeReq[512] = {};
+            GetWindowTextA(editor, beforeReq, (int)sizeof(beforeReq));
+            std::string completion = ide->requestGhostTextCompletion(
+                prefix, "cpp", "\n}\n", "probe_main.cpp", 1, (int)prefix.size(), 0);
+            {
+                std::ofstream rcpt("feature_probe_ghost_receipt.txt",
+                                   std::ios::trunc | std::ios::binary);
+                if (rcpt)
+                {
+                    rcpt << "model=" << model << "\n";
+                    rcpt << "completion_len=" << completion.size() << "\n";
+                    rcpt << "completion_prefix=";
+                    const size_t n = completion.size() < 160 ? completion.size() : 160;
+                    for (size_t i = 0; i < n; ++i)
+                    {
+                        const unsigned char c = (unsigned char)completion[i];
+                        rcpt << (c >= 32 && c < 127 ? (char)c : '.');
+                    }
+                    rcpt << "\n";
+                }
+            }
+            assertBehavior(!completion.empty(), "ollama_ghost_completion_nonempty");
+            char afterReq[512] = {};
+            GetWindowTextA(editor, afterReq, (int)sizeof(afterReq));
+            assertBehavior(strcmp(beforeReq, afterReq) == 0,
+                           "ollama_ghost_buffer_unchanged_until_tab");
+            const uint64_t gen = ide->editorDocGen() ? ide->editorDocGen() : 1;
+            const bool bound =
+                !completion.empty() &&
+                ide->applyProductGhost(completion.c_str(), gen, 0, 1, (int)prefix.size());
+            assertBehavior(bound && ide->isGhostTextVisible(), "ollama_ghost_visible");
+            char beforeEsc[512] = {};
+            GetWindowTextA(editor, beforeEsc, (int)sizeof(beforeEsc));
+            ide->handleGhostTextKey(VK_ESCAPE);
+            char afterEsc[512] = {};
+            GetWindowTextA(editor, afterEsc, (int)sizeof(afterEsc));
+            assertBehavior(!ide->isGhostTextVisible() && strcmp(beforeEsc, afterEsc) == 0,
+                           "ollama_ghost_esc_dismiss_no_mutation");
+            if (!completion.empty())
+            {
+                ide->applyProductGhost(completion.c_str(), gen, 0, 1, (int)prefix.size());
+                char beforeTab[512] = {};
+                GetWindowTextA(editor, beforeTab, (int)sizeof(beforeTab));
+                // Compare to live buffer snapshot (RichEdit may store \r\n).
+                assertBehavior(strcmp(beforeTab, beforeEsc) == 0,
+                               "ollama_ghost_pre_tab_buffer_unchanged");
+                ide->handleGhostTextKey(VK_TAB);
+                char afterTab[512] = {};
+                GetWindowTextA(editor, afterTab, (int)sizeof(afterTab));
+                assertBehavior(strcmp(beforeTab, afterTab) != 0, "ollama_ghost_tab_accept_mutates");
+                SendMessageA(editor, EM_UNDO, 0, 0);
+                for (int i = 0; i < 4; ++i)
+                    pumpMessagesTraced("feature_probe_ghost_undo");
+                char afterUndo[512] = {};
+                GetWindowTextA(editor, afterUndo, (int)sizeof(afterUndo));
+                assertBehavior(strcmp(beforeTab, afterUndo) == 0, "ollama_ghost_tab_accept_undo");
+            }
+            ide->triggerGhostTextCompletion();
+            ide->dismissGhostText();
+            assertBehavior(!ide->isGhostTextVisible(), "ollama_ghost_stale_dismiss");
+            if (modelBEnv && modelBEnv[0])
+            {
+                const std::string modelB(modelBEnv);
+                ide->setOllamaModelOverride(modelB);
+                std::string completionB = ide->requestGhostTextCompletion(
+                    prefix, "cpp", "\n}\n", "probe_main.cpp", 1, (int)prefix.size(), 0);
+                {
+                    std::ofstream rcpt("feature_probe_ghost_receipt.txt",
+                                       std::ios::app | std::ios::binary);
+                    if (rcpt)
+                    {
+                        rcpt << "model_b=" << modelB << "\n";
+                        rcpt << "completion_b_len=" << completionB.size() << "\n";
+                    }
+                }
+                assertBehavior(model != modelB, "ollama_ghost_model_switch_tags_differ");
+                assertBehavior(!completionB.empty(), "ollama_ghost_model_switch_completion");
+            }
+        }
     }
 
     if (probeMultiCursor)
@@ -2429,9 +2563,12 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             // Instead: log to stderr and exit cleanly for all contexts.
             if (name == "createWindow")
             {
-                fprintf(stderr, "[main_win32] createWindow failed — no interactive window station. "
-                                "Run with --headless for terminal/server mode.\n");
-                return 2; // distinct exit code for headless-required
+                // TIP_GUI_CREATEWINDOW_FIX_001: do not blame window-station by default.
+                // SEH path already printed exception code; boolean false is a soft fail.
+                fprintf(stderr, "[main_win32] createWindow FAILED (see prior SEH/SettingsManager "
+                                "stderr). MAIN_HWND unset. exit=2 PROMOTE=0\n");
+                fflush(stderr);
+                return 2;
             }
             MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
             return 1;

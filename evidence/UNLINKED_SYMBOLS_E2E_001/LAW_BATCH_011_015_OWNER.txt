@@ -1,0 +1,51 @@
+LAW — Quintile C batches 011–015 ownership
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+WORKSPACE=G:\~dev\rawrxd
+DATE=2026-10-27
+Camellia Auth ASM / Digestion_scanner.asm = NOT Mode*/SO*/Sovereign owners
+
+BATCH_011
+- AD_ProcessGGUF / SO_LoadExecFile / SO_StartDEFLATEThreads /
+  SO_PrintStatistics / SO_PrintMetrics:
+  OWNER_TU = src/core/rawrxd_subsystem_api.cpp
+- OMIT_FROM_LINK (CMake COMMENT, not #ifndef dual-link):
+  unlinked_symbols_batch_011.cpp  (RawrEngine + Win32IDE)
+- File remains in tree for reference / object smoke
+- GOLD: also EXCLUDE 011; SO_* owner = streaming_orchestrator.cpp
+- SYNTHETIC=partial on subsystem_api empty Mode*/SO stubs — leave unless real ASM modes land
+
+BATCH_012
+- HotSwapModel / g_RawrXD_HotSwapModelRequest / RawrXD_Native_Log /
+  asm_spengine_cpu_optimize(void):
+  OWNER_TU = unlinked_symbols_batch_012.cpp (RawrEngine + Win32IDE)
+- GOLD: EXCLUDE 012 (Native_Log / HotSwap provided elsewhere on GOLD lane)
+- Do not dual-link with streaming_orchestrator for SO_* (012 does not define SO_*)
+
+BATCH_013
+- asm_quadbuf_init / asm_quadbuf_render_thread:
+  C fallback OWNER = batch_013 → quad_registry_bind / render_tick
+  STORAGE + asm_quadbuf_shutdown OWNER = batch_001 (quad_registry.hpp)
+- asm_orchestrator_* / asm_gguf_loader_stage* / fnv1a_hash64:
+  C fallback OWNER = batch_013 when !MASM
+  Product MASM OWNER = RawrXD_AgenticOrchestrator.asm / QuadBuffer ASM
+- OMIT_FROM_LINK when RAWR_HAS_MASM (RawrEngine + Win32IDE) — avoid LNK2005
+- Keep file in tree; object smoke uses C path + batch_001 join
+
+BATCH_014
+- createOutlinePanel / createDockingPaneManager / Win32IDE::goToLine:
+  Types from OutlinePanel.h + DockingPaneManager.h (real headers)
+  Headless factory OWNER = batch_014 (object smoke / alternate targets)
+- Win32IDE product UI: Win32IDE_OutlinePanel.cpp / DockingPaneManager.cpp
+  — batch_014 NOT linked on Win32IDE (CMake omit)
+
+BATCH_015
+- Sovereign_Pipeline_Cycle / HealSymbolResolution / ValidateDMAAlignment /
+  RawrXD_Trigger_Chat / g_CycleCounter / g_SovereignStatus /
+  g_SymbolHealCount / g_ActiveAgentCount:
+  Win32IDE OWNER = batch_015 (when Sovereign_Core.asm absent)
+  GOLD OWNER = gold_link_closure.cpp — FILTER EXCLUDE batch_015 on GOLD
+- Not Camellia / Digestion_scanner
+
+MECHANISM
+  Prefer CMake TU omit of the non-owner side. Files stay in tree.
+  Quad join: shared QuadState via quad_registry.hpp (batch_001 storage).

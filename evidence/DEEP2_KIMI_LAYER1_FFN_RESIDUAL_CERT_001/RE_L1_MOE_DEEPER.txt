@@ -1,0 +1,61 @@
+DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001 — deeper RE (post residual PASS)
+ASOF=2026-10-27T06:58:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+SEALED (prior run SHA A68D8369…)
+  RUNTIME_REACHED=1 EXIT=0 ELAPSED_MS=42571
+  CHECKPOINTS 5/5 n=7168 nonfinite=0
+  L1FFN_INVARIANT maxAbs=1.86264515e-09 PASS=1
+  MoE parity experts_selected=480 experts_executed=480
+
+WHAT THE RESIDUAL PASS PROVES
+  FFN_RESIDUAL == FFN_INP + FFN_DOWN on layer-1 host buffer.
+  Does NOT prove router / SwiGLU / shared / quant / stick join correctness.
+
+MAGNITUDE FORENSICS (tok=0 layer=1)
+  FFN_INP_1      l2=1.16698168
+  FFN_NORM_1     l2=1.71812955   (RMSNorm amplifies)
+  FFN_DOWN_1     l2=0.312214549  (routed+shared accum into residual)
+  FFN_RESIDUAL_1 l2=1.20593758   (~INP; DOWN is small perturbation)
+  LAYER_OUT_1    identical stats to FFN_RESIDUAL_1
+
+BACKEND ATTRIBUTION (002 + cert — same counters)
+  EXPERT_GPU_EXEC=480  HOST_GEMV_EXPERT=0  → device SwiGLU path
+  SHARED_EXPERT_CALLS=60                 → shared stays host SwiGLUHost
+  hits=0 misses=480 stick_retains=0 stick_assigns=480
+  EXPERT_H2D_BYTES=12768903168 (~12.7 GiB / 1 gen token stream)
+  DECODE_TPS_REAL≈0.028  TPS_PRODUCT_SEAL=0
+
+SPEED LOCUS (next RE, not invent PASS)
+  Cold miss every Place: MarkHot fires but subsequent Place hits stay 0.
+  Wall dominated by expert H2D (≈212 MB/MoE layer × 60), not residual add.
+  Dual-stick overlap / residency retain is the performance repair target;
+  residual cert instrumentation is orthogonal and must stay fail-closed.
+
+INSTRUMENTED NEXT (source landed; rebuild pending — machine thrash from
+Deep2Engine forced rebuild)
+  K2NativeMoEFfn_Place.cpp under CERT+layer==1:
+    L1_ROUTER_DONE ids[]+w[]+count
+    FFN_ROUTED_1.f32   (p0+p1 before shared)
+    FFN_SHARED_1.f32   (host shared expert)
+    FFN_ACCUM_1.f32    (routed+shared = FFN_DOWN input)
+    L1FFN_JOIN_INVARIANT ACCUM_EQ_ROUTED_PLUS_SHARED
+    L1FFN_PLACE gpu0/1_ns h2d host_down/device_down
+  KimiLayer1FfnResidualCert.hpp:
+    DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_DIR → <key>.f32 dumps
+
+FIRST-DIVERGENCE MAP (independent parity still OPEN)
+  FFN_INP      → MLA / attn residual into FFN
+  FFN_NORM     → RMSNormW
+  FFN_ROUTED   → router top-k, weights, stick join, device SwiGLU
+  FFN_SHARED   → shexp gate/up/down host SwiGLU
+  FFN_ACCUM    → routed+shared join (internal; join invariant)
+  FFN_DOWN     → should match FFN_ACCUM (alias of Place accum)
+  FFN_RESIDUAL → hidden += accum
+  LAYER_OUT    → post-assign
+
+L0_DENSE_STUB=1 remains OPEN (EXIT_DENSE; no dense GEMV)
+FROZEN_002 / 12/22 matrix = UNCHANGED
+NEXT_GATE=rebuild Place-only → re-run cert with CERT_DIR → seal join+files
+  then independent reference compare starting at FFN_ROUTED vs FFN_SHARED

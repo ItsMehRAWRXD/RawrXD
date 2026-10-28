@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_FINAL_NORM
+pos=18
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=0b071a72f2d6cf42
+l2=84.678119723490965
+seq=911
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_PROMPT_FINAL_NORM_pos18_layer0_full_n3072_seq911.bin

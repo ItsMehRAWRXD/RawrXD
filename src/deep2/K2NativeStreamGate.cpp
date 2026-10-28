@@ -1135,9 +1135,26 @@ bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
     }
     const size_t hd = k2cfg.hiddenDim;
     std::vector<float> scratch(hd), mlaOut(hd);
-    return ExecuteMLALayer(layer, index, k2cfg, hiddenIn, hiddenOut,
-                           scratch.data(), mlaOut.data(), kv, position, stats,
-                           error);
+    if (Deep2::LivePath_Active())
+        Deep2::LivePath_OnLayerStart(Deep2::LivePath_ActiveCyclone(), layer, 0);
+    if (!ExecuteMLALayer(layer, index, k2cfg, hiddenIn, hiddenOut,
+                         scratch.data(), mlaOut.data(), kv, position, stats,
+                         error))
+        return false;
+    /* Live decode uses per-layer ForwardMlaLayer; MoE must mirror ForwardMLALayers.
+     * Prior path returned after MLA only → SHARD_MOE_US=0 / experts never entered. */
+    if (k2cfg.numExperts > 0) {
+        const bool decodePhase = true;
+        Deep2::moe_ltrace::SetToken(position);
+        if (!Deep2::K2NativeMoE_AfterMla(index, k2cfg, layer, decodePhase,
+                                         hiddenOut, scratch.data(), error))
+            return false;
+    } else {
+        Deep2::MoEPlaceLive().ffn_dispatch_dense++;
+    }
+    if (Deep2::LivePath_Active())
+        Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);
+    return true;
 }
 
 rawrxd::deep2::K2KVCache* ProdKv(const Deep2::KimiK2Config& k2cfg,

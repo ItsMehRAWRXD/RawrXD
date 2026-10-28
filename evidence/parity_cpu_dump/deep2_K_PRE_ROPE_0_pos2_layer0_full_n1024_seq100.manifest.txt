@@ -1,0 +1,13 @@
+side=deep2
+stage=K_PRE_ROPE_0
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1024
+nbytes=4096
+fnv=c6f9d44a46081357
+l2=43.440020320050706
+seq=100
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_K_PRE_ROPE_0_pos2_layer0_full_n1024_seq100.bin

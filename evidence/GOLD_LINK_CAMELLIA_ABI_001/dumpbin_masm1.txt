@@ -1,0 +1,30 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file G:\~dev\rawrxd\evidence\GOLD_LINK_CAMELLIA_ABI_001\abi_masm1.obj
+
+File Type: COFF OBJECT
+
+COFF SYMBOL TABLE
+000 0105899C ABS    notype       Static       | @comp.id
+001 80010190 ABS    notype       Static       | @feat.00
+002 00000003 ABS    notype       Static       | @vol.md
+003 00000000 SECT1  notype       Static       | .drectve
+    Section length   2F, #relocs    0, #linenums    0, checksum        0
+005 00000000 SECT2  notype       Static       | .debug$S
+    Section length   94, #relocs    0, #linenums    0, checksum        0
+007 00000000 SECT3  notype       Static       | .text$mn
+    Section length    3, #relocs    0, #linenums    0, checksum EFBA1F8D
+009 00000000 SECT3  notype ()    External     | main
+00A 00000000 SECT4  notype       Static       | .chks64
+    Section length   20, #relocs    0, #linenums    0, checksum        0
+
+String Table Size = 0x0 bytes
+
+  Summary
+
+          20 .chks64
+          94 .debug$S
+          2F .drectve
+           3 .text$mn

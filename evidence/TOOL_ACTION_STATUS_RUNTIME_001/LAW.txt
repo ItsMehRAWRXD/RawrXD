@@ -1,0 +1,82 @@
+TOOL_ACTION_STATUS_RUNTIME_001 / LAW
+====================================
+ASOF_UTC=2026-10-28T10:51:03Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P0=S-001 / A05
+RELINK=NO
+TIP_REBUILD=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+FinishedAction / okResult / success toast without real process exit = FORBIDDEN
+SYNTHETIC=1 DEMO gated events EXCLUDE_FROM_PRODUCT_RUN_HISTORY
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1 (pre + post invoke + reverify)
+MAP:
+  ?GateStub@@YAXPEAVWin32IDE@@@Z @ 000000014192f310
+    (Win32IDE_ToolActionStatus.cpp.obj)
+  ?HandleToolActionStatus@@YAXPEAX@Z @ 000000014192f4b0
+  ?HandleToolActionStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z
+    @ 000000014102f4d0 (rawrengine_command_handlers.cpp.obj — dispatch winner)
+  rawrxd_dispatch_command @ 0000000141027eb0
+IMAGE_BASE_PREFERRED=0x140000000
+RVA_GATE=0x192F310 RVA_VOID=0x192F4B0
+
+INVOKE PATH
+-----------
+CMD_ID=44016
+CANONICAL=ui.toolStatus
+CLI_ALIAS=!tool_status
+MENU=Tools path ENUM id=44016 (P1_UI_MENU_E2E_001)
+SOURCE=src/win32app/Win32IDE_ToolActionStatus.cpp GateStub
+HEADLESS_/api/tool=does NOT dispatch registry 44016 (execute_command=shell only)
+LOADLIBRARY_INPROC_RVA=AV (CRT not init) — not used for seal
+TIP_REBUILD=NO — tiny remote/ODS harness EXEs only under this evidence dir
+
+INVOKE METHOD (earned)
+----------------------
+METHOD=tip --headless live process + CreateRemoteThread into GateStub /
+  HandleToolActionStatus(void*) at module_base+RVA
+SPAWN: RawrXD-Win32IDE.exe --headless --local --port 18767 --bind 127.0.0.1
+
+RUNTIME EVIDENCE
+----------------
+PRIMARY (ASOF 2026-10-28T10:43:05Z):
+  PID=31232 ODS ×2 GATED_STUB SYNTHETIC=1 FinishedAction forbidden
+REVERIFY (ASOF 2026-10-28T10:51:03Z):
+  PID=17024 probe_tip_ods_capture.exe exit=0
+  ODS ×2 identical GateStub lines; HAS_FINISHED_WITH_TOAST=0
+  NEG_PASS=1 POS_PASS=1 RUNTIME_REACHED=1 MET_CLAIM=0
+HAS_FINISHED_WITH_TOAST=0
+FABRICATED_SUCCESS_TOAST=0
+TIP_ALIVE=1 after remote calls
+RUNTIME_REACHED=1
+MET_CLAIM=0 — product ConPTY/real-exit owner still unclaimed;
+  POS+NEG here prove fail-closed gate only, not full A05 product-exit MET
+
+DISPOSITION
+-----------
+S-001 / A05: RUNTIME_REACHED (earned + re-verified)
+MET=0 (no invent)
+PRODUCT_TERMINAL_OWNER=unclaimed
+EXCLUDE_FROM_PRODUCT_RUN_HISTORY when SYNTHETIC=1
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+CROSS_CITE
+----------
+TOOL_ACTION_STATUS_TRUTH_001 (SOURCE_WIRED GateStub; RUNTIME was NOT_RUN)
+WIN32IDE_CLOSURE_MATRIX_001 A05 / S-001 / G14 / G15
+command_registry.hpp X(44016, TOOL_ACTION_STATUS, "ui.toolStatus", "!tool_status")
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

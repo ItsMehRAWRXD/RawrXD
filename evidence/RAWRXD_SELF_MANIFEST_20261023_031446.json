@@ -1,0 +1,5294 @@
+{
+  "schema": "rawrxd-self-manifest-v1",
+  "generated_at": "2026-10-23T07:15:10.1137611Z",
+  "root": "G:\\~dev\\rawrxd",
+  "gateway": "http://127.0.0.1:19035",
+  "ollama": "http://127.0.0.1:11434",
+  "native": "http://127.0.0.1:19036",
+  "deep2_requested": true,
+  "source": {
+    "files": 3760,
+    "informational_leads": 7020
+  },
+  "routes": [
+    {
+      "path": "/api/agents",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agents/explain",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agents/explain/stats",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agents/history",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agents/replay",
+      "method": "POST",
+      "status": 503,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agents/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/agent/execute-tool",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/engine/capabilities",
+      "method": "GET",
+      "status": 503,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/backends",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/backends/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/backends/use",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/browse",
+      "method": "POST",
+      "status": 400,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/browse/extract",
+      "method": "POST",
+      "status": 400,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/chain",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/chat",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/cli",
+      "method": "GET",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/cli",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/extensions/activate",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/deactivate",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/disable",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/enable",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/export",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/extensions/host/kill",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/host/logs",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/extensions/host/restart",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/host/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/extensions/import",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/install",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/load-vsix",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/marketplace/search",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/scan",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/extensions/uninstall",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/failures",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/generate",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/hotpatch/apply",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/hotpatch/revert",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/hotpatch/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/hotpatch/toggle",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/policies",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/policies/apply",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/policies/export",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/policies/heuristics",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/policies/import",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/policies/reject",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/policies/suggestions",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/policies/stats",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/read-file",
+      "method": "POST",
+      "status": 400,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/filesystem/roots",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/compiler/capabilities",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/list-dir",
+      "method": "POST",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/list-directory",
+      "method": "POST",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/subagent",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/swarm",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/api/tags",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/api/tool",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/ask",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/complete",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/complete/stream",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/gui",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/metrics",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/models",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/status",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    },
+    {
+      "path": "/v1/chat/completions",
+      "method": "POST",
+      "status": -1,
+      "attached": true,
+      "probe": "skipped-active",
+      "error": null
+    },
+    {
+      "path": "/v1/models",
+      "method": "GET",
+      "status": 200,
+      "attached": true,
+      "error": null
+    }
+  ],
+  "checks": [
+    {
+      "id": "SRC-001",
+      "area": "source-scan",
+      "status": "PASS",
+      "detail": "Scanned 3760 source files; 7020 informational leads recorded",
+      "evidence": {
+        "files": 3760,
+        "leads": 7020
+      }
+    },
+    {
+      "id": "ROUTE-001",
+      "area": "gateway",
+      "status": "PASS",
+      "detail": "Registered routes: 67; 404 routes: 0",
+      "evidence": {
+        "routes": [
+          {
+            "path": "/api/agents",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agents/explain",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agents/explain/stats",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agents/history",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agents/replay",
+            "method": "POST",
+            "status": 503,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agents/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/agent/execute-tool",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/engine/capabilities",
+            "method": "GET",
+            "status": 503,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/backends",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/backends/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/backends/use",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/browse",
+            "method": "POST",
+            "status": 400,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/browse/extract",
+            "method": "POST",
+            "status": 400,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/chain",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/chat",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/cli",
+            "method": "GET",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/cli",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/extensions/activate",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/deactivate",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/disable",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/enable",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/export",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/extensions/host/kill",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/host/logs",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/extensions/host/restart",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/host/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/extensions/import",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/install",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/load-vsix",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/marketplace/search",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/scan",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/extensions/uninstall",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/failures",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/generate",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/hotpatch/apply",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/hotpatch/revert",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/hotpatch/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/hotpatch/toggle",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/policies",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/policies/apply",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/policies/export",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/policies/heuristics",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/policies/import",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/policies/reject",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/policies/suggestions",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/policies/stats",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/read-file",
+            "method": "POST",
+            "status": 400,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/filesystem/roots",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/compiler/capabilities",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/list-dir",
+            "method": "POST",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/list-directory",
+            "method": "POST",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/subagent",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/swarm",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/api/tags",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/api/tool",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/ask",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/complete",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/complete/stream",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/gui",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/health",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/metrics",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/models",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/status",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          },
+          {
+            "path": "/v1/chat/completions",
+            "method": "POST",
+            "status": -1,
+            "attached": true,
+            "probe": "skipped-active",
+            "error": null
+          },
+          {
+            "path": "/v1/models",
+            "method": "GET",
+            "status": 200,
+            "attached": true,
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "BACKEND-001",
+      "area": "gateway",
+      "status": "PASS",
+      "detail": "Gateway health HTTP 200",
+      "evidence": {
+        "status": "online",
+        "models": 41,
+        "uptime": 652.3982801,
+        "ollama": "http://127.0.0.1:11434"
+      }
+    },
+    {
+      "id": "BACKEND-002",
+      "area": "ollama",
+      "status": "PASS",
+      "detail": "Ollama tags HTTP 200",
+      "evidence": {
+        "models": [
+          {
+            "name": "qwen2.5-coder:1.5b-base",
+            "model": "qwen2.5-coder:1.5b-base",
+            "modified_at": "2026-10-22T17:44:57.6403237-04:00",
+            "size": 986060385,
+            "digest": "02e0f2817a890a6de385d534465c04c5d0980abddc83615c09e79cee2c094446",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen2",
+              "families": [
+                "qwen2"
+              ],
+              "parameter_size": "1.5B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 32768,
+              "embedding_length": 1536,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "insert"
+            ]
+          },
+          {
+            "name": "nemotron-3-nano:4b",
+            "model": "nemotron-3-nano:4b",
+            "modified_at": "2026-10-20T01:13:34.7550043-04:00",
+            "size": 2837597147,
+            "digest": "d94b6dfae26d340fd16599d8cd5301945bb42b6bd7a7c70f2078559562f60cbe",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "nemotron_h",
+              "families": [
+                "nemotron_h"
+              ],
+              "parameter_size": "4.0B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 3136,
+              "runner": "llamacpp"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "nemotron-3.5-bolt:latest",
+            "model": "nemotron-3.5-bolt:latest",
+            "modified_at": "2026-10-20T01:13:19.8767132-04:00",
+            "size": 24750264767,
+            "digest": "d6d3deeca27134af015d1ab4d57ee655dd6d624dbef4f5dfd18f4b54f76bb554",
+            "details": {
+              "parent_model": "nemotron-3.5-bolt:74b-a9b-iq2",
+              "format": "gguf",
+              "family": "nemotron_h_moe",
+              "families": [
+                "nemotron_h_moe"
+              ],
+              "parameter_size": "74.0B",
+              "quantization_level": "IQ2_XXS",
+              "context_length": 262144,
+              "embedding_length": 4096,
+              "runner": "llamacpp"
+            },
+            "capabilities": [
+              "completion",
+              "vision",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "deepseek-r1:32b",
+            "model": "deepseek-r1:32b",
+            "modified_at": "2026-10-12T11:54:42.4099872-04:00",
+            "size": 19851337809,
+            "digest": "edba8017331d15236e57480eb45406c0d721db77a4cdcf234df500fc2ad3960c",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen2",
+              "families": [
+                "qwen2"
+              ],
+              "parameter_size": "32.8B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 5120,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "tools",
+              "thinking",
+              "completion"
+            ]
+          },
+          {
+            "name": "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+            "model": "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+            "modified_at": "2026-10-05T02:19:54.0637855-04:00",
+            "size": 103999401425,
+            "digest": "b8fdc28d1cd65d5b6627f94b801e1814d861ab6aa09b6e769707dabd4e457d34",
+            "details": {
+              "parent_model": "bluehawana/deepseek-v4-flash:iq2_m",
+              "format": "gguf",
+              "family": "deepseek4",
+              "families": [
+                "deepseek4"
+              ],
+              "parameter_size": "284.3B",
+              "quantization_level": "IQ3_XXS",
+              "context_length": 1048576,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "tools",
+              "thinking",
+              "completion"
+            ]
+          },
+          {
+            "name": "minimax-m3:cloud",
+            "model": "minimax-m3:cloud",
+            "remote_model": "minimax-m3",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-09-29T17:57:54.147247-04:00",
+            "size": 301,
+            "digest": "6f927c9f5b085dba16863af475db4a6b34497be28b074b59d8906f91b38582db",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "0",
+              "quantization_level": "",
+              "context_length": 512000
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking",
+              "vision"
+            ]
+          },
+          {
+            "name": "n4-tiny-oracle:latest",
+            "model": "n4-tiny-oracle:latest",
+            "modified_at": "2026-09-28T15:42:53.0523377-04:00",
+            "size": 637699788,
+            "digest": "4c06ec5be5509ecd6a958b1b9dc4b2c46cbc9d4e548b14637567c8e5c7988f65",
+            "details": {
+              "parent_model": "tinyllama_fresh.gguf",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "1.1B",
+              "quantization_level": "Q4_0",
+              "context_length": 2048,
+              "embedding_length": 2048,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "bluehawana/deepseek-v4-flash:iq2_m",
+            "model": "bluehawana/deepseek-v4-flash:iq2_m",
+            "modified_at": "2026-09-22T00:34:35.5197576-04:00",
+            "size": 103999401442,
+            "digest": "53fa62a979e3ae77cf954141c22732309bb75ccfa4056586301af6c51ce5853f",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "deepseek4",
+              "families": [
+                "deepseek4"
+              ],
+              "parameter_size": "284.3B",
+              "quantization_level": "IQ3_XXS",
+              "context_length": 1048576,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "tools",
+              "thinking",
+              "completion"
+            ]
+          },
+          {
+            "name": "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest",
+            "model": "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest",
+            "modified_at": "2026-09-22T00:31:56.1121939-04:00",
+            "size": 6550811412,
+            "digest": "9d7b1b2ae3ba0e6ffaafd58e1c5f27d41cfb4594a070da11c0e910638807eede",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen35",
+              "families": [
+                "qwen35"
+              ],
+              "parameter_size": "9.0B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "vision",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "deepseek-v4.1-flash:cloud",
+            "model": "deepseek-v4.1-flash:cloud",
+            "remote_model": "deepseek-v4.1-flash",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-09-14T00:47:27.5063595-04:00",
+            "size": 326,
+            "digest": "e04da138d31e0c9468e982e1ae9503d06cb7e170caa16a90c17d931c4aa140f8",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "763B",
+              "quantization_level": "FP8",
+              "context_length": 1048576
+            },
+            "capabilities": [
+              "completion",
+              "thinking",
+              "tools",
+              "vision"
+            ]
+          },
+          {
+            "name": "deepseek-v4-flash:cloud",
+            "model": "deepseek-v4-flash:cloud",
+            "remote_model": "deepseek-v4-flash:0731",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-09-14T00:47:15.4833953-04:00",
+            "size": 326,
+            "digest": "d3f1c87447216481a8001f48c517a51e13bfb141853a8df5e52f81bf765dabc3",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "304B",
+              "quantization_level": "FP8",
+              "context_length": 1048576,
+              "embedding_length": 4096
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "glm-5.3-flash:cloud",
+            "model": "glm-5.3-flash:cloud",
+            "remote_model": "glm-5.3-flash",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-09-14T00:47:05.0895317-04:00",
+            "size": 317,
+            "digest": "3e780905abc0e7240dd1489935ec1e3c7fcf1854a6f4e7f8688f9bb0bdacb1a5",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "321B",
+              "quantization_level": "FP8",
+              "context_length": 1048576,
+              "embedding_length": 4096
+            },
+            "capabilities": [
+              "completion",
+              "thinking",
+              "tools",
+              "vision"
+            ]
+          },
+          {
+            "name": "glm-5.3:cloud",
+            "model": "glm-5.3:cloud",
+            "remote_model": "glm-5.3",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-09-14T00:46:54.8838877-04:00",
+            "size": 293,
+            "digest": "8477dab3e25bb0f93c468af220186f55394262ee5e9f39262af4b60b54a8c4ba",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "753B",
+              "quantization_level": "FP8",
+              "context_length": 1048576
+            },
+            "capabilities": [
+              "completion",
+              "thinking",
+              "tools"
+            ]
+          },
+          {
+            "name": "nemotron-3.5-lightning:30b",
+            "model": "nemotron-3.5-lightning:30b",
+            "modified_at": "2026-09-13T04:05:30.9867566-04:00",
+            "size": 25430749387,
+            "digest": "e7a64ff15fb174c42b4f463e5c888c4f2c7b9cabf9e8d65a1c0874405426c1b2",
+            "details": {
+              "parent_model": "nemotron3.5:30b-a3b-q4_K_M",
+              "format": "gguf",
+              "family": "nemotron_h_moe",
+              "families": [
+                "nemotron_h_moe"
+              ],
+              "parameter_size": "32.9B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 1048576,
+              "embedding_length": 2688,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "gpt-oss:120b",
+            "model": "gpt-oss:120b",
+            "modified_at": "2026-09-06T12:32:56.558122-04:00",
+            "size": 65369818941,
+            "digest": "a951a23b46a1f6093dafee2ea481d634b4e31ac720a8a16f3f91e04f5a40ecd9",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "gptoss",
+              "families": [
+                "gptoss"
+              ],
+              "parameter_size": "116.8B",
+              "quantization_level": "MXFP4",
+              "context_length": 131072,
+              "embedding_length": 2880,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "gpt-oss:latest",
+            "model": "gpt-oss:latest",
+            "modified_at": "2026-08-31T13:48:13.0345019-04:00",
+            "size": 13793441244,
+            "digest": "17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "gptoss",
+              "families": [
+                "gptoss"
+              ],
+              "parameter_size": "20.9B",
+              "quantization_level": "MXFP4",
+              "context_length": 131072,
+              "embedding_length": 2880,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "deepseek-coder-v2:16b",
+            "model": "deepseek-coder-v2:16b",
+            "modified_at": "2026-08-31T13:44:26.6109948-04:00",
+            "size": 8905126121,
+            "digest": "63fb193b3a9b4322a18e8c6b250ca2e70a5ff531e962dbf95ba089b2566f2fa5",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "deepseek2",
+              "families": [
+                "deepseek2"
+              ],
+              "parameter_size": "15.7B",
+              "quantization_level": "Q4_0",
+              "context_length": 163840,
+              "embedding_length": 2048,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "insert"
+            ]
+          },
+          {
+            "name": "kiminoto/T0.0.1:latest",
+            "model": "kiminoto/T0.0.1:latest",
+            "modified_at": "2026-08-31T13:42:54.3012645-04:00",
+            "size": 6594474711,
+            "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen35",
+              "families": [
+                "qwen35"
+              ],
+              "parameter_size": "9.7B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "vision",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "starcoder2:15b",
+            "model": "starcoder2:15b",
+            "modified_at": "2026-08-31T13:19:03.8642678-04:00",
+            "size": 9065413313,
+            "digest": "21ae152d49e026b721a52cda94b32f95b3c9719d5eb71ea670e4fa60efde276b",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "starcoder2",
+              "families": [
+                "starcoder2"
+              ],
+              "parameter_size": "16B",
+              "quantization_level": "Q4_0",
+              "context_length": 16384,
+              "embedding_length": 6144,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "insert"
+            ]
+          },
+          {
+            "name": "ornith-1.5:35b",
+            "model": "ornith-1.5:35b",
+            "modified_at": "2026-08-31T12:52:43.4368471-04:00",
+            "size": 22616285024,
+            "digest": "9f3b89b2521908dd2e6f7a11fa368e62c8f89e1075f22604e4d1a76dd1240fcc",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen35moe",
+              "families": [
+                "qwen35moe"
+              ],
+              "parameter_size": "35.5B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 2048,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "tools",
+              "thinking",
+              "completion",
+              "vision"
+            ]
+          },
+          {
+            "name": "gemma3:latest",
+            "model": "gemma3:latest",
+            "modified_at": "2026-08-31T12:51:40.0811662-04:00",
+            "size": 3338801804,
+            "digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "gemma3",
+              "families": [
+                "gemma3"
+              ],
+              "parameter_size": "4.3B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 2560,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "vision"
+            ]
+          },
+          {
+            "name": "bigdaddygnative:latest",
+            "model": "bigdaddygnative:latest",
+            "modified_at": "2026-08-31T02:04:23.9167944-04:00",
+            "size": 25463412187,
+            "digest": "02a792bbc286442029d5dffecc1cc05bca468b52753a58a93301c805254634ac",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "69.0B",
+              "quantization_level": "Q2_K",
+              "context_length": 4096,
+              "embedding_length": 8192,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "bigdaddyglocal:latest",
+            "model": "bigdaddyglocal:latest",
+            "modified_at": "2026-08-31T02:04:23.8510621-04:00",
+            "size": 25463412798,
+            "digest": "890a6c1859b780cbd1217cb616fe8e2821ff6dac100fb073d0f32d1331c03de5",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "69.0B",
+              "quantization_level": "Q2_K",
+              "context_length": 4096,
+              "embedding_length": 8192,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "deepseek-v4-flash:0731-cloud",
+            "model": "deepseek-v4-flash:0731-cloud",
+            "remote_model": "deepseek-v4-flash:0731",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-08-27T04:54:40.9650681-04:00",
+            "size": 326,
+            "digest": "d3f1c87447216481a8001f48c517a51e13bfb141853a8df5e52f81bf765dabc3",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "304B",
+              "quantization_level": "FP8",
+              "context_length": 1048576,
+              "embedding_length": 4096
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "deepseek-r1:70b",
+            "model": "deepseek-r1:70b",
+            "modified_at": "2026-08-26T03:23:03.5571396-04:00",
+            "size": 42520397873,
+            "digest": "d37b54d01a76512a5adbaa9da4ee1c00833bf2dfefb0d4cc54351ba529e0f4da",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "70.6B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 8192,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "tools",
+              "thinking",
+              "completion"
+            ]
+          },
+          {
+            "name": "gpt-oss:20b",
+            "model": "gpt-oss:20b",
+            "modified_at": "2026-08-25T22:44:06.0375614-04:00",
+            "size": 13793441244,
+            "digest": "17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "gptoss",
+              "families": [
+                "gptoss"
+              ],
+              "parameter_size": "20.9B",
+              "quantization_level": "MXFP4",
+              "context_length": 131072,
+              "embedding_length": 2880,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "laguna-s-2.1:Q4_K_M",
+            "model": "laguna-s-2.1:Q4_K_M",
+            "modified_at": "2026-08-25T22:32:17.2286596-04:00",
+            "size": 96031832854,
+            "digest": "1adabf138c90af2bc1e311c477e4716ce4c02066f71429311f4d16948e61e0c7",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "laguna",
+              "families": [
+                "laguna"
+              ],
+              "parameter_size": "117.6B",
+              "quantization_level": "Q8_0",
+              "context_length": 262144,
+              "embedding_length": 3072,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "qwen3-next:80b",
+            "model": "qwen3-next:80b",
+            "modified_at": "2026-08-25T22:31:51.4678485-04:00",
+            "size": 50351334197,
+            "digest": "b2ebb986e4e960bb3f2d636472a466b4027939c4d8d9a62fc82bed8ebfd1ae19",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen3next",
+              "families": [
+                "qwen3next"
+              ],
+              "parameter_size": "79.7B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 2048,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "blackgrg26/WORMGPT-14:latest",
+            "model": "blackgrg26/WORMGPT-14:latest",
+            "remote_model": "ministral-3:14b",
+            "remote_host": "https://ollama.com:443",
+            "modified_at": "2026-08-25T22:31:14.2733794-04:00",
+            "size": 37282,
+            "digest": "f9809643910ce9aa1b73bf92062f8c57e91faab3c392bf4e79a0c832f0e8f2bd",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "",
+              "quantization_level": ""
+            }
+          },
+          {
+            "name": "llama3.1:8b",
+            "model": "llama3.1:8b",
+            "modified_at": "2026-08-25T22:11:01.8028455-04:00",
+            "size": 4920753328,
+            "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "8.0B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools"
+            ]
+          },
+          {
+            "name": "qwen3:8b",
+            "model": "qwen3:8b",
+            "modified_at": "2026-08-25T22:10:04.7832217-04:00",
+            "size": 5225388164,
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "qwen3",
+              "families": [
+                "qwen3"
+              ],
+              "parameter_size": "8.2B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 40960,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "gemma3:4b",
+            "model": "gemma3:4b",
+            "modified_at": "2026-08-25T22:08:30.0710888-04:00",
+            "size": 3338801804,
+            "digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "gemma3",
+              "families": [
+                "gemma3"
+              ],
+              "parameter_size": "4.3B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 2560,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "vision"
+            ]
+          },
+          {
+            "name": "llama3.2:3b",
+            "model": "llama3.2:3b",
+            "modified_at": "2026-08-25T22:04:02.3441816-04:00",
+            "size": 2019393189,
+            "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "3.2B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 3072,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools"
+            ]
+          },
+          {
+            "name": "bigdaddyg-productivity-local:latest",
+            "model": "bigdaddyg-productivity-local:latest",
+            "modified_at": "2026-08-24T03:51:22.1656209-04:00",
+            "size": 25463412798,
+            "digest": "890a6c1859b780cbd1217cb616fe8e2821ff6dac100fb073d0f32d1331c03de5",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "69.0B",
+              "quantization_level": "Q2_K",
+              "context_length": 4096,
+              "embedding_length": 8192,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "bigdaddyg-productivity-native:latest",
+            "model": "bigdaddyg-productivity-native:latest",
+            "modified_at": "2026-08-24T03:30:11.2731016-04:00",
+            "size": 25463412187,
+            "digest": "02a792bbc286442029d5dffecc1cc05bca468b52753a58a93301c805254634ac",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "69.0B",
+              "quantization_level": "Q2_K",
+              "context_length": 4096,
+              "embedding_length": 8192,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "granite3.3:8b",
+            "model": "granite3.3:8b",
+            "modified_at": "2026-08-22T14:20:29.4358067-04:00",
+            "size": 4942891653,
+            "digest": "fd429f23b90980ed1bef53b990894e7b0199331f6ae90c5650240a7d5b70f1f7",
+            "details": {
+              "parent_model": "/Users/ollama/.ollama/models/blobs/sha256-77bcee066a76dcdd10d0d123c87e32c8ec2c74e31b6ffd87ebee49c9ac215dca",
+              "format": "gguf",
+              "family": "granite",
+              "families": [
+                "granite"
+              ],
+              "parameter_size": "8.2B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 4096,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools"
+            ]
+          },
+          {
+            "name": "qwen3.8:27b",
+            "model": "qwen3.8:27b",
+            "modified_at": "2026-08-22T14:12:25.2662855-04:00",
+            "size": 17741872154,
+            "digest": "22130167c4c20e20c7b71454612966ca8e8171e9b3cc8ab6ce8aa6cbfec79643",
+            "details": {
+              "parent_model": "qwen3.8:27b-q4_K_M",
+              "format": "gguf",
+              "family": "qwen35",
+              "families": [
+                "qwen35"
+              ],
+              "parameter_size": "27.3B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 262144,
+              "embedding_length": 5120,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "vision",
+              "tools",
+              "thinking"
+            ]
+          },
+          {
+            "name": "qwen35-40b-heretic-q8:latest",
+            "model": "qwen35-40b-heretic-q8:latest",
+            "modified_at": "2026-08-16T02:25:44.4364187-04:00",
+            "size": 2176177445,
+            "digest": "e377863e376c0a8dc4c49c0610fbef50580d75e92640b8ab721dcb542d81fc4d",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "phi3",
+              "families": [
+                "phi3"
+              ],
+              "parameter_size": "3.8B",
+              "quantization_level": "Q4_0",
+              "context_length": 131072,
+              "embedding_length": 3072,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion"
+            ]
+          },
+          {
+            "name": "glm-5.2:cloud",
+            "model": "glm-5.2:cloud",
+            "remote_model": "glm-5.2",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-08-16T00:40:55.1006178-04:00",
+            "size": 290,
+            "digest": "7e916d58b3256274892e4dc7ef6723ab2528d797da47907c1887899020ec035b",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "756B",
+              "quantization_level": "",
+              "context_length": 1000000
+            },
+            "capabilities": [
+              "thinking",
+              "completion",
+              "tools"
+            ]
+          },
+          {
+            "name": "kimi-k2.6:cloud",
+            "model": "kimi-k2.6:cloud",
+            "remote_model": "kimi-k2.6",
+            "remote_host": "https://ollama.com",
+            "modified_at": "2026-08-16T00:40:31.2864066-04:00",
+            "size": 310,
+            "digest": "0d3854574c71904ea116a2de680f0d35d4bad047a5503b6eeb0601679c2c15c3",
+            "details": {
+              "parent_model": "",
+              "format": "",
+              "family": "",
+              "families": null,
+              "parameter_size": "1.04T",
+              "quantization_level": "INT4",
+              "context_length": 262144,
+              "embedding_length": 2048
+            },
+            "capabilities": [
+              "vision",
+              "thinking",
+              "completion",
+              "tools"
+            ]
+          },
+          {
+            "name": "llama3.2:latest",
+            "model": "llama3.2:latest",
+            "modified_at": "2025-10-21T07:21:42.2582728-04:00",
+            "size": 2019393189,
+            "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "3.2B",
+              "quantization_level": "Q4_K_M",
+              "context_length": 131072,
+              "embedding_length": 3072,
+              "runner": "ggml"
+            },
+            "capabilities": [
+              "completion",
+              "tools"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "BACKEND-003",
+      "area": "deep2",
+      "status": "BLOCKED",
+      "detail": "Deep2 native capability HTTP 0; native execution is never inferred from enumeration",
+      "evidence": null
+    },
+    {
+      "id": "BACKEND-004",
+      "area": "dual-lane",
+      "status": "PASS",
+      "detail": "Advertised lanes: rawrxd-node, ollama-direct",
+      "evidence": {
+        "ok": true,
+        "active": "ollama-direct",
+        "backends": [
+          {
+            "id": "rawrxd-node",
+            "name": "RawrXD Node Gateway",
+            "kind": "gateway",
+            "url": "http://127.0.0.1:19035",
+            "active": false,
+            "available": true,
+            "capabilities": [
+              "chat",
+              "browser",
+              "filesystem",
+              "diagnostics"
+            ]
+          },
+          {
+            "id": "ollama-direct",
+            "name": "Ollama Direct",
+            "kind": "ollama",
+            "url": "http://127.0.0.1:11434",
+            "active": true,
+            "available": true,
+            "capabilities": [
+              "chat",
+              "generate",
+              "models"
+            ]
+          }
+        ],
+        "native": {
+          "available": false,
+          "url": "http://127.0.0.1:19036"
+        }
+      }
+    },
+    {
+      "id": "CHAT-001",
+      "area": "chat",
+      "status": "NOT_PROBED",
+      "detail": "Inference probe skipped; rerun with -ProbeModels for a bounded multi-turn model request",
+      "evidence": {
+        "probe_models": false
+      }
+    },
+    {
+      "id": "CHAT-002",
+      "area": "cors",
+      "status": "PASS",
+      "detail": "CORS preflight for standalone file:// mode",
+      "evidence": {
+        "Access-Control-Allow-Origin": [
+          "*"
+        ],
+        "Access-Control-Allow-Methods": [
+          "GET, POST, OPTIONS"
+        ],
+        "Access-Control-Allow-Headers": [
+          "Content-Type"
+        ],
+        "Date": [
+          "Fri, 23 Oct 2026 07:15:09 GMT"
+        ],
+        "Connection": [
+          "keep-alive"
+        ],
+        "Keep-Alive": [
+          "timeout=5"
+        ],
+        "Transfer-Encoding": [
+          "chunked"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      }
+    },
+    {
+      "id": "CHAT-003",
+      "area": "metrics",
+      "status": "PASS",
+      "detail": "Gateway metrics endpoint",
+      "evidence": {
+        "ok": true,
+        "backend": "rawrxd-node",
+        "uptime_seconds": 654.5712177,
+        "active_backend": "ollama-direct",
+        "metrics": {
+          "requests": 726,
+          "responses": 725,
+          "errors": 492,
+          "chat_requests": 21,
+          "chat_tokens": 0,
+          "started_at": "2026-10-23T07:04:15.216Z"
+        }
+      }
+    },
+    {
+      "id": "IDE-001",
+      "area": "filesystem",
+      "status": "PASS",
+      "detail": "Drive/hidden-root enumeration",
+      "evidence": {
+        "roots": [
+          {
+            "name": "C:",
+            "path": "C:\\",
+            "type": "dir",
+            "size": 0,
+            "hidden": false,
+            "systemRoot": true
+          },
+          {
+            "name": "D:",
+            "path": "D:\\",
+            "type": "dir",
+            "size": 0,
+            "hidden": false,
+            "systemRoot": true
+          },
+          {
+            "name": "E:",
+            "path": "E:\\",
+            "type": "dir",
+            "size": 0,
+            "hidden": false,
+            "systemRoot": true
+          },
+          {
+            "name": "F:",
+            "path": "F:\\",
+            "type": "dir",
+            "size": 0,
+            "hidden": false,
+            "systemRoot": true
+          },
+          {
+            "name": "G:",
+            "path": "G:\\",
+            "type": "dir",
+            "size": 0,
+            "hidden": false,
+            "systemRoot": true
+          }
+        ],
+        "hidden_included": true,
+        "backend": "rawrxd-node-loopback"
+      }
+    },
+    {
+      "id": "IDE-002",
+      "area": "compiler",
+      "status": "PASS",
+      "detail": "Native compiler capability probe",
+      "evidence": {
+        "native_only": true,
+        "dependency_free": true,
+        "root": "G:\\~dev\\rawrxd\\compilers\\native_toolchain",
+        "tools": [
+          {
+            "kind": "assembler",
+            "name": "rawrxd_native_assembler.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_assembler.exe",
+            "present": true,
+            "size": 151770
+          },
+          {
+            "kind": "linker",
+            "name": "rawrxd_native_linker.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_linker.exe",
+            "present": true,
+            "size": 74295
+          },
+          {
+            "kind": "librarian",
+            "name": "rawrxd_native_librarian.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_librarian.exe",
+            "present": true,
+            "size": 63674
+          },
+          {
+            "kind": "resource_compiler",
+            "name": "rawrxd_native_rc.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_rc.exe",
+            "present": true,
+            "size": 63940
+          },
+          {
+            "kind": "debugger",
+            "name": "rawrxd_native_debug.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_debug.exe",
+            "present": true,
+            "size": 63390
+          },
+          {
+            "kind": "manifest",
+            "name": "rawrxd_native_manifest.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\rawrxd_native_manifest.exe",
+            "present": true,
+            "size": 62017
+          },
+          {
+            "kind": "c_compiler",
+            "name": "c_compiler_working.exe",
+            "path": "G:\\~dev\\rawrxd\\compilers\\native_toolchain\\c_compiler_working.exe",
+            "present": true,
+            "size": 74469
+          }
+        ],
+        "available": true
+      }
+    },
+    {
+      "id": "IDE-003",
+      "area": "browser",
+      "status": "PASS",
+      "detail": "Read-only embedded browser reader",
+      "evidence": {
+        "title": "Models – Hugging Face",
+        "status": 200
+      }
+    }
+  ],
+  "findings": [
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 159,
+      "text": "if (!hSession) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 166,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 175,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 186,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 196,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 203,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 244,
+      "text": "if (!ParseUrl(url, host, sizeof(host), &port, path, sizeof(path))) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 247,
+      "text": "if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 251,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 260,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\certification\\Deep2_Cert_Main.cpp",
+      "line": 271,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 88,
+      "text": "if (out.gate.empty()) { why=\"missing GATE\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 89,
+      "text": "if (out.claimAuthority.empty()) { why=\"missing CLAIM_AUTHORITY\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 90,
+      "text": "if (out.gpuForwardMs < 0) { why=\"missing/invalid GPU_FORWARD_MS\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 102,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 104,
+      "text": "if (!r.runtimeAuthority) { why=\"RUNTIME_AUTHORITY != 1\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 105,
+      "text": "if (!r.modelProvenanceMatch) { why=\"MODEL_PROVENANCE_MATCH != 1\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 109,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 111,
+      "text": "if (p.requirePromoteOff && r.promote) { why=\"PROMOTE != 0\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 112,
+      "text": "if (p.requireOllamaHttpOff && r.ollamaHttp) { why=\"OLLAMA_HTTP != 0\"; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 115,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\control\\GpuForwardChain.cpp",
+      "line": 120,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\daily\\d2_session_deep2_gen.cpp",
+      "line": 49,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\AutoPlanner.hpp",
+      "line": 34,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicy.cpp",
+      "line": 27,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicy.cpp",
+      "line": 35,
+      "text": "if (layer < r.first) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyApply.cpp",
+      "line": 121,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyApply.cpp",
+      "line": 176,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyBridge.hpp",
+      "line": 92,
+      "text": "if (!p.reuse.enabled.present || !p.reuse.enabled.value) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyBridge.hpp",
+      "line": 93,
+      "text": "if (!p.reuse.mode.present) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 36,
+      "text": "if (s.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 39,
+      "text": "if (end == s.c_str()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 46,
+      "text": "else return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 204,
+      "text": "if (!in) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 216,
+      "text": "if (!out) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp",
+      "line": 793,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\HostRamTelemetry.hpp",
+      "line": 45,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\HostRamTelemetry.hpp",
+      "line": 56,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\execution_policy\\HostRamTelemetry.hpp",
+      "line": 98,
+      "text": "s.processLifetimePrivateCommitPeak = g.processLifetimeWorkingSetPeak; // placeholder"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\HotpatchSynthesizer.hpp",
+      "line": 134,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LatencyIntent.hpp",
+      "line": 317,
+      "text": "if (intent.targetMs <= 0.0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LazyRegionMaterialize.hpp",
+      "line": 75,
+      "text": "if (!tokenizer || !embedding || !finalNorm || !lmHead) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LazyRegionMaterialize.hpp",
+      "line": 77,
+      "text": "if (!layerReady(i)) return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\execution_policy\\LazyRegionMaterialize.hpp",
+      "line": 222,
+      "text": "// ExecuteLayer: acquire → ensure → reacquire patched gen → run (stub)."
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LazyRegionMaterialize.hpp",
+      "line": 228,
+      "text": "if (!r.ok) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileIo.hpp",
+      "line": 61,
+      "text": "if (s.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileIo.hpp",
+      "line": 64,
+      "text": "if (end == s.c_str()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileIo.hpp",
+      "line": 73,
+      "text": "else return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 37,
+      "text": "if (!in) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 46,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 51,
+      "text": "if (!out) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 60,
+      "text": "if (!v.ok) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 146,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\LearnedProfileStore.hpp",
+      "line": 150,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\execution_policy\\P1_EXEC_TELEMETRY_INTEGRITY_001.cpp",
+      "line": 104,
+      "text": "// Placeholder PASS for MARS counters (wired in VRAMManager SnapshotLive)."
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PlacementPlan.cpp",
+      "line": 76,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PolicyApply.hpp",
+      "line": 140,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PromotionCausality.hpp",
+      "line": 106,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PromotionCausality.hpp",
+      "line": 107,
+      "text": "if (attr.realSpeedup <= 1.0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PromotionCausality.hpp",
+      "line": 109,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\PromotionCausality.hpp",
+      "line": 263,
+      "text": "if (d.action != PromotionAction::Promote) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 232,
+      "text": "if (!img.frozen) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 233,
+      "text": "if (img.stateHash != HashRealtimeState(img.state)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 235,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 237,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 282,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 287,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 293,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 299,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 305,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 312,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 453,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 457,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\RealtimeKernel.hpp",
+      "line": 461,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ReverseQuantPlan.hpp",
+      "line": 401,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\ReverseSpeedupSolver.hpp",
+      "line": 257,
+      "text": "if (measuredSpeedup + 1e-12 < minGain) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\Tunable.hpp",
+      "line": 51,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\Tunable.hpp",
+      "line": 55,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\execution_policy\\TunerSuggest.hpp",
+      "line": 84,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 82,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 136,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 146,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 168,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 182,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 191,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 263,
+      "text": "// For now, return false as we prefer Vulkan"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 266,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 357,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 360,
+      "text": "// Placeholder implementation"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 384,
+      "text": "// Placeholder: would dispatch actual GPU kernel"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\gpu\\Deep2GPUBackend.cpp",
+      "line": 412,
+      "text": "*result = 0.0f; // Placeholder"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\mars\\DualGPUBackend.cpp",
+      "line": 297,
+      "text": "// Execution Stubs (would call real GPU kernels)"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\MARSController.cpp",
+      "line": 79,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\MARSController.cpp",
+      "line": 85,
+      "text": "printf(\"[MARS] WARNING: Dual GPU backend init failed (CPU fallback)\\n\");"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\TensorHotpatch.cpp",
+      "line": 145,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\TensorHotpatch.cpp",
+      "line": 149,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\TensorHotpatch.cpp",
+      "line": 152,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\mars\\TensorHotpatch.cpp",
+      "line": 163,
+      "text": "// so this is a placeholder for full verification sweep"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMLease.hpp",
+      "line": 95,
+      "text": "if (from < 0 || to < 0 || from >= 2 || to >= 2) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMLease.hpp",
+      "line": 97,
+      "text": "if (!gpu[from].healthy || !gpu[to].healthy) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 122,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 151,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 157,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 171,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 207,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 215,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 220,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 432,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 438,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 531,
+      "text": "if (gpu < 0 || gpu >= 2) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\mars\\VRAMManager.cpp",
+      "line": 533,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 121,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 168,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 235,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 249,
+      "text": "// TODO: Actually load the model into Deep2Engine"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 307,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 364,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 377,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 397,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 500,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 508,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 516,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 584,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 625,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp",
+      "line": 689,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 84,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 93,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 156,
+      "text": "// TODO: Implement ROCm discovery"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 158,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 162,
+      "text": "// TODO: Implement CUDA discovery"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 164,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 245,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 259,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 286,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 348,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 455,
+      "text": "if (!info) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp",
+      "line": 461,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\MultiGPUScheduler.cpp",
+      "line": 48,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\MultiGPU\\MultiGPUScheduler.cpp",
+      "line": 55,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 3,
+      "text": "Non-fictional: encodes measured seals only. No stubs. No third-party deps."
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 110,
+      "text": "if (!path || !path[0]) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 112,
+      "text": "if (fopen_s(&f, path, \"rb\") != 0 || !f) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 120,
+      "text": "if (!path) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 122,
+      "text": "if (!dot) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 127,
+      "text": "if (!path || !needle) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 136,
+      "text": "if (!path || !path[0]) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 139,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 140,
+      "text": "if (NameHas(path, \"mmproj\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\nano\\RawrNanoAuthority.cpp",
+      "line": 162,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\production\\Deep2ProductionRuntime.cpp",
+      "line": 257,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\RawrXD-Sovereign-671B-Release-001\\src\\Deep2EngineExtensions.cpp",
+      "line": 41,
+      "text": "* UNCREATED METHOD STUB [1]: Async Host-to-Device Allocation Pull"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\RawrXD-Sovereign-671B-Release-001\\src\\Deep2EngineExtensions.cpp",
+      "line": 46,
+      "text": "return false; // Out of bounds security mitigation"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\RawrXD-Sovereign-671B-Release-001\\src\\Deep2EngineExtensions.cpp",
+      "line": 52,
+      "text": "return false; // I/O stall encountered: Circular buffer full"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\RawrXD-Sovereign-671B-Release-001\\src\\Deep2EngineExtensions.cpp",
+      "line": 62,
+      "text": "* UNCREATED METHOD STUB [2]: Inline Decryption Driver Loop"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 38,
+      "text": "if (ephemeralUsed_ >= 16) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 87,
+      "text": "if (!decision.regenerate) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 88,
+      "text": "if (canonicalBlob_.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 110,
+      "text": "if (!havePrivate_) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 111,
+      "text": "if (!Freeze(privateNext_)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 123,
+      "text": "if (!havePrivate_ || !privateNext_.frozen) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 140,
+      "text": "if (!SerializeAndHashProofTable()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 141,
+      "text": "if (!RegenerateCandidateImage(decision)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 143,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RegenerativeRuntime.hpp",
+      "line": 149,
+      "text": "if (canonicalBlob_.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RetainedProofSerialize.hpp",
+      "line": 86,
+      "text": "if (!EnvelopeMatch(t.tableEnvelope, current)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RetainedProofSerialize.hpp",
+      "line": 89,
+      "text": "if (!EnvelopeMatch(t.entries[i].envelope, current)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RetainedProofSerialize.hpp",
+      "line": 110,
+      "text": "if (blob.size() < 8) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RetainedProofTable.hpp",
+      "line": 40,
+      "text": "if (count >= kMax || !p.active) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RetainedProofTable.hpp",
+      "line": 67,
+      "text": "for (int i = 0; i < n; ++i) if (slots[i] != 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\regenerative\\RuntimeGenerator.hpp",
+      "line": 192,
+      "text": "if (img.derivedFromPatchHistory) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\numerical\\layer_compare.cpp",
+      "line": 38,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\k2_003a_q4k_decoder.cpp",
+      "line": 117,
+      "text": "if (!std::isfinite(buf[i])) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 50,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 73,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 107,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 111,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 131,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 146,
+      "text": "if (it == source.end()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\tests\\test_val_051_7_tensor_residency.cpp",
+      "line": 147,
+      "text": "if (bytes != it->second.bytes.size()) return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\time_reversal\\SustainedDrift.hpp",
+      "line": 46,
+      "text": "// Placeholders filled by caller with measured deltas; zero here"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\validation\\Deep2Validation.cpp",
+      "line": 514,
+      "text": "// Placeholder implementations for remaining gates - now with actual validation logic"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\validation\\Deep2Validation.cpp",
+      "line": 676,
+      "text": "if (!result.passed) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\validation\\Deep2Validation.cpp",
+      "line": 735,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaBlockMath.hpp",
+      "line": 34,
+      "text": "if (br.count == 0 || br.id != r.desc.id) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaBlockMath.hpp",
+      "line": 35,
+      "text": "if (br.first > r.numBlocks || br.count > r.numBlocks - br.first) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaBlockMath.hpp",
+      "line": 38,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaBlockMath.hpp",
+      "line": 41,
+      "text": "if (!CheckedAddU64(r.desc.fileOffset, byteOff, abs)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaBlockMath.hpp",
+      "line": 42,
+      "text": "if (byteOff + byteLen > r.desc.byteLength) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaDma.hpp",
+      "line": 30,
+      "text": "if (!host || !device || n == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 21,
+      "text": "if (!experts || nExperts == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 22,
+      "text": "if (gate.expertCount == 0 || gate.expertStrideBytes == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 24,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 28,
+      "text": "if (eid >= t.expertCount) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 29,
+      "text": "if (t.expertStrideBytes % t.blockBytes) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 33,
+      "text": "if (first + blocksPer > t.numBlocks) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaExpert.hpp",
+      "line": 40,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 36,
+      "text": "if (it == shards_.end()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 37,
+      "text": "if (off > it->second.size || n > it->second.size - off) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 53,
+      "text": "if (h == INVALID_HANDLE_VALUE) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 57,
+      "text": "(void)shard; (void)path; return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 68,
+      "text": "if (it == files_.end()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 74,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaPhysical.hpp",
+      "line": 77,
+      "text": "(void)shard; (void)off; (void)n; (void)dst; return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 9,
+      "text": "if (!EvictToMakeRoom(static_cast<size_t>(r.desc.byteLength), 0)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 11,
+      "text": "if (!p) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 20,
+      "text": "if (!EvictToMakeRoom(0, static_cast<size_t>(r.desc.byteLength))) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 22,
+      "text": "if (!p) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 31,
+      "text": "if (!be) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 34,
+      "text": "if (!r) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 37,
+      "text": "if (!EnsureHost(*r)) { r->state = VwaState::NotResident; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 43,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 48,
+      "text": "if (!EnsureDevice(*r)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 53,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 66,
+      "text": "if (!r) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 68,
+      "text": "if (!BlocksToPhysical(*r, ranges[i], pr)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 81,
+      "text": "if (!r) { ++stats_.prefetchMisses; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp",
+      "line": 90,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Lease.cpp",
+      "line": 14,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Lease.cpp",
+      "line": 17,
+      "text": "if (!r || !r->device) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Lease.cpp",
+      "line": 29,
+      "text": "if (!r || r->pins == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Lease.cpp",
+      "line": 37,
+      "text": "if (!r) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaScheduler_Lease.cpp",
+      "line": 45,
+      "text": "if (!r || r->pins > 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaSpace.hpp",
+      "line": 18,
+      "text": "if (!desc.addressed || desc.byteLength == 0 || desc.id == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\vwa\\VwaSpace.hpp",
+      "line": 25,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 92,
+      "text": "if (len < 12) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 99,
+      "text": "if (len < 5) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 105,
+      "text": "if (len < 5) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 111,
+      "text": "if (len < 20) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 119,
+      "text": "if (len < 2) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 125,
+      "text": "if (len < 14) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 306,
+      "text": "if (evIt == evidenceLog.end()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 315,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\AntiPatcher.cpp",
+      "line": 379,
+      "text": "if (monitoring.exchange(true)) return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\asm_stubs.cpp",
+      "line": 2,
+      "text": "// asm_stubs.cpp — Real implementations for inference kernels (was stubs)"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\asm_stubs.cpp",
+      "line": 62,
+      "text": "(void)input; // GEMV uses weights directly; this is a dequant stub"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\BottleTTL.cpp",
+      "line": 121,
+      "text": "if (it == lifetimes.end()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\BottleTTL.cpp",
+      "line": 125,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\BottleTTL.cpp",
+      "line": 130,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\BP16Extractor.cpp",
+      "line": 2,
+      "text": "// BP16Extractor.cpp — Stub implementation"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\BP16Extractor.cpp",
+      "line": 9,
+      "text": "// Stub: BP16Extractor is referenced by CMake but not yet implemented."
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\BP16Streamer.cpp",
+      "line": 2,
+      "text": "// BP16Streamer.cpp — Stub implementation"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\BP16Streamer.cpp",
+      "line": 45,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\BP16Streamer.hpp",
+      "line": 2,
+      "text": "// BP16Streamer.hpp — Stub header for BP16 weight streaming"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CanonicalTokenizer.hpp",
+      "line": 30,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CanonicalTokenizer.hpp",
+      "line": 36,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Chamber.cpp",
+      "line": 49,
+      "text": "if (!weights || count == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Chamber.cpp",
+      "line": 120,
+      "text": "if (!routes || count == 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Chamber.cpp",
+      "line": 124,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.cpp",
+      "line": 213,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.cpp",
+      "line": 625,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.cpp",
+      "line": 636,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.cpp",
+      "line": 657,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.cpp",
+      "line": 667,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\ChatTemplate.hpp",
+      "line": 158,
+      "text": "// callback receives each token as it's generated; return false to stop"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\ChatTemplate.hpp",
+      "line": 287,
+      "text": "// Last resort: replace {{system}} / {{user}} / {{prompt}} placeholders."
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CompressedKVCache.cpp",
+      "line": 53,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CycloneScheduler.cpp",
+      "line": 304,
+      "text": "if (!elastic_) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CycloneScheduler.cpp",
+      "line": 317,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\CycloneScheduler.cpp",
+      "line": 562,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 59,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 63,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 67,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 78,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 82,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 86,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 91,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 105,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 110,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_attn_cert.cpp",
+      "line": 117,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_cert_main.cpp",
+      "line": 23,
+      "text": "if (x[i] != lo || x[i + 16] != hi) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_cert_main.cpp",
+      "line": 59,
+      "text": "if (out[h * D + d] != base + float(d)) return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Forward_Test.cpp",
+      "line": 20,
+      "text": "// Stub ResidencyTrace C interface (no ASM dependency)"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Elastic_GEMV_Test.cpp",
+      "line": 21,
+      "text": "// Stub ResidencyTrace C interface (no ASM dependency)"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Elastic_GEMV_Test.cpp",
+      "line": 183,
+      "text": "// the raw compressedData (memcpy'd from mmap), not the zero-filled stub"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Generation_Test.cpp",
+      "line": 22,
+      "text": "// Stub ResidencyTrace C interface (no ASM dependency)"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 36,
+      "text": "// Stub ResidencyTrace C interface (no ASM dependency)"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 239,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".attn_norm.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 240,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".attn_q.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 241,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".attn_k.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 242,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".attn_v.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 243,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".attn_output.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 246,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".ffn_norm.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 247,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".ffn_gate.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 248,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".ffn_up.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 249,
+      "text": "if (!acquire(\"blk.\" + std::to_string(layer) + \".ffn_down.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 267,
+      "text": "if (!acquire(\"token_embd.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 268,
+      "text": "if (!acquire(\"output.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Elastic_Integration_Test.cpp",
+      "line": 269,
+      "text": "if (!acquire(\"norm.weight\")) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_end_to_end_bench.cpp",
+      "line": 150,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_end_to_end_bench.cpp",
+      "line": 180,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_end_to_end_bench.cpp",
+      "line": 187,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 85,
+      "text": "if (!hSession) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 96,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 106,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 114,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 129,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Gateway_Runtime_Certification.cpp",
+      "line": 136,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_giant_moe_paragraph_perf_cert.cpp",
+      "line": 72,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_forward_ops_cert.cpp",
+      "line": 40,
+      "text": "if (!std::isfinite(x[i])) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_forward_ops_cert.cpp",
+      "line": 45,
+      "text": "if (!engine.loadModel(model)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_forward_ops_cert.cpp",
+      "line": 53,
+      "text": "if (!engine.initialize(cfg)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_numeric_parity_cert.cpp",
+      "line": 28,
+      "text": "if (!e.loadModel(model)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_packed_forward_cert.cpp",
+      "line": 36,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_q4k_gemv_cert.cpp",
+      "line": 31,
+      "text": "if (!vc || mw.layers.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_q4k_gemv_cert.cpp",
+      "line": 34,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_q4k_gemv_cert.cpp",
+      "line": 36,
+      "text": "if (!deq) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_q4k_gemv_cert.cpp",
+      "line": 48,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_quant_family_cert.cpp",
+      "line": 126,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_transfer_overlap_cert.cpp",
+      "line": 73,
+      "text": "a.fallback = c.hostForwardLayerCalls; a.f32 = c.cpuF32Expands;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_prefetch_cert.cpp",
+      "line": 42,
+      "text": "if (!vc || engine.getModelWeights().layers.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_prefetch_cert.cpp",
+      "line": 45,
+      "text": "if (!deq) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_prefetch_cert.cpp",
+      "line": 56,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_window_cert.cpp",
+      "line": 46,
+      "text": "if (!vc) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_window_cert.cpp",
+      "line": 48,
+      "text": "if (mw.layers.empty() || !mw.layers[0].wq.data) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_window_cert.cpp",
+      "line": 51,
+      "text": "if (!deq) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_gpu_weight_window_cert.cpp",
+      "line": 63,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp",
+      "line": 28,
+      "text": "if (!opt) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp",
+      "line": 34,
+      "text": "if (!f) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp",
+      "line": 41,
+      "text": "if (ref.nDims < 2 || ref.shape.size() < 2) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp",
+      "line": 45,
+      "text": "if (!r || !c || (c % 256) != 0) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp",
+      "line": 50,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_gpu_stream_mla_cert.cpp",
+      "line": 2,
+      "text": "// Live MLA Q4_K GEMV via DispatchGEMVPacked; CPU fallback parity."
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_logits_vwa_lineage_001.cpp",
+      "line": 39,
+      "text": "if (h == INVALID_HANDLE_VALUE) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_logits_vwa_lineage_001.cpp",
+      "line": 42,
+      "text": "CloseHandle(h); return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_k2_logits_vwa_lineage_001.cpp",
+      "line": 50,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 2,
+      "text": "// deep2_link_stubs.cpp — Honest stubs for symbols NOT provided by real TUs"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 15,
+      "text": "// VulkanCompute stubs"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 18,
+      "text": "bool VulkanCompute::Initialize() { return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 19,
+      "text": "bool VulkanCompute::InitializeSolo(const char*) { return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 21,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 23,
+      "text": "bool VulkanCompute::FlushAsyncCommands() { return false; }"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 27,
+      "text": "// OllamaBlobParser stub"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 39,
+      "text": "bool OllamaBlobParser::extractGGUFToFile(const std::string&, unsigned __int64, unsigned __int64, const std::string&) { return false; }"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 42,
+      "text": "// ASM kernel stubs for symbols not provided by linked .obj files"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 48,
+      "text": "// Note: RegisterIQKernels is provided by asm_stubs.obj"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_link_stubs.cpp",
+      "line": 51,
+      "text": "// HotPatcher dependency stubs"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_local_agent_audit_001.cpp",
+      "line": 39,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_local_agent_audit_001.cpp",
+      "line": 46,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_local_agent_audit_001.cpp",
+      "line": 52,
+      "text": "if (!needle || !*needle) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_nu_gemv_parity_cert.cpp",
+      "line": 54,
+      "text": "if (!packer.initialize(cfg)) { okOut = false; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_nu_gpu_gemv_cert.cpp",
+      "line": 48,
+      "text": "if (!packer.initialize(cfg)) { okOut = false; return false; }"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_nu_pack_format_cert.cpp",
+      "line": 41,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_openai_server.cpp",
+      "line": 349,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_openai_server.cpp",
+      "line": 642,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_openai_server.cpp",
+      "line": 649,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_openai_server.cpp",
+      "line": 667,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_openai_server.cpp",
+      "line": 675,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\deep2_outer_engine_bridge_cert.cpp",
+      "line": 55,
+      "text": "fprintf(f, \"REAL_ENGINE_ENTRY=1\\nTEST_STUB_GENERATE=0\\n\");"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2_Phase0_SmokeTest.cpp",
+      "line": 598,
+      "text": "printf(\"    [WARN] GPU Backend (CPU fallback)\\n\");"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2_Real_GGUF_Residency_Test.cpp",
+      "line": 21,
+      "text": "// Stub ResidencyTrace C interface (no ASM dependency)"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 41,
+      "text": "if (!e.loadModel(kModel)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 110,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 131,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 156,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 175,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 195,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 217,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 260,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 325,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 356,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch1_cert.cpp",
+      "line": 388,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 38,
+      "text": "if (!e.loadModel(kModel)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 80,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 109,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 129,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 165,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 178,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 188,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 204,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch2_cert.cpp",
+      "line": 253,
+      "text": "if (fopen_s(&f, p.c_str(), \"rb\") != 0 || !f) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_runtime_batch3_cert.cpp",
+      "line": 17,
+      "text": "if (fopen_s(&f, p.c_str(), \"rb\") != 0 || !f) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 60,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 64,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 79,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 84,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 88,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 124,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 136,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ssm_cert.cpp",
+      "line": 148,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_streamer_cert.cpp",
+      "line": 87,
+      "text": "if (promptTokens.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_streamer_cert.cpp",
+      "line": 100,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_topology_portability_cert.cpp",
+      "line": 43,
+      "text": "if (!hay || !needle || !*needle) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_topology_portability_cert.cpp",
+      "line": 55,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_topology_portability_cert.cpp",
+      "line": 72,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ucf_gpu_ready_e2e.cpp",
+      "line": 77,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ucf_gpu_ready_e2e.cpp",
+      "line": 97,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\deep2_ucf_no_stale_dispatch_001.cpp",
+      "line": 159,
+      "text": "if (r->device == kHost) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer_Complete.cpp",
+      "line": 87,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer_Complete.cpp",
+      "line": 94,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer_Complete.cpp",
+      "line": 109,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer_Complete.cpp",
+      "line": 116,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2APIServer_Complete.cpp",
+      "line": 670,
+      "text": "printf(\"Warning: Engine initialization failed, running in stub mode\\n\");"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 35,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 42,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 58,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 65,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 440,
+      "text": "j[\"status\"] = \"not_implemented\";"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 446,
+      "text": "j[\"status\"] = \"not_implemented\";"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2APIServer.cpp",
+      "line": 452,
+      "text": "j[\"status\"] = \"not_implemented\";"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 99,
+      "text": "if (PdhOpenQuery(nullptr, 0, &gpuQuery) != ERROR_SUCCESS) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 106,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 178,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 267,
+      "text": "if (!pImpl->engine->initialize(config)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 269,
+      "text": "if (!pImpl->engine->openK2ShardDirectory(shardDir)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 276,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 292,
+      "text": "if (!pImpl->engine->loadModel(modelPath)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 375,
+      "text": "if (!onEmit()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Benchmark.cpp",
+      "line": 379,
+      "text": "return false;"
+    },
+    {
+      "kind": "source-lead",
+      "path": "src\\deep2\\Deep2BenchmarkHarness.hpp",
+      "line": 40,
+      "text": "m_Results.push_back({currentTps, duration.count(), 0}); // VRAM tracking placeholder"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 46,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 75,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 106,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 114,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 123,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 128,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 148,
+      "text": "if (!m_modelLoaded || m_generating) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 160,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 178,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 200,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 209,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 223,
+      "text": "if (!m_generating) return false; // cancelled"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 264,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 268,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 272,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 278,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 282,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 301,
+      "text": "if (!m_generating) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 332,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 358,
+      "text": "if (!out) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 365,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 378,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 385,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Bridge.cpp",
+      "line": 389,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DetokenUtf8.hpp",
+      "line": 15,
+      "text": "else return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DetokenUtf8.hpp",
+      "line": 16,
+      "text": "if (i + need >= n) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DetokenUtf8.hpp",
+      "line": 18,
+      "text": "if ((p[i + k] & 0xC0) != 0x80) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 18,
+      "text": "if (!s || !n || !*n) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 31,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 88,
+      "text": "if (!p || !*p) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 129,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 175,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 191,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 201,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 239,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 286,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 327,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DeviceManager.cpp",
+      "line": 355,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 124,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 145,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 368,
+      "text": "if (!connected_) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 375,
+      "text": "if (response.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 381,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 386,
+      "text": "if (!connected_) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 389,
+      "text": "if (response.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Discovery.cpp",
+      "line": 395,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DualChannelMultiplier.hpp",
+      "line": 21,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2DualChannelMultiplier.hpp",
+      "line": 26,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 44,
+      "text": "if (!wt.data || !wt.sizeBytes) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 91,
+      "text": "if (!vc) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 107,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 127,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 154,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 162,
+      "text": "if (!vulkanInitialized_ || vulkanDevices_.empty()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 163,
+      "text": "if (layer >= modelWeights.layers.size()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 164,
+      "text": "if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, (int)slot)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 166,
+      "text": "if (!vc || !ensureGpuForwardArena(slot)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 185,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 208,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 215,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 262,
+      "text": "if (!vc->DownloadBuf(in, xin.data(), cols)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 277,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 284,
+      "text": "if (!vc->DownloadBuf(in, xin.data(), cols)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 305,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 309,
+      "text": "if (!vc->FlushWeightComputes()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 311,
+      "text": "if (!vc->PrefetchWeight(wt.data, wt.sizeBytes, sl)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 320,
+      "text": "if (pd && pd[0] == '1') return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 323,
+      "text": "if (!w) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 326,
+      "text": "if (!vc->FlushWeightComputes()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 328,
+      "text": "if (!vc->PrefetchWeight(w, (size_t)rows * cols * 4, sl)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 364,
+      "text": "if (!vc->FlushWeightComputes()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 366,
+      "text": "if (!vc->PrefetchWeight(wa.data, wa.sizeBytes, sa)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 368,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 369,
+      "text": "if (!vc->PrefetchWeight(wb.data, wb.sizeBytes, sb)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 370,
+      "text": "if (!vc->WaitWeightCompute(sa)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 372,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 373,
+      "text": "if (!vc->PrefetchWeight(wc.data, wc.sizeBytes, sc)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 374,
+      "text": "if (!vc->WaitWeightCompute(sb)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 376,
+      "text": "return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 379,
+      "text": "if (!vc->FlushWeightComputes()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 382,
+      "text": "if (!fwa || !vc->PrefetchWeight(fwa, (size_t)rA * cols * 4, sa)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 383,
+      "text": "if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 386,
+      "text": "if (!fwb || !vc->PrefetchWeight(fwb, (size_t)rB * cols * 4, sb)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 387,
+      "text": "if (!vc->WaitWeightCompute(sa)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 388,
+      "text": "if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 391,
+      "text": "if (!fwc || !vc->PrefetchWeight(fwc, (size_t)rC * cols * 4, sc)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 392,
+      "text": "if (!vc->WaitWeightCompute(sb)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 393,
+      "text": "if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols)) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 486,
+      "text": "if (fuse && !vc->EndFusedLayer()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 489,
+      "text": "if (!vc->FlushWeightComputes()) return false;"
+    },
+    {
+      "kind": "execution-lead",
+      "path": "src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "line": 526,
+      "text": "if (!vc || !ensureGpuForwardArena(slot)) return false;"
+    }
+  ],
+  "certification": "NOT_CERTIFIED",
+  "policy": "Connectivity and component checks never imply FULL_MODEL_CERTIFIED"
+}

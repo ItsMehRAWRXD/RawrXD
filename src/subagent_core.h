@@ -188,6 +188,9 @@ public:
                                    SwarmCompleteCallback onComplete);
     std::vector<SwarmTask> getSwarmTasks(const std::string& swarmId) const;
     float getSwarmProgress(const std::string& swarmId) const;
+    /// Last executeSwarm id (empty if never run). Peak = measured active overlap.
+    std::string getLastSwarmId() const;
+    int getSwarmPeakParallel(const std::string& swarmId) const;
 
     // ---- Todo List Management ----
     void setTodoList(const std::vector<TodoItem>& items);
@@ -272,11 +275,13 @@ private:
         SwarmConfig config;
         SwarmCompleteCallback onComplete;
         std::atomic<int> completedCount{0};
+        std::atomic<int> peakRunning{0}; // measured max concurrent workers
         std::atomic<bool> cancelled{false};
         std::string mergedResult;
     };
     std::unordered_map<std::string, std::shared_ptr<SwarmState>> m_swarms;
     mutable std::mutex m_swarmMutex;
+    std::string m_lastSwarmId;
 
     std::vector<TodoItem> m_todoList;
     mutable std::mutex m_todoMutex;

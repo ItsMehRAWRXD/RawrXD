@@ -1,0 +1,13 @@
+side=deep2
+stage=Q_POST_ROPE_0
+pos=18
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=d15df8f84ef1f422
+l2=66.69852725342156
+seq=870
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_Q_POST_ROPE_0_pos18_layer0_full_n3072_seq870.bin

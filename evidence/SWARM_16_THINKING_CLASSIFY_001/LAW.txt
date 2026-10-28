@@ -1,0 +1,69 @@
+SWARM_16_THINKING_CLASSIFY_001 / LAW
+====================================
+ASOF_UTC=2026-10-28T10:28:55Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+PRESERVE=SWARM_16_SMALL_HI_AUDIT_001 (untouched)
+PRESERVE=SWARM_16_SMALL_HI_AUDIT_002 (untouched)
+NO_TIP_REBUILD=1
+
+MISSION (P1 — thinking-aware response classification)
+-----------------------------------------------------
+User assessment: thinking-only (e.g. qwen3:8b) with empty response /
+done_reason=length must NOT count as final-answer PASS.
+
+Future harness MUST emit:
+  thinking_tokens
+  response_tokens
+  done_reason
+  usable_final_answer
+
+PASS requires usable_final_answer=1 (non-empty trimmed response=).
+THINKING_ONLY / EMPTY / HTTP_400 != invent PASS.
+
+CLASSIFICATION CONTRACT
+-----------------------
+FINAL_ANSWER     : response non-empty → usable_final_answer=1 → eligible PASS
+THINKING_ONLY    : thinking non-empty AND response empty → FAIL
+                   err=EMPTY_RESPONSE_THINKING_ONLY_LENGTH if done_reason=length
+EMPTY            : both empty → FAIL EMPTY_RESPONSE
+HTTP_400 / HTTP_OR_TRANSPORT → FAIL
+
+001/002 note: 001 recorded qwen3:8b as EMPTY_RESPONSE without thinking fields;
+probe_qwen3.json already showed response="" thinking!=null done_reason=length.
+002 avoided those slots via think=false + exclusion. This pack seals the
+explicit classify contract without rewriting 001/002 PASS seals.
+
+HARNESS
+-------
+PATH=evidence/SWARM_16_THINKING_CLASSIFY_001/harness_ollama_thinking_classify_v3.ps1
+API=GET /api/tags + POST /api/generate (127.0.0.1:11434)
+OUTPUT=RESULTS.csv CLASSIFY.csv SUMMARY.txt RUNLOG.txt probes/*.json
+DEMO_TAG=qwen3:8b (known thinking-heavy from 001)
+
+RUNTIME (this seal)
+-------------------
+TAGS_REACHABLE=1
+N=1 (demo classify; not full swarm re-audit)
+DEMO=qwen3:8b think=true num_predict=48
+CLASSIFY=THINKING_ONLY status=FAIL usable_final_answer=0
+thinking_tokens=48 response_tokens=0 done_reason=length
+err=EMPTY_RESPONSE_THINKING_ONLY_LENGTH
+CLASSIFY_PASS=0 CLASSIFY_FAIL=1 THINKING_ONLY=1
+RUNTIME_REACHED=1 (Ollama classify harness only)
+TIP_EXE_RUNTIME=NOT_RUN
+
+MATRIX
+------
+WIN32IDE_CLOSURE_MATRIX_001 G07 harness note: additive classify contract
+  SWARM_16_THINKING_CLASSIFY_001 (001/002 seals preserved; G07 still not MET)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+thinking-only != final-answer PASS
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

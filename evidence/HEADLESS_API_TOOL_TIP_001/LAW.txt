@@ -1,0 +1,69 @@
+HEADLESS_API_TOOL_TIP_001 / LAW
+================================
+ASOF_UTC=2026-10-28T11:02:18Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+NO_REBUILD=1
+LOCAL_ONLY=1
+P0=G16
+MATRIX=WIN32IDE_CLOSURE_MATRIX_001
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+Prior HEADLESS_TOOL_ROUTES_001 / G3_HEADLESS_API_TOOL_* seals = HISTORICAL_SHA_ONLY vs tip
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1 (pre + post + final; no rebuild)
+
+CMD (authorized local E2E)
+--------------------------
+RawrXD-Win32IDE.exe --headless --local --port <N> --bind 127.0.0.1 --dir G:\~dev\rawrxd
+ENV RAWRXD_HOSTED_API_KEY=<ephemeral>  (runtime auth; not rebuild)
+ENV RAWRXD_HOSTED_API_SCOPES=read,inference,models,github,admin
+
+G16 CRITERIA (Closure_Matrix)
+-----------------------------
+1) Local-only bind enforced
+2) E2E authorized /api/tool call
+3) Denied remote / non-local (Origin)
+
+LIVE RESULTS (tip)
+------------------
+BARE (no RAWRXD_HOSTED_API_KEY):
+  POST /api/tool → HTTP 503 {"error":"authentication_not_configured"}
+  cite logs/bare_nokey.txt  (fail-closed; not invent PASS)
+
+AUTHORIZED (key set; Bearer / X-Api-Key):
+  POS read_motd → HTTP 200 (PassiveRoleNotRoleplay content)
+  POS list_directory evidence → HTTP 200 (entries JSON)
+  POS Origin http://127.0.0.1:<port> list → HTTP 200
+  NEG Origin https://evil.example → HTTP 403 {"error":"origin_denied"}
+  NEG Origin null → HTTP 403 {"error":"origin_denied"}
+  NEG no Authorization/key (key configured) → HTTP 401 {"error":"unauthorized"}
+  NEG pre-MOTD list (round1) → HTTP 403
+  execute_command → HTTP 500 (NOT claimed PASS; shell grant path residual)
+
+DISPOSITION
+-----------
+G16=MET on tip 6832F439… (authorized local POS + origin_denied NEG)
+BARE_503=documented fail-closed (auth not configured) ≠ invent PASS
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+PRIOR seals remain HISTORICAL
+
+CROSS_CITE
+----------
+WIN32IDE_BINARY_PROVENANCE_003 (tip SHA)
+WIN32IDE_CLOSURE_MATRIX_001 G16
+HEADLESS_TOOL_ROUTES_001 HISTORICAL
+G3_HEADLESS_API_TOOL_UNSTUB_001 / UNBLOCK_001 HISTORICAL_SHA_ONLY
+SWARM_TIP_16_HI_AUDIT_001 tip /api/tool 503 without key (consistent)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

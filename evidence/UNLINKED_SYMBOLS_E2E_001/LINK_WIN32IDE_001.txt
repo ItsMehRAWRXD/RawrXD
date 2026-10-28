@@ -1,0 +1,85 @@
+UNLINKED_SYMBOLS_E2E_001 / LINK_WIN32IDE_001
+============================================
+WORKSPACE=G:\~dev\rawrxd
+BUILD_DIR=G:\~dev\rawrxd\build_win32ide_link001
+TARGET=RawrXD-Win32IDE
+DATE=2026-10-28
+LOCAL_ONLY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+LINK=FAIL
+
+VERIFY_OVERLAY_FIXES (pre-build, on disk)
+----------------------------------------
+AnnotationOverlay.cpp IsAgentBridgeHealthy → local m_agentBridgeReady (NOT Win32IDE member) OK
+tooltip / hit / paint paths use item.screenRect (not item.rect) OK
+AnnotationOverlay.h declares RECT screenRect + bool m_agentBridgeReady OK
+AnnotationOverlay.cpp.obj built in pass1 [59/656] with no C2039
+
+BUILD_COMMANDS
+--------------
+# Pass 1 — default ninja parallelism (hit C1060 heap)
+cmake --build "G:\~dev\rawrxd\build_win32ide_link001" --target RawrXD-Win32IDE --config Release
+EXIT_CODE=2
+LOG=evidence/UNLINKED_SYMBOLS_E2E_001/_link_win32ide_001_build.log
+C_ERRORS=fatal error C1060 compiler out of heap space (CapabilityBus, TerminalOwnership, workspace_reasoning_profiles, Deep2LocalServer; parallel cl.exe)
+LNK_ERRORS=NOT_REACHED (compile aborted)
+ANNOTATION_OVERLAY=COMPILE_OK
+
+# Pass 2 — reduced parallelism to clear C1060 and reach link
+cmake --build "G:\~dev\rawrxd\build_win32ide_link001" --target RawrXD-Win32IDE --config Release -j 2
+EXIT_CODE=-1
+  # PowerShell Tee-Object pipeline LASTEXITCODE; underlying link.exe reported exit 1120
+LINK_EXIT=1120
+NINJA=subcommand failed
+LOG=evidence/UNLINKED_SYMBOLS_E2E_001/_link_win32ide_001_build_j2.log
+EXE_EXISTS=0
+COMPILE=OK (remaining objs + ASM; AnnotationOverlay not recompiled = already OK)
+LINK=FAIL
+
+LNK / C SUMMARY (pass 2 — authoritative for LINK=)
+--------------------------------------------------
+C2039=0
+C1060=0 (pass2 -j2)
+LNK4006=1 warning (SkipValue: r25_productopen_masm.asm.obj vs MASMKernelStubs.cpp.obj; /FORCE:MULTIPLE ignored second)
+LNK2001 unresolved unique symbols = 10 (LNK1120)
+LNK2005=0 (no omit action taken this run)
+
+UNRESOLVED (LNK2001) — unique
+-----------------------------
+1. handleAIStopGeneration(CommandContext const &)
+   owner_on_disk=src/core/command_handlers_comprehensive.cpp
+   in_Win32IDE_obj_dir=NO (only rawrengine_command_handlers.cpp.obj present)
+2-6. RawrXD::SettingsManager::{Instance,Initialize,Shutdown,GetWindowState,SetWindowState}
+   owner_on_disk=src/settings/settings_manager.cpp
+   in_Win32IDE_obj_dir=NO
+7-9. ModelConversionDialog::{ctor,dtor,showModal}
+   owner_on_disk=src/gui/ModelConversionDialog.cpp
+   in_Win32IDE_obj_dir=NO
+10. CRDTBuffer::CRDTBuffer(void)
+   owner_tu_listed=src/collab/crdt_buffer.cpp (obj LINKED)
+   gap=TU implements methods only; default ctor body missing vs Win32IDE_Collab.cpp demand
+   Full Source/src/collab/crdt_buffer.cpp has ctor — product TU incomplete
+
+CMAKE_OMIT_OWNERSHIP
+--------------------
+No cheap C2039/LNK2005 omit applied this run (none observed at link).
+Remaining gaps are LNK2001 missing-definition / incomplete-TU — require INCLUDE or small ctor body, not omit.
+No MagBuf/CMake reopen. No F: tree. No Camellia XOR rewrite. No PROMOTE flip.
+
+NEXT_GAPS (not PASS)
+--------------------
+G1. Wire/include command_handlers_comprehensive.cpp into RawrXD-Win32IDE OR provide sole handleAIStopGeneration owner
+G2. Wire/include src/settings/settings_manager.cpp into RawrXD-Win32IDE
+G3. Wire/include src/gui/ModelConversionDialog.cpp into RawrXD-Win32IDE
+G4. Add CRDTBuffer::CRDTBuffer() to src/collab/crdt_buffer.cpp (obj already linked)
+G5. Optional: resolve LNK4006 SkipValue ownership (MASMKernelStubs vs InferenceEngine r25) — warning only under /FORCE:MULTIPLE
+G6. Prefer -j2 (or -j1) on this host to avoid C1060 during full rebuilds
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+LINK=FAIL · CERTIFIED=0 · PROMOTE=0 · TIP_CLIMB=HOLD

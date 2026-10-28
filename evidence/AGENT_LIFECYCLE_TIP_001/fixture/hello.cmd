@@ -1,0 +1,2 @@
+@echo fixture_ok
+

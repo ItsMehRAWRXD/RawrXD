@@ -1,0 +1,95 @@
+﻿ M CMakeLists.txt
+ M backend/server.js
+ M evidence/RAWRXD_MODEL_MANIFESTS/llama3.2-3b-Q2_K.gguf.514c00e0.1dcb4f40fcb8f4a.rmanifest.jsonl
+ M gui/ide_chatbot_engine.js
+ M gui/ide_chatbot_standalone.html
+ M include/vulkan_compute.h
+ M src/core/update_signature.cpp
+ M src/deep2/ChatTemplate.hpp
+ M src/deep2/Deep2Benchmark.cpp
+ M src/deep2/Deep2Benchmark.h
+ M src/deep2/Deep2Engine.h
+ M src/deep2/deep2_benchmark_main.cpp
+ M src/marketplace/extension_package_local.cpp
+ M src/subagent_core.cpp
+ M src/subagent_core.h
+ M src/vulkan_compute.cpp
+ M src/win32app/HeadlessIDE.cpp
+ M src/win32app/HeadlessIDE_FileAliases.cpp
+ M src/win32app/HeadlessIDE_ToolRoutes.cpp
+ M src/win32app/Win32IDE.cpp
+ M src/win32app/Win32IDE.h
+ M src/win32app/Win32IDE_AgenticBridge.cpp
+ M src/win32app/Win32IDE_LocalServer.cpp
+ M src/win32app/Win32IDE_NetworkPanel.cpp
+ M src/win32app/Win32IDE_PowerShellPanel.cpp
+ M test_simple.asm
+ M tools/rawrxd_source_consolidation_inventory.ps1
+?? RAWR_AGENT_NATIVE_COMPILE_E2E_002.ps1
+?? RAWR_AGENT_NATIVE_COMPILE_E2E_002_RECEIPT.txt
+?? RAWR_NATIVE_AGENT_BUILD_001.ps1
+?? RAWR_NATIVE_AGENT_BUILD_001_RECEIPT.txt
+?? _incoming_completion_121_150_20261023/
+?? _incoming_completion_331_360_20261023/
+?? _incoming_completion_361_390_20261023/
+?? _incoming_runtime_391_420_20261024/
+?? cert_driver.cpp
+?? cert_driver2.cpp
+?? evidence/IDE_AGENTIC_PATH_001/
+?? evidence/IDE_SECURITY_BOUNDARY_001/
+?? evidence/RAWRXD_MODEL_MANIFESTS/library__llama3.2__3b.gguf.785d40e0.1dd34ff22bceb27.rmanifest.jsonl
+?? evidence/RAWRXD_NATIVE_IDE_100_20261024/runtime_probe.json
+?? evidence/RAWRXD_NATIVE_IDE_100_20261024/runtime_probe_async.json
+?? evidence/RAWRXD_RUNTIME_EVIDENCE_013_partial.json
+?? evidence/RAWRXD_RUNTIME_EVIDENCE_013_synthetic.json
+?? evidence/RAWRXD_RUNTIME_EVIDENCE_014_partial.json
+?? evidence/RAWRXD_RUNTIME_EVIDENCE_014_synthetic.json
+?? evidence/RAWRXD_SELF_MANIFEST_20261023_031446.json
+?? evidence/RAWRXD_SELF_MANIFEST_20261023_031518.json
+?? evidence/RAWRXD_SOURCE_CONSOLIDATION_20261024/
+?? evidence/deep2_cpu_parity_control.log.err
+?? evidence/deep2_first_parity_cpu020.log.err
+?? evidence/deep2_first_parity_gpu020.log.err
+?? evidence/deep2_gpu_ffn_fix_2tok.log.err
+?? evidence/deep2_gpu_ffn_fix_8tok.log.err
+?? evidence/deep2_gpu_ffn_trace_2tok.log.err
+?? evidence/deep2_llama_cpu_nodouble.log.err
+?? evidence/deep2_llama_cpu_trace.log.err
+?? evidence/deep2_llama_gpu_arena4096.log.err
+?? evidence/deep2_llama_gpu_budget4g.log.err
+?? evidence/deep2_llama_gpu_diag.log.err
+?? evidence/deep2_llama_gpu_diag2.log.err
+?? evidence/deep2_llama_gpu_nodouble.log.err
+?? evidence/deep2_native_server_11436.log.err
+?? evidence/deep2_native_server_11436_v2.log.err
+?? evidence/deep2_parity_cpu019.log.err
+?? evidence/deep2_parity_gpu019.log.err
+?? evidence/deep2_production_live.log.err
+?? evidence/deep2_server_19036.log.err
+?? evidence/deep2_tinyllama_cpu2.log.err
+?? evidence/deep2_tinyllama_cpu3.log.err
+?? evidence/deep2_tinyllama_live.log.err
+?? evidence/deep2_tinyllama_templatefix.log.err
+?? evidence/deep2_tinyllama_trace.log.err
+?? evidence/parity_cpu_dump/
+?? evidence/parity_gpu_dump/
+?? evidence/qt_codex_ghost_migration_audit_20261023.md
+?? evidence/tmpinv/
+?? gui/ide_chatbot.html.preclean-20261022
+?? masm_driver.cpp
+?? src/voxel/
+?? src/win32app/AgentHttp.cpp
+?? src/win32app/AgentProduct.hpp
+?? src/win32app/AgentRunLoop.cpp
+?? src/win32app/AgentToolExec.cpp
+?? src/win32app/AgentToolParse.cpp
+?? src/win32app/AgentToolShell.cpp
+?? src/win32app/IdeAuthBoundary.hpp
+?? src/win32app/IdeAuthBoundary_test.cpp
+?? src/win32app/IdeAuthDecide.cpp
+?? src/win32app/IdeAuthPath.cpp
+?? src/win32app/IdeAuthSession.cpp
+?? src/win32app/IdeAuthTrust.cpp
+?? test_exit42.asm
+?? tests/gateway_route_matrix.test.js
+?? tools/RawrXD-SelfManifest.ps1

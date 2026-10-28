@@ -1,0 +1,81 @@
+WATCHDOG_ASM_BIND_001 / LAW
+===========================
+ASOF_UTC=2026-10-28T08:30:00Z
+WORKSPACE=G:\~dev\rawrxd
+PARALLEL_TO=CAMELLIA_AUTH_ASM_BIND_001
+PRIOR_NOTE=WATCHDOG_HMAC_PRODUCT_001 (MagBuf CRC CLEARED_JOIN; HMAC RUNTIME NOT_RUN)
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Restore product src/asm/RawrXD_Watchdog.asm from Full Source (was END-only stub).
+CMake assemble-from-source like Auth (skip tiny stub prebuilts ~816B).
+Object smoke ml64 + dumpbin HMAC-related exports. No forced Win32IDE relink.
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+OBJECT_SMOKE != LINK_SMOKE != RUNTIME_HMAC_PASS
+BIND_OBJECT != PROMOTE
+MagBuf CRC CLEARED_JOIN (B04) != HMAC product RUNTIME PASS
+Do not invent PASS. Do not alter sealed LIVE_TETRAD / POST_CAMELLIA EXE SHA.
+
+SOURCE
+------
+STUB_WAS=src/asm/RawrXD_Watchdog.asm END-only (5B source; linked obj ~816B)
+FULL_SOURCE=Full Source\src\asm\RawrXD_Watchdog.asm (.text HMAC-SHA256)
+RESTORED=src/asm/RawrXD_Watchdog.asm
+WATCHDOG_ASM_SRC_SHA256=A75DF2ADC748748CBD675F2FEE09DF75E805E62E32CBB0C3002A70A0DA76A704
+WATCHDOG_ASM_SRC_SIZE=25271
+
+CMAKE
+-----
+RAWRXD_PREBUILT_GENESIS_DIR/RawrXD_Watchdog.obj prefer path REMOVED.
+Always assemble ASM_WATCHDOG_OBJ from ASM_WATCHDOG_SRC (Auth-parallel).
+STATUS_MSG=[MASM] Watchdog: assemble-from-source (prebuilt stub bypass)
+
+OBJECT_SMOKE
+------------
+ML64=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe
+BAT=evidence/WATCHDOG_ASM_BIND_001/_asm_from_source.bat
+ML64_EXIT=0
+OBJ=evidence/WATCHDOG_ASM_BIND_001/RawrXD_Watchdog_from_source.obj
+OBJ_SIZE=13248
+OBJ_SHA256=8FC7DBB7E1EDAD638C4A422B95A394686A2385B73C9DEBF33116A8E2482A8EEE
+STALE_BUILDTREE_STUB=build_win32ide_link001/RawrXD_Watchdog.obj SIZE=816
+  (not rebuilt this turn; prebuilt bypass is CMake-side only until next Watchdog.obj build)
+
+EXPORTS (dumpbin /SYMBOLS External)
+-----------------------------------
+asm_watchdog_init
+asm_watchdog_verify
+asm_watchdog_get_baseline
+asm_watchdog_get_status
+asm_watchdog_shutdown
+wd_compute_hmac_sha256
+IMPORT_UNDEF=asm_camellia256_get_hmac_key (+ CryptoAPI / GetModuleHandleA / GetTickCount64)
+
+OWNERSHIP / LINK GATE
+---------------------
+MagBuf CRC C owners remain product-linked (CLEARED_JOIN):
+  asm_watchdog_init -> win32ide_watchdog_init.cpp
+  asm_watchdog_verify / get_status -> unlinked_symbols_batch_005.cpp
+Full Source HMAC ASM exports SAME names → LNK2005 if dual-linked without gating C.
+This bind = SOURCE + OBJECT only. LINK_SMOKE=NOT_RUN (no Win32IDE relink).
+
+DISPOSITION
+-----------
+RESTORED=Y
+SOURCE_WIRED=1 (product ASM body restored; CMake assemble-from-source)
+OBJECT_SMOKE=1 (ml64 EXIT=0; HMAC exports present)
+LINK_SMOKE=NOT_RUN
+RUNTIME_HMAC=NOT_RUN (WATCHDOG_HMAC_PRODUCT_001 still OPEN_UNTIL_CAMELLIA_INIT / runtime)
+WIN32IDE_RELINK=0
+SEALED_EXE_SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+  (LIVE_TETRAD_POST_CAMELLIA / CAMELLIA_AUTH bind; unchanged — no relink)
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

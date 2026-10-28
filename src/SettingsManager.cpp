@@ -4,18 +4,19 @@
 // INI-based settings persistence with UTF-8 support.
 // Uses Windows API for INI file operations.
 //
-// DAY 5 DELIVERABLES:
-// - INI read/write implementation
-// - Window state persistence
-// - Editor preferences persistence
-// - Model path history management
-// - Thread-safe operations
+// TIP_GUI_CREATEWINDOW_FIX_001 / Path B:
+// Initialize/Shutdown held m_mutex then called Load()/Save() which also
+// lock_guard the same non-recursive mutex → self-deadlock / SEH abort inside
+// createWindow near "before SettingsManager". MAIN_HWND never created.
+// Fix: unlocked Load/Save bodies; public APIs lock once.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
 // ============================================================================
 
 #include "SettingsManager.h"
 #include <shlobj.h>
 #include <algorithm>
 #include <sstream>
+#include <cstdio>
 
 namespace RawrXD {
 
@@ -34,36 +35,49 @@ SettingsManager& SettingsManager::Instance() {
 
 bool SettingsManager::Initialize(const std::string& configPath) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
+
     if (m_initialized) {
         return true;
     }
-    
+
+    fprintf(stderr, "[SettingsManager] Initialize ENTER path=%s\n",
+            configPath.empty() ? "(default)" : configPath.c_str());
+    fflush(stderr);
+
     if (configPath.empty()) {
         m_configPath = GetDefaultConfigPath();
     } else {
         m_configPath = configPath;
     }
-    
+
+    fprintf(stderr, "[SettingsManager] configPath=%s\n", m_configPath.c_str());
+    fflush(stderr);
+
     EnsureConfigDirectoryExists();
-    
-    // Load existing settings or create defaults
-    if (!Load()) {
-        // First run - save defaults
-        Save();
+
+    // Must use unlocked bodies — we already hold m_mutex (non-recursive).
+    if (!LoadUnlocked()) {
+        fprintf(stderr, "[SettingsManager] no ini — SaveUnlocked defaults\n");
+        fflush(stderr);
+        SaveUnlocked();
+    } else {
+        fprintf(stderr, "[SettingsManager] LoadUnlocked OK\n");
+        fflush(stderr);
     }
-    
+
     m_initialized = true;
+    fprintf(stderr, "[SettingsManager] Initialize OK\n");
+    fflush(stderr);
     return true;
 }
 
 void SettingsManager::Shutdown() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
+
     if (m_dirty) {
-        Save();
+        SaveUnlocked();
     }
-    
+
     m_initialized = false;
 }
 
@@ -77,7 +91,6 @@ std::string SettingsManager::GetDefaultConfigPath() {
         std::string configDir = std::string(path) + "\\RawrXD";
         return configDir + "\\settings.ini";
     }
-    // Fallback to executable directory
     return "settings.ini";
 }
 
@@ -90,21 +103,27 @@ void SettingsManager::EnsureConfigDirectoryExists() {
 }
 
 // ============================================================================
-// Save/Load
+// Save/Load (public = lock once; unlocked = caller holds lock)
 // ============================================================================
 
 bool SettingsManager::Save() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
-    // Window State
+    return SaveUnlocked();
+}
+
+bool SettingsManager::Load() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return LoadUnlocked();
+}
+
+bool SettingsManager::SaveUnlocked() {
     SetInt("Window", "X", m_windowState.x);
     SetInt("Window", "Y", m_windowState.y);
     SetInt("Window", "Width", m_windowState.width);
     SetInt("Window", "Height", m_windowState.height);
     SetBool("Window", "Maximized", m_windowState.maximized);
     SetBool("Window", "Fullscreen", m_windowState.fullscreen);
-    
-    // Editor Preferences
+
     SetString("Editor", "FontName", m_editorPrefs.fontName);
     SetInt("Editor", "FontSize", m_editorPrefs.fontSize);
     SetBool("Editor", "WordWrap", m_editorPrefs.wordWrap);
@@ -116,24 +135,21 @@ bool SettingsManager::Save() {
     SetInt("Editor", "TextColor", static_cast<int>(m_editorPrefs.textColor));
     SetInt("Editor", "SelectionColor", static_cast<int>(m_editorPrefs.selectionColor));
     SetInt("Editor", "GhostTextColor", static_cast<int>(m_editorPrefs.ghostTextColor));
-    
-    // Model Configuration
+
     SetString("Model", "LastModelPath", m_modelConfig.lastModelPath);
     SetBool("Model", "AutoDetectGPUs", m_modelConfig.autoDetectGPUs);
     SetString("Model", "VisibleDevices", m_modelConfig.visibleDevices);
     SetInt("Model", "DefaultMaxTokens", m_modelConfig.defaultMaxTokens);
     SetInt("Model", "DefaultTemperature", static_cast<int>(m_modelConfig.defaultTemperature * 100));
     SetInt("Model", "DefaultContextLength", m_modelConfig.defaultContextLength);
-    
-    // Recent models (comma-separated)
+
     std::string recentModels;
     for (size_t i = 0; i < m_modelConfig.recentModels.size(); ++i) {
         if (i > 0) recentModels += ";";
         recentModels += m_modelConfig.recentModels[i];
     }
     SetString("Model", "RecentModels", recentModels);
-    
-    // UI Preferences
+
     SetBool("UI", "DarkTheme", m_uiPrefs.darkTheme);
     SetBool("UI", "ShowStatusBar", m_uiPrefs.showStatusBar);
     SetBool("UI", "ShowToolbar", m_uiPrefs.showToolbar);
@@ -143,28 +159,23 @@ bool SettingsManager::Save() {
     SetBool("UI", "ShowOutline", m_uiPrefs.showOutline);
     SetBool("UI", "ShowTerminal", m_uiPrefs.showTerminal);
     SetBool("UI", "ShowChatPanel", m_uiPrefs.showChatPanel);
-    
+
     m_dirty = false;
     return true;
 }
 
-bool SettingsManager::Load() {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    
-    // Check if file exists
+bool SettingsManager::LoadUnlocked() {
     if (GetFileAttributesA(m_configPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
-        return false; // File doesn't exist, will use defaults
+        return false;
     }
-    
-    // Window State
+
     m_windowState.x = GetInt("Window", "X", CW_USEDEFAULT);
     m_windowState.y = GetInt("Window", "Y", CW_USEDEFAULT);
     m_windowState.width = GetInt("Window", "Width", 1280);
     m_windowState.height = GetInt("Window", "Height", 720);
     m_windowState.maximized = GetBool("Window", "Maximized", false);
     m_windowState.fullscreen = GetBool("Window", "Fullscreen", false);
-    
-    // Editor Preferences
+
     m_editorPrefs.fontName = GetString("Editor", "FontName", "Consolas");
     m_editorPrefs.fontSize = GetInt("Editor", "FontSize", 11);
     m_editorPrefs.wordWrap = GetBool("Editor", "WordWrap", false);
@@ -176,16 +187,14 @@ bool SettingsManager::Load() {
     m_editorPrefs.textColor = static_cast<COLORREF>(GetInt("Editor", "TextColor", static_cast<int>(RGB(220, 220, 220))));
     m_editorPrefs.selectionColor = static_cast<COLORREF>(GetInt("Editor", "SelectionColor", static_cast<int>(RGB(0, 120, 215))));
     m_editorPrefs.ghostTextColor = static_cast<COLORREF>(GetInt("Editor", "GhostTextColor", static_cast<int>(RGB(128, 128, 128))));
-    
-    // Model Configuration
+
     m_modelConfig.lastModelPath = GetString("Model", "LastModelPath", "");
     m_modelConfig.autoDetectGPUs = GetBool("Model", "AutoDetectGPUs", true);
     m_modelConfig.visibleDevices = GetString("Model", "VisibleDevices", "");
     m_modelConfig.defaultMaxTokens = GetInt("Model", "DefaultMaxTokens", 2048);
     m_modelConfig.defaultTemperature = GetInt("Model", "DefaultTemperature", 70) / 100.0f;
     m_modelConfig.defaultContextLength = GetInt("Model", "DefaultContextLength", 4096);
-    
-    // Recent models
+
     std::string recentModels = GetString("Model", "RecentModels", "");
     m_modelConfig.recentModels.clear();
     if (!recentModels.empty()) {
@@ -197,8 +206,7 @@ bool SettingsManager::Load() {
             }
         }
     }
-    
-    // UI Preferences
+
     m_uiPrefs.darkTheme = GetBool("UI", "DarkTheme", true);
     m_uiPrefs.showStatusBar = GetBool("UI", "ShowStatusBar", true);
     m_uiPrefs.showToolbar = GetBool("UI", "ShowToolbar", true);
@@ -208,7 +216,7 @@ bool SettingsManager::Load() {
     m_uiPrefs.showOutline = GetBool("UI", "ShowOutline", false);
     m_uiPrefs.showTerminal = GetBool("UI", "ShowTerminal", true);
     m_uiPrefs.showChatPanel = GetBool("UI", "ShowChatPanel", true);
-    
+
     return true;
 }
 
@@ -270,21 +278,18 @@ void SettingsManager::SetUIPreferences(const UIPreferences& prefs) {
 
 void SettingsManager::AddRecentModel(const std::string& path) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
-    // Remove if already exists
+
     auto it = std::find(m_modelConfig.recentModels.begin(), m_modelConfig.recentModels.end(), path);
     if (it != m_modelConfig.recentModels.end()) {
         m_modelConfig.recentModels.erase(it);
     }
-    
-    // Add to front
+
     m_modelConfig.recentModels.insert(m_modelConfig.recentModels.begin(), path);
-    
-    // Trim to max
+
     if (m_modelConfig.recentModels.size() > static_cast<size_t>(m_modelConfig.maxRecentModels)) {
         m_modelConfig.recentModels.resize(m_modelConfig.maxRecentModels);
     }
-    
+
     m_modelConfig.lastModelPath = path;
     m_dirty = true;
 }
@@ -304,7 +309,7 @@ std::optional<std::string> SettingsManager::GetLastModelPath() const {
 // Raw INI Access
 // ============================================================================
 
-std::string SettingsManager::GetString(const std::string& section, const std::string& key, 
+std::string SettingsManager::GetString(const std::string& section, const std::string& key,
                                        const std::string& defaultValue) {
     char buffer[1024];
     DWORD result = GetPrivateProfileStringA(section.c_str(), key.c_str(), defaultValue.c_str(),
@@ -320,7 +325,7 @@ bool SettingsManager::GetBool(const std::string& section, const std::string& key
     return GetInt(section, key, defaultValue ? 1 : 0) != 0;
 }
 
-void SettingsManager::SetString(const std::string& section, const std::string& key, 
+void SettingsManager::SetString(const std::string& section, const std::string& key,
                                 const std::string& value) {
     WritePrivateProfileStringA(section.c_str(), key.c_str(), value.c_str(), m_configPath.c_str());
 }

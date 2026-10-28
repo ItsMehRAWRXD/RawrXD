@@ -1,0 +1,8 @@
+B04 object smoke
+PROMOTE=0
+ASOF=2026-10-28
+WD_INIT_OBJ=win32ide_watchdog_init.obj PRESENT
+BATCH_005_OBJ=batch_005.obj PRESENT
+BATCH_001_OBJ=batch_001.obj PRESENT
+DEFINES=RAWR_HAS_MASM=1
+NOTE=Compile-only smoke; not product relink. Sealed post-Camellia EXE unchanged this step.

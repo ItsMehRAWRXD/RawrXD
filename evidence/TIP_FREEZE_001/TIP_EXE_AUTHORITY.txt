@@ -1,0 +1,43 @@
+TIP_EXE_AUTHORITY / TIP_FREEZE_001
+=================================
+ASOF_UTC=2026-10-28T14:30:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_THIS_DISPATCH=0
+
+AUTHORITY_ONLY
+--------------
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PDB=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.pdb
+
+LAW
+---
+1. Product inference gates (TOKEN64, MULTI_FAMILY, LIVE_TETRAD, AgentRunLoop,
+   swarm RUNTIME) MUST invoke THIS path only (748B210A…).
+2. Do NOT rebuild into build_win32ide_link001\bin for product certification.
+3. Do NOT use repo-root bin\RawrXD-Win32IDE.exe (legacy ~35MB; wrong binary).
+4. Do NOT invent SHA transfer from historical tips (6832F439, 2B9B5A67, …)
+   or from witness rebuilds onto this freeze.
+5. If a worker needs a new tip: copy AFTER verified seal into TIP_FREEZE_001\bin
+   and rewrite FROZEN_SHA / LIVE_SHA — never race ninja over the frozen file.
+6. NOT_RUN != PASS. PROMOTE stays 0 until PromoteReady conjunction.
+
+WITNESS_NE_TIP (do not absorb)
+------------------------------
+RAWRXD_MULTI_MODEL_AGENTIC_GHOSTTEXT_002
+  EXE=build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+  SHA=F0988009F73870B56FC9B4781ECE1F2D191985A0AE648CEDF380484AEBBF0B2E
+  ROLE=GhostText Ollama multi-model witness only
+  NO_ABSORB_SHA_TRANSFER=1
+  CERTIFIED=0 (MULTILINE=NOT_RUN)
+  Tip freeze 748B remains product authority; F098 is NOT the tip.
+
+FORBIDDEN_DEFAULTS
+------------------
+G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe  (except as F098 GhostText witness)
+G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe
+F:\~dev\rawrxd\build_*\bin\RawrXD-Win32IDE.exe
+any ninja/msbuild output path unless explicitly re-frozen here

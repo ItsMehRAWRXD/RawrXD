@@ -1,0 +1,1 @@
+MAIN_HWND=0x3E0212 tick=0 alive_at_find=1 proc_alive_end=True pid=36696 exited=False exit=

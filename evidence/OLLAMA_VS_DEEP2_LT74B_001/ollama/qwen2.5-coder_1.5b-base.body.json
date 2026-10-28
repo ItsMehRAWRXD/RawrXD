@@ -1,0 +1,1 @@
+{"model":"qwen2.5-coder:1.5b-base","prompt":"Say hi in one short sentence.","stream":false,"options":{"num_predict":32,"temperature":0}}

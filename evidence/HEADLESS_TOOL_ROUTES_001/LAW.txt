@@ -1,0 +1,95 @@
+HEADLESS_TOOL_ROUTES_001 / LAW
+==============================
+ASOF_UTC=2026-10-28T08:30:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+LOCAL_ONLY=1
+OLLAMA_HTTP=0
+NO_REBUILD=1
+NO_INFERENCE_SPLIT_FLIP=1
+NO_INVENT_PASS=1
+
+SEALED_EXE
+----------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SIZE=331629056
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+SHA_MATCH=1
+PROVENANCE=evidence/LIVE_TETRAD_POST_CAMELLIA_001 + CAMELLIA_AUTH_ASM_BIND_001
+SUBSTITUTE_BINARY=0
+
+MISSION
+-------
+HeadlessIDE tool-route product smoke on sealed EXE SHA 89BFD614…
+Verify routes in HeadlessIDE_ToolRoutes.cpp; exercise MOTD-gated
+file/command path without inventing PASS; seal this gate.
+
+ROUTE INVENTORY (source authority)
+----------------------------------
+FILE=src/win32app/HeadlessIDE_ToolRoutes.cpp
+DISPATCH=HeadlessIDE::routeToolAndFileRequest  (HTTP only)
+INPROC=HeadlessIDE::executeToolRepl            (called only from HTTP dispatch)
+
+HTTP_PATHS (POST):
+  /api/tool | /run-tool | /api/tool/*
+  /api/read-file | /api/file/read | /api/file
+  /api/write-file | /api/file/write
+  /api/list-dir | /api/file/list | /api/list-directory
+  /api/cli | /api/command | /api/command/*
+  /api/delete-file | /api/rename-file | /api/copy-file | /api/move-file
+  /api/mkdir | /api/stat-file | /api/search-files
+
+TOOLS:
+  read_motd | read_file | write_file | list_directory
+  execute_command | git_status
+  delete_file | rename_file | copy_file | move_file
+  mkdir | stat_file | search_files
+ALIASES: list_dir→list_directory; cli|command→execute_command
+MOTD_GATE: g_headlessMotdAcked; non-MOTD → error motd_required (403)
+
+GATED_LOCAL_ONLY (HTTP /api/tool ladder)
+----------------------------------------
+STATUS=GATED_LOCAL_ONLY
+REASON=Sealed product entry uses --local --no-server; HTTP server not started;
+       /api/tool and sibling routes require HostedHttpRequest path via startServer().
+CITE_A=evidence/LIVE_TETRAD_POST_CAMELLIA_001/LAW.txt
+  MODE=--local --no-server --prompt <text> --model <gguf> --max-tokens N --backend local
+CITE_B=src/win32app/HeadlessIDE.cpp runServerMode()
+  "Server disabled (--no-server); nothing to serve, exiting."
+CITE_C=src/win32app/HeadlessIDE.cpp processReplCommand / printReplHelp
+  REPL_TOOL_ENTRY=NONE — executeToolRepl not exposed on REPL stdin
+HTTP_TOOL_LADDER_RUNTIME=NOT_RUN
+HTTP_TOOL_LADDER_PASS=0  (NOT_RUN != PASS)
+
+IN-PROCESS SMOKE (available under LOCAL_ONLY)
+---------------------------------------------
+CMD=RawrXD-Win32IDE.exe --headless --local --no-server --dir G:\~dev\rawrxd
+EXIT_CODE=0
+OBSERVED=Server disabled (--no-server); nothing to serve, exiting.
+LOGS=evidence/HEADLESS_TOOL_ROUTES_001/logs/no_server_{stdout,stderr}.txt
+SOURCE_WIRED_STRINGS=1  (logs/exe_route_strings.txt — /api/tool, read_motd, motd_required, …)
+RUNTIME_REACHED_MOTD_TOOL=0
+TOKEN_SURVIVED=N/A (tool-route gate; not inference)
+PERFORMANCE_PASS=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GATED_LOCAL_ONLY != HTTP_TOOL_PASS
+HTTP_TOOL_PASS != PROMOTE
+PROMOTE=0 always this seal
+
+DISPOSITION
+-----------
+DISPOSITION=GATED_LOCAL_ONLY
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+SOURCE_WIRED=1
+RUNTIME_REACHED_HTTP_TOOL=NOT_RUN
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT=HTTP /api/tool MOTD ladder on this SHA requires explicit server-on authority
+     distinct from sealed --no-server LOCAL_ONLY entry (do not invent PASS).

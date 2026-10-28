@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_PRE_O_1
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=564a290709c6e7d1
+l2=3.4869952147304808
+seq=22
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_ATTN_PRE_O_1_pos0_layer0_full_n3072_seq022.bin

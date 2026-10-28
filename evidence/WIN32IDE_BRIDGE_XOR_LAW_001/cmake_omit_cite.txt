@@ -1,0 +1,10 @@
+=== CMakeLists.txt refs to win32ide_asm_kernel_bridge === 
+MATCH_COUNT=0 CMAKE_OMIT=1 
+=== Auth map cite (product owner) === 
+=== Source gate cite === 
+4:// WIN32IDE_BRIDGE_XOR_LAW_001: This TU is NOT in RawrXD-Win32IDE CMake link.
+7:// XOR leftovers below are GATED_OMIT — do not re-add this file to Win32IDE
+510:// Camellia XOR leftovers — GATED_OMIT (WIN32IDE_BRIDGE_XOR_LAW_001).
+512:#if !defined(RAWR_HAS_MASM)
+607:#endif // !RAWR_HAS_MASM
+DONE 

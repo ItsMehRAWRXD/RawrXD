@@ -1,0 +1,63 @@
+UNLINKED_SYMBOLS_E2E_001 / LINK_WIN32IDE_002
+============================================
+WORKSPACE=G:\~dev\rawrxd
+BUILD_DIR=G:\~dev\rawrxd\build_win32ide_link001
+TARGET=RawrXD-Win32IDE
+DATE=2026-10-28
+LOCAL_ONLY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+LINK=OK
+
+OWNER_INCLUDES (CMakeLists ~7498-7502; real TUs only)
+-----------------------------------------------------
+src/core/command_handlers_comprehensive.cpp  # handleAIStopGeneration
+src/SettingsManager.cpp                      # RawrXD::SettingsManager WindowState API
+src/gui/ModelConversionDialog.cpp            # ModelConversionDialog ctor/dtor/showModal
+CRDT: src/collab/crdt_buffer.cpp includes ../../include/collab/crdt_buffer.h (global CRDTBuffer ctor)
+
+NO stub-overwrite of the three owner files.
+NO batch_018/019/020. NO asm_link_stubs.
+
+BUILD_COMMANDS
+--------------
+# Configure — preserve prior cache flags
+cmake -S "G:\~dev\rawrxd" -B "G:\~dev\rawrxd\build_win32ide_link001"
+CMAKE_EXIT=0
+LOG=evidence/UNLINKED_SYMBOLS_E2E_001/_link_win32ide_002_cmake.log
+
+# Build — reduced parallelism (-j2) to avoid C1060
+cmake --build "G:\~dev\rawrxd\build_win32ide_link001" --target RawrXD-Win32IDE --config Release -j 2
+EXIT_CODE=0
+LOG=evidence/UNLINKED_SYMBOLS_E2E_001/_link_win32ide_002_build_j2.log
+
+# Prior attempt this seal (same log path overwritten): ModelConversionDialog.cpp failed
+# on orphaned post-extern-C methods (findConverter/execAsync/…) not declared in header.
+# Real file already ended cleanly at C API close before successful rebuild; no stub TU.
+
+LNK / C SUMMARY
+---------------
+C2039=0 (final pass)
+C1060=0
+LNK2001=0
+LNK1120=0
+LNK4006=not observed this pass (incremental link)
+
+EXE
+---
+EXE_EXISTS=1
+EXE_PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SIZE=331623936
+SHA256=4A5D6B31DD83CE117A1F8769D55474186C4629EA4074F033125EEE1D20F0E3CE
+
+REMAINING_SYMBOLS (LNK2001 unique)
+----------------------------------
+(none)
+
+FAIL_CLOSED
+-----------
+LINK=OK ≠ RUNTIME_REACHED ≠ TOKEN_SURVIVED ≠ PERFORMANCE_PASS
+NOT_RUN != PASS (no promote)
+CERTIFIED=0 · PROMOTE=0 · TIP_CLIMB=HOLD

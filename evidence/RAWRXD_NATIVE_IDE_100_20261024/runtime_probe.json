@@ -1,0 +1,11 @@
+{
+  "executable": "G:\\~dev\\rawrxd\\build_win32_cert_x64\\bin\\Release\\RawrXD-Win32IDE.exe",
+  "sha256": "DBDCA082CBB109E6FC579D154D9B455A79BA65AD2609DCCE46CD7C4813AC3E9B",
+  "bytes": 331386880,
+  "pid": 21100,
+  "exited": false,
+  "main_window": true,
+  "responsive": true,
+  "compiler_integration_trace": false,
+  "timestamp_utc": "2026-10-24T06:59:05.2623212Z"
+}

@@ -11,6 +11,11 @@ endif()
 add_executable(deep2_benchmark
   ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Benchmark.cpp
   ${CMAKE_SOURCE_DIR}/src/deep2/deep2_benchmark_main.cpp
+  # GpuLostReset pulls these; keep on the exe so InferenceEngine link closes.
+  ${CMAKE_SOURCE_DIR}/src/deep2/GpuPreflight.cpp
+  ${CMAKE_SOURCE_DIR}/src/deep2/GpuPreflightReset.cpp
+  ${CMAKE_SOURCE_DIR}/src/deep2/GpuPreflightElevatedPnp.cpp
+  ${CMAKE_SOURCE_DIR}/src/deep2/ss_product_e2e_stub.c
 )
 target_include_directories(deep2_benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/src
@@ -20,11 +25,18 @@ target_include_directories(deep2_benchmark PRIVATE
 if(MSVC)
   target_compile_options(deep2_benchmark PRIVATE /EHsc /W3 /std:c++20)
 endif()
-target_link_libraries(deep2_benchmark PRIVATE InferenceEngine dxgi pdh psapi)
+target_link_libraries(deep2_benchmark PRIVATE
+  InferenceEngine dxgi pdh psapi setupapi cfgmgr32)
 set_target_properties(deep2_benchmark PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
   OUTPUT_NAME deep2_benchmark
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# Alias expected by Kimi evidence scripts (orphan _full binary was 2026-09-07).
+add_custom_command(TARGET deep2_benchmark POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:deep2_benchmark>
+    $<TARGET_FILE_DIR:deep2_benchmark>/deep2_benchmark_full.exe
+  COMMENT "Sync deep2_benchmark_full.exe from deep2_benchmark")
 
 if(NOT TARGET k2_useful_tps_001)
   add_executable(k2_useful_tps_001

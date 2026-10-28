@@ -1,0 +1,102 @@
+SHELL_LAYOUT_PHASE5_001 / LAW
+=============================
+ASOF_UTC=2026-10-28T08:25:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Close the Phase=5 terminal stub gap without inventing PASS and without EXE
+relink. Disposition = GATED_UNIMPLEMENTED. Parent ladder authority remains
+P1_UI_SHELL_LAYOUT_001 (phases 0–4 PASS frozen).
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+NOT_TESTED != PASS
+UNIMPLEMENTED != PASS
+GATED_UNIMPLEMENTED != PASS
+SILENT_SKIP = FORBIDDEN in product evidence
+
+PHASE_5 LAW
+-----------
+PHASE_5_STATUS        = GATED_UNIMPLEMENTED
+PHASE_5_CERTIFIED     = 0
+PHASE_5_MAY_CLAIM_PASS= 0
+PHASE_5_SILENT_SKIP   = FORBIDDEN
+
+Any product / cert receipt that sets RAWRXD_SHELL_LAYOUT_PHASE=5 and omits an
+explicit GATED_UNIMPLEMENTED (or FAIL) disposition is INVALID.
+
+Operator must not treat:
+  - empty LayoutIDE fall-through after phase>=5
+  - bottomReserve += terminalH without MoveHwnd(terminal)
+  - RebuildRestrictActive() excluding phase 5 (policy off for 5)
+as evidence of terminal chrome PASS.
+
+SOURCE TRACE (no EXE relink this seal)
+--------------------------------------
+PhaseFromEnvironment:
+  src/win32app/Win32IDE_ShellLayout.cpp
+  env RAWRXD_SHELL_LAYOUT_PHASE; default 3; clamp 0..6
+
+RebuildRestrictActive:
+  true only when rebuild && phase in [0,4]
+  PHASE=5 is outside allow-list CBT policy by design (not a PASS)
+
+LayoutIDE phase ladder:
+  phase <1 return (frame-only after policy)
+  phase <2 activity only
+  phase <3 +sidebar
+  phase <4 +editor (bottomReserve uses status at >=4; terminalH at >=5)
+  phase <5 +status then return
+  phase >=5: GATED_UNIMPLEMENTED empty body — no terminal MoveHwnd / Show
+
+RegisterAllowedRoots / ApplyFromIde:
+  registers getPowerShellPanel + getOutputTabs
+  IsAllowedVisible allows terminal/output at phase>=3 (visibility host only)
+  PHASE=5 geometry owner for terminal = NOT WIRED
+
+Call sites (product path):
+  Win32IDE_Core.cpp — ApplyFromIde / LayoutIDE on rebuild && !UseLegacySpatial
+  Win32IDE_Session.cpp — RebuildActive suppresses session geometry restore
+
+Prior ladder (DO NOT REOPEN / DO NOT REWRITE)
+---------------------------------------------
+evidence/P1_UI_SHELL_LAYOUT_001/
+  GATE.txt STATUS=PHASE_4_PASS
+  PHASE_0..PHASE_4 = PASS (EXE_SHA 366AC1A8… historical freeze)
+  PHASE_5=NOT_TESTED / UNIMPLEMENTED (contract already forbade silent-skip)
+  PHASE_6=NOT_RUN
+
+This seal promotes the Phase=5 contract line to an explicit evidence packet
+GATED_UNIMPLEMENTED. It does not certify terminal chrome and does not change
+0–4 freeze records.
+
+DUAL_PATH WINDOW CREATE (related GATED)
+--------------------------------------
+Win32IDE_Window.cpp createWindow:
+  ORPHAN TU — removed from root CMake Win32IDE sources (P1_UI_WINDOW_OWNERSHIP_001)
+  createWindow stub refuses second shell path (returns false unless m_hwndMain live)
+  Production CreateWindowEx / WindowProc / onCreate = Win32IDE_Core.cpp only
+  Disposition = GATED_INTENTIONAL_DUAL_PATH_REFUSE
+  Cite: evidence/P1_UI_WINDOW_OWNERSHIP_001/CONTRACT.txt + GATE.txt
+  Linking this TU back without deleting Core path = FORBIDDEN
+
+WHAT WOULD BE REQUIRED TO LIFT THE GATE
+---------------------------------------
+1. Explicit HWND owner for terminal in LayoutIDE (MoveHwnd + SetChildVisible)
+2. RebuildRestrictActive / IsAllowedVisible policy decision for phase 5
+3. Freeze record PHASE_05.txt with EXE_SHA + LAUNCH/RESIZE/... predicates
+4. Update P1_UI_SHELL_LAYOUT_001 GATE PHASE_5 line only after that freeze
+Until then: PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+OUT OF SCOPE
+------------
+PHASE=6 spatial / 6A–6C splits
+P1_REAL_SPEEDUP_* / P1_POLICY_SHA_*
+MULTI_FAMILY / POST_SCHEDULER_PROMOTION_REQUIREMENTS
+EXE relink of sealed LIVE_TETRAD / post-Camellia images

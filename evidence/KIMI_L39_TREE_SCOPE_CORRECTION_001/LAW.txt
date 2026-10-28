@@ -1,0 +1,39 @@
+GATE=KIMI_L39_TREE_SCOPE_CORRECTION_001
+ASOF=2026-10-28
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NOT_RUN!=PASS
+
+# Why this exists
+Explore agent a002c695 searched ONLY G:\~dev\rawrxd and correctly reported:
+  - no sealed LAYER_39_MAX_ABS≈0.0109 under G:
+  - commits d35da627 / 4093f125 are bad objects in G:\~dev\rawrxd git
+
+That scope is incomplete for Kimi GPU-down numerical work.
+
+# Authority tree for L39 numerical / offline / parity
+TREE=F:\rawrxd
+HEAD=d35da627810f3d5a95db3eb4e04ee43b1bfe8c2a
+PARITY_TIP=4093f12598517db48dafe4541ad900e14da65846 (NOT merged; PROMOTE=0)
+
+# Sealed numeric receipts (F: — do not re-derive as "parent chat only")
+F:\rawrxd\evidence\KIMI_LAYER39_SINGLE_002\k2_l39_e108_audit.json
+  gpu_vs_scalar_down.max_abs=0.010918879306201279 worst_index=5418 expert=108
+F:\rawrxd\evidence\KIMI_LAYER39_SINGLE_002\replay.log
+  GPU_MOE_LAST_DOWN_PARITY max_abs=1.091888547e-02
+F:\rawrxd\evidence\KIMI_LAYER39_FIRST_FAIL_001\RECEIPT.json
+  LEADING=Q6_KxQ8_K_vs_FP32_contract; GPU vs Q8_K oracle max_abs≈3.18e-7
+F:\rawrxd\evidence\KIMI_LAYER39_FIRST_FAIL_001\OFFLINE_Q8K_CONTRACT.json
+F:\rawrxd\evidence\KIMI_LAYER39_FIRST_FAIL_001\NEXT_GATE.txt
+F:\rawrxd\evidence\KIMI_OFFLINE_CANONICAL_CLOSURE_20261027\KIMI_OFFLINE_RECEIPT.json
+
+# This tree (G:\~dev\rawrxd)
+HEAD≈219b0e5694e565575728faf6c820d3f76cfb8006
+Owns L39 ISO crumbs / L1 residual cert / STREAMER_GPU_Q6K_GEMV unit gate.
+Does NOT own the sealed 0.0109 MoE capture audit.
+
+# Forbidden follow-ons from G:-only miss
+- Do not purge d35da627/4093f125 from the Kimi timeline
+- Do not wire EndDeviceStep3 → HostGemv FP32 as G06 judge
+- Do not invent G06/G08 PASS or rewrite official 25-gate ledger

@@ -1,0 +1,25 @@
+{
+  "schema": "RAWRXD_RUNTIME_EVIDENCE_013",
+  "source": "src/runtime_evidence_013/tests/partial.txt",
+  "gates": [
+    {"id": "Q2K_SHADER_COMPILE", "status": "PASS", "requirement": "shader_compile=PASS"},
+    {"id": "Q2K_REAL_WEIGHT_PARITY", "status": "PASS", "requirement": "real_weight_parity=PASS"},
+    {"id": "Q2K_FFN_FINITE", "status": "PASS", "requirement": "ffn_up_finite=PASS; ffn_act_finite=PASS"},
+    {"id": "Q2K_GENERATION", "status": "NOT_CERTIFIED", "requirement": "generated_tokens>0; generation_completed=PASS"},
+    {"id": "Q2K_FULL_MODEL_PARITY", "status": "NOT_CERTIFIED", "requirement": "full_model_parity=PASS"},
+    {"id": "Q2K_MEASURED_TPS", "status": "NOT_CERTIFIED", "requirement": "finite decode_tps>0; generated_tokens>0"},
+    {"id": "GPU_FORWARD", "status": "NOT_CERTIFIED", "requirement": "gpu_forward_ops>0; gpu_layer_submits>0; strict_gpu_violations=0"},
+    {"id": "WIN32_BUILD", "status": "PASS", "requirement": "win32_build=PASS"},
+    {"id": "WIN32_LAUNCH", "status": "PASS", "requirement": "win32_launch=PASS"},
+    {"id": "WIN32_GUI_EDIT", "status": "NOT_CERTIFIED", "requirement": "gui_edit_save_reopen=PASS"},
+    {"id": "WIN32_DEBUGGER", "status": "NOT_CERTIFIED", "requirement": "debugger_step_watch=PASS"},
+    {"id": "WIN32_POWERSHELL", "status": "NOT_CERTIFIED", "requirement": "powershell_lifecycle=PASS"},
+    {"id": "IDE_AGENT_E2E", "status": "NOT_CERTIFIED", "requirement": "agent_edit_build_test_rollback=PASS"},
+    {"id": "IDE_EXTENSIONS", "status": "NOT_CERTIFIED", "requirement": "extension_host_e2e=PASS"},
+    {"id": "IDE_DUAL_PROVIDER", "status": "NOT_CERTIFIED", "requirement": "ollama_deep2_concurrent=PASS"},
+    {"id": "IDE_SIGNING", "status": "NOT_CERTIFIED", "requirement": "sign_verify_deploy=PASS"}
+  ],
+  "passed": 5,
+  "total": 16,
+  "overall": "NOT_CERTIFIED"
+}

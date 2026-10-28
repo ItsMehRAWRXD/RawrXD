@@ -1,0 +1,54 @@
+9:cam_sbox_preload:
+12:  0000000000000002: 48 8D 0D 00 00 00  lea         rcx,[cam_sbox1]
+20:  000000000000001E: 48 8D 0D 00 00 00  lea         rcx,[cam_sbox2]
+28:  000000000000003A: 48 8D 0D 00 00 00  lea         rcx,[cam_sbox3]
+36:  0000000000000056: 48 8D 0D 00 00 00  lea         rcx,[cam_sbox4]
+49:cam_sbox_layer:
+55:  0000000000000089: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox1]
+60:  000000000000009A: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox4]
+68:  00000000000000B9: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox3]
+76:  00000000000000D8: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox2]
+84:  00000000000000F7: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox4]
+93:  0000000000000119: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox3]
+102:  000000000000013B: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox2]
+111:  000000000000015D: 48 8D 3D 00 00 00  lea         rdi,[cam_sbox1]
+124:cam_F:
+126:  0000000000000183: E8 F8 FE FF FF     call        cam_sbox_layer
+139:cam_FL:
+148:cam_FLINV:
+237:asm_camellia256_set_key:
+270:  000000000000032B: E8 50 FE FF FF     call        cam_F
+281:  000000000000034A: E8 31 FE FF FF     call        cam_F
+292:  0000000000000369: E8 12 FE FF FF     call        cam_F
+303:  0000000000000388: E8 F3 FD FF FF     call        cam_F
+349:  000000000000041F: E8 00 00 00 00     call        OutputDebugStringA
+382:  0000000000000472: E8 89 FB FF FF     call        cam_sbox_preload
+399:  00000000000004A8: E8 D3 FC FF FF     call        cam_F
+407:  00000000000004BF: E8 EC FC FF FF     call        cam_FL
+411:  00000000000004CE: E8 ED FC FF FF     call        cam_FLINV
+422:  00000000000004EF: E8 8C FC FF FF     call        cam_F
+431:  0000000000000509: E8 A2 FC FF FF     call        cam_FL
+436:  000000000000051B: E8 A0 FC FF FF     call        cam_FLINV
+447:  000000000000053C: E8 3F FC FF FF     call        cam_F
+456:  0000000000000556: E8 55 FC FF FF     call        cam_FL
+461:  0000000000000568: E8 53 FC FF FF     call        cam_FLINV
+474:  000000000000058E: E8 ED FB FF FF     call        cam_F
+522:  0000000000000612: E8 E9 F9 FF FF     call        cam_sbox_preload
+543:  0000000000000654: E8 27 FB FF FF     call        cam_F
+552:  000000000000066E: E8 3D FB FF FF     call        cam_FL
+557:  0000000000000680: E8 3B FB FF FF     call        cam_FLINV
+568:  00000000000006A1: E8 DA FA FF FF     call        cam_F
+577:  00000000000006BB: E8 F0 FA FF FF     call        cam_FL
+582:  00000000000006CD: E8 EE FA FF FF     call        cam_FLINV
+593:  00000000000006EE: E8 8D FA FF FF     call        cam_F
+601:  0000000000000705: E8 A6 FA FF FF     call        cam_FL
+605:  0000000000000714: E8 A7 FA FF FF     call        cam_FLINV
+616:  0000000000000735: E8 46 FA FF FF     call        cam_F
+835:  00000000000009E9: E8 E2 F8 FF FF     call        asm_camellia256_set_key
+868:  0000000000000A6F: E8 00 00 00 00     call        OutputDebugStringA
+873:  0000000000000A7F: E8 00 00 00 00     call        OutputDebugStringA
+878:  0000000000000A92: E8 00 00 00 00     call        OutputDebugStringA
+1165:  0000000000000E72: E8 59 F4 FF FF     call        asm_camellia256_set_key
+1202:  0000000000000F00: E8 00 00 00 00     call        OutputDebugStringA
+1211:  0000000000000F24: E8 00 00 00 00     call        OutputDebugStringA
+1319:  0000000000001087: E8 00 00 00 00     call        OutputDebugStringA

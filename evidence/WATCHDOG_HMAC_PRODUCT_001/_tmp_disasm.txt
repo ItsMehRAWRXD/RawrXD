@@ -1,0 +1,190 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file g:\~dev\rawrxd\build_win32ide_link001\CMakeFiles\RawrXD-Win32IDE.dir\src\core\unlinked_symbols_batch_005.cpp.obj
+
+File Type: COFF OBJECT
+
+??$?0$0A@@id@locale@std@@QEAA@XZ (public: __cdecl std::locale::id::id<0>(void)):
+  0000000000000000: 48 C7 01 00 00 00  mov         qword ptr [rcx],0
+                    00
+  0000000000000007: 48 8B C1           mov         rax,rcx
+  000000000000000A: C3                 ret
+
+??$_Atomic_address_as@_JU?$_Atomic_padded@_K@std@@@std@@YAPEC_JAEAU?$_Atomic_padded@_K@0@@Z (__int64 volatile * __cdecl std::_Atomic_address_as<__int64,struct std::_Atomic_padded<unsigned __int64> >(struct std::_Atomic_padded<unsigned __int64> &)):
+  0000000000000000: 48 8B C1           mov         rax,rcx
+  0000000000000003: C3                 ret
+
+??$_Atomic_address_as@_JU?$_Atomic_padded@_K@std@@@std@@YAPED_JAEBU?$_Atomic_padded@_K@0@@Z (__int64 const volatile * __cdecl std::_Atomic_address_as<__int64,struct std::_Atomic_padded<unsigned __int64> >(struct std::_Atomic_padded<unsigned __int64> const &)):
+  0000000000000000: 48 8B C1           mov         rax,rcx
+  0000000000000003: C3                 ret
+
+??0?$lock_guard@Vmutex@std@@@std@@QEAA@AEAVmutex@1@@Z (public: __cdecl std::lock_guard<class std::mutex>::lock_guard<class std::mutex>(class std::mutex &)):
+  0000000000000000: 48 89 5C 24 08     mov         qword ptr [rsp+8],rbx
+  0000000000000005: 57                 push        rdi
+  0000000000000006: 48 83 EC 20        sub         rsp,20h
+  000000000000000A: 48 8B F9           mov         rdi,rcx
+  000000000000000D: 48 89 11           mov         qword ptr [rcx],rdx
+  0000000000000010: 48 8B CA           mov         rcx,rdx
+  0000000000000013: 48 8B DA           mov         rbx,rdx
+  0000000000000016: E8 00 00 00 00     call        _Mtx_lock
+  000000000000001B: 85 C0              test        eax,eax
+  000000000000001D: 75 29              jne         0000000000000048
+  000000000000001F: 81 7B 4C FF FF FF  cmp         dword ptr [rbx+4Ch],7FFFFFFFh
+                    7F
+  0000000000000026: 74 0E              je          0000000000000036
+  0000000000000028: 48 8B 5C 24 30     mov         rbx,qword ptr [rsp+30h]
+  000000000000002D: 48 8B C7           mov         rax,rdi
+  0000000000000030: 48 83 C4 20        add         rsp,20h
+  0000000000000034: 5F                 pop         rdi
+  0000000000000035: C3                 ret
+  0000000000000036: B9 06 00 00 00     mov         ecx,6
+  000000000000003B: C7 43 4C FE FF FF  mov         dword ptr [rbx+4Ch],7FFFFFFEh
+                    7F
+  0000000000000042: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  0000000000000047: CC                 int         3
+  0000000000000048: B9 05 00 00 00     mov         ecx,5
+  000000000000004D: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  0000000000000052: CC                 int         3
+
+??1?$lock_guard@Vmutex@std@@@std@@QEAA@XZ (public: __cdecl std::lock_guard<class std::mutex>::~lock_guard<class std::mutex>(void)):
+  0000000000000000: 48 8B 09           mov         rcx,qword ptr [rcx]
+  0000000000000003: E9 00 00 00 00     jmp         _Mtx_unlock
+
+?_Check_load_memory_order@std@@YAXW4memory_order@1@@Z (void __cdecl std::_Check_load_memory_order(enum std::memory_order)):
+  0000000000000000: C2 00 00           ret         0
+
+?_Mymtx@_Mutex_base@std@@AEAAPEAU_Mtx_internal_imp_t@@XZ (private: struct _Mtx_internal_imp_t * __cdecl std::_Mutex_base::_Mymtx(void)):
+  0000000000000000: 48 8B C1           mov         rax,rcx
+  0000000000000003: C3                 ret
+
+?_Verify_ownership_levels@_Mutex_base@std@@IEAA_NXZ (protected: bool __cdecl std::_Mutex_base::_Verify_ownership_levels(void)):
+  0000000000000000: 81 79 4C FF FF FF  cmp         dword ptr [rcx+4Ch],7FFFFFFFh
+                    7F
+  0000000000000007: 75 0A              jne         0000000000000013
+  0000000000000009: C7 41 4C FE FF FF  mov         dword ptr [rcx+4Ch],7FFFFFFEh
+                    7F
+  0000000000000010: 32 C0              xor         al,al
+  0000000000000012: C3                 ret
+  0000000000000013: B0 01              mov         al,1
+  0000000000000015: C3                 ret
+
+?fetch_add@?$_Atomic_integral@_K$07@std@@QEAA_K_KW4memory_order@2@@Z (public: unsigned __int64 __cdecl std::_Atomic_integral<unsigned __int64,8>::fetch_add(unsigned __int64,enum std::memory_order)):
+  0000000000000000: F0 48 0F C1 11     lock xadd   qword ptr [rcx],rdx
+  0000000000000005: 48 8B C2           mov         rax,rdx
+  0000000000000008: C3                 ret
+
+?load@?$_Atomic_storage@_K$07@std@@QEBA_KW4memory_order@2@@Z (public: unsigned __int64 __cdecl std::_Atomic_storage<unsigned __int64,8>::load(enum std::memory_order)const ):
+  0000000000000000: 48 8B 01           mov         rax,qword ptr [rcx]
+  0000000000000003: 85 D2              test        edx,edx
+  0000000000000005: 74 01              je          0000000000000008
+  0000000000000007: 90                 nop
+  0000000000000008: C3                 ret
+
+?lock@_Mutex_base@std@@QEAAXXZ (public: void __cdecl std::_Mutex_base::lock(void)):
+  0000000000000000: 40 53              push        rbx
+  0000000000000002: 48 83 EC 20        sub         rsp,20h
+  0000000000000006: 48 8B D9           mov         rbx,rcx
+  0000000000000009: E8 00 00 00 00     call        _Mtx_lock
+  000000000000000E: 85 C0              test        eax,eax
+  0000000000000010: 75 21              jne         0000000000000033
+  0000000000000012: 81 7B 4C FF FF FF  cmp         dword ptr [rbx+4Ch],7FFFFFFFh
+                    7F
+  0000000000000019: 74 06              je          0000000000000021
+  000000000000001B: 48 83 C4 20        add         rsp,20h
+  000000000000001F: 5B                 pop         rbx
+  0000000000000020: C3                 ret
+  0000000000000021: B9 06 00 00 00     mov         ecx,6
+  0000000000000026: C7 43 4C FE FF FF  mov         dword ptr [rbx+4Ch],7FFFFFFEh
+                    7F
+  000000000000002D: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  0000000000000032: CC                 int         3
+  0000000000000033: B9 05 00 00 00     mov         ecx,5
+  0000000000000038: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  000000000000003D: CC                 int         3
+
+?unlock@_Mutex_base@std@@QEAAXXZ (public: void __cdecl std::_Mutex_base::unlock(void)):
+  0000000000000000: E9 00 00 00 00     jmp         _Mtx_unlock
+
+_Check_memory_order:
+  0000000000000000: C2 00 00           ret         0
+
+asm_watchdog_get_baseline:
+  0000000000000000: 40 53              push        rbx
+  0000000000000002: 48 83 EC 20        sub         rsp,20h
+  0000000000000006: 48 8B D9           mov         rbx,rcx
+  0000000000000009: 48 85 C9           test        rcx,rcx
+  000000000000000C: 75 0B              jne         0000000000000019
+  000000000000000E: B8 FF FF FF FF     mov         eax,0FFFFFFFFh
+  0000000000000013: 48 83 C4 20        add         rsp,20h
+  0000000000000017: 5B                 pop         rbx
+  0000000000000018: C3                 ret
+  0000000000000019: 48 8D 0D 00 00 00  lea         rcx,[?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A]
+                    00
+  0000000000000020: E8 00 00 00 00     call        _Mtx_lock
+  0000000000000025: 85 C0              test        eax,eax
+  0000000000000027: 75 44              jne         000000000000006D
+  0000000000000029: 81 3D 4C 00 00 00  cmp         dword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+4Ch],7FFFFFFFh
+                    FF FF FF 7F
+  0000000000000033: 74 23              je          0000000000000058
+  0000000000000035: C5 FC 10 05 60 00  vmovups     ymm0,ymmword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+60h]
+                    00 00
+  000000000000003D: C5 FC 11 03        vmovups     ymmword ptr [rbx],ymm0
+  0000000000000041: 48 8D 0D 00 00 00  lea         rcx,[?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A]
+                    00
+  0000000000000048: C5 F8 77           vzeroupper
+  000000000000004B: E8 00 00 00 00     call        _Mtx_unlock
+  0000000000000050: 33 C0              xor         eax,eax
+  0000000000000052: 48 83 C4 20        add         rsp,20h
+  0000000000000056: 5B                 pop         rbx
+  0000000000000057: C3                 ret
+  0000000000000058: B9 06 00 00 00     mov         ecx,6
+  000000000000005D: C7 05 4C 00 00 00  mov         dword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+4Ch],7FFFFFFEh
+                    FE FF FF 7F
+  0000000000000067: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  000000000000006C: CC                 int         3
+  000000000000006D: B9 05 00 00 00     mov         ecx,5
+  0000000000000072: E8 00 00 00 00     call        ?_Throw_Cpp_error@std@@YAXH@Z
+  0000000000000077: CC                 int         3
+
+asm_watchdog_get_status:
+  0000000000000000: 48 85 C9           test        rcx,rcx
+  0000000000000003: 75 06              jne         000000000000000B
+  0000000000000005: B8 FF FF FF FF     mov         eax,0FFFFFFFFh
+  000000000000000A: C3                 ret
+  000000000000000B: 48 8B 05 50 00 00  mov         rax,qword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+50h]
+                    00
+  0000000000000012: 48 89 01           mov         qword ptr [rcx],rax
+  0000000000000015: 48 63 05 80 00 00  movsxd      rax,dword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+80h]
+                    00
+  000000000000001C: 48 89 41 08        mov         qword ptr [rcx+8],rax
+  0000000000000020: 48 8B 05 58 00 00  mov         rax,qword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+58h]
+                    00
+  0000000000000027: 48 89 41 10        mov         qword ptr [rcx+10h],rax
+  000000000000002B: 33 C0              xor         eax,eax
+  000000000000002D: 48 89 41 18        mov         qword ptr [rcx+18h],rax
+  0000000000000031: 48 89 41 20        mov         qword ptr [rcx+20h],rax
+  0000000000000035: 48 89 41 28        mov         qword ptr [rcx+28h],rax
+  0000000000000039: C3                 ret
+
+asm_watchdog_verify:
+  0000000000000000: F0 48 FF 05 50 00  lock inc    qword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+50h]
+                    00 00
+  0000000000000008: C7 05 80 00 00 00  mov         dword ptr [?g_wd@?A0xf1cfed00@@3UWatchdogStatusLane@1@A+80h],0
+                    00 00 00 00
+  0000000000000012: 33 C0              xor         eax,eax
+  0000000000000014: C3                 ret
+
+  Summary
+
+           C .bss
+         198 .chks64
+          88 .data
+        F54C .debug$S
+          5C .debug$T
+         1AF .drectve
+          24 .pdata
+         1AA .text$mn
+           5 .voltbl
+          1C .xdata

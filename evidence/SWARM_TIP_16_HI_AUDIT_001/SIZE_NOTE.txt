@@ -1,0 +1,10 @@
+SIZE_NOTE — SWARM_TIP_16_HI_AUDIT_001
+Larger selected models (approx on-disk from /api/tags size):
+qwen3.8:27b                 ~17GB
+deepseek-r1:32b             ~19GB
+ornith-1.5:35b              ~22GB
+nemotron-3.5-bolt:latest    ~24GB
+nemotron-3.5-lightning:30b  ~25GB
+bigdaddygnative:latest      ~25GB
+bigdaddyglocal:latest       ~25GB
+Timeouts scaled in harness (360s / 600s). All HI+AUDIT PASS this run.

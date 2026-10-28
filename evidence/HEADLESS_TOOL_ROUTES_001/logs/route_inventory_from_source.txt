@@ -1,0 +1,44 @@
+﻿SOURCE=G:\~dev\rawrxd\src\win32app\HeadlessIDE_ToolRoutes.cpp
+INPROC_IMPL=HeadlessIDE::executeToolRepl
+HTTP_DISPATCH=HeadlessIDE::routeToolAndFileRequest
+
+HTTP_PATHS (POST only):
+  /api/tool
+  /run-tool
+  /api/tool/* (prefix)
+  /api/read-file
+  /api/file/read
+  /api/file
+  /api/write-file
+  /api/file/write
+  /api/list-dir
+  /api/file/list
+  /api/cli
+  /api/command
+  /api/command/* (prefix)
+  /api/delete-file
+  /api/rename-file
+  /api/copy-file
+  /api/move-file
+  /api/mkdir
+  /api/stat-file
+  /api/search-files
+  /api/list-directory
+
+TOOLS (executeToolRepl):
+  read_motd
+  read_file
+  write_file
+  list_directory (alias list_dir)
+  execute_command (alias cli|command)
+  git_status
+  delete_file
+  rename_file
+  copy_file
+  move_file
+  mkdir
+  stat_file
+  search_files
+
+MOTD_GATE: g_headlessMotdAcked; non-MOTD tools return motd_required until read_motd/read_file(MOTD)
+REPL_TOOL_ENTRY: NONE (printReplHelp has no tool command; executeToolRepl only via HTTP routeToolAndFileRequest)

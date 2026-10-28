@@ -1,0 +1,31 @@
+DEEP2_VULKAN_SUBMIT_OPT_001 SYNC_BOUNDARIES
+ASOF=2026-10-27T03:35:00-04:00
+PROMOTE=0
+PATH=RuntimeGraph ExecuteToken + QuantDot EndQuantDotBatch (stack A)
+
+NECESSARY_HOST_SYNC (cannot remove without GPU-resident consumers):
+  1) After QKV DotBatch flush -> OpAttention (CPU) reads Q/K/V host buffers
+  2) After O DotBatch flush -> ResidualAdd (CPU) reads attn_out
+  3) After gate+up DotBatch flush -> SiLU/SwiGLU (CPU) reads gate/up
+  4) After down DotBatch flush -> ResidualAdd (CPU) reads ffn_out
+  ≈4 EndQuantDotBatch + fence waits per layer × ~22 layers ≈ 88 submits/fwd
+  Matches sealed SUBMITS_PER_FORWARD=89.0
+
+NOT_DOMINANT:
+  queue_submit_ms=48.4 vs host_wait_ms=6544.3 (baseline)
+  Fence deletion alone does not cut GPU_EXECUTION_MS=6244.1
+
+FUSE_STATUS:
+  BeginFusedLayer/EndFusedLayer/ForceHostSync wired on QuantDot + RuntimeGraph
+  DEEP2_RUNTIME_FUSE=1 (bench default) CLASSIFIES waits; does not merge CBs
+  across necessary host sync points yet.
+
+TO_REACH_<=10:
+  GPU-resident AttnDecode (+ ideally RMS/SiLU/Residual) recorded into the same
+  QuantDot command buffer as DotBlocked, OR full-token fuse (1 submit/token).
+  Layer-boundary fuse alone on tinyllama (22 layers) is still >10 unless
+  multi-layer recording is used.
+
+INSTRUMENTATION:
+  DEEP2_SUBMIT_TRACE=1 -> EndQuantDotBatch dependency=HOST_READBACK necessary=1
+  ForceHostSync dependency=HOST_DATA necessary=1

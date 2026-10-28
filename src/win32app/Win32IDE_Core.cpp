@@ -2110,16 +2110,21 @@ bool Win32IDE::createWindow()
         p0StartupCk("before SettingsManager");
         OutputDebugStringA("RawrXD: Initializing SettingsManager...\n");
         fileTrace("[Core] createWindow_before_SettingsManager");
-        if (RawrXD::GetSettings().Initialize()) {
+        // TIP_GUI_CREATEWINDOW_FIX_001: stderr breadcrumbs around GetSettings().Initialize
+        // (nested non-recursive mutex was aborting here with MAIN_HWND=0).
+        fprintf(stderr, "[STARTUP] SettingsManager::Initialize CALL\n");
+        fflush(stderr);
+        const bool settingsOk = RawrXD::GetSettings().Initialize();
+        fprintf(stderr, "[STARTUP] SettingsManager::Initialize RETURN ok=%d\n", settingsOk ? 1 : 0);
+        fflush(stderr);
+        if (settingsOk) {
             p0StartupCk("after SettingsManager Initialize OK");
             OutputDebugStringA("RawrXD: SettingsManager initialized\n");
             LOG_INFO("[createWindow] SettingsManager initialized");
-            
-            // Apply window state from settings
+
             auto windowState = RawrXD::GetSettings().GetWindowState();
             p0StartupCk("after GetWindowState");
             if (windowState.IsValid()) {
-                // Store for use in window creation
                 m_windowX = windowState.x;
                 m_windowY = windowState.y;
                 m_windowWidth = windowState.width;

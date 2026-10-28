@@ -1,23 +1,7 @@
 // ============================================================================
-// asm_link_stubs.cpp — Stub implementations for missing ASM symbols
+// asm_link_stubs.cpp — DORMANT (B06). Must NOT enter any product SOURCES list.
+// Owner: MagBuf unlinked_symbols_batch_001.cpp (asm_gguf_loader_close /
+//        asm_lsp_bridge_shutdown). Re-adding this TU → LNK2005.
+// LAW: evidence/BLOCKER_CLEAR_015_001/LAW_INTENTIONAL_STRIPS.txt
 // ============================================================================
-// These are minimal stub implementations for ASM functions that are referenced
-// but not yet available in the MASM source files.
-// ============================================================================
-
-#include <windows.h>
-#include <cstddef>
-
-extern "C" {
-
-// GGUF loader close stub
-void asm_gguf_loader_close(void* /*ctx*/) {
-    OutputDebugStringA("[asm_link_stubs] asm_gguf_loader_close stub called\n");
-}
-
-// LSP bridge shutdown stub
-void asm_lsp_bridge_shutdown(void) {
-    OutputDebugStringA("[asm_link_stubs] asm_lsp_bridge_shutdown stub called\n");
-}
-
-} // extern "C"
+#error "asm_link_stubs.cpp is CMake-omitted; MagBuf batch_001 owns close/shutdown. See BLOCKER_CLEAR_015_001 B06."

@@ -532,6 +532,20 @@ FailureClassification Win32IDE::hookToolResult(const std::string& toolName,
                                                  const std::string& toolOutput) {
     if (!m_failureDetectorEnabled) return FailureClassification::ok();
 
+    // A05 consumer reject: synthetic/GateStub success must never classify as ok.
+    if (RawrXD::UI::ToolOutputLooksSyntheticSuccess(toolOutput)) {
+        auto fc = FailureClassification::make(
+            AgentFailureType::ToolError, 0.99f,
+            "Tool '" + toolName + "': reject_synthetic (SYNTHETIC/GATED_STUB/FICTION)");
+        m_failureStats.toolErrorCount++;
+        LOG_WARNING("[FailureDetector] Synthetic tool success rejected: " + toolName);
+        recordEvent(AgentEventType::FailureDetected, "",
+                   "Tool: " + toolName, "reject_synthetic", 0, false, "",
+                   "{\"reason\":\"ToolError\",\"tool\":\"" + toolName +
+                   "\",\"synthetic\":1,\"confidence\":0.99}");
+        return fc;
+    }
+
     // Tool-specific error detection
     std::string lower = toolOutput;
     std::transform(lower.begin(), lower.end(), lower.begin(),

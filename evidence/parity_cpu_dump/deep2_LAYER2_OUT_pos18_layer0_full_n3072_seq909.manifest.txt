@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER2_OUT
+pos=18
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=725a3f0189049904
+l2=3.4554674083073929
+seq=909
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_LAYER2_OUT_pos18_layer0_full_n3072_seq909.bin

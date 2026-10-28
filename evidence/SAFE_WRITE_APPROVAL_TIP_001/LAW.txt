@@ -1,0 +1,92 @@
+SAFE_WRITE_APPROVAL_TIP_001 / LAW
+=================================
+ASOF_UTC=2026-10-28T07:06:01Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P0=A06 / A07
+RELINK=NO
+TIP_REBUILD=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+MET requires full gate conjunction — partial runtime ≠ MET
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1 (pre + post invoke)
+MAP cites (tip):
+  CanonicalInsideWorkspace @ IdeAuthPath.cpp.obj
+  DecideWin32 @ IdeAuthDecide.cpp.obj
+  PrivilegedExecGranted @ IdeAuthSession.cpp.obj
+  AgentParseToolCalls @ AgentToolParse.cpp.obj
+  AgentExecTool @ AgentToolExec.cpp.obj
+  AgentSessionNoteWrite / AgentSessionReviewFirst @ AgentSession.cpp.obj
+  executeToolRepl / routeToolAndFileRequest @ HeadlessIDE_ToolRoutes.cpp.obj
+  executeRollback / rollbackLast @ agent_safety_contract.cpp.obj
+  cmdSafetyRollbackLast @ Win32IDE_ExecutionGovernor.cpp.obj
+ComposerPanel ExecuteAtomicWrite: not tip-map cited (static / not linked as export)
+
+INVOKE (earned, no rebuild)
+---------------------------
+SPAWN: RawrXD-Win32IDE.exe --headless --local --port 18774 --bind 127.0.0.1
+  --dir evidence/SAFE_WRITE_APPROVAL_TIP_001/sandbox
+ENV: RAWRXD_HOSTED_API_KEY=<probe-key> ; RAWRXD_IDE_EXEC_GRANT unset
+METHOD: curl.exe POST/GET /api/tool + /api/safety/status with Origin + X-API-Key
+
+A06 FACETS
+----------
+DENY (workspace path policy via IdeAuth::CanonicalInsideWorkspace):
+  RUNTIME_REACHED=1
+  ABS outside → 403 forbidden "outside workspace" ; FS OUTSIDE_ABS=False
+  .. traversal → 403 "traversal rejected" ; FS OUTSIDE_TRAV=False
+  UNC → 403 "unc rejected"
+  Inside write → 200 success ; FS INSIDE_WROTE=True
+ATOMIC (tmp+ReplaceFile / CreateFile CREATE_ALWAYS):
+  Headless writeFileLimited = CreateFileA CREATE_ALWAYS (NOT atomic)
+  NOT_RUN on tip product headless write path ; MET denied for atomic facet
+PREVIEW (diff / AgentSessionReviewFirst on write path):
+  SOURCE_WIRED in tip map ; headless write_file does NOT call AgentSessionNoteWrite
+  NOT_RUN on tip headless product write path
+ROLLBACK (AgentSafetyContract /api/safety/rollback):
+  SOURCE_WIRED in tip map ; headless exposes GET /api/safety/status only
+  Status body: "Safety contract: Not initialized" (Phase10 not armed this spawn)
+  NOT_RUN for rollback E2E on tip headless
+
+A07 FACETS
+----------
+AUTH / APPROVAL gate:
+  NO_KEY → 401 {"error":"unauthorized"} RUNTIME_REACHED
+NETWORK isolation:
+  Origin https://evil.example → 403 origin_denied RUNTIME_REACHED
+SHELL / EXEC approval:
+  execute_command without RAWRXD_IDE_EXEC_GRANT →
+    {"success":false,"error":"execution_not_granted"} RUNTIME_REACHED
+PATH isolation:
+  same A06 deny probes RUNTIME_REACHED
+PROMPT-INJECTION parse negatives (AgentParseToolCalls substring ignore):
+  SOURCE_WIRED in tip map ; IdeAuthBoundary_test.cpp unit exists but tip HTTP NOT_RUN
+  NOT_RUN for injection-negative product invoke this seal
+
+DISPOSITION
+-----------
+A06: RUNTIME_REACHED (deny earned) ; MET=0
+     (atomic/preview/rollback = honest NOT_RUN on tip headless product path)
+A07: RUNTIME_REACHED (auth/origin/exec/path isolation negatives earned) ; MET=0
+     (prompt-injection parse negatives = SOURCE_WIRED / HTTP NOT_RUN)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+CROSS_CITE
+----------
+WIN32IDE_CLOSURE_MATRIX_001 A06 / A07
+IdeAuthPath.cpp / IdeAuthDecide.cpp / IdeAuthSession.cpp
+HeadlessIDE_ToolRoutes.cpp writeFileLimited / resolveToolPath
+AgentToolParse.cpp / AgentToolExec.cpp / AgentSession.cpp
+agent_safety_contract.cpp

@@ -1,4 +1,8 @@
-// Gold link closure batch 16 — agent registry + Sentinel hash (Detour MASM not in MASM_OBJECTS).
+// Batch 016 — Win32IDE owner for g_AgentRegistry + Sentinel FNV hash.
+// GOLD lane: gold_link_closure.cpp owns g_AgentRegistry — FILTER EXCLUDE this TU on GOLD.
+// inference_link_production.cpp also defines Sentinel hash (not on Win32IDE) — do not dual-link.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
 
 #include <cstdint>
 

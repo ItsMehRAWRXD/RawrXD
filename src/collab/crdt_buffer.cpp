@@ -1,5 +1,12 @@
-#include "collab/crdt_buffer.h"
+// Must match Win32IDE_Collab (global CRDTBuffer from include/collab/crdt_buffer.h).
+// Do not pull src/collab/crdt_buffer.h (RawrXD:: namespaced) — that mangling ODR-misses the IDE.
+#include "../../include/collab/crdt_buffer.h"
 #include <sstream>
+#include <algorithm>
+
+CRDTBuffer::CRDTBuffer() : m_text()
+{
+}
 
 void CRDTBuffer::applyRemoteOperation(const std::string &operationJson)
 {

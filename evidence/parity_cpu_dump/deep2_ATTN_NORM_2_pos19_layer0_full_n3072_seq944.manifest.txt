@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_2
+pos=19
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=bcb741746fb4f4fd
+l2=3.086453347260822
+seq=944
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_ATTN_NORM_2_pos19_layer0_full_n3072_seq944.bin

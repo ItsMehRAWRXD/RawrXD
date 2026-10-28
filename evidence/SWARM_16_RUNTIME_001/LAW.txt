@@ -1,0 +1,136 @@
+SWARM_16_RUNTIME_001 / LAW
+===========================
+ASOF_UTC=2026-10-28T11:00:00Z
+WORKSPACE=G:\~dev\rawrxd
+MOTD_ACK=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+TIP_REBUILD=NO
+RELINK=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != LINKED != INVOKED != RUNTIME_PASS != CERTIFIED
+NOT_RUN != PASS
+PostMessage delivered alone != RUNTIME_PASS
+Distributed /api/swarm/status != resolveSwarmModelOrchPlan
+/api/subagent nativeHexMag=false spawn != HexMag model orch
+Ollama harness PASS (SWARM_TIP_16_HI_AUDIT_001) != tip EXE RUNTIME_PASS
+handleSubAgentSwarm (feature_handlers) capability list != Win32IDE::onSubAgentSwarm
+
+MISSION
+-------
+Seal product HexMag swarm runtime against CURRENT tip EXE WITHOUT modifying it first.
+Invoke onSubAgentSwarm via GUI automation / PostMessage if possible.
+Capture INVOKED|NOT_RUN, models, dispatch order, tokens, attribution,
+cancel, queued vs parallel, resource notes.
+Distinguish SOURCE_WIRED / LINKED / INVOKED / RUNTIME_PASS / CERTIFIED.
+If unmodified EXE cannot expose orch: document exact blocker; tip climb
+only if code fix mandatory. TIP_CLIMB=HOLD → no rebuild this seal.
+
+TIP EXE (authority)
+-------------------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1 (pre + post all probes)
+CITE_ABSORB=TIP_ABSORB_SWARM_002
+
+COMMAND / MENU / WM (product path)
+----------------------------------
+CMD_ID=4111
+#define=IDM_SUBAGENT_SWARM (Win32IDE_Commands.h)
+CANONICAL_REGISTRY=subagent.swarm / !swarm (command_registry.hpp X(4111))
+MENU=Agent > SubAgent > "Agent: Execute &HexMag Swarm" (Win32IDE.cpp)
+WM=WM_COMMAND wParam=4111 (Win32IDE_AgentCommands.cpp case IDM_SUBAGENT_SWARM)
+HANDLER_LINKED=?onSubAgentSwarm@Win32IDE@@QEAAXXZ
+  VA_PREF=000000014084e0a0 RVA=0x84E0A0 OBJ=Win32IDE_SubAgent.cpp.obj
+ORCH_LINKED=?resolveSwarmModelOrchPlan@Win32App@RawrXD@@...
+  VA_PREF=00000001407d35e0 RVA=0x7D35E0 OBJ=Win32IDE_SwarmModelSelector.cpp.obj
+NOTE=feature_handlers::handleSubAgentSwarm is a DIFFERENT non-orch stub
+     (capability enumerate); product orch is Win32IDE_SubAgent.cpp path only.
+
+LAYER STATUS (fail-closed)
+--------------------------
+SOURCE_WIRED=1  (SWARM_MODEL_ORCH_001 + SubAgent onSubAgentSwarm source)
+LINKED=1        (map symbols PRESENT on tip 6832F439)
+INVOKED=0       (onSubAgentSwarm / resolveSwarmModelOrchPlan NOT entered)
+RUNTIME_PASS=0  (no models/tokens/dispatch/cancel observed on tip EXE)
+CERTIFIED=0
+
+INVOKE ATTEMPTS (unmodified EXE)
+--------------------------------
+A) GUI PostMessage WM_COMMAND 4111
+   SPAWN=RawrXD-Win32IDE.exe (no --headless)
+   RESULT=createWindow FAIL → process exit code 2 within ~5s
+   STDERR_LAW=main_win32.cpp: "createWindow failed — no interactive window station.
+              Run with --headless for terminal/server mode."
+   MAIN_HWND=NOT_FOUND (class RawrXD_IDE_MainWindow never created)
+   POSTMESSAGE=NOT_DELIVERED
+   ODS_HIT_onSubAgentSwarm=0
+   ARTIFACTS=logs/gui_probe_stdout.txt logs/gui_longwait.txt
+   BLOCKER_ID=GUI_NO_INTERACTIVE_WINDOW_STATION
+
+B) Headless HTTP (no API key)
+   SPAWN=--headless --local --port 18771
+   ALL routes STATUS=503 authentication_not_configured
+   ARTIFACTS=logs/headless_api_probe.txt
+   BLOCKER_ID=HEADLESS_AUTH_NOT_CONFIGURED (secondary; not orch)
+
+C) Headless HTTP (RAWRXD_HOSTED_API_KEY set) port 18772/18773
+   /health=200 authConfigured=true
+   /api/swarm/status=200 Distributed SwarmOrchestrator Standby (Peers:0)
+     ≠ resolveSwarmModelOrchPlan / HexMag N=1..16
+   /api/swarm/start|/api/swarm/config=404 (not routed on HeadlessIDE)
+   /api/tool !swarm / subagent.swarm / id:4111=400 (shell-oriented; not registry 4111)
+   /api/subagent {"task":"..."}=202 spawned agentId=hsub-* nativeHexMag=false
+     JSONL job accept only — NOT Win32IDE::onSubAgentSwarm / orch plan
+   /api/hexmag/ask=503 hexmag_unavailable_on_platform
+   ORCH_MARKERS in bodies=0
+   ARTIFACTS=logs/headless_auth_api_probe.txt logs/headless_tool_variants.txt
+   BLOCKER_ID=HEADLESS_NO_ORCH_EXPOSE
+
+D) CreateRemoteThread onSubAgentSwarm
+   Requires Win32IDE* this (member fn). Headless has no GUI Win32IDE /
+   no MAIN_HWND GWLP_USERDATA. GateStub-style nullptr is UNSAFE for
+   onSubAgentSwarm (uses this→bridge/editor). NOT attempted (crash risk;
+   would not equal product orch RUNTIME_PASS anyway).
+   BLOCKER_ID=NO_SAFE_THIS_FOR_REMOTE_MEMBER
+
+CAPTURE TABLE (observed)
+------------------------
+INVOKED|NOT_RUN          = NOT_RUN
+model identities         = NOT_OBSERVED (tip EXE orch not entered)
+dispatch order           = NOT_OBSERVED
+tokens                   = NOT_OBSERVED (GENERATED_TOKENS tip-swarm=0)
+attribution              = NOT_OBSERVED
+cancel attempt           = NOT_ATTEMPTED (no live swarm to cancel)
+queued vs parallel       = NOT_OBSERVED (plan.maxParallel unread at runtime)
+resource notes           = GUI exit=2; headless alive+auth; distributed swarm
+                           standby only; nativeHexMag=false on /api/subagent
+
+EXACT BLOCKER (primary)
+-----------------------
+Product HexMag orch is only entered via Win32IDE::onSubAgentSwarm
+(WM_COMMAND 4111 / menu). This execution environment cannot create
+RawrXD_IDE_MainWindow (no interactive window station → exit 2).
+Headless tip surface has no route that calls resolveSwarmModelOrchPlan
+or onSubAgentSwarm. Therefore INVOKED=0 / RUNTIME_PASS=0 on tip SHA
+6832F439 without inventing PASS.
+
+TIP_CLIMB / REBUILD HOLD
+------------------------
+A local-only headless expose (HeadlessIDE.cpp and/or LocalServer /
+SubAgent) would change EXE SHA → requires LIVE_TETRAD+TOKEN64+MULTI_FAMILY
+re-seal. TIP_CLIMB=HOLD and tip SHA must remain 6832F439 unless code fix
+mandatory. Fail-closed NOT_RUN seal is valid without tip climb.
+HEADLESS_ORCH_EXPOSE=HELD (not implemented this seal).
+
+MATRIX TARGETS
+--------------
+G07 / S-002 / G08 / G10 → remain SOURCE_WIRED or OPEN; RUNTIME_REACHED
+not earned; MET=0. Cite this pack + SWARM_TIP_16_HI_AUDIT_001.
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,0 +1,42 @@
+﻿BLOCKER_CLEAR_015_001 — intentional strip / omit LAWs
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+B06 asm_link_stubs.cpp
+  CMakeLists: NOT in any SOURCES. #error if compiled.
+  Re-add = LNK2005 vs MagBuf batch_001.
+  DISPOSITION=GATED_OMIT
+
+B07 subsystem_mode_runtime.cpp
+  CMakeLists: NOT in Win32IDE SOURCES. #error if compiled.
+  Empty void asm_* would shadow MagBuf/omega/subsystem_api if linked.
+  DISPOSITION=GATED_OMIT
+
+B08 RAWR_HAS_RAWR_INFERENCE=0 SPLIT
+  Authority: evidence/INFERENCE_FLAG_AUDIT_001/
+  Flip HOLD — product path is ProductOpen→ProductRun, not register_rawr_inference.
+  DISPOSITION=GATED_HOLD
+
+B09 RAWR_HAS_SOVEREIGN_ENGINES=0
+  CMakeLists ~7617 hard-set. Intentional Win32IDE strip.
+  DISPOSITION=GATED_INTENTIONAL
+
+B10 RAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0
+  C owner: rawrxd_subsystem_api.cpp SO_* (fail-closed -1).
+  DISPOSITION=GATED_C_OWNER
+
+B11 RAWRXD_LINK_ANALYZER_DISTILLER_ASM=0
+  C owner: rawrxd_subsystem_api.cpp AD_ProcessGGUF (fail-closed -1).
+  DISPOSITION=GATED_C_OWNER
+
+B12 unlinked_symbols_batch_017.cpp
+  Win32IDE COMMENT-OMIT (~5864). Titan/Sampler prefer ASM/gold.
+  DISPOSITION=GATED_OMIT
+
+B13 P1_COPILOT_CHAIN
+  evidence/P1_PRODUCT_GATE.txt — P1_COPILOT_CHAIN=BLOCKED / P1_PROMOTE=BLOCKED
+  NEXT_GATE=POST_SCHEDULER_PROMOTION_REQUIREMENTS (AGENTS.md; MULTI_FAMILY open)
+  DISPOSITION=BLOCKED_DOCUMENTED
+
+B14 AnnotationOverlay
+  IsAgentBridgeHealthy + m_agentBridgeReady + screenRect.
+  DISPOSITION=CLEARED

@@ -26,1179 +26,1185 @@ struct CommandResult {
     const char* error;
 };
 
+// COMMAND_HANDLERS_FICTION_GATE_001 — GATED_FICTION_EXPLICIT
+// Linked fail-closed theater: exitCode=1 + FEATURE_FICTION=1. Not product PASS.
+// LAW: GATED (not OPEN) when sealed; PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+static CommandResult GateFiction(const char* tagged) {
+    return CommandResult{1, tagged, nullptr};
+}
+
 // Model management handlers — fiction stubs (not ProductRun)
 CommandResult handleModelList(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelList", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelList");
 }
 
 CommandResult handleModelLoad(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelLoad", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelLoad");
 }
 
 CommandResult handleModelUnload(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelUnload", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelUnload");
 }
 
 CommandResult handleModelQuantize(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelQuantize", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelQuantize");
 }
 
 CommandResult handleModelFinetune(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelFinetune", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelFinetune");
 }
 
 // Disk management handlers
 CommandResult handleDiskListDrives(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskListDrives", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskListDrives");
 }
 
 CommandResult handleDiskScanPartitions(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskScanPartitions", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskScanPartitions");
 }
 
 // Governor handlers
 CommandResult handleGovernorStatus(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorStatus", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorStatus");
 }
 
 CommandResult handleGovernorSetPowerLevel(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorSetPowerLevel", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorSetPowerLevel");
 }
 
 // Marketplace handlers
 CommandResult handleMarketplaceList(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceList", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceList");
 }
 
 CommandResult handleMarketplaceInstall(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceInstall", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceInstall");
 }
 
 // Reverse engineering handlers
 CommandResult handleRevengFindVulnerabilities(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 RevengFindVulnerabilities", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 RevengFindVulnerabilities");
 }
 
 // Hybrid handlers
 CommandResult handleHybridSemanticPrefetch(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridSemanticPrefetch", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridSemanticPrefetch");
 }
 
 CommandResult handleHybridCorrectionLoop(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridCorrectionLoop", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridCorrectionLoop");
 }
 
 // Multi-response handlers — fiction (not ProductRun)
 CommandResult handleMultiRespGenerate(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespGenerate", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespGenerate");
 }
 
 CommandResult handleMultiRespSelectPreferred(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespSelectPreferred", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespSelectPreferred");
 }
 
 CommandResult handleMultiRespCompare(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespCompare", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespCompare");
 }
 
 CommandResult handleMultiRespShowStats(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowStats", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowStats");
 }
 
 CommandResult handleMultiRespShowTemplates(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowTemplates", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowTemplates");
 }
 
 CommandResult handleMultiRespToggleTemplate(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespToggleTemplate", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespToggleTemplate");
 }
 
 // Additional MultiResp handlers
 CommandResult handleMultiRespApplyPreferred(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespApplyPreferred", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespApplyPreferred");
 }
 
 CommandResult handleMultiRespClearHistory(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespClearHistory", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespClearHistory");
 }
 
 CommandResult handleMultiRespSetMax(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespSetMax", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespSetMax");
 }
 
 CommandResult handleMultiRespShowLatest(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowLatest", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowLatest");
 }
 
 CommandResult handleMultiRespShowPrefs(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowPrefs", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowPrefs");
 }
 
 CommandResult handleMultiRespShowStatus(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowStatus", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MultiRespShowStatus");
 }
 
 // AI Context handlers — fiction unless wired to real engine ctx
 CommandResult handleAICtx4K(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx4K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx4K");
 }
 
 CommandResult handleAICtx32K(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx32K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx32K");
 }
 
 CommandResult handleAICtx64K(const CommandContext& ctx) {
     (void)ctx;
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx64K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AICtx64K");
 }
 
 CommandResult handleAICtx128K(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto128K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto128K");
 }
 
 CommandResult handleAICtx256K(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto256K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto256K");
 }
 
 CommandResult handleAICtx512K(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto512K", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto512K");
 }
 
 CommandResult handleAICtx1M(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto1M", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextsetto1M");
 }
 
 CommandResult handleAINoRefusal(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Norefusalmodeenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Norefusalmodeenabled");
 }
 
 // Assembly handlers
 CommandResult handleAsmCallGraph(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Callgraphgenerated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Callgraphgenerated");
 }
 
 CommandResult handleAsmDataFlow(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Dataflowanalysiscomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Dataflowanalysiscomplete");
 }
 
 CommandResult handleAsmFindRefs(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Referencesfound", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Referencesfound");
 }
 
 CommandResult handleAsmGoto(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gotolocationresolved", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gotolocationresolved");
 }
 
 CommandResult handleAsmParse(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Assemblyparsed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Assemblyparsed");
 }
 
 CommandResult handleAsmSections(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Sectionslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Sectionslisted");
 }
 
 CommandResult handleAsmSymbolTable(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symboltablegenerated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symboltablegenerated");
 }
 
 // Audit handlers
 CommandResult handleAuditDashboard(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Auditdashboarddisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Auditdashboarddisplayed");
 }
 
 // Backend handlers
 CommandResult handleBackendConfigure(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendconfigured", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendconfigured");
 }
 
 CommandResult handleBackendHealthCheck(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendhealthy", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendhealthy");
 }
 
 CommandResult handleBackendSaveConfigs(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Configssaved", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Configssaved");
 }
 
 CommandResult handleBackendSetApiKey(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 APIkeyset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 APIkeyset");
 }
 
 CommandResult handleBackendShowStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendstatusdisplayed");
 }
 
 CommandResult handleBackendShowSwitcher(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendswitcherdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendswitcherdisplayed");
 }
 
 CommandResult handleBackendSwitchClaude(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoClaudebackend", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoClaudebackend");
 }
 
 CommandResult handleBackendSwitchGemini(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoGeminibackend", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoGeminibackend");
 }
 
 CommandResult handleBackendSwitchLocal(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Switchedtolocalbackend", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Switchedtolocalbackend");
 }
 
 CommandResult handleBackendSwitchOllama(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtonativeDeep2backend", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtonativeDeep2backend");
 }
 
 CommandResult handleBackendSwitchOpenAI(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoOpenAIbackend", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SwitchedtoOpenAIbackend");
 }
 
 // Beacon handlers
 CommandResult handleBeaconFullBeacon(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fullbeaconsent", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fullbeaconsent");
 }
 
 CommandResult handleBeaconHalfPulse(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Halfpulsesent", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Halfpulsesent");
 }
 
 CommandResult handleBeaconStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Beaconstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Beaconstatusdisplayed");
 }
 
 // Confidence handlers
 CommandResult handleConfidenceSetPolicy(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Confidencepolicyset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Confidencepolicyset");
 }
 
 CommandResult handleConfidenceStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Confidencestatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Confidencestatusdisplayed");
 }
 
 // Debugger handlers
 CommandResult handleDbgAddBp(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointadded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointadded");
 }
 
 CommandResult handleDbgAddWatch(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Watchadded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Watchadded");
 }
 
 CommandResult handleDbgAttach(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerattached", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerattached");
 }
 
 CommandResult handleDbgBreak(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breaktriggered", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breaktriggered");
 }
 
 CommandResult handleDbgClearBps(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointscleared", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointscleared");
 }
 
 CommandResult handleDbgDetach(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerdetached", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerdetached");
 }
 
 CommandResult handleDbgDisasm(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Disassemblydisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Disassemblydisplayed");
 }
 
 CommandResult handleDbgEnableBp(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointenabled");
 }
 
 CommandResult handleDbgEvaluate(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Expressionevaluated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Expressionevaluated");
 }
 
 CommandResult handleDbgGo(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Executioncontinued", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Executioncontinued");
 }
 
 CommandResult handleDbgKill(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Processkilled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Processkilled");
 }
 
 CommandResult handleDbgLaunch(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Processlaunched", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Processlaunched");
 }
 
 CommandResult handleDbgListBps(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointslisted");
 }
 
 CommandResult handleDbgMemory(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memorydisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memorydisplayed");
 }
 
 CommandResult handleDbgModules(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Moduleslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Moduleslisted");
 }
 
 CommandResult handleDbgRegisters(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Registersdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Registersdisplayed");
 }
 
 CommandResult handleDbgRemoveBp(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointremoved", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breakpointremoved");
 }
 
 CommandResult handleDbgRemoveWatch(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Watchremoved", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Watchremoved");
 }
 
 CommandResult handleDbgSearchMemory(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memorysearched", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memorysearched");
 }
 
 CommandResult handleDbgSetRegister(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Registerset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Registerset");
 }
 
 CommandResult handleDbgStack(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Stackdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Stackdisplayed");
 }
 
 CommandResult handleDbgStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Debuggerstatusdisplayed");
 }
 
 CommandResult handleDbgStepInto(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedinto", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedinto");
 }
 
 CommandResult handleDbgStepOut(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedout", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedout");
 }
 
 CommandResult handleDbgStepOver(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedover", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Steppedover");
 }
 
 CommandResult handleDbgSwitchThread(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Threadswitched", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Threadswitched");
 }
 
 CommandResult handleDbgSymbolPath(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolpathset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolpathset");
 }
 
 CommandResult handleDbgThreads(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Threadslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Threadslisted");
 }
 
 // Editor handlers
 CommandResult handleEditClipboardHist(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Clipboardhistorydisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Clipboardhistorydisplayed");
 }
 
 CommandResult handleEditorCycle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Editorcycled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Editorcycled");
 }
 
 CommandResult handleEditorMonacoCore(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacocoreeditoractive", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacocoreeditoractive");
 }
 
 CommandResult handleEditorRichEdit(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Richediteditoractive", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Richediteditoractive");
 }
 
 CommandResult handleEditorStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Editorstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Editorstatusdisplayed");
 }
 
 CommandResult handleEditorWebView2(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 WebView2editoractive", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 WebView2editoractive");
 }
 
 // Embedding handlers
 CommandResult handleEmbeddingEncode(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Textencoded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Textencoded");
 }
 
 // File handlers
 CommandResult handleFileAutoSave(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Autosaveenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Autosaveenabled");
 }
 
 // Governor additional handlers
 CommandResult handleGovKillAll(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alltaskskilled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alltaskskilled");
 }
 
 CommandResult handleGovStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Governorstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Governorstatusdisplayed");
 }
 
 CommandResult handleGovSubmitCommand(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Commandsubmitted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Commandsubmitted");
 }
 
 CommandResult handleGovTaskList(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Tasklistdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Tasklistdisplayed");
 }
 
 // Help handlers
 CommandResult handleHelpCmdRef(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Commandreferencedisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Commandreferencedisplayed");
 }
 
 CommandResult handleHelpPsDocs(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PowerShelldocsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PowerShelldocsdisplayed");
 }
 
 // Hotpatch handlers
 CommandResult handleHotpatchEventLog(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Eventlogdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Eventlogdisplayed");
 }
 
 CommandResult handleHotpatchMemRevert(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memoryreverted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Memoryreverted");
 }
 
 CommandResult handleHotpatchProxyStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Proxystatsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Proxystatsdisplayed");
 }
 
 // LSP additional handlers
 CommandResult handleLspClearDiag(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticscleared", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticscleared");
 }
 
 CommandResult handleLspDiagnostics(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticsdisplayed");
 }
 
 CommandResult handleLspFindRefs(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Referencesfound", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Referencesfound");
 }
 
 CommandResult handleLspGotoDef(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gotodefinition", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gotodefinition");
 }
 
 CommandResult handleLspHover(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Hoverinfodisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Hoverinfodisplayed");
 }
 
 CommandResult handleLspRename(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolrenamed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolrenamed");
 }
 
 CommandResult handleLspRestart(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPrestarted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPrestarted");
 }
 
 CommandResult handleLspStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPstatusdisplayed");
 }
 
 CommandResult handleLspSymbolInfo(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolinfodisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolinfodisplayed");
 }
 
 // LSP Server handlers
 CommandResult handleLspSrvConfig(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverconfigured", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverconfigured");
 }
 
 CommandResult handleLspSrvExportSymbols(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolsexported", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symbolsexported");
 }
 
 CommandResult handleLspSrvLaunchStdio(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverlaunchedstdio", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverlaunchedstdio");
 }
 
 CommandResult handleLspSrvPublishDiag(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticspublished", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Diagnosticspublished");
 }
 
 CommandResult handleLspSrvReindex(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Reindexingstarted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Reindexingstarted");
 }
 
 CommandResult handleLspSrvStart(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstarted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstarted");
 }
 
 CommandResult handleLspSrvStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstatsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstatsdisplayed");
 }
 
 CommandResult handleLspSrvStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstatusdisplayed");
 }
 
 CommandResult handleLspSrvStop(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstopped", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 LSPserverstopped");
 }
 
 // Monaco handlers
 CommandResult handleMonacoDevtools(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Devtoolsopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Devtoolsopened");
 }
 
 CommandResult handleMonacoReload(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacoreloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacoreloaded");
 }
 
 CommandResult handleMonacoSyncTheme(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Themesynced", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Themesynced");
 }
 
 CommandResult handleMonacoToggle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacotoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Monacotoggled");
 }
 
 CommandResult handleMonacoZoomIn(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Zoomedin", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Zoomedin");
 }
 
 CommandResult handleMonacoZoomOut(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Zoomedout", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Zoomedout");
 }
 
 // Plugin handlers
 CommandResult handlePluginConfigure(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginconfigured", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginconfigured");
 }
 
 CommandResult handlePluginLoad(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginloaded");
 }
 
 CommandResult handlePluginRefresh(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginsrefreshed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginsrefreshed");
 }
 
 CommandResult handlePluginScanDir(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Plugindirectoryscanned", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Plugindirectoryscanned");
 }
 
 CommandResult handlePluginShowPanel(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginpaneldisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginpaneldisplayed");
 }
 
 CommandResult handlePluginShowStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginstatusdisplayed");
 }
 
 CommandResult handlePluginToggleHotload(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Hotloadtoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Hotloadtoggled");
 }
 
 CommandResult handlePluginUnload(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginunloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginunloaded");
 }
 
 CommandResult handlePluginUnloadAll(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Allpluginsunloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Allpluginsunloaded");
 }
 
 // Prompt handlers
 CommandResult handlePromptClassifyContext(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextclassified", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Contextclassified");
 }
 
 // QW Alert handlers
 CommandResult handleQwAlertDismiss(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alertdismissed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alertdismissed");
 }
 
 CommandResult handleQwAlertHistory(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alerthistorydisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alerthistorydisplayed");
 }
 
 CommandResult handleQwAlertMonitor(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alertmonitoringstarted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Alertmonitoringstarted");
 }
 
 // Replay handlers
 CommandResult handleReplayCheckpoint(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Checkpointcreated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Checkpointcreated");
 }
 
 CommandResult handleReplayExportSession(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Sessionexported", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Sessionexported");
 }
 
 CommandResult handleReplayShowLast(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastreplayshown", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastreplayshown");
 }
 
 CommandResult handleReplayStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Replaystatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Replaystatusdisplayed");
 }
 
 // Reverse Engineering handlers
 CommandResult handleRECompare(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Comparisoncomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Comparisoncomplete");
 }
 
 CommandResult handleRECompile(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Compilationcomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Compilationcomplete");
 }
 
 CommandResult handleREDataFlow(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Dataflowanalysiscomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Dataflowanalysiscomplete");
 }
 
 CommandResult handleREDecompClose(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilerclosed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilerclosed");
 }
 
 CommandResult handleREDecompilerView(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilerviewopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilerviewopened");
 }
 
 CommandResult handleREDecompRename(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilersymbolrenamed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilersymbolrenamed");
 }
 
 CommandResult handleREDecompSync(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilersynced", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilersynced");
 }
 
 CommandResult handleREDemangle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symboldemangled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Symboldemangled");
 }
 
 CommandResult handleREDetectVulns(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Vulnerabilitiesdetected", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Vulnerabilitiesdetected");
 }
 
 CommandResult handleREExportGhidra(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ExportedtoGhidra", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ExportedtoGhidra");
 }
 
 CommandResult handleREExportIDA(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ExportedtoIDA", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ExportedtoIDA");
 }
 
 CommandResult handleREFunctions(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Functionslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Functionslisted");
 }
 
 CommandResult handleRELicenseInfo(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Licenseinfodisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Licenseinfodisplayed");
 }
 
 CommandResult handleRERecursiveDisasm(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Recursivedisassemblycomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Recursivedisassemblycomplete");
 }
 
 CommandResult handleRETypeRecovery(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Typerecoverycomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Typerecoverycomplete");
 }
 
 CommandResult handleRevengDecompile(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilationcomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Decompilationcomplete");
 }
 
 CommandResult handleRevengDisassemble(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Disassemblycomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Disassemblycomplete");
 }
 
 // Router handlers
 CommandResult handleRouterCapabilities(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routercapabilitiesdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routercapabilitiesdisplayed");
 }
 
 CommandResult handleRouterDecision(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerdecisionmade", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerdecisionmade");
 }
 
 CommandResult handleRouterDisable(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerdisabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerdisabled");
 }
 
 CommandResult handleRouterEnable(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerenabled");
 }
 
 CommandResult handleRouterEnsembleDisable(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensembledisabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensembledisabled");
 }
 
 CommandResult handleRouterEnsembleEnable(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensembleenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensembleenabled");
 }
 
 CommandResult handleRouterEnsembleStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensemblestatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Ensemblestatusdisplayed");
 }
 
 CommandResult handleRouterFallbacks(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fallbacksdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fallbacksdisplayed");
 }
 
 CommandResult handleRouterPinTask(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskpinned", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskpinned");
 }
 
 CommandResult handleRouterResetStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerstatsreset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerstatsreset");
 }
 
 CommandResult handleRouterRoutePrompt(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Promptrouted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Promptrouted");
 }
 
 CommandResult handleRouterSaveConfig(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerconfigsaved", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerconfigsaved");
 }
 
 CommandResult handleRouterSetPolicy(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerpolicyset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerpolicyset");
 }
 
 CommandResult handleRouterShowCostStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Coststatsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Coststatsdisplayed");
 }
 
 CommandResult handleRouterShowHeatmap(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Heatmapdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Heatmapdisplayed");
 }
 
 CommandResult handleRouterShowPins(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pinnedtasksdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pinnedtasksdisplayed");
 }
 
 CommandResult handleRouterSimulate(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routersimulationcomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routersimulationcomplete");
 }
 
 CommandResult handleRouterSimulateLast(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastsimulationshown", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastsimulationshown");
 }
 
 CommandResult handleRouterStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Routerstatusdisplayed");
 }
 
 CommandResult handleRouterUnpinTask(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskunpinned", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskunpinned");
 }
 
 CommandResult handleRouterWhyBackend(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendselectionexplained", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Backendselectionexplained");
 }
 
 // Safety handlers
 CommandResult handleSafetyResetBudget(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Safetybudgetreset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Safetybudgetreset");
 }
 
 CommandResult handleSafetyRollbackLast(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastoperationrolledback", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Lastoperationrolledback");
 }
 
 CommandResult handleSafetyShowViolations(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Violationsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Violationsdisplayed");
 }
 
 CommandResult handleSafetyStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Safetystatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Safetystatusdisplayed");
 }
 
 // Swarm handlers
 CommandResult handleSwarmBlacklist(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Blacklistupdated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Blacklistupdated");
 }
 
 CommandResult handleSwarmConfig(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmconfigupdated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmconfigupdated");
 }
 
 CommandResult handleSwarmDiscovery(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmdiscoverystarted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmdiscoverystarted");
 }
 
 CommandResult handleSwarmEvents(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmeventsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmeventsdisplayed");
 }
 
 CommandResult handleSwarmFitness(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fitnessmetricsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fitnessmetricsdisplayed");
 }
 
 CommandResult handleSwarmStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmstatsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Swarmstatsdisplayed");
 }
 
 CommandResult handleSwarmTaskGraph(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskgraphdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Taskgraphdisplayed");
 }
 
 // Telemetry handlers
 CommandResult handleTelemetryDashboard(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Telemetrydashboarddisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Telemetrydashboarddisplayed");
 }
 
 // Theme handlers
 CommandResult handleThemeCatppuccin(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Catppuccinthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Catppuccinthemeapplied");
 }
 
 CommandResult handleThemeCrimson(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Crimsonthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Crimsonthemeapplied");
 }
 
 CommandResult handleThemeCyberpunk(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Cyberpunkthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Cyberpunkthemeapplied");
 }
 
 CommandResult handleThemeGruvbox(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gruvboxthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Gruvboxthemeapplied");
 }
 
 CommandResult handleThemeOneDark(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OneDarkthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OneDarkthemeapplied");
 }
 
 CommandResult handleThemeSolDark(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SolarizedDarkthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SolarizedDarkthemeapplied");
 }
 
 CommandResult handleThemeSolLight(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SolarizedLightthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SolarizedLightthemeapplied");
 }
 
 CommandResult handleThemeSynthwave(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Synthwavethemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Synthwavethemeapplied");
 }
 
 CommandResult handleThemeTokyo(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TokyoNightthemeapplied", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TokyoNightthemeapplied");
 }
 
 // Tier1 handlers
 CommandResult handleTier1BreadcrumbsToggle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breadcrumbstoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Breadcrumbstoggled");
 }
 
 CommandResult handleTier1FileIconTheme(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fileiconthemechanged", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fileiconthemechanged");
 }
 
 CommandResult handleTier1FuzzyPalette(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fuzzypaletteopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Fuzzypaletteopened");
 }
 
 CommandResult handleTier1MinimapEnhanced(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Enhancedminimapenabled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Enhancedminimapenabled");
 }
 
 CommandResult handleTier1SettingsGUI(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SettingsGUIopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SettingsGUIopened");
 }
 
 CommandResult handleTier1SmoothScrollToggle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Smoothscrolltoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Smoothscrolltoggled");
 }
 
 CommandResult handleTier1SplitVertical(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Verticalsplitcreated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Verticalsplitcreated");
 }
 
 CommandResult handleTier1TabDragToggle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Tabdragtoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Tabdragtoggled");
 }
 
 CommandResult handleTier1WelcomePage(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Welcomepagedisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Welcomepagedisplayed");
 }
 
 // Transparency handlers
 CommandResult handleTrans100(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto100", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto100");
 }
 
 CommandResult handleTrans40(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto40", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto40");
 }
 
 CommandResult handleTrans50(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto50", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto50");
 }
 
 CommandResult handleTrans60(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto60", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto60");
 }
 
 CommandResult handleTrans70(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto70", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto70");
 }
 
 CommandResult handleTrans80(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto80", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto80");
 }
 
 CommandResult handleTrans90(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto90", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencysetto90");
 }
 
 CommandResult handleTransCustom(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Customtransparencyset", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Customtransparencyset");
 }
 
 CommandResult handleTransToggle(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencytoggled", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Transparencytoggled");
 }
 
 // Unity handlers
 CommandResult handleUnityAttach(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unitydebuggerattached", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unitydebuggerattached");
 }
 
 CommandResult handleUnityInit(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unityintegrationinitialized", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unityintegrationinitialized");
 }
 
 // Unreal handlers
 CommandResult handleUnrealAttach(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unrealdebuggerattached", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unrealdebuggerattached");
 }
 
 CommandResult handleUnrealInit(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unrealintegrationinitialized", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Unrealintegrationinitialized");
 }
 
 // View handlers
 CommandResult handleViewStreamingLoader(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Streamingloaderviewopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Streamingloaderviewopened");
 }
 
 CommandResult handleViewVulkanRenderer(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Vulkanrendererviewopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Vulkanrendererviewopened");
 }
 
 // Vision handlers
 CommandResult handleVisionAnalyzeImage(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Imageanalysiscomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Imageanalysiscomplete");
 }
 
 // Voice handlers
 CommandResult handleVoicePTT(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pushtotalkactivated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pushtotalkactivated");
 }
 
 // AI handlers
 CommandResult handleAIChatMode(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AIchatmodeactivated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AIchatmodeactivated");
 }
 
 CommandResult handleAIExplainCode(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Codeexplanationgenerated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Codeexplanationgenerated");
 }
 
 CommandResult handleAIFixErrors(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Errorsfixed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Errorsfixed");
 }
 
 CommandResult handleAIGenerateDocs(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Documentationgenerated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Documentationgenerated");
 }
 
 CommandResult handleAIGenerateTests(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Testsgenerated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Testsgenerated");
 }
 
 CommandResult handleAIInlineComplete(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Inlinecompletionprovided", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Inlinecompletionprovided");
 }
 
 CommandResult handleAIModelSelect(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Modelselected", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Modelselected");
 }
 
 CommandResult handleAIOptimizeCode(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Codeoptimized", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Codeoptimized");
 }
 
 CommandResult handleAIRefactor(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Refactoringcomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Refactoringcomplete");
 }
 
 CommandResult handleAIStopGeneration(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Generationstopped", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Generationstopped");
 }
 
 // Chat Panel handler
 CommandResult HandleChatPanel(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Chatpanelopened", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Chatpanelopened");
 }
 
 // Consent Prompt handler
 CommandResult HandleConsentPrompt(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Consentpromptdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Consentpromptdisplayed");
 }
 
 // Cursor Parity Bridge handler
 CommandResult HandleCursorParityBridge(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 CursorParityBridge", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 CursorParityBridge");
 }
 
 // Hardware Synthesizer handler
 CommandResult HandleHardwareSynthesizer(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HardwareSynthesizer", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HardwareSynthesizer");
 }
 CommandResult HandleMeshBrain(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MeshBrain", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MeshBrain");
 }
 CommandResult HandleNeuralBridge(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NeuralBridge", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NeuralBridge");
 }
 CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OmegaOrchestrator", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OmegaOrchestrator");
 }
 CommandResult HandleSelfHostEngine(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SelfHostEngine", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SelfHostEngine");
 }
 CommandResult HandleSpeciatorEngine(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SpeciatorEngine", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SpeciatorEngine");
 }
 
 // IDE Diagnostic Auto Healer handler
 CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer");
 }
 CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher");
 }
 CommandResult HandleMCPHooks(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks");
 }
 CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor");
 }
 CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry");
 }
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer");
 }
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent");
 }
 CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer");
 }
 
 // Plugin Signature handler
 CommandResult HandlePluginSignature(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginsignatureverified", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Pluginsignatureverified");
 }
 
 // Tier1 additional handlers
 CommandResult handleTier1AutoUpdateCheck(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Autoupdatecheckcomplete", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Autoupdatecheckcomplete");
 }
 
 CommandResult handleTier1SplitClose(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Splitclosed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Splitclosed");
 }
 
 CommandResult handleTier1SplitFocusNext(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Focusmovedtonextsplit", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Focusmovedtonextsplit");
 }
 
 CommandResult handleTier1SplitGrid(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Splitgridcreated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Splitgridcreated");
 }
 
 CommandResult handleTier1SplitHorizontal(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Horizontalsplitcreated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Horizontalsplitcreated");
 }
 
 CommandResult handleTier1UpdateDismiss(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Updatedismissed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Updatedismissed");
 }
 
 // Tool Action Status handler
 CommandResult HandleToolActionStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Toolactionstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Toolactionstatusdisplayed");
 }
 
 // Transcendence Coordinator handler
 CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator",
-            nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator");
 }
 
 // Update Signature handler
 CommandResult HandleUpdateSignature(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Updatesignatureverified", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Updatesignatureverified");
 }
 
 // VSCode Extension handlers
 CommandResult handleVscExtDeactivateAll(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AllVSCodeextensionsdeactivated", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AllVSCodeextensionsdeactivated");
 }
 
 CommandResult handleVscExtDiagnostics(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensiondiagnosticsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensiondiagnosticsdisplayed");
 }
 
 CommandResult handleVscExtExportConfig(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionconfigexported", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionconfigexported");
 }
 
 CommandResult handleVscExtExtensions(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionslisted");
 }
 
 CommandResult handleVscExtListCommands(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensioncommandslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensioncommandslisted");
 }
 
 CommandResult handleVscExtListProviders(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionproviderslisted", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionproviderslisted");
 }
 
 CommandResult handleVscExtLoadNative(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NativeVSCodeextensionloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NativeVSCodeextensionloaded");
 }
 
 CommandResult handleVscExtReload(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionreloaded", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionreloaded");
 }
 
 CommandResult handleVscExtStats(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionstatsdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionstatsdisplayed");
 }
 
 CommandResult handleVscExtStatus(const CommandContext& ctx) {
-    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionstatusdisplayed", nullptr};
+    return GateFiction("NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VSCodeextensionstatusdisplayed");
 }
 
 // Direct read/search functions (C ABI)

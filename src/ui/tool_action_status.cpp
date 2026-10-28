@@ -602,6 +602,45 @@ std::string ToolActionStatusFormatter::formatJson(const ToolActionStatus& action
 // ToolActionAccumulator
 // ============================================================================
 
+bool ToolOutputLooksSyntheticSuccess(const std::string& toolOutput) {
+    // Fail-closed markers from GateStub / fiction gates — never invent toast PASS.
+    if (toolOutput.find("SYNTHETIC=1") != std::string::npos) return true;
+    if (toolOutput.find("GATED_STUB") != std::string::npos) return true;
+    if (toolOutput.find("FEATURE_FICTION=1") != std::string::npos) return true;
+    if (toolOutput.find("NOT_PRODUCT_PATH=1") != std::string::npos) return true;
+    if (toolOutput.find("FinishedAction forbidden") != std::string::npos) return true;
+    return false;
+}
+
+ToolActionAdmitResult AdmitToolActionForProductHistory(
+    const ToolActionStatus& action, bool hasRealExitReceipt, bool sessionCancelled)
+{
+    ToolActionAdmitResult r;
+    if (sessionCancelled && action.state == ToolActionState::Completed) {
+        r.reason = "reject_post_cancel_success";
+        return r;
+    }
+    if (action.kind == ToolActionKind::FinishedStep && !hasRealExitReceipt) {
+        r.reason = "reject_finished_without_receipt";
+        return r;
+    }
+    if (ToolOutputLooksSyntheticSuccess(action.summary) ||
+        ToolOutputLooksSyntheticSuccess(action.detail)) {
+        r.reason = "reject_synthetic";
+        return r;
+    }
+    if (action.state == ToolActionState::Completed &&
+        (action.kind == ToolActionKind::RunTerminal ||
+         action.kind == ToolActionKind::BuildProject) &&
+        !hasRealExitReceipt) {
+        r.reason = "reject_terminal_without_exit";
+        return r;
+    }
+    r.admitted = true;
+    r.reason = "admit";
+    return r;
+}
+
 void ToolActionAccumulator::addAction(const ToolActionStatus& action) {
     m_actions.push_back(action);
 }

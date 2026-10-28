@@ -1,0 +1,28 @@
+﻿DEEP2_KIMI_K2_FULL_FORWARD_001 — FAIL-CLOSED DISPOSITION
+UTC_NOTE=source fix landed; prior binary evidence NOT re-run
+PROMOTE=0
+TIP_CLIMB=HOLD
+REAP_REWRITE_AUTHORIZED=FALSE
+FULL_FORWARD_CERT=FALSE
+
+P0_ROOT_CAUSE=INTEGRATION_BYPASS_NOT_TIMER
+PATH_LIVE=forwardTokenAllLayers -> computeAttention -> ForwardMlaLayer
+PATH_MISSING_MOE=ForwardMlaLayer returned after ExecuteMLALayer only
+PATH_THAT_HAD_MOE=ForwardMLALayers (plural) calls K2NativeMoE_AfterMla per layer
+PRIOR_RUN_SHARD_MOE_US=0
+PRIOR_RUN_D2_MOE_LIVE=NOT_IN_ERR_LOG (emit only on destructor / Run seam)
+PRIOR_RUN_LAYER_VETO=1 REASON=force_promo (policy arm name; BUDGET_FIT=1)
+PRIOR_RUN_CYCLONE_STARTS=0 EXPECTED_UNDER=FULL_DEPTH_PROMO trampoline-only mech
+
+FIX_LANDED=
+  K2NativeStreamGate.cpp ForwardMlaLayer: after MLA call K2NativeMoE_AfterMla when numExperts>0
+  K2NativeStreamGate.cpp ForwardMlaLayer: LivePath_OnLayerStart/End for layer accounting
+  Deep2Engine.cpp openK2ShardDirectory: fill numExperts from 0905 contract if metadata=0; print numExperts
+  Deep2LivePath.cpp LivePath_EndGenerate: StreamPathTiming_Emit + MoEPlaceLiveEmit on stdout
+
+STILL_OPEN=
+  L0 dense FFN inside K2NativeMoE_AfterMla is EXIT_DENSE stub (no dense GEMV)
+  Rebuild deep2_benchmark_full.exe required before re-probe
+  Independent logits finite + parity
+  SHARD_MOE_US / experts_executed must be >0 on next live run
+  FULL_61_LAYER_COMPLETION pending post-rebuild evidence

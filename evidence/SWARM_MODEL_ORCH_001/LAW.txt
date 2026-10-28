@@ -1,0 +1,83 @@
+SWARM_MODEL_ORCH_001 / LAW
+==========================
+ASOF_UTC=2026-10-28T09:55:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P1=S-002+S-003
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+Empty local inventory != invent models / cloud backends
+Fixed N=4 / one-dir *.gguf != configurable 1..16 product orch
+
+CONFIRM — FILES + TIP LINK (pre-fix tip 866E9D1B…)
+----------------------------------------------------
+PATH_OK=
+  src/win32app/Win32IDE_SubAgent.cpp
+  src/win32app/Win32IDE_SwarmModelSelector.cpp
+  src/win32app/Win32IDE_SwarmModelSelector.h
+CMAKE=WIN32IDE_SOURCES includes both .cpp (CMakeLists ~5794/5800)
+NINJA_LINKED_SRCS=evidence/_tmp_ninja_linked_srcs.txt L842–843
+MAP_TIP=build_win32ide_link001/bin/RawrXD-Win32IDE.map
+  enumerateSwarmModelCandidates → Win32IDE_SwarmModelSelector.cpp.obj
+  onSubAgentSwarm path → Win32IDE_SubAgent.cpp.obj
+TIP_SHA_HOLD=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+EXE_ON_DISK_NOW=ABSENT under build_win32ide_link001/bin (map retained);
+  SHA authority = LIVE_TETRAD_POST_HMAC_ABSORB_001 / BINARY_PROVENANCE_001
+LINKED_PRE_FIX=YES (both TUs in tip map / CMake net)
+LINKED_POST_FIX=NO (RELINK=N; tip binary not rebuilt this seal)
+
+HOLE (pre-fix tip behavior)
+---------------------------
+S-002 Win32IDE_SubAgent.cpp onSubAgentSwarm: 4 fixed prompts, maxParallel=4
+S-003 Win32IDE_SwarmModelSelector.cpp: single-dir *.gguf only
+  (RAWRXD_SWARM_MODEL_DIR or %USERPROFILE%\.ollama\models)
+
+SOURCE_WIRED FIX (this seal)
+----------------------------
+F1 Win32IDE_SwarmModelSelector.h/.cpp
+  Multi-root GGUF: RAWRXD_SWARM_MODEL_DIR; RAWRXD_MODELS;
+  RAWRXD_MODELS_PATH; OLLAMA_MODELS; USERPROFILE\.ollama\models;
+  LOCALAPPDATA\Ollama\models; common D/F/G/C roots; exe\models
+  Multi-root GGUF + appendLocalOllamaHttpTags (127.0.0.1:11434
+  /api/tags when reachable) + filesystem manifests secondary;
+  skipped when LOCAL_ONLY_NO_OLLAMA truthy; cloud tags filtered;
+  Empty inventory returns empty — never invent models
+  Helper TU: Win32IDE_SwarmOllamaHttpTags.cpp (CMake WIN32IDE_SOURCES)
+F2 resolveSwarmModelOrchPlan: N=1..16 (RAWRXD_SWARM_N),
+  maxParallel<=N (RAWRXD_SWARM_MAX_PARALLEL),
+  sequential via RAWRXD_SWARM_SEQUENTIAL=1 → maxParallel=1
+  Cap kSwarmOrchCap=16 and inventory size
+F3 onSubAgentSwarm: consume orch plan; FAIL_CLOSED if empty;
+  prompts annotated with real model id; maxParallel from plan;
+  cancel hook → SubAgentManager::cancelAll; empty merge ≠ success
+CROSS_RUNTIME=SWARM_16_SMALL_HI_AUDIT_001 (Ollama harness; tip EXE=0)
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1 (product path source + CMake)
+RUNTIME_REACHED=NOT_RUN (tip EXE not relinked)
+CLOUD_BACKENDS=0
+PROMOTE=0
+
+SEALED EXE / RELINK
+-------------------
+SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+RELINK=NO
+TIP_SEALS_INVALIDATED=NO (no new SHA; source-only)
+IF_RELINK=new SHA invalidates LIVE_TETRAD_POST_HMAC_ABSORB_001 /
+  TOKEN64_PRODUCT_RUN_003 / MULTI_FAMILY_PRODUCT_002 tip covers → HELD re-run
+
+CROSS_CITE
+----------
+WIN32IDE_CLOSURE_MATRIX_001 S-002 S-003
+WIN32IDE_BINARY_PROVENANCE_001
+LIVE_TETRAD_POST_HMAC_ABSORB_001
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

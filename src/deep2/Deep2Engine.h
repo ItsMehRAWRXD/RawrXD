@@ -542,6 +542,8 @@ public:
 
     // Vulkan GPU backend (SOLO or MULTI contiguous-layer)
     void enableVulkan(bool enable);
+    bool anyVulkanDeviceLost() const;
+    bool recoverVulkanAfterDeviceLost();
     void setVulkanStrictNoCpuFallback(bool strict) { vulkanStrictNoCpuFallback_ = strict; }
     bool isVulkanStrictNoCpuFallback() const { return vulkanStrictNoCpuFallback_; }
     bool isVulkanEnabled() const { return vulkanEnabled_; }

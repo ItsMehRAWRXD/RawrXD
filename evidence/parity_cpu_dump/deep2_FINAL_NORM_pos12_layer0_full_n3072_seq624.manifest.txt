@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_NORM
+pos=12
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=d629fe42318be315
+l2=86.629901483653569
+seq=624
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_FINAL_NORM_pos12_layer0_full_n3072_seq624.bin

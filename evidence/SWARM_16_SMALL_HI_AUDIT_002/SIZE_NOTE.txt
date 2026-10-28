@@ -1,0 +1,20 @@
+SIZE_NOTE — SWARM_16_SMALL_HI_AUDIT_002
+=======================================
+Prefer small-first. After 9 prior HI-PASS keepers (<~9GB), only larger
+unique local chat digests remain to fill N=16:
+
+  qwen3.8:27b                 ~17 GB
+  deepseek-r1:32b             ~19 GB
+  ornith-1.5:35b              ~22 GB
+  nemotron-3.5-bolt:latest    ~24 GB
+  nemotron-3.5-lightning:30b  ~25 GB
+  bigdaddygnative:latest      ~25 GB
+  bigdaddyglocal:latest       ~25 GB
+
+EXCLUDED: embeddinggemma-2:740m (embedding HTTP 400);
+  nemotron-3-nano:4b, qwen3:8b, kiminoto/T0.0.1, pdurugyan/qwen3.5-9b...,
+  gpt-oss:20b/latest (same digest EMPTY), flint:latest;
+  all :cloud / minimax-m3:cloud.
+gpt-oss:latest not distinct from gpt-oss:20b (digest 17052f91a42e).
+Harness uses think=false; PASS requires non-empty response= only
+(thinking-only = EMPTY_RESPONSE_THINKING_ONLY FAIL, not invent PASS).

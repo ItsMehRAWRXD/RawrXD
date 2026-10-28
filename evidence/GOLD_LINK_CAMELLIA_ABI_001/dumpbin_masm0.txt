@@ -1,0 +1,41 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file G:\~dev\rawrxd\evidence\GOLD_LINK_CAMELLIA_ABI_001\abi_masm0.obj
+
+File Type: COFF OBJECT
+
+COFF SYMBOL TABLE
+000 0105899C ABS    notype       Static       | @comp.id
+001 80010190 ABS    notype       Static       | @feat.00
+002 00000003 ABS    notype       Static       | @vol.md
+003 00000000 SECT1  notype       Static       | .drectve
+    Section length   2F, #relocs    0, #linenums    0, checksum        0
+005 00000000 SECT2  notype       Static       | .debug$S
+    Section length   94, #relocs    0, #linenums    0, checksum        0
+007 00000000 SECT3  notype       Static       | .text$mn
+    Section length   53, #relocs    1, #linenums    0, checksum 921DC62A
+009 00000000 SECT3  notype ()    External     | asm_camellia256_auth_encrypt_file
+00A 00000020 SECT3  notype ()    External     | asm_camellia256_auth_decrypt_file
+00B 00000050 SECT3  notype ()    External     | main
+00C 00000020 SECT3  notype       Label        | $LN3
+00D 00000000 SECT4  notype       Static       | .xdata
+    Section length    8, #relocs    0, #linenums    0, checksum C40886FB
+00F 00000000 SECT4  notype       Static       | $unwind$asm_camellia256_auth_decrypt_file
+010 00000000 SECT5  notype       Static       | .pdata
+    Section length    C, #relocs    3, #linenums    0, checksum BB53652B
+012 00000000 SECT5  notype       Static       | $pdata$asm_camellia256_auth_decrypt_file
+013 00000000 SECT6  notype       Static       | .chks64
+    Section length   30, #relocs    0, #linenums    0, checksum        0
+
+String Table Size = 0x9B bytes
+
+  Summary
+
+          30 .chks64
+          94 .debug$S
+          2F .drectve
+           C .pdata
+          53 .text$mn
+           8 .xdata

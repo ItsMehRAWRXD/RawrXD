@@ -1,0 +1,77 @@
+TOOL_ACTION_STATUS_TRUTH_001 / LAW
+==================================
+ASOF_UTC=2026-10-28T09:42:57Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P0=S-001
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+FinishedAction / okResult without real process exit = FORBIDDEN
+DEMO RunTerminalAction("cmake --build .") != product terminal run
+SYNTHETIC success toast / Info PASS theater = FORBIDDEN
+
+CONFIRM — LINKED INTO TIP EXE 866E9D1B…
+---------------------------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+SHA_MATCH=LIVE_TETRAD_POST_HMAC_ABSORB_001
+SIZE=331634176
+OBJ=build_win32ide_link001\CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ToolActionStatus.cpp.obj
+MAP_VOID=?HandleToolActionStatus@@YAXPEAX@Z → Win32IDE_ToolActionStatus.cpp.obj
+MAP_CMD=?HandleToolActionStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z
+  → rawrengine_command_handlers.cpp.obj
+EXE_STRING=[ToolActionStatus]=1
+CMAKE=WIN32IDE_SOURCES includes src/win32app/Win32IDE_ToolActionStatus.cpp
+FEATURE_MANIFEST=44016 → Win32IDE_ToolActionStatus.cpp
+LINKED=YES (pre-fix tip binary)
+
+HOLE (pre-fix tip binary behavior)
+-----------------------------------
+S-001 Win32IDE_ToolActionStatus.cpp ~L7–16
+  RunTerminalAction("cmake --build .", 120) + FinishedAction(0)
+  + appendToOutput Info — no CreateProcess/ConPTY; synthetic success
+S-001b rawrengine_command_handlers.cpp HandleToolActionStatus
+  same demo + FinishedAction(2) + okResult (command-dispatch winner)
+NOTE: command_handlers_comprehensive.cpp already GateFiction; not the
+  linked CommandResult owner for tip Win32IDE (rawrengine wins)
+
+SOURCE_WIRED FIX (this seal)
+----------------------------
+F1 src/win32app/Win32IDE_ToolActionStatus.cpp
+  REMOVE demo RunTerminal/FinishedAction(0)/success Info
+  NOW: GateStub + OutputDebugString SYNTHETIC=1 + Warning line only
+  NO FinishedAction; NO success toast; NO product run-history PASS claim
+F2 src/core/rawrengine_command_handlers.cpp HandleToolActionStatus
+  NOW: errorResult code=1 NOT_PRODUCT_PATH FEATURE_FICTION SYNTHETIC=1
+F3 src/win32app/Win32IDE_CommandHandlers.cpp (CMake-omitted companion)
+  NOW: call void GateStub path + CommandResult{1,…} (no ok)
+
+DISPOSITION
+-----------
+DEMO_PATH=GATED_STUB (prefer fail-closed over CreateProcess wire this turn)
+PRODUCT_TERMINAL_OWNER=unclaimed (real ConPTY/exit-code path NOT implemented)
+EXCLUDE_FROM_PRODUCT_RUN_HISTORY=1 when SYNTHETIC=1 / DEMO gated
+RUNTIME_REACHED=NOT_RUN (tip EXE still pre-fix binary)
+
+SEALED EXE / RELINK
+-------------------
+SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+RELINK=NO
+TIP_SEALS_INVALIDATED=NO (no new SHA; source-only)
+IF_RELINK=new SHA + INVALIDATE LIVE_TETRAD_POST_HMAC_ABSORB_001 /
+  READY tetrad covers for that tip
+
+CROSS_CITE
+----------
+LIVE_TETRAD_POST_HMAC_ABSORB_001 (tip SHA authority)
+IDE_BRIDGE_STUB_GATE_001 / WIN32IDE_STUB_SWEEP_001 (GateStub pattern)
+AGENTIC_BRIDGE_FAILCLOSE_001 (no invent PASS; prefer no relink)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

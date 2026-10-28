@@ -1,0 +1,17 @@
+# RAWRXD_GPU_CODE31_RESET_001
+
+## Scope
+Detect Windows Device Manager Code 31 (CM_PROB_FAILED_ADD / ERROR_GEN_FAILURE=31),
+VK_ERROR_DEVICE_LOST (-4), and DXGI device-removed HRs; run DevNode reset then
+Deep2 Vulkan destroy?recreate when lost.
+
+## Product path
+- GpuPreflight / GpuPreflightReset (PnP Code 31)
+- Deep2Engine::recoverVulkanAfterDeviceLost (Vulkan lost)
+- rawr_cmd_run GpuPreflightCheck before enableVulkan
+
+## Fail-closed
+SOURCE_WIRED != RUNTIME_REACHED != RESET_VERIFIED
+NOT_RUN != PASS
+PROMOTE=0
+TIP_CLIMB=HOLD

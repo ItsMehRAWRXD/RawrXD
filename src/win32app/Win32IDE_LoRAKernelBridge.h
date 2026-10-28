@@ -1,5 +1,9 @@
 // ============================================================================
 // Win32IDE_LoRAKernelBridge.h — LoRA MASM Kernel Integration Header
+// GATED_OMIT LORA_KERNEL_STUB_GATE_001 (+ WIN32IDE_BRIDGE_SWEEP_002 cross-cite):
+// .cpp not in RawrXD-Win32IDE CMake link. AgenticFeatures LoRAKernel_Initialize
+// stub fail-closed (false). Header presence != RUNTIME_REACHED / PASS.
+// ApplyLoRA ASM not product-wired. Duplicate symbol if both TUs ever linked.
 // ============================================================================
 #pragma once
 

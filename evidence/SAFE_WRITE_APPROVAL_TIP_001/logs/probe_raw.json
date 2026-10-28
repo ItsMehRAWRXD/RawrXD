@@ -1,0 +1,37 @@
+[
+    {
+        "name":  "NO_AUTH",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    },
+    {
+        "name":  "NO_AUTH_ORIGIN_LOOP",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    },
+    {
+        "name":  "WITH_KEY",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    },
+    {
+        "name":  "EVIL_ORIGIN_KEY",
+        "status":  403,
+        "body":  "{\"error\":\"origin_denied\"}"
+    },
+    {
+        "name":  "EXEC_NO_GRANT",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    },
+    {
+        "name":  "DENY_OUT",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    },
+    {
+        "name":  "SAFETY",
+        "status":  401,
+        "body":  "{\"error\":\"unauthorized\"}"
+    }
+]

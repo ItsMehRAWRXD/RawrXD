@@ -1,0 +1,67 @@
+TOOL_ACTION_STATUS_E2E_002 / RECEIPT
+====================================
+ASOF_UTC=2026-10-28T11:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+Four-case ToolActionStatus E2E exercised on tip SHA 6832F439… via headless
+/api/tool (success+failure) + GateStub RemoteThread supplement + Admit/cancel
+unit probes. A05_MET=0 — tip EXE lacks Admit consumer absorb (RELINK_REQUIRED).
+Disposition: RUNTIME_PARTIAL. PROMOTE=0.
+
+TIP
+---
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1
+TIP_REBUILD=N
+RELINK_REQUIRED=1
+
+CASE DISPOSITIONS
+-----------------
+1 NEG synthetic | GateStub RemoteThread + Admit unit | GateStub PASS; Admit UNIT PASS; tip Admit NOT_LINKED | PARTIAL
+2 REAL success | POST /api/tool list_directory | entries HTTP body | PASS
+3 REAL failure | POST /api/tool read_file missing | file_not_found | PASS
+4 CANCEL | AgentSessionCancel mid AgentRunCommand | cancelled=1; no success:true | PASS (product TU probe)
+
+CHECKS
+------
+MOTD_ACK_VIA_API=1
+REAL_SUCCESS=1
+REAL_FAILURE=1
+NEG_GATESTUB_REMOTE=1
+ADMIT_UNIT_FAILS=0
+CANCEL_ACTIVE=1
+CANCEL_NO_INVENT_SUCCESS=1
+TIP_ADMIT_LINKED=0
+A05_MET=0
+RUNTIME_PARTIAL=1
+
+PATH
+----
+evidence/TOOL_ACTION_STATUS_E2E_002/LAW.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/RECEIPT.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/logs/admit_unit.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/logs/api_probe.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/logs/api_bodies.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/logs/cancel_session.txt
+evidence/TOOL_ACTION_STATUS_E2E_002/logs/sha_verify.txt
+
+MATRIX
+------
+WIN32IDE_CLOSURE_MATRIX_001 A05 → RUNTIME_PARTIAL (cite TOOL_ACTION_STATUS_E2E_002)
+WIN32IDE_CLOSURE_MATRIX_001 S-001 → RUNTIME_PARTIAL
+WIN32IDE_CLOSURE_MATRIX_001 G14 → RUNTIME_PARTIAL
+WIN32IDE_CLOSURE_MATRIX_001 G15 → RUNTIME_PARTIAL
+
+HELD
+----
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NEXT=tip absorb Admit+VSCodeUI+hookToolResult → re-run 4-case → MET only if all PASS on tip

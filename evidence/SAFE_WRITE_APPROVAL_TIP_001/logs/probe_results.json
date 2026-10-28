@@ -1,0 +1,11 @@
+[
+  {"name":"A07_NO_KEY","status":401,"pass":true,"body":"{\"error\":\"unauthorized\"}"},
+  {"name":"A07_EVIL_ORIGIN","status":403,"pass":true,"body":"{\"error\":\"origin_denied\"}"},
+  {"name":"A06_READ_MOTD","status":200,"pass":true,"body":"content+PassiveRoleNotRoleplay"},
+  {"name":"A06_WRITE_INSIDE","status":200,"pass":true,"body":"{\"success\":true,\"path\":\"...\\inside_ok2.txt\"}"},
+  {"name":"A06_DENY_ABS","status":403,"pass":true,"body":"{\"error\":\"forbidden\",\"message\":\"outside workspace\"}"},
+  {"name":"A06_DENY_DOTDOT","status":403,"pass":true,"body":"{\"error\":\"forbidden\",\"message\":\"traversal rejected\"}"},
+  {"name":"A06_DENY_UNC","status":403,"pass":true,"body":"{\"error\":\"forbidden\",\"message\":\"unc rejected\"}"},
+  {"name":"A07_EXEC_NO_GRANT","status":500,"pass":true,"body":"{\"success\":false,\"error\":\"execution_not_granted\"}"},
+  {"name":"A07_SAFETY_STATUS","status":200,"pass":true,"body":"{\"status\":\"Safety contract: Not initialized\"}"}
+]

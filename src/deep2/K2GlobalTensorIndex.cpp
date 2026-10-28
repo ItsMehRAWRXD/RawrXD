@@ -6,6 +6,7 @@
 #include "GGUFLoader.hpp"
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 
@@ -40,7 +41,27 @@ bool GlobalTensorIndex::BuildFromShardDirectory(const std::filesystem::path& bas
         return false;
     }
 
-    // Parse each shard
+    // If names encode -of-NNNNN, require that many shards (e.g. Kimi K2 = 13).
+    uint32_t expectedShards = 0;
+    {
+        const std::string n0 = ggufFiles.front().filename().string();
+        const auto ofPos = n0.rfind("-of-");
+        if (ofPos != std::string::npos && ofPos + 4 + 5 <= n0.size()) {
+            try {
+                expectedShards = static_cast<uint32_t>(
+                    std::stoul(n0.substr(ofPos + 4, 5)));
+            } catch (...) {
+                expectedShards = 0;
+            }
+        }
+    }
+    if (expectedShards > 0 && ggufFiles.size() != expectedShards) {
+        error = "GlobalTensorIndex: expected " + std::to_string(expectedShards) +
+                " shards, found " + std::to_string(ggufFiles.size());
+        return false;
+    }
+
+    // Parse each shard — each file supplies its own header/dir/dataStart.
     uint32_t shardId = 0;
     for (const auto& path : ggufFiles) {
         shardPaths_.push_back(path);
@@ -50,6 +71,14 @@ bool GlobalTensorIndex::BuildFromShardDirectory(const std::filesystem::path& bas
         ++shardId;
     }
 
+    std::fprintf(stderr,
+                 "MULTISHARD_SHARDS_INDEXED=%zu/%zu\n"
+                 "MULTISHARD_TENSORS_INDEXED=%zu\n"
+                 "MULTISHARD_DUPLICATES=0\n",
+                 shardPaths_.size(),
+                 expectedShards > 0 ? static_cast<size_t>(expectedShards)
+                                    : shardPaths_.size(),
+                 tensors_.size());
     return true;
 }
 
@@ -194,13 +223,27 @@ bool GlobalTensorIndex::ParseShard(uint32_t shardId,
         return false;
     }
 
-    const uint64_t baseFileOffset = result.dataOffset;
+    // AbsoluteTensorOffset = ShardDataStart + ShardLocalTensorOffset
+    const uint64_t shardDataStart = result.dataOffset;
+    const uint64_t shardFileSize = static_cast<uint64_t>(result.totalSize);
 
     for (const auto& t : result.tensors) {
+        if (tensors_.find(t.name) != tensors_.end()) {
+            error = std::string("ParseShard: duplicate tensor name '") + t.name +
+                    "' in shard " + std::to_string(shardId);
+            return false;
+        }
+        if (t.offset > shardFileSize - shardDataStart ||
+            t.size > shardFileSize - shardDataStart - t.offset) {
+            error = std::string("ParseShard: tensor '") + t.name +
+                    "' exceeds shard " + std::to_string(shardId) + " bounds";
+            return false;
+        }
+
         GlobalTensorRef ref;
         ref.name = t.name;
         ref.shardId = shardId;
-        ref.fileOffset = baseFileOffset + t.offset;
+        ref.fileOffset = shardDataStart + t.offset;
         ref.byteOffset = 0; // No expert slicing at index level
         ref.byteSize = t.size;
         ref.ggmlType = static_cast<uint32_t>(t.type);
@@ -225,11 +268,19 @@ bool GlobalTensorIndex::ParseShard(uint32_t shardId,
             }
         }
 
-        if (ref.IsValid()) {
-            tensors_[ref.name] = std::move(ref);
+        if (!ref.IsValid()) {
+            error = std::string("ParseShard: invalid tensor ref '") + t.name +
+                    "' in shard " + std::to_string(shardId);
+            return false;
         }
+        tensors_[ref.name] = std::move(ref);
     }
 
+    std::fprintf(stderr,
+                 "[K2Index] shard=%u tensors=%zu data_start=%llu file_size=%llu path=%s\n",
+                 shardId, result.tensors.size(),
+                 (unsigned long long)shardDataStart,
+                 (unsigned long long)shardFileSize, path.string().c_str());
     return true;
 }
 

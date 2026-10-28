@@ -59,26 +59,38 @@ extern "C" {
     void DiskRecovery_GetStats(void* ctx, uint64_t* outGood, uint64_t* outBad, uint64_t* outCurrent, uint64_t* outTotal);
 }
 
-// Stub implementations for modes not available in this build
+// Mode* entry points — GATED (B02): no-op was silent success theater.
+// Fail-closed: log via OutputDebugString; do not claim Mode PASS.
+namespace {
+void GateMode(const char* name) {
+#ifdef _WIN32
+    char buf[160];
+    wsprintfA(buf, "[subsystem_api] Mode GATED SYNTHETIC=partial name=%s\n", name);
+    OutputDebugStringA(buf);
+#else
+    (void)name;
+#endif
+}
+} // namespace
 extern "C" {
-    void CompileMode(void) { }
-    void EncryptMode(void) { }
-    void InjectMode(void) { }
-    void UACBypassMode(void) { }
-    void PersistenceMode(void) { }
-    void SideloadMode(void) { }
-    void AVScanMode(void) { }
-    void EntropyMode(void) { }
-    void StubGenMode(void) { }
-    void TraceEngineMode(void) { }
-    void AgenticMode(void) { }
-    void BasicBlockCovMode(void) { }
-    void CovFusionMode(void) { }
-    void DynTraceMode(void) { }
-    void AgentTraceMode(void) { }
-    void GapFuzzMode(void) { }
-    void IntelPTMode(void) { }
-    void DiffCovMode(void) { }
+    void CompileMode(void) { GateMode("CompileMode"); }
+    void EncryptMode(void) { GateMode("EncryptMode"); }
+    void InjectMode(void) { GateMode("InjectMode"); }
+    void UACBypassMode(void) { GateMode("UACBypassMode"); }
+    void PersistenceMode(void) { GateMode("PersistenceMode"); }
+    void SideloadMode(void) { GateMode("SideloadMode"); }
+    void AVScanMode(void) { GateMode("AVScanMode"); }
+    void EntropyMode(void) { GateMode("EntropyMode"); }
+    void StubGenMode(void) { GateMode("StubGenMode"); }
+    void TraceEngineMode(void) { GateMode("TraceEngineMode"); }
+    void AgenticMode(void) { GateMode("AgenticMode"); }
+    void BasicBlockCovMode(void) { GateMode("BasicBlockCovMode"); }
+    void CovFusionMode(void) { GateMode("CovFusionMode"); }
+    void DynTraceMode(void) { GateMode("DynTraceMode"); }
+    void AgentTraceMode(void) { GateMode("AgentTraceMode"); }
+    void GapFuzzMode(void) { GateMode("GapFuzzMode"); }
+    void IntelPTMode(void) { GateMode("IntelPTMode"); }
+    void DiffCovMode(void) { GateMode("DiffCovMode"); }
 }
 
 // ---- Library Module Linkage (C ABI) ----
@@ -91,33 +103,54 @@ static constexpr uint32_t SO_DEFAULT_THREADS = 8;
 
 // Stub implementations for analyzer/streaming when not linked with MASM
 extern "C" {
+    // B03: fail-closed — return -1 (was 0 = fake success).
     int AD_ProcessGGUF(const char* inputPath, const char* outputExecPath) {
         (void)inputPath; (void)outputExecPath;
-        return 0;
+        OutputDebugStringA("[subsystem_api] AD_ProcessGGUF GATED SYNTHETIC=partial\n");
+        return -1;
     }
 
     int SO_LoadExecFile(const char* filePath) {
         (void)filePath;
-        return 0;
+        OutputDebugStringA("[subsystem_api] SO_LoadExecFile GATED SYNTHETIC=partial\n");
+        return -1;
     }
-    int SO_InitializeVulkan(void) { return 0; }
+    int SO_InitializeVulkan(void) {
+        OutputDebugStringA("[subsystem_api] SO_InitializeVulkan GATED SYNTHETIC=partial\n");
+        return -1;
+    }
     void* SO_CreateMemoryArena(uint64_t sizeBytes) {
         (void)sizeBytes;
         return nullptr;
     }
     int SO_CreateComputePipelines(void* operatorTable, uint64_t operatorCount) {
         (void)operatorTable; (void)operatorCount;
-        return 0;
+        OutputDebugStringA("[subsystem_api] SO_CreateComputePipelines GATED\n");
+        return -1;
     }
-    void SO_PrintStatistics(void) { }
-    int SO_InitializeStreaming(void) { return 0; }
-    int SO_CreateThreadPool(void) { return 0; }
+    void SO_PrintStatistics(void) {
+        OutputDebugStringA("[subsystem_api] SO_PrintStatistics GATED\n");
+    }
+    int SO_InitializeStreaming(void) {
+        OutputDebugStringA("[subsystem_api] SO_InitializeStreaming GATED\n");
+        return -1;
+    }
+    int SO_CreateThreadPool(void) {
+        OutputDebugStringA("[subsystem_api] SO_CreateThreadPool GATED\n");
+        return -1;
+    }
     int SO_StartDEFLATEThreads(uint32_t threadCount) {
         (void)threadCount;
-        return 0;
+        OutputDebugStringA("[subsystem_api] SO_StartDEFLATEThreads GATED\n");
+        return -1;
     }
-    int SO_InitializePrefetchQueue(void) { return 0; }
-    void SO_PrintMetrics(void) { }
+    int SO_InitializePrefetchQueue(void) {
+        OutputDebugStringA("[subsystem_api] SO_InitializePrefetchQueue GATED\n");
+        return -1;
+    }
+    void SO_PrintMetrics(void) {
+        OutputDebugStringA("[subsystem_api] SO_PrintMetrics GATED\n");
+    }
 }
 
 // ============================================================

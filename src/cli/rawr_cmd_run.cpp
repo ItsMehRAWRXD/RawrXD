@@ -100,6 +100,9 @@ int CmdRun(const CliArgs& a) {
     if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
     Deep2::Deep2Engine engine;
 
+    // GPU health preflight first — Code 31 DevNode reset before Vulkan open.
+    if (!GpuPreflightCheck(!a.vulkan)) return ExitCode::Runtime;
+
     // Configure engine for selected backend
     if (decision.backend == Deep2::Backend::CPU) {
         engine.enableVulkan(false);
@@ -113,10 +116,6 @@ int CmdRun(const CliArgs& a) {
             return ExitCode::Runtime;
         }
     }
-
-    // GPU health preflight: required before Vulkan init / model load.
-    // CPU-only mode (no --vulkan) reports health but does not block.
-    if (!GpuPreflightCheck(!a.vulkan)) return ExitCode::Runtime;
 
     if (a.vulkan) engine.enableVulkan(true);
     Deep2StreamSession* s = d2_session_create();

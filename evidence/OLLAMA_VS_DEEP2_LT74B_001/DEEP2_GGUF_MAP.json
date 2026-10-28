@@ -1,0 +1,16 @@
+{
+    "gpt-oss:20b":  "G:\\~dev\\rawrxd\\models\\QUARANTINED\\gptoss20b.gguf",
+    "llama3.2:3b":  "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf",
+    "qwen3.8:27b":  "F:\\OllamaModels\\_r1_iso\\03_qwen38_27b\\Qwen3.8-27B-AD-Q4_K_M.gguf",
+    "llama3.2:latest":  "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf",
+    "bigdaddygnative:latest":  "F:\\OllamaModels\\BigDaddyG-Q2_K-CHEETAH.gguf",
+    "n4-tiny-oracle:latest":  "G:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "qwen3:8b":  "F:\\OllamaModels\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+    "bigdaddyg-productivity-local:latest":  "F:\\OllamaModels\\BigDaddyG-Q2_K-CHEETAH.gguf",
+    "nemotron-3.5-lightning:30b":  "F:\\OllamaModels\\gguf\\nemotron-3.5-lightning-30b-Q4_K_M.gguf",
+    "ornith-1.5:35b":  "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "bigdaddyg-productivity-native:latest":  "F:\\OllamaModels\\BigDaddyG-Q2_K-CHEETAH.gguf",
+    "gpt-oss:latest":  "G:\\~dev\\rawrxd\\models\\QUARANTINED\\gptoss20b.gguf",
+    "bigdaddyglocal:latest":  "F:\\OllamaModels\\BigDaddyG-Q2_K-CHEETAH.gguf",
+    "nemotron-3-nano:4b":  "F:\\OllamaModels\\NVIDIA-Nemotron-3-Nano-4B-GGUF\\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf"
+}

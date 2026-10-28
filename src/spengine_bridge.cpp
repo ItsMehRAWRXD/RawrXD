@@ -187,4 +187,26 @@ uint64_t asm_get_active_patch_count() {
     return active;
 }
 
+// Cathedral MagShutdown owner: roll back every active patch, scrub journal.
+void asm_spengine_shutdown(void) {
+    std::lock_guard<std::mutex> lock(g_patchMutex);
+    for (auto it = g_patchJournal.rbegin(); it != g_patchJournal.rend(); ++it) {
+        if (!it->active || !it->targetAddr || it->originalBytes.empty()) {
+            continue;
+        }
+        DWORD oldProtect = 0;
+        const SIZE_T sz = static_cast<SIZE_T>(it->originalBytes.size());
+        if (!VirtualProtect(it->targetAddr, sz, PAGE_EXECUTE_READWRITE, &oldProtect)) {
+            continue;
+        }
+        std::memcpy(it->targetAddr, it->originalBytes.data(), sz);
+        DWORD dummy = 0;
+        VirtualProtect(it->targetAddr, sz, oldProtect, &dummy);
+        FlushInstructionCache(GetCurrentProcess(), it->targetAddr, sz);
+        it->active = false;
+    }
+    g_patchJournal.clear();
+    g_patchCount = 0;
+}
+
 } // extern "C"

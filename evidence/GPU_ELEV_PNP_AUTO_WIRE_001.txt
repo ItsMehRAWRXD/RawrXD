@@ -1,0 +1,9 @@
+GPU_ELEV_PNP_AUTO_WIRE_001
+ASOF=2026-10-27T01:01:27.5794927-04:00
+SCRIPT=scripts/Reset-GpuDevicePnp.ps1
+SELF_ELEVATE=1
+PREFLIGHT=evidence/RAWRXD_GPU_CODE31_RESET_001/build_and_run.ps1
+CPP=GpuPreflightElevatedPnp.cpp + GpuPreflightReset AUTO_ELEV on recoverable !ok
+TARGET=PCI\VEN_1002&DEV_747E codes 10/31
+PROMOTE=0
+NOTE=Elevated cycle can still leave Code 10 if PCIe rail latched; cold boot remains NEXT if AFTER Problem!=0

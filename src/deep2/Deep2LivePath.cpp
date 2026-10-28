@@ -7,6 +7,8 @@
 #include "StreamTransferCounters.hpp"
 #include "GpuTransferCounters.hpp"
 #include "FusedLiveController.hpp"
+#include "StreamPathTiming.hpp"
+#include "MoEPlaceLiveCounters.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -297,6 +299,10 @@ void LivePath_EndGenerate(CycloneScheduler* cyclone) {
     if (LivePath_MechOn(LP_MECH_PINBALL)) LivePath_PinballDisarm();
     if (LivePath_MechOn(LP_MECH_TRAMPOLINE)) LivePath_UninstallTrampoline();
     if (LivePath_MechOn(LP_MECH_TRAILBRAKE)) GetTrailBrake().PruneAnchors(1);
+    /* Live generate never entered K2NativeStreamGate::Run emit seam; dump
+     * SHARD_*_US + D2_MOE_LIVE here so MoE bypass cannot hide in silence. */
+    StreamPathTiming_Emit(stdout);
+    MoEPlaceLiveEmit(stdout);
     g_cyclone = nullptr;
     g_active = false;
 }

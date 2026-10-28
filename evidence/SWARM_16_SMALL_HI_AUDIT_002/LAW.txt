@@ -1,0 +1,84 @@
+SWARM_16_SMALL_HI_AUDIT_002 / LAW
+=================================
+ASOF_UTC=2026-10-28T10:17:11Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+TIP_EXE_RELINK=FORBIDDEN (sibling TIP_ABSORB_RELINK_001 already NEW_SHA)
+PRESERVE=SWARM_16_SMALL_HI_AUDIT_001 (untouched)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+EMPTY_RESPONSE != invent PASS
+thinking-only != invent PASS (EMPTY_RESPONSE_THINKING_ONLY)
+embedding-only /api/generate 400 != invent PASS
+Cloud tags skipped (remote_host / :cloud / minimax)
+
+MISSION (retry after 001 HI 9/16 FAIL)
+--------------------------------------
+1. Rebuild MODELS: chat/generate-capable only; digest-dedupe; no cloud;
+   no embeddinggemma
+2. Replace 001 EMPTY/400 slots with unique local chat models
+3. Prefer small-first; document size for larger fillers (SIZE_NOTE.txt)
+4. Re-run harness v2: (a) hi (b) audit Win32IDE_ToolActionStatus.cpp
+   first ~80 lines injected
+5. Seal 002; update MATRIX G07 HI_PASS/N; tip EXE RUNTIME NOT_RUN
+
+HARNESS
+-------
+PATH=evidence/SWARM_16_SMALL_HI_AUDIT_002/harness_ollama_swarm16_v2.ps1
+API=GET /api/tags + POST /api/generate (127.0.0.1:11434)
+  body includes think=false; PASS = non-empty response= only
+AUDIT_FILE=src/win32app/Win32IDE_ToolActionStatus.cpp
+
+EXCLUDED (from 001 failures / policy)
+-------------------------------------
+embeddinggemma-2:740m — HTTP 400 embedding
+nemotron-3-nano:4b, qwen3:8b, kiminoto/T0.0.1:latest,
+  pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest,
+  gpt-oss:20b / gpt-oss:latest (same digest 17052f91a42e),
+  flint:latest — EMPTY_RESPONSE on 001
+all :cloud tags; minimax-m3:cloud
+
+SELECTED N=16 (digest-unique, non-cloud, chat)
+---------------------------------------------
+n4-tiny-oracle:latest
+qwen2.5-coder:1.5b-base
+llama3.2:3b
+qwen35-40b-heretic-q8:latest
+gemma3:4b
+llama3.1:8b
+granite3.3:8b
+deepseek-coder-v2:16b
+starcoder2:15b
+qwen3.8:27b                 (~17GB — SIZE_NOTE)
+deepseek-r1:32b             (~19GB)
+ornith-1.5:35b              (~22GB)
+nemotron-3.5-bolt:latest    (~24GB)
+nemotron-3.5-lightning:30b  (~25GB)
+bigdaddygnative:latest      (~25GB)
+bigdaddyglocal:latest       (~25GB)
+
+RUNTIME (this seal)
+-------------------
+TAGS_REACHABLE=1
+N=16
+HI_PASS=16 HI_FAIL=0
+AUDIT_PASS=16 AUDIT_FAIL=0
+ORCH_1_TO_N=PASS
+FILE_AUDIT_GATE=PASS
+RUNTIME_REACHED=1 (Ollama harness only)
+TIP_EXE_RUNTIME=NOT_RUN
+TIP_ABSORB_RELINK_001 ABSORB=PASS NEW_SHA=C4FC9AE9… — no further relink
+
+SOURCE cross-cite
+-----------------
+SWARM_16_SMALL_HI_AUDIT_001 preserved (HI 9/16 FAIL historical)
+WIN32IDE_CLOSURE_MATRIX_001 G07 note updated HI_PASS=16/N=16
+  (Ollama orch only; tip EXE ensemble path still not MET)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

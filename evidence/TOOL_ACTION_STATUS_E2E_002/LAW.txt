@@ -1,0 +1,61 @@
+TOOL_ACTION_STATUS_E2E_002 / LAW
+================================
+ASOF_UTC=2026-10-28T11:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P0=A05 / S-001 / G14 / G15
+TIP_REBUILD=NO
+RELINK_REQUIRED=1 (AdmitToolActionForProductHistory + VSCodeUI/hookToolResult consumer reject)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+FinishedAction / invent toast without real receipt = FORBIDDEN
+SYNTHETIC=1 / GATED_STUB / FEATURE_FICTION EXCLUDE_FROM_PRODUCT_RUN_HISTORY
+A05_MET only if all four cases earned on tip product consumers
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1
+PORT=18991 (headless --local --bind 127.0.0.1)
+AUTH=RAWRXD_HOSTED_API_KEY (probe-owned; not invent PASS)
+
+FOUR CASES
+----------
+1) NEG synthetic reject
+   TIP: GateStub via CreateRemoteThread RVA 0x192F310 (supplement)
+        ODS path sealed prior TOOL_ACTION_STATUS_RUNTIME_001
+   CONSUMER: AdmitToolActionForProductHistory + ToolOutputLooksSyntheticSuccess
+        SOURCE_WIRED in tip sources; UNIT_RUNTIME via probe_admit_unit.exe
+        TIP_EXE_ADMIT=NOT_LINKED (RELINK_REQUIRED) → case1 tip-consumer PARTIAL
+2) REAL SUCCESS
+   METHOD=POST /api/tool list_directory
+   RESULT=entries payload, no error → EARNED
+3) REAL FAILURE
+   METHOD=POST /api/tool read_file missing path
+   RESULT=file_not_found win32_error=2 → EARNED
+4) CANCEL
+   METHOD=AgentSessionCancel during AgentRunCommand (product TUs)
+   RESULT=AgentSessionCancelled=1; no "success":true invent
+   NOTE=exitCode may still be 0 from killed child — consumer admit
+        reject_post_cancel_success is the A05 guard (SOURCE+unit)
+   HEADLESS /api/agent/run = NOT_ROUTE on tip headless
+
+SOURCE WIRING (this seal; tip absorb deferred)
+----------------------------------------------
+src/ui/tool_action_status.h|.cpp — AdmitToolActionForProductHistory
+src/win32app/Win32IDE_VSCodeUI.cpp — no invent FinishedAction toast
+src/win32app/Win32IDE_FailureDetector.cpp — hookToolResult reject_synthetic
+
+DISPOSITION
+-----------
+A05 / S-001 / G14 / G15 = RUNTIME_PARTIAL (not MET)
+A05_MET=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

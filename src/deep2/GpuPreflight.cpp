@@ -65,7 +65,8 @@ std::vector<GpuHealth> EnumerateGpuHealth() {
             gpu.instanceId = instanceId;
         }
 
-        // Device status (started + problem code)
+        // Device status (started + problem code). Code 31 = CM_PROB_FAILED_ADD.
+        gpu.devInst = devData.DevInst;
         DWORD status = 0, problem = 0;
         if (CM_Get_DevNode_Status(&status, &problem, devData.DevInst, 0) == CR_SUCCESS) {
             gpu.status = status;
@@ -108,30 +109,58 @@ bool GpuPreflightCheck(bool allowCpuOnly) {
         if (!gpu1 && (g.friendlyName.find(kGpu1Token) != std::wstring::npos)) gpu1 = &g;
     }
 
+    bool attemptedReset = false;
+    auto maybeReset = [&](const GpuHealth* g, const char* tag) {
+        if (!g || g->healthy || !g->devInst) return;
+        if (!GpuProblemCodeRecoverable(g->problem)) {
+            std::fprintf(stderr,
+                         "GPU_RESET_CANDIDATE=%s problem=%lu CODE31=%d SKIP=UNRECOVERABLE\n",
+                         tag, g->problem, GpuIsCode31(g->problem) ? 1 : 0);
+            std::fflush(stderr);
+            return;
+        }
+        std::fprintf(stderr,
+                     "GPU_RESET_CANDIDATE=%s problem=%lu CODE31=%d\n",
+                     tag, g->problem, GpuIsCode31(g->problem) ? 1 : 0);
+        std::fflush(stderr);
+        (void)AttemptGpuDevNodeReset(g->devInst, g->problem);
+        attemptedReset = true;
+    };
+    maybeReset(gpu0, "R9700");
+    maybeReset(gpu1, "RX_7800_XT");
+    if (attemptedReset) {
+        gpus = EnumerateGpuHealth();
+        gpu0 = gpu1 = nullptr;
+        for (const auto& g : gpus) {
+            if (!gpu0 && (g.friendlyName.find(kGpu0Token) != std::wstring::npos)) gpu0 = &g;
+            if (!gpu1 && (g.friendlyName.find(kGpu1Token) != std::wstring::npos)) gpu1 = &g;
+        }
+    }
     bool gpu0Healthy = gpu0 && gpu0->healthy;
     bool gpu1Healthy = gpu1 && gpu1->healthy;
 
-    // Print preflight report to stderr.
     std::fprintf(stderr, "RAWRXD_GPU_PREFLIGHT_BEGIN\n");
-
     if (gpu0) {
         std::fprintf(stderr,
-                     "GPU_0=R9700\n"
-                     "GPU_0_WINDOWS_HEALTH=%s\n"
-                     "GPU_0_PROBLEM_CODE=%lu\n",
-                     gpu0Healthy ? "PASS" : "FAIL", gpu0->problem);
+                     "GPU_0=R9700\nGPU_0_WINDOWS_HEALTH=%s\n"
+                     "GPU_0_PROBLEM_CODE=%lu\nGPU_0_CODE31=%d\n",
+                     gpu0Healthy ? "PASS" : "FAIL", gpu0->problem,
+                     GpuIsCode31(gpu0->problem) ? 1 : 0);
     } else {
-        std::fprintf(stderr, "GPU_0=R9700\nGPU_0_WINDOWS_HEALTH=FAIL\nGPU_0_PROBLEM_CODE=0\n");
+        std::fprintf(stderr,
+                     "GPU_0=R9700\nGPU_0_WINDOWS_HEALTH=FAIL\n"
+                     "GPU_0_PROBLEM_CODE=0\nGPU_0_CODE31=0\n");
     }
-
     if (gpu1) {
         std::fprintf(stderr,
-                     "GPU_1=RX_7800_XT\n"
-                     "GPU_1_WINDOWS_HEALTH=%s\n"
-                     "GPU_1_PROBLEM_CODE=%lu\n",
-                     gpu1Healthy ? "PASS" : "FAIL", gpu1->problem);
+                     "GPU_1=RX_7800_XT\nGPU_1_WINDOWS_HEALTH=%s\n"
+                     "GPU_1_PROBLEM_CODE=%lu\nGPU_1_CODE31=%d\n",
+                     gpu1Healthy ? "PASS" : "FAIL", gpu1->problem,
+                     GpuIsCode31(gpu1->problem) ? 1 : 0);
     } else {
-        std::fprintf(stderr, "GPU_1=RX_7800_XT\nGPU_1_WINDOWS_HEALTH=FAIL\nGPU_1_PROBLEM_CODE=0\n");
+        std::fprintf(stderr,
+                     "GPU_1=RX_7800_XT\nGPU_1_WINDOWS_HEALTH=FAIL\n"
+                     "GPU_1_PROBLEM_CODE=0\nGPU_1_CODE31=0\n");
     }
 
     bool allHealthy = gpu0Healthy && gpu1Healthy;

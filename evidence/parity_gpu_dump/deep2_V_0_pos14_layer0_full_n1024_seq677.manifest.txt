@@ -1,0 +1,13 @@
+side=deep2
+stage=V_0
+pos=14
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1024
+nbytes=4096
+fnv=f88f5bd5b9cf995a
+l2=1.2470569827720324
+seq=677
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_V_0_pos14_layer0_full_n1024_seq677.bin

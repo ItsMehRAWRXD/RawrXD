@@ -1,0 +1,52 @@
+AGENTIC_COMPOSER_UX_001 / LAW
+=============================
+ASOF_UTC=2026-10-28T09:40:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+SCOPE=src/win32app/Win32IDE_AgenticComposerUX.cpp
+P1=S-004 LOCAL CONFIRMED (default-model + MessageBox as fake success)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+MessageBoxA OK != product success
+model="default-model" != active ProductOpen / loaded model
+StartSession without resolved model = FORBIDDEN
+
+MISSION
+-------
+1. Bind StartSession model to real active local path / ProductOpen session model
+2. Fail-close if none: error status only; no fake default-model PASS; no MessageBox success
+3. Document + mitigate static callback lifecycle risk
+4. Seal this folder; prefer no tip EXE relink
+5. PROMOTE=0
+
+SOURCE_WIRED FIXES (this seal)
+------------------------------
+C01 ResolveActiveComposerModel:
+     getLoadedModelPath() first;
+     else ProductSessionOpen() + getenv("RAWRXD_PRODUCT_MODEL");
+     never literal "default-model"
+C02 Empty model => ShowError + appendToOutput FAIL_CLOSED; return;
+     no StartSession
+C03 MessageBoxA success dialog REMOVED; status via appendToOutput only
+C04 Static callback lifecycle:
+     was: lambdas captured `ide` by value into static AgenticComposerUX
+     now: g_composerUxIdeHost refreshed each HandleAgenticComposerUX entry;
+          callbacks null-check host before appendToOutput
+     RESIDUAL_RISK (documented): if Win32IDE destroyed without clearing
+     g_composerUxIdeHost, a late callback can still dangle — do not invoke
+     Composer UX after IDE teardown; process-exit order not claimed safe
+
+RELINK
+------
+RELINK=NOT_PERFORMED (prefer no tip relink)
+RELINK=REQUIRED before RUNTIME_REACHED of C01–C04 on product EXE
+No tip SHA invalidate this seal (source-only; sealed LIVE_TETRAD untouched)
+If a later tip climb relinks Win32IDE, that climb must document SHA invalidate
+  of any EXE-bound receipt — not done here
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

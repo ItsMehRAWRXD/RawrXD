@@ -1,0 +1,46 @@
+ASOF=2026-10-27T04:20:00-04:00
+EVIDENCE=DEEP2_KIMI_K2_001
+GATE=MULTISHARD_INDEX
+MODEL_DIR=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+MODEL_DISK_BYTES=621238241280
+MODEL_DISK_GiB=578.57
+MODEL_DISK_GB_DECIMAL=621.24
+NOTE=578.58 figure matches GiB (1024^3), not decimal GB
+SHARDS=13/13
+TENSORS=1096/1096
+DUPLICATES=0
+BOUNDS=PASS
+TOTAL_INDEXED_BYTES=621238241280
+PROBE=k2_multishard_index_probe.exe
+PROBE_EXIT=0
+MULTISHARD_INDEX_GATE=PASS
+SEALED=1
+DISPOSITION=PASS
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT_GATE=KIMI_K2_FULL_FORWARD_001
+
+# Source fixes this turn
+DEEP2_K2GlobalTensorIndex=
+  - require of-NNNNN shard count match
+  - fail on duplicate tensor names
+  - per-shard bounds: AbsoluteOffset = ShardDataStart + LocalOffset
+  - emit MULTISHARD_* receipts
+
+F_rawrxd_StreamingGGUFLoader=
+  - ROOT CAUSE: BuildTensorIndexFromShard read tensor_count as uint32_t
+    (GGUF v3 requires uint64) → stream desync / partial index (~98)
+  - FIXED: ParseHeaderFromShard (uint64) per shard; skip own metadata;
+    parse own tensor directory; rebase with own dataStart; reject duplicates
+  - Open() validates all shard headers before index; copies shard0 → header_/metadata_
+
+# Not yet certified
+LAYER_BINDING=NOT_RUN
+KIMI_K2_FORWARD=NOT_RUN
+FINITE_LOGITS=NOT_RUN
+GENERATED_TOKENS=NOT_RUN
+REFERENCE_PARITY=NOT_RUN
+REAP_REWRITE_AUTHORIZED=FALSE
+
+NEXT=Kimi K2 forward pass (MLA+MoE+KV) on indexed tensors — index gate closed
+LOG=index_probe_run.log

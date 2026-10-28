@@ -251,6 +251,8 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
         def("DEEP2_LIVE_ALLOW_LAYER_CACHE", "1");
         def("DEEP2_LIVE_CACHE_BUDGET_MIB", "12288");
         def("DEEP2_LIVE_MECH", "trampoline,cyclone,elastic");
+        /* Match prior K2 live braid: elastic skipped unless explicitly allowed. */
+        def("RAWRXD_DEEP2_ALLOW_ELASTIC", "1");
         def("DEEP2_GEN_ALG", "standard");
         def("DEEP2_LOGITS_THREADS", "32");
         /* LOGITS_SPLIT_CUT: GPU||CPU split measured unprofitable on K2 Q4;

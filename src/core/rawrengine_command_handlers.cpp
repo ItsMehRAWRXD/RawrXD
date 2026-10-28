@@ -230,14 +230,11 @@ CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
 }
 
 CommandResult HandleToolActionStatus(const CommandContext& ctx) {
-    RawrXD::UI::ToolActionAccumulator acc;
-    acc.addAction(RawrXD::UI::ToolActionStatus::RunTerminalAction("cmake --build .", 120));
-    acc.addAction(RawrXD::UI::ToolActionStatus::FinishedAction(2));
-    const std::string rendered = acc.renderPlainText();
-    if (rendered.empty()) {
-        return errorResult(ctx, "Tool action status rendering returned empty output");
-    }
-    return okResult(ctx, "Tool action status rendered");
+    // Fail-closed DEMO: no synthetic RunTerminal/FinishedAction without real exit.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SYNTHETIC=1 ToolActionStatus "
+        "DEMO gated; FinishedAction forbidden without real process exit",
+        /*code=*/1);
 }
 
 CommandResult HandleChatPanel(const CommandContext& ctx) {

@@ -1,0 +1,71 @@
+LORA_KERNEL_STUB_GATE_001 / LAW
+===============================
+ASOF_UTC=2026-10-28T08:25:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+WIN32IDE_EXE_SHA_HOLD=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GateMode / SO_* pattern: OutputDebugString + false|-1 = GATED (not PASS)
+CMake-omit != linked stub != product PASS
+
+TRACE — LINKED INTO Win32IDE EXE?
+---------------------------------
+TU                                              CMake Win32IDE   orphan_sources
+Win32IDE_AgenticFeatures.cpp                    NO (omit)       YES
+Win32IDE_LoRAKernelBridge.cpp                   NO (omit)       YES
+Win32IDE_AgentBridge_Init.cpp                   NO (omit)       YES
+ASM_Bridge_Implementation.cpp                   NO (omit)       YES
+src/core/agent_wal_cli_smoke_test.cpp           NO (omit)       YES
+src/core/ghost_pipeline_probe.cpp               NO (omit)       YES
+ApplyLoRA / LoRA_Kernel.asm                     NO refs in CMakeLists
+
+Call sites (source only; not product-linked):
+  AgentBridge_Init.cpp → LoRAKernel_Initialize() on init success path
+  No main_win32 / HeadlessIDE call to WAL smoke or ghost probe found
+
+DISPOSITION
+-----------
+D1 LoRAKernel_Initialize (AgenticFeatures)
+  WAS: return true (silent fake success)
+  NOW: GateStub log + return false
+  LINK: GATED_OMIT (CMake comment at WIN32IDE_SOURCES)
+  OWNER_WHEN_WIRED: Win32IDE_LoRAKernelBridge.cpp + ApplyLoRA ASM (neither product-linked)
+
+D2 runAgentWalCliSmokeTest
+  WAS: return 0 / "passed" theater (AgenticFeatures + core + ASM_Bridge)
+  NOW: GateStub/panic + return -1 in all three TUs
+  LINK: GATED_OMIT
+
+D3 runGhostPipelineProbeCli
+  WAS: return 0 / "completed successfully" theater
+  NOW: GateStub/panic + return -1 in all three TUs
+  LINK: GATED_OMIT
+
+D4 AgenticFeatures sibling empty-success stubs (same TU sweep)
+  Camellia256 asm_* empty return 0 → GateStub + -1
+  SelfHost asm_selfhost_* empty success → GateStub + -1|nullptr|0-bytes
+  DynamicModelLoader::loadTinyModel — already FEATURE_FICTION=1 false (KEEP)
+  matmul_kernel_avx2 / ggml_rxd_gemm_q4_0 — naive real math fallback (KEEP; SYNTHETIC=partial compute, not return-0 theater)
+  AgentBridge_Set* void log-only — no success code (KEEP)
+  Sovereign_VEH_Handler CONTINUE_SEARCH — intentional pass-through (KEEP)
+
+D5 Win32IDE_LoRAKernelBridge.cpp
+  GATED_OMIT — would call ApplyLoRA_Optimized if linked; ApplyLoRA not in product CMake.
+  Header cites this LAW. Do not invent Initialize PASS from source presence.
+
+SEALED EXE
+----------
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO — source fail-close + CMake omit only
+LIVE_TETRAD: unchanged for sealed SHA; NOT INVALIDATED (no new binary)
+If future relink of Win32IDE: note new SHA; prior tetrad INVALIDATED; do not invent PASS
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,0 +1,54 @@
+WIN32IDE_STUB_SWEEP_001 / LAW
+=============================
+ASOF_UTC=2026-10-28T08:20:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+SCOPE=product path RawrXD-Win32IDE.exe link TUs only
+  (rawrxd_subsystem_api, HeadlessIDE, win32app, linked unlinked_symbols_batch_*)
+EXCLUDE=Camellia RCM2 / gold_link (sibling owners)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GateMode / SO_*/AD_* return -1|nullptr = GATED (not PASS)
+CMake-omit != linked stub
+
+SWEEP RESULTS
+-------------
+S01 Mode* (CompileMode..DiffCovMode)
+  OWNER=rawrxd_subsystem_api.cpp GateMode + OutputDebugString
+  DISPOSITION=GATED_FAILCLOSED (B02)
+S02 SO_*/AD_*
+  OWNER=rawrxd_subsystem_api.cpp return -1 / nullptr
+  DISPOSITION=GATED_FAILCLOSED (B03)
+S03 batch_010 / batch_011 Mode*/SO_*/AD_* bodies
+  DISPOSITION=GATED_OMIT (CMake comment-omit Win32IDE)
+S04 batch_005 Camellia auth XOR
+  DISPOSITION=GATED_!RAWR_HAS_MASM (Win32IDE RAWR_HAS_MASM=1 → XOR not compiled)
+S05 Watchdog MagBuf CRC
+  DISPOSITION=CLEARED_JOIN_CRC (B04)
+S06 Watchdog HMAC product key
+  DISPOSITION=SOURCE_WIRED_FAILCLOSED + GATED_UNTIL_CAMELLIA_INIT
+  cite=evidence/WATCHDOG_HMAC_PRODUCT_001/
+  RUNTIME_REACHED=NOT_RUN (sealed EXE untouched)
+S07 Watchdog.asm product body
+  DISPOSITION=GATED_OMIT_BODY (END-only; Full Source not linked)
+S08 asm_link_stubs / subsystem_mode_runtime
+  DISPOSITION=GATED_OMIT (B06/B07)
+S09 batch_017 / sovereign engines=0 / orch ASM=0
+  DISPOSITION=GATED prior (B09–B12)
+S10 NEW linked fake-success holes this sweep
+  DISPOSITION=NONE_OPEN requiring emergency fix beyond S06
+  Note: batch_009 hwsynth returns 1 with synthetic estimates on valid
+  inputs (Mag-joined C owner) — SYNTHETIC=partial, not return-0 theater;
+  null args return 0 (fail). Not promoted.
+
+SEALED EXE
+----------
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO (source wire S06 only; tetrad re-run required on new SHA if relink)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

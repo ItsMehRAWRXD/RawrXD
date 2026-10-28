@@ -1,0 +1,3 @@
+wire IDE chat through the shared agent session
+
+The served GUI, tool registry, and worker thread now use one structured tool loop and the workspace authorization checks. Runtime certification stays NOT_RUN and PROMOTE stays 0.

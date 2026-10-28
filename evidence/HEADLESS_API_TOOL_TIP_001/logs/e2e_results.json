@@ -1,0 +1,42 @@
+[
+    {
+        "name":  "NO_KEY_list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "read_motd",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "execute_command",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    },
+    {
+        "name":  "list_directory",
+        "status":  -1,
+        "body":  "Unable to connect to the remote server"
+    }
+]

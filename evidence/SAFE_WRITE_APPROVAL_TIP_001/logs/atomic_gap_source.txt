@@ -1,0 +1,4 @@
+230:HANDLE h = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+258:bool writeFileLimited(const std::string& path, const std::string& content, std::string& errJson) {
+263:HANDLE h = CreateFileA(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+543:if (!writeFileLimited(resolved, content, err)) {

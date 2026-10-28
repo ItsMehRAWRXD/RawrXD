@@ -499,6 +499,10 @@ std::string SubAgentManager::executeSwarm(
     }
 
     std::string swarmId = generateUUID();
+    {
+        std::lock_guard<std::mutex> lock(m_swarmMutex);
+        m_lastSwarmId = swarmId;
+    }
 
     if (m_historyRecorder) {
         m_historyRecorder->recordSwarmStart(parentId, (int)prompts.size(), adjustedConfig.mergeStrategy);
@@ -539,7 +543,11 @@ std::string SubAgentManager::executeSwarm(
         if (swarmState->cancelled.load()) break;
         if (adjustedConfig.failFast && anyFailed.load()) break;
 
-        running++;
+        int cur = ++running;
+        for (int peak = swarmState->peakRunning.load();
+             cur > peak &&
+             !swarmState->peakRunning.compare_exchange_weak(peak, cur);) {
+        }
 
         swarmThreads.emplace_back([this, &swarmState, i, &running, &batchMutex,
                                    &batchCV, &anyFailed, parentId]() {
@@ -637,6 +645,18 @@ float SubAgentManager::getSwarmProgress(const std::string& swarmId) const {
         return (float)it->second->completedCount.load() / (float)total;
     }
     return 0.0f;
+}
+
+std::string SubAgentManager::getLastSwarmId() const {
+    std::lock_guard<std::mutex> lock(m_swarmMutex);
+    return m_lastSwarmId;
+}
+
+int SubAgentManager::getSwarmPeakParallel(const std::string& swarmId) const {
+    std::lock_guard<std::mutex> lock(m_swarmMutex);
+    auto it = m_swarms.find(swarmId);
+    if (it == m_swarms.end()) return 0;
+    return it->second->peakRunning.load();
 }
 
 std::string SubAgentManager::mergeSwarmResults(

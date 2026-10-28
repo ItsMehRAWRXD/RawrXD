@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_POST_LAYERS
+pos=4
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=f5bdf1766bff541c
+l2=113.09042250779677
+seq=238
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_PROMPT_POST_LAYERS_pos4_layer0_full_n3072_seq238.bin

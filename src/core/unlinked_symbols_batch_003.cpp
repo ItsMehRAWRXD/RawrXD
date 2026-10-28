@@ -1,12 +1,16 @@
 // unlinked_symbols_batch_003.cpp
-// Batch 3: V280 UI hooks and RTP (Runtime Telemetry Protocol) (15 symbols)
-// Full production implementations - no stubs
+// Batch 3: RTP telemetry + model loader (GGUF Open path).
+// V280_UI_* owned by src/win32app/v280_link_bridge.cpp (sole Win32IDE owner).
 
-#include <cstdint>
-#include <cstring>
 #include <array>
 #include <atomic>
+#include <cstdint>
+#include <cstring>
+#include <mutex>
+#include <new>
 #include <string>
+
+#include "../gguf_loader.h"
 
 namespace {
 
@@ -15,12 +19,6 @@ struct RTPDescriptor {
     uint32_t flags;
 };
 
-struct UiState {
-    char ghost[4096] = {0};
-    std::atomic<bool> ghostActive{false};
-    std::atomic<uint32_t> lastMsg{0};
-} g_ui;
-
 struct RTPState {
     std::array<RTPDescriptor, 16> descriptors{};
     std::array<uint8_t, 1024> contextBlob{};
@@ -28,45 +26,31 @@ struct RTPState {
     std::atomic<size_t> contextSize{0};
     std::atomic<uint64_t> packetCount{0};
     std::atomic<bool> initialized{false};
-} g_rtp;
+};
+RTPState g_rtp;
+
+std::mutex g_modelMtx;
+GGUFLoader* g_modelLoader = nullptr;
+bool g_modelInited = false;
 
 bool hasSupportedModelExt(const char* path) {
     if (path == nullptr) {
         return false;
     }
-    std::string p(path);
+    const std::string p(path);
     const auto pos = p.find_last_of('.');
     if (pos == std::string::npos) {
         return false;
     }
     const std::string ext = p.substr(pos);
-    return ext == ".gguf" || ext == ".bin" || ext == ".model";
+    return ext == ".gguf" || ext == ".bin" || ext == ".model" ||
+           ext == ".GGUF" || ext == ".BIN" || ext == ".MODEL";
 }
 
 } // namespace
 
 extern "C" {
 
-// V280 UI Ghost Text System
-const char* V280_UI_GetGhostText() {
-    return g_ui.ghost;
-}
-
-void* V280_UI_WndProc_Hook(void* hwnd, unsigned int msg, 
-                           void* wparam, void* lparam) {
-    (void)hwnd; (void)msg; (void)wparam; (void)lparam;
-    g_ui.lastMsg.store(msg, std::memory_order_relaxed);
-    if (msg == 0x0201 || msg == 0x0100) {
-        g_ui.ghostActive.store(true, std::memory_order_relaxed);
-    }
-    return nullptr;
-}
-
-bool V280_UI_IsGhostActive() {
-    return g_ui.ghostActive.load(std::memory_order_relaxed);
-}
-
-// RTP (Runtime Telemetry Protocol) Functions
 void RTP_InitDescriptorTable() {
     for (uint32_t i = 0; i < g_rtp.descriptors.size(); ++i) {
         g_rtp.descriptors[i].id = i;
@@ -132,22 +116,33 @@ void* RTP_GetTelemetrySnapshot() {
     return g_rtp.telemetry.data();
 }
 
-// Model loader functions
-bool LoadModel(const char* path) {
-    if (!hasSupportedModelExt(path)) {
-        g_ui.ghostActive.store(false, std::memory_order_relaxed);
-        return false;
+bool ModelLoaderInit() {
+    std::lock_guard<std::mutex> lock(g_modelMtx);
+    if (g_modelLoader == nullptr) {
+        g_modelLoader = new (std::nothrow) GGUFLoader();
     }
-    std::strncpy(g_ui.ghost, "model_loaded", sizeof(g_ui.ghost) - 1);
-    g_ui.ghost[sizeof(g_ui.ghost) - 1] = '\0';
-    g_ui.ghostActive.store(true, std::memory_order_relaxed);
-    return true;
+    g_modelInited = (g_modelLoader != nullptr);
+    return g_modelInited;
 }
 
-bool ModelLoaderInit() {
-    // Initialize model loader subsystem
-    // Implementation: Setup memory pools, register formats
-    return true;
+bool LoadModel(const char* path) {
+    if (!hasSupportedModelExt(path)) {
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(g_modelMtx);
+    if (!g_modelInited || g_modelLoader == nullptr) {
+        if (g_modelLoader == nullptr) {
+            g_modelLoader = new (std::nothrow) GGUFLoader();
+        }
+        g_modelInited = (g_modelLoader != nullptr);
+        if (!g_modelInited) {
+            return false;
+        }
+    }
+    if (!g_modelLoader->Open(path)) {
+        return false;
+    }
+    return g_modelLoader->ParseHeader();
 }
 
 } // extern "C"

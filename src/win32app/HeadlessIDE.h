@@ -378,6 +378,12 @@ private:
                                   HostedHttpResponse& response);
     void routeHexMagRequest(const HostedHttpRequest& request,
                             HostedHttpResponse& response);
+    // Local-only HexMag orch: resolveSwarmModelOrchPlan + executeSwarm (product path).
+    void routeSwarmOrchRequest(const HostedHttpRequest& request,
+                               HostedHttpResponse& response);
+    // Local-only AgentRunLoop: same AgentHttpRun as GUI LocalServer /api/agent/run.
+    void routeAgentRunRequest(const HostedHttpRequest& request,
+                              HostedHttpResponse& response);
     void routeNativeRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
     bool routeStatusRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
     void routeGitHubWebhook(const HostedHttpRequest& request, HostedHttpResponse& response);

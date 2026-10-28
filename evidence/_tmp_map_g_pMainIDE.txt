@@ -1,0 +1,1 @@
+ 0003:11380fe0       ?g_pMainIDE@@3PEAVWin32IDE@@EA 0000000153adafe0     Win32IDE.cpp.obj

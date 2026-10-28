@@ -1,4 +1,7 @@
 #pragma once
+// GATED_STUB — IDE_BRIDGE_STUB_GATE_001
+// Not in RawrXD-Win32IDE WIN32IDE_SOURCES (GATED_OMIT). Companion-only via SmokeE2EIPC.
+// Bodies return false; do not invent IPC/product PASS. PROMOTE=0.
 
 #include <cstdint>
 #include <string>
@@ -17,6 +20,7 @@ public:
     explicit ExtensionHostIpcBridge(const wchar_t* pipeName);
     ~ExtensionHostIpcBridge();
 
+    // GATED_STUB: always false (was CreateFileW success theater).
     bool Connect();
     void Disconnect();
     bool IsConnected() const;

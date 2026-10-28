@@ -1,0 +1,7 @@
+R_nokey|401|{"error":"unauthorized"}
+R_evil|403|{"error":"origin_denied"}
+R_null|403|{"error":"origin_denied"}
+R_pre|401|{"error":"unauthorized"}
+R_motd|401|{"error":"unauthorized"}
+R_list|401|{"error":"unauthorized"}
+R_exec|401|{"error":"unauthorized"}

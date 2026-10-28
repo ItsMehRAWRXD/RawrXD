@@ -1,0 +1,54 @@
+﻿# TIP_ABSORB_RELINK_001 — RECEIPT
+
+```
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+ABSORB=PASS
+ASOF_UTC=2026-10-28T10:00:00Z
+NEW_SHA=C4FC9AE9A6EAC016A78B0C1BB1690B9C47A46A4B47FC51B1B807E10E14EDC43B
+PRIOR_SHA=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+SWARM_MODEL_ORCH_001=ABSENT
+```
+
+## Verdict
+
+Tip absorb relink **PASS**. SOURCE_WIRED piles S-001 / S-004 / GateFiction×276
+landed in new EXE. Prior tip `866E9D1B…` seals **not rewritten**.
+
+## EXE
+
+| Field | Value |
+|-------|-------|
+| Path | `G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe` |
+| Size | 331646464 |
+| SHA256 | `C4FC9AE9A6EAC016A78B0C1BB1690B9C47A46A4B47FC51B1B807E10E14EDC43B` |
+| Prior | `866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F` |
+| Build | `cmake --build … -j 2` CMAKE_BUILD_EXIT=0 C1060=0 |
+
+## Absorbed TUs (obj SHA)
+
+| TU | Obj SHA256 |
+|----|------------|
+| Win32IDE_ToolActionStatus.cpp | F034F7DCAA9FA872AD9CE710141E294B295A0401C8756B66E39519D48A388BD9 |
+| rawrengine_command_handlers.cpp | 8C29048D77E493D5D3D665AFBB34A03DA1E636094865D2332D1B45D1C63D57AC |
+| Win32IDE_AgenticComposerUX.cpp | 5653CA085CD6A0594721EFD97AC416C7701E4F1809600ECADDCAB1DCF2BB2CC6 |
+| command_handlers_comprehensive.cpp | C2928C8FA0389C1F12C85B13A5AB443B978207FB0F13DA9FF459ACB85C994076 |
+
+## Support edit
+
+`Win32IDE.h`: `getLoadedModelPath` / setters moved to `public` so S-004 TU compiles (C2248).
+
+## Explicit non-claims
+
+```
+ABSORB PASS != product RUNTIME tetrad/token64/multi_family
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+SWARM_MODEL_ORCH_001 not present — not absorbed
+Historical 866E9D1B seals remain prior tip
+```
+
+## Artifacts
+
+- `LAW.txt` `RECEIPT.md` `BUNDLE_SHA256.txt` `sha.txt` `obj_sha.txt`
+- `logs/relink_j2.log` `ninja_relink_j2.log` `_relink_win32ide.bat`

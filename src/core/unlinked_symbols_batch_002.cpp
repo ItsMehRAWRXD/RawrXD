@@ -1,6 +1,7 @@
 // unlinked_symbols_batch_002.cpp
-// Batch 2: GPU dispatch and compute functions (15 symbols)
-// Full production implementations - no stubs
+// Batch 2: ggml/matmul + asm_pyre_* C fallback (gated by !RAWRXD_HAS_ASM_PYRE).
+// RawrEngine CMake excludes this file when RawrXD_Pyre_Compute.asm owns asm_pyre_*.
+// Win32IDE links this file; pyre symbols omitted when RAWRXD_HAS_ASM_PYRE is set.
 
 #include <algorithm>
 #include <cmath>

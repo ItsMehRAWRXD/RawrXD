@@ -1,0 +1,36 @@
+﻿TIMESTAMP_UTC=2026-10-28T13:45:58Z
+EXE=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+ARGV=--test-ghost-text
+KILLED_TIMEOUT=0
+EXIT_CODE_SIGNED=-1073740940
+EXIT_CODE_HEX=0xC0000374
+STATUS=STATUS_HEAP_CORRUPTION
+FEATURE_PROBE_SUMMARY_PRESENT=0
+FEATURE_PROBE_PASS_LINES=0
+FEATURE_PROBE_ASSERTIONS_EMITTED=0
+GHOST_TEXT_TIMER_STARTED_ASSERTED=0
+NOTE=Win32IDE --test-ghost-text reaches RuntimeSurface bootstrap then terminates with STATUS_HEAP_CORRUPTION before [feature-probe] assertions (ghost_text_timer_started / Tab / Esc / stale / model-switch). GUI HWND GhostText path BLOCKED for this seal.
+STDOUT_LOG=ghost_probe_final_stdout.txt
+STDERR_LOG=ghost_probe_final_stderr.txt
+ALSO=win32ide_test_ghost_text_attempt.log (HWND observed then process exited without feature-probe lines)
+
+HEADLESS_GHOST_PIPELINE_PROBE=GATED_SYNTHETIC_FAIL_CLOSED
+HEADLESS_GHOST_PIPELINE_PROBE_CITE=G:\~dev\rawrxd\src\core\ghost_pipeline_probe.cpp
+HEADLESS_GHOST_PIPELINE_PROBE_NOTE=returns -1; no real probe; must not invent PASS
+
+HEADLESS_AUTOCOMPLETE_E2E=PASS_BUT_OLLAMA=0
+HEADLESS_AUTOCOMPLETE_E2E_CITE=G:\~dev\rawrxd\evidence\RAWRXD_AUTOCOMPLETE_E2E_001\SEAL.txt
+HEADLESS_AUTOCOMPLETE_E2E_NOTE=TinyLlama/Deep2 product path; NOT_TRANSFER to Ollama multi-model GhostText
+
+HEADLESS_AUTOCOMPLETE_CANCEL=PASS
+HEADLESS_AUTOCOMPLETE_CANCEL_CITE=G:\~dev\rawrxd\evidence\RAWRXD_AUTOCOMPLETE_CANCEL_001\SEAL.txt
+HEADLESS_AUTOCOMPLETE_CANCEL_NOTE=NOT_TRANSFER to Ollama multi-model GhostText
+
+HEADLESS_PRODUCT_GHOST_BIND=PASS
+HEADLESS_PRODUCT_GHOST_BIND_CITE=G:\~dev\rawrxd\evidence\RAWRXD_PRODUCT_GHOST_BIND_001\SEAL.txt
+HEADLESS_PRODUCT_GHOST_BIND_NOTE=product bind; NOT per-model Ollama GhostText; NOT_TRANSFER
+
+LAW=NOT_RUN != PASS
+LAW=AGENTIC_EDIT_PASS != GHOSTTEXT_PASS
+PROMOTE=0
+CERTIFIED=0

@@ -1,0 +1,13 @@
+side=deep2
+stage=K_PRE_ROPE_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1024
+nbytes=4096
+fnv=c1433d4a5fe6b228
+l2=13.510289115091606
+seq=68
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_K_PRE_ROPE_1_pos1_layer0_full_n1024_seq068.bin

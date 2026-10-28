@@ -1,0 +1,3 @@
+SHA256 hash of G:\~dev\rawrxd\build_win32ide_link001\RawrXD_Camellia256.obj:
+49ce60b7fe06c4d15c313f55638b241abe394f2dc395515553797456ae4ddc24
+CertUtil: -hashfile command completed successfully.

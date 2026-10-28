@@ -1,0 +1,3 @@
+default the optional voxel renderer off
+
+The IDE target does not link it, and src/voxel is not in the tracked tree. A clean configure no longer requires that untracked directory.

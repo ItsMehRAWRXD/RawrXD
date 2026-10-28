@@ -1,0 +1,87 @@
+TOOL_ACTION_STATUS_RUNTIME_001 / RECEIPT
+========================================
+ASOF_UTC=2026-10-28T10:51:03Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+A05 / S-001 GateStub RUNTIME_REACHED on tip SHA 6832F439… .
+Primary invoke + independent reverify both POS+NEG.
+Invoke: headless tip process + CreateRemoteThread(GateStub / void handler).
+ODS proves GATED_STUB SYNTHETIC=1; no Finished-with success toast.
+MET=0 (product real-exit path unclaimed). PROMOTE=0. RELINK=NO.
+
+INVOKE
+------
+METHOD=CreateProcess tip --headless + CreateRemoteThread + DBWIN ODS
+CMD_ID=44016
+CANONICAL=ui.toolStatus
+CLI=!tool_status
+MENU=id=44016 Tools (enum only; not used this seal)
+PORT=18767
+RVA_GATE=0x192F310
+RVA_VOID=0x192F4B0
+PRIMARY_PID=31232
+REVERIFY_PID=17024
+MODULE_BASE=00007FF795370000 (both runs)
+
+TIP
+---
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1
+RELINK=N
+TIP_REBUILD=N
+
+CHECKS
+------
+HAS_GATED_STUB=1
+HAS_SYNTHETIC=1
+HAS_FORBID_FINISHEDACTION=1
+HAS_FINISHED_WITH_TOAST=0
+FABRICATED_SUCCESS_TOAST=0
+TIP_ALIVE=1
+NEG_PASS=1
+POS_PASS=1
+RUNTIME_REACHED=1
+MET_CLAIM=0
+REVERIFY_EXIT=0
+
+ODS (excerpt — reverify)
+------------------------
+[ToolActionStatus] GATED_STUB SYNTHETIC=1 DEMO NOT_PRODUCT_PATH
+FinishedAction forbidden without real process exit
+(repeated x2 — GateStub + void HandleToolActionStatus → GateStub)
+
+PATH
+----
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/LAW.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/RECEIPT.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/ods_stdout.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/gate_stub_ods_extract.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/reverify_ods_stdout.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/reverify_ods_exit.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/reverify_gate_stub_ods_extract.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/sha_verify.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/sha_verify_reverify.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/logs/remote_stdout.txt
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/probe_tip_ods_capture.cpp
+evidence/TOOL_ACTION_STATUS_RUNTIME_001/probe_tip_remote44016.cpp
+
+MATRIX
+------
+WIN32IDE_CLOSURE_MATRIX_001 A05 → RUNTIME_REACHED (not MET)
+WIN32IDE_CLOSURE_MATRIX_001 S-001 → RUNTIME_REACHED
+WIN32IDE_CLOSURE_MATRIX_001 G14 → OPEN (fabrication gated; product callable E2E OPEN)
+WIN32IDE_CLOSURE_MATRIX_001 G15 → OPEN (GateStub truthful; product real-exit OPEN)
+
+HELD
+----
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PRODUCT_TERMINAL_OWNER=unclaimed

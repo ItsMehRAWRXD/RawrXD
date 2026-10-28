@@ -1,0 +1,47 @@
+SWARM_16_RUNTIME_002_PATH_B / TIP_GUI_CREATEWINDOW_FIX_001
+==========================================================
+ASOF_UTC=2026-10-28T11:30:00Z
+PATH=B_GUI_RESTORE
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+HISTORICAL_TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+(preserve — do not rewrite 6832F439 receipts)
+
+ROOT_CAUSE
+----------
+SettingsManager::Initialize() takes std::mutex m_mutex (non-recursive), then
+calls Load()/Save() which each take the same m_mutex via lock_guard.
+
+Effect at createWindow:
+  p0StartupCk("before SettingsManager")
+  OutputDebugString("Initializing SettingsManager...")
+  → GetSettings().Initialize() self-deadlocks / SEH-aborts
+  → createWindowWithSEH returns false
+  → main_win32 exits 2 with MISLEADING stderr:
+      "createWindow failed — no interactive window station"
+  → MAIN_HWND=0; WM_COMMAND 4111 NEVER delivered
+  → onSubAgentSwarm / resolveSwarmModelOrchPlan / executeSwarm = NOT_RUN
+
+Evidence cite (SWARM_16_RUNTIME_001):
+  gui_launch_stderr.txt last breadcrumb: "[STARTUP] before SettingsManager"
+  ODS: Initializing SettingsManager... then PluginSignature Shutdown
+  settings.ini was MISSING → Initialize always took Load→fail→Save path
+    (both re-lock under held mutex)
+
+NOT root cause:
+  Window station / UserInteractive (WinSta0 + interactive was true)
+  HeadlessIDE / LocalServer (Path A ownership — out of Path B scope)
+
+FIX (source)
+------------
+src/SettingsManager.{h,cpp}:
+  LoadUnlocked()/SaveUnlocked(); public Load/Save lock once;
+  Initialize/Shutdown call unlocked bodies while holding m_mutex.
+src/win32app/main_win32.cpp:
+  createWindowWithSEH prints real GetExceptionCode();
+  remove misleading window-station blame on soft fail.
+src/win32app/Win32IDE_Core.cpp:
+  stderr breadcrumbs around SettingsManager::Initialize CALL/RETURN.
+
+REBUILD → NEW SHA required (6832F439 remains historical).
+INVOKED / RUNTIME_PASS: fail-closed until post-rebuild WM_COMMAND 4111
+witness lands under this evidence dir.

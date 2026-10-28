@@ -1,0 +1,133 @@
+﻿WIN32IDE_BINARY_PROVENANCE_001 / map_excerpt.txt
+SOURCE_MAP=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.map
+MAP_SHA256=4463301500FEDE934CF0A527444C21D81A4C1049BFB3D2E02630906B4180F186
+MAP_SIZE=330888726
+NOTE=excerpt only; full map remains in buildtree (not copied)
+
+=== MAP_HEADER ===
+ RawrXD-Win32IDE
+
+ Timestamp is 6ae1b928 (Wed Oct 28 04:58:16 2026)
+
+ Preferred load address is 0000000140000000
+
+ Start         Length     Name                   Class
+ 0001:00000000 0000aca0H .text$di                CODE
+ 0001:0000aca0 01f735c0H .text$mn                CODE
+ 0001:01f7e260 00000060H .text$mn$00             CODE
+ 0001:01f7e2c0 00001250H .text$mn$21             CODE
+ 0001:01f7f510 001ea9e0H .text$x                 CODE
+ 0001:02169ef0 000104acH .text$yd                CODE
+ 0002:00000000 00001c38H .idata$5                DATA
+ 0002:00001c38 00000038H .00cfg                  DATA
+ 0002:00001c70 00000008H .CRT$XCA                DATA
+ 0002:00001c78 00000008H .CRT$XCAA               DATA
+ 0002:00001c80 000000a8H .CRT$XCC                DATA
+ 0002:00001d28 00000010H .CRT$XCL                DATA
+ 0002:00001d38 00000700H .CRT$XCU                DATA
+ 0002:00002438 00000008H .CRT$XCZ                DATA
+ 0002:00002440 00000008H .CRT$XDA                DATA
+ 0002:00002448 00000010H .CRT$XDU                DATA
+ 0002:00002458 00000008H .CRT$XDZ                DATA
+ 0002:00002460 00000008H .CRT$XIA                DATA
+
+=== RawrXD_Camellia256.obj (first 25) ===
+ 0001:01d55bd0       cam_sbox_preload           0000000141d56bd0 f   RawrXD_Camellia256.obj
+ 0001:01d55c50       cam_sbox_layer             0000000141d56c50 f   RawrXD_Camellia256.obj
+ 0001:01d55d50       cam_F                      0000000141d56d50 f   RawrXD_Camellia256.obj
+ 0001:01d55d80       cam_FL                     0000000141d56d80 f   RawrXD_Camellia256.obj
+ 0001:01d55d90       cam_FLINV                  0000000141d56d90 f   RawrXD_Camellia256.obj
+ 0001:01d55da0       cam_load64                 0000000141d56da0 f   RawrXD_Camellia256.obj
+ 0001:01d55db0       cam_store64                0000000141d56db0 f   RawrXD_Camellia256.obj
+ 0001:01d55dc0       cam_sha256                 0000000141d56dc0 f   RawrXD_Camellia256.obj
+ 0001:01d55eb0       asm_camellia256_set_key    0000000141d56eb0 f   RawrXD_Camellia256.obj
+ 0001:01d560a0       asm_camellia256_encrypt_block 0000000141d570a0 f   RawrXD_Camellia256.obj
+ 0001:01d56240       asm_camellia256_decrypt_block 0000000141d57240 f   RawrXD_Camellia256.obj
+ 0001:01d563e0       asm_camellia256_encrypt_ctr 0000000141d573e0 f   RawrXD_Camellia256.obj
+ 0001:01d564b0       asm_camellia256_decrypt_ctr 0000000141d574b0 f   RawrXD_Camellia256.obj
+ 0001:01d564c0       asm_camellia256_init       0000000141d574c0 f   RawrXD_Camellia256.obj
+ 0001:01d56710       asm_camellia256_encrypt_file 0000000141d57710 f   RawrXD_Camellia256.obj
+ 0001:01d568f0       asm_camellia256_decrypt_file 0000000141d578f0 f   RawrXD_Camellia256.obj
+ 0001:01d56ac0       asm_camellia256_self_test  0000000141d57ac0 f   RawrXD_Camellia256.obj
+ 0001:01d56ba0       asm_camellia256_get_hmac_key 0000000141d57ba0 f   RawrXD_Camellia256.obj
+ 0001:01d56be0       asm_camellia256_get_status 0000000141d57be0 f   RawrXD_Camellia256.obj
+ 0001:01d56c20       asm_camellia256_shutdown   0000000141d57c20 f   RawrXD_Camellia256.obj
+ 0001:01d55bd0       $$000000                   0000000141d56bd0     RawrXD_Camellia256.obj
+ 0002:005a9350       $xdatasym                  0000000142725350     RawrXD_Camellia256.obj
+ 0003:10d02820       cam_sbox1                  000000015345a820     RawrXD_Camellia256.obj
+ 0003:10d02920       cam_sbox2                  000000015345a920     RawrXD_Camellia256.obj
+ 0003:10d02a20       cam_sbox3                  000000015345aa20     RawrXD_Camellia256.obj
+
+=== RawrXD_Camellia256_Auth.obj (first 20) ===
+ 0001:01d56cf0       cam_auth_build_hmac_pads   0000000141d57cf0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d56d40       cam_auth_constant_time_cmp 0000000141d57d40 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d56d80       cam_auth_hmac_compute      0000000141d57d80 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d56fe0       asm_camellia256_auth_encrypt_file 0000000141d57fe0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d57340       asm_camellia256_auth_decrypt_file 0000000141d58340 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d576c0       asm_camellia256_auth_encrypt_buf 0000000141d586c0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d577e0       asm_camellia256_auth_decrypt_buf 0000000141d587e0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d56cf0       $$000000                   0000000141d57cf0     RawrXD_Camellia256_Auth.obj
+ 0002:005a9418       $xdatasym                  0000000142725418     RawrXD_Camellia256_Auth.obj
+ 0003:10d02e90       cam_auth_str_enc_ok        000000015345ae90     RawrXD_Camellia256_Auth.obj
+ 0003:10d02ed3       cam_auth_str_dec_ok        000000015345aed3     RawrXD_Camellia256_Auth.obj
+ 0003:10d02f0a       cam_auth_str_hmac_fail     000000015345af0a     RawrXD_Camellia256_Auth.obj
+ 0003:10d02f54       cam_auth_str_magic_fail    000000015345af54     RawrXD_Camellia256_Auth.obj
+ 0003:10d02f92       cam_auth_str_ver_fail      000000015345af92     RawrXD_Camellia256_Auth.obj
+ 0003:10d02fc9       cam_auth_str_size_fail     000000015345afc9     RawrXD_Camellia256_Auth.obj
+ 0003:10d03016       cam_auth_str_alloc_fail    000000015345b016     RawrXD_Camellia256_Auth.obj
+ 0003:10d03050       cam_auth_str_crypto_fail   000000015345b050     RawrXD_Camellia256_Auth.obj
+ 0003:1176f880       cam_auth_hmac_key          0000000153ec7880     RawrXD_Camellia256_Auth.obj
+ 0003:1176f8a0       cam_auth_ipad              0000000153ec78a0     RawrXD_Camellia256_Auth.obj
+ 0003:1176f8e0       cam_auth_opad              0000000153ec78e0     RawrXD_Camellia256_Auth.obj
+
+=== RawrXD_Watchdog.obj (first 20) ===
+ 0001:01d57ff4       wd_compute_hmac_sha256     0000000141d58ff4 f   RawrXD_Watchdog.obj
+ 0001:01d57c40       $$000000                   0000000141d58c40     RawrXD_Watchdog.obj
+ 0002:005a94c0       $xdatasym                  00000001427254c0     RawrXD_Watchdog.obj
+ 0003:10d03090       wd_initialized             000000015345b090     RawrXD_Watchdog.obj
+ 0003:10d03094       wd_text_base               000000015345b094     RawrXD_Watchdog.obj
+ 0003:10d0309c       wd_text_size               000000015345b09c     RawrXD_Watchdog.obj
+ 0003:10d030a4       wd_hmac_key                000000015345b0a4     RawrXD_Watchdog.obj
+ 0003:10d030c4       wd_baseline_hmac           000000015345b0c4     RawrXD_Watchdog.obj
+ 0003:10d030e4       wd_current_hmac            000000015345b0e4     RawrXD_Watchdog.obj
+ 0003:10d03104       wd_verify_count            000000015345b104     RawrXD_Watchdog.obj
+ 0003:10d0310c       wd_last_verify_tick        000000015345b10c     RawrXD_Watchdog.obj
+ 0003:10d03114       wd_tamper_count            000000015345b114     RawrXD_Watchdog.obj
+ 0003:10d0311c       wd_text_name               000000015345b11c     RawrXD_Watchdog.obj
+ 0003:10d03124       wd_msg_init_ok             000000015345b124     RawrXD_Watchdog.obj
+ 0003:10d03156       wd_msg_no_key              000000015345b156     RawrXD_Watchdog.obj
+ 0003:10d0317f       wd_msg_no_pe               000000015345b17f     RawrXD_Watchdog.obj
+ 0003:10d031a3       wd_msg_no_text             000000015345b1a3     RawrXD_Watchdog.obj
+ 0003:10d031cd       wd_msg_crypto              000000015345b1cd     RawrXD_Watchdog.obj
+ 0003:10d031f1       wd_msg_verify_ok           000000015345b1f1     RawrXD_Watchdog.obj
+ 0003:10d03212       wd_msg_tampered            000000015345b212     RawrXD_Watchdog.obj
+
+=== key asm_* symbols (first 40) ===
+ 0001:0098b9a0       asm_watchdog_shutdown      000000014098c9a0 f   unlinked_symbols_batch_001.cpp.obj
+ 0001:0098d160       asm_watchdog_init          000000014098e160 f   win32ide_watchdog_init.cpp.obj
+ 0001:0098d370       asm_watchdog_get_baseline  000000014098e370 f   unlinked_symbols_batch_005.cpp.obj
+ 0001:0098d400       asm_watchdog_get_status    000000014098e400 f   unlinked_symbols_batch_005.cpp.obj
+ 0001:0098d460       asm_watchdog_verify        000000014098e460 f   unlinked_symbols_batch_005.cpp.obj
+ 0001:01d55eb0       asm_camellia256_set_key    0000000141d56eb0 f   RawrXD_Camellia256.obj
+ 0001:01d56ba0       asm_camellia256_get_hmac_key 0000000141d57ba0 f   RawrXD_Camellia256.obj
+ 0001:01d56fe0       asm_camellia256_auth_encrypt_file 0000000141d57fe0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d57340       asm_camellia256_auth_decrypt_file 0000000141d58340 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d576c0       asm_camellia256_auth_encrypt_buf 0000000141d586c0 f   RawrXD_Camellia256_Auth.obj
+ 0001:01d577e0       asm_camellia256_auth_decrypt_buf 0000000141d587e0 f   RawrXD_Camellia256_Auth.obj
+ 0002:0038f3f8       $unwind$asm_watchdog_shutdown 000000014250b3f8     unlinked_symbols_batch_001.cpp.obj
+ 0002:0038f400       $chain$0$asm_watchdog_shutdown 000000014250b400     unlinked_symbols_batch_001.cpp.obj
+ 0002:0038f414       $chain$1$asm_watchdog_shutdown 000000014250b414     unlinked_symbols_batch_001.cpp.obj
+ 0002:0038f688       $unwind$asm_watchdog_init  000000014250b688     win32ide_watchdog_init.cpp.obj
+ 0002:0038f698       $unwind$asm_watchdog_verify 000000014250b698     unlinked_symbols_batch_005.cpp.obj
+ 0002:0038f6a0       $chain$1$asm_watchdog_verify 000000014250b6a0     unlinked_symbols_batch_005.cpp.obj
+ 0002:0038f6b8       $chain$2$asm_watchdog_verify 000000014250b6b8     unlinked_symbols_batch_005.cpp.obj
+ 0002:0038f6c8       $chain$3$asm_watchdog_verify 000000014250b6c8     unlinked_symbols_batch_005.cpp.obj
+ 0002:0038f6e0       $unwind$asm_watchdog_get_status 000000014250b6e0     unlinked_symbols_batch_005.cpp.obj
+ 0002:0038f6e8       $unwind$asm_watchdog_get_baseline 000000014250b6e8     unlinked_symbols_batch_005.cpp.obj
+
+MAP_HIT_COUNTS
+RawrXD_Camellia256.obj=59
+RawrXD_Camellia256_Auth.obj=33
+RawrXD_Watchdog.obj=21
+asm_camellia256_set_key=1
+asm_watchdog*=15

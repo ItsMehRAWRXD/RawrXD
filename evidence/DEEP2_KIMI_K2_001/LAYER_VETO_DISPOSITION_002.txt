@@ -1,0 +1,36 @@
+DEEP2_KIMI_K2 — LAYER_VETO disposition (probe 002)
+ASOF=2026-10-27T06:16:00-04:00
+PROMOTE=0
+
+EMITTED (002.out.log)
+  K2_LIVE_POLICY_ARM=FULL_DEPTH_PROMO
+  K2_LIVE_POLICY_REASON=force_promo
+  LAYER_COUNT=61 TOKENS=1
+  BUDGET_FIT=1 LAYER_VETO=1
+  REUSE_STEPS=61 CROSSOVER_STEPS=8
+
+SOURCE
+  Deep2Benchmark.cpp defaults DEEP2_LIVE_POLICY=PROMO for K2 certify.
+  K2LivePolicy_Apply.cpp lines 106-109:
+    POLICY=PROMO|FULL|PROMOTED → arm=FULL_DEPTH_PROMO reason=force_promo layerVeto=1
+  Auto Decide sets layerVeto from !budgetFit; PROMO override forces layerVeto=1
+  even when BUDGET_FIT=1.
+
+CLASSIFICATION
+  LAYER_VETO=1 under PROMO = POLICY_ARM_FLAG (force_promo), NOT runtime layer failure.
+  Evidence of full forward despite veto flag:
+    moe_ffn_enter=61 moe_place_enter=60 moe_router_calls=60
+    EXPERTS_SELECTED=480 EXPERTS_EXECUTED=480
+    LIVE_PATH_TRAMPOLINE_HITS=63
+    REAL_WEIGHT_FORWARD=1 GENERATED_TOKENS=1
+
+DISPOSITION
+  LAYER_VETO_IS_EXECUTION_BLOCK=0
+  FULL_DEPTH_HONESTY=PASS_REPORTED_VIA_COUNTERS (61 MLA/MoE enters)
+  DO_NOT_SUPPRESS_FLAG=1 (semantics = promo arm selected)
+  OPTIONAL_CLARITY=emit LAYER_VETO_REASON=force_promo alongside LAYER_VETO=
+    (already present as K2_LIVE_POLICY_REASON=force_promo)
+
+NEXT
+  Treat 4c full-depth as CLOSED for one-token MoE path counters.
+  Keep flag; document as policy. Do not “fix” by clearing veto under PROMO.

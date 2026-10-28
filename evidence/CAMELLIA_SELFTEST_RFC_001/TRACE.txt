@@ -1,0 +1,46 @@
+﻿CAMELLIA_SELFTEST_RFC_001 / TRACE
+=================================
+ASOF_UTC=2026-10-28T09:15:00Z
+SOURCE=g:\~dev\rawrxd\src\asm\RawrXD_Camellia256.asm
+
+@@st_fail PATH
+-------------
+asm_camellia256_self_test (~L1933):
+  set_key(cam_test_key_256) -> encrypt_block(cam_test_plaintext)
+  -> cmpsb vs cam_test_ciphertext_256  [FAIL HERE historically]
+  -> decrypt_block / cmpsb plaintext (not reached when encrypt KAT fails)
+  jnz @@st_fail -> eax = CAMELLIA_ERR_SELFTEST (-8)
+
+asm_camellia256_init (~L1378):
+  call asm_camellia256_self_test
+  jnz @@init_selftest_fail -> returns -8
+
+Auth.asm: NO self_test / set_key ownership (auth_encrypt/decrypt only).
+
+SIMPLIFIED SCHEDULE (set_key ~L590-740)
+---------------------------------------
+1) Partial KA-like D1/D2 via 4 sigma F rounds (incomplete vs RFC KA/KB).
+2) k[0..7] ad-hoc from KL/KR/D1/D2 (not RFC kw/k/ke rotation table).
+3) k[8..51] = ROL64(k[i-8]^k[i-7], (i%13)+1) — invented mixer, not RFC.
+4) CAMELLIA_SUBKEYS=52 vs RFC Camellia-256 = 34 x 64-bit (kw1-4,k1-24,ke1-6).
+
+ENCRYPT INDEXING (~L813+)
+-------------------------
+Pre-whiten k[0],k[1]; rounds use 2+round*2 style indices; FL at 14/15,28/29,42/43;
+post-whiten k[50],k[51]. Not RFC 3713 Figure 1 / Section 3 subkey map.
+
+RFC KAT (Appendix A Camellia-256) embedded in .data:
+  key=0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF
+  pt =0123456789ABCDEFFEDCBA9876543210
+  ct =9ACC237DFF16D76C20EF7C919E3A7509
+
+WHY SCHEDULE-ONLY FIX IS NON-TRACTABLE THIS MISSION
+----------------------------------------------------
+Passing KAT requires simultaneous RFC-correct:
+  (A) KL/KR -> KA/KB derivation (6 Sigma F applications + 128-bit XOR chain)
+  (B) rotation table emitting kw/k/ke (34 slots)
+  (C) encrypt_block / decrypt_block remapped to RFC subkey indices
+  (D) byte-order of 64-bit loads matching RFC big-endian convention
+Under MASM <=99 lines/block + tip EXE LIVE_TETRAD seal on 866E9D1B,
+a partial schedule rewrite alone cannot earn self_test PASS and would
+force Win32IDE relink -> tip tetrad INVALIDATED without sibling re-seal.

@@ -1,0 +1,82 @@
+SWARM_TIP_16_HI_AUDIT_001 / LAW
+================================
+ASOF_UTC=2026-10-28T10:35:13Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+DISTINCT_FROM=SWARM_16_SMALL_HI_AUDIT_001|002
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+TIP_EXE_SWARM_RUNTIME=NOT_RUN != invent MATRIX RUNTIME_REACHED
+Ollama harness PASS != tip product swarm GUI MET / G07 MET
+EMPTY_RESPONSE / thinking-only != invent PASS
+Cloud tags skipped; embedding* skipped
+
+MISSION
+-------
+1. Enumerate real local chat models (no embeddinggemma; digest-dedupe; no cloud)
+   Target N=16 or honest N available → N=16 honest
+2. Prefer tip/product path (headless executeSwarm / RAWRXD_SWARM_N=16 + tip EXE)
+   Tip EXE SHA 6832F439… probed; GUI onSubAgentSwarm NOT_RUN;
+   resolveSwarmModelOrchPlan not exposeable via headless /api/tool|/api/subagent|/api/swarm/status
+   (503 / not orch path). Documented tip_probe_*.txt
+3. Run hi × N AND audit Win32IDE_ToolActionStatus.cpp via tip-stamped Ollama harness
+4. Seal this dir; MATRIX G07/U02/S-002 remain SOURCE_WIRED (RUNTIME_REACHED not earned)
+
+TIP EXE
+-------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+CITE_ABSORB=TIP_ABSORB_SWARM_002
+MAP: resolveSwarmModelOrchPlan / enumerateSwarmModelCandidates /
+     appendLocalOllamaHttpTags / onSubAgentSwarm = PRESENT
+HEADLESS_LISTEN=127.0.0.1:11436 (probe) RAWRXD_SWARM_N=16 set
+TIP_GUI_onSubAgentSwarm=NOT_RUN
+TIP_ORCH_RESOLVE_EXPOSEABLE=0
+
+HARNESS
+-------
+PATH=evidence/SWARM_TIP_16_HI_AUDIT_001/harness_tip_swarm16_hi_audit.ps1
+KIND=OLLAMA_GENERATE_TIP_STAMPED (fallback after tip orch NOT_EXPOSEABLE)
+API=GET /api/tags + POST /api/generate (127.0.0.1:11434) think=false
+AUDIT_FILE=src/win32app/Win32IDE_ToolActionStatus.cpp
+
+SELECTED N=16 (digest-unique, non-cloud, chat)
+---------------------------------------------
+n4-tiny-oracle:latest
+qwen2.5-coder:1.5b-base
+llama3.2:3b
+qwen35-40b-heretic-q8:latest
+gemma3:4b
+llama3.1:8b
+granite3.3:8b
+deepseek-coder-v2:16b
+starcoder2:15b
+qwen3.8:27b
+deepseek-r1:32b
+ornith-1.5:35b
+nemotron-3.5-bolt:latest
+nemotron-3.5-lightning:30b
+bigdaddygnative:latest
+bigdaddyglocal:latest
+
+RUNTIME (this seal)
+-------------------
+TAGS_REACHABLE=1
+N=16
+HI_PASS=16 HI_FAIL=0
+AUDIT_PASS=16 AUDIT_FAIL=0
+ORCH_1_TO_N=PASS (Ollama harness)
+FILE_AUDIT_GATE=PASS (Ollama harness)
+OLLAMA_HARNESS_RUNTIME_REACHED=1
+TIP_EXE_SWARM_RUNTIME=NOT_RUN
+MATRIX_RUNTIME_REACHED_EARNED=0
+G07_MET=0
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

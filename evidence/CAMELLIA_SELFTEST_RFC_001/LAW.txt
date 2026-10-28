@@ -1,0 +1,91 @@
+﻿CAMELLIA_SELFTEST_RFC_001 / LAW
+================================
+ASOF_UTC=2026-10-28T09:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Close remaining Camellia hole: init self_test=-8
+(simplified subkey schedule != RFC 3713 Appendix A KAT).
+Prefer real RFC fix if tractable; else seal BLOCKED_DOCUMENTED.
+
+DISPOSITION
+-----------
+BLOCKED_DOCUMENTED
+SELF_TEST_RFC=OPEN
+SELF_TEST_RC=-8
+HMAC_PRODUCT=PASS (independent; WATCHDOG_HMAC_PRODUCT_001 / ABSORB)
+EXE_SHA_CHANGED=0
+TIP_EXE_SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+TIP_TETRAD=UNTOUCHED (LIVE_TETRAD+MULTI_FAMILY+TOKEN64 remain sibling seals)
+ASM_PATCH=0
+WIN32IDE_RELINK=0
+
+ROOT CAUSE (exact)
+------------------
+asm_camellia256_self_test (RawrXD_Camellia256.asm):
+  set_key(RFC test key) -> encrypt_block -> cmpsb vs Appendix A CT
+  mismatch -> @@st_fail -> CAMELLIA_ERR_SELFTEST (-8)
+
+set_key expands cam_subkeys with a non-RFC mixer:
+  k[0..7] ad-hoc; k[8..51]=ROL64(k[i-8]^k[i-7],(i%13)+1)
+  CAMELLIA_SUBKEYS=52 (RFC Camellia-256 uses 34 x 64-bit kw/k/ke)
+
+encrypt_block / decrypt_block index that invented 52-slot table,
+not RFC Figure 1 / Section 3. Schedule-only patch cannot pass KAT.
+
+Auth.asm does not own self_test or set_key.
+
+PRODUCT PATH LAW (why init self_test is NOT required)
+-----------------------------------------------------
+Watchdog / HMAC product path (sealed PASS):
+  asm_camellia256_set_key
+    -> SHA256(master || "hmac-auth-key-v1\0") -> cam_hmac_key
+    -> asm_camellia256_get_hmac_key
+    -> asm_watchdog_get_baseline join
+
+That path:
+  - does NOT call asm_camellia256_init
+  - does NOT require Camellia Feistel/KAT correctness
+  - earned HMAC_PRODUCT=PASS + RUNTIME_REACHED=PASS on tip absorb
+    (CAMELLIA_HMAC_PRODUCT_ABSORB_001 / WATCHDOG_HMAC_PRODUCT_001)
+
+asm_camellia256_init remains gated by self_test for HWID-KDF bootstrap
+and file-cipher readiness. That is an independent cipher-KAT gate.
+
+LAW EQUATIONS (fail-closed)
+---------------------------
+HMAC_PRODUCT PASS != RFC 3713 cipher KAT PASS
+set_key HMAC derive != encrypt_block Appendix A compare
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+BLOCKED_DOCUMENTED != invent self_test PASS
+TIP tetrad PASS on 866E9D1B != self_test PASS
+
+RFC FIX GATE (held; next owner)
+-------------------------------
+Tractable only as multi-file MASM rewrite (<=99 lines/block each):
+  RawrXD_Camellia256_KeySchedule_RFC.asm  — KL/KR/KA/KB + rot table (34)
+  Remap encrypt_block / decrypt_block to RFC indices + endian
+  Smoke KAT; then Win32IDE relink
+  On relink: tip SHA changes -> LIVE_TETRAD INVALIDATED;
+  sibling/full audit owns re-seal. Do NOT invent new tetrad PASS here.
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 until that E2E lands.
+
+SEALED EVIDENCE CITE
+--------------------
+SMOKE_SELFTEST_reconfirm.log (this dir; cmd bat re-run)
+  self_test_rc=-8
+  init_rc=-8
+  HMAC_PRODUCT=PASS
+  INIT_SELF_TEST_BLOCK=-8
+TRACE.txt (@@st_fail / schedule / encrypt indexing)
+WATCHDOG_HMAC_PRODUCT_001 (HMAC product PASS authority)
+LIVE_TETRAD_POST_HMAC_ABSORB_001 (tip 866E9D1B tetrad; untouched)
+
+FAIL_CLOSED
+-----------
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

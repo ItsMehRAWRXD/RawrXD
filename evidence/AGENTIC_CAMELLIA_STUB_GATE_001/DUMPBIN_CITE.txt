@@ -1,0 +1,44 @@
+AGENTIC_CAMELLIA_STUB_GATE_001 / DUMPBIN_CITE
+=============================================
+PROMOTE=0
+TOOL=dumpbin /SYMBOLS
+MSVC=14.44.35207 Hostx64\x64
+
+SMOKE_SRC=agentic_camellia_gate_smoke.cpp
+GATE=#if !defined(RAWR_HAS_MASM) || !RAWR_HAS_MASM
+
+--- RAWR_HAS_MASM=1 (agentic_camellia_gate_masm1.obj) ---
+MASM1_CAM_COUNT=0
+External symbols (camellia): NONE
+External marker present:
+  ?agentic_camellia_gate_marker@@YAHXZ
+cite_file=dumpbin_masm1.txt
+
+--- RAWR_HAS_MASM=0 (agentic_camellia_gate_masm0.obj) ---
+MASM0_CAM_COUNT=12
+External:
+  asm_camellia256_init
+  asm_camellia256_set_key
+  asm_camellia256_encrypt_block
+  asm_camellia256_decrypt_block
+  asm_camellia256_encrypt_ctr
+  asm_camellia256_decrypt_ctr
+  asm_camellia256_encrypt_file
+  asm_camellia256_decrypt_file
+  asm_camellia256_get_status
+  asm_camellia256_shutdown
+  asm_camellia256_self_test
+  asm_camellia256_get_hmac_key
+cite_file=dumpbin_masm0.txt
+
+--- PRE-GATE stale AgenticFeatures.obj (build-master) ---
+PRE_GATE_CAM_COUNT=12
+cite_file=dumpbin_AgenticFeatures_PRE_GATE_stale_obj.txt
+
+--- REAL TU PREPROC (Win32IDE_AgenticFeatures.cpp /DRAWR_HAS_MASM=1) ---
+FUNC_BODY_DEFS=0
+PREPROC_GATESTUB_CAM_CALLS=0
+cite_file=agenticfeatures_masm1.i
+
+VERDICT: With RAWR_HAS_MASM=1, AgenticFeatures Camellia stubs do not export.
+Product owner remains RawrXD_Camellia256*.obj. PROMOTE=0.

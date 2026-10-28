@@ -1,9 +1,12 @@
 // =============================================================================
-// win32ide_asm_kernel_bridge.cpp — ASM symbol fallbacks for RawrXD-Win32IDE
+// win32ide_asm_kernel_bridge.cpp — ASM symbol fallbacks (DORMANT / CMake-omit)
 // =============================================================================
-// When MASM kernel .obj (LSP, GGUF, hotpatch, snapshot, pyre, camellia, perf)
-// are not linked, these stubs allow the IDE to link and run. File name must
-// NOT match .*_stubs\.cpp so real-lane CMake does not exclude it.
+// WIN32IDE_BRIDGE_XOR_LAW_001: This TU is NOT in RawrXD-Win32IDE CMake link.
+// Product Camellia Auth file/buf ownership = RawrXD_Camellia256_Auth.obj
+// (CAMELLIA_AUTH_ASM_BIND_001 CLEARED_LINK_LEVEL; EXE SHA 89BFD614…).
+// XOR leftovers below are GATED_OMIT — do not re-add this file to Win32IDE
+// sources without deleting Camellia XOR defs (would LNK2005 vs Auth.obj).
+// File name must NOT match .*_stubs\.cpp.
 // Rule: NO SOURCE FILE IS TO BE SIMPLIFIED.
 // =============================================================================
 
@@ -504,6 +507,9 @@ extern "C"
         return 0;
     }
 
+// Camellia XOR leftovers — GATED_OMIT (WIN32IDE_BRIDGE_XOR_LAW_001).
+// TU not in Win32IDE CMake; Auth.obj owns product file+buf. Keep gated if re-linked.
+#if !defined(RAWR_HAS_MASM)
     int asm_camellia256_auth_encrypt_file(const char* inputPath, const char* outputPath)
     {
         if (inputPath == nullptr || outputPath == nullptr)
@@ -550,7 +556,6 @@ extern "C"
         {
             return -1;
         }
-        // XOR transform is symmetric for this fallback.
         return asm_camellia256_auth_encrypt_file(inputPath, outputPath);
     }
     int asm_camellia256_auth_encrypt_buf(uint8_t* plaintext, uint32_t plaintextLen, uint8_t* output,
@@ -599,6 +604,7 @@ extern "C"
         *plaintextLen = plainCount;
         return 0;
     }
+#endif // !RAWR_HAS_MASM
 
     int asm_pyre_gemm_fp32(const float* A, const float* B, float* C, uint32_t M, uint32_t N, uint32_t K)
     {

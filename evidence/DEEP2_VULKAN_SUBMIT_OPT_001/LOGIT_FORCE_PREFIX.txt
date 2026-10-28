@@ -1,0 +1,54 @@
+DEEP2_VULKAN_SUBMIT_OPT_001 LOGIT_FORCE_PREFIX
+ASOF=2026-10-27T05:56:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+BASELINE=RETAIN
+
+EXPERIMENT=shared GENSTREAM prefix idx0..9 forced; capture next-token logits before free argmax
+PROMPT=1 32
+FORCE_GEN=29871 13 29966 29989 1792 29989 29958 13 6028 366
+DECODE=11
+DIVERGE_LOGITS_FILE=d2_logits_pos11.bin (after ExecuteToken(gen[9]))
+ARM_A_ENV=GPU_ATTN unset
+ARM_B_ENV=DEEP2_RUNTIME_GPU_ATTN=1
+ARM_A_NEXT=2649
+ARM_B_NEXT=3867
+CONFIRMED_SAME_PREFIX_THEN_DIVERGE=1
+
+DIAGNOSTIC_EXE_SHA256=D78F1348AC4446B89D74B4BAD38BDDB5964BFDC2BCFD0ED0DA18E353E91E29B3
+NOTE=Diagnostic rebuild with --force-gen/--dump-logits; NE sealed opt C2CBE815… (preserved as failed-arm evidence)
+
+POS11_VOCAB=32000
+A_TOP1=2649 logit=16.0296326
+A_TOP2=3867 logit=15.9599295
+A_MARGIN_TOP1_TOP2=0.0697031021
+B_TOP1=3867 logit=16.0050297
+B_TOP2=2649 logit=15.9533129
+B_MARGIN_TOP1_TOP2=0.0517168045
+A_TOP10=2649 3867 6907 4368 3113 5649 2367 19138 1083 1371
+B_TOP10=3867 2649 6907 3113 4368 5649 2367 19138 1083 1371
+RANK_2649 A=1 B=2
+RANK_3867 A=2 B=1
+
+LOGIT_2649 A=16.0296326 B=15.9533129 DIFF_A_minus_B=+0.0763196945
+LOGIT_3867 A=15.9599295 B=16.0050297 DIFF_A_minus_B=-0.0451002121
+A_GAP_2649_minus_3867=0.0697031021
+B_GAP_3867_minus_2649=0.0517168045
+
+POS11_MAX_ABS=0.411066055 AT=18041
+POS11_MAX_REL=288.896697 AT=160
+POS11_MEAN_ABS=0.0747909528
+POS10_MAX_ABS=0.47407341 A_TOP1=366 B_TOP1=366 (forced; drift already present)
+
+INTERPRETATION:
+  Competitive pair 2649↔3867 is top-2 in BOTH arms; rankings swap.
+  Cross-arm |Δ| at 2649 (0.076) exceeds A top1-top2 margin (0.070).
+  Full-vocab maxAbs~0.41 / meanAbs~0.075 → NOT near-zero logit parity.
+  Block0 attn maxAbs~8e-8 does NOT imply e2e logit match at diverge step.
+  Classification: SUBSTANTIAL_LOGIT_DRIFT_WITH_TIGHT_COMPETITIVE_MARGIN
+  (not pure float-order noise on a near-tie alone; margins ~0.05–0.07 while
+   path Δ is comparable/larger and global logit error is large).
+  FIRST_DIVERGENT_LAYER=UNKNOWN (next: per-layer residual/attn dumps under forced prefix)
+
+LOGS=force_prefix_A.log force_prefix_B.log
+DIRS=logits_force_A/ logits_force_B/

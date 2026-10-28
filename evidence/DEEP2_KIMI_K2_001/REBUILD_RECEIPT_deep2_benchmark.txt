@@ -1,0 +1,27 @@
+DEEP2_KIMI_K2_001 — deep2_benchmark rebuild receipt
+BuiltAt=2026-10-27T05:33:00-04:00 (filesystem LastWriteTime)
+HEAD=219b0e5694e565575728faf6c820d3f76cfb8006
+Target=deep2_benchmark (POST_BUILD sync → deep2_benchmark_full.exe)
+Config=Release
+PROMOTE=0
+
+EXECUTABLE
+  Path=G:\~dev\rawrxd\build-fd\bin\deep2_benchmark.exe
+  Size=6563840
+  SHA256=3280E16F5B1DBC4BCE870CF91EB2B6DE8A613DAC6999DF2A1872A1270D50AED6
+  Alias=G:\~dev\rawrxd\build-fd\bin\deep2_benchmark_full.exe
+  Alias_SHA256=3280E16F5B1DBC4BCE870CF91EB2B6DE8A613DAC6999DF2A1872A1270D50AED6
+  PriorStale=2026-09-07 ~2.2MB — NOT reused
+
+SOURCE_IN_GRAPH (InferenceEngine via build.ninja)
+  K2NativeStreamGate.cpp = YES (contains K2NativeMoE_AfterMla when numExperts>0)
+  K2NativeMoEFfn*.cpp = YES
+  Deep2LivePath.cpp = YES
+  MoEPlaceLiveCounters.cpp = YES
+
+DISPOSITION
+  MOE_SOURCE_FIX=REPORTED
+  MOE_BINARY_REBUILT=YES
+  MOE_RUNTIME_TEST=PENDING
+  MOE_BINARY_FIX=BUILD_PROVENANCE_RECORDED (runtime MoE counters still required)
+  NOTE=REAP ladder used rawr-reap-replay.exe — separate from this deep2_benchmark rebuild.

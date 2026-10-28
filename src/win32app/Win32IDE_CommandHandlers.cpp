@@ -70,9 +70,13 @@ CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
 }
 
 CommandResult HandleToolActionStatus(const CommandContext& ctx) {
+	// Fail-closed: void* path GateStubs; never ok/FinishedAction without real exit.
 	HandleToolActionStatus(ctx.idePtr);
-	emitStatus(ctx, "Tool Action Status invoked");
-	return CommandResult::ok("Tool Action Status invoked");
+	emitStatus(ctx,
+		"NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SYNTHETIC=1 ToolActionStatus DEMO gated");
+	return CommandResult{1,
+		"NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SYNTHETIC=1 ToolActionStatus DEMO gated",
+		nullptr};
 }
 
 CommandResult HandleChatPanel(const CommandContext& ctx) {

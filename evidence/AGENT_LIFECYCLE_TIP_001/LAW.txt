@@ -1,0 +1,60 @@
+AGENT_LIFECYCLE_TIP_001 / LAW
+=============================
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+MOTD_ACK=1
+ASOF_UTC=2026-10-28T11:18:18Z
+WORKSPACE=G:\~dev\rawrxd
+
+TIP
+---
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1
+RELINK=N
+TIP_REBUILD=N
+PORT=19891
+BIND=127.0.0.1
+DIR=G:\~dev\rawrxd
+AUTH=RAWRXD_HOSTED_API_KEY (harness disposable key) + X-API-Key
+EXEC_GRANT=RAWRXD_IDE_EXEC_GRANT=1 (for build_test execute_command)
+
+SCOPE
+-----
+Prove agent lifecycle on CURRENT tip via tip EXE headless /api/tool against
+disposable fixture under evidence/AGENT_LIFECYCLE_TIP_001/fixture.
+Do not invent historical path PASS as tip PASS.
+Do not edit swarm SubAgent/Selector, ShellLayout, ToolActionStatus.
+
+STEPS (tip product surface)
+---------------------------
+user_prompt          PASS   /ask|/api/generate fail-closed 503 accepted (no invent model PASS)
+agent_run_loop       NOT_RUN  /api/agent/run absent on headless (GUI LocalServer-only)
+plan/tools           PASS   MOTD + unknown_tool inventory + list_directory
+file_edits           PASS   write_file fixture tracked.txt
+build/test           PASS   execute_command hello.cmd -> fixture_ok
+diff_review          PASS   read_file before/after delta (UI Accept/Reject NOT_RUN)
+accept               PASS   write_file retain v1_accepted (product preview UI NOT_RUN)
+rollback             PASS   write_file restore v0 (CheckpointManager API NOT_RUN)
+cancel               PASS   Stop-Job cancelled in-flight /api/generate (AgentSessionCancel NOT_EXPOSEABLE headless)
+final_response       PASS   harness seal
+
+MATRIX EARNED
+-------------
+G16 Headless /api/tool on tip 6832F439... -> MET already (HEADLESS_API_TOOL_TIP_001);
+                                            this seal adds write/exec/lifecycle breadth cite
+G02 Agent mode E2E tool loop             -> OPEN (agent_run_loop NOT_RUN) — not elevated
+A04 GUI+headless bridge same SHA         -> OPEN (GUI NOT_RUN) — not elevated
+A06 Safe file writes atomic/preview      -> leave sibling RUNTIME_REACHED (SAFE_WRITE_APPROVAL_TIP_001);
+                                            this seal does not claim MET (Checkpoint/atomic NOT_RUN)
+G12 Checkpoint/rollback                  -> OPEN (CheckpointManager NOT_RUN) — not elevated
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

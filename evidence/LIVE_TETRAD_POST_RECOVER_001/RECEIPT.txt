@@ -1,0 +1,7 @@
+LIVE_TETRAD_POST_RECOVER_001 / RECEIPT
+======================================
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+NO_INVENT_PASS=1
+DISPOSITION=NOT_RUN
+REASON=SHA_DRIFT + disk I/O contention during tip freeze; triad deferred fail-closed
+PATH=G:\~dev\rawrxd\evidence\LIVE_TETRAD_POST_RECOVER_001

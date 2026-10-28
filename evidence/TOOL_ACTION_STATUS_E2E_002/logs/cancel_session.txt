@@ -1,0 +1,8 @@
+PROBE=TOOL_ACTION_STATUS_E2E_002_CANCEL
+CANCELLED=1 OUT_LEN=119
+OUT_SNIP={"exitCode":0,"output":"
+Pinging 127.0.0.1 with 32 bytes of data:
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
+"}
+CASE cancel_active_op PASS
+CASE cancel_no_invent_success PASS

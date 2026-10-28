@@ -1,0 +1,29 @@
+﻿WIN32IDE_BINARY_PROVENANCE_001 / objs.txt
+ASOF_UTC=2026-10-28T09:39:45Z
+BUILD_TREE=G:\~dev\rawrxd\build_win32ide_link001
+TIP_EXE_SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+NO_REBUILD=1
+PROMOTE=0
+
+# SIZE|SHA256|PATH|MTIME_UTC
+32137|49CE60B7FE06C4D15C313F55638B241ABE394F2DC395515553797456AE4DDC24|G:\~dev\rawrxd\build_win32ide_link001\RawrXD_Camellia256.obj|2026-10-28T08:58:13.0613140Z
+21749|74D031802C556BE608F3EB6E193A5F437499D876BAEA902A7274486961E2FB2D|G:\~dev\rawrxd\build_win32ide_link001\RawrXD_Camellia256_Auth.obj|2026-10-28T07:51:08.6187888Z
+13256|8A0244FDA2BDA1F8458B86B3C43C5E671F1585CE5DDCC7B900E13EF2604804E6|G:\~dev\rawrxd\build_win32ide_link001\RawrXD_Watchdog.obj|2026-10-28T08:58:13.0658671Z
+
+CITE_MATCH
+-----------
+CAM_OBJ == CAMELLIA_HMAC_PRODUCT_ABSORB_001 CAM_OBJ_SHA256
+WD_OBJ  == CAMELLIA_HMAC_PRODUCT_ABSORB_001 WD_OBJ_SHA256
+AUTH_OBJ == CAMELLIA_AUTH_ASM_BIND_001 AUTH_OBJ_BUILDTREE_SHA256
+
+MAP_OBJ_ATTRIBUTION (bin\RawrXD-Win32IDE.map hit counts)
+--------------------------------------------------------
+RawrXD_Camellia256.obj=59
+RawrXD_Camellia256_Auth.obj=33
+RawrXD_Watchdog.obj=21
+
+NINJA_LOG (link-time sequence for tip EXE)
+------------------------------------------
+RawrXD_Camellia256.obj assembled then RawrXD_Watchdog.obj assembled then
+bin/RawrXD-Win32IDE.exe linked (.ninja_log last Win32IDE/Cam/WD rows).
+Auth.obj not rebuilt in final absorb step; retained prior Auth bind obj.

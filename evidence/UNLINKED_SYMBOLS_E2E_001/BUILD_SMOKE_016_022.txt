@@ -1,0 +1,33 @@
+BUILD_SMOKE quintile D+E (016-022)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+DATE=2026-10-28
+WORKSPACE=G:\~dev\rawrxd
+
+PRECONDITION (CMake omit BEFORE compile — not invented):
+  RawrEngine: COMMENT-OMIT 016/017/018/019/020/022 (CMakeLists ~2761-2768)
+  Win32IDE: COMMENT-OMIT 017/018/019/020; INCLUDE 016/021/022 (CMakeLists ~5870-5876, 5750)
+  GOLD: FILTER EXCLUDE 016-022 (CMakeLists ~3621-3627)
+  asm_gguf_loader_close / asm_lsp_bridge_shutdown / asm_perf_* clashes:
+    ISOLATED_BY_CMAKE_OMIT=YES (018/020 never in RawrEngine or Win32IDE link lists)
+    REFERENCE_TUs_EMPTY=YES (018/019/020 bodies = anchor-only; defs live in MagBuf batch_001)
+
+COMMAND:
+  vcvars64 + cl /nologo /c /EHsc /std:c++20 /DWIN32
+  includes: src/core, src, include, src/win32app
+  object smoke only for TUs 016-022 (no full link)
+
+PER_TU_EXIT:
+  EXIT_016=0
+  EXIT_017=0
+  EXIT_018=0
+  EXIT_019=0
+  EXIT_020=0
+  EXIT_021=0
+  EXIT_022=0
+
+RESULT: COMPILE_OK (aggregate exit 0) — objs under evidence/UNLINKED_SYMBOLS_E2E_001/
+FAILS=0
+BAT_EXIT=0
+NOT_RUN: full RawrXD-Win32IDE link (user authorization required)
+NOT_PASS: no invented link PASS / no cert metrics / PROMOTE=0
+LINK=NOT_RUN

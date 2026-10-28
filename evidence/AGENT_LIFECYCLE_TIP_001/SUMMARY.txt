@@ -1,0 +1,33 @@
+﻿AGENT_LIFECYCLE_TIP_001 SUMMARY
+ASOF_UTC=2026-10-28T11:18:18Z
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 NO_INVENT_PASS=1
+TIP_EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+TIP_SHA_MATCH=1
+PORT=19891
+FIXTURE=G:\~dev\rawrxd\evidence\AGENT_LIFECYCLE_TIP_001\fixture
+PATH=evidence/AGENT_LIFECYCLE_TIP_001
+
+STEPS:
+  tip_sha_verify=PASS
+  tip_spawn=PASS
+  user_prompt=PASS
+  agent_run_loop=NOT_RUN
+  plan_tools_motd=PASS
+  plan_tools_inventory=PASS
+  plan_tools_list=PASS
+  file_edits=PASS
+  build_test=PASS
+  diff_review=PASS
+  accept=PASS
+  rollback=PASS
+  cancel=PASS
+  final_response=PASS
+  tip_shutdown=PASS
+
+MATRIX_CLAIMS:
+  G16=/api/tool tip surface - claim only if plan_tools+file_edits PASS
+  G02=Agent mode E2E - MET only if agent_run_loop PASS (else OPEN/NOT_RUN)
+  A04=GUI+headless bridge same SHA - headless-only this seal; GUI NOT_RUN
+  A06=atomic preview/rollback product - harness write restore != product CheckpointManager
+  G12=checkpoint/rollback product - NOT earned by write_file restore

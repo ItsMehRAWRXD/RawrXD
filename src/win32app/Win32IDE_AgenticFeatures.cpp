@@ -17,19 +17,30 @@
 std::atomic<bool> s_isThinking{false};
 
 // ============================================================================
-// LoRA Kernel Bridge stubs
+// LoRA Kernel Bridge — GATED (LORA_KERNEL_STUB_GATE_001)
+// TU is CMake-omitted from RawrXD-Win32IDE (orphan). Bodies fail-closed so any
+// accidental link cannot claim PASS. Match GateMode/SO_*: log + false|-1.
+// Real owner (when product-wired): Win32IDE_LoRAKernelBridge.cpp + ApplyLoRA ASM.
 // ============================================================================
+
+namespace {
+void GateStub(const char* name) {
+    char buf[192];
+    wsprintfA(buf, "[AgenticFeatures] GATED SYNTHETIC=partial name=%s\n", name);
+    OutputDebugStringA(buf);
+}
+} // namespace
 
 extern "C" {
     __declspec(dllexport) bool LoRAKernel_Initialize() {
         FMF_REAL_ENTRY("LoRAKernel_Initialize");
-        // Production: LoRA kernel initialization
-        return true;
+        GateStub("LoRAKernel_Initialize");
+        return false; // no real LoRA kernel in this TU
     }
-    
+
     __declspec(dllexport) void LoRAKernel_Shutdown() {
         FMF_REAL_ENTRY("LoRAKernel_Shutdown");
-        // Production: LoRA kernel shutdown
+        GateStub("LoRAKernel_Shutdown");
     }
 }
 
@@ -48,16 +59,16 @@ extern "C" {
 
 int runAgentWalCliSmokeTest() {
     FMF_REAL_ENTRY("runAgentWalCliSmokeTest");
-    // Production: Agent WAL CLI smoke test
-    return 0;
+    GateStub("runAgentWalCliSmokeTest");
+    return -1; // was 0 fake success — no real WAL smoke path here
 }
 
 namespace rawrxd {
     namespace ghost_pipeline_probe {
         int runGhostPipelineProbeCli() {
             FMF_REAL_ENTRY("runGhostPipelineProbeCli");
-            // Production: Ghost pipeline probe CLI
-            return 0;
+            GateStub("runGhostPipelineProbeCli");
+            return -1; // was 0 fake success — no real ghost probe path here
         }
     }
 }
@@ -500,70 +511,96 @@ public:
 } // namespace RawrXD
 
 // ============================================================================
-// Camellia256 stubs - matching signatures from camellia256_bridge.hpp
+// Camellia256 stubs — AGENTIC_CAMELLIA_STUB_GATE_001
+// Product owner (RAWR_HAS_MASM=1): RawrXD_Camellia256*.obj (CAMELLIA_AUTH_ASM_BIND_001).
+// Win32IDE always defines RAWR_HAS_MASM=0|1 — gate on value (batch_005 / gold_link B01).
+// !defined || !value keeps fail-closed stubs only for no-MASM builds (never return 0).
 // ============================================================================
 
+#if !defined(RAWR_HAS_MASM) || !RAWR_HAS_MASM
 extern "C" {
     int asm_camellia256_init() {
         FMF_REAL_ENTRY("asm_camellia256_init");
-        return 0;
+        GateStub("asm_camellia256_init");
+        return -1;
     }
-    
+
     int asm_camellia256_set_key(const uint8_t* key32) {
         FMF_REAL_ENTRY("asm_camellia256_set_key");
-        return 0;
+        (void)key32;
+        GateStub("asm_camellia256_set_key");
+        return -1;
     }
-    
+
     int asm_camellia256_encrypt_block(const uint8_t* plaintext16, uint8_t* ciphertext16) {
         FMF_REAL_ENTRY("asm_camellia256_encrypt_block");
-        return 0;
+        (void)plaintext16; (void)ciphertext16;
+        GateStub("asm_camellia256_encrypt_block");
+        return -1;
     }
-    
+
     int asm_camellia256_decrypt_block(const uint8_t* ciphertext16, uint8_t* plaintext16) {
         FMF_REAL_ENTRY("asm_camellia256_decrypt_block");
-        return 0;
+        (void)ciphertext16; (void)plaintext16;
+        GateStub("asm_camellia256_decrypt_block");
+        return -1;
     }
-    
+
     int asm_camellia256_encrypt_ctr(uint8_t* buffer, size_t length, uint8_t* nonce16) {
         FMF_REAL_ENTRY("asm_camellia256_encrypt_ctr");
-        return 0;
+        (void)buffer; (void)length; (void)nonce16;
+        GateStub("asm_camellia256_encrypt_ctr");
+        return -1;
     }
-    
+
     int asm_camellia256_decrypt_ctr(uint8_t* buffer, size_t length, uint8_t* nonce16) {
         FMF_REAL_ENTRY("asm_camellia256_decrypt_ctr");
-        return 0;
+        (void)buffer; (void)length; (void)nonce16;
+        GateStub("asm_camellia256_decrypt_ctr");
+        return -1;
     }
-    
+
     int asm_camellia256_encrypt_file(const char* inputPath, const char* outputPath) {
         FMF_REAL_ENTRY("asm_camellia256_encrypt_file");
-        return 0;
+        (void)inputPath; (void)outputPath;
+        GateStub("asm_camellia256_encrypt_file");
+        return -1;
     }
-    
+
     int asm_camellia256_decrypt_file(const char* inputPath, const char* outputPath) {
         FMF_REAL_ENTRY("asm_camellia256_decrypt_file");
-        return 0;
+        (void)inputPath; (void)outputPath;
+        GateStub("asm_camellia256_decrypt_file");
+        return -1;
     }
-    
+
     int asm_camellia256_get_status(void* status32) {
         FMF_REAL_ENTRY("asm_camellia256_get_status");
-        return 0;
+        (void)status32;
+        GateStub("asm_camellia256_get_status");
+        return -1;
     }
-    
+
     int asm_camellia256_shutdown() {
         FMF_REAL_ENTRY("asm_camellia256_shutdown");
-        return 0;
+        GateStub("asm_camellia256_shutdown");
+        return -1;
     }
-    
+
     int asm_camellia256_self_test() {
         FMF_REAL_ENTRY("asm_camellia256_self_test");
-        return 0;
+        GateStub("asm_camellia256_self_test");
+        return -1;
     }
-    
+
     int asm_camellia256_get_hmac_key(uint8_t* hmacKey32) {
         FMF_REAL_ENTRY("asm_camellia256_get_hmac_key");
-        return 0;
+        (void)hmacKey32;
+        GateStub("asm_camellia256_get_hmac_key");
+        return -1;
     }
 }
+#endif // !defined(RAWR_HAS_MASM) || !RAWR_HAS_MASM
 
 // ============================================================================
 // Matmul kernel stubs
@@ -604,84 +641,80 @@ extern "C" {
 }
 
 // ============================================================================
-// Self-Host Engine stubs
+// Self-Host Engine stubs — GATED (LORA_KERNEL_STUB_GATE_001 sibling sweep)
+// Product owner: RawrXD_SelfHost_Engine.obj when linked. Empty int/0 success banned.
 // ============================================================================
 
 extern "C" {
     uint64_t asm_selfhost_read_text(void* dst, size_t dstSize) {
         FMF_REAL_ENTRY("asm_selfhost_read_text");
-        (void)dst;
-        (void)dstSize;
-        return 0;
+        (void)dst; (void)dstSize;
+        GateStub("asm_selfhost_read_text");
+        return 0; // zero bytes = fail-closed empty read
     }
-    
+
     int asm_selfhost_profile_region(void* fn, uint64_t iterations, void* profileResult) {
         FMF_REAL_ENTRY("asm_selfhost_profile_region");
-        (void)fn;
-        (void)iterations;
-        (void)profileResult;
-        return 0;
+        (void)fn; (void)iterations; (void)profileResult;
+        GateStub("asm_selfhost_profile_region");
+        return -1;
     }
-    
+
     void* asm_selfhost_gen_trampoline(void* target) {
         FMF_REAL_ENTRY("asm_selfhost_gen_trampoline");
         (void)target;
+        GateStub("asm_selfhost_gen_trampoline");
         return nullptr;
     }
-    
+
     uint64_t asm_selfhost_micro_assemble(const void* instrArray, uint64_t instrCount,
                                           void* outBuf, uint64_t outBufSize) {
         FMF_REAL_ENTRY("asm_selfhost_micro_assemble");
-        (void)instrArray;
-        (void)instrCount;
-        (void)outBuf;
-        (void)outBufSize;
-        return 0;
+        (void)instrArray; (void)instrCount; (void)outBuf; (void)outBufSize;
+        GateStub("asm_selfhost_micro_assemble");
+        return 0; // zero assembled = fail-closed
     }
-    
+
     int asm_selfhost_atomic_swap(void* target, const void* replacement, uint64_t size) {
         FMF_REAL_ENTRY("asm_selfhost_atomic_swap");
-        (void)target;
-        (void)replacement;
-        (void)size;
-        return 0;
+        (void)target; (void)replacement; (void)size;
+        GateStub("asm_selfhost_atomic_swap");
+        return -1;
     }
-    
+
     int asm_selfhost_verify_equiv(void* originalFn, void* newFn,
                                    const uint64_t* testInputs, uint64_t testCount) {
         FMF_REAL_ENTRY("asm_selfhost_verify_equiv");
-        (void)originalFn;
-        (void)newFn;
-        (void)testInputs;
-        (void)testCount;
-        return 0;
+        (void)originalFn; (void)newFn; (void)testInputs; (void)testCount;
+        GateStub("asm_selfhost_verify_equiv");
+        return -1;
     }
-    
+
     int asm_selfhost_measure_delta(void* originalFn, void* newFn, uint64_t iterations) {
         FMF_REAL_ENTRY("asm_selfhost_measure_delta");
-        (void)originalFn;
-        (void)newFn;
-        (void)iterations;
-        return 0;
+        (void)originalFn; (void)newFn; (void)iterations;
+        GateStub("asm_selfhost_measure_delta");
+        return -1;
     }
-    
+
     void* asm_selfhost_read_source(const char* filename, uint64_t* outSize) {
         FMF_REAL_ENTRY("asm_selfhost_read_source");
         (void)filename;
-        (void)outSize;
+        if (outSize) *outSize = 0;
+        GateStub("asm_selfhost_read_source");
         return nullptr;
     }
-    
+
     int asm_selfhost_write_source(const char* filename, const void* data, uint64_t size) {
         FMF_REAL_ENTRY("asm_selfhost_write_source");
-        (void)filename;
-        (void)data;
-        (void)size;
-        return 0;
+        (void)filename; (void)data; (void)size;
+        GateStub("asm_selfhost_write_source");
+        return -1;
     }
-    
+
     uint64_t asm_selfhost_get_generation() {
         FMF_REAL_ENTRY("asm_selfhost_get_generation");
+        GateStub("asm_selfhost_get_generation");
         return 0;
     }
 }

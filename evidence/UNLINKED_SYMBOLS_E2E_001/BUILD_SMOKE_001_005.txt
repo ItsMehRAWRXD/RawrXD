@@ -1,0 +1,17 @@
+BUILD_SMOKE quintile A (001-005)
+PROMOTE=0 TIP_CLIMB=HOLD
+DATE=2026-10-27
+WORKSPACE=G:\~dev\rawrxd
+
+COMMAND:
+  cl /c /EHsc /std:c++20 /DWIN32 /I. /Isrc /Iinclude
+  → unlinked_symbols_batch_001.cpp
+  → unlinked_symbols_batch_002.cpp
+  → unlinked_symbols_batch_003.cpp
+  → unlinked_symbols_batch_005.cpp
+  → spengine_bridge.cpp
+  → v280_link_bridge.cpp
+
+RESULT: COMPILE_OK (exit 0) — object files under evidence/UNLINKED_SYMBOLS_E2E_001/
+NOT_RUN: full RawrXD-Win32IDE link
+NOT_PASS: no invented link PASS / no cert metrics

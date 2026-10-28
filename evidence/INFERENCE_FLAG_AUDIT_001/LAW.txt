@@ -1,0 +1,102 @@
+INFERENCE_FLAG_AUDIT_001 — LAW
+================================
+DATE=2026-10-28
+WORKSPACE=G:\~dev\rawrxd
+TARGET=RawrXD-Win32IDE
+SEALED_EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SEALED_SHA256=4A5D6B31DD83CE117A1F8769D55474186C4629EA4074F033125EEE1D20F0E3CE
+SEAL_REF=evidence/UNLINKED_SYMBOLS_E2E_001/LINK_WIN32IDE_002.txt
+BUILD_DIR=G:\~dev\rawrxd\build_win32ide_link001
+REBUILD=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+LOCAL_ONLY=1
+OLLAMA_HTTP=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+LINK_OK (LINK_WIN32IDE_002) != RUNTIME_PASS
+No Camellia / Mode / tetrad work this turn.
+Do not alter sealed LINK_WIN32IDE_002 EXE.
+
+VERDICT
+-------
+PRIMARY=SPLIT
+SECONDARY=PRODUCT_PATH_BYPASSES_FLAG
+NOT=DISABLED (kernels + ASM feature define are ON)
+NOT=MISREPORTED (StreamingEngineRegistry reports InferenceKernels; ASM objs are linked)
+NOT=BYPASSED as security sense — product generate never consulted RAWR_HAS_RAWR_INFERENCE
+
+MACRO MAP
+---------
+1) RAWR_HAS_RAWR_INFERENCE
+   - Win32IDE hard-set: CMakeLists.txt:7618  RAWR_HAS_RAWR_INFERENCE=0
+   - Same block also: RAWR_HAS_SOVEREIGN_ENGINES=0 (7617)
+   - Applied via target_compile_definitions(RawrXD-Win32IDE PRIVATE ...) ~7613-7628
+   - NOT an option()/cache knob — literal =0 for this target
+   - No option() gate found for this symbol in CMakeLists
+   - Sealed cl DEFINES (build.ninja near runtime_core.cpp):
+       -DRAWR_HAS_RAWR_INFERENCE=0
+   - Source #if sites (repo, excl. 3rdparty):
+       src/runtime_core.cpp:20-21  #ifndef default → 1 (overridden by Win32IDE=0)
+       src/runtime_core.cpp:27-28  declare register_rawr_inference
+       src/runtime_core.cpp:65-66  call register_rawr_inference inside init_runtime()
+   - deep2 / agentic / inference / win32app: ZERO #if RAWR_HAS_RAWR_INFERENCE hits
+   - WIN32IDE includes src/runtime_core.cpp (CMakeLists.txt:5920)
+
+2) RAWRXD_LINK_INFERENCE_KERNELS_ASM
+   - Feature pack: CMakeLists.txt:2100-2116  _RAWR_ASM_FEATURE_DEFINITIONS
+   - Line 2103: RAWRXD_LINK_INFERENCE_KERNELS_ASM=$<IF:$<BOOL:${RAWR_HAS_MASM}>,1,0>
+   - Win32IDE consumes pack: CMakeLists.txt:7622  ${_RAWR_ASM_FEATURE_DEFINITIONS}
+   - Sealed cl DEFINES: -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1  (-DRAWR_HAS_MASM=1)
+   - Standalone InferenceEngine also sets =1 when MASM: src/inference/CMakeLists.txt:110
+   - Source use: src/core/streaming_engine_registry.cpp:43-47
+       #ifdef RAWRXD_LINK_INFERENCE_KERNELS_ASM → extern matmul_f16_avx512_masm / rmsnorm_avx512_masm
+   - Registration UI path is NOT ifdef-gated:
+       registerBuiltinEngines → registerInferenceKernelsEngine (streaming_engine_registry.cpp:193,362-380)
+       desc.name="InferenceKernels-AVX512"; desc.loaded=true; sourceFile=src/asm/inference_kernels.asm
+
+3) ASM / OBJ link vs product flag
+   - ASM_KERNEL_SOURCES includes src/asm/inference_kernels.asm (CMakeLists.txt:1997)
+   - Win32IDE: _WIN32IDE_ASM = ASM_KERNEL_SOURCES minus Telemetry_Kernel + Code_Pattern_Reconstructor
+     (CMakeLists.txt:7493-7496); inference_kernels.asm RETAINED
+   - add_executable(RawrXD-Win32IDE ... ${_WIN32IDE_ASM} ...) (7505)
+   - Sealed map (bin/RawrXD-Win32IDE.map):
+       matmul_f16_avx512_masm  ← inference_kernels.asm.obj
+       rmsnorm_avx512_masm     ← inference_kernels.asm.obj
+       plus C++ InferenceKernels::* from inference_kernels.cpp.obj
+   - Obj present: build_win32ide_link001\CMakeFiles\RawrXD-Win32IDE.dir\src\asm\inference_kernels.asm.obj
+   - register_rawr_inference: NOT present in sealed map (call compiled out under =0; /OPT:REF)
+
+4) Generate / token dispatch (product) — independence from RAWR_HAS_RAWR_INFERENCE
+   Entry chain (Win32IDE / Headless / AgenticBridge):
+     rawr::ProductOpenSession  → product_deep2_infer.cpp:36-39
+     → ProductRuntime::OpenSession → lavapath/ProductRuntime.hpp:56-103
+     → Deep2::rawr_run::OpenSession
+     rawr::ProductDeep2Infer / ProductDeep2InferStream → ProductRun
+     → product_run::ProductRun (lavapath/ProductRun.hpp)
+     → RunDecodeStream → Deep2Engine::generateStream (ProductRunDecode.hpp)
+   Authority / promote gate (not exercised this audit):
+     Deep2ProductGate.hpp::PromoteReady — PROMOTE=0 held
+   DEPENDS_ON_RAWR_HAS_RAWR_INFERENCE=0  (no references in lavapath / win32app product calls)
+   Legacy path gated by the flag: init_runtime() → register_rawr_inference() only
+   Win32IDE chat/agent comments (e.g. Win32IDE.cpp ~6682-6720): ProductRun only
+
+RECOMMENDED_NEXT_FLIP
+---------------------
+FLIP_RAWR_HAS_RAWR_INFERENCE_0_TO_1=HOLD
+REASON=Not product-path enablement. Would only re-arm legacy EngineRegistry
+       register_rawr_inference() inside init_runtime(); product Open/Run/generate
+       already bypasses the flag. Not proven trivially correct for Win32IDE
+       readiness; empty/stub owners exist (e.g. src/engine/rawr_engine.cpp:227-229).
+APPLY=0 this turn (audit-only; prefer evidence over CMake churn).
+NEXT_REAL_GATE=exercise ProductOpenSession→ProductRun→generateStream on sealed EXE
+               (RUNTIME_REACHED / TOKEN_SURVIVED) — still PROMOTE=0 until tetrad law.
+
+CROSS_REF
+---------
+LINK_WIN32IDE_002 sealed; do not rebuild unless audit requires.
+Sibling evidence root also acceptable: evidence/UNLINKED_SYMBOLS_E2E_001/

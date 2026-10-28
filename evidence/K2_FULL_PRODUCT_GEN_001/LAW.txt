@@ -1,0 +1,109 @@
+K2_FULL_PRODUCT_GEN_001 / LAW
+=============================
+ASOF_LOCAL=2026-10-28 04:29:53
+WORKSPACE=G:\~dev\rawrxd
+GATE=K2_FULL_PRODUCT_GENERATION
+TOP15=#04
+CLOSEST=#3
+KIND=PRODUCT_PATH_KIMI_K2_FULL_GENERATION
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+LOCAL_ONLY=1
+NO_REBUILD=1
+NO_INVENT_PASS=1
+NOT_RUN_NE_PASS=1
+
+DEFINITION (in-repo)
+--------------------
+Authority cites:
+  evidence/RAWRXD_PERFORMANCE_001/G3_DEEP2_SCOREBOARD_POST_SCHEDULER_PROMOTE_001/TOP15_BREAKTHROUGH_ORDER.txt
+    ORDERED 04 / CLOSEST_THREE #3 = K2_FULL_PRODUCT_GENERATION
+  evidence/POST_SCHEDULER_PROMOTE_REQ_001/MATRIX.md S18
+    OPEN until Win32IDE post-Camellia PASS on THIS product path
+  evidence/POST_SCHEDULER_PROMOTE_REQ_001/LAW.txt
+    NEXT_EXECUTABLE includes K2_FULL_PRODUCT_GENERATION after 64_TOKEN_PRODUCT_RUN
+  evidence/RAWRXD_PERFORMANCE_001/THREE_AUTHORITY_SPLIT.txt CLOSEST #3
+
+Means (product authority, not deep2_benchmark MoE probe):
+  Win32IDE/HeadlessIDE --headless product path
+  -> ProductOpenSession -> ProductRun / Deep2Engine::generateStream
+  on Kimi-K2-Instruct-0905 multi-shard GGUF (arch=deepseek2 / MLA / MoE)
+  with GENERATED_TOKENS>0 + TOKEN_COMMIT on sealed post-Camellia EXE.
+
+Does NOT equal:
+  VWA_K2_FULL_E2E_001 (criteria C1-C8 closure)
+  DEEP2_KIMI_K2_001 deep2_benchmark MoE runtime probes
+  TinyLlama LIVE_TETRAD or gemma3 MULTI_FAMILY seals
+  TOKEN64_PRODUCT_RUN_001 (sibling 64-token clamp probe on TinyLlama)
+
+SEALED_EXE
+----------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SIZE=331629056
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+SHA_MATCH=1
+POST_RUN_SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+POST_RUN_SEALED=1
+SUBSTITUTE_BINARY=0
+
+MODEL
+-----
+PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+SHARDS=13
+TENSORS_INDEXED=1096
+ARCH=deepseek2
+LAYERS=61
+NUM_EXPERTS=384
+EXPERTS_PER_TOKEN=8
+MLA=1
+UNDER_models/=0 (no Kimi/K2 GGUF under G:\~dev\rawrxd\models)
+
+ENTRY
+-----
+FLAG=--headless (RAWRXD_HEADLESS=1 LOCAL_ONLY=1)
+RAWRXD_DEEP2_ALLOW_ELASTIC=1 (set in bat; product AUTO_BACKEND still ran)
+MODE=--local --no-server --model <k2 shard0> --prompt ... --max-tokens 64 --backend local --verbose
+HARNESS=run_k2_product.bat via cmd.exe /c
+PRODUCT_PATH=HeadlessIDE -> ProductOpenSession -> ProductRun/Deep2 generateStream
+NO_SEPARATE_DEEP2_HARNESS=1
+
+OBSERVED
+--------
+INDEX_OPEN=1 (K2 shard index 13/13, tokenizer vocab=163840)
+EARLY_PRODUCT_OPEN_PASS_EMIT=1 (index/session arm; DEEP2_RESIDENCY_ENTERED=0)
+AUTO_BACKEND weights=44152MB kv=122MB scratch=6MB
+AUTO_BACKEND host RAM=41447MB commit=33170MB
+AUTO_BACKEND decision=Reject reason=Insufficient host memory
+FAILED_STAGE=BACKEND_SELECT
+FAILED_OWNER=NO_FEASIBLE_BACKEND
+GENERATED_TOKENS=0
+TOKENS_COMMITTED=0
+PRODUCT_OPEN_PASS=0 (final PRODUCT_RUN stamp)
+SESSION_ENTER_PASS=0 (final)
+TOKEN_COMMIT_PASS=0
+PRODUCT_PASS=0
+EXIT_REASON=Insufficient host memory
+CLEAN_EXIT=1
+
+SIBLING CROSS-CITE (do not rewrite)
+-----------------------------------
+TOKEN64_PRODUCT_RUN_001 = BLOCKED_CLAMP
+  CLI_MAX_TOKENS=64 EFFECTIVE_MAX_TOKENS=8 GENERATED_TOKENS=8
+  same EXE SHA 89BFD614...; TinyLlama; ≠ K2_FULL
+LIVE_TETRAD_POST_CAMELLIA_001 = untouched (TinyLlama tetrad PASS; 8 tok)
+MULTI_FAMILY_PRODUCT_001 = untouched (gemma3 PASS; 8 tok)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+OOM/BACKEND_REJECT != PASS
+INDEX_OPEN != PRODUCT_GENERATION_PASS
+PROMOTE=0 always this seal
+
+DISPOSITION_AUTHORITY
+---------------------
+PASS iff Kimi-K2 product-path generateStream on THIS SHA with
+  PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS
+Else BLOCKED/FAIL/NOT_RUN with exact reason — never invent PASS

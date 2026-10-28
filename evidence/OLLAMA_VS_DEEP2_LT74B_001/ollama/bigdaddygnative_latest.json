@@ -1,0 +1,1 @@
+{"error":"llama-server process has terminated: exit status 1: cudaMalloc failed: out of memory\nggml_backend_buft_alloc_buffer_n_default: failed to allocate ROCm0 buffer of size 25375653888\nerror loading model: unable to allocate ROCm0 buffer"}

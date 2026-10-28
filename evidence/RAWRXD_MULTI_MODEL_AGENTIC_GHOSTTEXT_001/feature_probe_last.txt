@@ -1,0 +1,5 @@
+cmdline=--test-ghost-text 
+PASS main_window_created
+PASS editor_window_created
+PASS ghost_text_timer_started
+SUMMARY passed=3 failed=0

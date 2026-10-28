@@ -1,0 +1,16 @@
+0x2860B30|ComboLBox|
+0x41E0B28|ComboLBox|
+0x3660A72|tooltips_class32|
+0x2F908D0|ComboLBox|
+0x768088E|ComboLBox|
+0x2C3085E|ComboLBox|
+0x1AF0690|tooltips_class32|
+0x1BF068A|RawrXD_AnnotationOverlay|RawrXD Annotation Overlay
+0x840340|tooltips_class32|
+0x3E0212|RawrXD_IDE_MainWindow|RawrXD ScreenPilot â€” Desktop Preview
+0x41005B6|tooltips_class32|
+0xA90580|tooltips_class32|
+0x8FD0516|tooltips_class32|
+0x5A4054C|ComboLBox|
+0x2AD07E8|MSCTFIME UI|MSCTFIME UI
+0x4010184|IME|Default IME

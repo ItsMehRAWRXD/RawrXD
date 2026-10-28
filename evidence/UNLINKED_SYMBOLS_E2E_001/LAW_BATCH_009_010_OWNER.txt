@@ -1,0 +1,29 @@
+LAW: unlinked_symbols_batch_009 / 010 ownership (quintile B)
+PROMOTE=0 TIP_CLIMB=HOLD SYNTHETIC=0
+Digestion_scanner.asm = CMake-excluded — not a link owner
+
+BATCH_009
+- Owner for asm_hwsynth_analyze_memhier / profile_dataflow / est_resources /
+  predict_perf / gen_jtag_header / get_stats: unlinked_symbols_batch_009.cpp
+- Mode* (InjectMode, DiffCovMode, IntelPTMode, AgentTraceMode, DynTraceMode,
+  CovFusionMode, SideloadMode, PersistenceMode, BasicBlockCovMode):
+  OWNER = rawrxd_subsystem_api.cpp (stripped from batch_009 — LNK2005 avoid)
+- LINKED on RawrEngine + Win32IDE after Mode* strip
+- Mag join: LUT table published by batch_008 asm_hwsynth_init → MagShutdown
+
+BATCH_010
+- EXCLUDED from RawrEngine and Win32IDE CMake
+- Mode* (StubGenMode..AVScanMode): OWNER = rawrxd_subsystem_api.cpp
+- SO_* (SO_InitializeVulkan, SO_InitializeStreaming, SO_CreateMemoryArena,
+  SO_CreateThreadPool, SO_CreateComputePipelines, SO_InitializePrefetchQueue):
+  OWNER = rawrxd_subsystem_api.cpp on product / Win32IDE
+  Alternate GOLD paths may use streaming_orchestrator.cpp — verify target,
+  do not dual-link with batch_010
+- batch_010.cpp retained as ABI/reference only (#if 0 body); NOT link owner
+- Call-site verify: SubsystemRegistry dispatch in rawrxd_subsystem_api.cpp
+  resolves Mode*/SO_* to subsystem_api stubs (empty) until ASM modes land
+- Do NOT re-add batch_010 without removing subsystem_api Mode*/SO_* defs
+
+NOTE
+- subsystem_api Mode*/SO stubs are empty (SYNTHETIC=partial for modes) —
+  not claimed as PERF/E2E PASS; PROMOTE=0

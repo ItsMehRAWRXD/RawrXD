@@ -1,0 +1,59 @@
+AGENTIC_BRIDGE_FAILCLOSE_001 / LAW
+==================================
+ASOF_UTC=2026-10-28T08:35:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+SCOPE=Win32IDE_AgenticBridge.cpp + agentic_bridge_headless.cpp
+EXCLUDE=AgenticFeatures Camellia stubs (sibling !RAWR_HAS_MASM / GATED_OMIT TU)
+  cite=CMake GATED_OMIT LORA_KERNEL_STUB_GATE_001; do not reintroduce
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+Init return true != ProductOpen/ProductRun
+Stream callback return true != product success
+Loop completion != PROMOTE
+headless_stub mnemonic / synthetic NOP = FEATURE_FICTION (forbidden as success)
+
+MISSION
+-------
+Map fake-success return-true / CPU-only lies on agentic bridge surfaces.
+Fix clear LOCAL_ONLY ProductRun bypasses. Leave honest NOT_PRODUCT_PATH paths.
+No invent PASS. Prefer no EXE relink.
+
+SOURCE_WIRED FIXES (this seal)
+------------------------------
+W01 ExecuteAgentCommand: removed orch.RunAgent + ide->routeInferenceRequest
+     fallback after empty ProductDeep2InferStream; fail-closed NOT_PRODUCT_PATH
+W02 ProductOpenSession reopen: honor failure (no void cast)
+W03 SetModel: GGUF path -> LoadModel/ProductOpenSession; refuse Ollama tag
+     resurrection (no CIE loadLocalModel; no setBackendModel Ollama)
+W04 WarmUpModel: no CIE chat warmup; require ProductSessionOpen/m_deep2Ready
+W05 Initialize log: adapter init != inference stack success claim
+H01 headless ExecuteAgentCommand: ProductRun only; remove fake
+     "Headless agent ready" ANSWER + CIE NativeAgent path
+H02 headless LoadModel: ProductOpenSession only; CPU-only env fail-closed
+H03 headless_stub disasm: clear chunks + OutputDebugString GATED
+     FEATURE_FICTION (no NOP theater)
+H04 StartAgentLoop: return false on AGENT_ERROR; sawAnswer only
+
+PRESERVED HONEST FAIL-CLOSE
+---------------------------
+P01 LoadModel CPU-only lane -> false NOT_PRODUCT_PATH=1 (Win32)
+P02 LoadModel ProductOpenSession fail -> false
+P03 ExecuteAgentCommand no session -> AGENT_ERROR NOT_PRODUCT_PATH
+P04 AgenticFeatures DynamicModelLoader FEATURE_FICTION=1 (sibling TU omit)
+P05 Camellia GateStub return -1 under AgenticFeatures (do not reintroduce;
+     product Auth owner = RawrXD_Camellia256_Auth.obj)
+
+RELINK
+------
+RELINK=REQUIRED for RUNTIME_REACHED of W01–H04 on product EXE
+RELINK=NOT_PERFORMED this seal (prefer no EXE relink)
+Sealed LIVE_TETRAD_POST_CAMELLIA_001 SHA=89BFD614… preserved (not rewritten)
+On-disk build_win32ide_link001 EXE may already differ; not claimed PASS here
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

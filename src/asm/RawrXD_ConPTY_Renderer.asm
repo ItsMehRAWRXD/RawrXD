@@ -1,6 +1,11 @@
 ; =============================================================================
 ; RawrXD_ConPTY_Renderer.asm - Native Win32 Pseudoconsole TUI Renderer
 ; Implementation of collapsible blocks and real-time progress bars in MASM
+;
+; OWNERSHIP (SHELLLAYOUT_PHASE5_001 + CONPTY_STREAM_OWNER_001):
+;   HWND geometry owner = Win32IDE_ShellLayout.cpp → getPowerShellPanel
+;   This TU = VT100 TUI glyphs only — NOT chrome geometry / NOT PTY stream
+;   CreatePseudoConsole stream owner = Win32TerminalManager.cpp (SOURCE_WIRED)
 ; =============================================================================
 
 OPTION CASEMAP:NONE

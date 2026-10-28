@@ -245,8 +245,8 @@ static std::string routeScope(const std::string& path, const std::string& method
     if (path == "/api/github/webhook") return "github";
     if (path.find("/api/model/load") == 0 || path.find("/api/model/unload") == 0) return "models";
     if (path.find("/api/generate") == 0 || path.find("/api/hexmag/") == 0 ||
-        path == "/api/subagent" || path == "/api/chain" || path == "/ask" ||
-        path == "/v1/chat/completions") return "inference";
+        path == "/api/subagent" || path == "/api/chain" || path == "/api/swarm/orch" ||
+        path == "/ask" || path == "/v1/chat/completions") return "inference";
     if (method == "POST" && path.find("/api/instructions/reload") == 0) return "admin";
     return "read";
 }
@@ -1214,6 +1214,29 @@ int HeadlessIDE::run() {
             break;
     }
 
+    // B05: ProductRun/headless exit-code capture receipt (PE ERRORLEVEL observer).
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) {
+            fprintf(f, "EXIT_CODE=%d\n", exitCode);
+            fclose(f);
+        }
+        FILE* r = fopen("headless_product_exit_receipt.txt", "w");
+        if (r) {
+            fprintf(r,
+                    "HEADLESS_PRODUCT_EXIT_RECEIPT=1\n"
+                    "EXIT_CODE=%d\n"
+                    "MODE=%d\n"
+                    "PROMOTE=0\n"
+                    "TIP_CLIMB=HOLD\n"
+                    "CERTIFIED=0\n",
+                    exitCode, (int)m_config.mode);
+            fclose(r);
+        }
+        fprintf(stderr, "EXIT_CODE=%d\n", exitCode);
+        fflush(stderr);
+    }
+
     m_running.store(false);
     g_headlessInstance.store(nullptr);
     return exitCode;
@@ -1281,6 +1304,11 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[]) {
         }
         else if (arg == "--max-tokens" && i + 1 < argc) {
             m_config.maxTokens = std::atoi(argv[++i]);
+            FILE* f = fopen("headless_server.log", "a");
+            if (f) {
+                fprintf(f, "CLI_MAX_TOKENS=%d\n", m_config.maxTokens);
+                fclose(f);
+            }
         }
         else if (arg == "--temperature" && i + 1 < argc) {
             m_config.temperature = static_cast<float>(std::atof(argv[++i]));
@@ -1962,13 +1990,15 @@ std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, 
         safeAppendOutput("No model loaded for inference", OutputSeverity::Error);
         return "[error: no model loaded]";
     }
-    (void)maxTokens;
+    if (maxTokens > 0)
+        m_config.maxTokens = maxTokens;
     (void)temperature;
 
     /* Skip agent callbacks — ConsoleOutputSink::onAgentStarted AVs under oneshot. */
     {
         FILE* f = fopen("headless_server.log", "a");
-        if (f) { fprintf(f, "RUN_INFER_ROUTE backend=%d\n", (int)m_activeBackend); fclose(f); }
+        if (f) { fprintf(f, "RUN_INFER_ROUTE backend=%d maxTokens=%d\n",
+                         (int)m_activeBackend, m_config.maxTokens); fclose(f); }
     }
     auto startTime = std::chrono::steady_clock::now();
     std::string result = routeInferenceRequest(prompt);
@@ -1995,7 +2025,10 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
         /* Prefer ProductDeep2Infer (same ProductRun as /api/generate). */
         char outBuf[65536];
         outBuf[0] = 0;
-        bool ok = rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf));
+        const uint32_t tok =
+            m_config.maxTokens > 0 ? (uint32_t)m_config.maxTokens : 0u;
+        bool ok = rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf),
+                                          tok);
         if (ok && outBuf[0]) {
             if (tokenCallback)
                 tokenCallback(outBuf, std::strlen(outBuf));
@@ -2161,13 +2194,15 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
         return finish("[error] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun.", false);
     }
     if (m_activeBackend == AIBackendType::LocalGGUF) {
-        /* Prefer ProductDeep2 when session open; else CIE (LAA:NO large-GGUF arm). */
-        if (rawr::ProductSessionOpen()) {
-            char outBuf[65536];
-            outBuf[0] = 0;
-            if (rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf)) && outBuf[0])
-                return finish(std::string(outBuf), true);
-        }
+        /* ProductDeep2Infer → ProductRun; StreamBody opens session if needed.
+         * Pass CLI --max-tokens (was dropped; InferBody hard-clamped to 8). */
+        char outBuf[65536];
+        outBuf[0] = 0;
+        const uint32_t tok =
+            m_config.maxTokens > 0 ? (uint32_t)m_config.maxTokens : 0u;
+        if (rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf),
+                                    tok) && outBuf[0])
+            return finish(std::string(outBuf), true);
         if (RawrXD::HeadlessProduct::LocalOnly()) {
             std::string nativeError;
             std::string text = RawrXD::HeadlessProduct::GenerateNative(
@@ -2789,6 +2824,9 @@ bool HeadlessIDE::authorizeHttpRequest(const HostedHttpRequest& request,
         return false;
     }
     if (RawrXD::IdeAuth::HeaderHasSession(request.headers)) return true;
+    // Local-only admit: --local + loopback peer/bind + empty apiKey.
+    // No invented cloud keys. Non-local / hosted still fail-closed below.
+    if (localLoopback && m_config.apiKey.empty()) return true;
     bool apiAuthenticated = authenticateRequest(
         request.headers, m_config, routeScope(request.path, request.method));
     if (request.path != "/api/github/webhook" && !apiAuthenticated) {
@@ -3396,6 +3434,10 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
     } else if ((path == "/api/hexmag/ask" || path == "/api/subagent" ||
                 path == "/api/chain") && request.method == "POST") {
         routeHexMagRequest(request, response);
+    } else if (path == "/api/swarm/orch" && request.method == "POST") {
+        routeSwarmOrchRequest(request, response);
+    } else if (path == "/api/agent/run" && request.method == "POST") {
+        routeAgentRunRequest(request, response);
     } else if (routeGuiProductRequest(clientFd, request, response)) {
         return;
     } else if (routeStatusRequest(request, response)) {

@@ -1,6 +1,9 @@
 // unlinked_symbols_batch_017.cpp
-// RawrXD_Gold: eight extern "C" symbols — Titan SIMD entry points (when NativeModelBridge.asm
-// is excluded from the Gold MASM set), fused sampler helpers, and NLShell validation.
+// Gold/object-smoke: Titan SIMD + fused sampler + NLShell when ASM owners absent.
+// Win32IDE: CMake COMMENT-OMIT — NLShell may live in ai_agent_masm_impl; Titan in gold_link /
+// NativeModelBridge.asm / rawrxd_subsys_modes_d. Prefer real ASM; this TU is C fallback only.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 SYNTHETIC=partial (scalar C, not AVX512 product path)
+
 
 #include <algorithm>
 #include <cctype>

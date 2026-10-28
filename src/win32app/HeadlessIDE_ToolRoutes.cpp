@@ -7,6 +7,7 @@
 
 #include "HeadlessIDE.h"
 #include "IdeAuthBoundary.hpp"
+#include "SafeWriteAtomic.hpp"
 
 #include <atomic>
 #include <cctype>
@@ -449,11 +450,13 @@ void HeadlessIDE::routeToolAndFileRequest(const HostedHttpRequest& request,
 
     std::string out;
     if (!executeToolRepl(tool, args.dump(), out)) {
-        // executeToolRepl embeds status in out via side channel? Use parse of error shape.
-        // Prefer: executeToolRepl always fills out; return false means hard fail.
+        // executeToolRepl always fills out; map policy/validation denials (not invent 500).
         if (out.find("\"error\":\"motd_required\"") != std::string::npos) {
             response.status = 403;
         } else if (out.find("\"error\":\"forbidden\"") != std::string::npos) {
+            response.status = 403;
+        } else if (out.find("\"error\":\"execution_not_granted\"") != std::string::npos) {
+            // Align with Win32 LocalServer DecideWin32 ExecDenied → 403.
             response.status = 403;
         } else if (out.find("\"error\":\"file_not_found\"") != std::string::npos) {
             response.status = 404;
@@ -540,14 +543,38 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
             return false;
         }
         std::string content = jsonGetString(args, "content");
-        if (!writeFileLimited(resolved, content, err)) {
-            outResult = err;
+        // A06 product path: SafeWriteAtomic (tmp+ReplaceFile) + preview + rollback
+        auto wr = RawrXD::SafeWrite::WriteWithPreviewRollback(resolved, content);
+        if (!wr.ok) {
+            outResult = wr.errJson.empty()
+                ? std::string("{\"error\":\"safe_write_failed\"}")
+                : wr.errJson;
             return false;
         }
         outResult = "{\"success\":true,\"path\":\"" + toolJsonEscape(resolved) +
             "\",\"name\":\"" + toolJsonEscape(fileNameOf(resolved)) +
             "\",\"size\":" + std::to_string(content.size()) +
-            ",\"message\":\"File written successfully\"}";
+            ",\"atomic\":true,\"previewed\":true,\"rollback_id\":" +
+            std::to_string(wr.rollbackId) +
+            ",\"message\":\"File written atomically\"}";
+        return true;
+    }
+
+    if (toolName == "safe_write_preview") {
+        std::string diff = RawrXD::SafeWrite::PreviewFirstDiff();
+        outResult = "{\"success\":true,\"preview\":\"" + toolJsonEscape(diff) + "\"}";
+        return true;
+    }
+    if (toolName == "safe_write_rollback") {
+        if (!RawrXD::SafeWrite::RollbackLastWrite(err)) {
+            outResult = err;
+            return false;
+        }
+        outResult = "{\"success\":true,\"message\":\"Rollback applied\"}";
+        return true;
+    }
+    if (toolName == "safe_write_status") {
+        outResult = RawrXD::SafeWrite::StatusJson();
         return true;
     }
 
@@ -569,7 +596,8 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
 
     if (toolName == "execute_command" || toolName == "git_status") {
         if (!RawrXD::IdeAuth::PrivilegedExecGranted()) {
-            outResult = "{\"success\":false,\"error\":\"execution_not_granted\"}";
+            // Same shape as LocalServer ExecDenied body (status mapped to 403 above).
+            outResult = "{\"error\":\"execution_not_granted\"}";
             return false;
         }
         std::string command = (toolName == "git_status")
@@ -577,7 +605,7 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
             : jsonGetString(args, "command");
         if (command.empty()) command = jsonGetString(args, "cmd");
         if (command.empty()) {
-            outResult = "{\"success\":false,\"error\":\"Missing 'command'/'cmd' field\"}";
+            outResult = "{\"error\":\"missing_command\",\"message\":\"Missing 'command'/'cmd' field\"}";
             return false;
         }
         std::string output;
@@ -606,6 +634,7 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
         "{\"error\":\"unknown_tool\",\"message\":\"Unknown tool: " + toolJsonEscape(toolName) +
         "\",\"available\":[\"read_motd\",\"read_file\",\"write_file\",\"list_directory\","
         "\"execute_command\",\"git_status\",\"delete_file\",\"rename_file\",\"copy_file\","
-        "\"move_file\",\"mkdir\",\"stat_file\",\"search_files\"]}";
+        "\"move_file\",\"mkdir\",\"stat_file\",\"search_files\","
+        "\"safe_write_preview\",\"safe_write_rollback\",\"safe_write_status\"]}";
     return false;
 }

@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_UP_2
+pos=16
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=8192
+nbytes=32768
+fnv=baeebe487d3e7f26
+l2=19.271681720549047
+seq=809
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_FFN_UP_2_pos16_layer0_full_n8192_seq809.bin

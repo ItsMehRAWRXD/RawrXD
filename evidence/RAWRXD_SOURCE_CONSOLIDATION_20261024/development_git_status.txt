@@ -1,0 +1,232 @@
+ M .github/workflows/tests.yml
+ M CMakeLists.txt
+ M UniversalRunner.cpp
+ M build.bat
+ M build.ps1
+ M certification/D2_135TOKEN_CAPTURE.manifest.json
+ M cmake/run_oracle_parity.cmake
+ M cmake/run_production_smoke.cmake
+ M include/agentic_engine.h
+ M include/agentic_executor.h
+ M include/codec.h
+ M include/gguf_loader.h
+ M include/settings.h
+ M scripts/Map-OllamaModels.ps1
+ M scripts/Measure-ThreadCompletion.py
+ M scripts/Quarantine-ScratchFiles.ps1
+ M scripts/Test-ModelInventory.ps1
+ M scripts/certify_resident_overlap.ps1
+ M scripts/certify_zero_to_exe.ps1
+ M scripts/compile_inspect.ps1
+ M scripts/deep2_cert_receipt_scan.ps1
+ M scripts/inspect_gguf.cpp
+ M scripts/zero_to_exe_model_bakeoff.ps1
+ M src/Deep2Engine.cpp
+ D src/Deep2Engine.cpp.bak
+ M src/Deep2Engine.h
+ M src/Deep2Engine.hpp
+ M src/Deep2Engine_Llama.cpp
+ M src/Deep2Engine_MultiGPU.cpp
+ M src/GGUFLoader.cpp
+ M src/GGUFLoader.hpp
+ M src/HereticWeightModifier.hpp
+ M src/MasmCoreKernels.cpp
+ M src/NetworkStreamingServer.hpp
+ M src/PerformanceProfiler.hpp
+ M src/ShardPager.cpp
+ M src/TensorROM.cpp
+ M src/TensorROM.hpp
+ M src/TensorView.hpp
+ M src/VulkanDevice.cpp
+ M src/VulkanDevice.hpp
+ M src/VulkanDeviceAllocator.cpp
+ M src/VulkanDeviceAllocator.hpp
+ M src/Win32RomEmulator.cpp
+ M src/agentcore/authorization_gate.cpp
+ M src/agentcore/authorization_gate.hpp
+ M src/agentcore/http_client.cpp
+ M src/agentcore/http_client.hpp
+ M src/agentcore/mutation_ledger.cpp
+ M src/agentcore/mutation_ledger.hpp
+ M src/agentcore/process_runner.cpp
+ M src/agentcore/process_runner.hpp
+ M src/agentcore/rawrxd_msvc_diagnostics.hpp
+ M src/agentcore/tool_contract.cpp
+ M src/agentcore/tool_contract.hpp
+ M src/agentcore/toolchain.cpp
+ M src/agentcore/toolchain.hpp
+ M src/agentcore/zero_to_exe.cpp
+ M src/agentcore/zero_to_exe.hpp
+ M src/agentcore/zero_to_exe_main.cpp
+ M src/agentic_engine.cpp
+ M src/agentic_executor.cpp
+ M src/agentic_executor.h
+ M src/agentic_ide.cpp
+ M src/agentic_ide.h
+ M src/api_server.cpp
+ M src/api_server.h
+ D src/backend/agentic_tools_part1.cpp
+ M src/backend/ollama_client.cpp
+ M src/core/CertificationGates.cpp
+ M src/core/CertificationGates.hpp
+ M src/core/DecodeSession.cpp
+ M src/core/DecodeSession.hpp
+ M src/core/Deep2Types.hpp
+ M src/core/GenerationLoop.cpp
+ M src/core/GenerationLoop.hpp
+ M src/core/GgufTokenizer.cpp
+ M src/core/GgufTokenizer.hpp
+ M src/core/HostKvRing.hpp
+ M src/core/InferenceEngine.cpp
+ M src/core/InferenceEngine.hpp
+ M src/core/KVCache.cpp
+ M src/core/KVCache.hpp
+ M src/core/KvWindowPlan.hpp
+ M src/core/LlamaReference.hpp
+ M src/core/MlaLayout.hpp
+ M src/core/ModelAdmission.cpp
+ M src/core/ModelAdmission.hpp
+ M src/core/ModelTopology.cpp
+ M src/core/ModelTopology.hpp
+ M src/core/ParityTolerance.hpp
+ M src/core/PrefetchQueue.cpp
+ M src/core/QuantBlockTraits.hpp
+AM src/core/RunCommand.cpp
+ M src/core/Tokenizer.cpp
+ M src/core/Tokenizer.hpp
+ M src/core/VulkanComputeEngine.cpp
+ M src/core/VulkanComputeEngine.hpp
+ M src/core/VulkanGEMV.cpp
+ M src/core/VulkanGEMV.hpp
+ M src/core/VulkanWeightStreamer.cpp
+ M src/core/VulkanWeightStreamer.hpp
+ M src/deep2/Deep2Engine.cpp
+ M src/gguf2rom.cpp
+ M src/gguf_loader.cpp
+ M src/gui.h
+ M src/inference_oracle.cpp
+ M src/init_shutdown.cpp
+ M src/init_shutdown_only.cpp
+ M src/llm_adapter/llm_http_client.h
+ M src/llm_adapter/llm_implementation_adapter.h
+ M src/main.cpp
+ M src/multi_modal_model_router.cpp
+ M src/native_agent.hpp
+ M src/overclock_governor.h
+ M src/overclock_vendor.h
+ M src/qtapp/MainWindow_v5.cpp
+ M src/qtapp/MainWindow_v5.h
+ M src/quant_kernels.cpp
+ M src/quant_kernels.hpp
+ M src/rawrxd_cli.cpp
+ M src/rom_cert_gate.cpp
+ M src/rom_tests.cpp
+ M src/settings.cpp
+ M src/settings.h
+ M src/telemetry.h
+ M src/test_layer0.cpp
+ M src/test_metadata_parity.cpp
+ M src/tools/mla_layout_test.cpp
+ M src/tools/production_smoke_test.cpp
+ M src/tools/tokenizer_test.cpp
+ M src/tools/waaf_procedural_optimized.cpp
+ M src/tools/waaf_procedural_test.cpp
+ M src/utils/codec.cpp
+ M src/win32app/IDETestAgent.h
+ M src/win32app/Win32IDE.cpp
+ M src/win32app/Win32IDE.h
+ M tests/agentcore_test.cpp
+ M tests/quant_decoder_parity_test.cpp
+ M tests/quant_dispatch_shape_test.cpp
+ M tests/quant_layout_offsets_test.cpp
+ M tests/rawrxd_msvc_diagnostics_test.cpp
+ M tests/shard_pager_prefetch_test.cpp
+ M tests/test_weight_streamer.cpp
+ M ~dev/rawrxd/rguf_source/CMakeLists.txt
+ M ~dev/rawrxd/src/deep2/Deep2Engine.cpp
+ M ~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
+ M ~dev/rawrxd/src/deep2/shaders/deep2_qgemv.spv
+ M ~dev/rawrxd/src/deep2/vulkan_compute.cpp
+?? AGENTS.md
+?? build-cli/
+?? build-mapgen/
+?? build-vk/
+?? build2/
+?? build_msvc/
+?? build_ninja/
+?? certification/CTEST_certified.log
+?? certification/CTEST_cleansource.log
+?? certification/CTEST_cpu.log
+?? certification/CTEST_final.log
+?? certification/CTEST_full.log
+?? certification/CTEST_gates.log
+?? certification/DEEP2_BOTTLENECK_LEDGER_001.manifest.json
+?? certification/DEEP2_BOTTLENECK_LEDGER_001.md
+?? certification/GENERATION_llama3.2-3b.json
+?? certification/GENERATION_tinyllama.json
+?? certification/GGUF_PARSER_STRUCTURE_FIX_001.log
+?? certification/GPU_PACKED_RESIDENCY_Q4K_Q6K.log
+?? certification/LLAMACPP_REF_llama3.2-3b.txt
+?? certification/LLAMA_PARITY_8STEP.log
+?? certification/LLAMA_PARITY_llama3.2-3b.json
+?? certification/LLAMA_PARITY_llama3.2-3b.log
+?? certification/MODEL_SHOW_AND_PARSER_001.log
+?? certification/RAWRXD_ZERO_TO_EXE_001.md
+?? certification/RAWR_RUN_CLI_001.md
+?? certification/evidence/
+?? certification/gen_test.json
+?? certification/scan/
+?? evidence/RAWRXD_FULL_LAUNCH_CONNECTIVITY_001/
+?? evidence/r11_local_agent_001.json
+?? gen_out.txt
+?? include/agentic_engine_native.h
+?? include/backend/
+?? include/code_editor.h
+?? include/deflate_brutal.hpp
+?? include/editor_buffer.h
+?? include/inference_engine_native.h
+?? include/model_trainer_native.h
+?? include/settings_manager.h
+?? include/syntax_engine.h
+?? run_toolchain_checks.bat
+?? scripts/deep2_bottleneck_ledger.ps1
+?? services/__pycache__/
+?? services/_cancel_test/
+?? services/deep2_local_server.py
+?? src/agentic_file_operations.cpp
+?? src/agentic_file_operations.h
+?? src/backend/agentic_tools.h
+?? src/code_editor.cpp
+?? src/core/AgentLoop.cpp
+?? src/core/AgentLoop.hpp
+?? src/core/AgentLoopEngine.cpp
+?? src/core/AgentLoopInternal.hpp
+?? src/core/AgentTools.cpp
+?? src/core/ChatTemplate.hpp
+?? src/core/DecodeParityTest.cpp
+?? src/core/GenerationSelfTest.cpp
+?? src/core/ModelShow.cpp
+?? src/core/ModelShow.hpp
+?? src/core/RunCommand.hpp
+?? src/core/TinyJson.hpp
+?? src/ide_hooks.cpp
+?? src/ide_hooks.h
+?? src/llm_adapter/llm_implementation_adapter.cpp
+?? src/mapgen/
+?? src/memory_space_manager.cpp
+?? src/memory_space_manager.h
+?? src/rawr_cli.cpp
+?? src/rawr_cli.cpp.other-session.bak
+?? src/rawrxd_agentcore.h
+?? src/settings_manager.cpp
+?? src/tools/file_ops.h
+?? src/tools/git_client.h
+?? src/win32app/ConnectionRegistry.cpp
+?? src/win32app/ConnectionRegistry.h
+?? src/win32app/cpu_inference_engine.h
+?? tests/agent_loop_test.cpp
+?? tests/r11_local_agent_cert.cpp
+?? tests/test_api_show.cpp
+?? tests/test_gguf_parse_structure.cpp
+?? tests/test_model_show.cpp
+?? tests/test_q5k_device.cpp

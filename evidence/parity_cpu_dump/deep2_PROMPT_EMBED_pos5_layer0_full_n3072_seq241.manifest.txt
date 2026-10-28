@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_EMBED
+pos=5
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=dc90925d9e6e14f4
+l2=1.0504977807729647
+seq=241
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_PROMPT_EMBED_pos5_layer0_full_n3072_seq241.bin

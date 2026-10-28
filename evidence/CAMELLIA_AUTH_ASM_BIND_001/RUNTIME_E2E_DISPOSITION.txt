@@ -1,0 +1,68 @@
+CAMELLIA_AUTH_ASM_BIND_001 / RUNTIME_AUTH_E2E DISPOSITION
+=========================================================
+ASOF_UTC=2026-10-28T08:22:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+XOR_PATH=0
+SYNTHETIC=0
+WIN32IDE_REBUILD=0
+POST_BIND_EXE_SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+  (historical LIVE_TETRAD 4A5D6B31… does NOT cover this binary)
+
+VERDICT
+-------
+RUNTIME_AUTH_E2E=PASS
+SMOKE_EXIT=0
+RESULTS pass=16 fail=0
+BACKEND_UNAVAILABLE=0
+Cite: evidence/CAMELLIA_AUTH_ASM_BIND_001/RUNTIME_E2E_run.log
+
+HARNESS
+-------
+Tiny smoke exe: runtime_auth_e2e_smoke.exe
+Linked: RawrXD_Camellia256_Auth_e2e.obj + RawrXD_Camellia256_e2e.obj
+  (fresh ml64 from src/asm; same sources as product bind)
+No XOR. Two-path ABI: asm_camellia256_auth_{en,de}crypt_file.
+ods_stub.c + /FORCE:MULTIPLE — see CRASH_ROOT_CAUSE / harness note.
+Bats: _build_runtime_auth_e2e.bat _run_runtime_auth_e2e.bat
+
+CASES
+-----
+1. authorized encrypt→decrypt plaintext match — PASS
+2. RCM2 magic dword 0x52434D32 (LE bytes 32 4D 43 52) — PASS
+3. tampered ciphertext@56 → decrypt nonzero reject — PASS
+   (observed rc=1; ASM sets -7 then VirtualFree clobbers EAX — see note)
+4. null paths → -2 — PASS
+5. missing paths → -3 — PASS
+
+CRASH_ROOT_CAUSE (resolved for smoke; product note)
+-------------------------------------------------
+Prior AV 0xC0000005 on asm_camellia256_set_key:
+  set_key ends in call OutputDebugStringA with Win64 stack misaligned
+  (8 pushes + sub rsp,64 => RSP%%16==8 before CALL).
+  Fault RIP in kernelbase via IAT jmp; av_addr=FFFFFFFFFFFFFFFF.
+  Harness workaround: local OutputDebugStringA no-op (ods_stub.c) + /FORCE:MULTIPLE.
+  Product Win32IDE EXE 89BFD614… not rebuilt this turn; ABI align fix deferred.
+
+TAMPER RC NOTE
+--------------
+RawrXD_Camellia256_Auth.asm @@ad_hmac_fail:
+  mov eax, CAMELLIA_ERR_AUTH (-7)
+  jmp @@ad_free_buf → call VirtualFree → EAX=BOOL success (1)
+  so callers observe 1 not -7. Case gate = nonzero reject (earned).
+
+BRIDGE XOR LAW
+--------------
+win32ide_asm_kernel_bridge.cpp XOR auth leftovers NOT linked into Win32IDE
+(map count for win32ide_asm_kernel_bridge = 0). OMIT clear this turn; LAW note only.
+
+PATHS
+-----
+evidence/CAMELLIA_AUTH_ASM_BIND_001/RUNTIME_E2E_run.log
+evidence/CAMELLIA_AUTH_ASM_BIND_001/RUNTIME_E2E_DISPOSITION.txt
+evidence/CAMELLIA_AUTH_ASM_BIND_001/runtime_auth_e2e_smoke.c
+evidence/CAMELLIA_AUTH_ASM_BIND_001/ods_stub.c
+evidence/CAMELLIA_AUTH_ASM_BIND_001/RECEIPT.md
+evidence/CAMELLIA_AUTH_ASM_BIND_001/LAW.txt

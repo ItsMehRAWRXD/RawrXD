@@ -1,0 +1,75 @@
+SHELLLAYOUT_PHASE5_001 / LAW
+============================
+ASOF_UTC=2026-10-28T10:55:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+P0=S-005/U06
+
+TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+TIP_MUST_STAY=1
+RELINK_REQUIRED=1
+SMOKE_RELINK=0
+EXE_RELINK=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GATED_UNIMPLEMENTED != PASS (prior empty-body refuse; superseded for geometry wire)
+SILENT_SKIP = FORBIDDEN
+
+MISSION
+-------
+Lift PHASE=5 empty-body GATED_UNIMPLEMENTED by wiring LayoutIDE terminal
+chrome geometry to the real HWND owner (Win32IDE::getPowerShellPanel), or
+fail-closed via GateTerminalMissing when HWND is null/dead.
+
+Prior packet evidence/SHELL_LAYOUT_PHASE5_001 sealed the empty refuse.
+This packet seals the SOURCE_WIRED geometry owner without tip climb.
+
+SOURCE_WIRED (this seal)
+------------------------
+F1 src/win32app/Win32IDE_ShellLayout.cpp
+  PHASE>=5: MoveHwnd + SetChildVisible(getPowerShellPanel)
+  GateTerminalMissing → ODS + evidence/SHELLLAYOUT_PHASE5_001/GATE_TERMINAL.txt
+  RebuildRestrictActive includes phase 5 (allow-list CBT stays on)
+
+F2 src/win32app/Win32IDE_ShellLayout.hpp
+  Ladder comments cite this seal; RebuildRestrictActive 0..5
+
+F3 src/asm/RawrXD_ConPTY_Renderer.asm
+  Ownership comment only: VT100 TUI ≠ HWND geometry owner
+  CreatePseudoConsole stream path remains unclaimed (not PASS)
+
+OWNERSHIP SPLIT
+---------------
+TERMINAL_CHROME_GEOMETRY_OWNER = getPowerShellPanel (LayoutIDE PHASE=5)
+CONPTY_STREAM_PTY_OWNER        = UNCLAIMED (not this seal)
+PHASE_5_CERTIFIED              = 0
+PHASE_5_MAY_CLAIM_PASS         = 0
+RUNTIME_REACHED                = NOT_RUN (tip EXE pre-wire binary)
+
+SEALED EXE / RELINK
+-------------------
+TIP_SHA=6832F439…2A9F8B2 must stay for concurrent runtime seals
+RELINK_REQUIRED=1 (source newer than tip obj; absorb later)
+EXE_RELINK=0 this mission
+TIP_SEALS_INVALIDATED=NO (no new SHA)
+
+WHAT WOULD EARN RUNTIME_REACHED
+-------------------------------
+1. Absorb-relink Win32IDE with ShellLayout.obj on new tip SHA
+2. Launch with RAWRXD_SHELL_LAYOUT_REBUILD=1 PHASE=5
+3. Prove terminal HWND MoveWindow + no editor overlap + GateTerminal not fired
+4. Freeze PHASE_05.txt — still ≠ PROMOTE
+
+OUT OF SCOPE
+------------
+PHASE=6 spatial / CreatePseudoConsole product stream / U06 full ConPTY E2E
+MULTI_FAMILY / POST_SCHEDULER_PROMOTION_REQUIREMENTS
+PROMOTE / TIP_CLIMB
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

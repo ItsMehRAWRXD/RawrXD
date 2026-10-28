@@ -1,0 +1,45 @@
+DEEP2_VULKAN_SUBMIT_OPT_001 BENCH_BINARY_PROVENANCE
+ASOF=2026-10-27T03:35:00-04:00
+PROMOTE=0
+OPTIMIZATION_COMPLETE=0
+LIVE_BENCH_RUN=NOT_STARTED
+
+BENCH_BINARY_FOUND=YES
+BENCH_BINARY_MATCHED=YES
+
+SEAL_SOURCE_LOG=G:\~dev\rawrxd\evidence\OLLAMA_VS_DEEP2_LT74B_001\deep2\n4-tiny-oracle_latest.log
+SEAL_DRIVER_SCRIPT=G:\~dev\rawrxd\evidence\OLLAMA_VS_DEEP2_LT74B_001\Run-Deep2Bench.ps1
+
+MATCHED_EXE=F:\rawrxd\build_reap\bin\deep2_bench_tps.exe
+SHA256=B7CEAEEF675EB86023FF15EA1DB045B5C58634543EB7DD86A1F3E6680D4B0750
+SIZE_BYTES=33987072
+MTIME=2026-10-26T23:27:11.8841119-04:00
+SHA256_KIND=BASELINE_REFERENCE
+NOTE=Optimized rebuild must mint a NEW SHA256; do not reuse this hash as proof of optimization.
+
+REJECTED_CANDIDATE=G:\~dev\rawrxd\build-release\tests\benchmark_tps.exe
+ENGINE_PATH=RuntimeGraph Executor DotBlocked (NOT Deep2Engine_GpuForward fused)
+SOURCE_TREE=F:\rawrxd
+BUILD_DIR=F:\rawrxd\build_reap (ninja target deep2_bench_tps)
+
+MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+PROMPT_TOKEN_IDS=1 32
+DECODE_TOKENS=32
+RUNS=1
+GPU=AMD Radeon AI PRO R9700
+
+CMDLINE=
+  F:\rawrxd\build_reap\bin\deep2_bench_tps.exe --model G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --tokens "1 32" --decode 32 --runs 1
+
+ENV_AT_SEAL:
+  RAWRXD_NO_OLLAMA=1
+  RAWRXD_HOST_DECODE=1
+  DEEP2_MINIMAL_ENHANCE=1
+  DEEP2_WIDE_DOT_BATCH=1
+  prefill=PrefillBatch
+
+BASELINE_DECODE_TPS_WALL=4.484
+BASELINE_DECODE_TPS_TOOL=4.344
+BASELINE_SUBMITS_PER_FWD=89
+
+SEE=BENCH_SHA256_BASELINE.txt SYNC_BOUNDARIES.txt

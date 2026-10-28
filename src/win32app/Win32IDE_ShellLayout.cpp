@@ -88,14 +88,35 @@ static bool IsAllowedVisible(HWND hwnd)
         return true;
     if (phase >= 4 && IsDescendantOf(hwnd, g_allowStatus))
         return true;
-    // The lower PowerShell/output surfaces are first-class IDE chrome.  They
-    // must be allow-listed or the rebuild visibility policy hides them after
-    // they are created, leaving only Debug/Find Results visible.
+    // Terminal chrome (PowerShell panel) is geometry-owned at PHASE=5; keep
+    // visibility host at phase>=3 so create paths are not CBT-hidden early.
     if (phase >= 3 && IsDescendantOf(hwnd, g_allowTerminal))
         return true;
     if (phase >= 3 && IsDescendantOf(hwnd, g_allowOutput))
         return true;
     return false;
+}
+
+// Fail-closed when PHASE=5 runs without a live terminal HWND owner.
+static void GateTerminalMissing(const char* reason)
+{
+    char line[192];
+    std::snprintf(line, sizeof(line),
+                  "[SHELLLAYOUT_PHASE5] GateTerminal FAIL_CLOSED reason=%s "
+                  "SYNTHETIC=0 NOT_PASS\n",
+                  reason ? reason : "?");
+    OutputDebugStringA(line);
+    CreateDirectoryA("evidence", nullptr);
+    CreateDirectoryA("evidence\\SHELLLAYOUT_PHASE5_001", nullptr);
+    FILE* f = nullptr;
+    if (fopen_s(&f, "evidence\\SHELLLAYOUT_PHASE5_001\\GATE_TERMINAL.txt",
+                "wb") == 0 &&
+        f) {
+        std::fprintf(f, "GATE_TERMINAL\nFAIL_CLOSED=1\nREASON=%s\nPHASE=5\n"
+                        "OWNER=getPowerShellPanel\nPASS=0\n",
+                     reason ? reason : "?");
+        std::fclose(f);
+    }
 }
 
 static void HideRecursive(HWND h)
@@ -246,7 +267,9 @@ bool RebuildRestrictActive()
     if (!RebuildActive())
         return false;
     const int p = PhaseFromEnvironment();
-    return p >= 0 && p <= 4;
+    // PHASE=5 included so terminal chrome allow-list stays enforced.
+    // Cite: evidence/SHELLLAYOUT_PHASE5_001 (SOURCE_WIRED; not PASS).
+    return p >= 0 && p <= 5;
 }
 
 void RegisterAllowedRoots(HWND activity, HWND sidebar, HWND editor, HWND status,
@@ -351,7 +374,6 @@ void LayoutIDE(Win32IDE* ide, int clientW, int clientH)
     constexpr int sidebarW = 250;
     constexpr int statusH = 24;
     constexpr int terminalH = 200;
-    (void)terminalH;
 
     if (phase < 1)
         return;
@@ -399,7 +421,17 @@ void LayoutIDE(Win32IDE* ide, int clientW, int clientH)
 
     if (phase < 5)
         return;
-    // PHASE=5 RESERVED: terminal stub — NOT_TESTED / UNIMPLEMENTED.
+
+    // PHASE=5 SOURCE_WIRED: terminal chrome geometry → PowerShell panel HWND.
+    // ConPTY stream/PTY owner remains separate; this is chrome layout only.
+    // RELINK_REQUIRED — tip 6832F439… stays until absorb. NOT RUNTIME_REACHED.
+    HWND terminal = ide->getPowerShellPanel();
+    if (!terminal || !IsWindow(terminal)) {
+        GateTerminalMissing(!terminal ? "null_hwnd" : "dead_hwnd");
+        return;
+    }
+    SetChildVisible(terminal, true, "LayoutIDE:terminal");
+    MoveHwnd(terminal, x, workH, (std::max)(0, clientW - x), terminalH);
 }
 
 }  // namespace RawrXD::ShellLayout

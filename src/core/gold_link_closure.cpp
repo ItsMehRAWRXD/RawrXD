@@ -901,18 +901,23 @@ double SovereignInferenceClient::GetAvgTokensPerSec() const {
 // ============================================================================
 
 // ============================================================================
-// Camellia256 stubs
+// Camellia256 auth — GOLD_LINK_CAMELLIA_ABI_001
+// Product ABI (camellia256_bridge.hpp / RawrXD_Camellia256_Auth.asm RCM2):
+//   int asm_camellia256_auth_{en,de}crypt_file(const char* in, const char* out)
+// Prior 4-arg bool(... key, iv) XOR was NON-PRODUCT / dormant ABI mismatch.
+// When RAWR_HAS_MASM=1, Gold links Auth.obj — C defs here would LNK2005.
 // ============================================================================
 
+#if !RAWR_HAS_MASM
 extern "C" {
 
-bool asm_camellia256_auth_encrypt_file(const char* in_path, const char* out_path,
-                                         const uint8_t* key, const uint8_t* iv) {
-    if (!in_path || !out_path || !key || !iv) return false;
+// SYNTHETIC=partial: two-path XOR only (not RCM2 Encrypt-then-MAC).
+int asm_camellia256_auth_encrypt_file(const char* in_path, const char* out_path) {
+    if (!in_path || !out_path) return -1;
     std::ifstream in(in_path, std::ios::binary);
-    if (!in) return false;
+    if (!in) return -1;
     std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
-    if (!out) return false;
+    if (!out) return -1;
     uint8_t buffer[4096];
     uint64_t offset = 0;
     while (in) {
@@ -920,24 +925,22 @@ bool asm_camellia256_auth_encrypt_file(const char* in_path, const char* out_path
         const auto readCount = in.gcount();
         if (readCount <= 0) break;
         for (std::streamsize i = 0; i < readCount; ++i) {
-            const uint8_t k = key[(offset + static_cast<uint64_t>(i)) & 31u] ^
-                              iv[(offset + static_cast<uint64_t>(i)) & 15u];
-            buffer[i] ^= k;
+            buffer[i] = static_cast<uint8_t>(
+                buffer[i] ^ static_cast<uint8_t>(0xA5u ^ (offset + static_cast<uint64_t>(i))));
         }
         out.write(reinterpret_cast<const char*>(buffer), readCount);
-        if (!out) return false;
+        if (!out) return -1;
         offset += static_cast<uint64_t>(readCount);
     }
-    return true;
+    return 0;
 }
 
-bool asm_camellia256_auth_decrypt_file(const char* in_path, const char* out_path,
-                                         const uint8_t* key, const uint8_t* iv) {
-    // XOR cipher is symmetric
-    return asm_camellia256_auth_encrypt_file(in_path, out_path, key, iv);
+int asm_camellia256_auth_decrypt_file(const char* in_path, const char* out_path) {
+    return asm_camellia256_auth_encrypt_file(in_path, out_path);
 }
 
 } // extern "C"
+#endif // !RAWR_HAS_MASM
 
 // ============================================================================
 // Git MCP tools registration

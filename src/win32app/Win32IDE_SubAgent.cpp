@@ -18,6 +18,7 @@
 #include "Win32IDE_SubAgent.h"
 #include "Win32IDE.h"
 #include "IDEConfig.h"
+#include "Win32IDE_SwarmModelSelector.h"
 #include "../../include/feature_flags_runtime.h"
 #include <sstream>
 #include <chrono>
@@ -270,42 +271,77 @@ void Win32IDE::onSubAgentSwarm() {
         return;
     }
 
-    // Demonstrate swarm with parallel analysis tasks
+    // N=1..16 from local inventory (GGUF roots + optional local Ollama tags). No fakes.
+    const RawrXD::Win32App::SwarmModelOrchPlan plan =
+        RawrXD::Win32App::resolveSwarmModelOrchPlan(0);
+    if (plan.taskCount == 0 || plan.models.empty()) {
+        appendToOutput(
+            "FAIL_CLOSED: swarm model inventory empty (LOCAL_ONLY). "
+            "Set RAWRXD_SWARM_MODEL_DIR / RAWRXD_MODELS or place *.gguf under configured roots. "
+            "No fake models.\n",
+            "Output", OutputSeverity::Warning);
+        return;
+    }
+
     std::string editorContent = getWindowText(m_hwndEditor);
     if (editorContent.empty()) {
         appendToOutput("⚠️ No editor content for swarm input\n", "Output", OutputSeverity::Warning);
         return;
     }
+    const std::string codeSnippet = editorContent.substr(0, 2000);
 
-    std::string codeSnippet = editorContent.substr(0, 2000);
-
-    std::vector<std::string> prompts = {
-        "Analyze this code for security vulnerabilities:\n" + codeSnippet,
-        "Analyze this code for performance bottlenecks:\n" + codeSnippet,
-        "Analyze this code for code style and best practices:\n" + codeSnippet,
-        "Suggest refactoring opportunities for this code:\n" + codeSnippet
+    static const char* kLens[] = {
+        "security vulnerabilities",
+        "performance bottlenecks",
+        "code style and best practices",
+        "refactoring opportunities",
     };
+    constexpr size_t kLensN = sizeof(kLens) / sizeof(kLens[0]);
+
+    std::vector<std::string> prompts;
+    prompts.reserve(plan.taskCount);
+    for (unsigned i = 0; i < plan.taskCount; ++i) {
+        const char* lens = kLens[i % kLensN];
+        prompts.push_back(std::string("Model[") + plan.models[i] + "] — Analyze this code for " +
+                          lens + ":\n" + codeSnippet);
+    }
 
     SwarmConfig config;
-    config.maxParallel = 4;
+    config.maxParallel = static_cast<int>(plan.maxParallel); // <= N, sequential => 1
     config.timeoutMs = 60000;
     config.mergeStrategy = "concatenate";
     config.failFast = false;
 
-    appendToOutput("🐝 Starting HexMag swarm (" + std::to_string(prompts.size()) + " parallel tasks)...\n",
-                  "Output", OutputSeverity::Info);
+    appendToOutput(
+        "🐝 Starting HexMag swarm N=" + std::to_string(plan.taskCount) +
+            " maxParallel=" + std::to_string(plan.maxParallel) +
+            (plan.sequential ? " sequential" : " parallel") +
+            " (cap 16, LOCAL_ONLY inventory)...\n",
+        "Output", OutputSeverity::Info);
 
-    // Show swarm progress in streaming UX
     showSubAgentProgress("HexMag Swarm", static_cast<int>(prompts.size()));
 
     std::thread([this, prompts, config, mgr]() {
         DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
+        if (_guard.cancelled) {
+            mgr->cancelAll();
+            return;
+        }
         std::string result = mgr->executeSwarm("win32ide", prompts, config);
 
-        if (isShuttingDown()) return;
+        if (isShuttingDown() || _guard.cancelled) {
+            mgr->cancelAll();
+            hideSubAgentProgress();
+            postAgentOutputSafe("🐝 Swarm cancelled (fail-closed; no fake success)\n");
+            return;
+        }
         hideSubAgentProgress();
 
+        // Empty / cancelled merge is not success theater
+        if (result.empty()) {
+            postAgentOutputSafe("🐝 Swarm FAIL_CLOSED: empty merge (no invent PASS)\n");
+            return;
+        }
         std::string output = "🐝 Swarm complete (merged result):\n" + result.substr(0, 4000) + "\n";
         postAgentOutputSafe(output);
     }).detach();

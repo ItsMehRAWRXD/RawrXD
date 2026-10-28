@@ -1,0 +1,13 @@
+side=deep2
+stage=LOGITS
+pos=20
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=128256
+nbytes=513024
+fnv=5e35d5116748a122
+l2=357.59662968281793
+seq=963
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_LOGITS_pos20_layer0_full_n128256_seq963.bin

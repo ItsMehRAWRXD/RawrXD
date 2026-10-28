@@ -1,0 +1,8 @@
+00_nokey_pre|401|
+01_evil_origin|403|
+02_null_origin|403|
+03_pre_motd|403|
+04_read_motd|200|{"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay MOTD: per-turn Read gate + continue-ensure passive\r\n  coordinator (Cursor hooks, Deep/Win32/Headless /api/tool). Not roleplay.\r\nalwaysApply: true\r\n---\r\n\r\n# PassiveRoleNotRoleplay\r\n\r\nThis file is the **Message of the Day (MO
+05_post_list|200|{"path":"g:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups","type":"dir"},{"name":".cache","type":"dir"},{"name":".clang-format","type":"file"},{"name":".clangd","type":"file"},{"n
+06_exec|500|
+07_local_origin|200|{"path":"g:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups","type":"dir"},{"name":".cache","type":"dir"},{"name":".clang-format","type":"file"},{"name":".clangd","type":"file"},{"n

@@ -16,9 +16,9 @@ using product_infer_detail::InferBody;
 using product_infer_lane::Run;
 
 #ifdef _WIN32
-bool InferSeh(const char* prompt, char* out, size_t cap) {
+bool InferSeh(const char* prompt, char* out, size_t cap, uint32_t maxTokens) {
     __try {
-        return InferBody(prompt, out, cap);
+        return InferBody(prompt, out, cap, maxTokens);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         std::fprintf(stderr, "PRODUCT_DEEP2_INFER_SEH=1 CODE=0x%08lX\n",
                      (unsigned long)GetExceptionCode());
@@ -27,8 +27,8 @@ bool InferSeh(const char* prompt, char* out, size_t cap) {
     }
 }
 #else
-bool InferSeh(const char* prompt, char* out, size_t cap) {
-    return InferBody(prompt, out, cap);
+bool InferSeh(const char* prompt, char* out, size_t cap, uint32_t maxTokens) {
+    return InferBody(prompt, out, cap, maxTokens);
 }
 #endif
 } // namespace
@@ -67,10 +67,13 @@ bool ProductDeep2InferStream(const char* prompt, uint32_t maxTokens,
     });
 }
 
-bool ProductDeep2Infer(const char* prompt, char* out, size_t cap) {
+bool ProductDeep2Infer(const char* prompt, char* out, size_t cap,
+                       uint32_t maxTokens) {
     if (!out || cap < 2) return false;
     out[0] = 0;
-    return Run([&]() -> bool { return InferSeh(prompt, out, cap); });
+    return Run([&]() -> bool {
+        return InferSeh(prompt, out, cap, maxTokens);
+    });
 }
 
 uint32_t ProductDeep2LastEvalCount() {

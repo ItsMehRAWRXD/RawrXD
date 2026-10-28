@@ -1,0 +1,3 @@
+SHA256 hash of G:\~dev\rawrxd\build_win32ide_link001\RawrXD_Watchdog.obj:
+8a0244fda2bda1f8458b86b3c43c5e671f1585ce5ddcc7b900e13ef2604804e6
+CertUtil: -hashfile command completed successfully.

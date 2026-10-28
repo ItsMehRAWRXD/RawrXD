@@ -1,3 +1,11 @@
+// Win32IDE_LogpointBridge.cpp
+// GATED_OMIT WIN32IDE_BRIDGE_SWEEP_002: TU not in RawrXD-Win32IDE CMake link.
+// Owner (when product-wired): src/core/native_debugger_conditional_bp.cpp
+//   RawrXD_Debugger_AddConditionalBreakpoint / EvaluateConditionalBreakpoint
+// return true only after real owner success — not silent stub theater.
+// Cross-cite: IDE_BRIDGE_STUB_GATE_001 / LORA_KERNEL_STUB_GATE_001
+// PROMOTE=0 · RELINK=NO · NOT_RUN != PASS
+
 #include <string>
 #include <vector>
 #include <mutex>

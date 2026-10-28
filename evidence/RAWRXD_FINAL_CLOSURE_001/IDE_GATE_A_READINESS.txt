@@ -1,0 +1,24 @@
+IDE Gate A — readiness inventory
+ASOF=2026-10-27T06:16:00-04:00
+PROMOTE=0
+GATE=OPEN
+
+SHIPPING_EXE_CANDIDATES
+  G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe  size=330688512  mtime=2026-09-10
+  SHA256=873140373C0177611709897928FFCEA7B572E11F4D690D07FEB1312EA2E90941
+  C:\Users\Garrett\AppData\Local\Temp\RawrXD-Win32IDE.exe  size=330688512 (same SHA family as surpass receipt)
+  (older trees under bin/, build-master/, build-fresh-aug22/ — do not use for Gate A)
+
+REQUIREMENTS_NOT_YET_RUN
+  Disposable repo defect → Deep2 inference (not Ollama) → tools → edits → terminal → tests → review
+  Capture: model ID, tool calls, file hashes, terminal exits, final diff
+
+BLOCKERS_TO_CLEAR_BEFORE_GATE_A
+  Native Deep2 parity P0 (TinyLlama/Vulkan A/B) preferred before claiming Deep2-backed agent PASS
+  Confirm Win32IDE binary links current Deep2 path (Sept binary may predate MoE defer fix)
+  Prefer rebuild Win32IDE against HEAD 219b0e56… after parity, or explicitly seal older SHA as Gate A baseline
+
+NEXT_EXECUTABLE_STEP
+  1) Get-FileHash build-fd Win32IDE
+  2) Headless smoke: MOTD + /api/tool (known from G3_STREAMER_AGENTIC_*)
+  3) Disposable repo Gate A script once Deep2 backend on that EXE is provenance-matched

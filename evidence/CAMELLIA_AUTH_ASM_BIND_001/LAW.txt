@@ -1,0 +1,70 @@
+﻿CAMELLIA_AUTH_ASM_BIND_001 / LAW
+================================
+ASOF_UTC=2026-10-28T07:55:35Z
+WORKSPACE=G:\~dev\rawrxd
+NEXT_AFTER=LIVE_TETRAD_SEALED_EXE_001 (TinyLlama 8 tok; PROMOTE=0; MULTI_FAMILY open)
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+G06_REOPEN=0
+DIGESTION_SCANNER=OUT
+MODE_STUBS=OUT_THIS_TURN
+
+MISSION
+-------
+Product-bind asm_camellia256_auth_{en,de}crypt_file to RawrXD_Camellia256_Auth.asm
+(Encrypt-then-MAC RCM2). Prefer real bind over XOR. Object/link smoke as needed.
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+BIND_LINK != PROMOTE
+LIVE_TETRAD historical seal SHA is NOT rewritten by this bind.
+Do not invent PASS. Do not reopen G06. Digestion_scanner stays out. No Mode* this turn.
+
+OWNERSHIP (Win32IDE / RAWR_HAS_MASM=1)
+--------------------------------------
+asm_camellia256_auth_encrypt_file  -> RawrXD_Camellia256_Auth.obj
+asm_camellia256_auth_decrypt_file  -> RawrXD_Camellia256_Auth.obj
+asm_camellia256_auth_encrypt_buf   -> RawrXD_Camellia256_Auth.obj
+asm_camellia256_auth_decrypt_buf   -> RawrXD_Camellia256_Auth.obj
+batch_005 XOR file stubs           -> gated #if !defined(RAWR_HAS_MASM) (SYNTHETIC=partial fallback only)
+Camellia CTR / HMAC key deps       -> RawrXD_Camellia256.obj (already linked)
+
+ABI
+---
+File auth: int(const char* inputPath, const char* outputPath) — MATCH
+  camellia256_bridge.hpp / Auth ASM / prior batch_005 two-path ABI.
+Buf auth: encrypt_buf(pt,ptLen,out,outLen) / decrypt_buf(auth,authLen,pt,ptLen) — MATCH bridge.
+gold_link_closure.cpp bool(... key, iv) — DIFFERENT ABI; not Win32IDE product owner this turn.
+
+SYNTHETIC
+---------
+SYNTHETIC=0 for Win32IDE product file/buf auth symbols after Auth ASM bind+link.
+SYNTHETIC=partial remains for !RAWR_HAS_MASM XOR path and non-product gold_link key/iv ABI.
+Mode* stubs = next independent gap (not this turn).
+
+PRODUCT_LINK
+------------
+Required rebuild of Auth.obj + Win32IDE link to land ownership (empty END-only ASM was
+assembling into zero-export .obj; PRE_LINK removed prior sealed EXE).
+PRIOR_SEALED_SHA256=4A5D6B31DD83CE117A1F8769D55474186C4629EA4074F033125EEE1D20F0E3CE
+  (LIVE_TETRAD_SEALED_EXE_001 historical; not restored — exact backup not found)
+POST_BIND_EXE_SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+POST_BIND_EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+AUTH_ASM_SRC_SHA256=8979B38EEDAEA546D1914A864ABCC70A7C081F901EBD56046D55FC7D7461338E
+AUTH_OBJ_BUILDTREE_SHA256=74D031802C556BE608F3EB6E193A5F437499D876BAEA902A7274486961E2FB2D
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1 (product Auth ASM restored; batch_005 gated)
+OBJECT_SMOKE=1 (ml64 EXIT=0; 4 PUBLIC exports)
+LINK_SMOKE=1 (ninja RawrXD-Win32IDE LINK_EXIT=0; map owner=Auth.obj)
+RUNTIME_AUTH_E2E=PASS
+  cite=RUNTIME_E2E_run.log RESULTS pass=16 fail=0 SMOKE_EXIT=0
+  harness=runtime_auth_e2e_smoke.exe Auth_e2e.obj+Camellia256_e2e.obj XOR=0
+  ods_stub=/FORCE:MULTIPLE (set_key ODS stack-misalign AV workaround; no Win32IDE rebuild)
+  tamper_rc_note=ASM -7 clobbered to 1 by VirtualFree on @@ad_free_buf
+BRIDGE_XOR_TU=win32ide_asm_kernel_bridge.cpp NOT_IN_WIN32IDE_MAP omit_clear=1
+PROMOTE=0

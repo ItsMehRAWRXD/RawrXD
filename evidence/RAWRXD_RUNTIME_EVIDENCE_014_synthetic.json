@@ -1,0 +1,29 @@
+{
+  "schema": "RAWRXD_IDE_RUNTIME_014",
+  "origin": "src/runtime_evidence_014/tests/positive/evidence.txt",
+  "gates": [
+    {"id": "Q2K_COMPLETE_GENERATION", "status": "PASS", "requirement": "completed token generation with nonempty bounded generation log"},
+    {"id": "Q2K_FULL_MODEL_PARITY", "status": "PASS", "requirement": "full-model parity and external log"},
+    {"id": "Q2K_DECODE_TPS", "status": "PASS", "requirement": "finite positive decode TPS tied to completed generation"},
+    {"id": "Q2K_ACCEPTANCE_150_TPS", "status": "PASS", "requirement": "decode TPS >= 150, real generation evidence"},
+    {"id": "GPU_REAL_FORWARD", "status": "PASS", "requirement": "nonzero forward/layers, zero violations, trace"},
+    {"id": "GPU_CPU_REFERENCE", "status": "PASS", "requirement": "CPU vs GPU numerical result"},
+    {"id": "GPU_DEVICE_RECOVERY", "status": "PASS", "requirement": "device loss/recovery exercised"},
+    {"id": "DUAL_GPU_PARITY", "status": "PASS", "requirement": "real dual GPU parity"},
+    {"id": "WIN32_EDITOR_E2E", "status": "PASS", "requirement": "GUI edit save reopen"},
+    {"id": "WIN32_PROBLEMS_NAV", "status": "PASS", "requirement": "error click navigates file and line"},
+    {"id": "WIN32_DEBUGGER_E2E", "status": "PASS", "requirement": "real debugger stepping and watch"},
+    {"id": "WIN32_POWERSHELL_E2E", "status": "PASS", "requirement": "child cleanup and cancellation"},
+    {"id": "WEBVIEW2_EMBED", "status": "PASS", "requirement": "embedded WebView2 rendered with navigation"},
+    {"id": "GHOSTTEXT_E2E", "status": "PASS", "requirement": "visible accept and reject completion"},
+    {"id": "EXTENSION_HOST_E2E", "status": "PASS", "requirement": "activate and execute extension command"},
+    {"id": "AGENT_EDIT_BUILD_VERIFY", "status": "PASS", "requirement": "agent file edit build test verify"},
+    {"id": "AGENT_FAILED_TEST_ROLLBACK", "status": "PASS", "requirement": "failed test causes verified rollback"},
+    {"id": "OLLAMA_DEEP2_CONCURRENT", "status": "PASS", "requirement": "simultaneous inference with provider provenance"},
+    {"id": "NATIVE_BUILD_RELEASE", "status": "PASS", "requirement": "complete native release build"},
+    {"id": "IDE_SOAK", "status": "PASS", "requirement": "launch interact and soak receipt"}
+  ],
+  "passed": 20,
+  "total": 20,
+  "overall": "FULL_PASS"
+}

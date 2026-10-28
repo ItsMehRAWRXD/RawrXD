@@ -30,3 +30,6 @@ std::string AgentJoinWorkers(const std::vector<std::string>& ids);
 std::string AgentRunCommand(const std::string& name, const std::string& arguments);
 AgentRunResult AgentRunLoop(const std::string& prompt, int maxIter, int maxTokens,
                             void* ctx, std::string (*infer)(void*, const std::string&, int));
+/* Shared production /api/agent/run body (GUI LocalServer + local headless). */
+int AgentHttpRun(const std::string& body, bool modelReady, void* subAgentMgr,
+                 std::string* outJson);

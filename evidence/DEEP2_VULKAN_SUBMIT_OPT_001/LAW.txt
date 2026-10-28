@@ -1,0 +1,28 @@
+DEEP2_VULKAN_SUBMIT_OPT_001 LAW
+PROMOTE=0 TIP_CLIMB=HOLD OPTIMIZATION_COMPLETE=0
+
+BASELINE (sealed BASELINE_PROFILE.txt):
+  VULKAN_DEVICE=AMD Radeon AI PRO R9700
+  SUBMITS_PER_FORWARD=89.0
+  HOST_WAIT_MS=6544.3
+  QUEUE_SUBMIT_MS=48.4
+  GPU_EXECUTION_MS=6244.1
+  DECODE_TOKENS=32
+  DECODE_TPS=4.484
+  CPU_FALLBACK_COUNT=0
+  GPU_DISPATCH_COUNT=2759
+
+CRASH_MITIGATION:
+  Stopped concurrent deep2_bench_tps/rawr during profiling.
+  Ollama large-model FAIL root=ROCm/cudaMalloc OOM (~21-25GB) for flint/bolt/70b/bigdaddy — not Deep2 submit path.
+
+P0 IMPLEMENTATION TARGET (not yet landed):
+  RuntimeGraph ExecuteToken pays ~4 submits/layer (flush QuantDot batch + VulkanCompute endSubmitWait for norm/attn/residual).
+  Deep2Engine_GpuForward already BeginFusedLayer/EndFusedLayer per layer (1 submit/layer aspirational).
+  NEXT CODE: route bench/decode through fused layer recording OR defer fence until host activation read; measure before/after on identical tinyllama Q4_K_M prompt/decode=32.
+
+ACCEPTANCE:
+  TARGET_SUBMITS<=10/fwd
+  TOKEN_PARITY=PASS FINITE_LOGITS=PASS GPU_FALLBACKS=0
+  DECODE_TPS improvement measured; REGRESSIONS=0
+  Do NOT certify on submit count alone.

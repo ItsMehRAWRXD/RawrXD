@@ -1,0 +1,4 @@
+0001:01d56840       asm_camellia256_auth_encrypt_file 0000000141d57840 f   RawrXD_Camellia256_Auth.obj
+0001:01d56ba0       asm_camellia256_auth_decrypt_file 0000000141d57ba0 f   RawrXD_Camellia256_Auth.obj
+0001:01d56f20       asm_camellia256_auth_encrypt_buf 0000000141d57f20 f   RawrXD_Camellia256_Auth.obj
+0001:01d57040       asm_camellia256_auth_decrypt_buf 0000000141d58040 f   RawrXD_Camellia256_Auth.obj

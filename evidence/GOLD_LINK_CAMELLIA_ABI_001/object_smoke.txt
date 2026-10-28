@@ -1,0 +1,24 @@
+GOLD_LINK_CAMELLIA_ABI_001 object smoke 
+ASOF_UTC=2026-10-28 
+=== Source ABI cite (gold_link_closure.cpp) === 
+904:// Camellia256 auth — GOLD_LINK_CAMELLIA_ABI_001
+907:// Prior 4-arg bool(... key, iv) XOR was NON-PRODUCT / dormant ABI mismatch.
+911:#if !RAWR_HAS_MASM
+915:int asm_camellia256_auth_encrypt_file(const char* in_path, const char* out_path) {
+939:    return asm_camellia256_auth_encrypt_file(in_path, out_path);
+943:#endif // !RAWR_HAS_MASM
+=== SMOKE A: RAWR_HAS_MASM=1 === 
+abi_smoke.cpp
+CL_MASM1_EXIT=0 
+CAMELLIA_AUTH_SYMBOLS_MASM1=NONE 
+=== SMOKE B: RAWR_HAS_MASM=0 === 
+abi_smoke.cpp
+CL_MASM0_EXIT=0 
+009 00000000 SECT3  notype ()    External     | asm_camellia256_auth_encrypt_file
+00A 00000020 SECT3  notype ()    External     | asm_camellia256_auth_decrypt_file
+00F 00000000 SECT4  notype       Static       | $unwind$asm_camellia256_auth_decrypt_file
+012 00000000 SECT5  notype       Static       | $pdata$asm_camellia256_auth_decrypt_file
+=== Link smoke MASM0 (two-path present) === 
+LINK_MASM0_EXIT=0 
+=== Auth.obj still product owner (cite map) === 
+DONE 

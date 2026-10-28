@@ -1,0 +1,20 @@
+SWARM_16_RUNTIME_002_PATH_B / LAW
+=================================
+PATH=B_GUI_ONLY
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+DO_NOT_TOUCH=HeadlessIDE LocalServer (Path A ownership)
+HISTORICAL_TIP_SHA=6832F439… IMMUTABLE
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != REBUILT_NEW_SHA != MAIN_HWND != PostMessage != INVOKED
+PostMessage without orch ODS/UI witness != invent INVOKED
+Shell hung / ninja no progress != invent NEW_SHA
+NOT_RUN != PASS
+
+G16-B EVIDENCE
+--------------
+ROOT_CAUSE.txt
+SUMMARY.txt RECEIPT.md LAW.txt
+harness_path_b_wm4111.ps1 (ready; not executed to PASS)
+TIP_GUI_CREATEWINDOW_FIX_001/LAW.txt

@@ -1,0 +1,11 @@
+0001:000bdd80       ?CanonicalInsideWorkspace@IdeAuth@RawrXD@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEAV34@1@Z 00000001400bed80 f
+0001:000bd700       ?DecideWin32@IdeAuth@RawrXD@@YA?AW4HttpDecision@12@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@000@Z 00000001400be700 f
+0001:000bd5a0       ?PrivilegedExecGranted@IdeAuth@RawrXD@@YA_NXZ 00000001400be5a0 f   IdeAuthSession.cpp.obj
+0001:000c09a0       ?AgentParseToolCalls@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEAV?$vector@UAgentToolCall@@V?$allocator@UAgentT
+0001:000c1f00       ?AgentExecTool@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV12@0PEAV12@@Z 00000001400c2f00 f   AgentToolExec.cpp.o
+0001:000ccd80       ?AgentSessionNoteWrite@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@00@Z 00000001400cdd80 f   AgentSession.cpp.obj
+0001:000cd920       ?AgentSessionReviewFirst@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ 00000001400ce920 f   AgentSession.cpp.obj
+0001:000aca70       ?executeToolRepl@HeadlessIDE@@AEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0AEAV23@@Z 00000001400ada70 f   Headles
+0001:000b2700       ?routeToolAndFileRequest@HeadlessIDE@@AEAAXAEBUHostedHttpRequest@@AEAUHostedHttpResponse@@@Z 00000001400b3700 f   HeadlessIDE_ToolRoutes.cpp
+0001:00be8190       ?executeRollback@AgentSafetyContract@@QEAA_N_K@Z 0000000140be9190 f   agent_safety_contract.cpp.obj
+0001:008337b0       ?cmdSafetyRollbackLast@Win32IDE@@AEAAXXZ 00000001408347b0 f   Win32IDE_ExecutionGovernor.cpp.obj

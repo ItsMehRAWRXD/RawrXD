@@ -1,9 +1,22 @@
-// ExtensionHostIpcBridge.cpp - Minimal stub implementation
+// ExtensionHostIpcBridge.cpp — GATED_STUB (IDE_BRIDGE_STUB_GATE_001)
+// Win32IDE product link: GATED_OMIT (not in WIN32IDE_SOURCES).
+// Linked only via cmake/SmokeE2EIPC.cmake → RawrXD-ExtensionHost companion.
+// Match GateMode/SO_*: OutputDebugString + false. Smoke ≠ product PASS.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0. No Camellia reopen.
+
 #include "ExtensionHostIpcBridge.hpp"
 #include <windows.h>
 
 namespace RawrXD::ExtensionHost
 {
+
+namespace {
+void GateStub(const char* name) {
+    char buf[192];
+    wsprintfA(buf, "[ExtensionHostIpcBridge] GATED_STUB SYNTHETIC=partial name=%s\n", name);
+    OutputDebugStringA(buf);
+}
+} // namespace
 
 ExtensionHostIpcBridge::ExtensionHostIpcBridge()
     : m_pipeName(kDefaultPipeName)
@@ -22,26 +35,9 @@ ExtensionHostIpcBridge::~ExtensionHostIpcBridge()
 
 bool ExtensionHostIpcBridge::Connect()
 {
-    if (m_connected || m_pipeHandle != INVALID_HANDLE_VALUE) {
-        return true;
-    }
-
-    m_pipeHandle = CreateFileW(
-        m_pipeName.c_str(),
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        nullptr,
-        OPEN_EXISTING,
-        0,
-        nullptr
-    );
-
-    if (m_pipeHandle == INVALID_HANDLE_VALUE) {
-        return false;
-    }
-
-    m_connected = true;
-    return true;
+    // Was: CreateFileW + return true (stub theater / incomplete vs companion API).
+    GateStub("Connect");
+    return false;
 }
 
 void ExtensionHostIpcBridge::Disconnect()
@@ -55,34 +51,23 @@ void ExtensionHostIpcBridge::Disconnect()
 
 bool ExtensionHostIpcBridge::IsConnected() const
 {
-    return m_connected && m_pipeHandle != INVALID_HANDLE_VALUE;
+    return false;
 }
 
 bool ExtensionHostIpcBridge::SendMessage(const std::vector<std::uint8_t>& data)
 {
-    if (!IsConnected()) {
-        return false;
-    }
-
-    DWORD bytesWritten = 0;
-    return WriteFile(m_pipeHandle, data.data(), static_cast<DWORD>(data.size()), &bytesWritten, nullptr) != 0;
+    (void)data;
+    GateStub("SendMessage");
+    return false;
 }
 
-bool ExtensionHostIpcBridge::ReceiveMessage(std::vector<std::uint8_t>& outData, std::uint32_t timeoutMs)
+bool ExtensionHostIpcBridge::ReceiveMessage(std::vector<std::uint8_t>& outData,
+                                            std::uint32_t timeoutMs)
 {
-    if (!IsConnected()) {
-        return false;
-    }
-
-    outData.resize(4096);
-    DWORD bytesRead = 0;
-    
-    if (!ReadFile(m_pipeHandle, outData.data(), static_cast<DWORD>(outData.size()), &bytesRead, nullptr)) {
-        return false;
-    }
-
-    outData.resize(bytesRead);
-    return true;
+    (void)outData;
+    (void)timeoutMs;
+    GateStub("ReceiveMessage");
+    return false;
 }
 
 } // namespace RawrXD::ExtensionHost

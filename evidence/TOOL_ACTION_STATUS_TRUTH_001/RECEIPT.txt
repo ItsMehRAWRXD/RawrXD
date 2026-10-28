@@ -1,0 +1,52 @@
+TOOL_ACTION_STATUS_TRUTH_001 / RECEIPT
+======================================
+ASOF_UTC=2026-10-28T09:42:57Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+S-001 LOCAL CONFIRMED linked into tip EXE 866E9D1B… .
+SOURCE_WIRED fail-closed: GateStub + no FinishedAction(0) / no ok success.
+RELINK=N. Tip seals NOT invalidated. RUNTIME_REACHED of fix = NOT_RUN.
+PROMOTE=0.
+
+CONFIRM
+-------
+LINKED=Y
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+MAP=Win32IDE_ToolActionStatus.cpp.obj + rawrengine_command_handlers.cpp.obj
+
+FIX
+---
+PATHS=
+  src/win32app/Win32IDE_ToolActionStatus.cpp
+  src/core/rawrengine_command_handlers.cpp
+  src/win32app/Win32IDE_CommandHandlers.cpp (omit companion)
+MODE=GateStub / errorResult(1) SYNTHETIC=1 DEMO
+REMOVED=RunTerminalAction demo + FinishedAction(0|2) + ok/Info success
+CREATEPROCESS=NOT_WIRED (deferred; fail-closed preferred)
+
+RELINK
+------
+RELINK=N
+NEW_SHA=(none)
+TIP_SEALS_INVALIDATED=N
+NOTE=Relink required for RUNTIME_REACHED; would mint new SHA and
+  invalidate LIVE_TETRAD_POST_HMAC_ABSORB_001 tip cover
+
+HELD
+----
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PRODUCT_RUN_HISTORY must exclude SYNTHETIC=1 DEMO gated events
+
+SEAL_PATHS
+----------
+evidence/TOOL_ACTION_STATUS_TRUTH_001/LAW.txt
+evidence/TOOL_ACTION_STATUS_TRUTH_001/RECEIPT.txt

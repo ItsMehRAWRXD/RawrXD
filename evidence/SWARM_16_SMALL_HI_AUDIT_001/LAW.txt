@@ -1,0 +1,76 @@
+SWARM_16_SMALL_HI_AUDIT_001 / LAW
+=================================
+ASOF_UTC=2026-10-28T09:56:21Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+TIP_EXE_RELINK=FORBIDDEN (sibling TIP_ABSORB_RELINK)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+EMPTY_RESPONSE != invent PASS
+embedding-only /api/generate 400 != invent PASS
+Cloud tags skipped (remote_host / :cloud)
+
+MISSION
+-------
+1. Inventory local Ollama via /api/tags; digest-dedupe to N<=16
+2. Per model: prompt "hi" (orch proof)
+3. Per model: audit Win32IDE_ToolActionStatus.cpp (file inject)
+4. Prefer Ollama harness while Win32IDE tip absorb locks EXE
+5. Seal exact N + per-gate PASS/FAIL only
+
+HARNESS
+-------
+PATH=evidence/SWARM_16_SMALL_HI_AUDIT_001/harness_ollama_swarm16.ps1
+API=GET /api/tags + POST /api/generate (127.0.0.1:11434)
+AUDIT_FILE=src/win32app/Win32IDE_ToolActionStatus.cpp
+
+SELECTED N=16 (digest-unique, non-cloud)
+----------------------------------------
+n4-tiny-oracle:latest
+qwen2.5-coder:1.5b-base
+embeddinggemma-2:740m
+llama3.2:3b
+qwen35-40b-heretic-q8:latest
+nemotron-3-nano:4b
+gemma3:4b          (gemma3:latest alias skipped — same digest)
+llama3.1:8b
+granite3.3:8b
+qwen3:8b
+kiminoto/T0.0.1:latest
+pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest
+deepseek-coder-v2:16b
+starcoder2:15b
+gpt-oss:20b        (gpt-oss:latest alias skipped — same digest)
+flint:latest       (16th unique)
+
+RUNTIME (this seal)
+-------------------
+TAGS_REACHABLE=1
+N=16
+HI_PASS=9 HI_FAIL=7
+AUDIT_PASS=9 AUDIT_FAIL=7
+ORCH_1_TO_N=FAIL
+FILE_AUDIT_GATE=FAIL
+RUNTIME_REACHED=1 (Ollama harness only; Win32IDE EXE path NOT exercised)
+
+HI/AUDIT FAIL causes (truthful)
+-------------------------------
+embeddinggemma-2:740m — HTTP 400 (embedding capability; not completion)
+nemotron-3-nano:4b, qwen3:8b, kiminoto/T0.0.1:latest,
+  pdurugyan/...:latest, gpt-oss:20b, flint:latest — EMPTY_RESPONSE
+  Probe (post-seal): qwen3:8b returns response="" + non-empty thinking=
+  (done_reason=length). Harness scored response-only → FAIL held
+  (no invent PASS by rewriting thinking→response this seal)
+
+SOURCE cross-cite
+-----------------
+SWARM_MODEL_ORCH_001 SOURCE_WIRED (S-002/S-003); RUNTIME_REACHED tip EXE=0
+appendLocalOllamaHttpTags + multi-root GGUF (source only; no tip relink)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

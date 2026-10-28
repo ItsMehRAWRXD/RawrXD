@@ -1,0 +1,89 @@
+WATCHDOG_HMAC_PRODUCT_001 / LAW
+================================
+ASOF_UTC=2026-10-28T08:45:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Close B04 leftover: MagBuf CRC join CLEARED; HMAC product-key path was OPEN.
+Close HMAC RUNTIME via tiny object/link smoke (prefer over Win32IDE relink).
+
+OWNERSHIP TRACE
+---------------
+asm_watchdog_init
+  -> src/core/win32ide_watchdog_init.cpp (C sole provider; MagBuf CRC publish)
+asm_watchdog_verify / get_status
+  -> src/core/unlinked_symbols_batch_005.cpp (MagBuf CRC compare / status)
+mag_publish_watchdog_region / mag_watchdog_region_peek
+  -> src/core/unlinked_symbols_batch_001.cpp
+asm_camellia256_get_hmac_key / set_key / self_test / init
+  -> src/asm/RawrXD_Camellia256.asm (MASM product)
+  smoke obj: evidence/WATCHDOG_HMAC_PRODUCT_001/RawrXD_Camellia256_e2e.obj
+src/asm/RawrXD_Watchdog.asm
+  -> END-only (product); Full Source Watchdog.asm = real .text HMAC path (gated)
+
+ROOT CAUSE (pre-fix)
+---------------------
+1) asm_camellia256_set_key expanded subkeys + set cam_initialized=1 but NEVER
+   wrote cam_hmac_key (BSS zeros). get_hmac_key copied zeros on "success".
+2) cam_hmac_key was only populated in asm_camellia256_init Step 6:
+     hmac = SHA256(enc_key || "hmac-auth-key-v1\0")
+3) init gated by asm_camellia256_self_test; self_test returns CAMELLIA_ERR_SELFTEST
+   (-8) because set_key's simplified subkey schedule does NOT match RFC 3713
+   Appendix A known-answer ciphertext (encrypt compare fails → @@st_fail).
+4) Therefore: set_key path → ZERO hmac; init path → blocked at -8.
+   NO_KEY=-1 before set_key remained correct (fail-closed, not CRC-as-HMAC).
+
+FIX (this mission)
+------------------
+src/asm/RawrXD_Camellia256.asm:
+  - set_key now derives cam_hmac_key = SHA256(master_key || "hmac-auth-key-v1\0")
+    (same domain separation as init Step 6) BEFORE setting cam_initialized=1.
+    On cam_sha256 fail: zero hmac, initialized=0, return CAMELLIA_ERR_NOKEY.
+  - cam_sha256: and rsp,-16 + FP lea-restore epilogue so CryptoAPI CALLs are
+    safe when callers (self_test→set_key) enter with inverted RSP alignment.
+Smoke reassembled RawrXD_Camellia256_e2e.obj under this evidence dir only.
+Win32IDE EXE NOT rebuilt this mission (prefer smoke objs).
+
+DISPOSITION
+-----------
+SOURCE_WIRED_FAILCLOSED (batch_005 get_baseline → get_hmac_key; NO_KEY=-1)
+RUNTIME_REACHED=PASS  (smoke; earned)
+HMAC_PRODUCT=PASS     (smoke; earned — nonzero non-CRC key after set_key;
+                       baseline==get_hmac_key join; cite RUNTIME_run.log)
+INIT_SELF_TEST_BLOCK=-8  HELD (RFC schedule gap OPEN; ≠ invent self_test PASS)
+RELINK_REQUIRED=1     (product EXE absorption of fixed Camellia.obj + batch_005)
+SMOKE_RELINK=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+SELF_TEST LAW (held open)
+-------------------------
+self_test=-8 is independent of HMAC_PRODUCT.
+HMAC_PRODUCT PASS via set_key derive ≠ RFC 3713 cipher KAT PASS.
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+B04 CRC CLEARED != (prior) HMAC FAIL; this turn HMAC_PRODUCT PASS on smoke only.
+Product EXE SHA absorption still required for in-EXE RUNTIME.
+
+SEALED_EXE NOTES
+----------------
+Mission preferred smoke; did not relink Win32IDE.
+Prior mission-start seal: 89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+External concurrent EXE (user note): 32C28BF7… — NOT this mission's HMAC/tetrad seal.
+Smoke Camellia obj SHA256:
+  BB38AA5D5BB4627A86D42DBC4C796489B528835FFE8184A307B2446B3AE74B85
+
+FAIL_CLOSED
+-----------
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+SELF_TEST FOLLOW-ON (2026-10-28 CAMELLIA_SELFTEST_RFC_001)
+----------------------------------------------------------
+DISPOSITION=BLOCKED_DOCUMENTED
+Cite: evidence/CAMELLIA_SELFTEST_RFC_001/{LAW.txt,RECEIPT.md,TRACE.txt,SMOKE_SELFTEST_reconfirm.log}
+Smoke reconfirm: self_test_rc=-8; HMAC_PRODUCT still PASS; EXE_SHA_CHANGED=0
+tip SHA 866E9D1B... UNTOUCHED. RFC cipher rewrite held (not schedule-only).
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

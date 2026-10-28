@@ -1,0 +1,4 @@
+ 0001:01408150       ?AdmitToolActionForProductHistory@UI@RawrXD@@YA?AUToolActionAdmitResult@12@AEBUToolActionStatus@12@_N1@Z 0000000141409150 f   tool_action_status.cpp.obj
+ 0001:01408320       ?ToolOutputLooksSyntheticSuccess@UI@RawrXD@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z 0000000141409320 f   tool_action_status.cpp.obj
+ 0002:004b3cac       $unwind$?AdmitToolActionForProductHistory@UI@RawrXD@@YA?AUToolActionAdmitResult@12@AEBUToolActionStatus@12@_N1@Z 000000014263bcac     tool_action_status.cpp.obj
+ 0002:004b3cc0       $unwind$?ToolOutputLooksSyntheticSuccess@UI@RawrXD@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z 000000014263bcc0     tool_action_status.cpp.obj

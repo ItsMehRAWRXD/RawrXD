@@ -1,0 +1,35 @@
+=== RAWR_AGENT_NATIVE_COMPILE_E2E_002 Certification Receipt ===
+Date: 2026-10-24T06:50:00Z
+Workspace: G:\~dev\rawrxd
+Model: llama3.2:3b (via Ollama on localhost:11434)
+
+Certification Pipeline:
+  LOCAL AI MODEL
+      ↓ (reads source, generates modification)
+  Agent-modified cert_driver2.cpp (return value 42 → 43)
+      ↓
+  RawrXD CoffWriter (cert_driver2.exe)
+      → COFF object: cert_ret43.obj
+      ↓
+  RawrXD native linker (rawrxd_link.exe)
+      → PE executable: cert_ret43.exe
+      ↓
+  Windows loader execution
+      → Exit code: 43
+
+Certification Gates:
+  MODEL_MODIFICATION=PASS   (Ollama llama3.2:3b generated 0x2B instead of 0x2A)
+  AGENT_COMPILE=PASS        (RawrXD CoffWriter compiled agent-modified source)
+  COFF_GEN=PASS             (RawrXD CoffWriter generated COFF object)
+  LINK=PASS                 (RawrXD linker linked COFF -> PE)
+  EXECUTE=PASS              (Windows executed PE, exit code 43)
+  ROLLBACK=PASS             (Source restored to original)
+  EXTERNAL_COMPILER_INVOCATIONS=PASS (0 external compilers in agent pipeline)
+
+Invocation Log:
+  cert_driver2.exe -> cert_ret43.obj (exit 0)
+  rawrxd_link.exe cert_ret43.obj -o cert_ret43.exe (exit 0)
+  cert_ret43.exe -> exit code 43
+
+Result: CERTIFICATION=PASS
+PROMOTE=0

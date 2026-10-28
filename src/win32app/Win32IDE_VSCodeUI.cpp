@@ -370,13 +370,17 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     
     m_chatHistory.push_back({"assistant", response});
 
-    // Store accumulated tool actions for this response
+    // Store accumulated tool actions — admit-gate only (A05: no invent Finished toast).
     if (m_currentToolActions.totalActions() > 0) {
         size_t msgIdx = m_chatHistory.size() - 1;
-        m_chatToolActions[msgIdx] = m_currentToolActions.actions();
-        // Add "Finished" summary action
-        m_chatToolActions[msgIdx].push_back(
-            RawrXD::UI::ToolActionStatus::FinishedAction(m_currentToolActions.totalActions()));
+        std::vector<RawrXD::UI::ToolActionStatus> admitted;
+        for (const auto& a : m_currentToolActions.actions()) {
+            auto ar = RawrXD::UI::AdmitToolActionForProductHistory(
+                a, /*hasRealExitReceipt=*/false, /*sessionCancelled=*/false);
+            if (ar.admitted) admitted.push_back(a);
+        }
+        // FinishedAction without real exit receipt is always rejected by admit gate.
+        m_chatToolActions[msgIdx] = std::move(admitted);
         m_currentToolActions.clear();
     }
 

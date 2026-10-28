@@ -497,8 +497,11 @@ cam_sha256 PROC FRAME
     .pushreg r12
     push    r13
     .pushreg r13
-    sub     rsp, 96
-    .allocstack 96
+    ; Locals at [rbp-80..]; alloc + and -16 so CryptoAPI CALLs are safe
+    ; even when caller (e.g. self_test→set_key) entered misaligned.
+    sub     rsp, 128
+    .allocstack 128
+    and     rsp, -16
     .endprolog
 
     ; Save parameters in non-volatile registers
@@ -572,7 +575,8 @@ cam_sha256 PROC FRAME
 @@sha_fail:
     mov     eax, -1
 @@sha_exit:
-    add     rsp, 96
+    ; FP restore — ignore and-rsp delta
+    lea     rsp, [rbp - 40]
     pop     r13
     pop     r12
     pop     rdi
@@ -741,14 +745,53 @@ asm_camellia256_set_key PROC FRAME
     xor     rax, r15
     mov     [cam_key_fingerprint], rax
 
-    ; Mark engine as initialized
+    ; Derive HMAC auth key on set_key (caller-supplied path).
+    ; Prior gap: only init Step 6 wrote cam_hmac_key; set_key left it
+    ; ZERO while setting cam_initialized=1 → get_hmac_key returned zeros.
+    ; Contract matches init: SHA256(master_key || "hmac-auth-key-v1\0").
+    lea     rdi, [cam_sha256_concat_buf]
+    lea     rsi, [cam_master_key]
+    mov     ecx, 32
+    rep     movsb
+    lea     rsi, [cam_hmac_label]
+    xor     ebx, ebx
+@@set_key_hmac_lbl:
+    lodsb
+    stosb
+    inc     ebx
+    test    al, al
+    jnz     @@set_key_hmac_lbl
+
+    ; Win64 CALL needs RSP%16==0 (prolog left RSP%16==8)
+    sub     rsp, 8
+    lea     rcx, [cam_sha256_concat_buf]
+    mov     edx, ebx
+    add     edx, 32
+    lea     r8, [cam_hmac_key]
+    call    cam_sha256
+    add     rsp, 8
+    test    eax, eax
+    jnz     set_key_hmac_fail
+
+    ; Mark engine as initialized only after HMAC material exists
     mov     DWORD PTR [cam_initialized], 1
 
-    ; Log success
+    sub     rsp, 8
     lea     rcx, [cam_debug_init_ok]
     call    OutputDebugStringA
+    add     rsp, 8
 
     xor     eax, eax                    ; return CAMELLIA_OK
+    jmp     @@set_key_exit
+
+set_key_hmac_fail:
+    lea     rdi, [cam_hmac_key]
+    xor     eax, eax
+    mov     ecx, 32
+    rep     stosb
+    mov     DWORD PTR [cam_initialized], 0
+    mov     eax, CAMELLIA_ERR_NOKEY
+    jmp     @@set_key_exit
 
 @@set_key_exit:
     add     rsp, 64
@@ -1971,8 +2014,8 @@ asm_camellia256_self_test ENDP
 ; asm_camellia256_get_hmac_key — Copy HMAC authentication key to caller buffer
 ; RCX = pointer to 32-byte output buffer
 ; Returns: EAX = 0 or error code
-; Notes: HMAC key is derived separately from the encryption key during init.
-;        Used by C++ bridge for Encrypt-then-MAC file authentication.
+; Notes: HMAC key derived by set_key (and init Step 6) via
+;        SHA256(master || "hmac-auth-key-v1"). Used by Auth EtM + watchdog.
 ; =============================================================================
 ALIGN 16
 asm_camellia256_get_hmac_key PROC

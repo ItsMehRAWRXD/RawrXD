@@ -2,9 +2,13 @@
 // Batch 7: Mesh brain continued and federated learning (15 symbols)
 // Full production implementations - no stubs
 
+#include "mag_registry.hpp"
+
 #include <cstdint>
 #include <cstring>
 #include <atomic>
+#include <mutex>
+#include <new>
 
 namespace {
 
@@ -15,6 +19,13 @@ struct MeshSpecStats {
     std::atomic<uint64_t> verifications{0};
     std::atomic<uint64_t> generations{0};
 } g_stats;
+
+struct SpeciatorState {
+    std::mutex mtx;
+    void* rootGenome = nullptr;
+    std::atomic<bool> initialized{false};
+    uint64_t magEpoch = ~0ull;
+} g_spec;
 
 } // namespace
 
@@ -82,11 +93,24 @@ void* asm_mesh_get_stats() {
     return stats;
 }
 
-// Speciator evolutionary engine functions
-bool asm_speciator_init() {
-    // Initialize speciator evolutionary engine
-    // Implementation: Setup population, fitness functions
-    return true;
+// Speciator — publish root genome into MagBag for MagShutdown join
+int asm_speciator_init() {
+    std::lock_guard<std::mutex> lock(g_spec.mtx);
+    const uint64_t ep = mag_registry_epoch();
+    if (g_spec.rootGenome != nullptr && ep == g_spec.magEpoch) {
+        g_spec.initialized.store(true, std::memory_order_relaxed);
+        return 0;
+    }
+    g_spec.rootGenome = ::operator new(64, std::nothrow);
+    if (g_spec.rootGenome == nullptr) {
+        return -1;
+    }
+        std::memset(g_spec.rootGenome, 0, 64);
+        // MagBuf owns delete via asm_speciator_shutdown (batch_001).
+        asm_magbuf_register_speciator(g_spec.rootGenome);
+    g_spec.magEpoch = mag_registry_epoch();
+    g_spec.initialized.store(true, std::memory_order_relaxed);
+    return 0;
 }
 
 bool asm_speciator_create_genome(const void* template_data, void* out_genome) {

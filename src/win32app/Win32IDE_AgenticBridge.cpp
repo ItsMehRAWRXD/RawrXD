@@ -135,7 +135,8 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     }
 
     m_initialized = true;
-    LOG_INFO("Native Inference Stack initialized successfully.");
+    // Init ≠ ProductOpen/ProductRun. LoadModel owns product session.
+    LOG_INFO("AgenticBridge adapter initialized (await ProductOpenSession).");
     return true;
 }
 
@@ -333,40 +334,41 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     applyAgentCapabilityHotpatches(refinedPrompt);
 
-    // Batch 004: model turn = ProductRun; tool loop stays outside inference.
+    // Batch 004: model turn = ProductRun only. No CIE/orch/route fallback.
     std::string response;
     if (m_deep2Ready || rawr::ProductSessionOpen()) {
-        if (!m_deep2ModelPath.empty()) {
+        if (!m_deep2ModelPath.empty() && !rawr::ProductSessionOpen()) {
 #ifdef _WIN32
             _putenv_s("RAWRXD_PRODUCT_MODEL", m_deep2ModelPath.c_str());
 #endif
-            (void)rawr::ProductOpenSession(m_deep2ModelPath.c_str());
+            if (!rawr::ProductOpenSession(m_deep2ModelPath.c_str())) {
+                closePerf();
+                return {AgentResponseType::AGENT_ERROR,
+                        "NOT_PRODUCT_PATH=1 AgenticBridge: ProductOpenSession failed"};
+            }
         }
-        auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
-        if (!m_workspaceRoot.empty()) orch.SetWorkingDirectory(m_workspaceRoot);
-        // Tool-capable agent loop may call back; primary tokens from ProductRun.
+        if (!m_workspaceRoot.empty())
+            RawrXD::Agent::OrchestratorBridge::Instance().SetWorkingDirectory(
+                m_workspaceRoot);
         std::string prText;
-        auto streamed = false;
         int budget = 2048;
         if (const char* envBudget = std::getenv("RAWRXD_AGENT_MAX_TOKENS")) {
             int parsed = std::atoi(envBudget);
             if (parsed >= 1 && parsed <= 8192) budget = parsed;
         }
-        (void)rawr::ProductDeep2InferStream(
+        const bool inferOk = rawr::ProductDeep2InferStream(
             refinedPrompt.c_str(), budget,
-            [this, &streamed](const std::string& piece) -> bool {
-                streamed = true;
+            [this](const std::string& piece) -> bool {
                 if (m_outputCallback) m_outputCallback("token", piece);
-                return true;
+                return true; // stream continue (not product success)
             },
             &prText);
         response = prText;
-        if (response.empty()) {
-            response = orch.RunAgent(refinedPrompt);
+        if (!inferOk || response.empty()) {
+            closePerf();
+            return {AgentResponseType::AGENT_ERROR,
+                    "NOT_PRODUCT_PATH=1 AgenticBridge: ProductRun empty/fail"};
         }
-        if (response.empty() && m_ide)
-            response = m_ide->routeInferenceRequest(refinedPrompt);
-        (void)streamed;
     } else {
         closePerf();
         return {AgentResponseType::AGENT_ERROR,
@@ -703,22 +705,16 @@ void AgenticBridge::SetModel(const std::string& modelName)
 
     if (isPath)
     {
-        // GGUF file path — load via native engine
-        if (g_agentEngine)
-            g_agentEngine->loadLocalModel(modelName);
+        // LOCAL_ONLY: ProductOpenSession via LoadModel — never CIE loadLocalModel.
+        if (!LoadModel(modelName))
+            LOG_WARNING("SetModel LoadModel failed: " + m_lastModelLoadError);
     }
     else if (!modelName.empty())
     {
-        // Ollama model tag (e.g. "llama3.3:latest") — propagate to BackendSwitcher
-        // so that routeToOllama() sends the correct model name
-        if (m_ide)
-        {
-            m_ide->setBackendModel(Win32IDE::AIBackendType::Ollama, modelName);
-            LOG_INFO("BackendSwitcher Ollama model updated to: " + modelName);
-        }
-
-        // Keep OrchestratorBridge (agentic/tool-calling path) in sync so IDE agent flows
-        // use the same selected model as chat/FIM.
+        // LOCAL_ONLY_001: refuse Ollama tag resurrection on the bridge.
+        m_lastModelLoadError =
+            "NOT_PRODUCT_PATH=1 LOCAL_ONLY: use GGUF path / ProductOpenSession";
+        LOG_WARNING(m_lastModelLoadError);
         auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
         orch.SetModel(modelName);
         orch.SetFIMModel(modelName);
@@ -1306,14 +1302,11 @@ void AgenticBridge::WarmUpModel()
 {
     SCOPED_METRIC("agentic.warmup_model");
 
-    if (!g_agentEngine)
+    // Fail-closed: no CIE chat warmup pretending to be ProductRun.
+    if (!m_deep2Ready && !rawr::ProductSessionOpen())
     {
-        LOG_WARNING("AgenticBridge::WarmUpModel: agent engine not initialized");
+        LOG_WARNING("NOT_PRODUCT_PATH=1 AgenticBridge::WarmUpModel: no ProductOpenSession");
         return;
     }
-
-    // Minimal warmup: force the engine to touch inference path and allocator.
-    // Keep it deterministic and fast; ignore the output.
-    (void)g_agentEngine->chat("warmup");
-    LOG_INFO("AgenticBridge warmup complete");
+    LOG_INFO("AgenticBridge warmup skipped (session already open; no CIE chat)");
 }

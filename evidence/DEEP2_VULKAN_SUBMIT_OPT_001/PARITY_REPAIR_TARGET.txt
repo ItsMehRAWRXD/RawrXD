@@ -1,0 +1,37 @@
+PARITY_REPAIR_TARGET — layer localization refinement
+ASOF=2026-10-27T06:21:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+BASELINE=RETAIN
+SOURCE=LAYER_COMPARE.csv
+
+BLK0
+  all tags maxAbs <= 4.5e-8 → CLEARED (attn SoftmaxVec near-match stands)
+
+BLK1 (first meaningful residual drift)
+  QKV maxAbs      = 1.43e-6
+  ATTN value      = 2.84e-6
+  resid1          = 1.34e-5
+  resid2          = 3.65e-4   ← first tag >1e-4
+
+BLK2 (first substantial / repair hotspot)
+  QKV maxAbs      = 2.78e-2   ← order-of-magnitude jump (consumes drifted resid)
+  resid2          = 1.86e-3
+  ATTN            = 2.53e-3
+
+INTERPRETATION
+  Attention QKV/value at layer 1 remain near-parity.
+  Drift first becomes material in resid2 at layer 1 (post-FFN residual family),
+  then amplifies into layer-2 QKV (maxAbs≈0.028).
+  Therefore do NOT lead repair with AttnDecode Softmax — lead with
+  FFN / SiLU / down-proj / residual-add A vs B at layer 1.
+
+REPAIR_ORDER
+  1) Isolate A/B difference on layer-1 resid1→resid2 path (FFN/SiLU/residual)
+  2) Confirm layer-2 QKV maxAbs collapses once layer-1 resid2 matches
+  3) Re-run forced-prefix token parity (diverge_idx must leave 10)
+  4) Only then resume GPU-resident attn / submit≤10 work
+
+GPU_ATTN_NOTE
+  ISOLATED_AB: AttnDecode still HOST-uploads Q/KV after QKV fence.
+  GPU_RESIDENT_ATTENTION=FALSE — submit optimization remains HOLD.

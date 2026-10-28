@@ -438,6 +438,18 @@ public:
     static std::string formatJson(const ToolActionStatus& action);
 };
 
+// Product-history admit: reject SYNTHETIC/DEMO/Finished-without-receipt / post-cancel success.
+// Agents and UI must call this before toast/history PASS. A05 / S-001 consumer gate.
+struct ToolActionAdmitResult {
+    bool admitted = false;
+    const char* reason = "reject";
+};
+ToolActionAdmitResult AdmitToolActionForProductHistory(
+    const ToolActionStatus& action,
+    bool hasRealExitReceipt,
+    bool sessionCancelled);
+bool ToolOutputLooksSyntheticSuccess(const std::string& toolOutput);
+
 // ============================================================================
 // Tool Action Accumulator — collects actions during a chat response
 // ============================================================================

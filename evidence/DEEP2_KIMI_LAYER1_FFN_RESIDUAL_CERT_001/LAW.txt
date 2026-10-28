@@ -1,0 +1,36 @@
+DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001
+ASOF=2026-10-27T06:30:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+PURPOSE
+  Prove Kimi K2 layer-1 MoE FFN residual dataflow on the native path
+  (K2NativeMoE_AfterMla), not only the host dense forwardLayer sequence.
+
+ENV
+  DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT=1  → emit five checkpoints + invariant
+  DEEP2_CERT_STRICT=1                    → also hard-fail missing-layer identity
+
+CHECKPOINTS (layer==1)
+  FFN_INP_1      post-MLA residual (pre-norm)
+  FFN_NORM_1     RMSNormW output (scratch)
+  FFN_DOWN_1     weighted expert contribution (accum)
+  FFN_RESIDUAL_1 hidden after += accum
+  LAYER_OUT_1    same vector as FFN_RESIDUAL_1
+
+INVARIANT
+  FFN_RESIDUAL_1 == FFN_INP_1 + FFN_DOWN_1  (elementwise; maxAbs < 1e-5 → PASS)
+
+MISSING_LAYER_IDENTITY
+  forwardLayer / computeAttention / computeMoEFFN / computeFFN:
+  under DEEP2_CERT_STRICT=1 or DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT=1,
+  out-of-range layer must CERT_FAIL (no silent memcpy identity).
+
+DO_NOT
+  Alter frozen 12/22 matrix or KIMI_K2_MOE_RUNTIME_001/002 receipts
+  Claim reference parity from invariant PASS alone (needs independent tensors)
+
+SOURCE
+  src/deep2/KimiLayer1FfnResidualCert.hpp
+  src/deep2/K2NativeMoEFfn.cpp
+  src/deep2/Deep2Engine.cpp (strict missing-layer)

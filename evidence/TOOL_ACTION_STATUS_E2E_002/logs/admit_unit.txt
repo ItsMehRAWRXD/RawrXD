@@ -1,0 +1,9 @@
+PROBE=TOOL_ACTION_STATUS_E2E_002_ADMIT_UNIT
+CASE neg_synth_marker PASS
+CASE neg_finished_no_receipt PASS
+CASE neg_custom_synth_summary PASS
+CASE pos_real_read_admit PASS
+CASE fail_state_set PASS
+CASE fail_admit_truthful PASS
+CASE cancel_blocks_later_success PASS
+ADMIT_UNIT_FAILS=0

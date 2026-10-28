@@ -2,24 +2,34 @@
 // Batch 8: Speciator continued and neural bridge interface (15 symbols)
 // Full production implementations - no stubs
 
+#include "mag_registry.hpp"
+
 #include <cstdint>
 #include <cstring>
 #include <cmath>
 #include <atomic>
 #include <algorithm>
+#include <mutex>
+#include <new>
 
 namespace {
 
 struct NeuralState {
+    std::mutex mtx;
     std::atomic<bool> initialized{false};
     std::atomic<uint64_t> eegReads{0};
     std::atomic<uint64_t> classifications{0};
     std::atomic<float> lastConfidence{0.0f};
+    void* channelTable = nullptr;
+    uint64_t magEpoch = ~0ull;
 } g_neural;
 
 struct HWSynthState {
+    std::mutex mtx;
     std::atomic<bool> initialized{false};
     std::atomic<uint64_t> specsGenerated{0};
+    void* lutTable = nullptr;
+    uint64_t magEpoch = ~0ull;
 } g_hwsynth;
 
 } // namespace
@@ -35,10 +45,24 @@ void* asm_speciator_get_stats() {
     return stats;
 }
 
-// Neural bridge brain-computer interface functions
-bool asm_neural_init() {
+// Neural bridge — MagBag channel publish for MagShutdown join
+int asm_neural_init() {
+    std::lock_guard<std::mutex> lock(g_neural.mtx);
+    const uint64_t ep = mag_registry_epoch();
+    if (g_neural.channelTable != nullptr && ep == g_neural.magEpoch) {
+        g_neural.initialized.store(true, std::memory_order_relaxed);
+        return 0;
+    }
+    g_neural.channelTable = ::operator new(128, std::nothrow);
+    if (g_neural.channelTable == nullptr) {
+        return -1;
+    }
+        std::memset(g_neural.channelTable, 0, 128);
+        // MagBuf owns delete via asm_neural_shutdown (batch_001).
+        asm_magbuf_register_neural(g_neural.channelTable);
+    g_neural.magEpoch = mag_registry_epoch();
     g_neural.initialized.store(true, std::memory_order_relaxed);
-    return true;
+    return 0;
 }
 
 bool asm_neural_calibrate(int channel_count, float duration_sec) {
@@ -150,10 +174,24 @@ void* asm_neural_get_stats() {
     return stats;
 }
 
-// Hardware synthesizer FPGA functions
-bool asm_hwsynth_init() {
+// Hardware synthesizer — MagBag LUT publish for MagShutdown join
+int asm_hwsynth_init() {
+    std::lock_guard<std::mutex> lock(g_hwsynth.mtx);
+    const uint64_t ep = mag_registry_epoch();
+    if (g_hwsynth.lutTable != nullptr && ep == g_hwsynth.magEpoch) {
+        g_hwsynth.initialized.store(true, std::memory_order_relaxed);
+        return 0;
+    }
+    g_hwsynth.lutTable = ::operator new(256, std::nothrow);
+    if (g_hwsynth.lutTable == nullptr) {
+        return -1;
+    }
+        std::memset(g_hwsynth.lutTable, 0, 256);
+        // MagBuf owns delete via asm_hwsynth_shutdown (batch_001).
+        asm_magbuf_register_hwsynth(g_hwsynth.lutTable);
+    g_hwsynth.magEpoch = mag_registry_epoch();
     g_hwsynth.initialized.store(true, std::memory_order_relaxed);
-    return true;
+    return 0;
 }
 
 bool asm_hwsynth_gen_gemm_spec(int M, int N, int K, const char* datatype,

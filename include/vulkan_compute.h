@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <queue>
 
@@ -421,6 +422,10 @@ public:
     void EndMoePinHold() { moe_pin_hold_ = 0; }
     int LastD2hVk() const { return last_d2h_vk_; }
     const char* LastD2hPhase() const { return last_d2h_phase_; }
+    bool IsDeviceLost() const {
+        return last_d2h_vk_ == -4 ||
+               (last_d2h_phase_ && std::strcmp(last_d2h_phase_, "device_lost") == 0);
+    }
     bool EnsureGemvActDevice(size_t inBytes, size_t outBytes);
     bool GemvHostWriteIn(const float* src, size_t bytes);
     bool GemvHostReadOut(float* dst, size_t bytes);

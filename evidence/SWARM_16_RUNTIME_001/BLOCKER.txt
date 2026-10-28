@@ -1,0 +1,39 @@
+SWARM_16_RUNTIME_001 / EXACT BLOCKERS (unmodified tip EXE)
+==========================================================
+TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+INVOKED=0
+RUNTIME_PASS=0
+TIP_REBUILD=NO
+TIP_CLIMB=HOLD
+
+PRIMARY
+-------
+1) GUI_NO_INTERACTIVE_WINDOW_STATION
+   - Product entry: WM_COMMAND 4111 → Win32IDE::onSubAgentSwarm
+   - main_win32 createWindow fails → exit code 2
+   - Message: "createWindow failed — no interactive window station.
+     Run with --headless for terminal/server mode."
+   - Class RawrXD_IDE_MainWindow never created → PostMessage impossible
+
+2) HEADLESS_NO_ORCH_EXPOSE
+   - With RAWRXD_HOSTED_API_KEY: HTTP up, auth OK
+   - /api/swarm/status → Distributed SwarmOrchestrator only
+     (NOT resolveSwarmModelOrchPlan / N=1..16 HexMag plan)
+   - /api/swarm/start|/config → 404 on HeadlessIDE
+   - /api/tool → does not dispatch registry CMD 4111 / onSubAgentSwarm
+   - /api/subagent → 202 nativeHexMag=false JSONL spawn ≠ orch
+   - /api/hexmag/ask → 503 hexmag_unavailable_on_platform
+
+SECONDARY
+---------
+3) HEADLESS_AUTH_NOT_CONFIGURED (without API key → 503 all routes)
+4) NO_SAFE_THIS_FOR_REMOTE_MEMBER (onSubAgentSwarm needs Win32IDE*;
+   nullptr remote call unsafe; skipped)
+
+HELD NEXT (not done — tip climb forbidden unless mandatory)
+-----------------------------------------------------------
+Local-only headless route that calls resolveSwarmModelOrchPlan /
+executeSwarm with real inventory → NEW EXE SHA → re-seal
+LIVE_TETRAD + TOKEN64 + MULTI_FAMILY. Owners if ever authorized:
+HeadlessIDE.cpp / LocalServer / SubAgent only.
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,6 +1,8 @@
 // unlinked_symbols_batch_004.cpp
-// Batch 4: Hotpatch and snapshot management (15 symbols)
-// Full production implementations - no stubs
+// Batch 4: Hotpatch/snapshot C reference (NOT linked on Win32IDE / RawrEngine).
+// OWNER: RawrXD_Hotpatch_Kernel.asm + RawrXD_Snapshot.asm (CMake EXCLUDE).
+// asm_watchdog_init → win32ide_watchdog_init.cpp (separate TU to avoid ODR).
+// Keep this file as ABI reference only — do not re-add to WIN32IDE_SOURCES.
 
 #include <cstdint>
 #include <cstring>

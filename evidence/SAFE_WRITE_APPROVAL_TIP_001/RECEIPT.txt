@@ -1,0 +1,79 @@
+SAFE_WRITE_APPROVAL_TIP_001 / RECEIPT
+=====================================
+ASOF_UTC=2026-10-28T07:06:01Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+A06 / A07 tip headless probes on SHA 6832F439… .
+DENY + isolation/approval negatives = RUNTIME_REACHED.
+Atomic / preview / rollback / injection-parse E2E = honest NOT_RUN (or SOURCE_WIRED only).
+MET=0 both gates. PROMOTE=0. RELINK=NO. TIP_REBUILD=NO.
+
+INVOKE
+------
+METHOD=CreateProcess tip --headless + curl /api/tool
+PORT=18774
+PID=28476 (spawn; exited after probes)
+DIR=evidence/SAFE_WRITE_APPROVAL_TIP_001/sandbox
+AUTH=RAWRXD_HOSTED_API_KEY + Origin loopback
+EXEC_GRANT=unset
+
+TIP
+---
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1
+RELINK=N
+TIP_REBUILD=N
+
+PROBES (9/9 scored True — see logs/probe_table.txt)
+------
+A07_NO_KEY          401 unauthorized
+A07_EVIL_ORIGIN     403 origin_denied
+A06_READ_MOTD       200 content
+A06_WRITE_INSIDE    200 success (sandbox\inside_ok2.txt)
+A06_DENY_ABS        403 outside workspace ; FS absent
+A06_DENY_DOTDOT     403 traversal rejected ; FS absent
+A06_DENY_UNC        403 unc rejected
+A07_EXEC_NO_GRANT   body execution_not_granted (HTTP 500)
+A07_SAFETY_STATUS   200 "Safety contract: Not initialized"
+
+FS_EFFECTS
+----------
+INSIDE_WROTE=True
+OUTSIDE_ABS=False
+OUTSIDE_TRAV=False
+
+GAPS (fail-closed)
+------------------
+ATOMIC_HEADLESS_WRITE=NOT_ATOMIC (CreateFile CREATE_ALWAYS)
+PREVIEW_ON_HEADLESS_WRITE=NOT_RUN
+ROLLBACK_E2E_HEADLESS=NOT_RUN (status not initialized; no /api/safety/rollback)
+INJECTION_PARSE_HTTP=NOT_RUN (SOURCE_WIRED AgentParseToolCalls only)
+
+DISPOSITION
+-----------
+A06=RUNTIME_REACHED MET=0
+A07=RUNTIME_REACHED MET=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+PATH
+----
+evidence/SAFE_WRITE_APPROVAL_TIP_001/LAW.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/RECEIPT.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/probe_table.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/fs_effects.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/sha_pre.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/sha_post.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/map_cites.txt
+evidence/SAFE_WRITE_APPROVAL_TIP_001/logs/atomic_gap_source.txt
+
+MATRIX
+------
+WIN32IDE_CLOSURE_MATRIX_001 A06 → RUNTIME_REACHED (not MET)
+WIN32IDE_CLOSURE_MATRIX_001 A07 → RUNTIME_REACHED (not MET)

@@ -1,0 +1,30 @@
+TIP_GUI_CREATEWINDOW_FIX_001
+=============================
+PATH=B_GUI (SWARM_16_RUNTIME_002_PATH_B sibling seal)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+NO_INVENT_PASS=1
+HISTORICAL_TIP=6832F439… (immutable)
+
+LAW
+---
+SOURCE_WIRED != REBUILT != MAIN_HWND != INVOKED != RUNTIME_PASS
+NOT_RUN != PASS
+Misleading "window station" stderr != root cause
+
+ROOT_CAUSE (closed)
+-------------------
+SettingsManager::Initialize held non-recursive m_mutex then called
+Load()/Save() which re-lock → self-deadlock/SEH abort inside createWindow
+before CreateWindowEx → MAIN_HWND=0.
+
+FIX_SOURCE
+----------
+SettingsManager LoadUnlocked/SaveUnlocked
+main_win32 SEH code print + honest createWindow fail stderr
+Win32IDE_Core SettingsManager CALL/RETURN breadcrumbs
+
+GATES
+-----
+REBUILD_NEW_SHA required before INVOKED claim
+WM_COMMAND 4111 witness required for INVOKED=1
+PROMOTE=0 always in this seal

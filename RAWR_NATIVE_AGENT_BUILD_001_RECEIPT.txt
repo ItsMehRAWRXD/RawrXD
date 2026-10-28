@@ -1,0 +1,19 @@
+﻿=== RAWR_NATIVE_AGENT_BUILD_001 Certification Receipt ===
+Date: 2026-10-24T02:32:59.2734337-04:00
+Workspace: G:\~dev\rawrxd
+
+Configuration:
+  COMPILER_MODE=RAWR_NATIVE_ONLY
+  RAWXD_LINKER=F:\rawrxd\_pre_merge_backup\toolchain\from_scratch\phase2_linker\build\rawrxd_link.exe
+  STAGE0_BOOTSTRAP=MSVC (used only to build RawrXD compiler library)
+
+Certification Gates:
+  CERT_DRIVER=PASS          (RawrXD CoffWriter generates COFF object)
+  RAWXD_LINKER=PASS         (RawrXD linker links COFF -> PE)
+  NATIVE_EXECUTION=PASS     (Windows loads and executes PE, exit code 42)
+  EXTERNAL_COMPILER_INVOCATIONS=PASS (0 external compilers invoked)
+  LINKER_FAIL_CLOSED=PASS   (linker rejects invalid input with nonzero exit)
+
+Invocation Log:Result: CERTIFICATION=PASS
+PROMOTE=0
+

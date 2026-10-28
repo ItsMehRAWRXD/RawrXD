@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_OUT_0
+pos=13
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=d2ac2f5583af6877
+l2=0.71364572055268172
+seq=633
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_ATTN_OUT_0_pos13_layer0_full_n3072_seq633.bin

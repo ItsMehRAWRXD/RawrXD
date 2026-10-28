@@ -6,6 +6,15 @@
 #include <thread>
 #include <atomic>
 
+// CONPTY_STREAM_OWNER_001: product ConPTY/PTY stream owner for PowerShell
+// panel + terminal tabs (Win32IDE::m_dedicatedPowerShellTerminal / tab.manager).
+// CreatePseudoConsole path — SOURCE_WIRED; RELINK_REQUIRED; RUNTIME=NOT_RUN.
+// HWND chrome geometry remains getPowerShellPanel (SHELLLAYOUT_PHASE5_001).
+
+#ifndef HPCON
+typedef VOID* HPCON;
+#endif
+
 class Win32TerminalManager
 {
 public:
@@ -23,7 +32,6 @@ public:
     bool isRunning() const;
     void writeInput(const std::string& data);
 
-    // Callbacks
     std::function<void(const std::string&)> onOutput;
     std::function<void(const std::string&)> onError;
     std::function<void()> onStarted;
@@ -31,22 +39,19 @@ public:
 
 private:
     void readOutputThread();
-    void readErrorThread();
     void monitorProcessThread();
+    static void GateConPtyStream(const char* reason);
+    static bool ResolveConPtyApis();
 
     HANDLE m_hProcess;
     HANDLE m_hThread;
     DWORD m_processId;
+    HPCON m_hPC;
 
-    HANDLE m_hStdInRead;
-    HANDLE m_hStdInWrite;
-    HANDLE m_hStdOutRead;
-    HANDLE m_hStdOutWrite;
-    HANDLE m_hStdErrRead;
-    HANDLE m_hStdErrWrite;
+    HANDLE m_hStdInWrite;   // parent → ConPTY
+    HANDLE m_hStdOutRead;   // ConPTY → parent (stdout+stderr merged)
 
     std::thread m_outputThread;
-    std::thread m_errorThread;
     std::thread m_monitorThread;
 
     std::atomic<bool> m_running;

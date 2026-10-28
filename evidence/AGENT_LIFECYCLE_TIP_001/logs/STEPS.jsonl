@@ -1,0 +1,18 @@
+
+{"detail":"hash tip exe","step":"tip_sha_verify","utc":"2026-10-28T11:18:12.5142608Z","status":"RUNNING"}
+{"detail":"SHA_MATCH=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2","step":"tip_sha_verify","utc":"2026-10-28T11:18:13.1478915Z","status":"PASS"}
+{"detail":"--headless --local --port 19891 --bind 127.0.0.1 --dir G:\\~dev\\rawrxd","step":"tip_spawn","utc":"2026-10-28T11:18:14.7962745Z","status":"RUNNING"}
+{"detail":"pid=38552 port=19891 ready","step":"tip_spawn","utc":"2026-10-28T11:18:15.6942019Z","status":"PASS"}
+{"detail":"harness_prompt_accepted_failclosed status=503 ","step":"user_prompt","utc":"2026-10-28T11:18:15.7183675Z","status":"PASS"}
+{"detail":"headless surface has no /api/agent/run (GUI LocalServer-only)","step":"agent_run_loop","utc":"2026-10-28T11:18:15.7214181Z","status":"NOT_RUN"}
+{"detail":"status=200","step":"plan_tools_motd","utc":"2026-10-28T11:18:15.7373656Z","status":"PASS"}
+{"detail":"unknown_tool listed available tools","step":"plan_tools_inventory","utc":"2026-10-28T11:18:15.8057411Z","status":"PASS"}
+{"detail":"fixture listed","step":"plan_tools_list","utc":"2026-10-28T11:18:15.8174240Z","status":"PASS"}
+{"detail":"write_file tracked.txt -\u003e v1_edited","step":"file_edits","utc":"2026-10-28T11:18:15.8499276Z","status":"PASS"}
+{"detail":"hello.cmd ran fixture_ok","step":"build_test","utc":"2026-10-28T11:18:15.9046748Z","status":"PASS"}
+{"detail":"content delta observed via /api/tool read_file (UI Accept/Reject NOT_RUN)","step":"diff_review","utc":"2026-10-28T11:18:15.9104964Z","status":"PASS"}
+{"detail":"accepted write retained via write_file (product preview/approve UI NOT_RUN)","step":"accept","utc":"2026-10-28T11:18:15.9327426Z","status":"PASS"}
+{"detail":"restored v0 via write_file (CheckpointManager/product rollback API NOT_RUN)","step":"rollback","utc":"2026-10-28T11:18:15.9519504Z","status":"PASS"}
+{"detail":"cancelled in-flight /api/generate job (Stop-Job); product AgentSessionCancel route NOT_EXPOSEABLE on headless","step":"cancel","utc":"2026-10-28T11:18:17.1685308Z","status":"PASS"}
+{"detail":"lifecycle harness completed on tip SHA; see SUMMARY/STEPS","step":"final_response","utc":"2026-10-28T11:18:17.1710543Z","status":"PASS"}
+{"detail":"process stopped","step":"tip_shutdown","utc":"2026-10-28T11:18:18.2028825Z","status":"PASS"}

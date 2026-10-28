@@ -1,16 +1,19 @@
 #include "Win32IDE.h"
-#include "../ui/tool_action_status.h"
 #include <windows.h>
-#include <string>
+
+// Fail-closed DEMO gate: never emit FinishedAction / synthetic RunTerminal
+// without a real process exit code. Product run history must not record PASS.
+static void GateStub(Win32IDE* ide) {
+    OutputDebugStringA(
+        "[ToolActionStatus] GATED_STUB SYNTHETIC=1 DEMO "
+        "NOT_PRODUCT_PATH FinishedAction forbidden without real process exit\n");
+    if (!ide) return;
+    ide->appendToOutput(
+        "[ToolActionStatus] GATED_STUB SYNTHETIC=1 DEMO NOT_PRODUCT_PATH "
+        "no FinishedAction / no success toast\n",
+        "Tools", Win32IDE::OutputSeverity::Warning);
+}
 
 void HandleToolActionStatus(void* idePtr) {
-    Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
-    if (!ide) return;
-    RawrXD::UI::ToolActionAccumulator acc;
-    acc.addAction(
-        RawrXD::UI::ToolActionStatus::RunTerminalAction("cmake --build .", 120));
-    acc.addAction(RawrXD::UI::ToolActionStatus::FinishedAction(0));
-    const std::string text = acc.renderPlainText();
-    ide->appendToOutput(std::string("[ToolActionStatus]\n") + text + "\n",
-                        "Tools", Win32IDE::OutputSeverity::Info);
+    GateStub(static_cast<Win32IDE*>(idePtr));
 }

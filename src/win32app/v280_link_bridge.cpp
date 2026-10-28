@@ -66,5 +66,4 @@ extern "C" int V280_UI_GetGhostText(char* buf, int buf_size) {
     return static_cast<int>(std::strlen(buf));
 }
 
-extern "C" void asm_quadbuf_shutdown(void) {}
-extern "C" void asm_spengine_shutdown(void) {}
+// asm_quadbuf_shutdown / asm_spengine_shutdown: owned by batch_001 / spengine_bridge

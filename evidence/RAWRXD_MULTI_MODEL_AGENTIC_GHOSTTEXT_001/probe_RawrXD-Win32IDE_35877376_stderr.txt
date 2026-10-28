@@ -1,0 +1,27 @@
+[13:43:37.105] PID=19620 CRT_ENTRY_REACHED
+[13:43:37.106] PID=19620 STATIC_INIT_COMPLETE_OK
+[Prometheus] Listening on port 9090 for /metrics...
+[13:43:37.127] PID=19620 INIT_0_WINMAIN_ENTRY_REACHED
+[Win32IDE] ProbeGates=ON SovereignHarness=EXTERNAL GGUFFallback=link_fallbacks
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: G:\~dev\rawrxd\bin\rawrxd.config.json — using defaults.
+[FMF] REAL: AgentBridge_BindMainWindow in AgentBridge_BindMainWindow
+[AnnotationOverlay] Object created at 000001CE073F6FE0
+[AnnotationOverlay] Initialization SUCCESS
+[AnnotationOverlay] Mock mode detected: NO (env=(null))
+[AnnotationOverlay] Paint annotations=0 visible=1
+[AnnotationOverlay] Paint annotations=0 visible=1
+[FMF] REAL: Win32IDE::handleWiringManifestGaps in Win32IDE::handleWiringManifestGaps
+[FMF] REAL: Win32IDE::createAgentChatCursorOverlay in Win32IDE::createAgentChatCursorOverlay
+[ProjectChatSession] Initialized for project: .
+[ProjectChatSession] Storage: C:\Users\Garrett\AppData\Roaming\RawrXD\workspaces\0002b5d3\chat_history.txt
+[ProjectChatSession] Loaded 1 messages
+[FMF] REAL: Win32IDE::layoutAgentChatCursorOverlay in Win32IDE::layoutAgentChatCursorOverlay
+[FMF] REAL: Win32IDE::handleWiringManifestGaps in Win32IDE::handleWiringManifestGaps
+[FMF] REAL: Win32IDE::layoutAgentChatCursorOverlay in Win32IDE::layoutAgentChatCursorOverlay
+[FMF] REAL: Win32IDE::layoutAgentChatCursorOverlay in Win32IDE::layoutAgentChatCursorOverlay
+[FMF] REAL: Win32IDE::handleWiringManifestGaps in Win32IDE::handleWiringManifestGaps
+[FMF] REAL: Win32IDE::handleWiringManifestGaps in Win32IDE::handleWiringManifestGaps
+[FMF] REAL: AgentBridge_SetShuttingDown in AgentBridge_SetShuttingDown
+[FMF] STUB: PromptWarm_SetAcceptRequests in PromptWarm_SetAcceptRequests (D:\rawrxd\src\win32app\ASM_Bridge_Implementation.cpp:297)
+[BenchmarkMenu] Menu created

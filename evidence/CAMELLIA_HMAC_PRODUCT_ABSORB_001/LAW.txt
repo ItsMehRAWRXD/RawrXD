@@ -1,0 +1,73 @@
+CAMELLIA_HMAC_PRODUCT_ABSORB_001 / LAW
+=======================================
+ASOF_UTC=2026-10-28T09:00:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Absorb WATCHDOG_HMAC_PRODUCT_001 Camellia set_key→cam_hmac_key fix into the
+product RawrXD-Win32IDE.exe bind. Prior smoke: HMAC_PRODUCT=PASS +
+RELINK_REQUIRED=1. On-disk EXE D121659F… lacked the hmac fix.
+Also absorb Watchdog.asm RSP-align fixes into the same relink.
+
+PRIOR
+-----
+WATCHDOG_HMAC_PRODUCT_001:
+  HMAC_PRODUCT=PASS (smoke; set_key derives SHA256(master||"hmac-auth-key-v1"))
+  RELINK_REQUIRED=1
+  INIT_SELF_TEST_BLOCK=-8 HELD
+  EXE at that seal: D121659F03EE1CF2D818035C182BCAC05B8AD32642F85D58457FB77044E95D50
+    (no hmac absorb)
+
+OWNERSHIP
+---------
+asm_camellia256_set_key / get_hmac_key / cam_sha256
+  -> src/asm/RawrXD_Camellia256.asm
+  -> build_win32ide_link001\RawrXD_Camellia256.obj (product bind)
+asm_watchdog_* (RSP align)
+  -> src/asm/RawrXD_Watchdog.asm
+  -> build_win32ide_link001\RawrXD_Watchdog.obj (product bind)
+Product EXE
+  -> build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+
+BUILD (cmd bats; -j2)
+---------------------
+evidence/CAMELLIA_HMAC_PRODUCT_ABSORB_001/_asm_rebuild.bat
+  ml64 Camellia256 + Watchdog -> BT objs (pre-touch)
+evidence/CAMELLIA_HMAC_PRODUCT_ABSORB_001/_relink_win32ide.bat
+  cmake --build BT --target RawrXD-Win32IDE --config Release -j 2
+  ninja [1/3] Camellia256 [2/3] Watchdog [3/3] link EXE
+  CMAKE_BUILD_EXIT=0  C1060=0
+evidence/CAMELLIA_HMAC_PRODUCT_ABSORB_001/_seal_hashes.bat
+  post-link SHA capture
+
+SEALED ARTIFACTS
+----------------
+EXE_PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SIZE=331634176
+EXE_SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+PRIOR_EXE_SHA256=D121659F03EE1CF2D818035C182BCAC05B8AD32642F85D58457FB77044E95D50
+CAM_OBJ_SHA256=49CE60B7FE06C4D15C313F55638B241ABE394F2DC395515553797456AE4DDC24
+WD_OBJ_SHA256=8A0244FDA2BDA1F8458B86B3C43C5E671F1585CE5DDCC7B900E13EF2604804E6
+
+DISPOSITION
+-----------
+ABSORB=PASS (earned — product bind reassembled + EXE relinked; new SHA)
+RELINK_REQUIRED=0 (HMAC product absorption closed for this path)
+HMAC_PRODUCT_SMOKE=PASS (prior WATCHDOG_HMAC_PRODUCT_001; not re-run here)
+INIT_SELF_TEST_BLOCK=-8  OPEN (RFC schedule ≠ KAT; independent of HMAC absorb)
+TPS_PRODUCT_SEAL=SHA_BOUND_D121659F_ONLY
+  TOKEN64_PRODUCT_RUN_002 TPS on D121659F… is NOT transferred to 866E9D1B…
+  --max-tokens 64 NOT re-proven on new SHA this mission
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+ABSORB PASS ≠ self_test PASS ≠ TPS PASS ≠ PROMOTE
+HMAC_PRODUCT smoke PASS ≠ invent in-EXE runtime re-proof this seal
+self_test=-8 remains OPEN

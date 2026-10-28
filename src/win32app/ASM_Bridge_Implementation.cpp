@@ -153,24 +153,25 @@ extern "C" {
 }
 
 // ============================================================================
-// Ghost Pipeline — probe/testing
+// Ghost Pipeline — probe/testing (LORA_KERNEL_STUB_GATE_001)
+// Panic alone ≠ PASS. Return -1 fail-closed (was 0 fake success).
 // ============================================================================
 extern "C" {
     int runGhostPipelineProbeCli(void)
     {
         ASM_Fallback_Panic("runGhostPipelineProbeCli");
-        return 0; // Success (no-op)
+        return -1;
     }
 }
 
 // ============================================================================
-// Agent WAL CLI Smoke Test
+// Agent WAL CLI Smoke Test (LORA_KERNEL_STUB_GATE_001)
 // ============================================================================
 extern "C" {
     int runAgentWalCliSmokeTest(void)
     {
         ASM_Fallback_Panic("runAgentWalCliSmokeTest");
-        return 0; // Success (no-op)
+        return -1;
     }
 }
 

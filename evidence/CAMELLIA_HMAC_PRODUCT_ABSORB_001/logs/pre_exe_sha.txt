@@ -1,0 +1,3 @@
+SHA256 hash of G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe:
+d121659f03ee1cf2d818035c182bcac05b8ad32642f85d58457fb77044e95d50
+CertUtil: -hashfile command completed successfully.

@@ -1,0 +1,50 @@
+IDE_BRIDGE_STUB_GATE_001 / LAW
+==============================
+ASOF_UTC=2026-10-28T08:35:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+CAMELLIA_AUTH=DO_NOT_REOPEN (RUNTIME_AUTH_E2E PASS held)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GateMode / GATED_STUB = log SYNTHETIC=partial + return false|-1
+CMake-omit != linked stub PASS
+Smoke companion link != Win32IDE product PASS
+
+TARGETS
+-------
+T01 src/win32app/ExtensionHostIpcBridge.cpp (+ .hpp)
+  PRIOR="Minimal stub implementation"; Connect/Send/Receive could succeed
+    via CreateFileW/WriteFile/ReadFile (incomplete vs companion API:
+    ConnectAsClient / WriteLogicalMessage expected by RawrXDExtensionHost).
+  CMAKE_WIN32IDE=NO (zero refs in CMakeLists.txt WIN32IDE_SOURCES)
+  CMAKE_OTHER=YES cmake/SmokeE2EIPC.cmake → RawrXD-ExtensionHost EXCLUDE_FROM_ALL
+  DISPOSITION=GATED_OMIT (Win32IDE) + GATED_STUB (bodies: GateStub + false)
+  SMOKE=must not claim product PASS
+
+T02 src/win32app/Win32NeuralBridge.h
+  PRIOR=inline Initialize/RunSmokeTest return true + stub report string
+  CMAKE_WIN32IDE=NO (header orphan; Win32IDE_NeuralBridge.cpp comment-omit;
+    Win32NeuralBridge.cpp not in CMakeLists / cmake/)
+  DISPOSITION=GATED_STUB (Initialize/RunSmokeTest → false;
+    report="GATED_STUB … NOT_PASS")
+  PATTERN=match GateMode / AgenticFeatures LoRAKernel GateStub
+
+SEALED EXE
+----------
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO (header + omitted/companion TU only; tetrad SHA preserved)
+IF_RELINK=new SHA invalidates LIVE_TETRAD_POST_CAMELLIA_001 / READY tetrad
+
+CROSS_CITE
+----------
+WIN32IDE_STUB_SWEEP_001 (GateMode law)
+WIN32IDE_BRIDGE_XOR_LAW_001 (GATED_OMIT pattern)
+LORA_KERNEL_STUB_GATE_001 sibling (AgenticFeatures GateStub)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

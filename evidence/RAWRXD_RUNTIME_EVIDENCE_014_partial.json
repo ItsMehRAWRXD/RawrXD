@@ -1,0 +1,29 @@
+{
+  "schema": "RAWRXD_IDE_RUNTIME_014",
+  "origin": "src/runtime_evidence_014/tests/partial/evidence.txt",
+  "gates": [
+    {"id": "Q2K_COMPLETE_GENERATION", "status": "NOT_CERTIFIED", "requirement": "completed token generation with nonempty bounded generation log"},
+    {"id": "Q2K_FULL_MODEL_PARITY", "status": "NOT_CERTIFIED", "requirement": "full-model parity and external log"},
+    {"id": "Q2K_DECODE_TPS", "status": "NOT_CERTIFIED", "requirement": "finite positive decode TPS tied to completed generation"},
+    {"id": "Q2K_ACCEPTANCE_150_TPS", "status": "NOT_CERTIFIED", "requirement": "decode TPS >= 150, real generation evidence"},
+    {"id": "GPU_REAL_FORWARD", "status": "NOT_CERTIFIED", "requirement": "nonzero forward/layers, zero violations, trace"},
+    {"id": "GPU_CPU_REFERENCE", "status": "NOT_CERTIFIED", "requirement": "CPU vs GPU numerical result"},
+    {"id": "GPU_DEVICE_RECOVERY", "status": "NOT_CERTIFIED", "requirement": "device loss/recovery exercised"},
+    {"id": "DUAL_GPU_PARITY", "status": "NOT_CERTIFIED", "requirement": "real dual GPU parity"},
+    {"id": "WIN32_EDITOR_E2E", "status": "NOT_CERTIFIED", "requirement": "GUI edit save reopen"},
+    {"id": "WIN32_PROBLEMS_NAV", "status": "NOT_CERTIFIED", "requirement": "error click navigates file and line"},
+    {"id": "WIN32_DEBUGGER_E2E", "status": "NOT_CERTIFIED", "requirement": "real debugger stepping and watch"},
+    {"id": "WIN32_POWERSHELL_E2E", "status": "NOT_CERTIFIED", "requirement": "child cleanup and cancellation"},
+    {"id": "WEBVIEW2_EMBED", "status": "NOT_CERTIFIED", "requirement": "embedded WebView2 rendered with navigation"},
+    {"id": "GHOSTTEXT_E2E", "status": "NOT_CERTIFIED", "requirement": "visible accept and reject completion"},
+    {"id": "EXTENSION_HOST_E2E", "status": "NOT_CERTIFIED", "requirement": "activate and execute extension command"},
+    {"id": "AGENT_EDIT_BUILD_VERIFY", "status": "NOT_CERTIFIED", "requirement": "agent file edit build test verify"},
+    {"id": "AGENT_FAILED_TEST_ROLLBACK", "status": "NOT_CERTIFIED", "requirement": "failed test causes verified rollback"},
+    {"id": "OLLAMA_DEEP2_CONCURRENT", "status": "NOT_CERTIFIED", "requirement": "simultaneous inference with provider provenance"},
+    {"id": "NATIVE_BUILD_RELEASE", "status": "NOT_CERTIFIED", "requirement": "complete native release build"},
+    {"id": "IDE_SOAK", "status": "NOT_CERTIFIED", "requirement": "launch interact and soak receipt"}
+  ],
+  "passed": 0,
+  "total": 20,
+  "overall": "NOT_CERTIFIED"
+}

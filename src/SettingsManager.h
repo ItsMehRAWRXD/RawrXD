@@ -164,6 +164,9 @@ private:
     
     std::string GetDefaultConfigPath();
     void EnsureConfigDirectoryExists();
+    // Caller must hold m_mutex (non-recursive). Public Load/Save lock then call these.
+    bool LoadUnlocked();
+    bool SaveUnlocked();
 };
 
 // Convenience accessors

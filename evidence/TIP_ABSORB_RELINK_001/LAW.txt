@@ -1,0 +1,56 @@
+TIP_ABSORB_RELINK_001 / LAW
+===========================
+ASOF_UTC=2026-10-28T10:00:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+MISSION
+-------
+Absorb SOURCE_WIRED piles into tip RawrXD-Win32IDE.exe and mint NEW SHA.
+Prior tip 866E9D1B? remains HISTORICAL authority for prior seals ? DO NOT REWRITE.
+
+ABSORBED (SOURCE_WIRED -> linked this EXE)
+-----------------------------------------
+TOOL_ACTION_STATUS_TRUTH_001 (S-001 GateStub; no FinishedAction(0))
+  TU: src/win32app/Win32IDE_ToolActionStatus.cpp
+       src/core/rawrengine_command_handlers.cpp
+AGENTIC_COMPOSER_UX_001 (S-004 real model bind)
+  TU: src/win32app/Win32IDE_AgenticComposerUX.cpp
+  SUPPORT: Win32IDE.h getLoadedModelPath accessors public (compile fix)
+COMMAND_HANDLERS_FICTION_GATE_001 (GateFiction x276)
+  TU: src/core/command_handlers_comprehensive.cpp
+SWARM_MODEL_ORCH_001: ABSENT (no evidence dir; not claimed)
+
+BUILD
+-----
+cmd: evidence/TIP_ABSORB_RELINK_001/_relink_win32ide.bat
+cmake --build build_win32ide_link001 --target RawrXD-Win32IDE --config Release -j 2
+CMAKE_BUILD_EXIT=0
+C1060=0
+LOG=evidence/TIP_ABSORB_RELINK_001/logs/relink_j2.log
+NINJA_COPY=evidence/TIP_ABSORB_RELINK_001/ninja_relink_j2.log
+
+SEALED EXE
+----------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SIZE=331646464
+EXE_SHA256=C4FC9AE9A6EAC016A78B0C1BB1690B9C47A46A4B47FC51B1B807E10E14EDC43B
+PRIOR_EXE_SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+
+DISPOSITION
+-----------
+ABSORB=PASS (earned ? TUs rebuilt + EXE relinked; new SHA)
+RELINK_REQUIRED=0 for this absorb pile
+RUNTIME_REACHED=NOT_THIS_SEAL (product runs = sibling seals on NEW SHA)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+ABSORB PASS != LIVE_TETRAD PASS != MULTI_FAMILY PASS != TOKEN64 PASS != PROMOTE
+Historical seals on 866E9D1B? untouched (LIVE_TETRAD_POST_HMAC_ABSORB_001 /
+MULTI_FAMILY_PRODUCT_002 / TOKEN64_PRODUCT_RUN_003 remain prior tip authority)

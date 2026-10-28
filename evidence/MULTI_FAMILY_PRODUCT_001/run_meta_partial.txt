@@ -1,0 +1,4 @@
+START_UTC=Wed 10/28/2026  4:11:15.80
+MODEL=G:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+FAMILY=gemma3_ne_tinyllama
+END_UTC=Wed 10/28/2026  4:11:36.65

@@ -1,0 +1,9 @@
+nokey|403|
+nokey|401|
+evil|403|
+nullorig|403|
+premotd|403|
+motd|200|{"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay MOTD: per-turn Read gate + continue-ensure passive\r\n  coordinator (Cursor hooks, Deep/Win32/Headless /api/tool). No
+list|200|{"path":"g:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups",
+exec|500|
+localorig|200|{"path":"g:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups",

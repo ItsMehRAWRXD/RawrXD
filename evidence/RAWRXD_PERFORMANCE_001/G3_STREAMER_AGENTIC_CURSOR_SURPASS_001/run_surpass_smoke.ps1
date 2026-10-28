@@ -3,11 +3,12 @@ $ErrorActionPreference = "Continue"
 $gate = "G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CURSOR_SURPASS_001"
 New-Item -ItemType Directory -Force -Path $gate | Out-Null
 
+# Prefer build-fd / Temp SHA 87314037… — smoke_bin 5D80CC5F… fails MOTD ack stick.
 $exeCandidates = @(
-  "G:\~dev\rawrxd\smoke_bin\RawrXD-Win32IDE.exe",
   "G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe",
   "C:\Users\Garrett\AppData\Local\Temp\RawrXD-Win32IDE.exe",
-  "C:\Users\Garrett\rawrxd\bin\RawrXD-Win32IDE.exe"
+  "C:\Users\Garrett\rawrxd\bin\RawrXD-Win32IDE.exe",
+  "G:\~dev\rawrxd\smoke_bin\RawrXD-Win32IDE.exe"
 )
 $exe = $null
 foreach ($c in $exeCandidates) { if (Test-Path $c) { $exe = $c; break } }
@@ -97,13 +98,19 @@ Write-Host ("SUB=" + $sub.Substring(0, [Math]::Min(220, $sub.Length)))
 Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
 Start-Sleep 1
 
-$rawr = "F:\rawrxd\build_ide\bin-msvc\rawr.exe"
+# Product streamer markers: build-fd rawr (ProductStreamerPrep). F:\build_ide rawr is agentic REPL — no PREP markers.
+$rawrCandidates = @(
+  "G:\~dev\rawrxd\build-fd\bin\rawr.exe",
+  "F:\rawrxd\build_ide\bin-msvc\rawr.exe"
+)
+$rawr = $null
+foreach ($c in $rawrCandidates) { if (Test-Path $c) { $rawr = $c; break } }
 $model = "F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 $rawrOut = Join-Path $gate "rawr_run.out.txt"
 $rawrErr = Join-Path $gate "rawr_run.err.txt"
 $rawrRc = Join-Path $gate "rawr_run.rc.txt"
-if ((Test-Path $rawr) -and (Test-Path $model)) {
-  Write-Host "RAWR_RUN_START"
+if ($rawr -and (Test-Path $model)) {
+  Write-Host "RAWR_RUN_START EXE=$rawr"
   $rp = Start-Process -FilePath $rawr -ArgumentList @("run", $model, "-p", "Say OK in one word.", "--max-tokens", "8") -PassThru -NoNewWindow -RedirectStandardOutput $rawrOut -RedirectStandardError $rawrErr -WorkingDirectory "G:\~dev"
   $waited = $rp.WaitForExit(180000)
   if (-not $waited) {

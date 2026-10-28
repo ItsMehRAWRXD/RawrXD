@@ -1,0 +1,59 @@
+WATCHDOG_HMAC_PRODUCT_001 / RUNTIME_REACHED
+===========================================
+ASOF_UTC=2026-10-28T08:45:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+RESULT
+------
+RUNTIME_REACHED=PASS
+HMAC_PRODUCT=PASS
+NO_KEY_FAILCLOSED=-1
+CRC_AS_HMAC=0
+CAM_HMAC_AFTER_SET_KEY=NONZERO
+INIT_SELF_TEST_BLOCK=-8
+RELINK_REQUIRED=1
+SMOKE_RELINK=0
+PROMOTE=0
+
+HOW_EARNED
+----------
+Object/link smoke (Camellia Auth pattern), NOT Win32IDE product relink:
+  evidence/WATCHDOG_HMAC_PRODUCT_001/_run_runtime_hmac.bat
+  -> compiles src/core/unlinked_symbols_batch_005.cpp (SOURCE_WIRED)
+  -> links evidence/.../RawrXD_Camellia256_e2e.obj (HMAC-fix rebuild) + stubs
+  -> runtime_hmac_product_smoke.exe
+  RESULTS pass=8 fail=0 SMOKE_EXIT=0
+
+Witnessed at runtime:
+  1) asm_watchdog_get_baseline(NULL) -> -1
+  2) asm_watchdog_get_baseline(buf) before Camellia ready -> -1 + zero buffer
+  3) after set_key: get_hmac_key nonzero; get_baseline==get_hmac_key join
+  4) HMAC_PRODUCT: nonzero non-CRC key material (prefix E672E53B48E7676D)
+
+HMAC_PRODUCT=PASS (earned):
+  set_key now derives cam_hmac_key via SHA256(master||"hmac-auth-key-v1")
+  before cam_initialized=1 (src/asm/RawrXD_Camellia256.asm).
+  init/self_test still -8 (RFC schedule gap OPEN; independent gate).
+
+SEALED_EXE / RELINK
+-------------------
+This smoke did NOT invoke ninja/cmake/link on RawrXD-Win32IDE.exe.
+RELINK_REQUIRED=1 remains for product absorption of fixed Camellia.obj + batch_005.
+Prior seal 89BFD614… / user-note 32C28BF7… / on-disk link001 at seal
+  D121659F03EE1CF2D818035C182BCAC05B8AD32642F85D58457FB77044E95D50
+are NOT this mission's HMAC/tetrad claim.
+
+ARTIFACTS
+---------
+evidence/WATCHDOG_HMAC_PRODUCT_001/RUNTIME_run.log
+evidence/WATCHDOG_HMAC_PRODUCT_001/RUNTIME_HMAC_PRODUCT_smoke_run.log
+evidence/WATCHDOG_HMAC_PRODUCT_001/RUNTIME_REACHED.txt
+evidence/WATCHDOG_HMAC_PRODUCT_001/RawrXD_Camellia256_e2e.obj
+evidence/WATCHDOG_HMAC_PRODUCT_001/batch_005_hmac.obj
+evidence/WATCHDOG_HMAC_PRODUCT_001/runtime_hmac_product_smoke.exe
+evidence/WATCHDOG_HMAC_PRODUCT_001/_build_runtime_hmac.bat
+evidence/WATCHDOG_HMAC_PRODUCT_001/_run_runtime_hmac.bat
+src/asm/RawrXD_Camellia256.asm

@@ -1,0 +1,66 @@
+COMMAND_HANDLERS_FICTION_GATE_001 / LAW
+=======================================
+ASOF_UTC=2026-10-28T09:38:52Z
+WORKSPACE=G:\~dev\rawrxd
+MOTD_ACK=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PERFECT=0
+NO_INVENT_PASS=1
+FAIL_CLOSED=1
+RELINK=NO
+EXE_SHA_HOLD=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+FEATURE_FICTION fail-closed (exitCode=1) != product implementation PASS
+
+LAW — GATED_FICTION_EXPLICIT
+----------------------------
+Linked command handlers that return only:
+  exitCode=1
+  output containing NOT_PRODUCT_PATH=1 FEATURE_FICTION=1
+  via single helper GateFiction(const char*)
+are DISPOSITION=GATED (not OPEN).
+
+Rationale: audit OPEN was "fiction still linked." Explicit LAW accepts
+fail-closed linked theater as GATED when centralized + sealed; does not
+invent product PASS. OPEN count for this surface → 0.
+
+OMIT preference (evaluated)
+---------------------------
+Prefer CMake COMMENT-OMIT + #error IF handleAIStopGeneration can move to a
+tiny REAL product owner TU.
+RESULT: handleAIStopGeneration is itself FEATURE_FICTION theater
+  (Generationstopped). No real owner exists.
+  TU also owns real C ABI after fiction block: direct_read / direct_search /
+  patch_bytes / search_and_patch_bytes (lines ~1204+). Full omit would
+  drop real owners OR reopen LNK2001 for registry handlers.
+THEREFORE: KEEP LINKED + GateFiction + this LAW (not CMake omit).
+
+SURFACE
+-------
+TU=src/core/command_handlers_comprehensive.cpp
+CMake RawrEngine ~3547 (cite LAW; still PRIVATE sources)
+CMake Win32IDE ~7500–7501 (cite LAW; still APPEND WIN32IDE_SOURCES)
+GateFiction sites=276
+Real C ABI below fiction block = KEEP (not fiction)
+
+SEALED EXE
+----------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+RELINK=NO — source GateFiction centralize + CMake cite only
+IF_RELINK=new SHA invalidates tip seals bound to 866E9D1B…; document
+  SHA invalidate; do not invent PASS
+
+CROSS_CITE
+----------
+WIN32IDE_FULL_SOURCE_AUDIT_001 (A14 was OPEN → GATED this seal)
+LORA_KERNEL_STUB_GATE_001 / IDE_BRIDGE_STUB_GATE_001 (omit pattern sibling)
+UNLINKED_SYMBOLS_E2E_001 LINK_WIN32IDE_002 (why TU stays linked)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

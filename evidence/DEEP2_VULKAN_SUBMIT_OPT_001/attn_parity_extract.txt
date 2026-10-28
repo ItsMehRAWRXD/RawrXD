@@ -1,0 +1,627 @@
+[attn-parity] pos=0 T=1 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00073636 prob=1.00000000
+[attn-parity] out maxAbs=0 maxRel=0 at=0 gpu0=-0.00079965591 cpu0=-0.00079965591
+[attn-parity] pos=1 T=2 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00224946 prob=0.50032264
+[attn-parity] h0 t=1 score=0.00095887 prob=0.49967736
+[attn-parity] out maxAbs=3.7252903e-09 maxRel=8.3265583e-05 at=1874 gpu0=-0.0022833305 cpu0=-0.0022833305
+[attn-parity] pos=2 T=3 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00319217 prob=0.27228069
+[attn-parity] h0 t=1 score=0.07599524 prob=0.29284298
+[attn-parity] h0 t=2 score=0.47142038 prob=0.43487635
+[attn-parity] out maxAbs=2.6077032e-08 maxRel=3.494527e-05 at=1049 gpu0=-0.00067943032 cpu0=-0.0006794302
+[attn-parity] pos=3 T=4 scale=0.125000000
+[attn-parity] h0 t=0 score=0.01992682 prob=0.23769575
+[attn-parity] h0 t=1 score=0.03755416 prob=0.24192284
+[attn-parity] h0 t=2 score=0.78016633 prob=0.50838089
+[attn-parity] h0 t=3 score=-2.96611738 prob=0.01200049
+[attn-parity] out maxAbs=8.1956387e-08 maxRel=0.011887593 at=204 gpu0=-0.00030472098 cpu0=-0.00030472121
+[attn-parity] pos=4 T=5 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00167296 prob=0.19819109
+[attn-parity] h0 t=1 score=0.01228249 prob=0.20097631
+[attn-parity] h0 t=2 score=0.10309386 prob=0.22008161
+[attn-parity] h0 t=3 score=-0.18866834 prob=0.16438912
+[attn-parity] h0 t=4 score=0.08604775 prob=0.21636187
+[attn-parity] out maxAbs=5.9604645e-08 maxRel=8.2532859e-05 at=76 gpu0=0.00051067537 cpu0=0.00051067548
+[attn-parity] pos=5 T=6 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00258492 prob=0.13226980
+[attn-parity] h0 t=1 score=0.04802046 prob=0.13841818
+[attn-parity] h0 t=2 score=0.38499114 prob=0.19388206
+[attn-parity] h0 t=3 score=0.20285378 prob=0.16159816
+[attn-parity] h0 t=4 score=0.37385949 prob=0.19173582
+[attn-parity] h0 t=5 score=0.32227486 prob=0.18209597
+[attn-parity] out maxAbs=2.6077032e-08 maxRel=0.0043820322 at=1327 gpu0=0.00058224116 cpu0=0.00058224122
+[attn-parity] pos=6 T=7 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00090495 prob=0.14542605
+[attn-parity] h0 t=1 score=-0.01281259 prob=0.14344479
+[attn-parity] h0 t=2 score=0.07049797 prob=0.15590717
+[attn-parity] h0 t=3 score=-0.48188168 prob=0.08973681
+[attn-parity] h0 t=4 score=0.07441592 prob=0.15651920
+[attn-parity] h0 t=5 score=0.05342765 prob=0.15326837
+[attn-parity] h0 t=6 score=0.06915297 prob=0.15569761
+[attn-parity] out maxAbs=1.4901161e-08 maxRel=0.00018903173 at=1135 gpu0=-0.00081078388 cpu0=-0.00081078394
+[attn-parity] pos=7 T=8 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00362568 prob=0.10014685
+[attn-parity] h0 t=1 score=0.04196269 prob=0.10406072
+[attn-parity] h0 t=2 score=0.37443545 prob=0.14510351
+[attn-parity] h0 t=3 score=-0.01924825 prob=0.09788210
+[attn-parity] h0 t=4 score=0.37129945 prob=0.14464919
+[attn-parity] h0 t=5 score=0.32299995 prob=0.13782874
+[attn-parity] h0 t=6 score=0.28434390 prob=0.13260248
+[attn-parity] h0 t=7 score=0.32225704 prob=0.13772638
+[attn-parity] out maxAbs=2.9802322e-08 maxRel=0.0004939045 at=1039 gpu0=-0.00056882948 cpu0=-0.00056882936
+[attn-parity] pos=8 T=9 scale=0.125000000
+[attn-parity] h0 t=0 score=0.02415256 prob=0.03387299
+[attn-parity] h0 t=1 score=0.21695942 prob=0.04107603
+[attn-parity] h0 t=2 score=1.52402997 prob=0.15178959
+[attn-parity] h0 t=3 score=1.19631898 prob=0.10937522
+[attn-parity] h0 t=4 score=1.52743006 prob=0.15230657
+[attn-parity] h0 t=5 score=1.36748850 prob=0.12979469
+[attn-parity] h0 t=6 score=1.15962481 prob=0.10543452
+[attn-parity] h0 t=7 score=1.40911758 prob=0.13531195
+[attn-parity] h0 t=8 score=1.45056725 prob=0.14103845
+[attn-parity] out maxAbs=2.9802322e-08 maxRel=0.0007559043 at=1039 gpu0=-2.3572589e-05 cpu0=-2.3572442e-05
+[attn-parity] pos=9 T=10 scale=0.125000000
+[attn-parity] h0 t=0 score=0.02249296 prob=0.06777921
+[attn-parity] h0 t=1 score=0.07773529 prob=0.07162885
+[attn-parity] h0 t=2 score=0.88145274 prob=0.16000664
+[attn-parity] h0 t=3 score=-1.13448977 prob=0.02131205
+[attn-parity] h0 t=4 score=0.90239298 prob=0.16339254
+[attn-parity] h0 t=5 score=0.74719113 prob=0.13990360
+[attn-parity] h0 t=6 score=0.77360249 prob=0.14364789
+[attn-parity] h0 t=7 score=0.71968198 prob=0.13610744
+[attn-parity] h0 t=8 score=0.33676720 prob=0.09280772
+[attn-parity] h0 t=9 score=-2.96587062 prob=0.00341402
+[attn-parity] out maxAbs=4.4703484e-08 maxRel=0.00014083418 at=268 gpu0=-0.00070678681 cpu0=-0.00070678693
+[attn-parity] pos=10 T=11 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00288469 prob=0.11622769
+[attn-parity] h0 t=1 score=-0.05149334 prob=0.11071312
+[attn-parity] h0 t=2 score=-0.09198352 prob=0.10631988
+[attn-parity] h0 t=3 score=-1.47376835 prob=0.02670011
+[attn-parity] h0 t=4 score=-0.08393505 prob=0.10717905
+[attn-parity] h0 t=5 score=-0.10981941 prob=0.10444038
+[attn-parity] h0 t=6 score=-0.02965084 prob=0.11315799
+[attn-parity] h0 t=7 score=-0.11013946 prob=0.10440696
+[attn-parity] h0 t=8 score=-0.18049984 prob=0.09731333
+[attn-parity] h0 t=9 score=-1.73924029 prob=0.02047481
+[attn-parity] h0 t=10 score=-0.22511943 prob=0.09306669
+[attn-parity] out maxAbs=3.7252903e-08 maxRel=4.6457438e-05 at=1327 gpu0=-0.0016237856 cpu0=-0.0016237857
+[attn-parity] pos=11 T=12 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00184783 prob=0.08018699
+[attn-parity] h0 t=1 score=0.01429974 prob=0.08149233
+[attn-parity] h0 t=2 score=0.14678273 prob=0.09303650
+[attn-parity] h0 t=3 score=-0.21492095 prob=0.06479888
+[attn-parity] h0 t=4 score=0.14312544 prob=0.09269686
+[attn-parity] h0 t=5 score=0.11491986 prob=0.09011883
+[attn-parity] h0 t=6 score=0.10897292 prob=0.08958448
+[attn-parity] h0 t=7 score=0.11304834 prob=0.08995032
+[attn-parity] h0 t=8 score=0.10435741 prob=0.08917195
+[attn-parity] h0 t=9 score=-0.27596700 prob=0.06096148
+[attn-parity] h0 t=10 score=0.04943189 prob=0.08440622
+[attn-parity] h0 t=11 score=0.03977641 prob=0.08359516
+[attn-parity] out maxAbs=2.4214387e-08 maxRel=0.00046122989 at=1327 gpu0=-0.00080522051 cpu0=-0.00080522068
+[attn-parity] pos=12 T=13 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00502765 prob=0.06672607
+[attn-parity] h0 t=1 score=0.02024210 prob=0.06774903
+[attn-parity] h0 t=2 score=0.32590151 prob=0.09197066
+[attn-parity] h0 t=3 score=-0.65492272 prob=0.03448917
+[attn-parity] h0 t=4 score=0.33254039 prob=0.09258328
+[attn-parity] h0 t=5 score=0.27868399 prob=0.08772897
+[attn-parity] h0 t=6 score=0.27231839 prob=0.08717229
+[attn-parity] h0 t=7 score=0.28408998 prob=0.08820452
+[attn-parity] h0 t=8 score=0.17501359 prob=0.07908963
+[attn-parity] h0 t=9 score=-0.32826623 prob=0.04781321
+[attn-parity] h0 t=10 score=0.21265574 prob=0.08212347
+[attn-parity] h0 t=11 score=0.27218851 prob=0.08716097
+[attn-parity] h0 t=12 score=0.27250695 prob=0.08718874
+[attn-parity] out maxAbs=5.9604645e-08 maxRel=0.00020610909 at=1135 gpu0=-0.000612701 cpu0=-0.00061270106
+[attn-parity] pos=13 T=14 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00040329 prob=0.06569839
+[attn-parity] h0 t=1 score=0.01543354 prob=0.06669331
+[attn-parity] h0 t=2 score=0.18720403 prob=0.07919198
+[attn-parity] h0 t=3 score=-0.29668251 prob=0.04881260
+[attn-parity] h0 t=4 score=0.18482724 prob=0.07900398
+[attn-parity] h0 t=5 score=0.15355830 prob=0.07657184
+[attn-parity] h0 t=6 score=0.14815296 prob=0.07615905
+[attn-parity] h0 t=7 score=0.15411262 prob=0.07661430
+[attn-parity] h0 t=8 score=0.10715322 prob=0.07309970
+[attn-parity] h0 t=9 score=-0.12132508 prob=0.05816862
+[attn-parity] h0 t=10 score=0.11701746 prob=0.07382434
+[attn-parity] h0 t=11 score=0.14220226 prob=0.07570720
+[attn-parity] h0 t=12 score=0.14667934 prob=0.07604691
+[attn-parity] h0 t=13 score=0.12488966 prob=0.07440779
+[attn-parity] out maxAbs=1.8626451e-08 maxRel=0.0010158469 at=1071 gpu0=-0.0007319157 cpu0=-0.00073191558
+[attn-parity] pos=14 T=15 scale=0.125000000
+[attn-parity] h0 t=0 score=0.01775505 prob=0.03703352
+[attn-parity] h0 t=1 score=0.10985392 prob=0.04060626
+[attn-parity] h0 t=2 score=0.81986678 prob=0.08259384
+[attn-parity] h0 t=3 score=0.29774982 prob=0.04899990
+[attn-parity] h0 t=4 score=0.82346410 prob=0.08289149
+[attn-parity] h0 t=5 score=0.72416848 prob=0.07505618
+[attn-parity] h0 t=6 score=0.65237242 prob=0.06985633
+[attn-parity] h0 t=7 score=0.73194611 prob=0.07564221
+[attn-parity] h0 t=8 score=0.63771075 prob=0.06883959
+[attn-parity] h0 t=9 score=0.43749374 prob=0.05634886
+[attn-parity] h0 t=10 score=0.64633375 prob=0.06943577
+[attn-parity] h0 t=11 score=0.71377462 prob=0.07428009
+[attn-parity] h0 t=12 score=0.72446686 prob=0.07507858
+[attn-parity] h0 t=13 score=0.73252845 prob=0.07568627
+[attn-parity] h0 t=14 score=0.62029529 prob=0.06765110
+[attn-parity] out maxAbs=2.2351742e-08 maxRel=0.0022186481 at=1071 gpu0=-0.0004055048 cpu0=-0.00040550478
+[attn-parity] pos=15 T=16 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00452126 prob=0.04625924
+[attn-parity] h0 t=1 score=0.05873064 prob=0.04883614
+[attn-parity] h0 t=2 score=0.39314315 prob=0.06822992
+[attn-parity] h0 t=3 score=0.33031371 prob=0.06407496
+[attn-parity] h0 t=4 score=0.38204885 prob=0.06747714
+[attn-parity] h0 t=5 score=0.34044027 prob=0.06472712
+[attn-parity] h0 t=6 score=0.28666201 prob=0.06133815
+[attn-parity] h0 t=7 score=0.34061620 prob=0.06473850
+[attn-parity] h0 t=8 score=0.31044453 prob=0.06281441
+[attn-parity] h0 t=9 score=0.41022223 prob=0.06940523
+[attn-parity] h0 t=10 score=0.30217907 prob=0.06229736
+[attn-parity] h0 t=11 score=0.36351040 prob=0.06623774
+[attn-parity] h0 t=12 score=0.36394754 prob=0.06626670
+[attn-parity] h0 t=13 score=0.33230186 prob=0.06420248
+[attn-parity] h0 t=14 score=0.27362001 prob=0.06054337
+[attn-parity] h0 t=15 score=0.30625042 prob=0.06255151
+[attn-parity] out maxAbs=1.3038516e-08 maxRel=9.6121455e-05 at=1135 gpu0=-0.00028958305 cpu0=-0.00028958297
+[attn-parity] pos=16 T=17 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00108823 prob=0.06722450
+[attn-parity] h0 t=1 score=-0.03703464 prob=0.06485094
+[attn-parity] h0 t=2 score=-0.05411475 prob=0.06375268
+[attn-parity] h0 t=3 score=-0.92003679 prob=0.02681843
+[attn-parity] h0 t=4 score=-0.04912725 prob=0.06407145
+[attn-parity] h0 t=5 score=-0.06464952 prob=0.06308459
+[attn-parity] h0 t=6 score=-0.02789730 prob=0.06544622
+[attn-parity] h0 t=7 score=-0.06484707 prob=0.06307213
+[attn-parity] h0 t=8 score=-0.13932471 prob=0.05854533
+[attn-parity] h0 t=9 score=-0.90602052 prob=0.02719697
+[attn-parity] h0 t=10 score=-0.12719353 prob=0.05925988
+[attn-parity] h0 t=11 score=-0.10561278 prob=0.06055265
+[attn-parity] h0 t=12 score=-0.09507595 prob=0.06119406
+[attn-parity] h0 t=13 score=-0.05922383 prob=0.06342780
+[attn-parity] h0 t=14 score=-0.09179197 prob=0.06139535
+[attn-parity] h0 t=15 score=-0.04100761 prob=0.06459380
+[attn-parity] h0 t=16 score=-0.02687404 prob=0.06551322
+[attn-parity] out maxAbs=2.2351742e-08 maxRel=0.00030329654 at=1285 gpu0=-0.00073721795 cpu0=-0.00073721813
+[attn-parity] pos=17 T=18 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00277895 prob=0.05244953
+[attn-parity] h0 t=1 score=0.00413533 prob=0.05252072
+[attn-parity] h0 t=2 score=0.17817509 prob=0.06250506
+[attn-parity] h0 t=3 score=-0.57022566 prob=0.02957256
+[attn-parity] h0 t=4 score=0.18146163 prob=0.06271082
+[attn-parity] h0 t=5 score=0.15010862 prob=0.06077515
+[attn-parity] h0 t=6 score=0.16440740 prob=0.06165041
+[attn-parity] h0 t=7 score=0.15214998 prob=0.06089934
+[attn-parity] h0 t=8 score=0.05370656 prob=0.05518984
+[attn-parity] h0 t=9 score=-0.61584949 prob=0.02825366
+[attn-parity] h0 t=10 score=0.10293341 prob=0.05797465
+[attn-parity] h0 t=11 score=0.11284684 prob=0.05855224
+[attn-parity] h0 t=12 score=0.13464309 prob=0.05984246
+[attn-parity] h0 t=13 score=0.13945539 prob=0.06013114
+[attn-parity] h0 t=14 score=0.08515652 prob=0.05695315
+[attn-parity] h0 t=15 score=0.13502100 prob=0.05986508
+[attn-parity] h0 t=16 score=0.15193315 prob=0.06088614
+[attn-parity] h0 t=17 score=0.12499784 prob=0.05926805
+[attn-parity] out maxAbs=1.1175871e-08 maxRel=0.0009337923 at=1327 gpu0=-0.00086987688 cpu0=-0.00086987682
+[attn-parity] pos=18 T=19 scale=0.125000000
+[attn-parity] h0 t=0 score=0.01882237 prob=0.02991566
+[attn-parity] h0 t=1 score=0.10669553 prob=0.03266340
+[attn-parity] h0 t=2 score=0.79619175 prob=0.06508873
+[attn-parity] h0 t=3 score=0.19720852 prob=0.03575779
+[attn-parity] h0 t=4 score=0.79931676 prob=0.06529246
+[attn-parity] h0 t=5 score=0.70155686 prob=0.05921154
+[attn-parity] h0 t=6 score=0.65006149 prob=0.05623960
+[attn-parity] h0 t=7 score=0.70609343 prob=0.05948077
+[attn-parity] h0 t=8 score=0.60939586 prob=0.05399846
+[attn-parity] h0 t=9 score=0.22255217 prob=0.03667561
+[attn-parity] h0 t=10 score=0.62681532 prob=0.05494732
+[attn-parity] h0 t=11 score=0.67215383 prob=0.05749589
+[attn-parity] h0 t=12 score=0.70342100 prob=0.05932203
+[attn-parity] h0 t=13 score=0.68548018 prob=0.05826723
+[attn-parity] h0 t=14 score=0.53610986 prob=0.05018266
+[attn-parity] h0 t=15 score=0.67786020 prob=0.05782492
+[attn-parity] h0 t=16 score=0.73682684 prob=0.06133720
+[attn-parity] h0 t=17 score=0.47374281 prob=0.04714851
+[attn-parity] h0 t=18 score=0.70052046 prob=0.05915021
+[attn-parity] out maxAbs=1.4901161e-08 maxRel=4.9480919e-05 at=1947 gpu0=-0.00051518314 cpu0=-0.0005151832
+[attn-parity] pos=19 T=20 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00514032 prob=0.03747227
+[attn-parity] h0 t=1 score=0.05303047 prob=0.03931048
+[attn-parity] h0 t=2 score=0.38212818 prob=0.05463031
+[attn-parity] h0 t=3 score=0.23818436 prob=0.04730638
+[attn-parity] h0 t=4 score=0.37856144 prob=0.05443581
+[attn-parity] h0 t=5 score=0.33605573 prob=0.05217046
+[attn-parity] h0 t=6 score=0.28811088 prob=0.04972817
+[attn-parity] h0 t=7 score=0.33859932 prob=0.05230333
+[attn-parity] h0 t=8 score=0.32438481 prob=0.05156512
+[attn-parity] h0 t=9 score=0.32785797 prob=0.05174453
+[attn-parity] h0 t=10 score=0.29074708 prob=0.04985944
+[attn-parity] h0 t=11 score=0.33348817 prob=0.05203668
+[attn-parity] h0 t=12 score=0.33962023 prob=0.05235675
+[attn-parity] h0 t=13 score=0.33044869 prob=0.05187876
+[attn-parity] h0 t=14 score=0.29276574 prob=0.04996019
+[attn-parity] h0 t=15 score=0.34405690 prob=0.05258956
+[attn-parity] h0 t=16 score=0.34127277 prob=0.05244335
+[attn-parity] h0 t=17 score=0.22017519 prob=0.04646206
+[attn-parity] h0 t=18 score=0.31544974 prob=0.05110644
+[attn-parity] h0 t=19 score=0.30627945 prob=0.05063992
+[attn-parity] out maxAbs=9.3132257e-09 maxRel=0.00022888184 at=1477 gpu0=-0.00041366651 cpu0=-0.00041366654
+[attn-parity] pos=20 T=21 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00558602 prob=0.06278956
+[attn-parity] h0 t=1 score=-0.06996562 prob=0.05887457
+[attn-parity] h0 t=2 score=-0.21241201 prob=0.05105803
+[attn-parity] h0 t=3 score=-1.61704230 prob=0.01253259
+[attn-parity] h0 t=4 score=-0.20424075 prob=0.05147695
+[attn-parity] h0 t=5 score=-0.21125162 prob=0.05111732
+[attn-parity] h0 t=6 score=-0.13902055 prob=0.05494619
+[attn-parity] h0 t=7 score=-0.21170814 prob=0.05109398
+[attn-parity] h0 t=8 score=-0.33240947 prob=0.04528453
+[attn-parity] h0 t=9 score=-1.54728401 prob=0.01343806
+[attn-parity] h0 t=10 score=-0.28829584 prob=0.04732691
+[attn-parity] h0 t=11 score=-0.26713976 prob=0.04833883
+[attn-parity] h0 t=12 score=-0.25826028 prob=0.04876997
+[attn-parity] h0 t=13 score=-0.22306535 prob=0.05051698
+[attn-parity] h0 t=14 score=-0.28614822 prob=0.04742866
+[attn-parity] h0 t=15 score=-0.22523250 prob=0.05040762
+[attn-parity] h0 t=16 score=-0.18180801 prob=0.05264477
+[attn-parity] h0 t=17 score=-0.12772493 prob=0.05557036
+[attn-parity] h0 t=18 score=-0.28538695 prob=0.04746478
+[attn-parity] h0 t=19 score=-0.22385947 prob=0.05047688
+[attn-parity] h0 t=20 score=-0.26499805 prob=0.04844246
+[attn-parity] out maxAbs=7.4505806e-09 maxRel=0.00034181593 at=157 gpu0=-0.00069048774 cpu0=-0.00069048768
+[attn-parity] pos=21 T=22 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00762354 prob=0.03743052
+[attn-parity] h0 t=1 score=0.02141703 prob=0.03795039
+[attn-parity] h0 t=2 score=0.32668990 prob=0.05149850
+[attn-parity] h0 t=3 score=-0.39341056 prob=0.02506449
+[attn-parity] h0 t=4 score=0.33947438 prob=0.05216111
+[attn-parity] h0 t=5 score=0.29400012 prob=0.04984225
+[attn-parity] h0 t=6 score=0.30459732 prob=0.05037324
+[attn-parity] h0 t=7 score=0.29688752 prob=0.04998637
+[attn-parity] h0 t=8 score=0.19217464 prob=0.04501688
+[attn-parity] h0 t=9 score=-0.42854387 prob=0.02419919
+[attn-parity] h0 t=10 score=0.26751029 prob=0.04853927
+[attn-parity] h0 t=11 score=0.25182363 prob=0.04778379
+[attn-parity] h0 t=12 score=0.28412187 prob=0.04935231
+[attn-parity] h0 t=13 score=0.27346107 prob=0.04882898
+[attn-parity] h0 t=14 score=0.17945161 prob=0.04444775
+[attn-parity] h0 t=15 score=0.28478572 prob=0.04938509
+[attn-parity] h0 t=16 score=0.31718215 prob=0.05101119
+[attn-parity] h0 t=17 score=0.26505524 prob=0.04842025
+[attn-parity] h0 t=18 score=0.23458132 prob=0.04696695
+[attn-parity] h0 t=19 score=0.27396229 prob=0.04885346
+[attn-parity] h0 t=20 score=0.26379082 prob=0.04835906
+[attn-parity] h0 t=21 score=0.18127717 prob=0.04452897
+[attn-parity] out maxAbs=1.1175871e-08 maxRel=0.00092578634 at=1519 gpu0=-0.00053080427 cpu0=-0.00053080433
+[attn-parity] pos=22 T=23 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00061924 prob=0.04377347
+[attn-parity] h0 t=1 score=0.00013469 prob=0.04380648
+[attn-parity] h0 t=2 score=0.07392190 prob=0.04716108
+[attn-parity] h0 t=3 score=-0.47010863 prob=0.02737249
+[attn-parity] h0 t=4 score=0.06340864 prob=0.04666786
+[attn-parity] h0 t=5 score=0.04314911 prob=0.04573191
+[attn-parity] h0 t=6 score=0.04469942 prob=0.04580286
+[attn-parity] h0 t=7 score=0.04296666 prob=0.04572356
+[attn-parity] h0 t=8 score=0.00894641 prob=0.04419420
+[attn-parity] h0 t=9 score=-0.41074625 prob=0.02904658
+[attn-parity] h0 t=10 score=-0.01805407 prob=0.04301690
+[attn-parity] h0 t=11 score=0.01671523 prob=0.04453887
+[attn-parity] h0 t=12 score=0.02031653 prob=0.04469956
+[attn-parity] h0 t=13 score=0.03694037 prob=0.04544885
+[attn-parity] h0 t=14 score=0.00274113 prob=0.04392081
+[attn-parity] h0 t=15 score=0.04154217 prob=0.04565848
+[attn-parity] h0 t=16 score=0.05618729 prob=0.04633207
+[attn-parity] h0 t=17 score=0.01417169 prob=0.04442573
+[attn-parity] h0 t=18 score=0.03134953 prob=0.04519546
+[attn-parity] h0 t=19 score=0.05425931 prob=0.04624283
+[attn-parity] h0 t=20 score=0.00837556 prob=0.04416898
+[attn-parity] h0 t=21 score=-0.00492029 prob=0.04358560
+[attn-parity] h0 t=22 score=-0.00722155 prob=0.04348541
+[attn-parity] out maxAbs=7.4505806e-09 maxRel=0.000133897 at=157 gpu0=-0.00026509314 cpu0=-0.00026509311
+[attn-parity] pos=23 T=24 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00603099 prob=0.03466705
+[attn-parity] h0 t=1 score=0.02800770 prob=0.03543735
+[attn-parity] h0 t=2 score=0.29431269 prob=0.04625046
+[attn-parity] h0 t=3 score=-0.22743458 prob=0.02744884
+[attn-parity] h0 t=4 score=0.29648504 prob=0.04635103
+[attn-parity] h0 t=5 score=0.25798577 prob=0.04460047
+[attn-parity] h0 t=6 score=0.25192711 prob=0.04433107
+[attn-parity] h0 t=7 score=0.26062092 prob=0.04471815
+[attn-parity] h0 t=8 score=0.19719003 prob=0.04196973
+[attn-parity] h0 t=9 score=-0.18548849 prob=0.02862470
+[attn-parity] h0 t=10 score=0.22198056 prob=0.04302319
+[attn-parity] h0 t=11 score=0.23011366 prob=0.04337452
+[attn-parity] h0 t=12 score=0.24893789 prob=0.04419875
+[attn-parity] h0 t=13 score=0.24416628 prob=0.04398835
+[attn-parity] h0 t=14 score=0.17520094 prob=0.04105693
+[attn-parity] h0 t=15 score=0.24968304 prob=0.04423169
+[attn-parity] h0 t=16 score=0.27505812 prob=0.04536844
+[attn-parity] h0 t=17 score=0.19726771 prob=0.04197299
+[attn-parity] h0 t=18 score=0.22874975 prob=0.04331541
+[attn-parity] h0 t=19 score=0.26741683 prob=0.04502309
+[attn-parity] h0 t=20 score=0.24087547 prob=0.04384383
+[attn-parity] h0 t=21 score=0.17577012 prob=0.04108030
+[attn-parity] h0 t=22 score=0.23034240 prob=0.04338445
+[attn-parity] h0 t=23 score=0.19168222 prob=0.04173920
+[attn-parity] out maxAbs=2.6077032e-08 maxRel=0.00017451158 at=1480 gpu0=-0.00023501588 cpu0=-0.00023501589
+[attn-parity] pos=24 T=25 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00172697 prob=0.04031393
+[attn-parity] h0 t=1 score=-0.01977763 prob=0.03945626
+[attn-parity] h0 t=2 score=0.08636368 prob=0.04387453
+[attn-parity] h0 t=3 score=-0.97598410 prob=0.01516494
+[attn-parity] h0 t=4 score=0.09813047 prob=0.04439384
+[attn-parity] h0 t=5 score=0.06922996 prob=0.04312919
+[attn-parity] h0 t=6 score=0.10587145 prob=0.04473883
+[attn-parity] h0 t=7 score=0.06963090 prob=0.04314649
+[attn-parity] h0 t=8 score=-0.04264427 prob=0.03856426
+[attn-parity] h0 t=9 score=-0.93399793 prob=0.01581521
+[attn-parity] h0 t=10 score=0.01027367 prob=0.04065996
+[attn-parity] h0 t=11 score=0.02151464 prob=0.04111960
+[attn-parity] h0 t=12 score=0.03574678 prob=0.04170900
+[attn-parity] h0 t=13 score=0.05264790 prob=0.04241992
+[attn-parity] h0 t=14 score=-0.02747379 prob=0.03915376
+[attn-parity] h0 t=15 score=0.06473001 prob=0.04293555
+[attn-parity] h0 t=16 score=0.10153293 prob=0.04454514
+[attn-parity] h0 t=17 score=0.07535814 prob=0.04339431
+[attn-parity] h0 t=18 score=0.00307915 prob=0.04036848
+[attn-parity] h0 t=19 score=0.07136947 prob=0.04322157
+[attn-parity] h0 t=20 score=0.04370221 prob=0.04204214
+[attn-parity] h0 t=21 score=0.01524412 prob=0.04086256
+[attn-parity] h0 t=22 score=0.05690643 prob=0.04260095
+[attn-parity] h0 t=23 score=0.08854245 prob=0.04397022
+[attn-parity] h0 t=24 score=0.05216249 prob=0.04239934
+[attn-parity] out maxAbs=3.3527613e-08 maxRel=0.00055033639 at=1480 gpu0=-0.00036664985 cpu0=-0.00036664997
+[attn-parity] pos=25 T=26 scale=0.125000000
+[attn-parity] h0 t=0 score=-0.00330712 prob=0.04496023
+[attn-parity] h0 t=1 score=-0.04973779 prob=0.04292042
+[attn-parity] h0 t=2 score=-0.10788397 prob=0.04049594
+[attn-parity] h0 t=3 score=-1.08799028 prob=0.01519696
+[attn-parity] h0 t=4 score=-0.09404138 prob=0.04106040
+[attn-parity] h0 t=5 score=-0.10261581 prob=0.04070983
+[attn-parity] h0 t=6 score=-0.06385851 prob=0.04231861
+[attn-parity] h0 t=7 score=-0.10912402 prob=0.04044575
+[attn-parity] h0 t=8 score=-0.20611691 prob=0.03670704
+[attn-parity] h0 t=9 score=-1.11558330 prob=0.01478336
+[attn-parity] h0 t=10 score=-0.17388952 prob=0.03790928
+[attn-parity] h0 t=11 score=-0.14635909 prob=0.03896744
+[attn-parity] h0 t=12 score=-0.15126836 prob=0.03877661
+[attn-parity] h0 t=13 score=-0.12482765 prob=0.03981557
+[attn-parity] h0 t=14 score=-0.16963787 prob=0.03807080
+[attn-parity] h0 t=15 score=-0.10554799 prob=0.04059064
+[attn-parity] h0 t=16 score=-0.08282769 prob=0.04152343
+[attn-parity] h0 t=17 score=-0.06808037 prob=0.04214033
+[attn-parity] h0 t=18 score=-0.16578110 prob=0.03821792
+[attn-parity] h0 t=19 score=-0.11294713 prob=0.04029141
+[attn-parity] h0 t=20 score=-0.13523805 prob=0.03940322
+[attn-parity] h0 t=21 score=-0.11960471 prob=0.04002406
+[attn-parity] h0 t=22 score=-0.10394126 prob=0.04065591
+[attn-parity] h0 t=23 score=-0.03339868 prob=0.04362747
+[attn-parity] h0 t=24 score=-0.08724637 prob=0.04134036
+[attn-parity] h0 t=25 score=-0.14431976 prob=0.03904699
+[attn-parity] out maxAbs=1.0244548e-08 maxRel=0.00011751433 at=1167 gpu0=-0.000287781 cpu0=-0.00028778103
+[attn-parity] pos=26 T=27 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00840180 prob=0.03312151
+[attn-parity] h0 t=1 score=0.00002013 prob=0.03284505
+[attn-parity] h0 t=2 score=0.24906342 prob=0.04213355
+[attn-parity] h0 t=3 score=-1.12264395 prob=0.01068817
+[attn-parity] h0 t=4 score=0.27032080 prob=0.04303879
+[attn-parity] h0 t=5 score=0.21304807 prob=0.04064310
+[attn-parity] h0 t=6 score=0.24995479 prob=0.04217113
+[attn-parity] h0 t=7 score=0.21536736 prob=0.04073747
+[attn-parity] h0 t=8 score=0.07932787 prob=0.03555600
+[attn-parity] h0 t=9 score=-1.02192402 prob=0.01182076
+[attn-parity] h0 t=10 score=0.12795073 prob=0.03732755
+[attn-parity] h0 t=11 score=0.15481438 prob=0.03834390
+[attn-parity] h0 t=12 score=0.18146887 prob=0.03937968
+[attn-parity] h0 t=13 score=0.19724824 prob=0.04000599
+[attn-parity] h0 t=14 score=0.09299932 prob=0.03604544
+[attn-parity] h0 t=15 score=0.20089827 prob=0.04015228
+[attn-parity] h0 t=16 score=0.24859840 prob=0.04211396
+[attn-parity] h0 t=17 score=0.16135995 prob=0.03859570
+[attn-parity] h0 t=18 score=0.14220114 prob=0.03786329
+[attn-parity] h0 t=19 score=0.21720436 prob=0.04081238
+[attn-parity] h0 t=20 score=0.19888216 prob=0.04007141
+[attn-parity] h0 t=21 score=0.06931886 prob=0.03520189
+[attn-parity] h0 t=22 score=0.19852436 prob=0.04005707
+[attn-parity] h0 t=23 score=0.16773264 prob=0.03884245
+[attn-parity] h0 t=24 score=0.15961911 prob=0.03852857
+[attn-parity] h0 t=25 score=0.23241076 prob=0.04143773
+[attn-parity] h0 t=26 score=0.25690383 prob=0.04246520
+[attn-parity] out maxAbs=9.3132257e-09 maxRel=0.0003288259 at=1327 gpu0=-4.6031382e-06 cpu0=-4.6031782e-06
+[attn-parity] pos=27 T=28 scale=0.125000000
+[attn-parity] h0 t=0 score=0.06663963 prob=0.00729881
+[attn-parity] h0 t=1 score=0.23977500 prob=0.00867848
+[attn-parity] h0 t=2 score=1.91044092 prob=0.04613226
+[attn-parity] h0 t=3 score=1.43288863 prob=0.02861583
+[attn-parity] h0 t=4 score=1.98041630 prob=0.04947601
+[attn-parity] h0 t=5 score=1.75143671 prob=0.03935048
+[attn-parity] h0 t=6 score=1.64131081 prob=0.03524707
+[attn-parity] h0 t=7 score=1.75708318 prob=0.03957330
+[attn-parity] h0 t=8 score=1.52661991 prob=0.03142775
+[attn-parity] h0 t=9 score=1.54768312 prob=0.03209674
+[attn-parity] h0 t=10 score=1.74234545 prob=0.03899436
+[attn-parity] h0 t=11 score=1.74773347 prob=0.03920503
+[attn-parity] h0 t=12 score=1.84971917 prob=0.04341438
+[attn-parity] h0 t=13 score=1.73484671 prob=0.03870304
+[attn-parity] h0 t=14 score=1.45209098 prob=0.02917063
+[attn-parity] h0 t=15 score=1.68574524 prob=0.03684857
+[attn-parity] h0 t=16 score=1.81390584 prob=0.04188707
+[attn-parity] h0 t=17 score=1.26659524 prob=0.02423182
+[attn-parity] h0 t=18 score=1.66044962 prob=0.03592815
+[attn-parity] h0 t=19 score=1.69467521 prob=0.03717909
+[attn-parity] h0 t=20 score=1.74844158 prob=0.03923279
+[attn-parity] h0 t=21 score=1.15256727 prob=0.02162043
+[attn-parity] h0 t=22 score=1.61473989 prob=0.03432285
+[attn-parity] h0 t=23 score=1.10882425 prob=0.02069508
+[attn-parity] h0 t=24 score=1.29137862 prob=0.02483987
+[attn-parity] h0 t=25 score=1.84179556 prob=0.04307174
+[attn-parity] h0 t=26 score=2.19964552 prob=0.06160340
+[attn-parity] h0 t=27 score=2.34378862 prob=0.07115497
+[attn-parity] out maxAbs=2.6077032e-08 maxRel=0.001545001 at=1359 gpu0=0.00066343386 cpu0=0.00066343369
+[attn-parity] pos=28 T=29 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00130132 prob=0.03585912
+[attn-parity] h0 t=1 score=-0.03522651 prob=0.03457290
+[attn-parity] h0 t=2 score=0.15625007 prob=0.04186904
+[attn-parity] h0 t=3 score=-2.66332245 prob=0.00249671
+[attn-parity] h0 t=4 score=0.16618337 prob=0.04228701
+[attn-parity] h0 t=5 score=0.08681605 prob=0.03906053
+[attn-parity] h0 t=6 score=0.21150093 prob=0.04424743
+[attn-parity] h0 t=7 score=0.10523942 prob=0.03978683
+[attn-parity] h0 t=8 score=-0.11245661 prob=0.03200333
+[attn-parity] h0 t=9 score=-2.44831491 prob=0.00309560
+[attn-parity] h0 t=10 score=-0.04742382 prob=0.03415376
+[attn-parity] h0 t=11 score=-0.03024574 prob=0.03474552
+[attn-parity] h0 t=12 score=0.04433693 prob=0.03743602
+[attn-parity] h0 t=13 score=0.10134526 prob=0.03963219
+[attn-parity] h0 t=14 score=-0.08200161 prob=0.03299298
+[attn-parity] h0 t=15 score=0.11419547 prob=0.04014476
+[attn-parity] h0 t=16 score=0.20754206 prob=0.04407261
+[attn-parity] h0 t=17 score=0.13202159 prob=0.04086680
+[attn-parity] h0 t=18 score=-0.02904457 prob=0.03478728
+[attn-parity] h0 t=19 score=0.13148582 prob=0.04084491
+[attn-parity] h0 t=20 score=0.09472094 prob=0.03937053
+[attn-parity] h0 t=21 score=-0.05284734 prob=0.03396903
+[attn-parity] h0 t=22 score=0.07082497 prob=0.03844088
+[attn-parity] h0 t=23 score=0.14868192 prob=0.04155336
+[attn-parity] h0 t=24 score=0.09431112 prob=0.03935439
+[attn-parity] h0 t=25 score=0.08444100 prob=0.03896787
+[attn-parity] h0 t=26 score=0.04755211 prob=0.03755658
+[attn-parity] h0 t=27 score=-0.28805339 prob=0.02684939
+[attn-parity] h0 t=28 score=-1.38300109 prob=0.00898265
+[attn-parity] out maxAbs=2.2351742e-08 maxRel=0.00142057 at=1286 gpu0=-4.9359683e-06 cpu0=-4.9361406e-06
+[attn-parity] pos=29 T=30 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00891047 prob=0.02339864
+[attn-parity] h0 t=1 score=0.06223312 prob=0.02468018
+[attn-parity] h0 t=2 score=0.45925882 prob=0.03670916
+[attn-parity] h0 t=3 score=-0.07182673 prob=0.02158375
+[attn-parity] h0 t=4 score=0.45989874 prob=0.03673265
+[attn-parity] h0 t=5 score=0.40093583 prob=0.03462941
+[attn-parity] h0 t=6 score=0.37053353 prob=0.03359244
+[attn-parity] h0 t=7 score=0.41015717 prob=0.03495021
+[attn-parity] h0 t=8 score=0.39239791 prob=0.03433500
+[attn-parity] h0 t=9 score=0.20257580 prob=0.02839870
+[attn-parity] h0 t=10 score=0.34589532 prob=0.03277489
+[attn-parity] h0 t=11 score=0.37767786 prob=0.03383329
+[attn-parity] h0 t=12 score=0.40207824 prob=0.03466899
+[attn-parity] h0 t=13 score=0.38612852 prob=0.03412041
+[attn-parity] h0 t=14 score=0.31417391 prob=0.03175154
+[attn-parity] h0 t=15 score=0.38683289 prob=0.03414446
+[attn-parity] h0 t=16 score=0.41382697 prob=0.03507871
+[attn-parity] h0 t=17 score=0.26752272 prob=0.03030431
+[attn-parity] h0 t=18 score=0.40303123 prob=0.03470204
+[attn-parity] h0 t=19 score=0.39983153 prob=0.03459119
+[attn-parity] h0 t=20 score=0.38807362 prob=0.03418685
+[attn-parity] h0 t=21 score=0.20619920 prob=0.02850178
+[attn-parity] h0 t=22 score=0.34149128 prob=0.03263086
+[attn-parity] h0 t=23 score=0.23951137 prob=0.02946723
+[attn-parity] h0 t=24 score=0.28193808 prob=0.03074433
+[attn-parity] h0 t=25 score=0.40323257 prob=0.03470903
+[attn-parity] h0 t=26 score=0.46736759 prob=0.03700803
+[attn-parity] h0 t=27 score=0.45574906 prob=0.03658054
+[attn-parity] h0 t=28 score=0.84580708 prob=0.05403189
+[attn-parity] h0 t=29 score=0.47145167 prob=0.03715949
+[attn-parity] out maxAbs=3.7252903e-08 maxRel=0.00015398331 at=1148 gpu0=0.00068424345 cpu0=0.00068424357
+[attn-parity] pos=30 T=31 scale=0.125000000
+[attn-parity] h0 t=0 score=0.01919937 prob=0.01960236
+[attn-parity] h0 t=1 score=0.08125100 prob=0.02085725
+[attn-parity] h0 t=2 score=0.82722902 prob=0.04397758
+[attn-parity] h0 t=3 score=-1.20868528 prob=0.00574176
+[attn-parity] h0 t=4 score=0.79967725 prob=0.04278246
+[attn-parity] h0 t=5 score=0.64849240 prob=0.03677959
+[attn-parity] h0 t=6 score=0.71949655 prob=0.03948605
+[attn-parity] h0 t=7 score=0.66178769 prob=0.03727186
+[attn-parity] h0 t=8 score=0.47746119 prob=0.03099767
+[attn-parity] h0 t=9 score=-1.24772918 prob=0.00552190
+[attn-parity] h0 t=10 score=0.56447548 prob=0.03381574
+[attn-parity] h0 t=11 score=0.52817315 prob=0.03261016
+[attn-parity] h0 t=12 score=0.63485181 prob=0.03628131
+[attn-parity] h0 t=13 score=0.65074837 prob=0.03686266
+[attn-parity] h0 t=14 score=0.43370962 prob=0.02967071
+[attn-parity] h0 t=15 score=0.72825444 prob=0.03983338
+[attn-parity] h0 t=16 score=0.81125182 prob=0.04328052
+[attn-parity] h0 t=17 score=0.58853137 prob=0.03463907
+[attn-parity] h0 t=18 score=0.56894028 prob=0.03396706
+[attn-parity] h0 t=19 score=0.74408150 prob=0.04046884
+[attn-parity] h0 t=20 score=0.73574013 prob=0.04013268
+[attn-parity] h0 t=21 score=0.43208858 prob=0.02962265
+[attn-parity] h0 t=22 score=0.67613590 prob=0.03781050
+[attn-parity] h0 t=23 score=0.58278310 prob=0.03444052
+[attn-parity] h0 t=24 score=0.57579130 prob=0.03420056
+[attn-parity] h0 t=25 score=0.70961642 prob=0.03909784
+[attn-parity] h0 t=26 score=0.78763807 prob=0.04227048
+[attn-parity] h0 t=27 score=0.54268545 prob=0.03308686
+[attn-parity] h0 t=28 score=0.13184810 prob=0.02193972
+[attn-parity] h0 t=29 score=0.78026175 prob=0.04195982
+[attn-parity] h0 t=30 score=-2.96606541 prob=0.00099043
+[attn-parity] out maxAbs=6.7055225e-08 maxRel=8.0497165e-05 at=268 gpu0=0.00034975194 cpu0=0.00034975188
+[attn-parity] pos=31 T=32 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00316444 prob=0.03042170
+[attn-parity] h0 t=1 score=-0.00782073 prob=0.03008934
+[attn-parity] h0 t=2 score=0.11839998 prob=0.03413734
+[attn-parity] h0 t=3 score=-0.42643702 prob=0.01979748
+[attn-parity] h0 t=4 score=0.12941894 prob=0.03451558
+[attn-parity] h0 t=5 score=0.10345728 prob=0.03363103
+[attn-parity] h0 t=6 score=0.09612389 prob=0.03338530
+[attn-parity] h0 t=7 score=0.09418044 prob=0.03332048
+[attn-parity] h0 t=8 score=0.02956985 prob=0.03123570
+[attn-parity] h0 t=9 score=-0.42081589 prob=0.01990908
+[attn-parity] h0 t=10 score=0.03917218 prob=0.03153708
+[attn-parity] h0 t=11 score=0.08042675 prob=0.03286534
+[attn-parity] h0 t=12 score=0.07417402 prob=0.03266048
+[attn-parity] h0 t=13 score=0.06508174 prob=0.03236487
+[attn-parity] h0 t=14 score=0.00851487 prob=0.03058491
+[attn-parity] h0 t=15 score=0.06099704 prob=0.03223294
+[attn-parity] h0 t=16 score=0.09957595 prob=0.03350075
+[attn-parity] h0 t=17 score=0.04010406 prob=0.03156648
+[attn-parity] h0 t=18 score=0.06797026 prob=0.03245849
+[attn-parity] h0 t=19 score=0.08207981 prob=0.03291971
+[attn-parity] h0 t=20 score=0.04803637 prob=0.03181787
+[attn-parity] h0 t=21 score=0.00662605 prob=0.03052719
+[attn-parity] h0 t=22 score=0.04799683 prob=0.03181661
+[attn-parity] h0 t=23 score=0.03828633 prob=0.03150915
+[attn-parity] h0 t=24 score=0.02733533 prob=0.03116598
+[attn-parity] h0 t=25 score=0.05041139 prob=0.03189353
+[attn-parity] h0 t=26 score=0.05847133 prob=0.03215163
+[attn-parity] h0 t=27 score=0.04002764 prob=0.03156407
+[attn-parity] h0 t=28 score=0.07349446 prob=0.03263829
+[attn-parity] h0 t=29 score=0.10309547 prob=0.03361886
+[attn-parity] h0 t=30 score=-0.18862849 prob=0.02511244
+[attn-parity] h0 t=31 score=0.08603878 prob=0.03305030
+[attn-parity] out maxAbs=4.4703484e-08 maxRel=6.7937551e-05 at=1404 gpu0=0.00056663511 cpu0=0.00056663522
+[attn-parity] pos=32 T=33 scale=0.125000000
+[attn-parity] h0 t=0 score=0.00965404 prob=0.02426365
+[attn-parity] h0 t=1 score=0.02420230 prob=0.02461923
+[attn-parity] h0 t=2 score=0.33304405 prob=0.03352762
+[attn-parity] h0 t=3 score=-0.61815459 prob=0.01295097
+[attn-parity] h0 t=4 score=0.35395062 prob=0.03423594
+[attn-parity] h0 t=5 score=0.30057326 prob=0.03245644
+[attn-parity] h0 t=6 score=0.30304801 prob=0.03253686
+[attn-parity] h0 t=7 score=0.30635637 prob=0.03264468
+[attn-parity] h0 t=8 score=0.20772256 prob=0.02957851
+[attn-parity] h0 t=9 score=-0.43338367 prob=0.01557928
+[attn-parity] h0 t=10 score=0.24023297 prob=0.03055592
+[attn-parity] h0 t=11 score=0.27396688 prob=0.03160427
+[attn-parity] h0 t=12 score=0.30097339 prob=0.03246943
+[attn-parity] h0 t=13 score=0.28829065 prob=0.03206022
+[attn-parity] h0 t=14 score=0.18806429 prob=0.02900272
+[attn-parity] h0 t=15 score=0.26105312 prob=0.03119877
+[attn-parity] h0 t=16 score=0.32868734 prob=0.03338186
+[attn-parity] h0 t=17 score=0.19447929 prob=0.02918937
+[attn-parity] h0 t=18 score=0.25553843 prob=0.03102719
+[attn-parity] h0 t=19 score=0.29281679 prob=0.03220566
+[attn-parity] h0 t=20 score=0.26736242 prob=0.03139623
+[attn-parity] h0 t=21 score=0.16220210 prob=0.02826227
+[attn-parity] h0 t=22 score=0.23351981 prob=0.03035148
+[attn-parity] h0 t=23 score=0.18355402 prob=0.02887221
+[attn-parity] h0 t=24 score=0.19811979 prob=0.02929583
+[attn-parity] h0 t=25 score=0.26219973 prob=0.03123456
+[attn-parity] h0 t=26 score=0.30048126 prob=0.03245345
+[attn-parity] h0 t=27 score=0.23616482 prob=0.03043186
+[attn-parity] h0 t=28 score=0.50378793 prob=0.03977002
+[attn-parity] h0 t=29 score=0.38500977 prob=0.03531597
+[attn-parity] h0 t=30 score=0.20287463 prob=0.02943546
+[attn-parity] h0 t=31 score=0.37381586 prob=0.03492285
+[attn-parity] h0 t=32 score=0.32229614 prob=0.03316920
+[attn-parity] out maxAbs=2.9802322e-08 maxRel=0.0035304851 at=1071 gpu0=0.00061072822 cpu0=0.00061072828

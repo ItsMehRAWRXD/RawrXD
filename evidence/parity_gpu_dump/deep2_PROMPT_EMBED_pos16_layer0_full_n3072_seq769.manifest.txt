@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_EMBED
+pos=16
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=21cb042319fd8b85
+l2=0.73706831654792859
+seq=769
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_PROMPT_EMBED_pos16_layer0_full_n3072_seq769.bin

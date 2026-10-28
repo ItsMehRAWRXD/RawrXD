@@ -6,6 +6,7 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
+#include "KimiLayer1FfnResidualCert.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
 #include "lavapath/DualStickImbalance.hpp"
@@ -18,6 +19,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -130,13 +132,19 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     if (!LoadAndRoute(index, cfg, layer, normed, route, error)) return false;
     for (uint32_t i = 0; i < route.count; ++i)
         greedy_det::NoteExpert(layer, (int32_t)route.expertIds[i]);
-    if (moe_ltrace::On(layer)) {
+    if (moe_ltrace::On(layer) ||
+        (kimi_l1_ffn::CertOn() && layer == 1u)) {
         std::fprintf(stderr, "L%u_ROUTER_DONE ids=[", layer);
         for (uint32_t i = 0; i < route.count; ++i) {
             if (i) std::fputc(',', stderr);
             std::fprintf(stderr, "%u", route.expertIds[i]);
         }
-        std::fprintf(stderr, "]\n");
+        std::fprintf(stderr, "] w=[");
+        for (uint32_t i = 0; i < route.count; ++i) {
+            if (i) std::fputc(',', stderr);
+            std::fprintf(stderr, "%.9g", (double)route.weights[i]);
+        }
+        std::fprintf(stderr, "] count=%u\n", route.count);
         std::fflush(stderr);
     }
 
@@ -385,6 +393,25 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         MoEPlaceLive().product_backend_attested = 1;
 
     moe_ltrace::BC(layer, "ROUTED_ACCUM_DONE");
+    const bool dumpL1 = kimi_l1_ffn::CertOn() && layer == 1u;
+    if (dumpL1) {
+        std::vector<float> routed(cfg.hiddenDim);
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
+            routed[i] = p0[i] + p1[i];
+        kimi_l1_ffn::DumpVec("FFN_ROUTED_1", layer, moe_ltrace::Tok(),
+                             routed.data(), cfg.hiddenDim);
+        std::fprintf(stderr,
+                     "L1FFN_PLACE layer=1 executed=%u selected=%u dual=%d "
+                     "gpu0_ns=%llu gpu1_ns=%llu h2d0=%llu h2d1=%llu "
+                     "host_down=%llu device_down=%llu\n",
+                     executed, pn, dual ? 1 : 0,
+                     (unsigned long long)tw0, (unsigned long long)tw1,
+                     (unsigned long long)c0.h2d_bytes,
+                     (unsigned long long)c1.h2d_bytes,
+                     (unsigned long long)merged.host_expert_down_vectors,
+                     (unsigned long long)merged.device_down_vectors);
+        std::fflush(stderr);
+    }
     MoEPlaceLive().experts_executed += executed;
     if (decodePhase) MoEPlaceLive().decode_experts_executed += executed;
     if (executed != pn) {
@@ -400,7 +427,28 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     }
     moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
     MoEPlaceLive().shared_expert_calls++;
+    if (dumpL1)
+        kimi_l1_ffn::DumpVec("FFN_SHARED_1", layer, moe_ltrace::Tok(),
+                             shared.data(), cfg.hiddenDim);
     for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
+    if (dumpL1) {
+        kimi_l1_ffn::DumpVec("FFN_ACCUM_1", layer, moe_ltrace::Tok(), accum,
+                             cfg.hiddenDim);
+        /* Join invariant: accum == routed + shared (pre-hidden residual). */
+        double maxAbs = 0.0;
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) {
+            const double expect =
+                (double)(p0[i] + p1[i]) + (double)shared[i];
+            const double err = std::fabs(expect - (double)accum[i]);
+            if (err > maxAbs) maxAbs = err;
+        }
+        std::fprintf(stderr,
+                     "L1FFN_JOIN_INVARIANT layer=1 tok=%u n=%u "
+                     "ACCUM_EQ_ROUTED_PLUS_SHARED maxAbs=%.9g PASS=%d\n",
+                     moe_ltrace::Tok(), cfg.hiddenDim, maxAbs,
+                     maxAbs < 1e-5 ? 1 : 0);
+        std::fflush(stderr);
+    }
     return true;
 }
 

@@ -1,21 +1,28 @@
-// Fallback implementations for GUI components not available in headless builds.
+// unlinked_symbols_batch_014.cpp
+// Headless / link-gap factories for OutlinePanel + DockingPaneManager.
+// Real types: src/win32app/OutlinePanel.h, DockingPaneManager.h
+// Win32IDE product UI path uses Win32IDE::initOutlinePanel / DockingPaneManager.cpp —
+// do not dual-link stub OutlinePanel classes. PROMOTE=0.
+
 #include <memory>
 
-// Forward declare the classes to satisfy the compiler for the unique_ptr types.
-class OutlinePanel {};
-class DockingPaneManager {};
+#include "../win32app/OutlinePanel.h"
+#include "../win32app/DockingPaneManager.h"
 
 namespace Win32IDE {
-    std::unique_ptr<OutlinePanel> createOutlinePanel() { 
-        // Return a minimal implementation instead of nullptr
-        return std::make_unique<OutlinePanel>(); 
-    }
-    std::unique_ptr<DockingPaneManager> createDockingPaneManager() { 
-        // Return a minimal implementation instead of nullptr
-        return std::make_unique<DockingPaneManager>(); 
-    }
-    void goToLine(int line, int col) {
-        // No-op in headless mode — maintains API compatibility
-        (void)line; (void)col;
-    }
+
+std::unique_ptr<OutlinePanel> createOutlinePanel() {
+    return std::make_unique<OutlinePanel>();
 }
+
+std::unique_ptr<DockingPaneManager> createDockingPaneManager() {
+    return std::make_unique<DockingPaneManager>();
+}
+
+void goToLine(int line, int col) {
+    // Headless: no editor HWND. Product path: Win32IDE::gotoLine.
+    (void)line;
+    (void)col;
+}
+
+} // namespace Win32IDE

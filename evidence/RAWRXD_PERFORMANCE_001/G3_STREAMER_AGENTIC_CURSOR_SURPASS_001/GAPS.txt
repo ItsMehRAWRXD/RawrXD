@@ -1,0 +1,23 @@
+G3_STREAMER_AGENTIC_CURSOR_SURPASS_001 — Cursor hooks/rules vs Deep IDE continue-ensure
+
+CURSOR (G:\~dev\.cursor)
+  hooks.json: sessionStart + beforeSubmitPrompt + preToolUse(failClosed=true) + postToolUse(Read|read_file|read_motd)
+  Rules: PassiveRoleNotRoleplay.mdc, StreamerAgenticContinueEnsure.mdc, MultitaskMode.mdc
+  MultitaskMode: Cursor Task preferred; Deep IDE /api/subagent when Task unavailable
+
+DEEP IDE (gui/ide_chatbot_engine.js)
+  State.motd + executeTool MOTD gate (path leaf PassiveRoleNotRoleplay)
+  isContinueEnsureTrigger + runContinueEnsureCoordinator → EngineAPI.subagent(MAX_BRIEF)
+  3-line ack matches StreamerAgenticContinueEnsure.mdc
+  Full Source\gui\ide_chatbot_engine.js SYNCED from gui\ (2026-10-26 follow-up)
+
+GAPS / DISPOSITION
+  1) MOTD .mdc twin — CLOSED (gui + Full Source synced)
+  2) smoke_bin Win32IDE MOTD ack broken — MITIGATED: run_surpass_smoke.ps1 prefers build-fd SHA 87314037…
+  3) PRODUCT_STREAMER_PREP/AGENTIC_PATH — CLOSED on product binary
+     build-fd\bin\rawr.exe run <model> -p … → PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 (rawr_product_prep_g.err.txt)
+     F:\rawrxd\build_ide\bin-msvc\rawr.exe is agentic REPL — PREP NOT expected; do not use for this marker
+  4) Deep GUI continue-ensure RUNTIME_REACHED — OPEN (HTTP /api/subagent proved; GUI click path NOT_RUN)
+  5) K2 256 factory seal — OPEN (separate track)
+
+NO new deps. Hooks.json left intact. PROMOTE=0 TIP_CLIMB=HOLD.

@@ -1,0 +1,32 @@
+DEEP2_VULKAN_SUBMIT_OPT_001 ARCHITECTURE
+ASOF=2026-10-27T02:54:39.8714948-04:00
+BASELINE_SEALED=1
+CODE_CHANGE_COMPLETE=0
+OPTIMIZATION_COMPLETE=0
+PROMOTE=0
+
+TWO_VULKAN_STACKS:
+  A) include/vulkan_compute.h + src/vulkan_compute.cpp
+     - QuantDot Begin/EndQuantDotBatch (RuntimeGraph / deep2_bench_tps hot path)
+  B) src/deep2/vulkan_compute.h + BeginFusedLayer/EndFusedLayer
+     - Deep2Engine_GpuForward (not used by deep2_bench_tps)
+
+WHY ~89 SUBMITS/FORWARD (tinyllama decode token):
+  CPU OpAttention requires host Q/K/V before softmax/attn.
+  Per layer RuntimeGraph typically:
+    EndQuantDotBatch(QKV) -> host wait -> CPU attn -> EndQuantDotBatch(O)
+    -> residual/rms host -> EndQuantDotBatch(gate+up) -> silu -> EndQuantDotBatch(down)
+  ≈4 host-necessary submits/layer × ~22 layers ≈ 88.
+
+BeginFusedLayer on stack B does not reduce stack A submits.
+TARGET <=10/fwd requires GPU-resident attention (and ideally RMS/residual)
+on stack A in the same CB as QuantDot, or routing the bench through stack B
+full-token fuse — not fence deletion alone.
+
+INSTRUMENTATION:
+  DEEP2_SUBMIT_TRACE=1 logs EndQuantDotBatch as dependency=HOST_READBACK necessary=1
+
+NEXT_CODE:
+  1) GPU AttnDecode on QuantDot VulkanCompute between QKV and O without host roundtrip
+  2) Then layer/token BeginSubmitFuse on stack A
+  3) A/B tinyllama Q4_K_M decode=32 vs BASELINE_PROFILE.txt

@@ -1,0 +1,26 @@
+﻿[
+    {
+        "ProcessId":  12880,
+        "ParentProcessId":  12684,
+        "Name":  "RawrXD-Win32IDE.exe",
+        "ExecutablePath":  "G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference\\bin\\RawrXD-Win32IDE.exe",
+        "CommandLine":  "\"G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference\\bin\\RawrXD-Win32IDE.exe\" ",
+        "CreationDate":  "\/Date(1793007015468)\/"
+    },
+    {
+        "ProcessId":  24488,
+        "ParentProcessId":  12880,
+        "Name":  "cmd.exe",
+        "ExecutablePath":  "C:\\WINDOWS\\system32\\cmd.exe",
+        "CommandLine":  "C:\\WINDOWS\\system32\\cmd.exe /c ollama list 2\u003enul",
+        "CreationDate":  "\/Date(1793007015952)\/"
+    },
+    {
+        "ProcessId":  19280,
+        "ParentProcessId":  24488,
+        "Name":  "conhost.exe",
+        "ExecutablePath":  "C:\\WINDOWS\\system32\\conhost.exe",
+        "CommandLine":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+        "CreationDate":  "\/Date(1793007015962)\/"
+    }
+]

@@ -30,6 +30,7 @@
 #include <functional>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
@@ -125,7 +126,8 @@ std::string buildSnippetCompletion(const std::string& context, const std::string
 // ============================================================================
 
 void Win32IDE::initGhostText() {
-    // Ghost text enabled by default (heap corruption fixed in render path).
+    // Ghost text enabled by default. Render path must use RichEdit EM_POSFROMCHAR
+    // ABI (wParam=POINTL*, lParam=cp) — inverted args scribble heap → 0xC0000374.
     m_ghostTextEnabled        = true;
     m_ghostTextVisible        = false;
     m_ghostTextAccepted       = false;
@@ -137,7 +139,10 @@ void Win32IDE::initGhostText() {
     m_ghostTextId             = 0;
     m_ghostSource             = 0;
     m_ghostLegacyRejected     = 0;
-    m_ghostTextFont           = nullptr;
+    if (m_ghostTextFont) {
+        DeleteObject(m_ghostTextFont);
+        m_ghostTextFont = nullptr;
+    }
 
     // Wire ghost text overlay to editor so overlay can render/draw when used
     if (m_ghostTextRendererOverlay && m_hwndEditor) {
@@ -145,7 +150,8 @@ void Win32IDE::initGhostText() {
         m_ghostTextRendererOverlay->initialize();
     }
 
-    // Create ghost text font — italic version of editor font (DPI-scaled)
+    // Create ghost text font — italic version of editor font (DPI-scaled).
+    // Theme populate may run after this late-step; fall back to Consolas.
     LOGFONTA lf = {};
     lf.lfHeight         = -dpiScale(14);    // ~10.5pt at 96 DPI
     lf.lfWeight         = FW_NORMAL;
@@ -153,7 +159,9 @@ void Win32IDE::initGhostText() {
     lf.lfCharSet        = DEFAULT_CHARSET;
     lf.lfQuality        = CLEARTYPE_QUALITY;
     lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
-    strncpy(lf.lfFaceName, m_currentTheme.fontName.c_str(), LF_FACESIZE - 1);
+    const char* face = m_currentTheme.fontName.empty() ? "Consolas"
+                                                       : m_currentTheme.fontName.c_str();
+    strncpy(lf.lfFaceName, face, LF_FACESIZE - 1);
     lf.lfFaceName[LF_FACESIZE - 1] = '\0';
     m_ghostTextFont = CreateFontIndirectA(&lf);
 
@@ -416,7 +424,45 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 }
             }
 
-            // LOCAL_ONLY_001: no Ollama HTTP / no CPUInferenceEngine fallthrough.
+            // Multi-model GhostText: Ollama FIM after product Deep2 miss.
+            // Opt-in: RAWRXD_GHOST_OLLAMA=1 or an explicit model override/resolution.
+            {
+                const char* ghostOllama = std::getenv("RAWRXD_GHOST_OLLAMA");
+                const std::string resolved = getResolvedOllamaModel();
+                const bool allowOllama =
+                    (ghostOllama && ghostOllama[0] == '1') ||
+                    !m_ollamaModelOverride.empty() ||
+                    !resolved.empty();
+                if (allowOllama) {
+                    RawrXD::Prediction::OllamaProvider ollama;
+                    const char* baseEnv = std::getenv("RAWRXD_OLLAMA_URL");
+                    ollama.SetBaseUrl(baseEnv && baseEnv[0] ? baseEnv
+                                                            : "http://127.0.0.1:11434");
+                    RawrXD::Prediction::PredictionConfig cfg;
+                    cfg.useFIM = true;
+                    cfg.model = !m_ollamaModelOverride.empty()
+                                    ? m_ollamaModelOverride
+                                    : (!resolved.empty() ? resolved
+                                                         : std::string("nemotron-3-nano:4b"));
+                    cfg.maxTokens = 64;
+                    ollama.Configure(cfg);
+                    if (ollama.IsAvailable()) {
+                        RawrXD::Prediction::PredictionContext octx;
+                        octx.prefix = context;
+                        octx.suffix = suffix;
+                        octx.language = language;
+                        octx.filePath = filePath;
+                        octx.cursorLine = cursorLine;
+                        octx.cursorColumn = cursorCol;
+                        auto ores = ollama.Predict(octx);
+                        if (ores.success && !ores.completion.empty()) {
+                            std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                            m_ghostTextMetrics.localWins++;
+                            return trimGhostText(ores.completion);
+                        }
+                    }
+                }
+            }
             (void)suffix;
             return "";
         }
@@ -471,10 +517,25 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
 
 void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionText) {
     m_ghostTextPending = false;
-    (void)requestedCursorPos;
-    (void)completionText;
-    // Product is the only completion authority. Legacy producers cannot write.
-    ++m_ghostLegacyRejected;
+    if (!completionText || !completionText[0] || !m_hwndEditor)
+        return;
+
+    // Drop if caret moved since request was issued.
+    CHARRANGE sel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (requestedCursorPos >= 0 && sel.cpMin != requestedCursorPos) {
+        ++m_ghostLegacyRejected;
+        return;
+    }
+
+    const uint64_t gen = m_editorDocGen;
+    if (gen == 0) {
+        ++m_ghostLegacyRejected;
+        return;
+    }
+    // Product bind is the only writer that may paint (GhostSrcProduct).
+    if (!applyProductGhost(completionText, gen, 0, m_ghostTextLine, m_ghostTextColumn))
+        ++m_ghostLegacyRejected;
 }
 
 bool Win32IDE::applyProductGhost(const char* text, uint64_t gen, uint64_t id,
@@ -561,10 +622,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
     CHARRANGE sel;
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
 
-    // Get the pixel position of the cursor
-    POINTL pt;
-    SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)sel.cpMin, (LPARAM)&pt);
-
+    // RichEdit EM_POSFROMCHAR: wParam=POINTL*, lParam=cp (NOT edit-control order).
+    POINTL pt{};
+    if (SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&pt, (LPARAM)sel.cpMin) != 0)
+        return;
     if (pt.x < 0 || pt.y < 0) return;  // Cursor not visible
 
     // Get the text after cursor on the same line to know rendering offset
@@ -575,9 +636,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
 
     // If cursor is not at end of line, render after end of line text
     // (ghost text appears after existing text)
-    POINTL endPt;
+    POINTL endPt{};
     if (lineEnd > sel.cpMin) {
-        SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineEnd, (LPARAM)&endPt);
+        if (SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&endPt, (LPARAM)lineEnd) != 0)
+            endPt = pt;
     } else {
         endPt = pt;
     }
@@ -631,8 +693,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
         } else {
             // Subsequent lines: render at left margin (indented to match cursor column)
             // Get x position of the start of the line (respect indentation)
-            POINTL lineStartPt;
-        SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineStart, (LPARAM)&lineStartPt);
+            POINTL lineStartPt{};
+            if (SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&lineStartPt,
+                             (LPARAM)lineStart) != 0)
+                lineStartPt.x = 0;
             int indentX = lineStartPt.x;
 
             drawY += lineHeight;

@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // Deep2Engine.cpp - Production Inference Engine Implementation
 // Real weight loading, real attention, real FFN, real sampling
 // NO STUBS, NO DUMMIES, NO HARDCODED VALUES
@@ -103,6 +103,7 @@
 #include "CycloneScheduler.hpp"
 #include "ElasticDynamicBudget.hpp"
 #include "KimiK2Config.hpp"
+#include "KimiLayer1FfnResidualCert.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2LivePathTensorCache.hpp"
 #include "K2LivePathOwnership.hpp"
@@ -7817,6 +7818,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         return;
     }
     if (layer >= modelWeights.layers.size()) {
+        if (Deep2::kimi_l1_ffn::RejectMissingLayerIdentity(
+                layer, modelWeights.layers.size(),
+                k2ShardIndexOpen_ ? k2ShardConfig_.architecture.c_str()
+                                 : "host",
+                "forwardLayer")) {
+            throw std::runtime_error(
+                "CERT_FAIL: MISSING_LAYER_IDENTITY in forwardLayer");
+        }
         memcpy(output, input, config.hiddenDim * sizeof(float));
         return;
     }
@@ -8366,6 +8375,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         return;
     }
     if (layer >= modelWeights.layers.size()) {
+        if (Deep2::kimi_l1_ffn::RejectMissingLayerIdentity(
+                layer, modelWeights.layers.size(),
+                k2ShardIndexOpen_ ? k2ShardConfig_.architecture.c_str()
+                                 : "host",
+                "computeAttention")) {
+            throw std::runtime_error(
+                "CERT_FAIL: MISSING_LAYER_IDENTITY in computeAttention");
+        }
         memcpy(output, input, config.hiddenDim * sizeof(float));
         return;
     }
@@ -9100,6 +9117,14 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
         return;
     }
     if (layer >= modelWeights.layers.size()) {
+        if (Deep2::kimi_l1_ffn::RejectMissingLayerIdentity(
+                layer, modelWeights.layers.size(),
+                k2ShardIndexOpen_ ? k2ShardConfig_.architecture.c_str()
+                                 : "host",
+                "computeFFN")) {
+            throw std::runtime_error(
+                "CERT_FAIL: MISSING_LAYER_IDENTITY in computeFFN");
+        }
         memcpy(output, input, config.hiddenDim * sizeof(float));
         if (debugLogging_) {
             fprintf(stderr, "[FFN_EXIT] ly=%zu (out of range, identity)\n", layer);
@@ -9727,6 +9752,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     }
     if (layer >= modelWeights.layers.size()) {
         MoEPlaceLive().moe_ffn_early_return++;
+        if (Deep2::kimi_l1_ffn::RejectMissingLayerIdentity(
+                layer, modelWeights.layers.size(),
+                k2ShardIndexOpen_ ? k2ShardConfig_.architecture.c_str()
+                                 : "host",
+                "computeMoEFFN")) {
+            throw std::runtime_error(
+                "CERT_FAIL: MISSING_LAYER_IDENTITY in computeMoEFFN");
+        }
         memcpy(output, input, config.hiddenDim * sizeof(float));
         return;
     }
@@ -10887,13 +10920,28 @@ void Deep2Engine::enableAllEnhancements() {
     if (EnhanceWanted("vulkan") && modelWeights.loaded && !vulkanInitialized_)
         enableVulkan(true);
     const bool hostCpuOptIn = envFlagEnabled("RAWRXD_HOST_DECODE");
+    /* K2 multi-shard: weights/index land in openK2ShardDirectory after init.
+     * Do not wipe initialized here — Vulkan is armed post-index by the harness. */
+    const char* k2Dir = std::getenv("DEEP2_K2_SHARD_DIR");
+    const char* k2Gen = std::getenv("DEEP2_REAL_K2_GENERATE");
+    const bool k2Deferred =
+        (k2Dir && k2Dir[0]) ||
+        (k2Gen && k2Gen[0] == '1') ||
+        (config.useMLA && !modelWeights.loaded);
     if (!hostCpuOptIn && EnhanceWanted("vulkan") && !vulkanEnabled_) {
-        printf("[Deep2Engine] FATAL: GPU inference required — Vulkan not armed. "
-               "Set RAWRXD_HOST_DECODE=1 only to opt into CPU decode.\n");
-        fflush(stdout);
-        modelWeights.loaded = false;
-        initialized = false;
-        return;
+        if (k2Deferred) {
+            printf("[Deep2Engine] K2_DEFER_VULKAN: index/weights not loaded yet; "
+                   "Vulkan arm deferred to openK2ShardDirectory "
+                   "(initialized preserved)\n");
+            fflush(stdout);
+        } else {
+            printf("[Deep2Engine] FATAL: GPU inference required — Vulkan not armed. "
+                   "Set RAWRXD_HOST_DECODE=1 only to opt into CPU decode.\n");
+            fflush(stdout);
+            modelWeights.loaded = false;
+            initialized = false;
+            return;
+        }
     }
     /* Same enhancement braid on GPU path (elastic/prefetch/ckv/nvme/torus).
      * Router→experts→residency→TransferScheduler→GPU cache needs elastic armed
@@ -11360,6 +11408,20 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
     if (!vc) {
         ++vulkanGemvFail_;
         return false;
+    }
+    if (vc->IsDeviceLost()) {
+        std::fprintf(stderr, "GPU_LOST_ON_GEMV slot=%d phase=%s vk=%d\n",
+                     slot, vc->LastD2hPhase() ? vc->LastD2hPhase() : "?",
+                     vc->LastD2hVk());
+        std::fflush(stderr);
+        if (recoverVulkanAfterDeviceLost()) {
+            vc = getVulkanComputeSlot((unsigned)slot);
+            if (!vc) vc = getVulkanComputeSlot(0);
+            if (!vc) { ++vulkanGemvFail_; return false; }
+        } else {
+            ++vulkanGemvFail_;
+            return false;
+        }
     }
 
     if (wt.data && wt.sizeBytes &&
@@ -12855,6 +12917,8 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
     isMultiShard_ = true;
     k2ShardIndexOpen_ = true;
     modelWeights.loaded = true;
+    /* Restore after enableAllEnhancements K2_DEFER path; MODEL_INDEXED needs both. */
+    initialized = true;
     modelState_ = ModelState::Indexed;
     modelWeights.useMLA = true;
     strncpy(config.modelPath, shardDirPath.c_str(), sizeof(config.modelPath) - 1);
@@ -12871,10 +12935,25 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
     } else {
         printf("[Deep2Engine] WARNING: NVMe lane still cold after shard open\n");
     }
-    printf("[Deep2Engine] K2 shard index open: %zu tensors, %zu shards, arch=%s\n",
-           globalIndex_->TotalTensors(),
-           shards.size(),
-           k2ShardConfig_.architecture.c_str());
+    /* Fail-closed MoE contract: deepseek2/Kimi shards without expert metadata
+     * still require expert routing; zero experts → live path skipped MoE. */
+    if (k2ShardConfig_.numExperts == 0) {
+        const Deep2::KimiK2Config fb = makeK2Config0905Fallback();
+        k2ShardConfig_.numExperts = fb.numExperts;
+        if (k2ShardConfig_.expertsPerToken == 0)
+            k2ShardConfig_.expertsPerToken = fb.expertsPerToken;
+        if (k2ShardConfig_.sharedExperts == 0)
+            k2ShardConfig_.sharedExperts = fb.sharedExperts;
+        printf("[Deep2Engine] K2 MoE dims filled from 0905 contract "
+               "(metadata numExperts was 0)\n");
+    }
+    modelWeights.numExperts = k2ShardConfig_.numExperts;
+    modelWeights.numExpertsPerToken = k2ShardConfig_.expertsPerToken;
+    printf("[Deep2Engine] K2 shard index open: %zu tensors, %zu shards, "
+           "arch=%s numExperts=%u expertsPerToken=%u\n",
+           globalIndex_->TotalTensors(), shards.size(),
+           k2ShardConfig_.architecture.c_str(),
+           k2ShardConfig_.numExperts, k2ShardConfig_.expertsPerToken);
     // Propagate MLA dims into EngineConfig so allocateBuffers / live path
     // use tensor authority (q_b cols = heads*(nope+rope) = 12288).
     config.useMLA = true;

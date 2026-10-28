@@ -1,0 +1,66 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file agentic_camellia_gate_masm0.obj
+
+File Type: COFF OBJECT
+
+COFF SYMBOL TABLE
+000 0105899C ABS    notype       Static       | @comp.id
+001 80010190 ABS    notype       Static       | @feat.00
+002 00000003 ABS    notype       Static       | @vol.md
+003 00000000 SECT1  notype       Static       | .drectve
+    Section length   2F, #relocs    0, #linenums    0, checksum        0
+005 00000000 SECT2  notype       Static       | .debug$S
+    Section length   A8, #relocs    0, #linenums    0, checksum        0
+007 00000000 SECT3  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum 7F8535B7, selection    1 (pick no duplicates)
+009 00000000 SECT4  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+00B 00000000 SECT5  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+00D 00000000 SECT6  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+00F 00000000 SECT7  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+011 00000000 SECT8  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+013 00000000 SECT9  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+015 00000000 SECTA  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+017 00000000 SECTB  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+019 00000000 SECTC  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+01B 00000000 SECTD  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+01D 00000000 SECTE  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+01F 00000000 SECTF  notype       Static       | .text$mn
+    Section length    6, #relocs    0, #linenums    0, checksum CD290AF0, selection    1 (pick no duplicates)
+021 00000000 SECTC  notype ()    External     | asm_camellia256_init
+022 00000000 SECTE  notype ()    External     | asm_camellia256_set_key
+023 00000000 SECT7  notype ()    External     | asm_camellia256_encrypt_block
+024 00000000 SECT4  notype ()    External     | asm_camellia256_decrypt_block
+025 00000000 SECT8  notype ()    External     | asm_camellia256_encrypt_ctr
+026 00000000 SECT5  notype ()    External     | asm_camellia256_decrypt_ctr
+027 00000000 SECT9  notype ()    External     | asm_camellia256_encrypt_file
+028 00000000 SECT6  notype ()    External     | asm_camellia256_decrypt_file
+029 00000000 SECTB  notype ()    External     | asm_camellia256_get_status
+02A 00000000 SECTF  notype ()    External     | asm_camellia256_shutdown
+02B 00000000 SECTD  notype ()    External     | asm_camellia256_self_test
+02C 00000000 SECTA  notype ()    External     | asm_camellia256_get_hmac_key
+02D 00000000 SECT3  notype ()    External     | ?agentic_camellia_gate_marker@@YAHXZ (int __cdecl agentic_camellia_gate_marker(void))
+02E 00000000 SECT10 notype       Static       | .chks64
+    Section length   80, #relocs    0, #linenums    0, checksum        0
+
+String Table Size = 0x16F bytes
+
+  Summary
+
+          80 .chks64
+          A8 .debug$S
+          2F .drectve
+          4E .text$mn

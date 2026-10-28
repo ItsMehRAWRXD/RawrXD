@@ -1,0 +1,42 @@
+WIN32IDE_BRIDGE_XOR_LAW_001 / LAW
+=================================
+ASOF_UTC=2026-10-28T08:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+LOCAL_ONLY=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+WIN32IDE_EXE_SHA_HOLD=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+CAMELLIA_AUTH_BIND=CLEARED_LINK_LEVEL (do not reopen)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+CMAKE_OMIT != PRODUCT_LINK_SUCCESS
+XOR_IN_SOURCE != RUNTIME_AUTH_E2E PASS
+
+FINDING
+-------
+src/core/win32ide_asm_kernel_bridge.cpp contains Camellia XOR leftovers
+(file + buf under #if !defined(RAWR_HAS_MASM)).
+CMakeLists.txt: ZERO references to win32ide_asm_kernel_bridge — not in
+RawrXD-Win32IDE link (nor Gold). Product Auth bind owner remains
+RawrXD_Camellia256_Auth.obj per CAMELLIA_AUTH_ASM_BIND_001 map.
+
+CLASSIFICATION
+--------------
+DORMANT / CMake-omitted — not a live Win32IDE link hazard while omitted.
+Re-adding this TU to Win32IDE sources without removing Camellia XOR would
+LNK2005 vs Auth.obj (or silently reintroduce SYNTHETIC XOR if MASM undef).
+
+GATE
+----
+GATED_OMIT: keep CMake-omit; header + Camellia block cite this LAW.
+Do not invent link/runtime PASS from source presence of XOR.
+
+DISPOSITION
+-----------
+GATED_OMIT — LAW_INTENTIONAL cite: CMake omit + Auth.obj product bind
+PROMOTE=0

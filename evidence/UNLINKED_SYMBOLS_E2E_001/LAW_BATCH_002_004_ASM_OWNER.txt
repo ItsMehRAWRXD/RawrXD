@@ -1,0 +1,20 @@
+﻿LAW: unlinked_symbols_batch_002 / 004 ownership (quintile A)
+PROMOTE=0 TIP_CLIMB=HOLD SYNTHETIC=0
+
+BATCH_002
+- Win32IDE: LINKED via unlinked_symbols_batch_002.cpp
+- ggml_gemm_q4_0 / matmul_kernel_avx2: owner batch_002 (CPU GEMM)
+- asm_pyre_*: owner RawrXD_Pyre_Compute.asm when RAWRXD_HAS_ASM_PYRE;
+  else C fallback in batch_002 (#if !RAWRXD_HAS_ASM_PYRE)
+- RawrEngine GOLD path: batch_002 EXCLUDED (ASM pyre owns) — verify call sites
+  compile against pyre_compute.h / ASM exports; do not re-add batch_002 there
+
+BATCH_004
+- EXCLUDED from Win32IDE and RawrEngine CMake (duplicate with ASM)
+- Owner: RawrXD_Hotpatch_Kernel.asm (asm_hotpatch_*)
+- Owner: RawrXD_Snapshot.asm (asm_snapshot_*)
+- asm_watchdog_init: win32ide_watchdog_init.cpp (separate TU)
+- Call-path verify: masm_stress_harness / hardware_synthesizer / cathedral
+  MagShutdown must resolve to ASM objs, not batch_004.cpp
+- C reference file retained for ABI documentation only
+

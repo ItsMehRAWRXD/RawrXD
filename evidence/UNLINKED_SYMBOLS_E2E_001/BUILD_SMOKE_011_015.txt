@@ -1,0 +1,19 @@
+BUILD_SMOKE quintile C (011-015)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+DATE=2026-10-27
+WORKSPACE=G:\~dev\rawrxd
+
+COMMAND:
+  vcvars64 + cl /nologo /c /EHsc /std:c++20 /DWIN32
+  includes: src/core, src, include, src/win32app
+  → unlinked_symbols_batch_001.cpp
+  → unlinked_symbols_batch_011.cpp
+  → unlinked_symbols_batch_012.cpp
+  → unlinked_symbols_batch_013.cpp
+  → unlinked_symbols_batch_014.cpp
+  → unlinked_symbols_batch_015.cpp
+
+RESULT: COMPILE_OK (exit 0) — objs under evidence/UNLINKED_SYMBOLS_E2E_001/
+FAILS=0
+NOT_RUN: full RawrXD-Win32IDE link
+NOT_PASS: no invented link PASS / no cert metrics / PROMOTE=0

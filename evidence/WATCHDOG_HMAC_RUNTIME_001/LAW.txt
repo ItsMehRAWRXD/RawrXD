@@ -1,0 +1,45 @@
+WATCHDOG_HMAC_RUNTIME_001 / LAW
+================================
+ASOF_UTC=2026-10-28T08:45:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+MISSION
+-------
+Close HMAC RUNTIME_REACHED without Win32IDE relink by linking:
+  RawrXD_Watchdog_from_source.obj + RawrXD_Camellia256.obj (product bind)
+into a tiny console smoke and exercising asm_watchdog_init/get_baseline/verify
+on the MASM get_hmac_key join.
+
+OWNERSHIP TRACE
+---------------
+asm_watchdog_init / verify / get_baseline / shutdown
+  -> src/asm/RawrXD_Watchdog.asm (Full Source restored; object smoke)
+asm_camellia256_get_hmac_key
+  -> build_win32ide_link001\RawrXD_Camellia256.obj (product bind)
+NO Win32IDE EXE relink this mission.
+
+DISPOSITION
+-----------
+RUNTIME_REACHED=PASS (earned)
+  Smoke exit 0. asm_watchdog_init returned WATCHDOG_STATUS_NO_KEY=2 before
+  Camellia ready (fail-closed nonzero). get_baseline + verify exercised.
+  set_key + get_hmac_key join exercised (key material ZERO after set_key;
+  derive owned by init KDF — HMAC_PRODUCT NOT_CLAIMED).
+
+HMAC_FULL=FAIL / SKIPPED default
+  Optional --full post-set CryptoAPI baseline capture AVs in this harness;
+  not required for RUNTIME_REACHED. Not invented PASS.
+
+SOURCE_WIRED != RUNTIME_REACHED (prior PRODUCT_001 SOURCE_WIRED held;
+  this seal closes RUNTIME on ASM object path).
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+NO_KEY must remain nonzero (observed=2)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+RELINK_BY_THIS_MISSION=0

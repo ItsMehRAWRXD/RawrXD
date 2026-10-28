@@ -1,0 +1,91 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file G:\~dev\rawrxd\evidence\WATCHDOG_ASM_BIND_001\RawrXD_Watchdog_from_source.obj
+
+File Type: COFF OBJECT
+
+COFF SYMBOL TABLE
+000 0103899C ABS    notype       Static       | @comp.id
+001 00000010 ABS    notype       Static       | @feat.00
+002 00000000 SECT1  notype       Static       | .text$mn
+    Section length  660, #relocs   5B, #linenums    0, checksum        0
+004 00000000 SECT2  notype       Static       | .data
+    Section length  1DB, #relocs    0, #linenums    0, checksum        0
+006 00000000 SECT3  notype       Static       | .pdata
+    Section length   24, #relocs    9, #linenums    0, checksum        0
+008 00000000 SECT4  notype       Static       | .xdata
+    Section length   54, #relocs    0, #linenums    0, checksum        0
+00A 00000000 SECT5  notype       Static       | .debug$S
+    Section length 13D4, #relocs   60, #linenums    0, checksum        0
+00C 00000000 SECT6  notype       Static       | .debug$T
+    Section length  5BC, #relocs    0, #linenums    0, checksum        0
+00E 00000000 UNDEF  notype       External     | GetTickCount64
+00F 00000000 UNDEF  notype       External     | GetModuleHandleA
+010 00000000 UNDEF  notype       External     | CryptAcquireContextA
+011 00000000 UNDEF  notype       External     | CryptReleaseContext
+012 00000000 UNDEF  notype       External     | CryptCreateHash
+013 00000000 UNDEF  notype       External     | CryptHashData
+014 00000000 UNDEF  notype       External     | CryptDestroyHash
+015 00000000 UNDEF  notype       External     | CryptGetHashParam
+016 00000000 UNDEF  notype       External     | asm_camellia256_get_hmac_key
+017 00000084 SECT2  notype       Static       | wd_tamper_count
+018 0000008C SECT2  notype       Static       | wd_text_name
+019 00000004 SECT2  notype       Static       | wd_text_base
+01A 0000000C SECT2  notype       Static       | wd_text_size
+01B 00000074 SECT2  notype       Static       | wd_verify_count
+01C 00000034 SECT2  notype       Static       | wd_baseline_hmac
+01D 00000000 SECT2  notype       Static       | wd_initialized
+01E 000001B9 SECT2  notype       Static       | wd_msg_not_init
+01F 00000054 SECT2  notype       Static       | wd_current_hmac
+020 00000161 SECT2  notype       Static       | wd_msg_verify_ok
+021 0000007C SECT2  notype       Static       | wd_last_verify_tick
+022 00000182 SECT2  notype       Static       | wd_msg_tampered
+023 00000113 SECT2  notype       Static       | wd_msg_no_text
+024 000000EF SECT2  notype       Static       | wd_msg_no_pe
+025 00000014 SECT2  notype       Static       | wd_hmac_key
+026 00000094 SECT2  notype       Static       | wd_msg_init_ok
+027 0000013D SECT2  notype       Static       | wd_msg_crypto
+028 000000C6 SECT2  notype       Static       | wd_msg_no_key
+029 00000000 SECT1  notype ()    External     | asm_watchdog_init
+02A 00000000 SECT4  notype       Static       | $xdatasym
+02B 00000188 SECT1  notype ()    External     | asm_watchdog_verify
+02C 00000293 SECT1  notype ()    External     | asm_watchdog_get_baseline
+02D 000002D5 SECT1  notype ()    External     | asm_watchdog_get_status
+02E 0000032D SECT1  notype ()    External     | asm_watchdog_shutdown
+02F 000003B4 SECT1  notype ()    External     | wd_compute_hmac_sha256
+030 00000000 SECT1  notype       Static       | $$000000
+031 0000007F SECT1  notype       Label        | wd_find_text_loop
+032 0000009F SECT1  notype       Label        | wd_found_text
+033 00000129 SECT1  notype       Label        | wd_init_no_key
+034 0000013D SECT1  notype       Label        | wd_init_no_pe
+035 00000151 SECT1  notype       Label        | wd_init_no_text
+036 00000165 SECT1  notype       Label        | wd_init_crypto_fail
+037 00000177 SECT1  notype       Label        | wd_init_done
+038 00000327 SECT1  notype       Label        | wd_status_null
+039 00000249 SECT1  notype       Label        | wd_verify_tampered
+03A 00000268 SECT1  notype       Label        | wd_verify_not_init
+03B 00000276 SECT1  notype       Label        | wd_verify_crypto_fail
+03C 00000282 SECT1  notype       Label        | wd_verify_done
+03D 00000457 SECT1  notype       Label        | wd_hmac_pad_loop
+03E 000004D6 SECT1  notype       Label        | wd_hmac_inner_data_loop
+03F 00000539 SECT1  notype       Label        | wd_hmac_inner_data_done
+040 00000626 SECT1  notype       Label        | wd_hmac_destroy_inner
+041 00000630 SECT1  notype       Label        | wd_hmac_destroy_outer
+042 00000638 SECT1  notype       Label        | wd_hmac_release_ctx
+043 00000647 SECT1  notype       Label        | wd_hmac_fail
+044 0000064C SECT1  notype       Label        | wd_hmac_done
+045 000002CF SECT1  notype       Label        | wd_baseline_null
+046 000002CF SECT1  notype       Label        | wd_baseline_not_init
+
+String Table Size = 0x3D2 bytes
+
+  Summary
+
+         1DB .data
+        13D4 .debug$S
+         5BC .debug$T
+          24 .pdata
+         660 .text$mn
+          54 .xdata

@@ -1,0 +1,1 @@
+{"model":"pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest","prompt":"Say hi in one short sentence.","stream":false,"options":{"num_predict":32,"temperature":0}}

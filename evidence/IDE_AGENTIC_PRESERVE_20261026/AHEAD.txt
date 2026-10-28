@@ -1,0 +1,4 @@
+﻿ab0af78ade add full IDE end-to-end audit receipt
+0d662f1ddb add safe source consolidation inventory
+f0e3df6f18 keep PowerShell and output panes visible under shell layout policy
+d87c5b8c7b wire native compiler bridge and preserve IDE responsiveness

@@ -1,6 +1,9 @@
 // unlinked_symbols_batch_013.cpp
-// Batch 13: MASM cathedral bridge — agentic orchestrator + quad-buffer entry + GGUF staging
-// Prototypes: include/masm_bridge_cathedral.h (Tier-2 link closure, production Win32IDE).
+// Batch 13: MASM cathedral C fallback — agentic orchestrator + quad-buffer + GGUF staging
+// Prototypes: include/masm_bridge_cathedral.h
+// QuadState join: quad_registry.hpp → storage/shutdown in batch_001.
+// Product link: CMake-OMIT when RawrXD_AgenticOrchestrator / QuadBuffer ASM linked
+// (RAWR_HAS_MASM). Keep in tree for !MASM / object smoke. PROMOTE=0.
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -14,22 +17,14 @@
 
 #include <atomic>
 #include <mutex>
+
 #include "gguf_loader.h"
+#include "quad_registry.hpp"
 
 namespace {
 
-struct QuadBufState {
-    std::mutex mutex;
-    HWND hwnd = nullptr;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    uint32_t flags = 0;
-    std::atomic<uint32_t> renderThreadRuns{0};
-};
-
 struct GgufLoaderLiteState {
     std::mutex mutex;
-    // Default-open virtual session: real GGUF init may live in other TUs; staging must not fail link tests.
     bool open = true;
     uint32_t stagedTensor = 0;
     uint32_t stageCalls = 0;
@@ -52,7 +47,6 @@ struct OrchestratorState {
     HookPair hooks[32] = {};
 };
 
-QuadBufState g_quad;
 GgufLoaderLiteState g_gguf;
 OrchestratorState g_orch;
 
@@ -74,17 +68,13 @@ uint64_t fnv1a_hash64(const char* data, uint32_t len) {
 }
 
 int asm_quadbuf_init(HWND hwnd, uint32_t width, uint32_t height, uint32_t flags) {
-    std::lock_guard<std::mutex> lock(g_quad.mutex);
-    g_quad.hwnd = hwnd;
-    g_quad.width = width;
-    g_quad.height = height;
-    g_quad.flags = flags;
-    return 0;
+    // Shared QuadState with asm_quadbuf_shutdown (batch_001) via quad_registry.
+    return quad_registry_bind(hwnd, width, height, flags);
 }
 
 int asm_quadbuf_render_thread(void* param) {
     (void)param;
-    g_quad.renderThreadRuns.fetch_add(1u, std::memory_order_relaxed);
+    (void)quad_registry_render_tick();
     return 0;
 }
 
@@ -235,4 +225,3 @@ void asm_orchestrator_lsp_sync(void* symbolIndex, void* contextAnalyzer, uint32_
 }
 
 } // extern "C"
-

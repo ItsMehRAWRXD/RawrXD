@@ -1,0 +1,82 @@
+CONPTY_STREAM_OWNER_001 / LAW
+=============================
+ASOF_UTC=2026-10-28T11:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+TIP_MUST_STAY=1
+RELINK_REQUIRED=1
+SMOKE_RELINK=0
+EXE_RELINK=0
+RUNTIME_REACHED=NOT_RUN
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+SILENT_PIPE_AS_CONPTY = FORBIDDEN
+CreatePseudoConsole absent/fail → GateConPtyStream (PASS=0)
+
+MISSION
+-------
+Claim the real CreatePseudoConsole / ConPTY product stream owner and bind
+it to the PowerShell panel / terminal session path already used by Win32IDE
+(m_dedicatedPowerShellTerminal + tab.manager → Win32TerminalManager), or
+fail-closed when ConPTY APIs are absent.
+
+Prior SHELLLAYOUT_PHASE5_001 sealed HWND chrome geometry only
+(getPowerShellPanel). Stream/PTY was UNCLAIMED. This packet claims stream.
+
+SOURCE_WIRED (this seal)
+------------------------
+F1 src/win32app/Win32TerminalManager.cpp|.h
+  start() → ResolveConPtyApis (kernel32 CreatePseudoConsole/ClosePseudoConsole)
+  CreatePseudoConsole + PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE + CreateProcessW
+  GateConPtyStream → evidence/CONPTY_STREAM_OWNER_001/GATE_STREAM.txt
+  No silent CreatePipe-redirect fallback pretending to be ConPTY
+
+F2 PowerShell panel / tabs (already wired; one session owner)
+  Win32IDE_PowerShellPanel.cpp → m_dedicatedPowerShellTerminal->start(PowerShell)
+  Win32IDE.cpp createTerminalPane → tab.manager = Win32TerminalManager
+  No ShellLayout phase5 chrome edits required
+
+F3 src/asm/RawrXD_ConPTY_Renderer.asm
+  Ownership comment: TUI ≠ stream; stream owner = Win32TerminalManager
+
+NON-OWNERS (not product stream claim)
+-------------------------------------
+src/core/pty_terminal.hpp — has CreatePseudoConsole but NOT CMake product-linked
+Ship/RawrXD_TerminalMgr.c — comment-only ConPTY; pipes only; not Win32IDE path
+src/terminal/embedded_terminal.cpp — stub comment; not CreatePseudoConsole
+RawrXD_ConPTY_Renderer.asm — VT100 TUI only
+
+OWNERSHIP SPLIT
+---------------
+TERMINAL_CHROME_GEOMETRY_OWNER = getPowerShellPanel (SHELLLAYOUT_PHASE5_001)
+CONPTY_STREAM_PTY_OWNER        = Win32TerminalManager (this seal; SOURCE_WIRED)
+PHASE_5_CERTIFIED              = 0
+RUNTIME_REACHED                = NOT_RUN (tip EXE pre-wire binary)
+RELINK_REQUIRED                = 1
+
+SEALED EXE / RELINK
+-------------------
+TIP_SHA=6832F439…2A9F8B2 must stay (E2E_002/swarm runtime seals may be active)
+EXE_RELINK=0 this mission
+TIP_SEALS_INVALIDATED=NO
+
+WHAT WOULD EARN RUNTIME_REACHED
+-------------------------------
+1. Absorb-relink Win32IDE with Win32TerminalManager.obj on new tip SHA
+2. Launch tip; start PowerShell panel / terminal tab
+3. Prove CreatePseudoConsole HPCON live + stream I/O + exit code
+4. Still ≠ PROMOTE
+
+OUT OF SCOPE
+------------
+Tip climb / EXE absorb / PHASE=6 spatial / MULTI_FAMILY / PROMOTE
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

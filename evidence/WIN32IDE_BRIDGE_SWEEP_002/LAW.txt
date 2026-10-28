@@ -1,0 +1,62 @@
+WIN32IDE_BRIDGE_SWEEP_002 / LAW
+===============================
+ASOF_UTC=2026-10-28T08:36:29Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+WIN32IDE_EXE_SHA_HOLD=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GateMode / GATED_STUB = log SYNTHETIC=partial + return false|-1
+CMake-omit != linked stub PASS
+Duplicate export LoRAKernel_Initialize: AgenticFeatures vs LoRAKernelBridge
+
+TARGETS
+-------
+T01 Win32IDE_LogpointBridge.cpp
+  PRIOR concern: "return true" stubs
+  TRACE: returns true only after RawrXD_Debugger_* owner success
+  OWNER_WHEN_WIRED=src/core/native_debugger_conditional_bp.cpp
+  CMAKE_WIN32IDE=NO (zero refs; GATED_OMIT comment added)
+  OWNER_TU CMAKE=NO (native_debugger_conditional also absent)
+  DISPOSITION=GATED_OMIT + SOURCE_WIRED_TO_OWNER (source path only)
+  RUNTIME_REACHED=NOT_RUN (TU not linked; no invent PASS)
+
+T02 Win32IDE_SidebarBridge.cpp
+  PRIOR: Send/Receive MASM paths return true after WndProc==0 or MMF memcpy
+  PRIOR: RawrXD_SidebarWndProc undefined; BATCH2_CONTEXT.h missing
+  PRODUCT_OWNER=Win32IDE_Sidebar.cpp (linked; no SidebarBridge_ cites)
+  CMAKE_WIN32IDE=NO (omit comment; runoff-only historical cite)
+  NOW: GateStub + RawrXD_SidebarWndProc returns -1
+       SendToMASM64 / ReceiveFromMASM64 return false
+  DISPOSITION=GATED_OMIT + GATED_STUB (IPC bools)
+  CreateWindow path kept (real HWND work) but TU remains unlinked
+
+T03 Win32IDE_LoRAKernelBridge.cpp vs AgenticFeatures LoRAKernel_Initialize
+  SIBLING=LORA_KERNEL_STUB_GATE_001 (LANDED)
+  AgenticFeatures: GateStub + return false (was return true)
+  LoRAKernelBridge: real-ish init path but ApplyLoRA not product-wired
+  Both TUs CMake-omitted; AgentBridge_Init omitted (calls Initialize)
+  DISPOSITION=CROSS_CITE LORA_KERNEL_STUB_GATE_001 (no duplicate rewrite)
+  Header cites LORA + this SWEEP; accidental dual-link = LNK2005 risk
+
+CROSS_CITE (siblings landed)
+----------------------------
+IDE_BRIDGE_STUB_GATE_001  ExtensionHostIpcBridge + Win32NeuralBridge
+LORA_KERNEL_STUB_GATE_001 AgenticFeatures / LoRAKernel / WAL / ghost
+WIN32IDE_STUB_SWEEP_001   GateMode / SO_* law
+WIN32IDE_BRIDGE_XOR_LAW_001 GATED_OMIT pattern
+
+SEALED EXE
+----------
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+RELINK=NO — source gate + CMake omit only; tetrad SHA preserved
+IF_RELINK=new SHA invalidates LIVE_TETRAD_POST_CAMELLIA_001
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_NORM_0
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=ed1b1f6179dac1ef
+l2=7.4619053117703587
+seq=59
+path=G:\~dev\rawrxd\evidence\parity_gpu_dump\deep2_FFN_NORM_0_pos1_layer0_full_n3072_seq059.bin

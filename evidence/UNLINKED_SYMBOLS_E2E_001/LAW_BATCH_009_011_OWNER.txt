@@ -1,0 +1,31 @@
+LAW — batch_009 / batch_010 / batch_011 vs rawrxd_subsystem_api.cpp
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+WORKSPACE=G:\~dev\rawrxd
+DATE=2026-10-27
+
+DECISION (Win32IDE + RawrEngine):
+  OWNER_TU = src/core/rawrxd_subsystem_api.cpp
+  OMIT_FROM_LINK = unlinked_symbols_batch_009.cpp
+                   unlinked_symbols_batch_010.cpp
+                   unlinked_symbols_batch_011.cpp
+
+MECHANISM:
+  CMake COMMENT-OMIT of the batch TUs (same pattern as RawrEngine ~2754-2756).
+  NOT #ifndef / macro dual-compilation of both sides into one binary.
+  Files remain in tree for reference / alternate smoke; do not re-add without
+  removing subsystem_api from the same target (LNK2005 otherwise).
+
+RATIONALE:
+  Overlap includes subsystem mode entry points (StubGenMode/CompileMode/...) and
+  streaming/orchestrator symbols (SO_*/AD_*) that subsystem_api already provides
+  for product call sites. Prefer the product API TU as sole linked owner.
+
+WIN32IDE KEEP:
+  unlinked_symbols_batch_006.cpp  (mesh init + MagBuf register)
+  unlinked_symbols_batch_007.cpp  (speciator init + MagBuf register)
+  unlinked_symbols_batch_008.cpp  (neural/hwsynth init + MagBuf register)
+  unlinked_symbols_batch_001.cpp  (MagBuf tables + MagShutdown)
+
+SMOKE SCOPE FOR QUINTILE B:
+  COMPILE 006-008 (+001 join) under object smoke.
+  009-010 object-only smoke optional; NOT linked into Win32IDE/RawrEngine.

@@ -1,0 +1,51 @@
+GOLD_LINK_CAMELLIA_ABI_001 / LAW
+================================
+ASOF_UTC=2026-10-28T08:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+LOCAL_ONLY=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+WIN32IDE_EXE_SHA_HOLD=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+CAMELLIA_AUTH_BIND=CLEARED_LINK_LEVEL (do not reopen)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+ABI_ALIGN != RUNTIME_AUTH_E2E
+OBJECT_SMOKE != PROMOTE
+
+FINDING
+-------
+Prior gold_link_closure.cpp defined:
+  bool asm_camellia256_auth_{en,de}crypt_file(path, path, key32, iv16)
+Product / Auth ASM / camellia256_bridge.hpp two-path:
+  int asm_camellia256_auth_{en,de}crypt_file(const char* in, const char* out)
+Mismatch was REAL for any caller expecting product ABI against Gold C stubs,
+but DORMANT as product blocker for Win32IDE: Gold excludes camellia256_bridge.cpp;
+Win32IDE ownership is Auth.obj (CAMELLIA_AUTH_ASM_BIND_001).
+Gold with RAWR_HAS_MASM=1 also links Auth.obj via MASM_OBJECTS — unguarded C
+defs would LNK2005.
+
+FIX (non-Win32IDE harness; no EXE rebuild required)
+---------------------------------------------------
+src/core/gold_link_closure.cpp:
+  - Retire key/iv 4-arg bool XOR
+  - Align !RAWR_HAS_MASM fallback to product two-path int(path,path)
+  - Gate under #if !RAWR_HAS_MASM so Auth.obj owns when MASM linked
+  - SYNTHETIC=partial for !MASM XOR only (not RCM2)
+gold_link_closure_v2.cpp: unlinked dormant varargs stubs; not Gold CMake owner
+
+OWNERSHIP
+---------
+RAWR_HAS_MASM=1 (Gold/Win32IDE product): Auth.obj RCM2
+RAWR_HAS_MASM=0 Gold fallback: gold_link_closure two-path XOR SYNTHETIC=partial
+Win32IDE EXE SHA 89BFD614…: HOLD (not rebuilt this seal)
+
+DISPOSITION
+-----------
+CLEARED — ABI documented + Gold C path aligned/gated; object smoke in RECEIPT
+RUNTIME_AUTH_E2E=NOT_RUN (sibling worker / CAMELLIA_AUTH_ASM_BIND_001)
+PROMOTE=0

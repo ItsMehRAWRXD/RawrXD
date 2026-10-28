@@ -1,26 +1,44 @@
 // ============================================================================
 // Win32IDE_SidebarBridge.cpp — Phase 17: MASM64 Sidebar Bridge
-// ============================================================================
-// Window subclassing bridge between MASM64 and Win32 sidebar rendering:
-//   - WM_USER+100 message handling from MASM64
-//   - Sidebar content rendering and updates
-//   - Cross-process sidebar state synchronization
-//   - Real-time UI updates from beacon system
+// GATED_OMIT WIN32IDE_BRIDGE_SWEEP_002: not in RawrXD-Win32IDE CMake link.
+// Product sidebar owner: Win32IDE_Sidebar.cpp (linked). This TU is orphan.
+// RawrXD_SidebarWndProc has no MASM product owner — IPC bools fail-closed.
+// Missing BATCH2_CONTEXT.h → local minimal decls (do not invent PASS).
+// Cross-cite: IDE_BRIDGE_STUB_GATE_001 / LORA_KERNEL_STUB_GATE_001
+// PROMOTE=0 · RELINK=NO · NOT_RUN != PASS
 // ============================================================================
 
-#include "BATCH2_CONTEXT.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <vector>
 #include <string>
 #include <map>
-#include <memory>
-#include <string>
-#include <windows.h>
-#include <map>
 #include <cstring>
 #include <ctime>
+
+namespace {
+void GateStub(const char* name) {
+    char buf[192];
+    wsprintfA(buf, "[SidebarBridge] GATED SYNTHETIC=partial name=%s\n", name);
+    OutputDebugStringA(buf);
+}
+} // namespace
+
+// Minimal stand-ins formerly expected from BATCH2_CONTEXT.h (absent).
+struct CommandResult {
+    bool success;
+    char message[256];
+    int code;
+};
+
+enum class BeaconStage : int { Unknown = 0 };
+
+// Fail-closed MASM peer — no product definition of RawrXD_SidebarWndProc.
+extern "C" LRESULT RawrXD_SidebarWndProc(HWND, UINT, WPARAM, LPARAM) {
+    GateStub("RawrXD_SidebarWndProc");
+    return (LRESULT)-1;
+}
 
 // ============================================================================
 // SIDEBAR BRIDGE STATE
@@ -407,26 +425,25 @@ extern "C" __declspec(dllexport) void SidebarBridge_Refresh() {
 
 bool SidebarBridge_SendToMASM64(UINT message, WPARAM wParam, LPARAM lParam) {
     if (!g_sidebarState.hwndSidebar) return false;
-
-    // Send message to MASM64 through the bridged window procedure
-    return (LRESULT)RawrXD_SidebarWndProc(g_sidebarState.hwndSidebar, message, wParam, lParam) == 0;
+    // Was: treat WndProc==0 as success. Owner is GATED; never claim PASS.
+    GateStub("SidebarBridge_SendToMASM64/msg");
+    (void)RawrXD_SidebarWndProc(g_sidebarState.hwndSidebar, message, wParam, lParam);
+    return false;
 }
 
 bool SidebarBridge_ReceiveFromMASM64(void* buffer, size_t bufferSize) {
     if (!g_sidebarState.mmfBase || !buffer || bufferSize == 0) return false;
-
-    // Copy data from MMF to buffer
-    const size_t copySize = (bufferSize < 4096) ? bufferSize : 4096;
-    memcpy(buffer, g_sidebarState.mmfBase, copySize);
-    return true;
+    // MMF memcpy alone != MASM peer success (was return true theater).
+    GateStub("SidebarBridge_ReceiveFromMASM64");
+    (void)bufferSize;
+    return false;
 }
 
 bool SidebarBridge_SendToMASM64(void* data, size_t dataSize) {
     if (!g_sidebarState.mmfBase || !data || dataSize == 0 || dataSize > 4096) return false;
-
-    // Copy data to MMF
-    memcpy(g_sidebarState.mmfBase, data, dataSize);
-    return true;
+    GateStub("SidebarBridge_SendToMASM64/data");
+    (void)dataSize;
+    return false;
 }
 
 // ============================================================================

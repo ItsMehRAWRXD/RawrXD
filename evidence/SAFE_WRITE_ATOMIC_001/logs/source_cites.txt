@@ -1,0 +1,12 @@
+SAFE_WRITE_ATOMIC_001 / source cites (SOURCE_WIRED; pre-relink)
+==============================================================
+SafeWriteAtomic.hpp     AtomicWriteFile WriteWithPreviewRollback PreviewFirstDiff RollbackLastWrite StatusJson
+SafeWriteAtomic.cpp     tmp+.swa.tmp ReplaceFileA|MoveFileExA + AgentSessionNoteWrite + rollback slot
+SafeWriteRollback.cpp   PreviewFirstDiff RollbackLastWrite StatusJson (Phase10-independent)
+SafeWriteState.hpp      shared Slot/Mu/Stack
+HeadlessIDE_ToolRoutes  write_file -> WriteWithPreviewRollback
+                        tools: safe_write_preview safe_write_rollback safe_write_status
+CMakeLists.txt          rawrxd + WIN32IDE_SOURCES += SafeWriteAtomic.cpp SafeWriteRollback.cpp
+NOT_EDITED              HeadlessIDE_SwarmOrch.cpp SettingsManager SAFE_WRITE_APPROVAL_TIP_001/*
+TIP_MAP_PRE_RELINK      SafeWrite* symbols absent on 6832F439 (expected; RELINK_REQUIRED=1)
+COMPILE_SMOKE           SafeWriteAtomic.obj + SafeWriteRollback.obj produced under logs/ (cl /c; not tip-linked)

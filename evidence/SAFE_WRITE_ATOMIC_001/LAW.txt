@@ -1,0 +1,91 @@
+SAFE_WRITE_ATOMIC_001 / LAW
+===========================
+ASOF_UTC=2026-10-28T11:28:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+TIP_SHA=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+TIP_MUST_STAY=1
+RELINK_REQUIRED=1
+SMOKE_RELINK=0
+EXE_RELINK=0
+RUNTIME_REACHED=NOT_RUN
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+CREATE_ALWAYS direct product write = FORBIDDEN on A06 tip path after absorb
+
+MISSION
+-------
+Wire product atomic write + preview + rollback on tip headless write path
+(write_file), owning write-safety TUs (not HeadlessIDE_SwarmOrch /
+SettingsManager). Tip rebuild deferred → SOURCE_WIRED + RELINK_REQUIRED.
+
+Prior SAFE_WRITE_APPROVAL_TIP_001 sealed DENY earned + honest NOT_RUN for
+atomic/preview/rollback on tip headless (writeFileLimited CREATE_ALWAYS;
+Phase10 safety "Not initialized"). DENY rows of that seal stay untouched.
+
+SOURCE_WIRED (this seal)
+------------------------
+F1 src/win32app/SafeWriteAtomic.hpp|.cpp
+  AtomicWriteFile = tmp (.swa.tmp) + ReplaceFileA / MoveFileExA
+  WriteWithPreviewRollback = prior capture + AgentSessionNoteWrite + atomic
+  + local rollback slot (Phase10-independent)
+
+F2 src/win32app/SafeWriteRollback.cpp + SafeWriteState.hpp
+  PreviewFirstDiff / RollbackLastWrite / StatusJson
+  Own stack; does not require AgentSafetyContract::init()
+
+F3 src/win32app/HeadlessIDE_ToolRoutes.cpp
+  write_file → SafeWrite::WriteWithPreviewRollback (not CREATE_ALWAYS)
+  Tools: safe_write_preview / safe_write_rollback / safe_write_status
+
+F4 CMakeLists.txt
+  SafeWriteAtomic.cpp + SafeWriteRollback.cpp in rawrxd + WIN32IDE_SOURCES
+  Sibling HeadlessIDE_SwarmOrch.cpp / SettingsManager untouched
+
+NON-OWNERS
+----------
+Win32IDE_ComposerPanel.cpp ExecuteAtomicWrite — GUI composer only; not tip
+  headless product write path (prior map: not tip-cited as export)
+agent_safety_contract.cpp — SOURCE_WIRED rollback API; Phase10 arm separate
+HeadlessIDE_SwarmOrch.cpp / SettingsManager — siblings; no edits
+
+OWNERSHIP SPLIT
+---------------
+A06_DENY_RUNTIME     = SAFE_WRITE_APPROVAL_TIP_001 (untouched; MET=0)
+A06_ATOMIC_PREVIEW_RB = SafeWriteAtomic TUs (this seal; SOURCE_WIRED)
+RELINK_REQUIRED      = 1 (Path A/B tip absorb deferred)
+RUNTIME_REACHED      = NOT_RUN (tip EXE pre-wire binary 6832F439…)
+
+SEALED EXE / RELINK
+-------------------
+TIP_SHA=6832F439…2A9F8B2 must stay
+EXE_RELINK=0 this mission
+TIP_SEALS_INVALIDATED=NO
+SAFE_WRITE_APPROVAL_TIP_001 DENY rows = DO_NOT_REWRITE
+
+WHAT WOULD EARN RUNTIME_REACHED
+-------------------------------
+1. Absorb-relink Win32IDE with SafeWriteAtomic.obj + SafeWriteRollback.obj
+2. Launch tip headless; write_file → response atomic=true + .swa.tmp absent
+3. safe_write_preview / safe_write_rollback / safe_write_status exercise
+4. Still ≠ MET (needs deny conjunction + full gate) ≠ PROMOTE
+
+OUT OF SCOPE
+------------
+Tip climb / EXE absorb / PROMOTE / rewrite APPROVAL_TIP deny evidence
+Phase10 AgentSafetyContract init coupling (intentionally independent)
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1
+RELINK_REQUIRED=1
+RUNTIME_REACHED=NOT_RUN
+A06_MET=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

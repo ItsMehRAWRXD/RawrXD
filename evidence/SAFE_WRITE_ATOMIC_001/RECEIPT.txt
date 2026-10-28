@@ -1,0 +1,66 @@
+SAFE_WRITE_ATOMIC_001 / RECEIPT
+===============================
+ASOF_UTC=2026-10-28T11:28:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+SOURCE_WIRED atomic/preview/rollback product path on headless write_file.
+Tip rebuild deferred (Path A/B absorb) → RELINK_REQUIRED=1.
+RUNTIME_REACHED=NOT_RUN on tip SHA 6832F439… (pre-wire binary).
+A06 MET=0. PROMOTE=0.
+SAFE_WRITE_APPROVAL_TIP_001 deny rows not rewritten.
+
+TIP
+---
+EXE_AUTHORITY=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+TIP_MUST_STAY=1
+EXE_RELINK=0
+RELINK_REQUIRED=1
+
+SOURCE_WIRED LANDING
+--------------------
+src/win32app/SafeWriteAtomic.hpp
+src/win32app/SafeWriteAtomic.cpp
+src/win32app/SafeWriteRollback.cpp
+src/win32app/SafeWriteState.hpp
+src/win32app/HeadlessIDE_ToolRoutes.cpp  (write_file + safe_write_* tools)
+CMakeLists.txt  (rawrxd + WIN32IDE_SOURCES)
+
+SIBLINGS_UNTOUCHED
+------------------
+HeadlessIDE_SwarmOrch.cpp
+SettingsManager (no edits)
+SAFE_WRITE_APPROVAL_TIP_001 LAW/RECEIPT/logs (deny evidence sealed)
+
+GAPS (fail-closed)
+------------------
+ATOMIC_RUNTIME_ON_TIP=NOT_RUN (RELINK_REQUIRED)
+PREVIEW_RUNTIME_ON_TIP=NOT_RUN
+ROLLBACK_RUNTIME_ON_TIP=NOT_RUN
+A06_MET=0 (deny RUNTIME_REACHED prior; atomic facet SOURCE_WIRED only)
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1
+RELINK_REQUIRED=1
+RUNTIME_REACHED=NOT_RUN
+A06=RUNTIME_REACHED (deny; SAFE_WRITE_APPROVAL_TIP_001) + SOURCE_WIRED atomic
+    (SAFE_WRITE_ATOMIC_001) ; MET=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+PATH
+----
+evidence/SAFE_WRITE_ATOMIC_001/LAW.txt
+evidence/SAFE_WRITE_ATOMIC_001/RECEIPT.txt
+evidence/SAFE_WRITE_ATOMIC_001/logs/source_cites.txt
+
+MATRIX
+------
+WIN32IDE_CLOSURE_MATRIX_001 A06 note updated — atomic/preview/rollback
+  disposition = SOURCE_WIRED RELINK_REQUIRED (this seal); deny unchanged

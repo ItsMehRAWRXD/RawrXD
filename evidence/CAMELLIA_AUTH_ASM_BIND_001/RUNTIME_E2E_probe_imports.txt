@@ -1,0 +1,127 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file runtime_auth_e2e_probe.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Section contains the following imports:
+
+    KERNEL32.dll
+             140018038 Import Address Table
+             140022288 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                         65F WriteConsoleW
+                         353 GetVolumeInformationA
+                         44A OutputDebugStringA
+                          9D CloseHandle
+                          DE CreateFileA
+                         660 WriteFile
+                         4A9 ReadFile
+                         205 GetComputerNameA
+                         303 GetStdHandle
+                          E6 CreateFileW
+                         383 HeapReAlloc
+                         509 RtlCaptureContext
+                         511 RtlLookupFunctionEntry
+                         518 RtlVirtualUnwind
+                         5FB UnhandledExceptionFilter
+                         5B8 SetUnhandledExceptionFilter
+                         241 GetCurrentProcess
+                         5D8 TerminateProcess
+                         3B8 IsProcessorFeaturePresent
+                         481 QueryPerformanceCounter
+                         242 GetCurrentProcessId
+                         246 GetCurrentThreadId
+                         31A GetSystemTimeAsFileTime
+                         39A InitializeSListHead
+                         3B0 IsDebuggerPresent
+                         301 GetStartupInfoW
+                         2A5 GetModuleHandleW
+                         517 RtlUnwindEx
+                         28D GetLastError
+                         578 SetLastError
+                         157 EnterCriticalSection
+                         3F0 LeaveCriticalSection
+                         12F DeleteCriticalSection
+                         396 InitializeCriticalSectionAndSpinCount
+                         5EA TlsAlloc
+                         5EC TlsGetValue
+                         5EE TlsSetValue
+                         5EB TlsFree
+                         1D4 FreeLibrary
+                         2DD GetProcAddress
+                         3F6 LoadLibraryExW
+                         153 EncodePointer
+                         498 RaiseException
+                         513 RtlPcToFileHeader
+                         2A1 GetModuleFileNameW
+                         186 ExitProcess
+                         2A4 GetModuleHandleExW
+                         1FF GetCommandLineA
+                         200 GetCommandLineW
+                         37C HeapAlloc
+                         380 HeapFree
+                         1C2 FlsAlloc
+                         1C4 FlsGetValue
+                         1C6 FlsSetValue
+                         1C3 FlsFree
+                         397 InitializeCriticalSectionEx
+                         61A VirtualProtect
+                          B3 CompareStringW
+                         3E4 LCMapStringW
+                         27A GetFileType
+                         1C8 FlushFileBuffers
+                         229 GetConsoleOutputCP
+                         225 GetConsoleMode
+                         19D FindClose
+                         1A3 FindFirstFileExW
+                         1B4 FindNextFileW
+                         3BE IsValidCodePage
+                         1DB GetACP
+                         2C6 GetOEMCP
+                         1EA GetCPInfo
+                         423 MultiByteToWideChar
+                         64C WideCharToMultiByte
+                         262 GetEnvironmentStringsW
+                         1D3 FreeEnvironmentStringsW
+                         55A SetEnvironmentVariableW
+                         593 SetStdHandle
+                         308 GetStringTypeW
+                         2E4 GetProcessHeap
+                         569 SetFilePointerEx
+                         278 GetFileSizeEx
+                         385 HeapSize
+
+    ADVAPI32.dll
+             140018000 Import Address Table
+             140022250 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                          C7 CryptDestroyHash
+                          D9 CryptHashData
+                          C4 CryptCreateHash
+                          DC CryptReleaseContext
+                          C1 CryptAcquireContextA
+                          D5 CryptGetHashParam
+
+    bcrypt.dll
+             1400182C8 Import Address Table
+             140022518 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                          1F BCryptGenRandom
+
+  Summary
+
+       13000 .data
+        1000 .fptable
+        2000 .pdata
+        B000 .rdata
+        1000 .reloc
+       17000 .text

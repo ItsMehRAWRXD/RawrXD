@@ -10,6 +10,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "ui/agentic_bridge_api.h"
 #include "../deep2/Deep2IDEIntegration.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -190,15 +191,30 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         return {ok ? AgentResponseType::ANSWER : AgentResponseType::AGENT_ERROR, shellOutput};
     }
 
-    if (m_nativeAgent && m_nativeEngine && m_nativeEngine->IsModelLoaded())
-    {
-        const std::string response = m_nativeAgent->Execute(trimmed);
-        return {AgentResponseType::ANSWER, response};
+    // LOCAL_ONLY: ProductRun only — no CIE NativeAgent / fake-ready ANSWER.
+    if (m_deep2Ready || rawr::ProductSessionOpen()) {
+        if (!m_deep2ModelPath.empty() && !rawr::ProductSessionOpen()) {
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", m_deep2ModelPath.c_str());
+#endif
+            if (!rawr::ProductOpenSession(m_deep2ModelPath.c_str())) {
+                return {AgentResponseType::AGENT_ERROR,
+                        "NOT_PRODUCT_PATH=1 headless: ProductOpenSession failed"};
+            }
+        }
+        std::string prText;
+        const bool inferOk = rawr::ProductDeep2InferStream(
+            trimmed.c_str(), 2048,
+            [](const std::string&) { return true; }, &prText);
+        if (!inferOk || prText.empty()) {
+            return {AgentResponseType::AGENT_ERROR,
+                    "NOT_PRODUCT_PATH=1 headless: ProductRun empty/fail"};
+        }
+        return {AgentResponseType::ANSWER, prText};
     }
 
-    std::ostringstream oss;
-    oss << "Headless agent ready. Prefix OS commands with '!'. Prompt received: " << trimmed;
-    return {AgentResponseType::ANSWER, oss.str()};
+    return {AgentResponseType::AGENT_ERROR,
+            "NOT_PRODUCT_PATH=1 headless: no ProductOpenSession"};
 }
 
 bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations)
@@ -214,6 +230,7 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
 
     m_agentLoopRunning = true;
     std::string nextPrompt = initialPrompt;
+    bool sawAnswer = false;
 
     for (int i = 0; i < maxIterations && m_agentLoopRunning; ++i)
     {
@@ -223,15 +240,22 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
             m_outputCallback("loop", response.content);
         }
 
-        if (response.type == AgentResponseType::AGENT_ERROR || response.type == AgentResponseType::ANSWER)
+        if (response.type == AgentResponseType::AGENT_ERROR)
         {
+            m_agentLoopRunning = false;
+            return false;
+        }
+        if (response.type == AgentResponseType::ANSWER)
+        {
+            sawAnswer = true;
             break;
         }
         nextPrompt = response.content;
     }
 
     m_agentLoopRunning = false;
-    return true;
+    // Loop completion ≠ PROMOTE; sawAnswer only means non-error exit.
+    return sawAnswer;
 }
 
 void AgenticBridge::StopAgentLoop()
@@ -346,70 +370,57 @@ void AgenticBridge::SetContextSize(const std::string& sizeName)
 bool AgenticBridge::LoadModel(const std::string& path)
 {
     m_lastModelLoadError.clear();
+    m_deep2Ready = false;
+    m_deep2ModelPath.clear();
     if (path.empty())
     {
         m_lastModelLoadError = "empty model path";
         if (m_modelLoadErrorCallback)
-        {
             m_modelLoadErrorCallback(m_lastModelLoadError);
-        }
         return false;
     }
 
-    m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
-    if (!m_nativeAgent)
+    auto envTruth = [](const char* name) -> bool {
+        char buf[12] = {};
+        const DWORD n = GetEnvironmentVariableA(name, buf, sizeof(buf));
+        return n > 0 && (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' ||
+                         buf[0] == 'y' || buf[0] == 'Y');
+    };
+    if (envTruth("RAWRXD_FORCE_CPU_INFERENCE") || envTruth("RAWRXD_BRIDGE_CPU_ONLY"))
     {
-        m_nativeAgent = std::make_unique<RawrXD::NativeAgent>(m_nativeEngine.get());
+        m_lastModelLoadError = "NOT_PRODUCT_PATH=1 CPU-only lane";
+        if (m_modelLoadErrorCallback)
+            m_modelLoadErrorCallback(m_lastModelLoadError);
+        return false;
     }
 
-    bool loaded = true;
-    if (HeadlessIsFile(path))
-    {
-        // Try Deep2 sharded loader first (Kimi K2 / Moonshot)
-        if (RawrXD::Deep2ModelLoader::IsShardedModel(path)) {
-            std::string deep2Error;
-            loaded = RawrXD::Deep2LoadModelForBridge(path, deep2Error);
-            if (!loaded) {
-                m_lastModelLoadError = deep2Error;
-            }
-        } else {
-            loaded = m_nativeEngine->LoadModel(path);
-        }
-        if (!loaded)
-        {
-            if (m_lastModelLoadError.empty()) {
-                m_lastModelLoadError = m_nativeEngine->GetLastLoadErrorMessage();
-            }
-            if (m_lastModelLoadError.empty())
-            {
-                m_lastModelLoadError = "native engine load failed without detailed error";
-            }
-            if (m_modelLoadErrorCallback)
-            {
-                m_modelLoadErrorCallback(m_lastModelLoadError);
-            }
-            if (m_errorCallback)
-            {
-                m_errorCallback("Model load failed: " + m_lastModelLoadError);
-            }
-        }
-    }
-    else
+    if (!HeadlessIsFile(path))
     {
         m_lastModelLoadError = "path not found or not a file: " + path;
-        loaded = false;
         if (m_modelLoadErrorCallback)
-        {
             m_modelLoadErrorCallback(m_lastModelLoadError);
-        }
+        return false;
     }
 
-    if (loaded)
+#ifdef _WIN32
+    _putenv_s("RAWRXD_PRODUCT_MODEL", path.c_str());
+#endif
+    // Align with Win32IDE AgenticBridge: ProductOpenSession only (no CIE).
+    if (!rawr::ProductOpenSession(path.c_str()))
     {
-        m_modelName = path;
-        m_initialized = true;
+        m_lastModelLoadError = "ProductOpenSession failed";
+        if (m_modelLoadErrorCallback)
+            m_modelLoadErrorCallback(m_lastModelLoadError);
+        if (m_errorCallback)
+            m_errorCallback("Model load failed: " + m_lastModelLoadError);
+        return false;
     }
-    return loaded;
+
+    m_deep2Ready = true;
+    m_deep2ModelPath = path;
+    m_modelName = path;
+    m_initialized = true;
+    return true;
 }
 
 void AgenticBridge::SetWorkspaceRoot(const std::string& workspaceRoot)
@@ -616,18 +627,13 @@ std::vector<HeadlessWatchEntry> g_headlessWatches;
 
 extern "C" void RawrXD_Disasm_HandleReq(void* req)
 {
+    // GateMode-style: no synthetic NOP / headless_stub mnemonic as success.
+    (void)req;
     std::lock_guard<std::mutex> lock(g_headlessIpcMutex);
     g_headlessDisasm.clear();
-
-    rawrxd::ipc::MsgDisasmChunk chunk{};
-    if (req != nullptr)
-    {
-        chunk.address = *reinterpret_cast<const uint64_t*>(req);
-    }
-    std::strncpy(chunk.mnemonic, "headless_stub", sizeof(chunk.mnemonic) - 1);
-    chunk.length = 1;
-    chunk.raw_bytes[0] = 0x90;  // NOP
-    g_headlessDisasm.push_back(chunk);
+    OutputDebugStringA(
+        "[agentic_bridge_headless] GATED FEATURE_FICTION=1 "
+        "RawrXD_Disasm_HandleReq NOT_PRODUCT_PATH\n");
 }
 
 extern "C" void RawrXD_Symbol_HandleReq(void* req)

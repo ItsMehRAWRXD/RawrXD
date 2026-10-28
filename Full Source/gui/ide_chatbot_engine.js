@@ -1,20 +1,20 @@
-// ═══════════════════════════════════════════════════════════════════════
-// RawrXD IDE Chatbot — Shared Engine (auto-extracted from ide_chatbot.html)
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// RawrXD IDE Chatbot â€” Shared Engine (auto-extracted from ide_chatbot.html)
 // This file is loaded by both the main chatbot and the Win32 themed variant.
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // Guard: avoid const redeclaration when Win32 HTML pre-declares these
 if (typeof _isFileProtocol === 'undefined') {
   var _isFileProtocol = (window.location.protocol === 'file:');
 }
 if (typeof _ideServerUrl === 'undefined') {
-  var _ideServerUrl = 'http://localhost:8080';
+  var _ideServerUrl = 'http://localhost:11435';
 }
 
 // ======================================================================
 // STATE
 // ======================================================================
-// Detect if opened from file:// — if so, we must probe localhost for the backend
+// Detect if opened from file:// â€” if so, we must probe localhost for the backend
 // [guard: _isFileProtocol moved to top]
 // Resolved IDE server base URL (set during connectBackend)
 // Used by readLocalFile() since window.location.origin is null in file:// context
@@ -23,34 +23,42 @@ if (typeof _ideServerUrl === 'undefined') {
 var State = {
   backend: {
     online: false,
-    url: 'http://localhost:8080',
-    ollamaDirectUrl: 'http://localhost:11434',  // Fallback: talk to Ollama directly
-    directMode: false,                           // true = bypassing serve.py, talking to Ollama
+    url: 'http://127.0.0.1:11435',
+    ollamaDirectUrl: 'http://127.0.0.1:11434',  // Ollama default port — auto-fallback when RawrXD backend is down
+    directMode: false,                           // true = direct to configured local server (not Ollama)
     lastPing: 0,
     serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct'
     fileProtocol: _isFileProtocol,               // true when opened via file:///
     hasCliEndpoint: false,    // Beacon: true if backend has /api/cli (Win32IDE or tool_server)
   },
-  model: { current: null, list: [] },
+  model: { current: null, list: [], local: [] },
   gen: {
-    context: 8192, maxTokens: 512, temperature: 0.7, stream: true,
+    context: 65536, maxTokens: 4096, temperature: 0.7, stream: true,
     top_p: 0.9, top_k: 40,
     // Tensor Bunny Hop: skip unneeded tensor layers during inference for faster large-model runs
     tensorHop: {
       enabled: false,
       strategy: 'auto',     // 'auto' | 'even' | 'front' | 'back' | 'custom'
-      skipRatio: 0.25,      // fraction of layers to skip (0.0–0.5)
+      skipRatio: 0.25,      // fraction of layers to skip (0.0â€“0.5)
       keepFirst: 2,         // always keep first N layers
       keepLast: 2,          // always keep last N layers
       customSkip: [],       // manual layer indices to skip
+    },
+    // NVMe reverse-chunk hotpatch bunnyhop (Deep2 mmap-fallback path)
+    nvmeBunnyHop: {
+      enabled: false,
+      force: true,
+      unlaidout: true,
+      hotpatchRelive: true,
+      chunkMib: 4,
     },
     // Safe Decode Profile: auto-clamp for large models to prevent HTTP 500
     safeDecodeProfile: {
       enabled: true,
       autoClamp: true,      // auto-detect model size and clamp
       thresholdB: 27,       // models >= this size (in B) trigger safe profile
-      safeContext: 3072,
-      safeMaxTokens: 128,
+      safeContext: 65536,
+      safeMaxTokens: 4096,
       safeTemperature: 0.3,
       safeTopP: 0.9,
       safeTopK: 40,
@@ -63,6 +71,19 @@ var State = {
   filePendingReads: 0,        // count of FileReader ops still in progress
   debug: { open: false },
   chat: { sending: false, messageCount: 0 },
+  // MOTD gate: each message turn must Read PassiveRoleNotRoleplay before tools (Cursor parity)
+  // Prefer .mdc (Cursor alwaysApply twin); .md remains accepted twin under same rules dir.
+  motd: {
+    needle: 'PassiveRoleNotRoleplay.mdc',
+    path: '.cursor/rules/PassiveRoleNotRoleplay.mdc',
+    read: false
+  },
+  // Multitask / continue-ensure (same trigger as Cursor StreamerAgenticContinueEnsure)
+  continueEnsure: {
+    active: true,
+    shortTrigger: 'please continue ensuring',
+    maxTrigger: 'please continue ensuring that the streamer is complete and can run agentic'
+  },
   terminal: { history: [], index: -1, minimized: false, mode: 'local' },
   reconnectTimer: null,
   failureData: [],
@@ -108,7 +129,7 @@ var State = {
     sessionId: 0,           // monotonic session counter
     waitingForIde: false,   // true when auto-retry polling for IDE
     autoRetryTimer: null,   // setInterval handle for auto-retry
-    scanPorts: [8080, 3000, 5000, 11434], // ports to scan for IDE (server.js first)
+    scanPorts: [19035, 11435, 19036, 3000, 5000], // gateway/native first, then Win32 IDE and Deep2
     lastScanResults: [],    // [{port, status, backend}] from last scan
   },
   // VSIX Extension Manager state
@@ -157,8 +178,16 @@ var State = {
   },
 };
 
+// The browser-facing gateway is also a complete API backend.  Prefer its
+// same-origin URL when the GUI is opened from loopback; use the legacy 11435
+// host only for file:// or an explicitly configured remote IDE.
+if (!_isFileProtocol && /^https?:$/.test(window.location.protocol) &&
+  /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+  State.backend.url = window.location.origin;
+}
+
 // ======================================================================
-// ENGINE REGISTRY — All available engines in the RawrXD codebase
+// ENGINE REGISTRY â€” All available engines in the RawrXD codebase
 // Each engine can be swapped in/out via !engine swap <name>
 // ======================================================================
 var EngineRegistry = {
@@ -190,9 +219,9 @@ var EngineRegistry = {
     'multi-response': { name: 'MultiResponseEngine', module: 'phase10', status: 'standby', desc: 'S/G/C/X multi-response generation' },
     'flight-recorder': { name: 'FlightRecorder', module: 'core', status: 'standby', desc: 'MASM64 ring-buffer flight recorder' },
     'cot': { name: 'ChainOfThoughtEngine', module: 'core', status: 'standby', desc: 'Chain-of-Thought multi-model reasoning' },
-    'vsix-host': { name: 'VSIXExtensionHost', module: 'ext', status: 'standby', desc: 'VSIX extension host — loads .vsix packages, manages activation events' },
-    'ext-manager': { name: 'ExtensionManager', module: 'ext', status: 'standby', desc: 'Extension lifecycle manager — install, enable, disable, uninstall' },
-    'marketplace': { name: 'MarketplaceClient', module: 'ext', status: 'standby', desc: 'VS Code Marketplace API client — search, download, version resolve' },
+    'vsix-host': { name: 'VSIXExtensionHost', module: 'ext', status: 'standby', desc: 'VSIX extension host â€” loads .vsix packages, manages activation events' },
+    'ext-manager': { name: 'ExtensionManager', module: 'ext', status: 'standby', desc: 'Extension lifecycle manager â€” install, enable, disable, uninstall' },
+    'marketplace': { name: 'MarketplaceClient', module: 'ext', status: 'standby', desc: 'VS Code Marketplace API client â€” search, download, version resolve' },
     'ext-sandbox': { name: 'ExtensionSandbox', module: 'ext', status: 'standby', desc: 'Sandboxed extension execution environment (QuickJS + polyfills)' },
   },
   getActive: function () { return this.engines[this.active] || null; },
@@ -217,7 +246,7 @@ var EngineRegistry = {
 };
 
 // ======================================================================
-// CODEX OPERATIONS — Compilation, code generation, and MASM64 toolchain
+// CODEX OPERATIONS â€” Compilation, code generation, and MASM64 toolchain
 // ======================================================================
 var CodexOps = {
   targets: [
@@ -424,7 +453,7 @@ function logStructured(level, event, data) {
 function updatePerfSidebar() {
   // Update the right sidebar perf mini-stats
   var avgLat = State.perf.totalRequests > 0 ? Math.round(State.perf.totalLatency / State.perf.totalRequests) : 0;
-  var avgTps = State.perf.totalTokens > 0 && State.perf.totalLatency > 0 ? (State.perf.totalTokens / (State.perf.totalLatency / 1000)).toFixed(1) : '—';
+  var avgTps = State.perf.totalTokens > 0 && State.perf.totalLatency > 0 ? (State.perf.totalTokens / (State.perf.totalLatency / 1000)).toFixed(1) : 'â€”';
 
   var elReqs = document.getElementById('perfTotalReqs');
   var elAvgLat = document.getElementById('perfAvgLatency');
@@ -463,7 +492,16 @@ var Conversation = {
 
   // Build OpenAI-compatible messages array for /v1/chat/completions
   getContextForAPI: function () {
-    var context = [{ role: 'system', content: this.systemPrompt }];
+    var sys = this.systemPrompt;
+    if (State.motd && !State.motd.read) {
+      sys += '\n\n[MOTD GATE] Before any tool call you MUST read_file/read_motd path containing '
+        + State.motd.needle + ' (PassiveRoleNotRoleplay). Tools are blocked until that read succeeds.';
+    }
+    sys += '\n\n[CONTINUE-ENSURE / MULTITASK] When the user says "Please continue ensuring" '
+      + '(short) or the full streamer-agentic phrase: reply with exactly 3 ack lines, spawn ONE '
+      + 'background /api/subagent with the max continue-ensure brief, then stop. Passive coordinator '
+      + 'only — no roleplay. Obey PassiveRoleNotRoleplay MOTD gate before tools.';
+    var context = [{ role: 'system', content: sys }];
 
     // Build file context block (injected near the end, not at position 2)
     var fileContextMsg = null;
@@ -483,7 +521,7 @@ var Conversation = {
             fileParts.push('--- ' + f.name + ' ---\n' + content);
           }
         } else {
-          fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') — content not yet loaded]');
+          fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') â€” content not yet loaded]');
         }
       });
       if (fileParts.length > 0) {
@@ -494,8 +532,22 @@ var Conversation = {
       }
     }
 
-    // Add conversation history (all but the last user message)
-    var msgs = this.messages;
+    // Bound restored history before sending. Old persisted sessions can contain
+    // huge tool/code transcripts; forwarding all 40 messages makes small local
+    // models emit garbage and can silently overflow their context window.
+    var msgs = this.messages.slice(-12);
+    var chars = 0;
+    var bounded = [];
+    for (var bi = msgs.length - 1; bi >= 0; bi--) {
+      var mc = String(msgs[bi].content || '');
+      if (chars + mc.length > 24000 && bounded.length > 0) break;
+      bounded.unshift(msgs[bi]);
+      chars += mc.length;
+    }
+    msgs = bounded;
+    if (this.messages.length !== msgs.length) {
+      logDebug('[Conversation] bounded API context to ' + msgs.length + ' messages / ' + chars + ' chars', 'info');
+    }
     var insertIdx = msgs.length; // default: append at end
     // Find the last user message to inject file context right before it
     for (var i = msgs.length - 1; i >= 0; i--) {
@@ -532,7 +584,7 @@ var Conversation = {
       parts.push('');
     }
 
-    // Add file context — placed right before the user question so it's in active context
+    // Add file context â€” placed right before the user question so it's in active context
     if (State.files.length > 0) {
       var fileParts = [];
       State.files.forEach(function (f) {
@@ -546,7 +598,7 @@ var Conversation = {
             fileParts.push('--- ' + f.name + ' ---\n' + content);
           }
         } else {
-          fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') — content not loaded]');
+          fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') â€” content not loaded]');
         }
       });
       parts.push('The user has attached the following files. Review them carefully:\n' + fileParts.join('\n\n'));
@@ -568,7 +620,7 @@ var Conversation = {
       // Also persist generation settings
       localStorage.setItem('rawrxd_gen_settings', JSON.stringify(State.gen));
     } catch (e) {
-      // localStorage full or unavailable — degrade silently
+      // localStorage full or unavailable â€” degrade silently
       logDebug('Persist failed: ' + e.message, 'warn');
     }
   },
@@ -613,6 +665,16 @@ var Conversation = {
           if (data.tensorHop.keepFirst != null) State.gen.tensorHop.keepFirst = data.tensorHop.keepFirst;
           if (data.tensorHop.keepLast != null) State.gen.tensorHop.keepLast = data.tensorHop.keepLast;
           if (data.tensorHop.customSkip) State.gen.tensorHop.customSkip = data.tensorHop.customSkip;
+        }
+        if (data.nvmeBunnyHop) {
+          if (!State.gen.nvmeBunnyHop) {
+            State.gen.nvmeBunnyHop = { enabled: false, force: true, unlaidout: true, hotpatchRelive: true, chunkMib: 4 };
+          }
+          if (data.nvmeBunnyHop.enabled != null) State.gen.nvmeBunnyHop.enabled = data.nvmeBunnyHop.enabled;
+          if (data.nvmeBunnyHop.force != null) State.gen.nvmeBunnyHop.force = data.nvmeBunnyHop.force;
+          if (data.nvmeBunnyHop.unlaidout != null) State.gen.nvmeBunnyHop.unlaidout = data.nvmeBunnyHop.unlaidout;
+          if (data.nvmeBunnyHop.hotpatchRelive != null) State.gen.nvmeBunnyHop.hotpatchRelive = data.nvmeBunnyHop.hotpatchRelive;
+          if (data.nvmeBunnyHop.chunkMib != null) State.gen.nvmeBunnyHop.chunkMib = data.nvmeBunnyHop.chunkMib;
         }
         // Restore safe decode profile
         if (data.safeDecodeProfile) {
@@ -681,11 +743,11 @@ function clearConversation() {
 }
 
 // ======================================================================
-// WIN32IDE BRIDGE — detect running IDE, sync state, launch IDE
+// WIN32IDE BRIDGE â€” detect running IDE, sync state, launch IDE
 // Works from both file:// and http:// contexts
 // ======================================================================
 var _win32IdeDetected = false;
-var _win32IdeUrl = 'http://localhost:8080';
+var _win32IdeUrl = 'http://localhost:11435';
 var _win32IdePollTimer = null;
 
 async function probeWin32IDE() {
@@ -768,7 +830,7 @@ function updateIdeBridgeUI(ideRunning, statusData) {
     if (tbDot) tbDot.classList.add('online');
     if (tbStatusText) tbStatusText.textContent = 'IDE ONLINE';
     if (tbMode) {
-      tbMode.textContent = _isFileProtocol ? 'FILE → IDE' : 'HTTP';
+      tbMode.textContent = _isFileProtocol ? 'FILE â†’ IDE' : 'HTTP';
       tbMode.style.background = 'rgba(0,255,136,0.15)';
       tbMode.style.color = 'var(--accent-green)';
     }
@@ -823,14 +885,14 @@ function stopIdePoll() {
 }
 
 // ======================================================================
-// GHOST IDE — RDP-style beacon into the full Win32 IDE via iframe
+// GHOST IDE â€” RDP-style beacon into the full Win32 IDE via iframe
 // "Ghosting in" = probe the IDE server, then embed its /gui endpoint
 // inside an overlay iframe so the user gets the full IDE experience
 // without leaving the chatbot. Beaconism-driven: works from file://
 // ======================================================================
 
 // ======================================================================
-// BUILT-IN BROWSER (WebView2-style) — Model web access, tabbed browsing,
+// BUILT-IN BROWSER (WebView2-style) â€” Model web access, tabbed browsing,
 // proxy-based page fetching, content extraction for model context.
 // When hosted in Win32 IDE with WebView2, can use native WebView2 APIs.
 // When running in standard browser, uses iframe + server proxy for CORS.
@@ -868,7 +930,7 @@ function browserMinimize() {
   browserClose();
   // Show toast that browser is still running
   if (typeof addSystemMessage === 'function') {
-    addSystemMessage('Browser minimized. Click 🌐 Browse or type `browse` to reopen.');
+    addSystemMessage('Browser minimized. Click ðŸŒ Browse or type `browse` to reopen.');
   }
 }
 
@@ -1007,7 +1069,7 @@ function _browserLoadViaIframe(url) {
     // Check if iframe loaded (simple heuristic)
     if (loading && loading.style.display !== 'none') {
       // Still loading after 8s, offer proxy option
-      document.getElementById('browserStatusInfo').textContent = 'Slow load — try proxy? (click Extract)';
+      document.getElementById('browserStatusInfo').textContent = 'Slow load â€” try proxy? (click Extract)';
     }
   }, 8000);
 
@@ -1037,11 +1099,18 @@ function _browserLoadViaProxy(url) {
     var div = document.createElement('div');
     div.className = 'browser-proxy-content';
 
-    // Basic sanitization: remove dangerous tags but keep structure
+    // Basic sanitization: remove active content and presentation attributes.
+    // A remote page's CSS must not be allowed to collapse the reader into a
+    // tiny centered fragment (Google and similar sites ship aggressive reset
+    // styles).  The visible surface is our controlled reader, while the
+    // extracted text/links remain available to the agent separately.
     var sanitized = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<link[^>]*>/gi, '')
       .replace(/<meta[^>]*>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+      .replace(/\s(?:style|class|id)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
       .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
       .replace(/on\w+\s*=\s*'[^']*'/gi, '');
 
@@ -1068,13 +1137,14 @@ function _browserLoadViaProxy(url) {
       })(links[i]);
     }
 
+    div.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:28px 24px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
     vp.appendChild(div);
 
     // Extract title
     var titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     var title = titleMatch ? titleMatch[1].trim() : _browserTitleFromUrl(url);
     _browserUpdateTab(BrowserState.activeTab, title, url);
-    document.getElementById('browserStatusInfo').textContent = 'Loaded (proxy) — ' + html.length + ' bytes';
+    document.getElementById('browserStatusInfo').textContent = 'Loaded (proxy) â€” ' + html.length + ' bytes';
 
   }).catch(function (err) {
     if (loading) loading.style.display = 'none';
@@ -1095,13 +1165,13 @@ function _browserLoadViaProxy(url) {
 }
 
 function _browserLoadViaWebView2(url) {
-  // WebView2 native navigation — send message to host application
+  // WebView2 native navigation â€” send message to host application
   if (window.chrome && window.chrome.webview) {
     window.chrome.webview.postMessage({
       type: 'browser-navigate',
       url: url
     });
-    document.getElementById('browserStatusInfo').textContent = 'WebView2 navigation → ' + url;
+    document.getElementById('browserStatusInfo').textContent = 'WebView2 navigation â†’ ' + url;
   } else {
     // Fallback to iframe
     _browserLoadViaIframe(url);
@@ -1154,7 +1224,7 @@ function browserExtractContent() {
     try {
       text = iframe.contentDocument.body.innerText || iframe.contentDocument.body.textContent || '';
     } catch (e) {
-      // Cross-origin — use proxy extraction
+      // Cross-origin â€” use proxy extraction
     }
   }
 
@@ -1171,7 +1241,7 @@ function browserExtractContent() {
       BrowserState.extractedContent = { url: tab.url, text: extracted, timestamp: Date.now() };
       document.getElementById('browserStatusInfo').textContent = 'Extracted ' + extracted.length + ' chars';
       if (typeof addSystemMessage === 'function') {
-        addSystemMessage('📋 Extracted ' + extracted.length + ' chars from ' + tab.url);
+        addSystemMessage('ðŸ“‹ Extracted ' + extracted.length + ' chars from ' + tab.url);
       }
     }).catch(function (err) {
       document.getElementById('browserStatusInfo').textContent = 'Extract error: ' + err.message;
@@ -1182,7 +1252,7 @@ function browserExtractContent() {
   BrowserState.extractedContent = { url: tab.url, text: text, timestamp: Date.now() };
   document.getElementById('browserStatusInfo').textContent = 'Extracted ' + text.length + ' chars';
   if (typeof addSystemMessage === 'function') {
-    addSystemMessage('📋 Extracted ' + text.length + ' chars from ' + tab.url);
+    addSystemMessage('ðŸ“‹ Extracted ' + text.length + ' chars from ' + tab.url);
   }
 }
 
@@ -1214,7 +1284,7 @@ function _browserDoSendToModel() {
   }
 
   // Inject as a system message into the chat, or add to current context
-  var contextMsg = '[Web Page Content from ' + ec.url + ' — extracted ' + new Date(ec.timestamp).toLocaleTimeString() + ']\n\n' + text;
+  var contextMsg = '[Web Page Content from ' + ec.url + ' â€” extracted ' + new Date(ec.timestamp).toLocaleTimeString() + ']\n\n' + text;
 
   // If there's a chat input, prepend context
   var chatInput = document.getElementById('chatInput');
@@ -1222,7 +1292,7 @@ function _browserDoSendToModel() {
     chatInput.value = contextMsg + '\n\n---\n\n' + (chatInput.value || '');
     chatInput.focus();
     if (typeof addSystemMessage === 'function') {
-      addSystemMessage('🌐→🤖 Web content injected into chat input (' + text.length + ' chars from ' + ec.url + ')');
+      addSystemMessage('ðŸŒâ†’ðŸ¤– Web content injected into chat input (' + text.length + ' chars from ' + ec.url + ')');
     }
   }
 
@@ -1275,7 +1345,7 @@ function browserSwitchTab(idx) {
 
 function browserCloseTab(idx) {
   if (BrowserState.tabs.length <= 1) {
-    // Last tab — just go home
+    // Last tab â€” just go home
     browserGoHome();
     return;
   }
@@ -1300,7 +1370,7 @@ function browserCloseTab(idx) {
 }
 
 function browserNavigateTo(url) {
-  // Direct navigation to a specific URL — used by bookmarks and quicklinks
+  // Direct navigation to a specific URL â€” used by bookmarks and quicklinks
   document.getElementById('browserUrlInput').value = url;
   showBrowser();
   browserNavigate();
@@ -1334,7 +1404,7 @@ function browserToggleDevtools() {
   var vp = document.getElementById('browserViewport');
   var iframe = vp ? vp.querySelector('iframe') : null;
   var proxyDiv = vp ? vp.querySelector('.browser-proxy-content') : null;
-  var info = 'DevTools — URL: ' + tab.url;
+  var info = 'DevTools â€” URL: ' + tab.url;
   if (iframe) {
     info += ' | Type: iframe';
     try { info += ' | Title: ' + (iframe.contentDocument.title || '?'); } catch (e) { info += ' | Cross-origin'; }
@@ -1476,14 +1546,14 @@ function _browserUpdateSsl(url) {
   var icon = document.getElementById('browserSslIcon');
   var status = document.getElementById('browserStatusSsl');
   if (!url) {
-    if (icon) icon.textContent = '🔒';
-    if (status) status.textContent = '🔒 Secure';
+    if (icon) icon.textContent = 'ðŸ”’';
+    if (status) status.textContent = 'ðŸ”’ Secure';
     return;
   }
   var isHttps = url.indexOf('https://') === 0;
-  if (icon) icon.textContent = isHttps ? '🔒' : '⚠';
+  if (icon) icon.textContent = isHttps ? 'ðŸ”’' : 'âš ';
   if (icon) icon.style.color = isHttps ? 'var(--accent-green)' : 'var(--accent-orange)';
-  if (status) status.textContent = isHttps ? '🔒 Secure' : '⚠ Not Secure';
+  if (status) status.textContent = isHttps ? 'ðŸ”’ Secure' : 'âš  Not Secure';
   if (status) status.style.color = isHttps ? 'var(--accent-green)' : 'var(--accent-orange)';
 }
 
@@ -1555,7 +1625,14 @@ async function ghostBeaconScan() {
         var data = await res.json();
         entry.status = 'ok';
         entry.backend = data.backend || data.server || 'unknown';
-        if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+        // The ghost surface can be hosted by the full Win32 IDE or by the
+        // dependency-free RawrXD gateway.  Both expose the same /gui page;
+        // requiring the historical Win32IDE label made the overlay report
+        // "not detected" even while the browser-first gateway was healthy.
+        var isIde = data.backend === 'rawrxd-win32ide' ||
+          data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' ||
+          (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0));
+        if (isIde) {
           entry.status = 'ide';
           if (!foundUrl) { foundUrl = url; foundData = data; }
         }
@@ -1578,7 +1655,7 @@ async function ghostBeaconScan() {
       } catch (_) { /* truly dead */ }
     }
     results.push(entry);
-    logDebug('\uD83D\uDC7B Scan :' + ports[i] + ' → ' + entry.status + (entry.backend ? ' (' + entry.backend + ')' : ''), entry.status === 'ide' ? 'info' : 'warn');
+    logDebug('\uD83D\uDC7B Scan :' + ports[i] + ' â†’ ' + entry.status + (entry.backend ? ' (' + entry.backend + ')' : ''), entry.status === 'ide' ? 'info' : 'warn');
   }
 
   State.ghost.lastScanResults = results;
@@ -1603,7 +1680,7 @@ function _ghostScanResultsHtml(results) {
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
       '<td style="padding:3px 8px;color:' + color + ';">' + icon + ' :' + r.port + '</td>' +
       '<td style="padding:3px 8px;color:' + color + ';">' + r.status + '</td>' +
-      '<td style="padding:3px 8px;color:var(--text-muted);">' + (r.backend || '—') + '</td></tr>';
+      '<td style="padding:3px 8px;color:var(--text-muted);">' + (r.backend || 'â€”') + '</td></tr>';
   }
   html += '</table></div>';
   return html;
@@ -1631,17 +1708,22 @@ function _ghostStartAutoRetry() {
     }
     // Quick probe just the primary IDE port
     try {
-      var res = await fetch('http://localhost:8080/status', { signal: AbortSignal.timeout(1500) });
+      var retryPorts = State.ghost.scanPorts;
+      var found = false;
+      for (var rp = 0; rp < retryPorts.length && !found; rp++) {
+        var res = await fetch('http://localhost:' + retryPorts[rp] + '/status', { signal: AbortSignal.timeout(1500) });
       if (res.ok) {
         var data = await res.json();
-        if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+        if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' ||
+            data.backend === 'rawrxd-native' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
           logDebug('\uD83D\uDC7B Auto-retry: IDE found! Connecting...', 'info');
           _ghostStopAutoRetry();
           // Close and re-ghost now that IDE is alive
           ghostCloseIDE();
           ghostIntoIDE();
-          return;
+          found = true;
         }
+      }
       }
     } catch (_) { /* still not up */ }
 
@@ -1665,7 +1747,7 @@ async function ghostIntoIDE() {
   if (State.ghost.active) {
     overlay.classList.remove('minimized');
     State.ghost.minimized = false;
-    logDebug('\uD83D\uDC7B Ghost session already active — brought to front', 'info');
+    logDebug('\uD83D\uDC7B Ghost session already active â€” brought to front', 'info');
     return;
   }
 
@@ -1685,11 +1767,11 @@ async function ghostIntoIDE() {
   loading.style.display = 'block';
 
   // Determine primary probe URL: prefer already-detected IDE, else default
-  var primaryUrl = _win32IdeDetected ? _win32IdeUrl : 'http://localhost:8080';
+  var primaryUrl = _win32IdeDetected ? _win32IdeUrl : 'http://localhost:11435';
   if (probeUrlSpan) probeUrlSpan.textContent = 'scanning ports...';
 
   logDebug('\uD83D\uDC7B Ghost beacon: multi-port scan starting...', 'info');
-  addMessage('system', '\uD83D\uDC7B **Ghost Session Starting** — Beacon scanning ports for Win32 IDE...', { skipMemory: true });
+  addMessage('system', '\uD83D\uDC7B **Ghost Session Starting** â€” Beacon scanning ports for Win32 IDE...', { skipMemory: true });
 
   // Multi-port beacon scan
   var scan = await ghostBeaconScan();
@@ -1703,7 +1785,16 @@ async function ghostIntoIDE() {
     logDebug('\uD83D\uDC7B Beacon confirmed: Win32 IDE alive at ' + scan.foundUrl, 'info');
 
     // Inject iframe pointed at /gui
-    State.ghost.ideUrl = scan.foundUrl + '/gui';
+    // Keep the embedded page on the same loopback origin as the shell.  A
+    // localhost/127.0.0.1 spelling change is enough for Chromium/WebView2 to
+    // treat the iframe as a separate site and refuse the embedded document.
+    var ghostOrigin = scan.foundUrl;
+    try {
+      var ghostUrl = new URL(scan.foundUrl);
+      if (ghostUrl.hostname === 'localhost' && location.hostname) ghostUrl.hostname = location.hostname;
+      ghostOrigin = ghostUrl.origin;
+    } catch (_) { /* retain scanned origin */ }
+    State.ghost.ideUrl = ghostOrigin + '/gui';
     loading.style.display = 'none';
 
     var iframe = document.createElement('iframe');
@@ -1726,7 +1817,7 @@ async function ghostIntoIDE() {
 
     if (titleText) titleText.innerHTML = '\uD83D\uDC7B GHOST SESSION \u2014 ' + scan.foundUrl + ' \u2014 #' + State.ghost.sessionId;
 
-    addMessage('system', '\u2705 **Ghost Session Active** — Win32 IDE embedded via beacon at `' + scan.foundUrl + '/gui`. Session #' + State.ghost.sessionId, { skipMemory: true });
+    addMessage('system', '\u2705 **Ghost Session Active** â€” Win32 IDE embedded via beacon at `' + scan.foundUrl + '/gui`. Session #' + State.ghost.sessionId, { skipMemory: true });
     logDebug('\uD83D\uDC7B Ghost session #' + State.ghost.sessionId + ' established at ' + State.ghost.ideUrl, 'info');
 
     // Also ensure CLI beacon is probed since IDE is confirmed alive
@@ -1736,10 +1827,10 @@ async function ghostIntoIDE() {
     return;
   }
 
-  // IDE not found — show waiting dashboard with scan results + auto-retry
+  // IDE not found â€” show waiting dashboard with scan results + auto-retry
   var dot = document.getElementById('ghostDot');
   if (dot) dot.style.background = 'var(--accent-secondary)';
-  if (titleText) titleText.innerHTML = '\uD83D\uDC7B GHOST — Waiting for Win32 IDE...';
+  if (titleText) titleText.innerHTML = '\uD83D\uDC7B GHOST â€” Waiting for Win32 IDE...';
 
   // Detect if Ollama Direct is alive for the inline dashboard
   var ollamaAlive = scan.results.some(function (r) { return r.status === 'ollama'; });
@@ -1750,7 +1841,7 @@ async function ghostIntoIDE() {
   waitHtml += '<div style="font-size:36px;margin-bottom:8px;">\uD83D\uDC7B</div>';
   waitHtml += '<div style="color:var(--accent-secondary);font-size:15px;font-weight:700;margin-bottom:6px;">Win32 IDE Not Detected</div>';
   waitHtml += '<div style="color:var(--text-muted);font-size:12px;margin-bottom:16px;">'
-    + 'Scanned ' + scan.results.length + ' ports — no RawrXD-Win32IDE found.</div>';
+    + 'Scanned ' + scan.results.length + ' ports â€” no RawrXD-Win32IDE found.</div>';
 
   // Scan results table
   waitHtml += _ghostScanResultsHtml(scan.results);
@@ -1791,8 +1882,8 @@ async function ghostIntoIDE() {
   loading.innerHTML = waitHtml;
   loading.style.display = 'block';
 
-  addMessage('system', '\u26A0\uFE0F **Ghost Waiting** — Win32 IDE not found on ' + scan.results.length + ' ports. '
-    + (ollamaAlive ? 'Ollama is running — chat works, but Ghost needs the IDE.' : 'No backends detected.')
+  addMessage('system', '\u26A0\uFE0F **Ghost Waiting** â€” Win32 IDE not found on ' + scan.results.length + ' ports. '
+    + (ollamaAlive ? 'Ollama is running â€” chat works, but Ghost needs the IDE.' : 'No backends detected.')
     + ' Click **Auto-Wait** to auto-connect when IDE starts.', { skipMemory: true });
 }
 
@@ -1849,7 +1940,7 @@ function ghostDetachIDE() {
     addMessage('system', '\u2197\uFE0F Ghost IDE detached to popup window. Closing overlay.', { skipMemory: true });
     ghostCloseIDE();
   } else {
-    addMessage('system', '\u26A0\uFE0F Popup blocked — allow popups for this page to detach the ghost session.', { skipMemory: true });
+    addMessage('system', '\u26A0\uFE0F Popup blocked â€” allow popups for this page to detach the ghost session.', { skipMemory: true });
   }
 }
 
@@ -1867,14 +1958,14 @@ function ghostMinimizeIDE() {
 }
 
 // ======================================================================
-// REFRESH BACKEND BEACON — Force re-probe of all beacons
+// REFRESH BACKEND BEACON â€” Force re-probe of all beacons
 // Reconnects backend, re-probes Win32 IDE, re-probes /api/cli endpoint
 // Accessible from button press, CLI /beacon, or ghost toolbar
 // ======================================================================
 
 async function refreshBackendBeacon() {
   logDebug('\u26A1 Beacon refresh: re-probing all connections...', 'info');
-  addMessage('system', '\u26A1 **Beacon Refresh** — Re-probing backend, Win32 IDE, and CLI endpoints...', { skipMemory: true });
+  addMessage('system', '\u26A1 **Beacon Refresh** â€” Re-probing backend, Win32 IDE, and CLI endpoints...', { skipMemory: true });
 
   // 1. Multi-port scan for Win32 IDE
   var ideWasDetected = _win32IdeDetected;
@@ -1908,7 +1999,7 @@ async function refreshBackendBeacon() {
       var r = scan.results[i];
       var icon = r.status === 'ide' ? '\u2714' :
         r.status === 'ollama' || r.status === 'ok' || r.status === 'alive' ? '\u25CF' : '\u2718';
-      scanLines += '  ' + icon + ' `:' + r.port + '` → ' + r.status + (r.backend ? ' (' + r.backend + ')' : '') + '\n';
+      scanLines += '  ' + icon + ' `:' + r.port + '` â†’ ' + r.status + (r.backend ? ' (' + r.backend + ')' : '') + '\n';
     }
   }
 
@@ -2019,7 +2110,7 @@ var _localStorageAvailable = (function () {
     localStorage.removeItem(key);
     return true;
   } catch (e) {
-    console.warn('[RawrXD] localStorage unavailable — session persistence disabled');
+    console.warn('[RawrXD] localStorage unavailable â€” session persistence disabled');
     return false;
   }
 })();
@@ -2036,10 +2127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (titlebar) titlebar.classList.add('active');
     var brandSpan = document.querySelector('.header-bar .brand span:last-child');
     if (brandSpan) brandSpan.textContent = '// STANDALONE v3.4';
-    logDebug('\uD83D\uDCC2 Opened from file:// — standalone mode active. Backend at localhost:8080/11434.', 'info');
+    logDebug('\uD83D\uDCC2 Opened from file:// â€” standalone mode active. Backend at localhost:11435 (RawrXD).', 'info');
     // Warn if localStorage is blocked in file:// mode
     if (!_localStorageAvailable) {
-      logDebug('\u26A0\uFE0F localStorage blocked by browser in file:// mode — conversations won\u2019t persist across reloads', 'warn');
+      logDebug('\u26A0\uFE0F localStorage blocked by browser in file:// mode â€” conversations won\u2019t persist across reloads', 'warn');
     }
   }
 
@@ -2153,31 +2244,30 @@ function dismissRestored() {
 
 function addWelcomeMessage() {
   var modeNote = _isFileProtocol
-    ? '\n\n\u{1F4C2} **Standalone Mode** — Opened directly from file system. ' +
-    'Connecting to `localhost:8080` (RawrXD server) or `localhost:11434` (Ollama).\n' +
+    ? '\n\n\u{1F4C2} **Standalone Mode** â€” Opened directly from file system. ' +
+    'Connecting to `localhost:11435` (RawrXD Headless / Win32 IDE).\n' +
     'Drag & drop files to attach them, or paste file paths in your message.' +
-    (_win32IdeDetected ? '\n\u{1F5A5} **Win32 IDE detected** — use the `OPEN IDE` button in the titlebar to switch.' : '')
+    (_win32IdeDetected ? '\n\u{1F5A5} **Win32 IDE detected** â€” use the `OPEN IDE` button in the titlebar to switch.' : '')
     : '';
   addMessage('system',
-    '**RawrXD Agentic Interface v3.4** — Standalone + Win32IDE Bridge\n\n' +
-    'This interface connects to the RawrXD backend on `localhost:8080`. ' +
-    'If the server isn\u2019t running, it will automatically fall back to Ollama directly on `localhost:11434`.' + modeNote + '\n\n' +
+    '**RawrXD Agentic Interface v3.4** â€” Standalone + Win32IDE Bridge\n\n' +
+    'This interface connects to the RawrXD backend on `localhost:11435` (LOCAL_ONLY_NO_OLLAMA — no :11434 fallback).' + modeNote + '\n\n' +
     '**What\'s new in v3.4:**\n' +
-    '\u2022 **Standalone Mode** — Works fully from `file:///` with no server needed for UI\n' +
-    '\u2022 **Win32 IDE Bridge** — Auto-detects running IDE, syncs state, hotpatch control\n' +
-    '\u2022 **Native Titlebar** — Window chrome with status, mode badge, and IDE launcher\n' +
-    '\u2022 **IDE File Bridge** — Read local files via IDE\'s `/api/read-file` endpoint\n' +
-    '\u2022 **Fullscreen Mode** — F11 key or titlebar button for distraction-free chat\n' +
-    '\u2022 **Security Dashboard** — CSP audit, input validation, rate limit meter\n' +
-    '\u2022 **Hotpatch Control** — Toggle/apply/revert hotpatches from the browser\n\n' +
+    '\u2022 **Standalone Mode** â€” Works fully from `file:///` with no server needed for UI\n' +
+    '\u2022 **Win32 IDE Bridge** â€” Auto-detects running IDE, syncs state, hotpatch control\n' +
+    '\u2022 **Native Titlebar** â€” Window chrome with status, mode badge, and IDE launcher\n' +
+    '\u2022 **IDE File Bridge** â€” Read local files via IDE\'s `/api/read-file` endpoint\n' +
+    '\u2022 **Fullscreen Mode** â€” F11 key or titlebar button for distraction-free chat\n' +
+    '\u2022 **Security Dashboard** â€” CSP audit, input validation, rate limit meter\n' +
+    '\u2022 **Hotpatch Control** â€” Toggle/apply/revert hotpatches from the browser\n\n' +
     '**Quick start:**\n' +
     '1. Run `launch_rawrxd.bat` or click **\u26A1** to connect\n' +
     '2. Select a model from the sidebar dropdown\n' +
     '3. Type your message and press Enter\n\n' +
     '**Usage modes:**\n' +
-    '\u2022 **File mode** — Double-click `gui/ide_chatbot.html` (standalone, no server required for UI)\n' +
-    '\u2022 **Served mode** — Navigate to `http://localhost:8080` (served by RawrXD server)\n' +
-    '\u2022 **Both** — Same HTML works in either context, auto-detects environment');
+    '\u2022 **File mode** â€” Double-click `gui/ide_chatbot.html` (standalone, no server required for UI)\n' +
+    '\u2022 **Served mode** â€” Navigate to `http://localhost:11435` (served by RawrXD server)\n' +
+    '\u2022 **Both** â€” Same HTML works in either context, auto-detects environment');
 }
 
 // ======================================================================
@@ -2205,7 +2295,7 @@ function estimateModelSizeB(modelName) {
   if (lower.indexOf('7b') >= 0 || lower.indexOf('8b') >= 0) return 7;
   if (lower.indexOf('3b') >= 0) return 3;
   if (lower.indexOf('1b') >= 0 || lower.indexOf('1.5b') >= 0) return 1.5;
-  return 0; // unknown — don't clamp
+  return 0; // unknown â€” don't clamp
 }
 
 // Check if current model triggers safe decode profile
@@ -2256,6 +2346,22 @@ function buildTensorHopOptions() {
   };
 }
 
+function buildNvmeBunnyHopOptions() {
+  if (!State.gen.nvmeBunnyHop) {
+    State.gen.nvmeBunnyHop = { enabled: false, force: true, unlaidout: true, hotpatchRelive: true, chunkMib: 4 };
+  }
+  if (!State.gen.nvmeBunnyHop.enabled) return null;
+  var n = State.gen.nvmeBunnyHop;
+  return {
+    enabled: true,
+    force: !!n.force,
+    unlaidout: !!n.unlaidout,
+    hotpatch_relive: !!n.hotpatchRelive,
+    chunk_mib: n.chunkMib || 4,
+    mode: 'UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP',
+  };
+}
+
 // Build full options payload for OpenAI-compatible endpoints
 function buildOpenAIPayloadExtras() {
   var p = getEffectiveGenParams();
@@ -2274,6 +2380,8 @@ function buildOpenAIPayloadExtras() {
   // Tensor hop metadata (custom extension)
   var th = buildTensorHopOptions();
   if (th) extras.tensor_hop = th;
+  var nb = buildNvmeBunnyHopOptions();
+  if (nb) extras.nvme_bunnyhop = nb;
   return extras;
 }
 
@@ -2288,6 +2396,8 @@ function buildOllamaOptions() {
   };
   var th = buildTensorHopOptions();
   if (th) opts.tensor_hop = th;
+  var nb = buildNvmeBunnyHopOptions();
+  if (nb) opts.nvme_bunnyhop = nb;
   return opts;
 }
 
@@ -2346,7 +2456,7 @@ function updateSafeDecodeStatus(status, detail) {
 }
 
 // ======================================================================
-// ENGINE API — Unified interface to all 150+ engine sources via HTTP
+// ENGINE API â€” Unified interface to all 150+ engine sources via HTTP
 // Maps complete_server.cpp (21 routes) + tool_server.cpp (18+ routes)
 // ======================================================================
 var EngineAPI = {
@@ -2439,8 +2549,41 @@ var EngineAPI = {
   hotpatchStatus: function () { return this._get('/api/hotpatch/status'); },
 
   // ---- Tools (tool_server: /api/tool) ----
+  // MOTD hook: block all tools until PassiveRoleNotRoleplay.mdc/.md is read this message turn
   executeTool: function (tool, args) {
-    return this._post('/api/tool', { tool: tool, args: args || {} });
+    args = args || {};
+    var needle = (State.motd && State.motd.needle) ? State.motd.needle : 'PassiveRoleNotRoleplay.mdc';
+    var pathStr = String((args && (args.path || args.file_path || args.target_file)) || '');
+    var isMotdRead = (tool === 'read_motd') ||
+      ((tool === 'read_file' || tool === 'Read') && pathStr.indexOf('PassiveRoleNotRoleplay') >= 0);
+    if (State.motd && !State.motd.read && !isMotdRead) {
+      return Promise.reject(new Error(
+        'motd_required: Read Message of the Day first (' + needle + ') before executing tools.'
+      ));
+    }
+    // Prefer server-side MOTD resolve (cwd/module walk) — relative paths need no --dir.
+    var postTool = tool;
+    var postArgs = args;
+    if (isMotdRead) {
+      postTool = 'read_motd';
+      var abs = pathStr.length >= 3 && pathStr.charAt(1) === ':' &&
+        (pathStr.charAt(2) === '\\' || pathStr.charAt(2) === '/');
+      postArgs = abs ? { path: pathStr } : {};
+    }
+    return this._post('/api/tool', { tool: postTool, args: postArgs }).then(function (data) {
+      // Ack only on successful MOTD payload (HTTP ok + no error + canonical content)
+      if (isMotdRead && State.motd) {
+        var ok = data && !data.error && typeof data.content === 'string' &&
+          data.content.indexOf('PassiveRoleNotRoleplay') >= 0 &&
+          data.content.indexOf('Message of the Day') >= 0;
+        if (ok) State.motd.read = true;
+        else return Promise.reject(new Error('motd_required: canonical MOTD read failed'));
+      }
+      return data;
+    });
+  },
+  toolReadMotd: function (path) {
+    return this.executeTool('read_motd', path ? { path: path } : {});
   },
   toolReadFile: function (path) {
     return this.executeTool('read_file', { path: path });
@@ -2743,12 +2886,12 @@ var EngineAPI = {
     'Server / Complete Server': {
       files: ['complete_server.cpp', 'complete_server.hpp'],
       endpoints: ['/status', '/complete', '/complete/stream', '/api/chat', '/api/subagent', '/api/chain', '/api/swarm', '/api/agents', '/api/agents/status', '/api/agents/history', '/api/agents/replay', '/api/policies', '/api/policies/suggestions', '/api/policies/apply', '/api/policies/reject', '/api/policies/export', '/api/policies/import', '/api/policies/heuristics', '/api/policies/stats', '/api/agents/explain', '/api/agents/explain/stats', '/api/backends', '/api/backends/status', '/api/backends/use'],
-      desc: 'Main agentic completion server — 21 routes for chat, agents, policies, backends'
+      desc: 'Main agentic completion server â€” 21 routes for chat, agents, policies, backends'
     },
     'Server / Tool Server': {
       files: ['tool_server.cpp', 'tool_server.hpp'],
       endpoints: ['/api/tags', '/health', '/api/status', '/status', '/api/generate', '/metrics', '/api/tool', '/models', '/v1/models', '/v1/chat/completions', '/ask', '/gui', '/api/failures', '/api/agents/status', '/api/agents/history', '/api/agents/replay', '/api/hotpatch/*', '/api/read-file', '/api/cli'],
-      desc: 'Tool executor, WinHTTP proxy to Ollama, CLI bridge — 18+ routes'
+      desc: 'Tool executor, WinHTTP proxy to Ollama, CLI bridge â€” 18+ routes'
     },
     'Agent / Failure Detector': {
       files: ['agentic_failure_detector.hpp', 'agentic_failure_detector.cpp'],
@@ -2818,7 +2961,7 @@ var EngineAPI = {
     'Zone / Memory Manager': {
       files: ['zone_memory.hpp', 'zone_memory.cpp', 'zone_preloader.hpp', 'zone_preloader.cpp'],
       endpoints: [],
-      desc: 'Zone-based memory management with async preloading (400ms → 40ms)'
+      desc: 'Zone-based memory management with async preloading (400ms â†’ 40ms)'
     },
     'Speculative / Decoding': {
       files: ['speculative_decoder.hpp', 'speculative_decoder.cpp'],
@@ -2858,27 +3001,27 @@ var EngineAPI = {
     'Ext / VSIX Extension Host': {
       files: ['vsix_extension_host.hpp', 'vsix_extension_host.cpp', 'extension_sandbox.hpp', 'extension_sandbox.cpp'],
       endpoints: ['/api/extensions', '/api/extensions/install', '/api/extensions/uninstall', '/api/extensions/enable', '/api/extensions/disable', '/api/extensions/activate', '/api/extensions/deactivate', '/api/extensions/host/status', '/api/extensions/host/restart', '/api/extensions/host/kill', '/api/extensions/host/logs'],
-      desc: 'VSIX extension host — loads .vsix packages, manages activation events, sandboxed QuickJS execution'
+      desc: 'VSIX extension host â€” loads .vsix packages, manages activation events, sandboxed QuickJS execution'
     },
     'Ext / Extension Manager': {
       files: ['extension_manager.hpp', 'extension_manager.cpp', 'extension_manifest.hpp'],
       endpoints: ['/api/extensions/scan', '/api/extensions/export', '/api/extensions/import'],
-      desc: 'Extension lifecycle manager — install, update, enable/disable, dependency resolution'
+      desc: 'Extension lifecycle manager â€” install, update, enable/disable, dependency resolution'
     },
     'Ext / Marketplace Client': {
       files: ['marketplace_client.hpp', 'marketplace_client.cpp'],
       endpoints: ['/api/extensions/marketplace/search', '/api/extensions/marketplace/*'],
-      desc: 'VS Code Marketplace API client — search, download, version resolution, compatibility check'
+      desc: 'VS Code Marketplace API client â€” search, download, version resolution, compatibility check'
     },
     'Ext / Polyfill Engine': {
       files: ['extension_polyfill.hpp', 'extension_polyfill.cpp', 'vscode_api_shim.js'],
       endpoints: [],
-      desc: 'VS Code API polyfill layer — provides vscode.* namespace, commands, workspace, languages APIs'
+      desc: 'VS Code API polyfill layer â€” provides vscode.* namespace, commands, workspace, languages APIs'
     },
     'Ext / VSIX Loader': {
       files: ['vsix_loader.hpp', 'vsix_loader.cpp', 'vsix_parser.hpp'],
       endpoints: ['/api/extensions/load-vsix'],
-      desc: 'VSIX package parser — extracts manifest, contributions, activation events from .vsix ZIP'
+      desc: 'VSIX package parser â€” extracts manifest, contributions, activation events from .vsix ZIP'
     }
   },
 
@@ -2940,8 +3083,8 @@ function getActiveUrl() {
 async function beaconProbeCliEndpoint() {
   State.backend.hasCliEndpoint = false;
 
-  // Build list of URLs to probe — only RawrXD servers (tool_server / Win32IDE)
-  // Skip ollamaDirectUrl — Ollama never exposes /api/cli and probing it
+  // Build list of URLs to probe â€” only RawrXD servers (tool_server / Win32IDE)
+  // Skip ollamaDirectUrl â€” Ollama never exposes /api/cli and probing it
   // produces a noisy 404 in DevTools console.
   var urlsToProbe = [State.backend.url];
   if (_ideServerUrl && urlsToProbe.indexOf(_ideServerUrl) === -1) {
@@ -2975,9 +3118,9 @@ async function beaconProbeCliEndpoint() {
   // so file reads still work via /api/read-file even without /api/cli
   if (_win32IdeDetected || (State.backend.serverType && State.backend.serverType.indexOf('rawrxd') !== -1)) {
     State.backend._cliEndpointUrl = _ideServerUrl || _win32IdeUrl || State.backend.url;
-    logDebug('Beacon: /api/cli not found but RawrXD tool_server detected — file reads via /api/read-file available', 'info');
+    logDebug('Beacon: /api/cli not found but RawrXD tool_server detected â€” file reads via /api/read-file available', 'info');
   } else {
-    logDebug('Beacon: /api/cli not found on any backend — using client-side CLI', 'info');
+    logDebug('Beacon: /api/cli not found on any backend â€” using client-side CLI', 'info');
   }
 }
 
@@ -2985,9 +3128,15 @@ async function connectBackend() {
   const status = document.getElementById('backendStatus');
   const text = document.getElementById('statusText');
 
+  // Prefer Debug Panel Backend URL (configured) over stale State defaults
+  var dbgUrlEl = document.getElementById('dbgBackendUrl');
+  if (dbgUrlEl && dbgUrlEl.value && dbgUrlEl.value.trim()) {
+    State.backend.url = dbgUrlEl.value.trim().replace(/\/$/, '');
+  }
+
   // Phase 4: Validate backend URL before connecting
   if (!isUrlAllowed(State.backend.url)) {
-    secLog('BLOCK', 'Connection blocked — URL not on allowlist: ' + State.backend.url);
+    secLog('BLOCK', 'Connection blocked â€” URL not on allowlist: ' + State.backend.url);
     State.security.inputGuard.blockedUrl++;
     status.className = 'status-pill offline';
     text.textContent = 'URL BLOCKED';
@@ -2998,29 +3147,32 @@ async function connectBackend() {
   status.className = 'status-pill connecting';
   text.textContent = 'CONNECTING...';
 
-  // ---- Try 1: Primary backend (server.js on :8080) ----
+  // ---- Try 1: Primary backend (configured URL â€” default :11435) ----
   try {
     const t0 = performance.now();
+    var primaryUrl = State.backend.url;
+    logDebug('Probing configured backend at ' + primaryUrl + '...', 'info');
 
     let statusData = null;
     let detectedVia = '';
+    var primaryLastErr = '';
 
-    // Try /status first (new binary with full capabilities)
+    // Try /status first (HeadlessIDE / new binary with full capabilities)
     try {
       const ctrl = new AbortController();
       setTimeout(() => ctrl.abort(), 3000);
-      const res = await fetch(State.backend.url + '/status', { signal: ctrl.signal });
+      const res = await fetch(primaryUrl + '/status', { signal: ctrl.signal });
       if (res.ok) { statusData = await res.json(); detectedVia = '/status'; }
-    } catch (_) { /* fall through */ }
+      else { primaryLastErr = '/status HTTP ' + res.status; }
+    } catch (e1) { primaryLastErr = '/status ' + (e1 && e1.message ? e1.message : 'failed'); }
 
-    // Try /api/status (old binary — returns {running, pid, uptime_seconds})
+    // Try /api/status (old tool_server â€” returns {running, pid, uptime_seconds})
     if (!statusData) {
       try {
-        const res = await fetch(State.backend.url + '/api/status', { signal: AbortSignal.timeout(3000) });
+        const res = await fetch(primaryUrl + '/api/status', { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           const d = await res.json();
           if (d.running === true && d.pid) {
-            // This is definitely the tool_server. Enrich the status data.
             statusData = {
               backend: 'rawrxd-tool-server',
               server: 'RawrXD-ToolServer',
@@ -3040,28 +3192,53 @@ async function connectBackend() {
               },
             };
             detectedVia = '/api/status';
+          } else if (d.server_running === true || d.mode || d.version) {
+            statusData = Object.assign({}, d, {
+              backend: d.backend || d.server || 'rawrxd-headless-ide',
+              server: d.server || 'RawrXD-HeadlessIDE',
+            });
+            detectedVia = '/api/status';
+          } else {
+            primaryLastErr = '/api/status unexpected shape';
           }
-        }
-      } catch (_) { /* fall through */ }
+        } else { primaryLastErr = '/api/status HTTP ' + res.status; }
+      } catch (e2) { primaryLastErr = '/api/status ' + (e2 && e2.message ? e2.message : 'failed'); }
     }
 
-    // Try /health (old binary — returns {status, version, models_loaded})
+    // Try /health (LocalServer / tool_server)
     if (!statusData) {
       try {
-        const res = await fetch(State.backend.url + '/health', { signal: AbortSignal.timeout(3000) });
+        const res = await fetch(primaryUrl + '/health', { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           const d = await res.json();
-          if (d.status === 'ok') {
+          if (d.status === 'ok' || d.status === 'healthy' || d.ok === true) {
             statusData = Object.assign({}, d, {
-              backend: 'rawrxd-tool-server',
-              server: 'RawrXD-ToolServer',
-              license: 'unlicensed-open',
-              model_range: '8B-100B swarm + 800B dual engine',
+              backend: d.backend || d.server || 'rawrxd-ide-server',
+              server: d.server || 'RawrXD-IDE-Server',
+              license: d.license || 'unlicensed-open',
             });
             detectedVia = '/health';
-          }
-        }
-      } catch (_) { /* fall through */ }
+          } else { primaryLastErr = '/health unexpected shape'; }
+        } else { primaryLastErr = '/health HTTP ' + res.status; }
+      } catch (e3) { primaryLastErr = '/health ' + (e3 && e3.message ? e3.message : 'failed'); }
+    }
+
+    // Try /api/engine/capabilities (IDE surface present even if /status missing)
+    if (!statusData) {
+      try {
+        const res = await fetch(primaryUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          const d = await res.json();
+          statusData = {
+            backend: d.server || 'rawrxd-ide-server',
+            server: d.server || 'RawrXD-IDE-Server',
+            status: 'ok',
+            capabilities: d,
+            model_loaded: false,
+          };
+          detectedVia = '/api/engine/capabilities';
+        } else { primaryLastErr = '/api/engine/capabilities HTTP ' + res.status; }
+      } catch (e4) { primaryLastErr = '/api/engine/capabilities ' + (e4 && e4.message ? e4.message : 'failed'); }
     }
 
     const latency = Math.round(performance.now() - t0);
@@ -3084,17 +3261,48 @@ async function connectBackend() {
       updateBackendInfo(statusData, latency);
       updateModeBadge(true);
       syncTitlebarStatus();
-      logDebug('Connected to ' + State.backend.serverType + ' via ' + detectedVia + ' (' + latency + 'ms)', 'info');
+      logDebug('Connected to ' + State.backend.serverType + ' via ' + detectedVia + ' at ' + primaryUrl + ' (' + latency + 'ms)', 'info');
 
       await fetchModels();
       await beaconProbeCliEndpoint();
       return;
     }
+
+    logDebug('Configured backend (' + primaryUrl + ') not ready: ' + (primaryLastErr || 'no status endpoint'), 'warn');
   } catch (e) {
     logDebug('Primary backend (' + State.backend.url + ') failed: ' + e.message, 'warn');
   }
 
-  // ---- Try 2: Direct Ollama fallback (default :11434) ----
+  // ---- Try 1b: native Deep2 server (:11436) ----
+  // Keep this separate from Ollama Direct so a running native server is
+  // discoverable even when the IDE gateway on :11435 is not started.
+  try {
+    var deep2Url = 'http://127.0.0.1:11436';
+    var deep2Health = await fetch(deep2Url + '/health', { signal: AbortSignal.timeout(3000) });
+    if (deep2Health.ok) {
+      var deep2Data = await deep2Health.json();
+      if (deep2Data.status === 'ok' && deep2Data.model_loaded) {
+        State.backend.url = deep2Url;
+        State.backend.online = true;
+        State.backend.directMode = false;
+        State.backend.serverType = 'deep2-native';
+        State.backend.lastPing = Date.now();
+        status.className = 'status-pill online';
+        text.textContent = 'DEEP2 NATIVE';
+        updateBackendInfo({ backend: 'deep2-native', model_loaded: true }, 0);
+        updateModeBadge(false);
+        syncTitlebarStatus();
+        logDebug('\u2705 Connected to native Deep2 at ' + deep2Url, 'info');
+        await fetchModels();
+        await beaconProbeCliEndpoint();
+        return;
+      }
+    }
+  } catch (eDeep2) {
+    logDebug('Native Deep2 (' + 'http://127.0.0.1:11436' + ') unavailable: ' + eDeep2.message, 'warn');
+  }
+
+  // ---- Try 2: Ollama direct fallback (:11434) ----
   if (State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
     try {
       logDebug('Trying direct Ollama at ' + State.backend.ollamaDirectUrl + '...', 'info');
@@ -3183,7 +3391,7 @@ function updateBackendInfo(data, latency) {
       if (data.capabilities.hotpatching) caps.push('Hotpatch');
       if (data.capabilities.file_read) caps.push('FileIO');
       if (data.capabilities.cli) caps.push('CLI');
-      if (caps.length > 0) html += '<p><span class="label">Engines:</span> <span class="val-online">' + caps.join(' · ') + '</span></p>';
+      if (caps.length > 0) html += '<p><span class="label">Engines:</span> <span class="val-online">' + caps.join(' Â· ') + '</span></p>';
     }
     if (data.pid) html += '<p><span class="label">PID:</span> <span class="val-neutral">' + data.pid + '</span></p>';
   }
@@ -3286,6 +3494,7 @@ function populateModelSelect(models) {
 
   var labels = {
     gguf: '\uD83D\uDCE6 Local GGUF',
+    'gguf-local': '\uD83D\uDCE6 Local Folder',
     ollama: '\uD83E\uDD99 Ollama',
     blob: '\uD83D\uDCBE Blobs',
     cloud: '\u2601\uFE0F Cloud',
@@ -3307,7 +3516,120 @@ function populateModelSelect(models) {
 
 function populateModelsFallback() {
   var sel = document.getElementById('modelSelect');
-  sel.innerHTML = '<option value="">Backend offline</option>';
+  sel.innerHTML = '<option value=\"\">Backend offline â€” use Browse Local</option>';
+}
+
+// Local model discovery (file:// or offline mode)
+function isLocalModelFile(name) {
+  var lower = (name || '').toLowerCase();
+  return lower.endsWith('.gguf') || lower.endsWith('.bin');
+}
+
+function normalizeLocalModelName(name) {
+  return (name || '')
+    .replace(/\\.gguf.*$/i, '')
+    .replace(/\\.bin$/i, '')
+    .trim();
+}
+
+function inferLocalFolderLabel(fileList) {
+  if (!fileList || fileList.length === 0) return 'Local Folder';
+  var first = fileList[0];
+  if (first.webkitRelativePath) {
+    var parts = first.webkitRelativePath.split(/[\\\\/]/);
+    parts.pop(); // remove filename
+    return parts.join('/') || 'Local Folder';
+  }
+  return first.name || 'Local Folder';
+}
+
+function applyLocalModels(models, label) {
+  label = label || 'Local Folder';
+  State.model.local = models;
+  var merged = (models || []).concat(State.model.list || []);
+  var seen = {};
+  var dedup = [];
+  merged.forEach(function (m) {
+    if (!m || !m.name) return;
+    if (seen[m.name]) return;
+    seen[m.name] = true;
+    dedup.push(m);
+  });
+  State.model.list = dedup;
+  populateModelSelect(dedup);
+  addMessage('system', '\u2705 Loaded ' + models.length + ' local models from ' + label + '.');
+  logDebug('Local models: ' + models.length + ' (' + label + ')', 'info');
+}
+
+async function browseLocalModels() {
+  // Prefer native directory picker when available (Chrome 86+)
+  if (window.showDirectoryPicker) {
+    try {
+      var dir = await window.showDirectoryPicker({ mode: 'read' });
+      var models = await scanDirectoryForModels(dir);
+      applyLocalModels(models, dir && dir.name ? dir.name : 'Local Folder');
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // user cancelled
+      logDebug('Directory picker failed (' + (e && e.message ? e.message : e) + '), falling back to file chooser.', 'warn');
+    }
+  }
+
+  // Fallback: <input type="file" webkitdirectory>
+  var input = document.getElementById('localModelDirInput');
+  if (input) {
+    input.value = '';
+    input.click();
+  } else {
+    addMessage('system', 'Directory picker not available in this browser.');
+  }
+}
+
+async function scanDirectoryForModels(dirHandle) {
+  var models = [];
+  if (!dirHandle || !dirHandle.values) return models;
+  try {
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'file') {
+        try {
+          var f = await entry.getFile();
+          if (isLocalModelFile(f.name)) {
+            models.push({
+              name: normalizeLocalModelName(f.name),
+              type: 'gguf-local',
+              size: formatBytes(f.size || 0),
+              path: (dirHandle.name ? dirHandle.name + '/' : '') + entry.name,
+              _local: true,
+            });
+          }
+        } catch (eFile) {
+          logDebug('Skip file read: ' + eFile.message, 'warn');
+        }
+      }
+    }
+  } catch (e) {
+    logDebug('scanDirectoryForModels failed: ' + (e && e.message ? e.message : e), 'warn');
+  }
+  return models;
+}
+
+function handleLocalModelFiles(fileList) {
+  var files = Array.from(fileList || []).filter(function (f) { return isLocalModelFile(f.name); });
+  if (files.length === 0) {
+    addMessage('system', 'No GGUF/BIN models found in the selected folder.');
+    return;
+  }
+  var label = inferLocalFolderLabel(files);
+  var models = files.map(function (f) {
+    return {
+      name: normalizeLocalModelName(f.name),
+      type: 'gguf-local',
+      size: formatBytes(f.size || 0),
+      path: f.webkitRelativePath || f.name,
+      _local: true,
+    };
+  });
+  applyLocalModels(models, label);
 }
 
 async function refreshModels() {
@@ -3337,7 +3659,7 @@ function changeModel() {
     updateSafeDecodeStatus();
     var sizeB = estimateModelSizeB(name);
     if (isSafeDecodeActive()) {
-      logDebug('[SafeDecode] Large model detected (' + sizeB + 'B >= ' + State.gen.safeDecodeProfile.thresholdB + 'B) — safe decode active', 'warn');
+      logDebug('[SafeDecode] Large model detected (' + sizeB + 'B >= ' + State.gen.safeDecodeProfile.thresholdB + 'B) â€” safe decode active', 'warn');
     }
   } else {
     badge.style.display = 'none';
@@ -3347,7 +3669,7 @@ function changeModel() {
 }
 
 // ======================================================================
-// MODEL BRIDGE — MASM x64 Pure Assembly Bridge (24 profiles, 1.5B-800B)
+// MODEL BRIDGE â€” MASM x64 Pure Assembly Bridge (24 profiles, 1.5B-800B)
 // ======================================================================
 
 // Bridge state tracking
@@ -3382,12 +3704,66 @@ var BRIDGE_MODEL_NAMES = [
 ];
 
 // Fetch all 24 profiles from MASM bridge endpoint
+// In directMode (Ollama), synthesize profiles from /api/tags
 async function fetchBridgeProfiles() {
   var badge = document.getElementById('bridgeBadge');
   badge.textContent = 'loading...';
   badge.style.background = 'rgba(255,204,0,0.15)';
   badge.style.color = '#ffcc00';
 
+  // Direct Mode: Synthesize profiles from Ollama /api/tags
+  if (State.backend.directMode) {
+    try {
+      var ollamaUrl = State.backend.ollamaDirectUrl;
+      var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var tagsData = await res.json();
+      var models = tagsData.models || [];
+
+      // Map Ollama models to bridge profiles
+      var profiles = models.map(function (m, idx) {
+        var name = m.name || m.model;
+        var sizeB = m.size ? Math.round(m.size / (1024 * 1024 * 1024)) : 0;
+        var tier = sizeB < 9 ? 'small' : sizeB < 28 ? 'medium' : sizeB < 71 ? 'large' : 'ultra';
+        return {
+          id: idx,
+          name: name,
+          tier: tier,
+          params_b: sizeB > 0 ? Math.round(sizeB / 2) : '?', // Rough estimate
+          quant: 'Q4_K_M',
+          ram_mb: sizeB * 1024,
+          requires_swarm: sizeB > 70,
+          requires_avx512: sizeB > 100
+        };
+      });
+
+      BridgeState.profiles = profiles;
+      BridgeState.hardware = null; // Ollama doesn't expose hardware info
+      BridgeState.bridge = 'ollama-direct';
+      BridgeState.fetched = true;
+
+      badge.textContent = 'ollama-direct';
+      badge.style.background = 'rgba(0,255,136,0.15)';
+      badge.style.color = '#00ff88';
+
+      renderBridgeProfiles();
+      updateBridgeStatusBar();
+      logDebug('[ModelBridge] Loaded ' + profiles.length + ' profiles from Ollama /api/tags (direct)', 'info');
+
+      // Also merge bridge profiles into model select dropdown
+      mergeBridgeIntoModelSelect();
+      return;
+    } catch (e) {
+      logDebug('[ModelBridge] Direct mode profile fetch failed: ' + e.message, 'error');
+      badge.textContent = 'error';
+      badge.style.background = 'rgba(255,68,102,0.15)';
+      badge.style.color = '#ff4466';
+      renderBridgeProfilesFallback();
+      return;
+    }
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/model/profiles', { signal: AbortSignal.timeout(8000) });
@@ -3535,6 +3911,7 @@ function selectBridgeProfile(profileId) {
 }
 
 // Load model via MASM bridge POST /api/model/load
+// In directMode (Ollama), this just sets state - Ollama lazy-loads on first /api/chat
 async function bridgeLoadModel() {
   if (BridgeState.selectedProfileId < 0) {
     addMessage('system', '\u26A0\uFE0F Select a model profile from the bridge list first.');
@@ -3543,6 +3920,50 @@ async function bridgeLoadModel() {
 
   var profileId = BridgeState.selectedProfileId;
   var nameStr = BRIDGE_MODEL_NAMES[profileId] || ('profile-' + profileId);
+
+  // Direct Mode: Ollama handles loading lazily - just set state
+  if (State.backend.directMode) {
+    addMessage('system', '\u26A1 Activating model for Ollama direct mode: **' + nameStr + '**...');
+    BridgeState.activeProfileId = profileId;
+    BridgeState.loaded = true;
+    BridgeState.bridge = 'ollama-direct';
+
+    // Set in main model state
+    State.model.current = nameStr;
+    var sel = document.getElementById('modelSelect');
+    if (sel) {
+      var found = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === nameStr) {
+          sel.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        var opt = document.createElement('option');
+        opt.value = nameStr;
+        opt.textContent = '\uD83E\uDDE9 ' + nameStr + ' (Ollama)';
+        sel.appendChild(opt);
+        sel.value = nameStr;
+      }
+    }
+    changeModel();
+
+    // Update card highlights
+    var cards = document.querySelectorAll('.bridge-model-card');
+    cards.forEach(function (card) {
+      var cardId = parseInt(card.getAttribute('data-profile-id'), 10);
+      card.classList.toggle('active', cardId === profileId);
+    });
+
+    addMessage('system', '\u2705 Model activated for Ollama direct: **' + nameStr + '** | Ollama will lazy-load on first generation.');
+    logDebug('[ModelBridge] Activated (direct): ' + nameStr, 'info');
+    updateBridgeStatusBar();
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   addMessage('system', '\u26A1 Loading model via MASM x64 bridge: **' + nameStr + '** (ID ' + profileId + ')...');
 
   try {
@@ -3555,8 +3976,24 @@ async function bridgeLoadModel() {
       signal: AbortSignal.timeout(30000)
     });
 
-    var data = await res.json();
     if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u274C Model load failed: HTTP ' + res.status + ' â€” ' + errText.substring(0, 120));
+      logDebug('[ModelBridge] Load failed: HTTP ' + res.status + ' â€” ' + errText.substring(0, 200), 'error');
+      return;
+    }
+
+    var data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      var rawText = await res.text();
+      addMessage('system', '\u274C Model load failed: Invalid JSON response');
+      logDebug('[ModelBridge] Load failed: Invalid JSON â€” ' + rawText.substring(0, 200), 'error');
+      return;
+    }
+
+    if (data.error || data.message) {
       addMessage('system', '\u274C Model load failed: ' + (data.error || data.message || 'Unknown error'));
       logDebug('[ModelBridge] Load failed: ' + JSON.stringify(data), 'error');
       return;
@@ -3606,7 +4043,26 @@ async function bridgeLoadModel() {
 }
 
 // Unload model via MASM bridge POST /api/model/unload
+// In directMode (Ollama), unload is handled via keep_alive:0 on next request or explicit unload
 async function bridgeUnloadModel() {
+  // Direct Mode: Ollama doesn't have explicit unload, just clear state
+  // The model will be unloaded from VRAM automatically when not used
+  if (State.backend.directMode) {
+    BridgeState.activeProfileId = -1;
+    BridgeState.loaded = false;
+    BridgeState.bridge = 'unknown';
+
+    // Clear card highlights
+    var cards = document.querySelectorAll('.bridge-model-card');
+    cards.forEach(function (card) { card.classList.remove('active'); });
+
+    addMessage('system', '\u23F9\uFE0F Model deactivated from Ollama direct mode. Ollama will release VRAM automatically.');
+    logDebug('[ModelBridge] Deactivated (direct)', 'info');
+    updateBridgeStatusBar();
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/model/unload', {
@@ -3616,8 +4072,23 @@ async function bridgeUnloadModel() {
       signal: AbortSignal.timeout(10000)
     });
 
-    var data = await res.json();
     if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u26A0\uFE0F Unload: HTTP ' + res.status + ' â€” ' + errText.substring(0, 120));
+      logDebug('[ModelBridge] Unload failed: HTTP ' + res.status, 'error');
+      return;
+    }
+
+    var data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      addMessage('system', '\u26A0\uFE0F Unload: Invalid JSON response');
+      logDebug('[ModelBridge] Unload failed: Invalid JSON', 'error');
+      return;
+    }
+
+    if (data.error || data.message) {
       addMessage('system', '\u26A0\uFE0F Unload: ' + (data.error || data.message || 'no model loaded'));
       return;
     }
@@ -3640,12 +4111,74 @@ async function bridgeUnloadModel() {
 }
 
 // Fetch engine capabilities GET /api/engine/capabilities
+// In directMode (Ollama), synthesize capabilities from /api/tags and system info
 async function fetchBridgeCapabilities() {
+  // Direct Mode: Synthesize capabilities from Ollama
+  if (State.backend.directMode) {
+    try {
+      var ollamaUrl = State.backend.ollamaDirectUrl;
+      var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var tags = await res.json();
+      var modelCount = (tags.models && tags.models.length) || 0;
+
+      // Build synthetic capabilities
+      var caps = {
+        bridge: 'ollama-direct',
+        cpu: { avx2: true, fma3: true, avx512f: false, avx512bw: false }, // Assume AVX2 baseline
+        memory: { total_ram_gb: '?', free_ram_gb: '?' },
+        engine: {
+          swarm: false,
+          dual_engine: false,
+          five_drive: false,
+          tensor_hop: false,
+          flash_attention: true,  // Ollama supports flash attn
+          safe_decode: true
+        },
+        model_range: modelCount + ' models available',
+        supported_tiers: ['small', 'medium', 'large', 'ultra'],
+        profile_count: modelCount,
+        raw_caps: 'ollama-native'
+      };
+
+      BridgeState.hardware = caps;
+
+      var lines = [];
+      lines.push('**\uD83D\uDD0D Ollama Direct Capabilities**');
+      lines.push('Backend: Ollama Native (direct mode)');
+      lines.push('Models: ' + modelCount + ' available');
+      lines.push('Features: FlashAttention=\u2705 Streaming=\u2705');
+      lines.push('Note: CPU/RAM detection not available in direct mode');
+
+      addMessage('system', lines.join('\n'));
+      logDebug('[ModelBridge] Capabilities (direct): ' + modelCount + ' models', 'info');
+      updateBridgeStatusBar();
+    } catch (e) {
+      addMessage('system', '\u274C Ollama capabilities fetch failed: ' + e.message);
+      logDebug('[ModelBridge] Caps error (direct): ' + e.message, 'error');
+    }
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var caps = await res.json();
+    if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u274C Capabilities fetch failed: HTTP ' + res.status);
+      logDebug('[ModelBridge] Caps error: HTTP ' + res.status + ' â€” ' + errText.substring(0, 200), 'error');
+      return;
+    }
+
+    var caps;
+    try {
+      caps = await res.json();
+    } catch (jsonErr) {
+      addMessage('system', '\u274C Capabilities fetch failed: Invalid JSON');
+      logDebug('[ModelBridge] Caps error: Invalid JSON', 'error');
+      return;
+    }
 
     BridgeState.hardware = caps;
 
@@ -3827,7 +4360,7 @@ async function readLocalFile(filePath) {
   // Uses _ideServerUrl (resolved during connectBackend) + window.location.origin as fallbacks.
   // Critical for file:// opens where window.location.origin is null.
   {
-    var ideServerUrl = _ideServerUrl || 'http://localhost:8080';
+    var ideServerUrl = _ideServerUrl || 'http://localhost:11435';
     var urlsToTry = [ideServerUrl];
     // Also try page origin if we're served from a server (not file://)
     if (!_isFileProtocol && window.location.origin && window.location.origin !== 'null' && window.location.origin !== ideServerUrl) {
@@ -3848,7 +4381,7 @@ async function readLocalFile(filePath) {
         if (res1b.ok) {
           var data1b = await res1b.json();
           if (data1b.content) {
-            logDebug('📂 read-file via ' + urlsToTry[ui] + ' succeeded', 'info');
+            logDebug('ðŸ“‚ read-file via ' + urlsToTry[ui] + ' succeeded', 'info');
             return { content: data1b.content, name: data1b.name || normalized.split('/').pop() };
           }
         }
@@ -3900,11 +4433,66 @@ async function autoAttachFilePaths(text) {
   }
 }
 
+// ======================================================================
+// Continue-ensure / Multitask (Cursor-parity for Deep IDE)
+// Trigger: "Please continue ensuring" → 3-line ack + one /api/subagent + end
+// ======================================================================
+var CONTINUE_ENSURE_MAX_BRIEF =
+  'Please continue ensuring that the streamer is complete and can run agentic.\n\n'
+  + 'You are the single end-to-end continue-ensure worker (product / passive agentic only — no roleplay).\n\n'
+  + 'Mandate:\n'
+  + '- Make the streamer binary path complete and able to run agentic product tasks.\n'
+  + '- Verify the live binary / harness path; close remaining gaps with evidence.\n'
+  + '- Prefer perfect livepath metrics and real unstubs over invented surfaces.\n'
+  + '- Do not invent pinball, trailbrake, tensor_hop, or host-VRAM restore targets.\n'
+  + '- Obey PROMOTE=0 and TIP_CLIMB=HOLD — coverage/epoch only; no directional climb.\n'
+  + '- HeadlessIDE /api/tool 403 reverse remains in-scope if still open.\n'
+  + '- Align with PassiveRoleNotRoleplay: coordinator/product tone only — no character play.\n'
+  + '- Read MOTD (.cursor/rules/PassiveRoleNotRoleplay.mdc or .md) before any other tool each turn.\n\n'
+  + 'Authority: evidence/RAWRXD_PERFORMANCE_001/G3_STREAMER_AGENTIC_* ; '
+  + 'G3_ARMSPEED_AUTHORIZE_LANE_CLOSE_001.txt ; PERF_COMPLETION_CONTRACT.md\n\n'
+  + 'Work until streamer is complete and agentic-ready, or leave a fail-closed receipt naming the blocker.';
+
+function isContinueEnsureTrigger(text) {
+  var t = String(text || '').toLowerCase();
+  if (!State.continueEnsure || State.continueEnsure.active === false) return false;
+  return t.indexOf('please continue ensuring') >= 0;
+}
+
+async function runContinueEnsureCoordinator() {
+  var ack = [
+    'Continuing to ensure the streamer is fully complete and operational for agentic tasks.',
+    'Multitask Mode is active. A background subagent will handle the agentic streamer completion.',
+    'Delegating streamer completeness + agentic readiness as one end-to-end worker so it can verify the binary path and close any remaining gaps.'
+  ].join('\n');
+  Conversation.addMessage('assistant', ack);
+  addMessage('assistant', ack, { skipMemory: true });
+  try {
+    if (typeof EngineAPI !== 'undefined' && EngineAPI.subagent) {
+      var model = (State.model && State.model.current) ? State.model.current : undefined;
+      await EngineAPI.subagent(CONTINUE_ENSURE_MAX_BRIEF, model, 'continue-ensure');
+      logDebug('continue-ensure: spawned /api/subagent with max brief', 'info');
+    } else {
+      addMessage('system',
+        'Subagent API unavailable — Multitask spawn skipped; continue-ensure will run in-session if you proceed.',
+        { skipMemory: true });
+    }
+  } catch (err) {
+    logDebug('continue-ensure subagent spawn failed: ' + (err && err.message ? err.message : String(err)), 'warn');
+    addMessage('system',
+      'Subagent spawn failed — keep the 3-line ack; do not fake a launch. Proceed in-session if needed.',
+      { skipMemory: true });
+  }
+}
+
 async function sendMessage() {
   if (State.chat.sending) return;
   var el = document.getElementById('chatInput');
   var text = el.value.trim();
   if (!text) return;
+
+  // Each user message resets MOTD ack — local streaming model must re-read before tools
+  if (State.motd) State.motd.read = false;
 
   // Wait for any pending file reads from drag-and-drop to complete
   if (State.filePendingReads > 0) {
@@ -3935,31 +4523,56 @@ async function sendMessage() {
   el.value = '';
   el.style.height = 'auto';
 
+  // Cursor-parity: "Please continue ensuring" → 3-line ack + one /api/subagent + end (no parent doer)
+  if (isContinueEnsureTrigger(text)) {
+    State.chat.sending = true;
+    document.getElementById('sendBtn').disabled = true;
+    try {
+      Conversation.addMessage('user', text);
+      await runContinueEnsureCoordinator();
+    } catch (err) {
+      logDebug('continue-ensure error: ' + (err && err.message ? err.message : String(err)), 'error');
+      addMessage('system', '\u26A0\uFE0F **Error:** ' + (err && err.message ? err.message : 'continue-ensure failed'), { skipMemory: true });
+    } finally {
+      State.chat.sending = false;
+      var sendBtnCe = document.getElementById('sendBtn');
+      if (sendBtnCe) { sendBtnCe.disabled = false; }
+      showSendHideStop();
+    }
+    return;
+  }
+
   State.chat.sending = true;
   document.getElementById('sendBtn').disabled = true;
   showStopHideSend();
 
-  if (State.backend.online) {
-    await sendToBackend(text);
-  } else {
-    // Offline mode — still record to conversation memory
-    Conversation.addMessage('user', text);
-    showTyping();
-    await sleep(400);
-    hideTyping();
-    var offlineReply = getOfflineResponse(text);
-    Conversation.addMessage('assistant', offlineReply);
-    addMessage('assistant', offlineReply, { skipMemory: true });
+  try {
+    if (State.backend.online) {
+      await sendToBackend(text);
+    } else {
+      // Offline mode â€” still record to conversation memory
+      Conversation.addMessage('user', text);
+      showTyping();
+      await sleep(400);
+      hideTyping();
+      var offlineReply = getOfflineResponse(text);
+      Conversation.addMessage('assistant', offlineReply);
+      addMessage('assistant', offlineReply, { skipMemory: true });
+    }
+  } catch (err) {
+    logDebug('sendMessage error: ' + (err && err.message ? err.message : String(err)), 'error');
+    addMessage('system', '\u26A0\uFE0F **Error:** ' + (err && err.message ? err.message : 'Failed to send. Please try again.'), { skipMemory: true });
+  } finally {
+    State.chat.sending = false;
+    var sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) { sendBtn.disabled = false; }
+    showSendHideStop();
   }
-
-  State.chat.sending = false;
-  document.getElementById('sendBtn').disabled = false;
-  showSendHideStop();
 }
 
 // ======================================================================
-// RawrXD Streaming Bridge — Production-grade NDJSON/SSE stream client
-// Connects to server.js (localhost:8080) or direct Ollama (11434)
+// RawrXD Streaming Bridge â€” Production-grade NDJSON/SSE stream client
+// Connects to RawrXD Headless / Win32IDE (localhost:11435) — LOCAL_ONLY_NO_OLLAMA
 // Implements: AbortController, cross-chunk NDJSON buffer, token rate
 // ======================================================================
 class RawrXDStream {
@@ -4140,7 +4753,7 @@ class RawrXDStream {
   }
 }
 
-// Global stream instance — tracks active stream for abort
+// Global stream instance â€” tracks active stream for abort
 var _activeStream = null;
 
 // Show/hide Stop/Send buttons
@@ -4153,7 +4766,7 @@ function showSendHideStop() {
   document.getElementById('sendBtn').style.display = 'flex';
 }
 
-// Stop Generation — cleanly cancels Ollama mid-generation
+// Stop Generation â€” cleanly cancels Ollama mid-generation
 function stopGeneration() {
   if (_activeStream) {
     _activeStream.abort();
@@ -4182,6 +4795,14 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'F11' && _isFileProtocol) {
     e.preventDefault();
     toggleStandaloneFullscreen();
+  }
+});
+
+// Keyboard shortcut: Ctrl+Shift+P â€” Command Palette / Settings (opens Backend Switcher)
+document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+    e.preventDefault();
+    if (typeof showBackendSwitcher === 'function') showBackendSwitcher();
   }
 });
 
@@ -4231,13 +4852,57 @@ function hideStreamRate() {
 }
 
 // ======================================================================
-// CHAT — SEND TO BACKEND
+// CHAT â€” SEND TO BACKEND
 // ======================================================================
+
+async function sendViaAgentSession(query) {
+  showTyping();
+  try {
+    var res = await fetch(getActiveUrl() + '/api/agent/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: query, max_iterations: 8, max_tokens: 2048 }),
+      signal: AbortSignal.timeout(180000)
+    });
+    var data = await res.json();
+    hideTyping();
+    if (!res.ok) {
+      addMessage('system', 'Agent session failed: ' + (data.error || res.status), { skipMemory: true });
+      return;
+    }
+    var content = (data.choices && data.choices[0] && data.choices[0].message)
+      ? data.choices[0].message.content : '';
+    var log = data.tool_log || '';
+    Conversation.addMessage('assistant', content);
+    addMessage('assistant', content + (log ? '\n\n' + log : ''), { skipMemory: true });
+  } catch (err) {
+    hideTyping();
+    addMessage('system', 'Agent session failed: ' + (err && err.message ? err.message : String(err)), { skipMemory: true });
+  }
+}
 
 async function sendToBackend(query) {
   var model = State.model.current;
   var t0 = performance.now();
+  if (!State.backend.directMode) {
+    await sendViaAgentSession(query);
+    return;
+  }
   var activeUrl = getActiveUrl();  // respects directMode fallback
+
+  // Fail fast when the selected provider disappeared instead of leaving the
+  // chat in an indefinite "waiting" state. Ollama uses /, RawrXD uses
+  // /health; both are loopback-only by construction.
+  try {
+    var readinessPath = State.backend.directMode ? '/' : '/health';
+    var ready = await fetch(activeUrl + readinessPath, { signal: AbortSignal.timeout(3000) });
+    if (!ready.ok) throw new Error('HTTP ' + ready.status);
+  } catch (e) {
+    var provider = State.backend.directMode ? 'Ollama' : 'Deep2/RawrXD';
+    addMessage('system', '\u26a0\ufe0f **' + provider + ' unavailable** at ' + activeUrl + '. Start the service or select another provider, then retry.', { skipMemory: true });
+    logDebug('[ProviderReady] ' + provider + ' unavailable: ' + e.message, 'error');
+    return;
+  }
 
   // First-token probe for large models (Safe Decode Profile)
   if (isSafeDecodeActive() && State.gen.safeDecodeProfile.probeFirst) {
@@ -4293,6 +4958,7 @@ async function sendNonStreamingOpenAI(query, model, t0) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(120000),
     });
 
     hideTyping();
@@ -4397,13 +5063,13 @@ async function sendStreamingOpenAI(query, model, t0) {
   } catch (e) {
     textEl.classList.remove('streaming-cursor');
     if (e.name === 'AbortError') {
-      // User cancelled — save partial response
+      // User cancelled â€” save partial response
       var partialText = textEl.textContent || '';
       if (partialText) Conversation.addMessage('assistant', partialText + '\n\n*[Generation stopped by user]*');
       logDebug('Stream aborted by user after ' + stream.tokenCount + ' tokens', 'info');
       recordMetric({ latency: Math.round(performance.now() - t0), tokens: stream.tokenCount, model: model, endpoint: '/v1/chat/completions (stream)', success: true, errorMsg: 'user_abort' });
     } else if (!textEl.textContent) {
-      // OpenAI streaming not available — try Ollama, then /ask
+      // OpenAI streaming not available â€” try Ollama, then /ask
       msgDiv.remove();
       State.chat.messageCount--;
       logDebug('OpenAI streaming failed: ' + e.message + ', trying /api/generate', 'warn');
@@ -4413,7 +5079,7 @@ async function sendStreamingOpenAI(query, model, t0) {
       await sendStreamingOllama(query, model, t0);
       return;
     } else {
-      // Partial response received — save what we got
+      // Partial response received â€” save what we got
       var partial = textEl.textContent || '';
       if (partial) Conversation.addMessage('assistant', partial);
       logDebug('OpenAI stream interrupted: ' + e.message, 'error');
@@ -4489,7 +5155,7 @@ async function sendStreamingOllama(query, model, t0) {
   } catch (e) {
     textEl.classList.remove('streaming-cursor');
     if (e.name === 'AbortError') {
-      // User cancelled — save partial response
+      // User cancelled â€” save partial response
       var partialText = textEl.textContent || '';
       if (partialText) Conversation.addMessage('assistant', partialText + '\n\n*[Generation stopped by user]*');
       logDebug('Ollama stream aborted by user after ' + stream.tokenCount + ' tokens', 'info');
@@ -4523,7 +5189,7 @@ async function sendNonStreamingLegacy(query, model, t0) {
     var legacyPrompt = Conversation.getLegacyPrompt(query);
     var activeUrl = getActiveUrl();
 
-    // In direct Ollama mode, skip /ask (doesn't exist) — use /api/generate directly
+    // In direct Ollama mode, skip /ask (doesn't exist) â€” use /api/generate directly
     if (State.backend.directMode) {
       var res = await fetch(activeUrl + '/api/generate', {
         method: 'POST',
@@ -4609,13 +5275,11 @@ async function sendNonStreamingLegacy(query, model, t0) {
 function getOfflineResponse(q) {
   var lower = q.toLowerCase();
   if (lower.indexOf('help') >= 0 || lower === '?') {
-    return '**Offline Mode \u2014 Help**\n\nThe backend is not running. To use AI:\n\n' +
-      '1. **Start Ollama** \u2014 the chatbot will connect directly on port 11434\n' +
-      '2. **Or start the RawrXD server** \u2014 `node server.js` on port 8080\n' +
-      '3. **Or run the start script:**\n' +
-      '```powershell\ncd D:\\rawrxd\nnode server.js\n```\n\n' +
-      'Then click the \u26A1 button to connect.\n\n' +
-      '*Note: If Ollama is running, the chatbot will automatically detect it even without the Python server.*';
+    return '**Offline Mode \u2014 Help**\n\nThe RawrXD backend is not running. To use AI:\n\n' +
+      '1. **Start RawrXD Headless** \u2014 `RawrXD-Win32IDE.exe --headless --local --port 11435`\n' +
+      '2. **Or start the Win32 IDE** \u2014 built-in server on port 11435\n' +
+      '3. Click the \u26A1 button to connect.\n\n' +
+      '*Policy: LOCAL_ONLY_NO_OLLAMA — product does not fall back to :11434.*';
   }
   if (lower.indexOf('endpoint') >= 0 || lower.indexOf('api') >= 0) {
     return '**API Endpoints** (when backend is online):\n\n' +
@@ -4764,11 +5428,11 @@ function formatMessage(text) {
     });
   }
 
-  // DOMPurify not loaded (CDN blocked) — return escaped text as-is
+  // DOMPurify not loaded (CDN blocked) â€” return escaped text as-is
   return text;
 }
 
-// HTML entity escaper — used for ALL untrusted text
+// HTML entity escaper â€” used for ALL untrusted text
 function escHtml(t) {
   if (!t) return '';
   return t.replace(/&/g, '&amp;')
@@ -4916,12 +5580,12 @@ function renderFile(file) {
 function getFileIcon(name) {
   var ext = name.split('.').pop().toLowerCase();
   var map = {
-    js: '📜', py: '🐍', cpp: '⚙', c: '⚙', h: '📋', hpp: '📋',
-    rs: '🦀', go: '🐹', java: '☕', ts: '📘',
-    html: '🌐', css: '🎨', json: '📋', md: '📝', txt: '📄',
-    gguf: '🧠', bin: '💾', asm: '⚡', ps1: '💠',
+    js: 'ðŸ“œ', py: 'ðŸ', cpp: 'âš™', c: 'âš™', h: 'ðŸ“‹', hpp: 'ðŸ“‹',
+    rs: 'ðŸ¦€', go: 'ðŸ¹', java: 'â˜•', ts: 'ðŸ“˜',
+    html: 'ðŸŒ', css: 'ðŸŽ¨', json: 'ðŸ“‹', md: 'ðŸ“', txt: 'ðŸ“„',
+    gguf: 'ðŸ§ ', bin: 'ðŸ’¾', asm: 'âš¡', ps1: 'ðŸ’ ',
   };
-  return map[ext] || '📄';
+  return map[ext] || 'ðŸ“„';
 }
 
 function formatBytes(b) {
@@ -4969,6 +5633,37 @@ function closeDebug() {
 async function runDiagnostics() {
   logDebug('=== Running Diagnostics ===', 'info');
 
+  // In Ollama direct mode, test Ollama-native endpoints
+  if (State.backend.directMode) {
+    var ollamaUrl = State.backend.ollamaDirectUrl;
+
+    logDebug('Testing Ollama root...', 'info');
+    try {
+      var t0 = performance.now();
+      var res = await fetch(ollamaUrl + '/', { signal: AbortSignal.timeout(3000) });
+      var lat = Math.round(performance.now() - t0);
+      var txt = await res.text();
+      logDebug('Ollama root: OK (' + lat + 'ms) \u2014 ' + txt.substring(0, 60), 'info');
+    } catch (e) {
+      logDebug('Ollama root: FAILED \u2014 ' + e.message, 'error');
+    }
+
+    logDebug('Testing /api/tags...', 'info');
+    try {
+      var t1 = performance.now();
+      var res2 = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(5000) });
+      var d2 = await res2.json();
+      var lt = Math.round(performance.now() - t1);
+      logDebug('Models: ' + (d2.models ? d2.models.length : 0) + ' found (' + lt + 'ms)', 'info');
+    } catch (e) {
+      logDebug('Models: FAILED \u2014 ' + e.message, 'error');
+    }
+
+    logDebug('=== Diagnostics Complete (Ollama Direct) ===', 'info');
+    return;
+  }
+
+  // RawrXD backend mode: test native endpoints
   logDebug('Testing /health...', 'info');
   try {
     var t0 = performance.now();
@@ -5005,13 +5700,24 @@ async function runDiagnostics() {
 
 async function testAllEndpoints() {
   var activeUrl = getActiveUrl();
-  var eps = [
-    { method: 'GET', path: '/health' },
-    { method: 'GET', path: '/status' },
-    { method: 'GET', path: '/models' },
-    { method: 'GET', path: '/api/tags' },
-    { method: 'POST', path: '/ask', body: { question: 'ping', model: '' } },
-  ];
+
+  // Endpoint list depends on backend mode
+  var eps;
+  if (State.backend.directMode) {
+    eps = [
+      { method: 'GET', path: '/' },
+      { method: 'GET', path: '/api/tags' },
+      { method: 'POST', path: '/api/generate', body: { model: State.model.current || 'deepseek-coder:latest', prompt: 'ping', stream: false } },
+    ];
+  } else {
+    eps = [
+      { method: 'GET', path: '/health' },
+      { method: 'GET', path: '/status' },
+      { method: 'GET', path: '/models' },
+      { method: 'GET', path: '/api/tags' },
+      { method: 'POST', path: '/ask', body: { question: 'ping', model: '' } },
+    ];
+  }
 
   logDebug('=== Testing All Endpoints (via ' + activeUrl + (State.backend.directMode ? ' [DIRECT]' : '') + ') ===', 'info');
 
@@ -5034,12 +5740,13 @@ async function testAllEndpoints() {
     }
   }
 
-  // Also test direct Ollama if we're currently going through the proxy
+  // Also test configured local RawrXD (ollamaDirectUrl is LOCAL_ONLY alias for :11435 — not Ollama)
   if (!State.backend.directMode && State.backend.ollamaDirectUrl !== State.backend.url) {
-    logDebug('--- Also testing direct Ollama at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
+    var rawrLabel = 'RawrXD';
+    logDebug('--- Also testing ' + rawrLabel + ' at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
     var ollamaEps = [
-      { method: 'GET', path: '/' },
-      { method: 'GET', path: '/api/tags' },
+      { method: 'GET', path: '/health' },
+      { method: 'GET', path: '/api/engine/capabilities' },
       { method: 'GET', path: '/v1/models' },
     ];
     for (var j = 0; j < ollamaEps.length; j++) {
@@ -5050,9 +5757,9 @@ async function testAllEndpoints() {
         var olat = Math.round(performance.now() - t1);
         var otxt = await ores.text();
         var oprev = otxt.length > 80 ? otxt.substring(0, 80) + '...' : otxt;
-        logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
+        logDebug('[' + rawrLabel + '] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
       } catch (oe) {
-        logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
+        logDebug('[' + rawrLabel + '] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
       }
     }
   }
@@ -5108,7 +5815,7 @@ function logDebug(msg, level) {
 }
 
 // ======================================================================
-// TERMINAL — Dual-mode: Local (client-side) + CLI (remote /api/cli)
+// TERMINAL â€” Dual-mode: Local (client-side) + CLI (remote /api/cli)
 // ======================================================================
 
 // --- Terminal Mode Switching ---
@@ -5150,7 +5857,7 @@ function getCliUrl() {
   }
   // Otherwise use the active URL (respects directMode)
   if (State.backend.online) return getActiveUrl();
-  return _ideServerUrl || 'http://localhost:11434';
+  return _ideServerUrl || 'http://localhost:11435';
 }
 
 // --- Render CLI output lines with color coding ---
@@ -5629,7 +6336,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /ask <question> — proxy to Ollama /api/generate or /v1/chat/completions
+  // /ask <question> â€” proxy to Ollama /api/generate or /v1/chat/completions
   if (lower.indexOf('/ask') === 0) {
     var question = cmd.replace(/^\/?(ask)\s*/i, '').trim();
     if (!question) {
@@ -5717,14 +6424,14 @@ async function processCliLocally(command) {
       addTerminalLine(result.success ? ('\u2714 ' + result.msg) : ('\u2718 ' + result.msg), result.success ? 'success' : 'error');
       if (result.success) {
         var eng = EngineRegistry.getActive();
-        addTerminalLine('  Active: ' + eng.name + ' [' + eng.module + '] — ' + eng.desc, 'output');
+        addTerminalLine('  Active: ' + eng.name + ' [' + eng.module + '] â€” ' + eng.desc, 'output');
         // If backend is online, try to notify via API
         if (State.backend.online && !State.backend.directMode) {
           fetch(getActiveUrl() + '/api/backend/switch', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ engine: subParts[1] }), signal: AbortSignal.timeout(3000)
           }).then(function () { addTerminalLine('  \u2714 Backend notified of engine swap', 'success'); })
-            .catch(function () { addTerminalLine('  (Backend not notified — client-side swap only)', 'system'); });
+            .catch(function () { addTerminalLine('  (Backend not notified â€” client-side swap only)', 'system'); });
         }
       }
     } else if (subParts[0] === 'info' && subParts[1]) {
@@ -5800,9 +6507,9 @@ async function processCliLocally(command) {
         '  objdump -d -M intel build/bin/RawrXD-Win32IDE.exe > disasm.txt\n' +
         '  \n' +
         '  ASM Kernels:\n' +
-        '    memory_patch.asm   — Memory hotpatch primitives\n' +
-        '    byte_search.asm    — Boyer-Moore + SIMD scan\n' +
-        '    request_patch.asm  — Server request interception\n' +
+        '    memory_patch.asm   â€” Memory hotpatch primitives\n' +
+        '    byte_search.asm    â€” Boyer-Moore + SIMD scan\n' +
+        '    request_patch.asm  â€” Server request interception\n' +
         '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
       );
     } else if (sub === 'dumpbin') {
@@ -5898,14 +6605,14 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /ghost — Ghost into the full Win32 IDE (RDP-style beacon)
+  // /ghost â€” Ghost into the full Win32 IDE (RDP-style beacon)
   if (lower === '/ghost' || lower === 'ghost' || lower === '/rdp' || lower === 'rdp') {
     addTerminalLine('\uD83D\uDC7B Launching ghost session into Win32 IDE...', 'system');
     ghostIntoIDE();
     return;
   }
 
-  // /ide — Launch Win32 IDE in a new window (non-ghost)
+  // /ide â€” Launch Win32 IDE in a new window (non-ghost)
   if (lower === '/ide' || lower === 'ide') {
     if (_win32IdeDetected) {
       addTerminalLine('\uD83D\uDDA5 Opening Win32 IDE at ' + _win32IdeUrl + '/gui', 'system');
@@ -5916,7 +6623,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /beacon — Force re-probe all beacons (backend, IDE, CLI)
+  // /beacon â€” Force re-probe all beacons (backend, IDE, CLI)
   if (lower === '/beacon' || lower === 'beacon' || lower === '/rebeacon') {
     addTerminalLine('\u26A1 Beacon refresh: scanning ports + re-probing all connections...', 'system');
     await refreshBackendBeacon();
@@ -5935,7 +6642,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /ghost-close — Close ghost session from CLI
+  // /ghost-close â€” Close ghost session from CLI
   if (lower === '/ghost-close' || lower === '/ghostclose') {
     if (State.ghost.active) {
       ghostCloseIDE();
@@ -5946,7 +6653,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /ghost-detach — Detach ghost to popup
+  // /ghost-detach â€” Detach ghost to popup
   if (lower === '/ghost-detach' || lower === '/ghostdetach') {
     if (State.ghost.active) {
       ghostDetachIDE();
@@ -5957,7 +6664,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /ghost-wait — Start auto-wait polling for IDE
+  // /ghost-wait â€” Start auto-wait polling for IDE
   if (lower === '/ghost-wait' || lower === '/ghostwait') {
     if (!State.ghost.active) {
       addTerminalLine('\uD83D\uDC7B Starting ghost in wait mode...', 'system');
@@ -5973,7 +6680,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /scan — Port scan for all services
+  // /scan â€” Port scan for all services
   if (lower === '/scan' || lower === 'scan') {
     addTerminalLine('\u26A1 Scanning ports for services...', 'system');
     var scan = await ghostBeaconScan();
@@ -5992,11 +6699,11 @@ async function processCliLocally(command) {
     return;
   }
 
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // WebView2 Browser Commands
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  // /browse [url] — Open built-in browser (optional URL)
+  // /browse [url] â€” Open built-in browser (optional URL)
   if (lower === '/browse' || lower === 'browse' || lower.indexOf('/browse ') === 0) {
     var browseUrl = cmd.replace(/^\/?browse\s*/i, '').trim();
     if (browseUrl) {
@@ -6009,7 +6716,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /web <query> — Web search from terminal
+  // /web <query> â€” Web search from terminal
   if (lower.indexOf('/web ') === 0 || lower.indexOf('web ') === 0) {
     var query = cmd.replace(/^\/?web\s+/i, '').trim();
     if (query) {
@@ -6022,7 +6729,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /url <url> — Navigate browser to URL
+  // /url <url> â€” Navigate browser to URL
   if (lower.indexOf('/url ') === 0) {
     var navUrl = cmd.replace(/^\/url\s+/i, '').trim();
     if (navUrl) {
@@ -6036,7 +6743,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /bookmarks — List browser bookmarks
+  // /bookmarks â€” List browser bookmarks
   if (lower === '/bookmarks' || lower === 'bookmarks') {
     var bms = State.browser.bookmarks;
     addTerminalLine('\u2500\u2500\u2500 Browser Bookmarks (' + bms.length + ') \u2500\u2500\u2500', 'output');
@@ -6052,7 +6759,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /bookmark <name> <url> — Add a bookmark
+  // /bookmark <name> <url> â€” Add a bookmark
   if (lower.indexOf('/bookmark ') === 0) {
     var bmParts = cmd.replace(/^\/bookmark\s+/i, '').trim().split(/\s+/);
     if (bmParts.length >= 2) {
@@ -6068,7 +6775,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /browser-close — Close browser panel
+  // /browser-close â€” Close browser panel
   if (lower === '/browser-close' || lower === '/browserclose') {
     if (State.browser.active) {
       closeBrowserPanel();
@@ -6079,7 +6786,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /models — Quick model website links
+  // /models â€” Quick model website links
   if (lower === '/model-sites' || lower === 'model-sites' || lower === '/modelsites') {
     addTerminalLine('\u2500\u2500\u2500 Model Website Quick Links \u2500\u2500\u2500', 'output');
     addTerminalLine('  \uD83E\uDD17 HuggingFace GGUF    /browse https://huggingface.co/models?sort=trending&search=gguf', 'output');
@@ -6095,11 +6802,11 @@ async function processCliLocally(command) {
     return;
   }
 
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // Win32IDE Extension Commands (fetch from /api/* endpoints)
-  // ══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  // /backends — Backend Switcher
+  // /backends â€” Backend Switcher
   if (lower === '/backends' || lower === 'backends') {
     addTerminalLine('\u2500\u2500\u2500 Backend Switcher \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6137,7 +6844,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /router — LLM Router
+  // /router â€” LLM Router
   if (lower === '/router' || lower === 'router') {
     addTerminalLine('\u2500\u2500\u2500 LLM Router \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6175,7 +6882,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /swarm — Swarm Dashboard
+  // /swarm â€” Swarm Dashboard
   if (lower === '/swarm' || lower === 'swarm') {
     addTerminalLine('\u2500\u2500\u2500 Swarm Dashboard \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6207,7 +6914,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /safety — Safety Monitor
+  // /safety â€” Safety Monitor
   if (lower === '/safety' || lower === 'safety') {
     addTerminalLine('\u2500\u2500\u2500 Safety Monitor \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6237,7 +6944,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /cot — Chain-of-Thought Engine
+  // /cot â€” Chain-of-Thought Engine
   if (lower === '/cot' || lower === 'cot') {
     addTerminalLine('\u2500\u2500\u2500 Chain-of-Thought Engine \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6268,7 +6975,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /confidence — Confidence Evaluator
+  // /confidence â€” Confidence Evaluator
   if (lower === '/confidence' || lower === 'confidence') {
     addTerminalLine('\u2500\u2500\u2500 Confidence Evaluator \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6300,7 +7007,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /governor — Task Governor
+  // /governor â€” Task Governor
   if (lower === '/governor' || lower === 'governor') {
     addTerminalLine('\u2500\u2500\u2500 Task Governor \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6322,7 +7029,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /lsp — LSP Integration
+  // /lsp â€” LSP Integration
   if (lower === '/lsp' || lower === 'lsp') {
     addTerminalLine('\u2500\u2500\u2500 LSP Integration \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6364,7 +7071,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /hybrid — Hybrid Completion Engine
+  // /hybrid â€” Hybrid Completion Engine
   if (lower === '/hybrid' || lower === 'hybrid') {
     addTerminalLine('\u2500\u2500\u2500 Hybrid Completion \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6385,7 +7092,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /replay — Replay Sessions
+  // /replay â€” Replay Sessions
   if (lower === '/replay' || lower === 'replay') {
     addTerminalLine('\u2500\u2500\u2500 Replay Sessions \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6416,7 +7123,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /phases — Phase 10/11/12 Status
+  // /phases â€” Phase 10/11/12 Status
   if (lower === '/phases' || lower === 'phases') {
     addTerminalLine('\u2500\u2500\u2500 Phase Status (10/11/12) \u2500\u2500\u2500', 'output');
     (async function () {
@@ -6443,7 +7150,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /extensions, /ext — VSIX Extension Manager
+  // /extensions, /ext â€” VSIX Extension Manager
   if (lower === '/extensions' || lower === '/ext' || lower === 'extensions') {
     showExtensionsPanel();
     addTerminalLine('\u2500\u2500\u2500 VSIX Extension Manager \u2500\u2500\u2500', 'output');
@@ -6459,11 +7166,11 @@ async function processCliLocally(command) {
     return;
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // AGENTIC FILE EDITING CLI COMMANDS (Phase 40)
-  // ═══════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  // /editor, /files — Open File Editor panel
+  // /editor, /files â€” Open File Editor panel
   if (lower === '/editor' || lower === '/files' || lower === '/file-editor') {
     showFileEditorPanel();
     addTerminalLine('\u2500\u2500\u2500 Agentic File Editor \u2500\u2500\u2500', 'output');
@@ -6472,7 +7179,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /edit <file> — Open file in editor panel
+  // /edit <file> â€” Open file in editor panel
   if (lower.indexOf('/edit ') === 0) {
     var editPath = cmd.substring(6).trim();
     if (editPath) {
@@ -6485,7 +7192,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /create <file> [content] — Create a new file
+  // /create <file> [content] â€” Create a new file
   if (lower.indexOf('/create ') === 0) {
     var createParts = cmd.substring(8).trim().split(/\s+/);
     var createPath = createParts[0] || '';
@@ -6504,7 +7211,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /delete <file> — Delete a file
+  // /delete <file> â€” Delete a file
   if (lower.indexOf('/delete ') === 0) {
     var deletePath = cmd.substring(8).trim();
     if (deletePath) {
@@ -6521,7 +7228,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /rename <old> <new> — Rename/move a file
+  // /rename <old> <new> â€” Rename/move a file
   if (lower.indexOf('/rename ') === 0) {
     var renameParts = cmd.substring(8).trim().split(/\s+/);
     var renOld = renameParts[0] || '';
@@ -6531,7 +7238,7 @@ async function processCliLocally(command) {
         try {
           await EngineAPI.renameFile(renOld, renNew);
           addTerminalLine('  \u2705 Renamed: ' + renOld + ' \u2192 ' + renNew, 'success');
-          feLogHistory('rename', renOld + ' → ' + renNew);
+          feLogHistory('rename', renOld + ' â†’ ' + renNew);
         } catch (e) { addTerminalLine('  Error: ' + e.message, 'error'); }
       })();
     } else {
@@ -6540,7 +7247,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /find <pattern> [dir] — Search for files
+  // /find <pattern> [dir] â€” Search for files
   if (lower.indexOf('/find ') === 0) {
     var findParts = cmd.substring(6).trim().split(/\s+/);
     var findPattern = findParts[0] || '*.*';
@@ -6558,7 +7265,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /grep <pattern> [path] — Search in files
+  // /grep <pattern> [path] â€” Search in files
   if (lower.indexOf('/grep ') === 0) {
     var grepParts = cmd.substring(6).trim().split(/\s+/);
     var grepPattern = grepParts[0] || '';
@@ -6581,7 +7288,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /diff <fileA> <fileB> — Compare two files
+  // /diff <fileA> <fileB> â€” Compare two files
   if (lower.indexOf('/diff ') === 0) {
     var diffParts = cmd.substring(6).trim().split(/\s+/);
     var diffA = diffParts[0] || '';
@@ -6601,7 +7308,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /patch <file> <search> <replace> — Search-and-replace in a file
+  // /patch <file> <search> <replace> â€” Search-and-replace in a file
   if (lower.indexOf('/patch ') === 0) {
     var patchParts = cmd.substring(7).trim().split(/\s+/);
     var patchFile = patchParts[0] || '';
@@ -6626,7 +7333,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /cat <file> — Display full file content
+  // /cat <file> â€” Display full file content
   if (lower.indexOf('/cat ') === 0) {
     var catPath = cmd.substring(5).trim();
     if (catPath) {
@@ -6646,7 +7353,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /head [n] <file> — Show first N lines
+  // /head [n] <file> â€” Show first N lines
   if (lower.indexOf('/head ') === 0) {
     var headParts = cmd.substring(6).trim().split(/\s+/);
     var headN = parseInt(headParts[0]) || 20;
@@ -6668,7 +7375,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /tail [n] <file> — Show last N lines
+  // /tail [n] <file> â€” Show last N lines
   if (lower.indexOf('/tail ') === 0) {
     var tailParts = cmd.substring(6).trim().split(/\s+/);
     var tailN = parseInt(tailParts[0]) || 20;
@@ -6691,7 +7398,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /wc <file> — Word/line/char count
+  // /wc <file> â€” Word/line/char count
   if (lower.indexOf('/wc ') === 0) {
     var wcPath = cmd.substring(4).trim();
     if (wcPath) {
@@ -6710,7 +7417,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /mkdir <path> — Create directory
+  // /mkdir <path> â€” Create directory
   if (lower.indexOf('/mkdir ') === 0) {
     var mkdirPath = cmd.substring(7).trim();
     if (mkdirPath) {
@@ -6727,7 +7434,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /copy <src> <dst> — Copy file
+  // /copy <src> <dst> â€” Copy file
   if (lower.indexOf('/copy ') === 0) {
     var copyParts = cmd.substring(6).trim().split(/\s+/);
     var copySrc = copyParts[0] || '';
@@ -6737,7 +7444,7 @@ async function processCliLocally(command) {
         try {
           await EngineAPI.copyFile(copySrc, copyDst);
           addTerminalLine('  \u2705 Copied: ' + copySrc + ' \u2192 ' + copyDst, 'success');
-          feLogHistory('copy', copySrc + ' → ' + copyDst);
+          feLogHistory('copy', copySrc + ' â†’ ' + copyDst);
         } catch (e) { addTerminalLine('  Error: ' + e.message, 'error'); }
       })();
     } else {
@@ -6746,7 +7453,7 @@ async function processCliLocally(command) {
     return;
   }
 
-  // /move <src> <dst> — Move/rename file
+  // /move <src> <dst> â€” Move/rename file
   if (lower.indexOf('/move ') === 0) {
     var moveParts = cmd.substring(6).trim().split(/\s+/);
     var moveSrc = moveParts[0] || '';
@@ -6756,7 +7463,7 @@ async function processCliLocally(command) {
         try {
           await EngineAPI.moveFile(moveSrc, moveDst);
           addTerminalLine('  \u2705 Moved: ' + moveSrc + ' \u2192 ' + moveDst, 'success');
-          feLogHistory('move', moveSrc + ' → ' + moveDst);
+          feLogHistory('move', moveSrc + ' â†’ ' + moveDst);
         } catch (e) { addTerminalLine('  Error: ' + e.message, 'error'); }
       })();
     } else {
@@ -6849,7 +7556,7 @@ function executeCommand() {
   // --- Local mode: client-side command processing ---
   var args = cmd.toLowerCase().split(/\s+/);
   var rest = cmd.substring(cmd.indexOf(' ') + 1).trim();
-  if (rest === cmd) rest = '';  // No space found — no arguments
+  if (rest === cmd) rest = '';  // No space found â€” no arguments
 
   switch (args[0]) {
     case 'help':
@@ -8138,7 +8845,7 @@ function executeCommand() {
               addTerminalLine('  (Run dumpbin/objdump locally for full results)', 'system');
             });
           } else {
-            addTerminalLine('  (Backend offline — use individual re commands)', 'system');
+            addTerminalLine('  (Backend offline â€” use individual re commands)', 'system');
           }
           addTerminalLine('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', 'output');
         } else if (reSub === 'compare') {
@@ -8226,7 +8933,7 @@ function executeCommand() {
       break;
 
     // =============================================================
-    // ENGINE API COMMANDS — Full 150+ source wiring
+    // ENGINE API COMMANDS â€” Full 150+ source wiring
     // =============================================================
     case 'subagent':
       (async function () {
@@ -8270,7 +8977,7 @@ function executeCommand() {
           if (Array.isArray(policies)) {
             addTerminalLine('  Active Policies: ' + policies.length, 'output');
             policies.forEach(function (p) {
-              addTerminalLine('    [' + (p.id || '?') + '] ' + (p.name || p.type || 'unnamed') + ' — ' + (p.status || 'active'), 'output');
+              addTerminalLine('    [' + (p.id || '?') + '] ' + (p.name || p.type || 'unnamed') + ' â€” ' + (p.status || 'active'), 'output');
             });
           } else {
             addTerminalLine('  ' + JSON.stringify(data).substring(0, 300), 'output');
@@ -8682,7 +9389,7 @@ function executeCommand() {
         var extArg = args.slice(2).join(' ');
 
         if (!sub) {
-          // ext — show overview
+          // ext â€” show overview
           addTerminalLine('\u2500\u2500\u2500\u2500\u2500 VSIX Extension Manager \u2500\u2500\u2500\u2500\u2500', 'output');
           addTerminalLine('  Installed:  ' + State.extensions.installed.length + ' extensions', 'output');
           addTerminalLine('  Enabled:    ' + State.extensions.installed.filter(function (e) { return e.enabled; }).length, 'output');
@@ -9117,9 +9824,9 @@ function executeCommand() {
       })();
       break;
 
-    // ═══════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // AGENTIC FILE EDITING COMMANDS (Phase 40)
-    // ═══════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     case 'cat':
       (async function () {
@@ -9234,7 +9941,7 @@ function executeCommand() {
         try {
           var data = await EngineAPI.moveFile(src, dst);
           addTerminalLine('  \u2705 Moved: ' + src + ' \u2192 ' + dst, 'success');
-          feLogHistory('move', src + ' → ' + dst);
+          feLogHistory('move', src + ' â†’ ' + dst);
         } catch (e) { addTerminalLine('  Error: ' + e.message, 'error'); }
       })();
       break;
@@ -9248,7 +9955,7 @@ function executeCommand() {
         try {
           var data = await EngineAPI.copyFile(src, dst);
           addTerminalLine('  \u2705 Copied: ' + src + ' \u2192 ' + dst, 'success');
-          feLogHistory('copy', src + ' → ' + dst);
+          feLogHistory('copy', src + ' â†’ ' + dst);
         } catch (e) { addTerminalLine('  Error: ' + e.message, 'error'); }
       })();
       break;
@@ -9312,7 +10019,7 @@ function executeCommand() {
           var result = await EngineAPI.patchFile(filePath, search, replace);
           if (result.success) {
             addTerminalLine('  \u2705 ' + result.message, 'success');
-            feLogHistory('patch', filePath + ': ' + search + ' → ' + replace);
+            feLogHistory('patch', filePath + ': ' + search + ' â†’ ' + replace);
           } else {
             addTerminalLine('  \u2718 ' + (result.error || 'Pattern not found'), 'error');
           }
@@ -9708,8 +10415,8 @@ function renderPerfPanel() {
   // Metric summary cards
   document.getElementById('pmTotalReqs').textContent = total;
   var avgLat = total > 0 ? Math.round(State.perf.totalLatency / total) : 0;
-  document.getElementById('pmAvgLatency').textContent = total > 0 ? avgLat : '—';
-  var avgTps = State.perf.totalTokens > 0 && State.perf.totalLatency > 0 ? (State.perf.totalTokens / (State.perf.totalLatency / 1000)).toFixed(1) : '—';
+  document.getElementById('pmAvgLatency').textContent = total > 0 ? avgLat : 'â€”';
+  var avgTps = State.perf.totalTokens > 0 && State.perf.totalLatency > 0 ? (State.perf.totalTokens / (State.perf.totalLatency / 1000)).toFixed(1) : 'â€”';
   document.getElementById('pmAvgTps').textContent = avgTps;
   document.getElementById('pmTotalTokens').textContent = State.perf.totalTokens.toLocaleString();
 
@@ -9823,7 +10530,7 @@ function renderBenchmarkTable() {
   var keys = Object.keys(models);
 
   if (keys.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">No benchmark data yet — send some messages first</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">No benchmark data yet â€” send some messages first</td></tr>';
     return;
   }
 
@@ -9871,7 +10578,7 @@ function renderRequestHistory() {
     var timeStr = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     var modelStr = e.model || 'unknown';
     if (modelStr.length > 22) modelStr = modelStr.substring(0, 19) + '...';
-    var tpsStr = e.tps > 0 ? e.tps.toFixed(1) : '—';
+    var tpsStr = e.tps > 0 ? e.tps.toFixed(1) : 'â€”';
     var errClass = e.success ? '' : ' error-row';
 
     html += '<div class="perf-history-row' + errClass + '">';
@@ -9889,11 +10596,11 @@ function renderRequestHistory() {
 
 function renderPercentiles(latencies) {
   if (!latencies || latencies.length === 0) {
-    document.getElementById('perfP50').textContent = '—';
-    document.getElementById('perfP90').textContent = '—';
-    document.getElementById('perfP99').textContent = '—';
-    document.getElementById('perfMin').textContent = '—';
-    document.getElementById('perfMax').textContent = '—';
+    document.getElementById('perfP50').textContent = 'â€”';
+    document.getElementById('perfP90').textContent = 'â€”';
+    document.getElementById('perfP99').textContent = 'â€”';
+    document.getElementById('perfMin').textContent = 'â€”';
+    document.getElementById('perfMax').textContent = 'â€”';
     return;
   }
 
@@ -9949,7 +10656,7 @@ function renderStructuredLog() {
   counter.textContent = entries.length;
 
   if (entries.length === 0) {
-    logBody.innerHTML = '<div class="perf-log-entry"><span class="log-ts">—</span><span class="log-level INFO">INFO</span><span class="log-event">Structured logging ready</span></div>';
+    logBody.innerHTML = '<div class="perf-log-entry"><span class="log-ts">â€”</span><span class="log-level INFO">INFO</span><span class="log-event">Structured logging ready</span></div>';
     return;
   }
 
@@ -10396,7 +11103,7 @@ function reOmegaScan() {
 
   var steps = pipeline ? pipeline.querySelectorAll('.re-omega-step') : [];
   var stepNames = ['PE Analysis', 'Disassembly', 'Deobfuscation', 'Symbol Resolution', 'Binary Comparison', 'Memory Scan', 'GGUF Inspection'];
-  output.textContent = 'Omega Suite — Full Scan: ' + target + '\n\n';
+  output.textContent = 'Omega Suite â€” Full Scan: ' + target + '\n\n';
 
   // Animate steps
   var stepDelay = 600;
@@ -10595,7 +11302,7 @@ function toggleHotpatchLayer(layer, enabled) {
   updateHotpatchLayerVisuals();
 
   if (!State.backend.online) {
-    logDebug('Hotpatch toggle queued (offline): ' + layer + ' → ' + (enabled ? 'ON' : 'OFF'), 'warn');
+    logDebug('Hotpatch toggle queued (offline): ' + layer + ' â†’ ' + (enabled ? 'ON' : 'OFF'), 'warn');
     return;
   }
 
@@ -10607,7 +11314,7 @@ function toggleHotpatchLayer(layer, enabled) {
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      logDebug('Hotpatch layer ' + layer + ' ' + (enabled ? 'enabled' : 'disabled') + (data.status ? ' — ' + data.status : ''), 'info');
+      logDebug('Hotpatch layer ' + layer + ' ' + (enabled ? 'enabled' : 'disabled') + (data.status ? ' â€” ' + data.status : ''), 'info');
       fetchAgentStatus();
     })
     .catch(function (e) {
@@ -10701,7 +11408,7 @@ async function fetchAgentHistory() {
     var data = await res.json();
     renderAgentTimeline(data.events || []);
   } catch (e) {
-    // Silently fail — polling will retry
+    // Silently fail â€” polling will retry
   }
 }
 
@@ -10858,7 +11565,7 @@ function validateInput(text) {
     };
   }
 
-  // XSS pattern detection (before it reaches DOMPurify — defense in depth)
+  // XSS pattern detection (before it reaches DOMPurify â€” defense in depth)
   var xssPatterns = [
     /<script[\s>]/i,
     /javascript\s*:/i,
@@ -10874,7 +11581,7 @@ function validateInput(text) {
     if (xssPatterns[i].test(text)) {
       State.security.inputGuard.blockedXss++;
       secLog('BLOCK', 'XSS pattern detected: ' + xssPatterns[i].toString().substring(0, 40));
-      // Strip the pattern rather than rejecting — DOMPurify will handle the rest
+      // Strip the pattern rather than rejecting â€” DOMPurify will handle the rest
       text = text.replace(xssPatterns[i], '[filtered]');
     }
   }
@@ -10911,8 +11618,15 @@ function resetRateLimit() {
 
 // --- Backend URL Validation ---
 function isUrlAllowed(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  var u = urlStr.trim();
+  // Soften partial loopback keystrokes (avoids "http://1" hard-block noise)
+  if (/^https?:\/\/(1|12|127|127\.|127\.0|127\.0\.|127\.0\.0|127\.0\.0\.|l|lo|loc|loca|local|localh|localho|localhos|localhost)/i.test(u) &&
+      !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?/i.test(u)) {
+    return true;
+  }
   for (var i = 0; i < State.security.urlAllowlist.length; i++) {
-    if (State.security.urlAllowlist[i].test(urlStr)) return true;
+    if (State.security.urlAllowlist[i].test(u)) return true;
   }
   return false;
 }
@@ -11082,8 +11796,8 @@ async function _probeBackendUrl(url, path) {
 // --- Build client-side backend list from known state ---
 async function _buildBeaconBackendList() {
   var backends = [];
-  var ollamaUrl = State.backend.ollamaDirectUrl || 'http://localhost:11434';
-  var ideUrl = State.backend.url || 'http://localhost:8080';
+  var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11435';
+  var ideUrl = State.backend.url || 'http://localhost:11435';
 
   // Probe Ollama
   var ollamaOnline = await _probeBackendUrl(ollamaUrl);
@@ -11149,10 +11863,10 @@ async function fetchBackends() {
       }
     }
   } catch (_) {
-    // Remote endpoints not available — fall through to beacon
+    // Remote endpoints not available â€” fall through to beacon
   }
 
-  // --- Try 2: Beacon — build client-side backend list ---
+  // --- Try 2: Beacon â€” build client-side backend list ---
   logDebug('Backend Switcher: /api/backends unavailable, using beacon probe', 'info');
   document.getElementById('bsBackendList').innerHTML = '<div style="color:var(--text-muted);padding:12px;font-size:11px;">Probing backends...</div>';
 
@@ -11191,7 +11905,7 @@ async function switchBackend(name) {
       return;
     }
   } catch (_) {
-    // Remote endpoint not available — try client-side switch
+    // Remote endpoint not available â€” try client-side switch
   }
 
   // --- Try 2: Client-side beacon switch ---
@@ -11199,7 +11913,7 @@ async function switchBackend(name) {
 
   if (lowerName === 'ollama' || lowerName === 'ollama-direct') {
     // Switch to Ollama direct mode
-    var ollamaUrl = State.backend.ollamaDirectUrl || 'http://localhost:11434';
+    var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11435';
     var online = await _probeBackendUrl(ollamaUrl);
     if (online) {
       State.backend.directMode = true;
@@ -11215,7 +11929,7 @@ async function switchBackend(name) {
     }
   } else if (lowerName === 'win32ide' || lowerName === 'rawrxd-win32ide' || lowerName === 'rawrxd') {
     // Switch to Win32IDE proxy mode
-    var ideUrl = State.backend.url || 'http://localhost:8080';
+    var ideUrl = State.backend.url || 'http://localhost:11435';
     var online = await _probeBackendUrl(ideUrl, '/status');
     if (online) {
       State.backend.directMode = false;
@@ -11867,7 +12581,7 @@ async function safetyCheck() {
     var data = res.ok ? await res.json() : {};
     var safe = data.safe !== false;
     addMessage('system', safe ? '\u2705 **Safety Check:** Output passed all safety checks.' : '\u26A0\uFE0F **Safety Check:** ' + (data.reason || data.detail || 'Violation detected'), { skipMemory: true });
-    logDebug('Safety check: ' + (safe ? 'PASS' : 'FAIL — ' + (data.reason || '')), safe ? 'info' : 'warn');
+    logDebug('Safety check: ' + (safe ? 'PASS' : 'FAIL â€” ' + (data.reason || '')), safe ? 'info' : 'warn');
   } catch (e) {
     logDebug('Safety check failed: ' + e.message, 'error');
   }
@@ -12009,7 +12723,7 @@ async function evaluateConfidence() {
     var data = res.ok ? await res.json() : {};
     var score = data.score !== undefined ? data.score : data.confidence;
     if (score !== undefined) {
-      addMessage('system', '\u{1F3AF} **Confidence:** ' + (score * 100).toFixed(1) + '% — ' + (data.explanation || data.detail || ''), { skipMemory: true });
+      addMessage('system', '\u{1F3AF} **Confidence:** ' + (score * 100).toFixed(1) + '% â€” ' + (data.explanation || data.detail || ''), { skipMemory: true });
     } else {
       addMessage('system', 'Evaluation result: ' + JSON.stringify(data), { skipMemory: true });
     }
@@ -12076,7 +12790,7 @@ async function governorSubmitTask() {
       signal: AbortSignal.timeout(30000)
     });
     var data = res.ok ? await res.json() : {};
-    addMessage('system', '\u{1F3DB} **Task Submitted:** ' + (data.id || data.task_id || 'queued') + ' — ' + (data.status || data.message || 'accepted'), { skipMemory: true });
+    addMessage('system', '\u{1F3DB} **Task Submitted:** ' + (data.id || data.task_id || 'queued') + ' â€” ' + (data.status || data.message || 'accepted'), { skipMemory: true });
     document.getElementById('govTaskInput').value = '';
     governorRefresh();
   } catch (e) {
@@ -12149,7 +12863,7 @@ async function lspRefreshDiagnostics() {
         if (diags.length > 20) dHtml += '<div style="color:var(--text-muted);padding-top:4px;">... (' + (diags.length - 20) + ' more)</div>';
         document.getElementById('lspDiagList').innerHTML = dHtml;
       } else {
-        document.getElementById('lspDiagList').innerHTML = '<div style="color:var(--accent-green);">\u2714 No diagnostics — clean!</div>';
+        document.getElementById('lspDiagList').innerHTML = '<div style="color:var(--accent-green);">\u2714 No diagnostics â€” clean!</div>';
       }
     }
   } catch (_) { /* diagnostics unavailable */ }
@@ -12305,14 +13019,14 @@ async function phaseStatusRefresh() {
 }
 
 // ======================================================================
-// VSIX EXTENSION MANAGER — Panel Functions
+// VSIX EXTENSION MANAGER â€” Panel Functions
 // Manages .vsix plugin packages, marketplace search, install/uninstall,
 // enable/disable, extension host lifecycle, and local VSIX loading.
 // All operations route through EngineAPI to the Ollama-direct backend.
 // ======================================================================
-// ═══════════════════════════════════════════════════════════════
-// AGENTIC FILE EDITOR — Full JS Functions (Phase 40 Expanded)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// AGENTIC FILE EDITOR â€” Full JS Functions (Phase 40 Expanded)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 var FE = {
   tabs: [],         // [{path, name, content, savedContent, undoStack, redoStack, scrollTop, cursorPos}]
@@ -12348,7 +13062,7 @@ function feApiUrl() {
 async function feApiPost(endpoint, body) {
   var urls = [feApiUrl()];
   if (_ideServerUrl && urls.indexOf(_ideServerUrl) === -1) urls.push(_ideServerUrl);
-  if (urls.indexOf('http://localhost:8080') === -1) urls.push('http://localhost:8080');
+  if (urls.indexOf('http://localhost:11435') === -1) urls.push('http://localhost:11435');
 
   for (var i = 0; i < urls.length; i++) {
     try {
@@ -12364,11 +13078,34 @@ async function feApiPost(endpoint, body) {
   return null;
 }
 
+async function feApiGet(endpoint) {
+  var urls = [feApiUrl()];
+  if (_ideServerUrl && urls.indexOf(_ideServerUrl) === -1) urls.push(_ideServerUrl);
+  if (urls.indexOf('http://localhost:11435') === -1) urls.push('http://localhost:11435');
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      var res = await fetch(urls[i] + endpoint, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000)
+      });
+      if (res.ok) return await res.json();
+    } catch (_) { }
+  }
+  return null;
+}
+
 // ---- Tree Browser ----
 async function feRefreshTree() {
   var rootInput = document.getElementById('feTreePath');
   var root = rootInput ? rootInput.value.trim() : '.';
   if (!root) root = '.';
+
+  // A blank/current-directory request opens the complete drive view.  This
+  // keeps the file editor browser-first while still allowing any explicit
+  // directory (including hidden/system directories) to be entered directly.
+  if (root === '.' || root.toLowerCase() === 'drives:' || root === '::drives') {
+    return feLoadRoots();
+  }
 
   feSetStatus('Loading tree...');
   var data = await feApiPost('/api/list-dir', { path: root });
@@ -12391,13 +13128,28 @@ async function feRefreshTree() {
   feSetStatus('Tree loaded: ' + data.entries.length + ' items');
 }
 
+async function feLoadRoots() {
+  feSetStatus('Enumerating drives...');
+  var data = await feApiGet('/api/filesystem/roots');
+  var tc = document.getElementById('feTreeContent');
+  if (!data || !Array.isArray(data.roots)) {
+    feSetStatus('Drive enumeration unavailable');
+    if (tc) tc.innerHTML = '<div style="padding:12px;color:#ff6b6b;font-size:10px;">Could not enumerate local drives. Connect the RawrXD loopback backend.</div>';
+    return;
+  }
+  FE.treeCache['::drives'] = data.roots;
+  FE.treeExpanded['::drives'] = true;
+  feRenderTree('::drives', data.roots);
+  feSetStatus('Drives loaded: ' + data.roots.length + ' (hidden entries included)');
+}
+
 function feRenderTree(root, entries) {
   var tc = document.getElementById('feTreeContent');
   if (!tc) return;
   var html = '';
   for (var i = 0; i < entries.length; i++) {
     var e = entries[i];
-    var fullPath = root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+    var fullPath = (e.path || (root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
     if (e.type === 'dir') {
       var isExpanded = FE.treeExpanded[fullPath];
       html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -12461,7 +13213,7 @@ async function feToggleDir(path, el) {
   var html = '';
   for (var i = 0; i < entries.length; i++) {
     var e = entries[i];
-    var fullPath = path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+    var fullPath = (e.path || (path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
     if (e.type === 'dir') {
       var isExp = FE.treeExpanded[fullPath];
       html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -12688,7 +13440,7 @@ function feOnEditorInput() {
   var area = document.getElementById('feEditorArea');
   if (!area) return;
 
-  // Push to undo stack (debounced — every 30 chars or so)
+  // Push to undo stack (debounced â€” every 30 chars or so)
   var newContent = area.value;
   if (tab.undoStack.length === 0 || Math.abs(newContent.length - (tab.undoStack[tab.undoStack.length - 1] || '').length) > 30) {
     tab.undoStack.push(tab.content);
@@ -12708,7 +13460,7 @@ function feOnEditorScroll() {
 }
 
 function feOnEditorKeydown(e) {
-  // Tab key — insert spaces instead of moving focus
+  // Tab key â€” insert spaces instead of moving focus
   if (e.key === 'Tab') {
     e.preventDefault();
     var area = e.target;
@@ -12733,19 +13485,19 @@ function feOnEditorKeydown(e) {
     feOnEditorInput();
     return;
   }
-  // Ctrl+S — save
+  // Ctrl+S â€” save
   if (e.ctrlKey && e.key === 's') { e.preventDefault(); feSaveFile(); return; }
-  // Ctrl+Z — undo
+  // Ctrl+Z â€” undo
   if (e.ctrlKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); feUndo(); return; }
-  // Ctrl+Shift+Z or Ctrl+Y — redo
+  // Ctrl+Shift+Z or Ctrl+Y â€” redo
   if ((e.ctrlKey && e.shiftKey && e.key === 'Z') || (e.ctrlKey && e.key === 'y')) { e.preventDefault(); feRedo(); return; }
-  // Ctrl+F — find
+  // Ctrl+F â€” find
   if (e.ctrlKey && e.key === 'f') { e.preventDefault(); feFindReplace(); return; }
-  // Ctrl+G — go to line
+  // Ctrl+G â€” go to line
   if (e.ctrlKey && e.key === 'g') { e.preventDefault(); feGoToLine(); return; }
-  // Ctrl+H — find and replace (focus replace)
+  // Ctrl+H â€” find and replace (focus replace)
   if (e.ctrlKey && e.key === 'h') { e.preventDefault(); feFindReplace(); setTimeout(function () { var ri = document.getElementById('feReplaceInput'); if (ri) ri.focus(); }, 100); return; }
-  // Enter — auto-indent
+  // Enter â€” auto-indent
   if (e.key === 'Enter') {
     e.preventDefault();
     var area = e.target;
@@ -13585,7 +14337,7 @@ function formatBytesExt(b) {
 })();
 
 // ======================================================================
-// WEBVIEW2 BUILT-IN BROWSER — Panel Functions
+// WEBVIEW2 BUILT-IN BROWSER â€” Panel Functions
 // Full-screen embedded browser with multi-tab, address bar, navigation,
 // bookmarks, history, model site quick-links, proxy content extraction.
 // WebView2-style browsing integrated into the IDE chatbot interface.
@@ -13596,7 +14348,7 @@ function showBrowserPanel(url) {
   if (!overlay) return;
   overlay.classList.add('active');
   State.browser.active = true;
-  logDebug('\uD83C\uDF10 Browser panel opened' + (url ? ' → ' + url : ''), 'info');
+  logDebug('\uD83C\uDF10 Browser panel opened' + (url ? ' â†’ ' + url : ''), 'info');
   if (url) {
     browserNavigateTo(url);
   } else {
@@ -13718,8 +14470,106 @@ function browserNavigateFromHome() {
   browserNavigate();
 }
 
+function _browserRecordNavigation(url) {
+  var tab = _browserGetActiveTab();
+  if (!tab || !url) return;
+  if (tab.url && tab.url !== url) {
+    tab.history = Array.isArray(tab.history) ? tab.history.slice(0, tab.historyIdx + 1) : [];
+    tab.history.push(tab.url);
+    tab.historyIdx = tab.history.length - 1;
+  }
+  tab.url = url;
+  tab.iframeRef = null;
+  var input = document.getElementById('browserUrlInput');
+  if (input) input.value = url;
+  _browserUpdateLock(url);
+  _browserUpdateNavButtons();
+}
+
+function _browserReaderBlocked(url, reason) {
+  var viewport = document.getElementById('browserViewport');
+  if (!viewport) return;
+  viewport.querySelectorAll('iframe,.browser-reader-card,.browser-blocked-card').forEach(function (node) { node.remove(); });
+  var card = document.createElement('div');
+  card.className = 'browser-home browser-blocked-card';
+  card.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;color:var(--text-muted);text-align:center;';
+  card.innerHTML = '<div style="font-size:28px;">🛡️</div><strong style="color:var(--accent-cyan);">Embedded page unavailable</strong>' +
+    '<div style="max-width:760px;word-break:break-word;line-height:1.5;">' + String(reason || 'The RawrXD reader backend is unavailable.') + '</div>' +
+    '<div style="max-width:760px;word-break:break-all;color:var(--accent-secondary);font-size:11px;">' + String(url || '') + '</div>';
+  viewport.appendChild(card);
+  _browserUpdateStatusBar('Reader unavailable', url || '');
+}
+
+function _browserRenderReader(page) {
+  var viewport = document.getElementById('browserViewport');
+  if (!viewport || !page) return false;
+  _browserRecordNavigation(page.url || '');
+  viewport.querySelectorAll('iframe,.browser-home:not(#browserHomePage),.browser-reader-card,.browser-reader-page').forEach(function (node) { node.remove(); });
+  if (document.getElementById('browserHomePage')) document.getElementById('browserHomePage').style.display = 'none';
+  var card = document.createElement('div');
+  card.className = 'browser-reader-page';
+  card.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:32px 28px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
+  var content = document.createElement('div');
+  content.style.cssText = 'width:min(100%,1100px);margin:0 auto;';
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:28px;font-weight:700;line-height:1.25;color:#202124;margin:0 0 8px;';
+  title.textContent = page.title || page.url || 'Reader';
+  var source = document.createElement('div');
+  source.style.cssText = 'font-size:12px;line-height:1.4;color:#5f6368;word-break:break-all;margin:0 0 20px;padding-bottom:14px;border-bottom:1px solid #dadce0;';
+  source.textContent = 'RawrXD safe reader · ' + (page.url || '');
+  var body = document.createElement('div');
+  body.style.cssText = 'box-sizing:border-box;width:100%;min-height:84px;white-space:pre-wrap;overflow:auto;background:#f8f9fa;border:1px solid #dadce0;border-radius:8px;padding:20px;color:#202124;font-size:16px;line-height:1.65;text-align:left;';
+  body.textContent = page.text || '(empty response)';
+  var label = document.createElement('div');
+  label.style.cssText = 'width:100%;color:#5f6368;font-size:13px;margin:24px 0 8px;font-weight:600;';
+  var links = Array.isArray(page.links) ? page.links : [];
+  label.textContent = 'Links (' + links.length + ')';
+  var linkBox = document.createElement('div');
+  linkBox.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;gap:6px;';
+  links.forEach(function (link) {
+    var button = document.createElement('button');
+    button.className = 'browser-bookmark-btn';
+    button.type = 'button';
+    button.textContent = link.label || link.url;
+    button.title = link.url;
+    button.style.cssText = 'display:block;width:100%;box-sizing:border-box;text-align:left;padding:9px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;color:#1a73e8;cursor:pointer;font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;';
+    button.onclick = function () { browserNavigateTo(link.url); };
+    linkBox.appendChild(button);
+  });
+  content.appendChild(title); content.appendChild(source); content.appendChild(body); content.appendChild(label); content.appendChild(linkBox); card.appendChild(content);
+  viewport.appendChild(card);
+  _browserUpdateTabTitle(page.title || 'Reader');
+  _browserUpdateStatusBar('Reader view', page.url || '');
+  return true;
+}
+
+function browserTryProxy(url) {
+  var bases = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+    ? [window.location.origin]
+    : [(typeof getActiveUrl === 'function' ? getActiveUrl() : ''), 'http://127.0.0.1:19035', 'http://127.0.0.1:11435'];
+  bases = bases.filter(function (base, i) { return base && bases.indexOf(base) === i; });
+  function attempt(i) {
+    if (i >= bases.length) return Promise.resolve(false);
+    return fetch(bases[i] + '/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, extract: true }), signal: AbortSignal.timeout(20000) })
+      .then(function (res) { if (!res.ok) throw new Error('reader HTTP ' + res.status); return res.json(); })
+      .then(function (page) { if (!page || !page.ok) throw new Error(page && page.error || 'reader failed'); _browserRenderReader(page); return true; })
+      .catch(function () { return attempt(i + 1); });
+  }
+  return attempt(0);
+}
+
 function browserNavigateTo(url) {
   if (!url) return;
+  try { url = new URL(url, window.location.href).href; } catch (_) { _browserReaderBlocked(url, 'Invalid URL'); return; }
+  var external = false;
+  try { external = new URL(url).origin !== window.location.origin; } catch (_) { external = true; }
+  if (external) {
+    _browserRecordNavigation(url);
+    _browserUpdateStatusBar('Fetching reader view...', url);
+    browserTryProxy(url).then(function (ok) { if (!ok) _browserReaderBlocked(url, 'The site could not be fetched by the safe embedded reader.'); });
+    return;
+  }
   var viewport = document.getElementById('browserViewport');
   var homePage = document.getElementById('browserHomePage');
   var urlInput = document.getElementById('browserUrlInput');
@@ -13779,7 +14629,7 @@ function browserNavigateTo(url) {
       var iframeTitle = iframe.contentDocument ? iframe.contentDocument.title : '';
       if (iframeTitle) _browserUpdateTabTitle(iframeTitle);
     } catch (_) {
-      // Cross-origin — use domain
+      // Cross-origin â€” use domain
     }
   };
   iframe.onerror = function () {
@@ -13886,7 +14736,7 @@ function browserSwitchTab(tabId) {
 function browserCloseTab(tabId) {
   var tabs = State.browser.tabs;
   if (tabs.length <= 1) {
-    // Last tab — just go home
+    // Last tab â€” just go home
     _browserShowHome();
     return;
   }
@@ -14033,7 +14883,7 @@ function browserSendToModel() {
 }
 
 // ======================================================================
-// EXTENSION PANEL (Phase 39) — Functions for ext-panel UI
+// EXTENSION PANEL (Phase 39) â€” Functions for ext-panel UI
 // ======================================================================
 
 function toggleExtPanel() {
@@ -14347,7 +15197,7 @@ function installFromMarketplaceResult(extId) {
     });
   } else {
     ExtensionState.install({ id: extId, name: extId, enabled: true, type: 'vsix', version: '1.0.0' });
-    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + extId + ' (backend offline — local state only)';
+    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + extId + ' (backend offline â€” local state only)';
     refreshExtPanel();
   }
 }
@@ -14381,7 +15231,7 @@ function installVsixFromPath() {
     // Local-only fallback
     var name = path.split(/[\\\/]/).pop().replace(/\.vsix$/, '');
     ExtensionState.install({ id: name, name: name, enabled: true, type: 'vsix', version: '1.0.0', path: path });
-    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline — local state only)';
+    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline â€” local state only)';
     refreshExtPanel();
   }
 }
@@ -14463,7 +15313,7 @@ function installNativeExt() {
   } else {
     var name = path.split(/[\\\/]/).pop() || 'native-ext';
     ExtensionState.install({ id: name, name: name, enabled: true, type: 'native-dll', version: '1.0.0', path: path });
-    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline — requires Win32IDE for DLL loading)';
+    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline â€” requires Win32IDE for DLL loading)';
     refreshExtPanel();
   }
 }
@@ -14489,7 +15339,7 @@ function installPsm1Ext() {
   } else {
     var name = path.split(/[\\\/]/).pop().replace(/\.psm1$/i, '');
     ExtensionState.install({ id: name, name: name, enabled: true, type: 'psm1', version: '1.0.0', path: path });
-    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline — use PowerShell tab for Import-Module)';
+    if (outputEl) outputEl.textContent = '\u2705 Registered: ' + name + ' (backend offline â€” use PowerShell tab for Import-Module)';
     refreshExtPanel();
   }
 }
@@ -14615,11 +15465,11 @@ function extPsCreate() {
 //   - An optional flag (skip = true means this step is skipped)
 //
 // Presets configure common patterns:
-//   Review:   [Analyze] → [Critique] → [Summarize]
-//   Audit:    [Audit] → [Verify] → [Report]
-//   Think:    [Brainstorm] → [Evaluate] → [Refine] → [Conclude]
-//   Research: [Gather] → [Analyze] → [Cross-check] → [Synthesize]
-//   Debate:   [Argue For] → [Argue Against] → [Judge]
+//   Review:   [Analyze] â†’ [Critique] â†’ [Summarize]
+//   Audit:    [Audit] â†’ [Verify] â†’ [Report]
+//   Think:    [Brainstorm] â†’ [Evaluate] â†’ [Refine] â†’ [Conclude]
+//   Research: [Gather] â†’ [Analyze] â†’ [Cross-check] â†’ [Synthesize]
+//   Debate:   [Argue For] â†’ [Argue Against] â†’ [Judge]
 //   Custom:   User configures everything
 //
 // The chain executes sequentially. Each step receives:
@@ -15213,7 +16063,7 @@ window.addEventListener('DOMContentLoaded', function () {
   setTimeout(function () { CoT.init(); }, 500);
 });
 
-/* ── Mobile Sidebar Toggle ── */
+/* â”€â”€ Mobile Sidebar Toggle â”€â”€ */
 function toggleSidebarMobile(side) {
   const sidebar = document.querySelector(side === 'left' ? '.sidebar' : '.rightbar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -15249,17 +16099,17 @@ document.addEventListener('keydown', function (e) {
     }
     closeMobileSidebars();
   }
-  // Ctrl+` — toggle terminal
+  // Ctrl+` â€” toggle terminal
   if (e.ctrlKey && e.key === '`') {
     e.preventDefault();
     toggleTerminalFull();
   }
-  // Ctrl+B — toggle right sidebar
+  // Ctrl+B â€” toggle right sidebar
   if (e.ctrlKey && e.key === 'b') {
     e.preventDefault();
     toggleRightbar();
   }
-  // Ctrl+Shift+B — toggle browser
+  // Ctrl+Shift+B â€” toggle browser
   if (e.ctrlKey && e.shiftKey && e.key === 'B') {
     e.preventDefault();
     var bel = document.getElementById('browserOverlay');

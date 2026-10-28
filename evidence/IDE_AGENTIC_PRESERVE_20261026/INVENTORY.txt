@@ -1,0 +1,71 @@
+IDE agent integration inventory
+Recorded 2026-10-26
+HEAD before this commit: ab0af78ade5c45a58dabf6d9cbb7bfd16f34f7fa
+Branch before switch: cert/gpu-forward-child-ladder-20260909
+Origin tip: 7e2f018f8770242c59e437148e99050a45782870
+Preservation: evidence/IDE_AGENTIC_PRESERVE_20261026/tracked.diff
+Untracked source copies: evidence/IDE_AGENTIC_PRESERVE_20261026/untracked-src
+Working tree was not reset, cleaned, or checked out over.
+
+Agent product files (6, not 7):
+  src/win32app/AgentHttp.cpp
+  src/win32app/AgentProduct.hpp
+  src/win32app/AgentRunLoop.cpp
+  src/win32app/AgentToolExec.cpp
+  src/win32app/AgentToolParse.cpp
+  src/win32app/AgentToolShell.cpp
+There is no seventh Agent* source file.
+
+Authorization files:
+  src/win32app/IdeAuthBoundary.hpp
+  src/win32app/IdeAuthSession.cpp
+  src/win32app/IdeAuthDecide.cpp
+  src/win32app/IdeAuthPath.cpp
+  src/win32app/IdeAuthTrust.cpp
+  src/win32app/IdeAuthBoundary_test.cpp
+
+Integration edits included:
+  CMakeLists.txt source-list entries for the CLI and Win32 IDE targets only
+  gui/ide_chatbot_engine.js
+  gui/ide_chatbot.html
+  src/subagent_core.cpp
+  src/subagent_core.h
+  src/win32app/Win32IDE.h handleAgentRun declaration only
+  src/win32app/Win32IDE_AgenticBridge.cpp
+  src/win32app/Win32IDE_LocalServer.cpp
+  src/win32app/HeadlessIDE.cpp
+  src/win32app/HeadlessIDE_FileAliases.cpp
+  src/win32app/HeadlessIDE_ToolRoutes.cpp
+  src/win32app/Win32IDE_NetworkPanel.cpp
+  src/core/update_signature.cpp
+  src/marketplace/extension_package_local.cpp
+  evidence/IDE_AGENTIC_PATH_001/RECEIPT.json
+  evidence/IDE_SECURITY_BOUNDARY_001/RECEIPT.json
+
+Dependency note:
+  Win32IDE::handleServeGui reads gui/ide_chatbot.html.
+  That file had its own sendToBackend and did not load ide_chatbot_engine.js.
+  The served page now calls /api/agent/run unless Ollama direct mode is on.
+  DualAgent or Chain-of-Thought, when enabled in that page, still intercept
+  sendToBackend before the original function runs.
+  backend/server.js exposes a different Node route, /api/agent/execute-tool.
+  That file is not part of this change set.
+
+Left unstaged on purpose:
+  backend/server.js
+  gui/ide_chatbot_standalone.html
+  evidence model manifests and runtime logs
+  include/vulkan_compute.h
+  src/vulkan_compute.cpp
+  src/deep2/*
+  src/win32app/Win32IDE.cpp
+  src/win32app/Win32IDE.h PowerShell splitter lines
+  src/win32app/Win32IDE_PowerShellPanel.cpp
+  CMakeLists.txt line-ending-only tail
+  test_simple.asm
+  tools/rawrxd_source_consolidation_inventory.ps1
+  incoming trees, voxel sources, drivers, and other untracked evidence
+
+Gates at commit time:
+  RAWRXD_SELF_AUDIT_AGENTIC_001=NOT_RUN
+  PROMOTE=0

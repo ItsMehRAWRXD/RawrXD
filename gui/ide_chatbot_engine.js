@@ -72,9 +72,10 @@ var State = {
   debug: { open: false },
   chat: { sending: false, messageCount: 0 },
   // MOTD gate: each message turn must Read PassiveRoleNotRoleplay before tools (Cursor parity)
+  // Prefer .mdc (Cursor alwaysApply twin); .md remains accepted twin under same rules dir.
   motd: {
-    needle: 'PassiveRoleNotRoleplay.md',
-    path: '.cursor/rules/PassiveRoleNotRoleplay.md',
+    needle: 'PassiveRoleNotRoleplay.mdc',
+    path: '.cursor/rules/PassiveRoleNotRoleplay.mdc',
     read: false
   },
   // Multitask / continue-ensure (same trigger as Cursor StreamerAgenticContinueEnsure)
@@ -2548,10 +2549,10 @@ var EngineAPI = {
   hotpatchStatus: function () { return this._get('/api/hotpatch/status'); },
 
   // ---- Tools (tool_server: /api/tool) ----
-  // MOTD hook: block all tools until PassiveRoleNotRoleplay.md is read this message turn
+  // MOTD hook: block all tools until PassiveRoleNotRoleplay.mdc/.md is read this message turn
   executeTool: function (tool, args) {
     args = args || {};
-    var needle = (State.motd && State.motd.needle) ? State.motd.needle : 'PassiveRoleNotRoleplay.md';
+    var needle = (State.motd && State.motd.needle) ? State.motd.needle : 'PassiveRoleNotRoleplay.mdc';
     var pathStr = String((args && (args.path || args.file_path || args.target_file)) || '');
     var isMotdRead = (tool === 'read_motd') ||
       ((tool === 'read_file' || tool === 'Read') && pathStr.indexOf('PassiveRoleNotRoleplay') >= 0);
@@ -4447,7 +4448,7 @@ var CONTINUE_ENSURE_MAX_BRIEF =
   + '- Obey PROMOTE=0 and TIP_CLIMB=HOLD — coverage/epoch only; no directional climb.\n'
   + '- HeadlessIDE /api/tool 403 reverse remains in-scope if still open.\n'
   + '- Align with PassiveRoleNotRoleplay: coordinator/product tone only — no character play.\n'
-  + '- Read MOTD (.cursor/rules/PassiveRoleNotRoleplay.md) before any other tool each turn.\n\n'
+  + '- Read MOTD (.cursor/rules/PassiveRoleNotRoleplay.mdc or .md) before any other tool each turn.\n\n'
   + 'Authority: evidence/RAWRXD_PERFORMANCE_001/G3_STREAMER_AGENTIC_* ; '
   + 'G3_ARMSPEED_AUTHORIZE_LANE_CLOSE_001.txt ; PERF_COMPLETION_CONTRACT.md\n\n'
   + 'Work until streamer is complete and agentic-ready, or leave a fail-closed receipt naming the blocker.';

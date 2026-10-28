@@ -1,0 +1,67 @@
+TIP_ABSORB_SWARM_002 / LAW
+==========================
+ASOF_UTC=2026-10-28T10:10:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+MISSION
+-------
+Absorb SWARM_MODEL_ORCH_001 into tip RawrXD-Win32IDE.exe (Selector + HttpTags + SubAgent).
+Prior tip C4FC9AE9… (TIP_ABSORB_RELINK_001) remains HISTORICAL — DO NOT REWRITE.
+Prior tip 866E9D1B… seals untouched.
+
+PRE_TIP (ABSORB GAP)
+--------------------
+EXE_SHA256=C4FC9AE9A6EAC016A78B0C1BB1690B9C47A46A4B47FC51B1B807E10E14EDC43B
+SWARM_MODEL_ORCH_001=ABSENT from TIP_ABSORB_RELINK_001
+SwarmModelSelector SRC newer than OBJ
+SwarmOllamaHttpTags in CMakeLists but OBJ MISSING / not in build.ninja (needed cmake reconfigure)
+SubAgent OBJ after SRC; resolveSwarmModelOrchPlan present in pre-map via Selector
+
+ABSORBED
+--------
+SWARM_MODEL_ORCH_001 (S-002/S-003 SOURCE_WIRED -> linked this EXE)
+  TU: src/win32app/Win32IDE_SwarmModelSelector.cpp
+  TU: src/win32app/Win32IDE_SwarmOllamaHttpTags.cpp  (NEW link; appendLocalOllamaHttpTags)
+  TU: src/win32app/Win32IDE_SubAgent.cpp             (rebuild; resolveSwarmModelOrchPlan caller)
+
+BUILD
+-----
+cmd: evidence/TIP_ABSORB_SWARM_002/_absorb_swarm.bat
+cmake -S . -B build_win32ide_link001 -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_WIN32IDE=ON
+CMAKE_RECONFIG_EXIT=0  (HttpTags entered build.ninja)
+cmake --build build_win32ide_link001 --target RawrXD-Win32IDE --config Release -j 2
+CMAKE_BUILD_EXIT=0
+C1060=0
+Built: SwarmOllamaHttpTags + SwarmModelSelector + SubAgent + link
+LOG=evidence/TIP_ABSORB_SWARM_002/logs/relink_j2.log
+
+SEALED EXE
+----------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SIZE=331649536
+EXE_SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+PRIOR_EXE_SHA256=C4FC9AE9A6EAC016A78B0C1BB1690B9C47A46A4B47FC51B1B807E10E14EDC43B
+
+MAP CONFIRM
+-----------
+appendLocalOllamaHttpTags -> Win32IDE_SwarmOllamaHttpTags.cpp.obj  LINKED=1
+resolveSwarmModelOrchPlan  -> Win32IDE_SwarmModelSelector.cpp.obj   LINKED=1
+
+DISPOSITION
+-----------
+ABSORB=PASS (earned — TUs rebuilt + EXE relinked; new SHA)
+HTTPTAGS_LINKED=1
+RUNTIME_REACHED=NOT_THIS_SEAL (product triad = sibling seals on NEW SHA)
+G07_MET=0 (tip product swarm GUI RUNTIME separate from Ollama SWARM_16 harness)
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+ABSORB PASS != LIVE_TETRAD PASS != MULTI_FAMILY PASS != TOKEN64 PASS != PROMOTE
+Historical seals on C4FC9AE9… / 866E9D1B… untouched

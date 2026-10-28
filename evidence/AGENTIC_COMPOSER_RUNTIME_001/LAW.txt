@@ -1,0 +1,88 @@
+AGENTIC_COMPOSER_RUNTIME_001 / LAW
+==================================
+ASOF_UTC=2026-10-28T11:20:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+LOCAL_ONLY=1
+P0=S-004 / U01 / G01-G05
+RELINK=NO
+TIP_REBUILD=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+default-model != real model path
+MessageBoxA OK != product success
+CreateRemoteThread without non-null Win32IDE* != composer product path
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=6832F439100C71AE7923A7736F71784039B7F6A9DE53C895E56E9C7932A9F8B2
+SHA_MATCH=1 (verified this session pre-probe; no tip rebuild)
+MAP=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.map
+IMAGE_BASE_PREFERRED=0x140000000
+
+MAP SYMBOLS (INVOKED surface on tip — earned)
+---------------------------------------------
+?onAgenticModeAsk@Win32IDE@@AEAAXXZ     @ 00000001405a8850  RVA=0x5A8850
+?onAgenticModePlan@Win32IDE@@AEAAXXZ    @ 00000001405a8870  RVA=0x5A8870
+?onAgenticModeAgent@Win32IDE@@AEAAXXZ   @ 00000001405a8840  RVA=0x5A8840
+?setAgenticMode@Win32IDE@@AEAAXW4AgenticMode@RawrXD@@@Z
+                                        @ 00000001405aef20  RVA=0x5AEF20
+?HandleAgenticComposerUX@@YAXPEAX@Z     @ 00000001405c0c40  RVA=0x5C0C40
+  TU=Win32IDE_AgenticComposerUX.cpp.obj (S-004 absorb via TIP_ABSORB_RELINK_001
+  → tip climb to 6832F439…)
+?g_pMainIDE@@3PEAVWin32IDE@@EA         @ 0000000153adafe0  RVA=0x13ADAFE0
+
+ENUM AUTHORITY (src/win32app/agentic_mode_switcher.hpp)
+------------------------------------------------------
+AgenticMode on tip: Ask=0, Plan=1, Agent=2, DeepThink=3, DeepResearch=4
+Debug mode (G04): NOT_ON_TIP_ENUM → NOT_INVOKED
+Auto mode (G05):  NOT_ON_TIP_ENUM → NOT_INVOKED
+(DeepThink/DeepResearch exist but outside G01–G05 Ask/Agent/Plan/Debug/Auto set)
+
+MODEL PATH LAW
+--------------
+HandleAgenticComposerUX resolves via getLoadedModelPath() then
+ProductSessionOpen()+RAWRXD_PRODUCT_MODEL — never literal "default-model"
+(AGENTIC_COMPOSER_UX_001 C01–C03 SOURCE_WIRED; linked on this tip)
+
+PROBE (authored; no tip rebuild)
+--------------------------------
+probe_composer_modes.cpp / build_probe.bat under this folder
+METHOD=headless tip + ReadProcessMemory(g_pMainIDE) + CreateRemoteThread
+  Ask/Plan/Agent member entry + HandleAgenticComposerUX(ide*)
+PORT=18771 (avoids ToolActionStatus 18767; no swarm/ShellLayout touch)
+MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  + RAWRXD_PRODUCT_MODEL (real path; no default-model)
+
+RUNTIME DISPOSITION (this seal)
+-------------------------------
+RUNTIME_REACHED=NOT_RUN
+REASON=probe authored; live CreateRemoteThread exercise not completed in-session
+  (shell/I/O saturation on tip map/EXE tooling; NOT_RUN != PASS)
+MODES_INVOKED_SURFACE=Ask,Plan,Agent,HandleAgenticComposerUX
+MODES_NOT_INVOKED=Debug,Auto
+MET_CLAIM=0
+TOKEN_SURVIVED=0
+PERFORMANCE_PASS=0
+
+AVOID CONFLICTS
+---------------
+No ToolActionStatus GateStub re-entry
+No swarm orch / ShellLayout phase-5 touch
+No tip EXE relink
+
+CROSS_CITE
+----------
+AGENTIC_COMPOSER_UX_001 (SOURCE_WIRED S-004)
+TIP_ABSORB_RELINK_001 / LIVE_TETRAD_POST_SWARM_ABSORB_001 (tip 6832F439…)
+WIN32IDE_CLOSURE_MATRIX_001 S-004 / U01 / G01–G05
+agentic_mode_switcher.hpp + Win32IDE_AgentCommands.cpp setAgenticMode
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,0 +1,13 @@
+side=deep2
+stage=TIP_FINAL_HIDDEN
+pos=20
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=a0cba3416892fee6
+l2=57.846645016319918
+seq=965
+path=G:\~dev\rawrxd\evidence\parity_cpu_dump\deep2_TIP_FINAL_HIDDEN_pos20_layer0_full_n3072_seq965.bin

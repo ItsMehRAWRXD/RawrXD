@@ -1,0 +1,70 @@
+READY_PROMOTE_TETRAD_001 / LAW
+=============================
+ASOF_UTC=2026-10-28T08:23:00Z
+WORKSPACE=G:\~dev\rawrxd
+KIND=DOCUMENTATION_SEAL_PROMOTE_READY_TETRAD_MAP
+PRODUCT_PATH=Win32IDE / HeadlessIDE -> ProductOpenSession -> ProductRun/Deep2 generateStream
+PROMOTE=0
+PromoteReady_EMIT=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+R28_APPLY=HELD
+NO_REBUILD=1
+NO_INVENT_MET=1
+NOT_RUN!=PASS
+DOCUMENTATION_SEAL!=PROMOTE_FLIP
+
+AUTHORITY
+---------
+HEADER=rawrxd/src/deep2/lavapath/Deep2ProductGate.hpp
+FN=Deep2::product_gate::PromoteReady
+  PROMOTE_IF (tetrad bits) =
+      PRODUCT_OPEN_PASS
+   && SESSION_ENTER_PASS
+   && GENERATED_TOKENS>0
+   && TOKEN_COMMIT_PASS
+  Comment: PRODUCT_PASS / readiness only. Callers must still emit PROMOTE=0.
+AGENTS.md Final readiness / promote gate (cites READY_PROMOTE_TETRAD_001)
+PLAYBOOK=G3_STREAMER_AGENTIC_PLAYBOOK_001 S5 vs S6
+HISTORICAL=
+  evidence/RAWRXD_PERFORMANCE_001/READY_PROMOTE_TETRAD_001/RECEIPT.txt
+  evidence/RAWRXD_PERFORMANCE_001/FINAL_READY_PROMOTE_TETRAD_001/RECEIPT.txt
+SIBLING_AUDIT (do not duplicate / conflict) =
+  evidence/PROMOTE_READY_CONJUNCTION_001/
+  — owns product conjunction audit incl. 64_TOKEN / R28 / RUNTIME_AUTH / SPLIT
+  — this folder = tetrad documentation map only; PromoteReady_EMIT=0
+
+LIVE_MIRRORS (earned inputs; untouched)
+---------------------------------------
+LIVE_TETRAD_POST_CAMELLIA_001
+  TinyLlama LIVE_TETRAD=PASS EXE SHA 89BFD614…
+  PRODUCT_OPEN_PASS=1 SESSION_ENTER_PASS=1
+  GENERATED_TOKENS=8 TOKEN_COMMIT_PASS=1
+MULTI_FAMILY_PRODUCT_001
+  gemma3-1b-Q2_K ARCH=gemma3 MULTI_FAMILY=PASS same EXE
+  independent coverage ≠ TinyLlama R25
+
+SEALED_EXE (input; not rewritten)
+---------------------------------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA256=89BFD6142CEE7A6AA537DF0297014E240C7CC55B142C230521527914469F8630
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+PromoteReady_fn_inputs_MET != PromoteReady_EMIT=1
+DOCUMENTATION_FOLDER_MET != PROMOTE=1
+PROMOTE=0 always this seal — never emit PromoteReady=1 / PROMOTE=1
+TIP_CLIMB=HOLD CERTIFIED=0
+
+DISPOSITION
+-----------
+FOLDER_SEALED=1
+KIND=DOCUMENTATION
+PromoteReady_EMIT=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+OPEN=64_TOKEN,K2,R28,CERTIFIED,TIP_CLIMB
+NEXT_GATE=POST_SCHEDULER_PROMOTION_REQUIREMENTS (unchanged)

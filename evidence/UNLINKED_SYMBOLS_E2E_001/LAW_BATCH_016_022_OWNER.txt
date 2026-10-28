@@ -1,0 +1,60 @@
+LAW — Quintile D+E batches 016–022 ownership
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+WORKSPACE=G:\~dev\rawrxd
+DATE=2026-10-28
+EVIDENCE=RECEIPT_BATCH_016_022.md + BUILD_SMOKE_016_022.txt (object smoke; LINK=NOT_RUN)
+Digestion_scanner.asm = NOT Mode*/SO*/Sovereign owner
+Camellia Auth ASM = SYNTHETIC=partial until product ASM lands (batch_005 C stubs)
+
+BATCH_016
+- g_AgentRegistry[32] (RawrXD::Sovereign) + RawrXD_Sentinel_CalculateHash_MASM:
+  Win32IDE OWNER_TU = unlinked_symbols_batch_016.cpp
+  GOLD OWNER = gold_link_closure.cpp — FILTER EXCLUDE batch_016
+- Do not dual-link with inference_link_production.cpp on same lane
+
+BATCH_017
+- Titan_*_AVX512 / Sampler_* / NLShell_ValidateCommand:
+  C fallback OWNER = batch_017 (object smoke / GOLD-if-needed)
+  Win32IDE: CMake COMMENT-OMIT (prefer ASM / gold_link / ai_agent_masm_impl)
+  SYNTHETIC=partial (scalar C ≠ AVX512 product path)
+
+BATCH_018
+- AgentOllamaClient / OllamaProvider → src/agentic/AgentOllamaClient.cpp
+- asm_gguf_loader_close / asm_lsp_bridge_shutdown → MagBuf batch_001
+- OMIT_FROM_LINK (CMake COMMENT): unlinked_symbols_batch_018.cpp
+- File remains as empty reference TU for smoke presence
+
+BATCH_019
+- AD_ProcessGGUF / SO_* → rawrxd_subsystem_api.cpp (same as batch_011)
+- asm_camellia256_auth_* → batch_005 (SYNTHETIC=partial until Auth ASM)
+- asm_watchdog_* → win32ide_watchdog_init.cpp + batch_001/005 MagBuf
+- find_pattern_asm → byte_level_hotpatcher.cpp
+- OMIT_FROM_LINK (CMake COMMENT): unlinked_symbols_batch_019.cpp
+
+BATCH_020
+- asm_perf_* slot API → MagBuf batch_001
+  (prior void/slot-less signatures here were ODR-wrong)
+- OMIT_FROM_LINK (CMake COMMENT): unlinked_symbols_batch_020.cpp
+
+BATCH_021
+- SetCompletionBackendNative / CreateAgentCoordinator* / BraidedLoader_*:
+  OWNER_TU = unlinked_symbols_batch_021.cpp (sole C defs on Win32IDE)
+- AnnotationOverlay → src/win32app/AnnotationOverlay.cpp (wired; stubs removed)
+- AppendANSIToRichEdit → ANSIParser.cpp (stripped from 021)
+- Deep2_SwiGLU/RMSNorm → Deep2Engine.cpp (stripped)
+- Deep2Discovery::GetPreferredBackend → Deep2Discovery.cpp (stripped)
+- CRDTBuffer product path → collab/ + Win32IDE_Collab (stripped from 021)
+
+BATCH_022
+- Deep2::Deep2APIServer methods + Deep2::Production::* stubs + VAL038 C fallbacks:
+  OWNER_TU = unlinked_symbols_batch_022.cpp
+- Profiler_* → NegativeSpaceProfiler.cpp (stripped from 022)
+- TopKSampler → sampling/advanced_sampler.* (stripped)
+- ReverseEngine/Loader → src/reverse/* (stripped)
+- rawr::RawrRuntime → src/runtime/RawrRuntime.cpp (stripped)
+- ZlibRuntimeLoader → compression/zlib_runtime_loader.cpp (stripped)
+- SYNTHETIC=partial on Deep2APIServer/Production method bodies
+
+MECHANISM
+  Prefer CMake TU omit of the non-owner side. Files stay in tree.
+  No #ifndef dual-link. No invented CERTIFIED/PASS.

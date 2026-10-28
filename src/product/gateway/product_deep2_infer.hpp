@@ -11,7 +11,9 @@ bool ProductSessionOpen();
 void ProductRequestCancel();
 
 // Production product-serve infer: real Deep2Engine via ProductRun (no hardcoded text).
-bool ProductDeep2Infer(const char* prompt, char* out, size_t cap);
+// maxTokens=0 → product default 64 (StreamBody); never hard-clamp to 8.
+bool ProductDeep2Infer(const char* prompt, char* out, size_t cap,
+                       uint32_t maxTokens = 0);
 /* Last ProductRun GENERATED_TOKENS after Infer/Stream (0 if none). */
 uint32_t ProductDeep2LastEvalCount();
 // Streaming ProductRun — same path as rawr run / IDE Copilot.

@@ -1,0 +1,10 @@
+
+[2026-10-28T06:28:46-04:00] START SWARM_16_THINKING_CLASSIFY_001
+[2026-10-28T06:28:46-04:00] PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+[2026-10-28T06:28:46-04:00] HARNESS=harness_ollama_thinking_classify_v3.ps1
+[2026-10-28T06:28:46-04:00] CONTRACT: PASS <=> usable_final_answer=1; thinking-only != PASS
+[2026-10-28T06:28:47-04:00] MODELS=qwen3:8b think=True num_predict=48
+[2026-10-28T06:28:47-04:00] [1/1] HI classify qwen3:8b
+[2026-10-28T06:28:55-04:00]   FAIL classify=THINKING_ONLY usable=0 think_tok=48 resp_tok=0 done_reason=length err=EMPTY_RESPONSE_THINKING_ONLY_LENGTH ms=8426
+[2026-10-28T06:28:55-04:00] N=1 | TAGS_REACHABLE=1 | CLASSIFY_PASS=0 | CLASSIFY_FAIL=1 | THINKING_ONLY=1 | HARNESS=evidence/SWARM_16_THINKING_CLASSIFY_001/harness_ollama_thinking_classify_v3.ps1 | CONTRACT=usable_final_answer_required | FIELDS=thinking_tokens,response_tokens,done_reason,usable_final_answer | PRESERVE_001=1 | PRESERVE_002=1 | RUNTIME_REACHED=1 | TIP_EXE_RUNTIME=NOT_RUN | PROMOTE=0 | TIP_CLIMB=HOLD | CERTIFIED=0
+[2026-10-28T06:28:55-04:00] DONE
