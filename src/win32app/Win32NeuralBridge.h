@@ -1,7 +1,8 @@
-// Win32NeuralBridge.h — GATED_STUB (IDE_BRIDGE_STUB_GATE_001)
+// Win32NeuralBridge.h — GATED_STUB (IDE_BRIDGE_STUB_GATE_001 / NEURAL_CRDT_GATE_001)
 // Orphan header: not included by Win32IDE product path; CMake-omitted TU sibling
-// (Win32IDE_NeuralBridge.cpp comment-omit). Match GateMode: log + false.
-// Smoke must NOT claim PASS. PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0.
+// (Win32IDE_NeuralBridge.cpp comment-omit; Win32NeuralBridge.cpp GATED_STUB).
+// Match GateMode: log + false. Smoke must NOT claim PASS.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0. ABSORB=NOT_AUTHORIZED.
 
 #pragma once
 

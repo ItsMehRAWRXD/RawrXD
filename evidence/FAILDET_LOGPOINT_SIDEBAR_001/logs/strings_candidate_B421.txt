@@ -1,0 +1,10 @@
+EXE=g:\~dev\rawrxd\evidence\WIN32IDE_BUILD_CLOSURE_001\candidate_bin\RawrXD-Win32IDE.exe
+FOUND=1 needle=[FailureDetector]
+FOUND=1 needle=Failure detector initialized
+FOUND=1 needle=reject_synthetic
+FOUND=0 needle=[SidebarBridge] GATED
+FOUND=0 needle=RawrXD_IDE_AddLogpoint
+FOUND=0 needle=SidebarBridge_Create
+FOUND=0 needle=Win32IDE_LogpointBridge
+FOUND=1 needle=initFailureDetector
+FOUND=1 needle=Failure detector initialized (headless)

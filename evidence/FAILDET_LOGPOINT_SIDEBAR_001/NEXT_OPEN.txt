@@ -1,0 +1,17 @@
+NEXT_OPEN after FAILDET_LOGPOINT_SIDEBAR_001
+============================================
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 ABSORB=NOT_AUTHORIZED
+TIP=748B210A… (TIP_FREEZE_001\bin) NEVER_ERASE
+
+PRIMARY (highest remaining OPEN on tip 748B):
+  A04 / G02 — Agent bridge + AgentRunLoop E2E on FROZEN SHA
+  Cite: AGENT_RUN_LOOP_TIP_003 HTTP 503 ENTERED=0 on 748B
+  ≠ invent transfer from historical 6832F439 G16
+
+ALTERNATES (still OPEN; do not invent PASS):
+  G07 swarm tip RUNTIME_PASS=0 (PATH_B Post≠orch E2E)
+  S-005 / U06 ConPTY tip absorb + RUNTIME (RELINK_REQUIRED; need new freeze)
+  A02 Camellia self_test=-8
+  A05 MET=0 (GateStub RUNTIME ≠ product real-exit)
+
+LAW: NOT_RUN != PASS · SOURCE_WIRED != RUNTIME_REACHED · PROMOTE=0

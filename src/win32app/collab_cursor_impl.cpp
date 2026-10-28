@@ -1,3 +1,8 @@
+// collab_cursor_impl.cpp — GATED_OMIT (NEURAL_CRDT_GATE_001)
+// Orphan duplicate CRDTBuffer/CursorWidget TU. NOT in WIN32IDE_SOURCES.
+// Product owner: src/collab/*.cpp via Win32IDE_Collab. Do not link (LNK2005).
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 RELINK=NO.
+
 #include "../include/collab/cursor_widget.h"
 #include "../include/collab/crdt_buffer.h"
 #include <algorithm>
@@ -5,7 +10,7 @@
 #include <string>
 #include <windows.h>
 
-// Link-only fallbacks for collaboration runtime when real handlers are absent.
+// Link-only fallbacks — GATED_OMIT orphan; product path does not use this TU.
 namespace {
 constexpr size_t kMaxRemoteOpBytes = 64u * 1024u;
 constexpr size_t kMaxRemotePayloadBytes = 16u * 1024u;

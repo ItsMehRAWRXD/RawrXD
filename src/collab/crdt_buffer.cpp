@@ -1,5 +1,8 @@
 // Must match Win32IDE_Collab (global CRDTBuffer from include/collab/crdt_buffer.h).
 // Do not pull src/collab/crdt_buffer.h (RawrXD:: namespaced) — that mangling ODR-misses the IDE.
+// NEURAL_CRDT_GATE_001: SOURCE_WIRED SYNTHETIC=partial OT-lite — NOT conflict-free CRDT_PASS.
+// Orphan duplicates (rawrxd_collab_crdt_impl / collab_cursor_impl) = GATED_OMIT.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 RELINK=NO.
 #include "../../include/collab/crdt_buffer.h"
 #include <sstream>
 #include <algorithm>

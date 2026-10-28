@@ -1,0 +1,1 @@
+failure_stats|200|{"failures":[],"stats":"Failure detector: Active (headless)\nTotal detections: 0\nRetries: 0"}

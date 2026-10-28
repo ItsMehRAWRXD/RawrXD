@@ -1,6 +1,7 @@
-// Win32IDE_Collab.cpp — Collaboration panel: CRDT + WebSocket + cursor sharing.
-// Real onCollabMessage handler: parses JSON ops, applies to CRDTBuffer,
-// broadcasts edits, shares cursor positions.
+// Win32IDE_Collab.cpp — Collaboration panel: OT-lite buffer + WebSocket + cursors.
+// NEURAL_CRDT_GATE_001: SOURCE_WIRED SYNTHETIC=partial (include/collab/crdt_buffer.h).
+// NOT conflict-free CRDT_PASS. onCollabMessage applies JSON ops to CRDTBuffer.
+// PROMOTE=0 TIP_CLIMB=HOLD. ABSORB=NOT_AUTHORIZED.
 
 #include "Win32IDE.h"
 #include "collab/websocket_hub.h"

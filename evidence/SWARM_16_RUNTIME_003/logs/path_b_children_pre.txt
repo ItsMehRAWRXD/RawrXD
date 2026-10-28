@@ -1,0 +1,15 @@
+Static|Untitled  •  bin
+Button|GH
+Button|MS
+Button|Gear
+Button|-
+Button|[]
+Button|X
+Button|Files
+Button|Search
+Button|Source
+Button|Debug
+Button|Exts
+Button|Recov
+Button|Chat
+Edit|

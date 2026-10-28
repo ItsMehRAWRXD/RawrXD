@@ -1,36 +1,41 @@
-﻿# ACTIVE_NOW — tip authority + live gates
+﻿# ACTIVE_NOW — Full IDE Completion Campaign
 
 ```
-ASOF_UTC=2026-10-28T14:30:00Z
-PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
-AUTHORITY_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
-AUTHORITY_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
-REBUILD_THIS_DISPATCH=0
+ASOF_UTC=2026-10-28T17:11:30Z
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+PROMOTE=0 TIP_CLIMB=HOLD PRODUCT_CERTIFIED=0
+TIP=748B210A… (TIP_FREEZE_001\bin)
+GHOSTTEXT_WITNESS=B421… CERTIFIED=1
+ABSORB=NOT_AUTHORIZED
+PHASE_6_PRODUCT=BLOCKED_PENDING_EXPLICIT_AUTH
+LAST_SEAL=WIN32IDE_CONTINUOUS_SETTINGS_HMAC_CAM_001
+PRIOR_SEAL=FAILDET_LOGPOINT_SIDEBAR_001
+NEXT_OPEN=A04_G02_AGENT_RUN_LOOP_748B
 ```
 
-## Wrong binary (do not use)
+## Just sealed
 
-| Path | Why wrong |
-|------|-----------|
-| `G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe` | Legacy ~35MB July tip — not product |
-| `G:\~dev\rawrxd\build_win32ide_link001\bin\…` | Build tree only; ninja races cause SHA_DRIFT |
-| Any fresh ninja/msbuild output | Not frozen until copied into TIP_FREEZE_001\bin |
+| Seal | Tip | Notes |
+|------|-----|-------|
+| `WIN32IDE_CONTINUOUS_SETTINGS_HMAC_CAM_001` | 748B | Settings LoadUnlocked + HMAC/Cam smokes re-verify; MASM wd init OPEN; PROMOTE=0 |
+| `FAILDET_LOGPOINT_SIDEBAR_001` | 748B | FailDet headless Active RUNTIME; Logpoint/Sidebar GATED_OMIT NOT_RUN; PROMOTE=0 |
 
-Authority seal: `evidence/TIP_FREEZE_001/TIP_EXE_AUTHORITY.txt`
+## Live workstreams (Cursor local agents)
 
-## GhostText witness (≠ tip)
+| Stream | Focus | Absorb? |
+|--------|-------|---------|
+| Settings/HMAC/Cam continuous | Sealed; GhostText absorb hold | No |
+| Continuous closure | **NEXT** AgentRunLoop 503 / A04 G02 on 748B | No |
+| Stub fiction sweep | Fake-success / TODO fail-close | No |
+| Admit + execute_command | Tip RUNTIME | No |
+| Composer / ConPTY / SafeWrite | Surface RUNTIME | No |
+| Closure matrix driver | MET rows honest | No |
+| Campaign phases 1–5,7–9 | Audit/build/Deep2/agentic/UI/perf | No Phase 6 tip absorb |
 
-| Seal | EXE SHA | Status |
-|------|---------|--------|
-| `RAWRXD_MULTI_MODEL_AGENTIC_GHOSTTEXT_002` | `F0988009…` (build_win32ide_link001) | Gates 1–6 PASS ×5 models; MULTILINE=NOT_RUN; CERTIFIED=0 |
-| Tip freeze basic probe | `748B210A…` | EXIT=0 timer-only; no Ollama asserts in that binary |
+## Auth gate (user must say exactly)
 
-`NO_ABSORB_SHA_TRANSFER=1` — do not treat F098 as tip or invent tip GhostText cert.
+`Authorize GhostText absorption into a new product candidate, with full regression testing`
 
-## Next (tip freeze only — no rebuild)
+Until then: preserve SHA hold; continue all independent IDE work.
 
-1. Same-EXE TinyLlama + Gemma3 matrix under TIP_FREEZE_001\bin
-2. AgentRunLoop 503 on freeze (still OPEN)
-3. Optional later: re-freeze only after explicit absorb of F098 GhostText bits
-
-`NOT_RUN != PASS`.
+`NOT_RUN != PASS` · no self-promote

@@ -1,8 +1,10 @@
 // ============================================================================
-// crdt_buffer.h — CRDT Buffer for Real-Time Collaborative Editing
+// crdt_buffer.h — RawrXD:: namespaced CRDT sketch (NEURAL_CRDT_GATE_001)
 // ============================================================================
-// Conflict-free Replicated Data Type buffer for multi-user text editing.
-// Site-based operation tracking with logical clock ordering.
+// ORPHAN vs product path: Win32IDE uses include/collab/crdt_buffer.h (global).
+// This header is NOT the product owner. SYNTHETIC=partial site/clock sketch.
+// NOT conflict-free CRDT_PASS. Do not invent PASS from source presence.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0.
 // ============================================================================
 
 #pragma once

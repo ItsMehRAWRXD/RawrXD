@@ -6834,8 +6834,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/asm/diff_engine.asm
             src/asm/RawrXD_HexMag_Swarm.asm
             src/asm/RawrXD_HexMag_RepeatTuner.asm
+            # GOLD_LINK_CONTINUOUS_001: VT100 TUI glyphs only; PTY stream stays Win32TerminalManager
+            src/asm/RawrXD_ConPTY_Renderer.asm
         )
-        message(STATUS "[Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)")
+        message(STATUS "[Win32IDE] HexMag MASM linked (Swarm + RepeatTuner + ConPTY_Renderer)")
 
         # NOTE: Removed fraudulent GPU sovereign modules
         # These claimed capabilities that are physically impossible:

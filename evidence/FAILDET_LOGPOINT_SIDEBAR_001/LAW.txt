@@ -1,0 +1,75 @@
+FAILDET_LOGPOINT_SIDEBAR_001 / LAW
+===================================
+ASOF_UTC=2026-10-28T17:08:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+RELINK=NO
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+CANDIDATE_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+CANDIDATE_ROLE=GhostText_witness_only
+ABSORB=NOT_AUTHORIZED
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+NEVER_ERASE_748B=1
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+CMake-omit != linked stub PASS
+GateMode / GATED_STUB = log SYNTHETIC=partial + return false|-1
+New freeze required if tip relink; do not overwrite TIP_FREEZE_001\bin 748B
+
+TARGETS
+-------
+T01 Win32IDE_FailureDetector.cpp
+  CMAKE_WIN32IDE=YES (linked)
+  MAP_OBJ=Win32IDE_FailureDetector.cpp.obj (present)
+  TIP_STRINGS=[FailureDetector], initFailureDetector, reject_synthetic = PRESENT
+  CANDIDATE_B421 same string disposition
+  HEADLESS_RUNTIME=/api/failure/stats HTTP=200 stats="Failure detector: Active (headless)"
+  HEADLESS_NOKEY=/api/failure/stats HTTP=401 (fail-closed auth)
+  A05_CONSUMER=hookToolResult reject_synthetic SOURCE_WIRED (string + source)
+  GUI_hookPostGeneration_E2E=NOT_RUN (no invent PASS)
+  DISPOSITION=SOURCE_WIRED + HEADLESS_FAILDET_RUNTIME_REACHED (Active)
+  MET_CLAIM=0 (full classify/retry E2E unclaimed)
+
+T02 Win32IDE_LogpointBridge.cpp
+  PRIOR=WIN32IDE_BRIDGE_SWEEP_002 GATED_OMIT + owner native_debugger_conditional_bp
+  CMAKE_WIN32IDE=NO (omit comment only)
+  MAP_LOGPOINT=0
+  TIP_STRINGS RawrXD_IDE_AddLogpoint / Win32IDE_LogpointBridge = ABSENT
+  CANDIDATE_B421 = ABSENT
+  Source: return true only after Debugger_* owner success; owner TU also omit
+  DISPOSITION=GATED_OMIT + FAIL_CLOSED
+  RUNTIME_REACHED=NOT_RUN (honest; TU not in tip)
+
+T03 Win32IDE_SidebarBridge.cpp
+  PRIOR=WIN32IDE_BRIDGE_SWEEP_002 GATED_OMIT + GATED_STUB
+  PRODUCT_OWNER=Win32IDE_Sidebar.cpp (linked; not this orphan bridge)
+  CMAKE_WIN32IDE=NO
+  MAP_SIDEBARBRIDGE=0
+  TIP_STRINGS [SidebarBridge] GATED / SidebarBridge_Create = ABSENT
+  CANDIDATE_B421 = ABSENT
+  Source IPC bools return false; RawrXD_SidebarWndProc returns -1
+  DISPOSITION=GATED_OMIT + GATED_STUB
+  RUNTIME_REACHED=NOT_RUN (honest; TU not in tip)
+
+CROSS_CITE
+----------
+WIN32IDE_BRIDGE_SWEEP_002
+IDE_BRIDGE_STUB_GATE_001
+TIP_FREEZE_001 / TIP_EXE_AUTHORITY (748B)
+GHOSTTEXT_SHA_AUTHORITY_HOLD_001 (B421 witness; ABSORB=NOT_AUTHORIZED)
+TOOL_ACTION_STATUS_RUNTIME_001 / E2E (A05 GateStub lineage; no invent transfer)
+
+SEALED EXE
+----------
+PRODUCT_TIP=748B210A… TIP_FREEZE_001\bin  RELINK=NO  NEVER_ERASE
+WITNESS_CANDIDATE=B421… (no absorb, no SHA transfer)
+IF_RELINK=new freeze directory + rewrite authority; preserve 748B artifact
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

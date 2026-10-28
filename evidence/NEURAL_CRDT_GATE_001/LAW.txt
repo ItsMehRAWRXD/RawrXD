@@ -1,0 +1,74 @@
+NEURAL_CRDT_GATE_001 / LAW
+==========================
+ASOF_UTC=2026-10-28T17:06:53Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB=NOT_AUTHORIZED
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+RELINK=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+GateMode / GATED_STUB = log SYNTHETIC=partial + return false|0
+CMake-omit != linked stub PASS
+OT-lite string buffer != conflict-free CRDT_PASS
+ABSORB into tip NOT_AUTHORIZED (GHOSTTEXT_SHA_AUTHORITY_HOLD_001)
+
+TARGETS
+-------
+T01 src/win32app/Win32NeuralBridge.h
+  PRIOR=GATED_STUB under IDE_BRIDGE_STUB_GATE_001 (Initialize/RunSmokeTest false)
+  CMAKE_WIN32IDE=NO (orphan header)
+  DISPOSITION=KEEP GATED_STUB + cross-cite this LAW
+  RUNTIME_REACHED=NOT_RUN
+
+T02 src/win32app/Win32NeuralBridge.cpp
+  PRIOR="Production Implementation"; Init/CreateOp returned 1 (fake success theater)
+  CMAKE_WIN32IDE=NO (orphan; audit orphans_residual)
+  NOW=GateStub + return 0 on all exports
+  DISPOSITION=GATED_OMIT + GATED_STUB
+  RUNTIME_REACHED=NOT_RUN
+
+T03 src/win32app/Win32IDE_NeuralBridge.cpp
+  PRIOR=comment-omit (transcendence fiction); handlers elsewhere
+  CMAKE_WIN32IDE=NO (list REMOVE / comment at ~7116)
+  DISPOSITION=GATED_OMIT (prior; no reopen)
+  CROSS_CITE=IDE_BRIDGE_STUB_GATE_001
+
+T04 include/collab/crdt_buffer.h + src/collab/crdt_buffer.cpp
+  CMAKE_WIN32IDE=YES (WIN32IDE_SOURCES + Win32IDE_Collab.cpp)
+  PRIOR header claimed "conflict-free" CRDT
+  NOW=honest OT-lite / SYNTHETIC=partial labels; insert/delete kept (real buffer work)
+  DISPOSITION=SOURCE_WIRED SYNTHETIC=partial — NOT CRDT_PASS
+  RUNTIME_REACHED=NOT_RUN this seal (no invent Collab E2E PASS)
+
+T05 src/win32app/rawrxd_collab_crdt_impl.cpp
+     src/win32app/collab_cursor_impl.cpp
+  CMAKE_WIN32IDE=NO (orphan duplicates; LNK2005 if linked)
+  DISPOSITION=GATED_OMIT (banner + CMake omit cite)
+  PRODUCT_OWNER=src/collab/crdt_buffer.cpp + cursor_widget.cpp
+
+T06 src/collab/crdt_buffer.h (RawrXD:: namespaced)
+  ORPHAN vs product include path (global CRDTBuffer)
+  DISPOSITION=ORPHAN_SKETCH SYNTHETIC=partial — NOT product owner
+
+SEALED EXE
+----------
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PATH=evidence/TIP_FREEZE_001/bin/RawrXD-Win32IDE.exe
+RELINK=NO (source gate + omit cites only; tip SHA preserved)
+IF_RELINK=new SHA; ABSORB still NOT_AUTHORIZED without explicit user auth
+
+CROSS_CITE
+----------
+IDE_BRIDGE_STUB_GATE_001 (Win32NeuralBridge.h prior)
+WIN32IDE_BRIDGE_SWEEP_002 / WIN32IDE_STUB_SWEEP_001 (GateMode law)
+GHOSTTEXT_SHA_AUTHORITY_HOLD_001 (ABSORB=NOT_AUTHORIZED)
+TIP_FREEZE_748B_HEADLESS_SURFACE_001 (tip 748B)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

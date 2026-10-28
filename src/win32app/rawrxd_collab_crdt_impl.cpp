@@ -1,3 +1,9 @@
+// rawrxd_collab_crdt_impl.cpp — GATED_OMIT (NEURAL_CRDT_GATE_001)
+// Orphan duplicate of product owner src/collab/crdt_buffer.cpp + cursor_widget.cpp.
+// NOT in WIN32IDE_SOURCES. Do not link (LNK2005 vs product CRDTBuffer).
+// SYNTHETIC=partial OT-lite body kept for archaeology only — NOT CRDT_PASS.
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 RELINK=NO.
+
 #include "../include/collab/cursor_widget.h"
 #include "../include/collab/crdt_buffer.h"
 #include <algorithm>
@@ -6,8 +12,8 @@
 #include <windows.h>
 
 // ============================================================================
-// CRDTBuffer + CursorWidget — production implementations
-// Provides the 3 collaboration symbols required by the Win32IDE link target.
+// CRDTBuffer + CursorWidget — ORPHAN duplicate (GATED_OMIT)
+// Product link owner: src/collab/crdt_buffer.cpp + src/collab/cursor_widget.cpp
 // ============================================================================
 
 namespace {

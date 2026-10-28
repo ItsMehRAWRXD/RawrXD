@@ -1,0 +1,43 @@
+SWARM_16_RUNTIME_003 / LAW
+==========================
+ASOF_UTC=2026-10-28T17:10:00Z
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+
+AUTHORITY
+---------
+TIP_FREEZE_001 TIP_EXE_AUTHORITY — product gates on 748B only.
+GHOSTTEXT_SHA_AUTHORITY_HOLD_001 — B421 witness ≠ tip; absorb held.
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+Product JSON RUNTIME_PASS != invent E2E inference PASS
+[Error: No Inference Engine] != TOKEN_SURVIVED
+PostMessage alone != Path B orch PASS
+N_REQUESTED != N_EFFECTIVE when inventory smaller
+NOT_RUN != PASS
+
+PATH A (headless)
+-----------------
+POST http://127.0.0.1:18961/api/swarm/orch
+resolveSwarmModelOrchPlan + SubAgentManager::executeSwarm
+Parallel + sequential (RAWRXD_SWARM_SEQUENTIAL=1) + cancelAfterMs
+
+PATH B (GUI)
+------------
+WM_COMMAND 4111 IDM_SUBAGENT_SWARM → onSubAgentSwarm
+Tip EXE has HexMag orch strings (not AgentCommands dialog stub)
+
+DISPOSITION
+-----------
+ORCH_DISPOSITION=FAIL_CLOSED_NO_INFERENCE_ENGINE
+STRUCTURAL_RUNTIME_REACHED=1 (product JSON)
+RUNTIME_PASS=0 (honest; inference missing)
+PROMOTE=0
