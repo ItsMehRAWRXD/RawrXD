@@ -69,3 +69,40 @@ G05_G06=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 3: strict offline aggregate vector comparison
+
+Added `tools/k2_aggregate_vector_audit.py` to consume the three
+`k2_l<L>_s<S>_aggregate_comparison.*` files emitted by the post-device
+capture. It verifies the manifest's schema, exact identity/filename,
+layer/stick, vector dimensions, full ordered routing list, unique expert IDs,
+finite route coefficients, provenance, scope, and the mandatory
+`certified=0` field. It refuses blank/malformed/nonfinite vectors or
+mismatched lengths and computes max/mean/RMS absolute error plus the
+worst-error index. Explicit numerical thresholds are mandatory.
+SHA-256 hashes cover both vectors and the manifest.
+
+Example, using an *actual* emitted manifest and a fresh receipt filename:
+
+```powershell
+python tools/test_k2_aggregate_vector_audit.py
+python tools/k2_aggregate_vector_audit.py --manifest "F:\rawrxd\evidence\KIMI_AGGREGATE_001\k2_l2_s0_aggregate_comparison.manifest.txt" --max-abs 0.01 --max-rms 0.001 --receipt "F:\rawrxd\evidence\KIMI_AGGREGATE_001\comparison_receipt.json"
+```
+
+Thresholds above are illustrative, **not certified tolerances**. Status
+`PASS_DIAGNOSTIC` means only that this aggregate pair met the specified
+thresholds. Numerical disagreement exits 2; malformed/missing evidence
+exits 3. Existing receipts are never overwritten. Every receipt contains
+`gpu_expert_witness=ABSENT`, `certified=false`, and `promote=0`.
+No model-specific numerical PASS is claimed without executing actual Kimi
+captures, inspecting the receipts, and independently reviewing tolerance
+provenance. Ten synthetic regression cases were added to the offline suites.
+
+```ini
+PAIRED_AGGREGATE_AUDITOR=SOURCE_COMMITTED
+SYNTHETIC_REGRESSION=SOURCE_ADDED_NOT_RUN
+REAL_KIMI_AGGREGATE_RECEIPT=NOT_RUN
+GPU0_PER_EXPERT_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
