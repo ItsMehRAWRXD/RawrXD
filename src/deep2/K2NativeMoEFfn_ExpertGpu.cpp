@@ -347,7 +347,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                     stageSq += d * d;
                 }
             }
-            const double stageFinite = H > stageNonFinite
+            const double stageFinite = downloaded && H > stageNonFinite
                                            ? static_cast<double>(H - stageNonFinite)
                                            : 0.0;
             std::fprintf(stderr,
@@ -359,7 +359,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                                     : "DOWNLOAD_FAIL", stageMax,
                          stageFinite > 0.0 ? stageSum / stageFinite : 0.0,
                          stageFinite > 0.0 ? std::sqrt(stageSq / stageFinite) : 0.0,
-                         H - stageNonFinite, stageNonFinite);
+                         downloaded ? H - stageNonFinite : 0u,
+                         stageNonFinite);
             std::fflush(stderr);
 
             double actMax = 0.0, actSum = 0.0, actSq = 0.0;
@@ -377,7 +378,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                     actSq += d * d;
                 }
             }
-            const double actFinite = I > actNonFinite
+            const double actFinite = actDownloaded && I > actNonFinite
                                          ? static_cast<double>(I - actNonFinite)
                                          : 0.0;
             std::fprintf(stderr,
@@ -389,7 +390,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                                        : "DOWNLOAD_FAIL", actMax,
                          actFinite > 0.0 ? actSum / actFinite : 0.0,
                          actFinite > 0.0 ? std::sqrt(actSq / actFinite) : 0.0,
-                         I - actNonFinite, actNonFinite);
+                         actDownloaded ? I - actNonFinite : 0u,
+                         actNonFinite);
             std::fflush(stderr);
         }
     };
