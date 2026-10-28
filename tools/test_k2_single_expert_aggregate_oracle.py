@@ -101,7 +101,7 @@ class SingleExpertAggregateOracleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             a, s = paired(d)
             s.write_text(s.read_text().replace(
-                "run_id=fixture20261027unique01\\n", ""))
+                "run_id=fixture20261027unique01\n", ""))
             with self.assertRaisesRegex(ValueError, "RUN_ID"):
                 audit(a, s, 1, 1)
 
