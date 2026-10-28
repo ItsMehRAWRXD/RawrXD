@@ -309,21 +309,51 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         const double cosine = cosineDenom > 0.0 ? dot / cosineDenom : 0.0;
         std::fprintf(stderr,
                      "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu "
-                     "status=DIAGNOSTIC scope=DIAGNOSTIC_ONLY "
+                     "status=%s scope=DIAGNOSTIC_ONLY "
                      "max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                      "max_rel=%.9e cosine=%.9e gpu_l2=%.9e cpu_l2=%.9e "
                      "finite=%zu nonfinite=%zu\n",
-                     layer, stick, work.size(), maxAbs,
+                     layer, stick, work.size(),
+                     nonFinite ? "NONFINITE" : "DIAGNOSTIC", maxAbs,
                      H ? sumAbs / (double)H : 0.0, rmsAbs, maxRel,
                      cosine, std::sqrt(gpuSq), std::sqrt(cpuSq),
                      H - nonFinite, nonFinite);
         std::fflush(stderr);
 
+        /* Persist only the completed aggregate pair.  This is useful for
+           layer/stick coverage audits but is never a per-expert witness. */
+        if (!nonFinite) {
+            if (captureRequested) {
+                std::vector<int> expertIds;
+                std::vector<float> routeWeights;
+                expertIds.reserve(work.size());
+                routeWeights.reserve(work.size());
+                for (const auto& r : work) {
+                    expertIds.push_back(r.expertId);
+                    routeWeights.push_back(r.weight);
+                }
+                const bool saved = k2_parity_capture::CaptureAggregateComparison(
+                    stick, layer, gpuAggregate, cpuAggregate.data(), H,
+                    expertIds.data(), routeWeights.data(), work.size());
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_VECTOR_CAPTURE layer=%u stick=%u "
+                             "status=%s scope=AGGREGATE_ONLY certified=0\n",
+                             layer, stick, saved ? "WRITTEN" : "SKIPPED");
+                std::fflush(stderr);
+            }
+        }
+
         const char* stageEnv = std::getenv("DEEP2_MOE_GPU_STAGE_PARITY");
         const bool stageRequested =
-            (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0') ||
-            captureRequested;
-        if (stageRequested && lastExpert >= 0) {
+            stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0';
+        if (stageRequested && lastExpert >= 0 && work.size() != 1u) {
+            std::fprintf(stderr,
+                         "GPU_MOE_LAST_STAGE_PARITY layer=%u stick=%u "
+                         "status=BLOCKED reason=MULTI_EXPERT_SCRATCH_IDENTITY_UNPROVEN "
+                         "experts=%zu\n", layer, stick, work.size());
+            std::fflush(stderr);
+        }
+        if (stageRequested && lastExpert >= 0 && work.size() == 1u) {
             auto* vc = DualStickVc(stick);
             std::vector<float> gpuLast(H, 0.0f);
             std::vector<float> gpuAct(I, 0.0f);
@@ -348,7 +378,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                     stageSq += d * d;
                 }
             }
-            const double stageFinite = H > stageNonFinite
+            const double stageFinite = downloaded && H > stageNonFinite
                                            ? static_cast<double>(H - stageNonFinite)
                                            : 0.0;
             std::fprintf(stderr,
@@ -356,10 +386,12 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                          "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         downloaded ? "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY" : "DOWNLOAD_FAIL", stageMax,
+                         downloaded ? (stageNonFinite ? "NONFINITE" :
+                                      "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                   : "DOWNLOAD_FAIL", stageMax,
                          stageFinite > 0.0 ? stageSum / stageFinite : 0.0,
                          stageFinite > 0.0 ? std::sqrt(stageSq / stageFinite) : 0.0,
-                         H - stageNonFinite, stageNonFinite);
+                         downloaded ? H - stageNonFinite : 0u, stageNonFinite);
             std::fflush(stderr);
 
             double actMax = 0.0, actSum = 0.0, actSq = 0.0;
@@ -377,7 +409,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                     actSq += d * d;
                 }
             }
-            const double actFinite = I > actNonFinite
+            const double actFinite = actDownloaded && I > actNonFinite
                                          ? static_cast<double>(I - actNonFinite)
                                          : 0.0;
             std::fprintf(stderr,
@@ -385,10 +417,12 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                          "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         actDownloaded ? "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY" : "DOWNLOAD_FAIL", actMax,
+                         actDownloaded ? (actNonFinite ? "NONFINITE" :
+                                         "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                       : "DOWNLOAD_FAIL", actMax,
                          actFinite > 0.0 ? actSum / actFinite : 0.0,
                          actFinite > 0.0 ? std::sqrt(actSq / actFinite) : 0.0,
-                         I - actNonFinite, actNonFinite);
+                         actDownloaded ? I - actNonFinite : 0u, actNonFinite);
             std::fflush(stderr);
 
             /* Completion-ordered per-expert witness.  The helper requires

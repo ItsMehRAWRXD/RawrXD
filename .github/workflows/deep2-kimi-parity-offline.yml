@@ -44,8 +44,14 @@ jobs:
         run: python tools/test_k2_moe_capture_audit.py
       - name: Validate repeated completed aggregate captures
         run: python tools/test_k2_stick_partial_repeatability.py
+      - name: Validate completed aggregate vector audit
+        run: python tools/test_k2_aggregate_vector_audit.py
+      - name: Validate aggregate layer/stick coverage audit
+        run: python tools/test_k2_aggregate_batch_audit.py
       - name: Guard against unsafe fused GPU output capture
         run: python tools/test_k2_fused_parity_safety.py
+      - name: Guard canonical post-fence parity safety
+        run: python tools/test_k2_postfence_parity_safety.py
   cpp-capture-linux:
     name: Standalone parity capture helper / Linux
     runs-on: ubuntu-latest

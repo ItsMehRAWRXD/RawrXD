@@ -193,5 +193,61 @@ inline bool CaptureScalarInputs(unsigned stick, unsigned layer, int expert,
     return ok;
 }
 
+/* Capture completed fused-stick aggregate vectors only.  This evidence is
+   deliberately aggregate-scoped and non-certifying: it never claims that a
+   scratch vector belongs to an individual expert or proves GPU SwiGLU
+   activation identity. */
+inline bool CaptureAggregateComparison(unsigned stick, unsigned layer,
+                                       const float* gpu, const float* cpu,
+                                       size_t hidden, const int* expertIds,
+                                       const float* weights, size_t experts) {
+    const char* raw = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+    if (!raw || !*raw || !gpu || !cpu || !expertIds || !weights ||
+        hidden == 0 || hidden > 16384u || experts == 0 || experts > 64u ||
+        stick > 1u)
+        return false;
+    for (size_t i = 0; i < hidden; ++i)
+        if (!std::isfinite(gpu[i]) || !std::isfinite(cpu[i])) return false;
+    for (size_t i = 0; i < experts; ++i) {
+        if (expertIds[i] < 0 || !std::isfinite(weights[i])) return false;
+        for (size_t j = 0; j < i; ++j)
+            if (expertIds[i] == expertIds[j]) return false;
+    }
+    std::filesystem::path dir(raw);
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dir, ec) || ec) return false;
+    const std::string stem = "k2_l" + std::to_string(layer) +
+        "_s" + std::to_string(stick) + "_aggregate_comparison";
+    const auto gpuPath = dir / (stem + ".gpu.txt");
+    const auto cpuPath = dir / (stem + ".cpu.txt");
+    const auto receiptPath = dir / (stem + ".manifest.txt");
+    for (const auto& path : {gpuPath, cpuPath, receiptPath}) {
+        ec.clear();
+        if (std::filesystem::exists(path, ec) || ec) return false;
+    }
+    if (!WriteVector(gpuPath, gpu, hidden)) return false;
+    if (!WriteVector(cpuPath, cpu, hidden)) {
+        std::filesystem::remove(gpuPath, ec);
+        return false;
+    }
+    std::string manifest =
+        "schema=DEEP2_KIMI_AGGREGATE_COMPARISON_001\n"
+        "layer=" + std::to_string(layer) +
+        "\nstick=" + std::to_string(stick) +
+        "\nrows=" + std::to_string(hidden) +
+        "\nexperts=" + std::to_string(experts) +
+        "\nsource=POST_END_DEVICE_GPU_PARTIAL_AND_COMPLETE_CPU_REFERENCE\n"
+        "scope=AGGREGATE_ONLY_NOT_PER_EXPERT_PARITY\n"
+        "certified=0\n";
+    for (size_t i = 0; i < experts; ++i) {
+        manifest += "expert=" + std::to_string(expertIds[i]) +
+            " weight=" + std::to_string(weights[i]) + "\n";
+    }
+    if (WriteNew(receiptPath, manifest.data(), manifest.size())) return true;
+    std::filesystem::remove(gpuPath, ec);
+    std::filesystem::remove(cpuPath, ec);
+    return false;
+}
+
 } // namespace k2_parity_capture
 } // namespace Deep2
