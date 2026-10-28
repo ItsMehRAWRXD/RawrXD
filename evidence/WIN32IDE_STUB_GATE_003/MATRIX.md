@@ -27,11 +27,11 @@ RUNTIME_REACHED=NOT_RUN
 | P04 | ToolActionStatus DEMO | YES | PRIOR GATED | TOOL_ACTION_STATUS_TRUTH_001 |
 | P05 | ConPTY GateConPtyStream | YES | SOURCE_WIRED | RUNTIME=NOT_RUN |
 | P06 | ShellLayout PHASE=5 GateTerminalMissing | YES | SOURCE_WIRED | chrome≠stream |
-| O01 | HandleUpdateSignature / PluginSignature ok | YES | **OPEN** | Authenticode path; keep until proven theater |
-| O02 | HandleChatPanel GUI create ok | YES | **OPEN** | real HWND create; not tip chat owner certify |
-| O03 | HandleConsentPrompt GUI MessageBox ok | YES | **OPEN** | real receipt; product policy TBD |
-| O04 | ConPTY RUNTIME_REACHED on tip 748B | tip | **OPEN** | RELINK_REQUIRED; tip stay |
-| O05 | LoRA ApplyLoRA product wire | omit | **OPEN** | needs real ASM+CMake; not this seal |
+| O01 | HandleUpdateSignature / PluginSignature ok | YES | **CLOSED→FOLLOWUP_001** | REAL_WINVERIFYTRUST; tip NotSigned; see FOLLOWUP |
+| O02 | HandleChatPanel GUI create ok | YES | **CLOSED→FOLLOWUP_001** | HWND_CREATE_REAL ≠ tip chat certify |
+| O03 | HandleConsentPrompt GUI MessageBox ok | YES | **CLOSED→FOLLOWUP_001** | MESSAGEBOX_RECEIPT_REAL ≠ policy certify |
+| O04 | ConPTY RUNTIME_REACHED on tip 748B | tip | **CLOSED→FOLLOWUP_001** | FAIL_CLOSED/NOT_RUN RUNTIME_REACHED=0; tip stay |
+| O05 | LoRA ApplyLoRA product wire | omit | **CLOSED→FOLLOWUP_001** | INVENTORY_ONLY; tip unwired |
 | O06 | AgentRunLoop/swarm continuous | sibling | **OUT_OF_SCOPE** | worker 39046747 |
 
 `SOURCE_WIRED != RUNTIME_REACHED`. Source fail-close ≠ tip relink PASS.

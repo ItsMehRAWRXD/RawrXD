@@ -141,6 +141,18 @@ endfunction()
 
 rawr_agent_cert(rawrxd_agentic_cli_001 certs/rawrxd_agentic_cli_001.cpp)
 rawr_agent_cert(rawrxd_agent_session_001 certs/rawrxd_agent_session_001.cpp)
+
+# Agent WAL continuous smoke (standalone; PROMOTE=0)
+add_executable(agent_wal_cli_smoke src/core/agent_wal_cli_smoke_test.cpp)
+target_include_directories(agent_wal_cli_smoke PRIVATE ${CMAKE_SOURCE_DIR}/src/core)
+target_compile_definitions(agent_wal_cli_smoke PRIVATE AGENT_WAL_SMOKE_MAIN=1)
+if(MSVC)
+  target_compile_options(agent_wal_cli_smoke PRIVATE /EHsc /W3 /std:c++20)
+endif()
+set_target_properties(agent_wal_cli_smoke PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 rawr_agent_cert(rawrxd_agent_tools_001 certs/rawrxd_agent_tools_001.cpp)
 rawr_agent_cert(rawrxd_agent_patch_001 certs/rawrxd_agent_patch_001.cpp)
 rawr_agent_cert(rawrxd_agent_build_test_001 certs/rawrxd_agent_build_test_001.cpp)

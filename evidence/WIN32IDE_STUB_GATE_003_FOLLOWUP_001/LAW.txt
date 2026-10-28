@@ -1,0 +1,34 @@
+WIN32IDE_STUB_GATE_003_FOLLOWUP_001 / LAW
+=========================================
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+NOT_RUN!=PASS
+REBUILD_TIP=0
+ABSORB_GHOSTTEXT_B421=NOT_AUTHORIZED
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+TIP_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PARENT=WIN32IDE_STUB_GATE_003
+SIBLING_OPEN_SOURCE=6d6bc8a3
+
+LAW
+---
+1. SOURCE_WIRED != RUNTIME_REACHED != PASS. Do not invent RUNTIME PASS.
+2. Tip freeze 748B… must not be overwritten; tip rebuild forbidden this seal.
+3. GhostText B421 absorb remains NOT_AUTHORIZED.
+4. Authenticode ok is real only if WinVerifyTrust owns the path; unsigned tip
+   must fail-close on verify — not theater ok.
+5. ChatPanel CreateWindowEx HWND create != tip chat product certify.
+6. ConsentPrompt MessageBox receipt != product consent-policy certify.
+7. ConPTY: prove RUNTIME_REACHED on frozen tip OR seal FAIL_CLOSED/NOT_RUN;
+   candidate wire only in a separate freeze; do not clobber tip.
+8. ApplyLoRA: inventory only unless SOURCE_WIRE without tip clobber.
+
+CROSS_CITE
+----------
+WIN32IDE_STUB_GATE_003
+CONPTY_STREAM_OWNER_001
+CONPTY_STREAM_OWNER_RUNTIME_748B_001
+LORA_KERNEL_STUB_GATE_001
+TIP_FREEZE_001

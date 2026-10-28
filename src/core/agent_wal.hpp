@@ -9,20 +9,16 @@
 #endif
 #include <windows.h>
 #endif
-
 namespace rawrxd {
 namespace agent_wal {
-
 inline const char* DefaultRoot() {
     return "G:\\~dev\\rawrxd\\evidence\\RAWRXD_AGENT_WAL";
 }
-
 inline uint32_t Fnv1a32(const char* s, size_t n) {
     uint32_t h = 2166136261u;
     for (size_t i = 0; i < n; ++i) { h ^= (uint8_t)s[i]; h *= 16777619u; }
     return h;
 }
-
 inline bool EnsureRoot(const char* root) {
 #ifdef _WIN32
     CreateDirectoryA("G:\\~dev\\rawrxd\\evidence", nullptr);
@@ -31,8 +27,7 @@ inline bool EnsureRoot(const char* root) {
     (void)root; return false;
 #endif
 }
-
-// Line: seq\top\tpayload\tCRC32\n (CRC over seq+op+payload body)
+// Line: seq\top\tpayload\tCRC32\n (CRC over body)
 inline bool Append(const char* root, uint64_t seq, const char* op, const char* payload) {
     if (!root || !op || !payload || !EnsureRoot(root)) return false;
 #ifdef _WIN32
@@ -56,8 +51,6 @@ inline bool Append(const char* root, uint64_t seq, const char* op, const char* p
     return false;
 #endif
 }
-
-// Count CRC-valid lines; return count or -1 on I/O/parse failure.
 inline int VerifyAll(const char* root) {
     if (!root) return -1;
 #ifdef _WIN32
@@ -101,6 +94,5 @@ inline int VerifyAll(const char* root) {
     return -1;
 #endif
 }
-
 } // namespace agent_wal
 } // namespace rawrxd

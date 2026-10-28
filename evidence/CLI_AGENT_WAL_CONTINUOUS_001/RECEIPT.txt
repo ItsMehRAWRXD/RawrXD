@@ -1,0 +1,59 @@
+CLI_AGENT_WAL_CONTINUOUS_001 / RECEIPT
+======================================
+ASOF_UTC=2026-10-28T17:25:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+VERDICT
+-------
+Agent WAL continuous path SOURCE_WIRED + CLI smoke PASS.
+Subsystem handleAgent fail-closed to durable WAL (not loop fiction).
+Tip 748B held; GhostText absorb not authorized; PROMOTE=0.
+
+TIP / SHA
+---------
+PRODUCT_TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_PATH=evidence/TIP_FREEZE_001/bin/RawrXD-Win32IDE.exe
+RELINK_TIP=NO
+GHOSTTEXT_WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+
+SMOKES
+------
+agent_wal_cli_smoke: PASS
+  exe=evidence/CLI_AGENT_WAL_CONTINUOUS_001/bin/agent_wal_cli_smoke.exe
+  SMOKE_EXE_SHA=4425CDB7C4317CF1C964D4EE579A2C61DB67863FDDD48FF9D6A4E385350EF8DC
+  log=logs/smoke_run.txt
+  wal=evidence/RAWRXD_AGENT_WAL/agent.wal
+rawrxd_agent_session_001: PASS (logs/session_run.txt)
+rawr list: EXIT=0 (logs/rawr_list_exit.txt)
+rawr run / generate / TOKEN: NOT_RUN
+
+SOURCE_WIRED LANDING
+--------------------
+src/core/agent_wal.hpp
+src/core/agent_wal_cli_smoke_test.cpp
+src/core/rawrxd_subsystem_api.cpp
+src/cli/rawr_commands_agent.cpp
+src/cli/rawr_cmd_run.cpp
+cmake/RawrAgenticCli.fragment.cmake
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1
+AGENT_WAL_CLI_SMOKE=PASS
+CMD_RUN_GENERATE_RUNTIME=NOT_RUN
+SUBSYSTEM_AGENT_PRODUCT_RUNTIME=NOT_RUN
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+PATH
+----
+evidence/CLI_AGENT_WAL_CONTINUOUS_001/LAW.txt
+evidence/CLI_AGENT_WAL_CONTINUOUS_001/RECEIPT.txt
+evidence/CLI_AGENT_WAL_CONTINUOUS_001/logs/

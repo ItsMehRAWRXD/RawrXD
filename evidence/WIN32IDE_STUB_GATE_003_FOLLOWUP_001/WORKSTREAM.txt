@@ -1,0 +1,26 @@
+WIN32IDE_STUB_GATE_003_FOLLOWUP_001 / WORKSTREAM
+================================================
+ASOF_UTC=2026-10-28T17:26:10Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_TIP=0
+ABSORB_GHOSTTEXT_B421=NOT_AUTHORIZED
+TIP_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+| WS | Item | Owner path | Disposition | RUNTIME | PROMOTE |
+|----|------|------------|-------------|---------|---------|
+| O01 | Authenticode Update/Plugin ok | update_signature.cpp + plugin_signature.cpp + rawrengine_command_handlers | REAL_WINVERIFYTRUST (not theater); tip NotSigned ⇒ ok does not fire | NOT_RUN (handler exercise) | 0 |
+| O02 | ChatPanel GUI create | chat_panel.cpp::create + HandleChatPanel | HWND_CREATE_REAL; ≠ tip chat certify | NOT_RUN as chat certify | 0 |
+| O03 | ConsentPrompt MessageBox | HandleConsentPrompt MessageBoxA | MESSAGEBOX_RECEIPT_REAL; ≠ consent policy certify | NOT_RUN as policy certify | 0 |
+| O04 | ConPTY on tip 748B | Win32TerminalManager + CONPTY_STREAM_OWNER_RUNTIME_748B_001 | FAIL_CLOSED/NOT_RUN; tip stay; symbols≠PASS | RUNTIME_REACHED=0 | 0 |
+| O05 | ApplyLoRA | src/lora/*.asm + LoRAKernelBridge GATED_OMIT | INVENTORY_ONLY; tip ApplyLoRA=0 | NOT_PRODUCT_WIRED | 0 |
+
+SUMMARY
+-------
+OPEN_CLOSED=5/5 (honest seals; zero invent PASS)
+TIP_OVERWRITE=0
+SOURCE_EDITS_THIS_SEAL=0
+TEXT_EVIDENCE_ONLY=1
+NEXT=HWND ConPTY E2E only via separate freeze if authorized; ApplyLoRA SOURCE_WIRE only without tip clobber

@@ -1,0 +1,56 @@
+CLI_AGENT_WAL_CONTINUOUS_001 / LAW
+==================================
+ASOF_UTC=2026-10-28T17:25:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+SHA_SPLIT=PRESERVED
+PRODUCT_TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PRODUCT_TIP_PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+GHOSTTEXT_WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+RELINK_TIP=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+AgenticMode() GATED ≠ agent-loop PASS
+handleAgent OK = WAL durable commit only (not full agent RUNTIME)
+
+MISSION
+-------
+Continuous CLI: real Agent WAL + smoke + subsystem Agent invoke honesty
++ rawr_cmd_run WAL note on generate success. Tip/product SHA discipline.
+
+SOURCE_WIRED
+------------
+F1 src/core/agent_wal.hpp
+  Append + VerifyAll (FNV-1a CRC lines, FlushFileBuffers)
+F2 src/core/agent_wal_cli_smoke_test.cpp
+  Real OPEN/STEP/COMMIT + verify (≥3); was GATED -1 theater
+F3 src/core/rawrxd_subsystem_api.cpp::handleAgent
+  WAL append+verify; error on fail; no "loop executed" fiction
+F4 src/cli/rawr_commands_agent.cpp
+  SESSION_OPEN WAL append on CmdAgent
+F5 src/cli/rawr_cmd_run.cpp
+  CMD_RUN_OK WAL append after successful generate
+F6 cmake/RawrAgenticCli.fragment.cmake
+  agent_wal_cli_smoke target
+
+ORPHAN_HOLD (unchanged fail-closed)
+----------------------------------
+Win32IDE_AgenticFeatures / ASM_Bridge runAgentWalCliSmokeTest = -1
+CMake-omit from tip EXE; tip not relinked
+
+RUNTIME (this seal)
+-------------------
+AGENT_WAL_CLI_SMOKE=PASS (standalone exe; logs/smoke_run.txt)
+RAWRXD_AGENT_SESSION_001=PASS
+rawr list EXIT=0 (build_ninja\bin\rawr.exe)
+rawr run generate = NOT_RUN (no invent generate/TOKEN PASS)
+subsystem handleAgent product-link RUNTIME = NOT_RUN (SOURCE_WIRED)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 ABSORB=NOT_AUTHORIZED
