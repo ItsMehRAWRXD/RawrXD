@@ -182,33 +182,68 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                   return a.expertId < b.expertId;
               });
 
-    /* Capture only the CPU-side packed inputs for an independent scalar
-       oracle.  This is deliberately before fused command recording and
-       never reads ArenaDown/ArenaFFNAct, so it cannot be mistaken for a GPU
-       output witness.  At most one cold, host-visible expert is captured per
-       stick worklist and the helper refuses overwrites. */
+    /* Opt-in all-routed-expert scalar INPUT evidence for independent MoE
+       aggregation. No device scratch is accessed before fused submission.
+       The legacy first-cold-expert diagnostic is preserved by default.
+       Captures remain CPU-only and are never GPU parity certifications. */
     const char* captureDir = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
     const bool captureRequested = captureDir && captureDir[0] != '\0';
     if (captureRequested) {
-        bool written = false;
-        int captureExpert = -1;
-        for (const auto& candidate : work) {
-            if (!candidate.g || !candidate.u || !candidate.d) continue;
-            captureExpert = candidate.expertId;
-            written = k2_parity_capture::CaptureScalarInputs(
-                stick, layer, candidate.expertId,
-                candidate.gt, candidate.g, candidate.gb,
-                candidate.ut, candidate.u, candidate.ub,
-                candidate.dt, candidate.d, candidate.db,
-                normed, H, I);
-            break;
+        const char* allEnv = std::getenv("DEEP2_MOE_CAPTURE_ALL_EXPERTS");
+        const bool captureAll = allEnv && allEnv[0] == '1' && allEnv[1] == '\0';
+        if (captureAll) {
+            const bool eligible = work.size() >= 1u && work.size() <= 8u &&
+                !k2_parity_capture::CaptureRunId().empty();
+            size_t saved = 0;
+            bool complete = eligible;
+            if (eligible) {
+                for (const auto& candidate : work) {
+                    if (!candidate.g || !candidate.u || !candidate.d ||
+                        !candidate.gb || !candidate.ub || !candidate.db) {
+                        complete = false;
+                        break;
+                    }
+                    if (!k2_parity_capture::CaptureScalarInputs(
+                            stick, layer, candidate.expertId,
+                            candidate.gt, candidate.g, candidate.gb,
+                            candidate.ut, candidate.u, candidate.ub,
+                            candidate.dt, candidate.d, candidate.db,
+                            normed, H, I)) {
+                        complete = false;
+                        break;
+                    }
+                    ++saved;
+                }
+            }
+            std::fprintf(stderr,
+                         "GPU_SCALAR_ALL_INPUT_CAPTURE layer=%u stick=%u "
+                         "status=%s written=%zu required=%zu "
+                         "scope=CPU_INPUTS_ONLY certified=0\n",
+                         layer, stick, complete && saved == work.size() ?
+                         "COMPLETE_DIAGNOSTIC" : "INCOMPLETE",
+                         saved, work.size());
+            std::fflush(stderr);
+        } else {
+            bool written = false;
+            int captureExpert = -1;
+            for (const auto& candidate : work) {
+                if (!candidate.g || !candidate.u || !candidate.d) continue;
+                captureExpert = candidate.expertId;
+                written = k2_parity_capture::CaptureScalarInputs(
+                    stick, layer, candidate.expertId,
+                    candidate.gt, candidate.g, candidate.gb,
+                    candidate.ut, candidate.u, candidate.ub,
+                    candidate.dt, candidate.d, candidate.db,
+                    normed, H, I);
+                break;
+            }
+            std::fprintf(stderr,
+                         "GPU_SCALAR_INPUT_CAPTURE layer=%u stick=%u expert=%d "
+                         "status=%s scope=CPU_INPUTS_ONLY\n",
+                         layer, stick, captureExpert,
+                         written ? "WRITTEN" : "SKIPPED");
+            std::fflush(stderr);
         }
-        std::fprintf(stderr,
-                     "GPU_SCALAR_INPUT_CAPTURE layer=%u stick=%u expert=%d "
-                     "status=%s scope=CPU_INPUTS_ONLY\n",
-                     layer, stick, captureExpert,
-                     written ? "WRITTEN" : "SKIPPED");
-        std::fflush(stderr);
     }
 
     /* Optional aggregate parity.  The fused worklist keeps each expert's
