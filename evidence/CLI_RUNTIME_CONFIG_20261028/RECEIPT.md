@@ -52,6 +52,31 @@ admission remains model/configuration controlled; Ollama context propagation is
 the path exercised above. Product certification remains governed by the frozen
 `748B210A...` authority and is not changed by this development CLI build.
 
+## Current development binary witness
+
+A subsequent development link produced a different non-authoritative binary
+hash without changing the source commit. The earlier `814AE04C...` witness is
+preserved above; this is the current executable baseline:
+
+```ini
+SOURCE_COMMIT=3b0392f96f1f912594ed278e61199c2b52080476
+CLI=F:\rawrxd\build_ide\bin-msvc\rawr.exe
+CLI_SHA256=2787C418C9AAF613EF7E39DD6D02EFC22C985C6C235A964450ADAE4484468233
+COMMAND=rawr run qwen3:8b --backend ollama --mode ask --workspace F:\rawrxd --fresh-session --max-tokens 16 --context 4096 --esp=tps --task "Reply exactly RAWRXD_CURRENT_LIMIT_PASS"
+EXIT_CODE=0
+REQUESTED_MAX_TOKENS=16
+REQUESTED_CONTEXT=4096
+APPLIED_MAX_TOKENS=16
+APPLIED_CONTEXT=4096
+OUTPUT_MARKER=RAWRXD_CURRENT_LIMIT_PASS
+ESP_FINISHED=PASS
+STDOUT=current.stdout.txt
+STDOUT_SHA256=0B5F968402E17D6A77923A5D82644A07C856FAE239475C18342AF472522EFBA9
+STDERR=current.stderr.txt
+STDERR_SHA256=AB73D0B729AA97546E2088EE6A880D6490CF64589AE46D5DBF9BC43CCBCBC352
+ESP=current.esp.jsonl
+```
+
 ```ini
 PROMOTE=0
 ```
