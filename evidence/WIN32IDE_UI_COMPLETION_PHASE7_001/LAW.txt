@@ -1,0 +1,32 @@
+WIN32IDE_UI_COMPLETION_PHASE7_001 / LAW
+=======================================
+ASOF_UTC=2026-10-28T17:24:56Z
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+PHASE=7_UI_COMPLETION
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+UI_ACCEPTANCE_PASS=0
+RUNTIME_PASS=0
+NO_INVENT_PASS=1
+NOT_RUN != PASS
+
+PRODUCT_TIP
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+  TIP_SHA_MATCH=1 (pre/post harness)
+
+GHOSTTEXT
+  WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  ABSORB=NOT_AUTHORIZED
+  NO_TIP_COPY=1
+
+SCOPE
+  Chat panel, diff review, file counts, background tasks UI,
+  model selector, settings — tip HWND/headless exercise only.
+  No tip rebuild. No GhostText absorb.
+
+FAIL_CLOSED
+  PostMessage alone != E2E PASS
+  Empty/missing surface stays FAIL_CLOSED / NOT_WIRED
+  showTaskRunnerDialog has no Commands.cpp menu case on tip
