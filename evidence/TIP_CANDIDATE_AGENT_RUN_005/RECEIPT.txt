@@ -1,0 +1,44 @@
+TIP_CANDIDATE_AGENT_RUN_005 / RECEIPT
+=====================================
+ASOF_UTC=2026-10-28T18:25:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+TIP_PRESERVED=1
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_FREEZE_BIN_OVERWRITE=0
+
+C2171
+-----
+SOURCE_FIXED=1
+  Win32IDE.cpp decl: bool SetCompletionBackendNative(void*)
+  batch_021.cpp: extern "C" bool SetCompletionBackendNative(...)
+OBJ_REBUILT_POST_FIX=1 (Win32IDE.cpp.obj ~14:05 local; size~22MB)
+C2171_IN_LAST_LOG=0
+BUILD_VERIFIED_FULL_LINK=0
+
+CANDIDATE
+---------
+NEW_CANDIDATE_SHA=PENDING
+B421_IS_TIP_CANDIDATE=0
+B421=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  (GhostText witness only; ABSORB=NOT_AUTHORIZED)
+LINK001_EXE_PRESENT=0
+TIP_CANDIDATE_RELINK_COMPLETE=0
+
+BLOCKERS
+--------
+1. ninja-log reset → full tree dirty (~716 TUs)
+2. -j1 rebuild FAILED: C1083 Permission denied on
+   auto_repair_orchestrator.cpp.obj (not C2171)
+3. RawrXD-Win32IDE.rsp missing until ninja link stage
+4. Sibling 0527ad91 transcript stuck at prompt-only; this
+   follow-up took over freeze path
+
+NEXT
+----
+Clear obj locks; resume ninja -j1 bin/RawrXD-Win32IDE.exe;
+seal NEW SHA under this dir (≠748B ≠B421); PROMOTE=0
+
+NO_INVENT_PASS=1
+NOT_RUN != PASS

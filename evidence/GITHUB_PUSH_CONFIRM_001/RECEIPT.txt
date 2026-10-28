@@ -1,37 +1,34 @@
 GITHUB_PUSH_CONFIRM_001 / RECEIPT
 =================================
-ASOF_UTC=2026-10-28T17:40:54Z
+ASOF_UTC=2026-10-28T18:25:00Z
 BRANCH=feature/ide-agentic-product-path-20261026
 REMOTE=origin
-URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/e8d336b2accf9a6c825ca9d14e929ffa6bff1d0a
-LOCAL_SHA=e8d336b2accf9a6c825ca9d14e929ffa6bff1d0a
-REMOTE_SHA=e8d336b2accf9a6c825ca9d14e929ffa6bff1d0a
+LOCAL_SHA=363b525cab8a1ed4ea3cd9a8132278aae8c72b3a
+REMOTE_SHA=363b525cab8a1ed4ea3cd9a8132278aae8c72b3a
 MATCH=1
 PUSH_CONFIRMED=1
 LS_REMOTE_CMD=git ls-remote origin refs/heads/feature/ide-agentic-product-path-20261026
-
+URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/363b525cab8a1ed4ea3cd9a8132278aae8c72b3a
 PRODUCT_TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
 GHOSTTEXT_WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
 ABSORB=NOT_AUTHORIZED
 PROMOTE=0
 TIP_CLIMB=HOLD
 PRODUCT_CERTIFIED=0
-SHA_SPLIT=PRESERVED
-NO_ABSORB=1
 NO_INVENT_PASS=1
 NOT_RUN != PASS
 
-SWARM_16_RUNTIME_003
---------------------
-ON_REMOTE=1
-ENGINE_BIND=FAIL_CLOSED
-BLOCKER=RELINK_REQUIRED
-SOURCE_WIRE=HeadlessIDE_SwarmOrch.cpp setInferenceEngine(CPU shared)
-TIP_EXE_OVERWRITE=0
-REPROVE_ON_TIP=0
+PUSHED_THIS_STREAM
+------------------
+evidence/WIN32IDE_BUILD_CLOSURE_001/RECEIPT.md
+evidence/WIN32IDE_BUILD_CLOSURE_001/CANDIDATE_SHA.txt (B421 pre-rebuild note; NOT new candidate)
+evidence/WIN32IDE_FULL_SOURCE_AUDIT_002/MATRIX.md
+evidence/TIP_CANDIDATE_AGENT_RUN_005/HANDOFF_FROM_F4B02C82_FOLLOWUP.txt
+src/win32app/Win32IDE_CrashReporter.cpp = already on origin (no new push)
 
 NOTE
 ----
-Follow-up SWARM_16_RUNTIME_003: evidence + ENGINE_BIND + SOURCE_WIRE on origin.
-Tip 748B freeze authority preserved. PROMOTE=0.
-Branch ls-remote MATCH confirmed prior to this receipt refresh.
+Follow-up Phases 1+2 (f4b02c82): C2171 void→bool SOURCE_FIXED;
+Win32IDE.cpp.obj rebuilt post-fix; NEW CANDIDATE_SHA seal PENDING
+(link001 EXE absent; -j1 stopped on C1083 permission / ninja-log cascade).
+Tip 748B freeze bin never overwritten. B421 ABSORB=NOT_AUTHORIZED.
