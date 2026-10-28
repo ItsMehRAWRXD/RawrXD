@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <limits>
 #include <cstdlib>
 #ifdef _WIN32
 #include <process.h>
@@ -83,6 +84,37 @@ int main() {
                                  down.data(), down.size(),
                                  activation.data(), 256, 256))
             code = 11; // refuse wrong quantization
+
+        // Post-device aggregate witness: paired finite outputs and explicit routes.
+        std::vector<float> aggregateGpu(256, 1.25f);
+        std::vector<float> aggregateCpu(256, 1.5f);
+        int routedExperts[] = {8, 12};
+        float routingWeights[] = {0.6f, 0.4f};
+        using Deep2::k2_parity_capture::CaptureAggregateComparison;
+        if (!CaptureAggregateComparison(0, 3, aggregateGpu.data(),
+                                        aggregateCpu.data(), 256,
+                                        routedExperts, routingWeights, 2))
+            code = 12;
+        const auto pairStem = dir / "k2_l3_s0_aggregate_comparison";
+        if (!std::filesystem::exists(pairStem.string() + ".manifest.txt") ||
+            !std::filesystem::exists(pairStem.string() + ".gpu.txt") ||
+            !std::filesystem::exists(pairStem.string() + ".cpu.txt"))
+            code = 13;
+        if (CaptureAggregateComparison(0, 3, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       routedExperts, routingWeights, 2))
+            code = 14; // refuse overwrite of an existing receipt
+        aggregateGpu[0] = std::numeric_limits<float>::quiet_NaN();
+        if (CaptureAggregateComparison(0, 4, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       routedExperts, routingWeights, 2))
+            code = 15; // refuse nonfinite vectors
+        aggregateGpu[0] = 1.25f;
+        int duplicateExperts[] = {8, 8};
+        if (CaptureAggregateComparison(0, 4, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       duplicateExperts, routingWeights, 2))
+            code = 16; // refuse duplicate expert identities
 
         SetCaptureDir("");
     } catch (const std::exception& e) {
