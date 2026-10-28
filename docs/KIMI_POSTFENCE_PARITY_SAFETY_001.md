@@ -344,3 +344,30 @@ CERTIFIED_GATES=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 10: strict complete-vector geometry at the common comparator
+
+The common \`k2_aggregate_vector_audit.compare\` routine also serves the
+batch, single-expert, and provisional GPU stage comparisons. Before
+this fix, Python \`zip(candidate, reference)\` could silently truncate
+an in-memory vector and report an apparently passing comparison using
+the declared row count. Valid file parsers normally prevented this,
+but the comparator itself was unsafe as a reusable numerical gate.
+
+It now requires an actual positive integer \`rows\` and exact lengths
+of **both** vectors before any metrics are calculated. It also refuses
+nonfinite elements in either input before subtraction. The test suite
+adds explicit truncated candidate, truncated reference, inconsistent
+row declaration, zero-length, and nonfinite input cases.
+
+This guards a source-level correctness flaw. New test execution, real
+GPU capture, and independent buffer-lifetime authority remain pending.
+
+\`\`\`ini
+FULL_VECTOR_LENGTH_GUARD=SOURCE_COMMITTED
+NONFINITE_INPUT_GUARD=SOURCE_COMMITTED
+SYNTHETIC_TESTS=ADDED_NOT_EXECUTED
+G05_G06=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
