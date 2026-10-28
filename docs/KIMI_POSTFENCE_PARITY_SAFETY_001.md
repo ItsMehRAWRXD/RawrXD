@@ -106,3 +106,40 @@ GPU0_PER_EXPERT_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 4: explicit aggregate layer/stick coverage gate
+
+Added `tools/k2_aggregate_batch_audit.py`, a fail-closed audit across a
+caller-declared, bounded list of completed aggregate layer/stick pairs.
+It consumes each strict paired manifest using
+`k2_aggregate_vector_audit.read_capture`, applies the **same explicit**
+max-absolute and RMS thresholds to each, records the exact ordered routed
+expert IDs/weights and SHA-256 of both vectors and manifest, and refuses
+duplicate scopes or any missing/malformed/nonfinite/mismatched capture.
+
+Example (select layers actually executed; these values are illustrative):
+
+```powershell
+python tools/test_k2_aggregate_batch_audit.py
+python tools/k2_aggregate_batch_audit.py --capture-dir "F:\rawrxd\evidence\KIMI_AGGREGATE_001" --require 2:0 3:1 --max-abs 0.01 --max-rms 0.001 --receipt "F:\rawrxd\evidence\KIMI_AGGREGATE_001\batch_receipt.json"
+```
+
+The batch result is `PASS_DIAGNOSTIC` only if all specifically requested
+layer/stick pairs pass. Missing or invalid evidence fails with exit 3;
+numerical disagreement exits 2. Explicitly missing layers are never
+treated as pass. The receipt always states `certified=false`,
+`gpu_expert_witness=ABSENT`, and `promote=0`. This does not
+establish per-expert GPU ownership, full routed-expert coverage, or
+production numerical tolerance authority.
+
+Ten synthetic cases were added and registered in CI and the Windows
+offline gate. Their execution on real Kimi hardware is unverified.
+
+```ini
+AGGREGATE_LAYER_COVERAGE_AUDITOR=SOURCE_COMMITTED
+AGGREGATE_BATCH_REGRESSION=SOURCE_ADDED_NOT_RUN
+REAL_GPU0_PARITY=NOT_CERTIFIED
+CERTIFIED_GATES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
