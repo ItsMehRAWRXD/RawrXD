@@ -1,0 +1,54 @@
+UNLINKED_STUB_GATE_CONTINUOUS_001 / LAW
+=======================================
+ASOF_UTC=2026-10-28T17:24:00Z
+WORKSPACE=G:\~dev\rawrxd
+SCOPE=src/core unlinked_symbols_batch_* + asm_link_stubs fake-success crush
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+NOT_RUN != PASS
+ABSORB_GHOSTTEXT_B421=NOT_AUTHORIZED
+
+PRODUCT_TIP_AUTHORITY
+---------------------
+PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+OVERWRITE_TIP=FORBIDDEN
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+return true/0 without real impl = FAKE_SUCCESS theater → crush
+CMake-omit + #error (asm_link_stubs) = GATED_OMIT (not PASS)
+
+THIS_SWEEP (SOURCE fail-close)
+------------------------------
+U01 Deep2APIServer::Initialize/Start → false (was true, no bind)
+U02 ProductionAPIServer::initialize → false; start no-op; isRunning=false
+U03 CompressionEngine::initialize → false
+U04 SetCompletionBackendNative → bool; stores ptr SOURCE_WIRED; audit not ✅ theater
+     GhostText ABSORB remains NOT_AUTHORIZED
+U05 AgentCoordinator C ABI align Ship/RawrXD_AgentCoordinator.h
+     Create=nullptr; Initialize=FALSE; TryDequeue=FALSE (Ship TU empty)
+U06 orphan BraidedLoader_Init(const char*) → 0 fail (real owner BraidedModelLoader.c)
+U07 ValidateDMAAlignment → ~0ull (was 0 OK theater)
+U08 asm_link_stubs.cpp → prior GATED_OMIT (#error + CMake absent) cite B06
+
+OBJECT_SMOKE
+------------
+DIR=evidence/UNLINKED_STUB_GATE_CONTINUOUS_001/_obj_smoke
+batch_015.cpp.obj / batch_021.cpp.obj / batch_022.cpp.obj = SMOKE_OK (vcvars64 cl)
+link001 ninja deps log locked by concurrent ninja PID — full EXE RELINK=NOT_RUN
+CANDIDATE_SHA=NOT_PRODUCED this seal (≠ invent PASS)
+TIP remains 748B…
+
+CROSS_CITE
+----------
+WIN32IDE_STUB_SWEEP_001
+BLOCKER_CLEAR_015_001 (B03/B06)
+WIN32IDE_STUB_GATE_003
+WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+GHOSTTEXT_SHA_AUTHORITY_HOLD_001
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

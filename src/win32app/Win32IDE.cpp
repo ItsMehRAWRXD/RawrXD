@@ -44,7 +44,7 @@
 // Forward declarations from ai_completion_real.cpp
 extern "C" {
     void InitAICompletion();
-    void SetCompletionBackendNative(void* engine_ptr);
+    bool SetCompletionBackendNative(void* engine_ptr);
     void ShutdownAICompletion();
     // Ghost text integration API
     const char* RequestGhostTextCompletion(
@@ -860,6 +860,9 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
 
     // Initialize Governor/Throttling
     m_governorThrottling = std::make_unique<RawrXD::GovernorThrottling>();
+
+    // Product singleton for remote/agent bridges (was ProblemsPanel-only — headless null).
+    g_pMainIDE = this;
 }
 
 // Build a "Commands" submenu from COMMAND_TABLE so every GUI-exposed command has a menu entry (avoids menu-only drift).
@@ -6496,9 +6499,13 @@ bool Win32IDE::initializeInference()
                 // Wire completion system to native engine (VAL-063)
                 // SetCompletionBackendNative stores ptr only — GhostText ABSORB=NOT_AUTHORIZED.
                 InitAICompletion();
-                SetCompletionBackendNative(static_cast<void*>(engine));
-                appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
-                OutputDebugStringA("[AUDIT] AI Completion backend ptr stored\n");
+                if (SetCompletionBackendNative(static_cast<void*>(engine))) {
+                    appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
+                    OutputDebugStringA("[AUDIT] AI Completion backend ptr stored\n");
+                } else {
+                    appendToOutput("[AUDIT] AI Completion backend wire FAIL_CLOSED.", "Errors", OutputSeverity::Error);
+                    OutputDebugStringA("[AUDIT] AI Completion backend FAIL_CLOSED\n");
+                }
             }
             else
             {

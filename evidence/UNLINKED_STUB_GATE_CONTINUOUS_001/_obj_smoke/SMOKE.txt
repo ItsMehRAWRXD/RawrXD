@@ -1,0 +1,9 @@
+OBJECT_SMOKE=PASS
+ASOF_UTC=2026-10-28T17:24:00Z
+TOOL=vcvars64 + cl /c
+batch_015.cpp.obj size=1313
+batch_021.cpp.obj size=4951
+batch_022.cpp.obj size=51662
+NOTE=*.obj gitignored; sizes recorded here. RELINK=NOT_RUN (concurrent ninja lock).
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PROMOTE=0
