@@ -299,3 +299,48 @@ G05_G06=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 9: full provisional stage-to-independent-oracle comparison
+
+Added \`tools/k2_provisional_stage_oracle_audit.py\`, consuming a
+same-run \`k2_l<L>_e<E>_s<S>_provisional_stage.manifest.txt\` and the
+matching \`k2_l<L>_e<E>_s<S>_scalar_inputs.manifest.txt\`.
+
+The audit validates exact schema and filename identity, all four complete
+finite stage vectors, expert/layer/stick/geometry, valid matching run IDs,
+SHA-256 of inputs, and explicit maximum-absolute and RMS tolerances.
+It independently reconstructs Q4_K gate/up → SwiGLU → Q6_K down and
+checks six pairs: GPU activation vs oracle; CPU activation vs oracle;
+GPU activation vs CPU; GPU down vs oracle; CPU down vs oracle; and GPU
+down vs CPU. All six must satisfy both thresholds to return
+\`PASS_DIAGNOSTIC\`. A mismatch exits 2, missing/bad evidence exits 3.
+Existing receipts cannot be overwritten.
+
+With matching real emitted run-specific manifests, use:
+
+\`\`\`powershell
+python tools/k2_provisional_stage_oracle_audit.py --stage-manifest "F:\rawrxd\evidence\RUN\k2_l2_e44_s0_provisional_stage.manifest.txt" --scalar-input-manifest "F:\rawrxd\evidence\RUN\k2_l2_e44_s0_scalar_inputs.manifest.txt" --max-abs 0.01 --max-rms 0.001 --receipt "F:\rawrxd\evidence\RUN\provisional_stage_audit.json"
+\`\`\`
+
+The layer/expert and thresholds above are illustrations, not approved
+settings or actual evidence. The 12 synthetic cases exercise six-way
+agreement, independent-oracle disagreement, cross-run identity,
+malformed provenance, nonfinite vectors, invalid geometry and
+overwrite refusal. CI and local Windows offline runner are registered.
+
+**No result from this audit can certify G05 or G06.** The manifest must
+continue to state \`gpu_buffer_identity=UNPROVEN\`; the tool rejects
+claims of proven buffer identity. Matching downloaded scratch values
+are not a substitute for a retained GPU buffer with verified command
+ordering and ownership. The original GPU execution path is untouched.
+
+\`\`\`ini
+STAGE_ORACLE_SIX_WAY=SOURCE_COMMITTED
+SYNTHETIC_TESTS=12_ADDED_UNEXECUTED
+MSVC_VULKAN_RUN_THIS_INCREMENT=NOT_VERIFIED
+GPU_BUFFER_IDENTITY=UNPROVEN
+G05_G06=NOT_CERTIFIED
+CERTIFIED_GATES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
