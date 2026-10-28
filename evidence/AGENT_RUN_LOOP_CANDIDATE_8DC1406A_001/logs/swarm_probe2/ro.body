@@ -1,0 +1,1 @@
+{"PROMOTE":0,"RUNTIME_PASS":false,"RUNTIME_REACHED":true,"disposition":"RESOLVE_ONLY_SELECTED","emptyFailClosed":false,"executeInvoked":false,"localOnly":true,"maxParallelPlan":2,"models":["bigdaddyg-productivity-local:latest","bigdaddyg-productivity-native:latest"],"path":"/api/swarm/orch","resolveInvoked":true,"resolveOnly":true,"sequential":false,"taskCount":2}

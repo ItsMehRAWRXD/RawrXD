@@ -1,0 +1,8 @@
+N1_HTTP=200 ALIVE1=1 LEN1=859
+N2_HTTP=000 ALIVE2=1 LEN2=0
+NO_INFERENCE_ENGINE=0
+N1_ERR=
+
+N2_ERR=curl: (56) Recv failure: Connection was reset
+
+

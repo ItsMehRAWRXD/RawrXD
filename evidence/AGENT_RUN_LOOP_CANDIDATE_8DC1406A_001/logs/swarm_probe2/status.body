@@ -1,0 +1,38 @@
+{
+  "mode": "local",
+  "server": "RawrXD-HeadlessIDE",
+  "backend": "rawrxd-win32ide",
+  "running": true,
+  "pid": 33428,
+  "version": "20.0.0-headless-enterprise",
+  "phase": "Phase 20 Enterprise",
+  "session": "headless-1793212007275",
+  "uptime_ms": 2080,
+  "model_loaded": true,
+  "model_name": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "server_running": true,
+  "subsystems": {
+    "winsock": true,
+    "backend_manager": true,
+    "llm_router": true,
+    "failure_detector": true,
+    "agent_history": true,
+    "asm_semantic": true,
+    "lsp_client": false,
+    "hybrid_bridge": false,
+    "multi_response": false,
+    "exec_governor": false,
+    "swarm": true,
+    "native_debugger": false,
+    "hotpatch": false,
+    "instructions": false
+  }
+  ,"experimental": {
+    "hotpatch70b_activated": false,
+    "layer_eviction_activated": false,
+    "governor_activated": false,
+    "quantum_time_manager_activated": false,
+    "quantum_orchestrator_activated": false,
+    "quantum_missing_impl_activated": false
+  }
+}
