@@ -242,8 +242,15 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         std::vector<float> cpuLast(H, 0.0f);
         int lastExpert = -1;
         for (const auto& r : work) {
-            if (!r.g || !r.u || !r.d || !r.gb || !r.ub || !r.db)
-                continue;
+            if (!r.g || !r.u || !r.d || !r.gb || !r.ub || !r.db) {
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u "
+                             "status=BLOCKED reason=CPU_EXPERT_INPUT_UNAVAILABLE "
+                             "expert=%d\n",
+                             layer, stick, r.expertId);
+                std::fflush(stderr);
+                return;
+            }
             auto gate = QuantKernelRegistry::Instance().GetGEMV(r.gt);
             auto up = QuantKernelRegistry::Instance().GetGEMV(r.ut);
             auto down = QuantKernelRegistry::Instance().GetGEMV(r.dt);
@@ -293,19 +300,29 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         const double cosineDenom = std::sqrt(gpuSq) * std::sqrt(cpuSq);
         const double cosine = cosineDenom > 0.0 ? dot / cosineDenom : 0.0;
         std::fprintf(stderr,
-                     "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu status=OK "
+                     "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu "
+                     "status=%s scope=DIAGNOSTIC_ONLY "
                      "max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                      "max_rel=%.9e cosine=%.9e gpu_l2=%.9e cpu_l2=%.9e "
                      "finite=%zu nonfinite=%zu\n",
-                     layer, stick, work.size(), maxAbs,
-                     H ? sumAbs / (double)H : 0.0, rmsAbs, maxRel,
+                     layer, stick, work.size(),
+                     nonFinite ? "NONFINITE" : "DIAGNOSTIC",
+                     maxAbs, H ? sumAbs / (double)H : 0.0, rmsAbs, maxRel,
                      cosine, std::sqrt(gpuSq), std::sqrt(cpuSq),
                      H - nonFinite, nonFinite);
         std::fflush(stderr);
 
         const char* stageEnv = std::getenv("DEEP2_MOE_GPU_STAGE_PARITY");
         if (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0' &&
-            lastExpert >= 0) {
+            lastExpert >= 0 && work.size() != 1u) {
+            std::fprintf(stderr,
+                         "GPU_MOE_LAST_STAGE_PARITY layer=%u stick=%u "
+                         "status=BLOCKED reason=MULTI_EXPERT_SCRATCH_IDENTITY_UNPROVEN "
+                         "experts=%zu\n", layer, stick, work.size());
+            std::fflush(stderr);
+        }
+        if (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0' &&
+            lastExpert >= 0 && work.size() == 1u) {
             auto* vc = DualStickVc(stick);
             std::vector<float> gpuLast(H, 0.0f);
             std::vector<float> gpuAct(I, 0.0f);
@@ -338,7 +355,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                          "status=%s max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         downloaded ? "OK" : "DOWNLOAD_FAIL", stageMax,
+                         downloaded ? (stageNonFinite ? "NONFINITE" : "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                    : "DOWNLOAD_FAIL", stageMax,
                          stageFinite > 0.0 ? stageSum / stageFinite : 0.0,
                          stageFinite > 0.0 ? std::sqrt(stageSq / stageFinite) : 0.0,
                          H - stageNonFinite, stageNonFinite);
@@ -367,7 +385,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                          "status=%s max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         actDownloaded ? "OK" : "DOWNLOAD_FAIL", actMax,
+                         actDownloaded ? (actNonFinite ? "NONFINITE" : "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                       : "DOWNLOAD_FAIL", actMax,
                          actFinite > 0.0 ? actSum / actFinite : 0.0,
                          actFinite > 0.0 ? std::sqrt(actSq / actFinite) : 0.0,
                          I - actNonFinite, actNonFinite);
