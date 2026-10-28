@@ -1,0 +1,46 @@
+GOLD_LINK_CONTINUOUS_001 / RECEIPT
+===================================
+ASOF_UTC=2026-10-28T17:45:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB=NOT_AUTHORIZED
+TIP_FREEZE_CLOBBER=0
+
+TIP
+  SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+  PRE_BUILD_MATCH=1
+  POST_CMAKE_MATCH=1
+  PDB_PROBE=PASS (Camellia/Watchdog/v280/CreatePseudoConsole present;
+                RawrXD_TUI_RenderThinkingBlock absent historically)
+
+CANDIDATE_PRE (B421 witness; no absorb)
+  SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  MAP=Camellia ASM LINKED; Watchdog.obj LINKED; v280_link_bridge LINKED;
+      Watchdog API MagBuf-C via FORCE:MULTIPLE; ConPTY TUI ASM COUNT=0 pre-wire
+
+ML64_ASSEMBLE (14.44.35228.0)
+  Camellia256 EXIT=0
+  Camellia256_Auth EXIT=0
+  Watchdog EXIT=0
+  ConPTY_Renderer EXIT=0
+
+CMAKE
+  WIN32IDE_EXTRA_ASM += RawrXD_ConPTY_Renderer.asm
+  reconfigure EXIT=0
+  ninja rule present for ConPTY_Renderer.asm.obj
+
+CANDIDATE_RELINK
+  STARTED=1
+  COMPLETE=0
+  REASON=full tree rebuild (1422) saturated host; NOT_RUN != PASS for new cand SHA
+  TIP_UNTARGETED=1
+
+UNRESOLVED_EXTERNALS
+  Prior tip/cand product link: CLOSED (exe+map/pdb exist)
+  Gold historical UE log (_gold_link_latest.log): separate GOLD target; not tip path
+  No tip clobber applied while clearing gaps
+
+RETURN
+  GOLD_LINK_CONTINUOUS_001=SEALED
+  PROMOTE=0
+  ABSORB=NOT_AUTHORIZED

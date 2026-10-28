@@ -41,6 +41,8 @@ VERIFICATION (fail-closed)
 4) CMake fix (candidate path only; no tip absorb)
    WIN32IDE_EXTRA_ASM += src/asm/RawrXD_ConPTY_Renderer.asm
    Ownership: VT100 TUI glyphs only; PTY stream remains Win32TerminalManager
+   build.ninja contains RawrXD_ConPTY_Renderer.asm.obj on RawrXD-Win32IDE link line
+   Candidate full ninja RawrXD-Win32IDE: IN_PROGRESS/HEAVY (NOT_RUN≠PASS for new SHA)
 
 DISPOSITION
 -----------
@@ -48,7 +50,10 @@ CAMELLIA_ASM=LINKED_TIP_AND_CAND
 WATCHDOG_ASM_OBJ=LINKED_TIP_AND_CAND
 WATCHDOG_API=MAGBUF_C_OWNER (HMAC body present under FORCE:MULTIPLE)
 CONPTY_STREAM=Win32TerminalManager SOURCE_WIRED
-CONPTY_ASM_RENDERER=ASSEMBLE_PASS + CMAKE_WIRED (relink candidate required)
+CONPTY_ASM_RENDERER=ASSEMBLE_PASS + CMAKE_WIRED + NINJA_RULE_PRESENT
+CONPTY_CAND_MAP_HIT=PENDING_RELINK (do not invent)
 V280_LINK_BRIDGE=LINKED_TIP_AND_CAND
 GOLD_LINK_CONTINUOUS=SEALED
+TIP_FREEZE_INTACT=1
 PROMOTE=0
+ABSORB=NOT_AUTHORIZED
