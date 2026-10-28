@@ -46,6 +46,12 @@ class PostFenceDiagnosticSafetyTests(unittest.TestCase):
         self.assertLess(fused, complete)
         self.assertLess(complete, post)
 
+    def test_failed_download_cannot_claim_finite_values(self):
+        self.assertIn("downloaded && H > stageNonFinite", self.source)
+        self.assertIn("actDownloaded && I > actNonFinite", self.source)
+        self.assertIn("downloaded ? H - stageNonFinite : 0u", self.source)
+        self.assertIn("actDownloaded ? I - actNonFinite : 0u", self.source)
+
     def test_production_path_stays_present(self):
         for anchor in ("K2MoEStickPinExpert(stick",
                        "K2MoEStickBeginFused(stick)",
