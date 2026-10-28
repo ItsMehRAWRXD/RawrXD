@@ -143,3 +143,44 @@ CERTIFIED_GATES=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 5: single-expert GPU aggregate vs independent scalar expert
+
+Added \`tools/k2_single_expert_aggregate_oracle.py\` to join the completed
+GPU aggregate manifest with the CPU packed Q4_K gate/up, Q6_K down,
+and normalized-hidden input manifest. It **requires exactly one routed
+expert** and validates matching layer, stick, expert ID, hidden dimension,
+quant tensor shapes, and input hashes. It independently evaluates
+Q4_K gate/up → SwiGLU → Q6_K down, multiplies that scalar expert
+vector by the recorded router weight, and compares the result with the
+**completed GPU aggregate**, using explicit max-absolute and RMS tolerances.
+
+This is a step closer to an independent numerical witness than the
+CPU-kernel aggregate comparison. But it does not prove any individual
+GPU activation or unweighted down buffer. A multi-expert aggregate is
+always rejected rather than incorrectly attributed to one expert.
+Every receipt remains \`certified=false\`, \`promote=0\`, with both
+\`gpu_post_swiglu_witness=ABSENT\` and
+\`gpu_unweighted_down_witness=ABSENT\`.
+
+Example using real single-expert capture manifests and a fresh receipt:
+
+\`\`\`powershell
+python tools/k2_single_expert_aggregate_oracle.py --aggregate-manifest "F:\rawrxd\evidence\RUN\k2_l2_s0_aggregate_comparison.manifest.txt" --scalar-input-manifest "F:\rawrxd\evidence\RUN\k2_l2_e44_s0_scalar_inputs.manifest.txt" --max-abs 0.01 --max-rms 0.001 --receipt "F:\rawrxd\evidence\RUN\independent_aggregate_receipt.json"
+\`\`\`
+
+The expert 44 and thresholds above are examples, **not** real evidence or
+certified tolerances. Requires actual emitted manifests from the same
+execution, not a coincidental matching layer/stick. Recording a common
+unique run/submission identifier is a future evidence-contract improvement.
+Ten synthetic tests are registered in the local offline and GitHub CI suites.
+A native Vulkan GPU run and test execution have not been verified here.
+
+\`\`\`ini
+INDEPENDENT_SINGLE_EXPERT_AGGREGATE=SOURCE_COMMITTED
+EXACT_SAME_RUN_PROVENANCE=NOT_ESTABLISHED
+GPU_EXPERT_STAGE_WITNESS=ABSENT
+G05_G06=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
