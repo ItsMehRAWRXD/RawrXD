@@ -1,0 +1,33 @@
+FOLLOWUP_ABSORB (post f22e60bf + 9fd86950)
+==========================================
+ASOF_UTC=2026-10-28T18:15:00Z
+PROMOTE=0 TIP_CLIMB=HOLD ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+TIP_748B=DO_NOT_OVERWRITE
+NO_TIP_FREEZE_002=1
+CANDIDATE_ONLY=TIP_CANDIDATE_AGENT_RUN_005\bin
+
+FROM_AGENT_RUN_LOOP_TIP_004 (f22e60bf)
+--------------------------------------
+TIP_DISPOSITION=FAIL_CLOSED
+ROOT_CAUSE_1=HTTP 503 CL=54 runtime_warming before RuntimeReady
+ROOT_CAUSE_2=AgentHttpRun hardcoded maxTokens=2048 → client reset after PREFILL
+SOURCE_FIX=AgentHttpRun max_tokens/max_iter + non-stream ProductDeep2Infer;
+  HeadlessIDE RUNTIME_READY=1 stderr
+OBJS=may exist in build_win32ide_link001; link was blocked by concurrent ninja
+REPROVE=wait RUNTIME_READY=1 then POST /api/agent/run max_tokens<=64
+NOTE=Do NOT invent TIP_FREEZE_002; freeze under TIP_CANDIDATE_AGENT_RUN_005 only
+
+FROM_UI_PHASE7 (9fd86950)
+-------------------------
+GATE=WIN32IDE_UI_PHASE7_SETTINGS_TASKRUNNER_SOURCE_001
+DISPOSITION=SOURCE_WIRED_RELINK_REQUIRED
+COMMIT=c406749dbe
+U_BG=IDM 5199 → showTaskRunnerDialog
+U_SETTINGS=5016/502/12040 → showSettingsGUIDialog
+UI_ACCEPTANCE_PASS=0 until candidate prove
+CANDIDATE_INCLUDE_ITEM=10
+
+OWNER
+-----
+Running -j1 candidate worker 98b1aca7 (or successor) must absorb items 1+10
+into the same link before claiming ENTERED or UI_ACCEPTANCE.

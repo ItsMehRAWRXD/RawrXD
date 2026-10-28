@@ -1,0 +1,33 @@
+CANDIDATE_INCLUDE (for TIP_CANDIDATE / AGENT_RUN_005 freeze)
+============================================================
+PROMOTE=0
+TIP_748B_PRESERVED=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+DO_NOT_OVERWRITE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\
+
+MUST_LINK_SOURCE_FIXES
+----------------------
+1. AgentRunLoop / HeadlessIDE_AgentRun.cpp + AgentHttpRun.cpp (TIP_004 crash-at-logits + max_tokens/non-stream + RUNTIME_READY=1)
+2. HeadlessIDE_SwarmOrch.cpp setInferenceEngine / CPUInferenceEngine bind (SWARM_003 ENGINE_BIND)
+3. PathB IDM 4111 CmdDiag — SWARM_PATH_B_4111_SOURCE_001 SOURCE_WIRED (RELINK_REQUIRED; RUNTIME_REACHED=NOT_RUN)
+4. Deep2Engine.cpp Nemotron-only attn FFN-skip arch gate (PHASE3 — was applied to llama wrongly)
+5. embedded_terminal.cpp pipe-as-ConPTY fail-close (P1 surface)
+6. HeadlessIDE SubAgentManager fail-close (SUBAGENT_EXTENSIONHOST_CONTINUOUS_001)
+7. Unblock TerminalManager + CaretAnimation compile so candidate can link
+8. MODE_SWITCH_UI IDC 5005–5008 + radios + g_pMainIDE ctor (collision fix; Debug IDC)
+9. TOOL_ACTION_STATUS_ACCUMULATOR_SOURCE_001 — DispatchModelToolCalls → m_currentToolActions (Admit producer)
+10. WIN32IDE_UI_PHASE7_SETTINGS_TASKRUNNER_SOURCE_001 — IDM 5199 TaskRunner + 5016/502/12040 Settings (SOURCE_WIRED; commit c406749dbe)
+
+REPROVE_ON_CANDIDATE_ONLY (SHA=8DC1406A… ASOF=2026-10-28T18:22Z)
+-------------------------
+[x] POST /api/agent/run AFTER RUNTIME_READY=1; max_tokens<=64 → ENTERED_HTTP_OK (GENERATED_TOKENS=16; PERF=0)
+[x] POST /api/swarm/orch Path A — no "No Inference Engine" → HTTP 200 (workers still "No model loaded")
+[ ] PathB 4111 CmdDiag crumb if 4111 fix linked → RUNTIME_REACHED=NOT_RUN (GUI not launched)
+[ ] UI Settings/TaskRunner smoke if GUI path available (UI_ACCEPTANCE_PASS stays 0 until sealed)
+
+LAW
+---
+Candidate freeze = TIP_CANDIDATE_AGENT_RUN_005\bin ONLY (≠ TIP_FREEZE_002; tip 748B stays authority)
+NEVER overwrite TIP_FREEZE_001\bin
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+PROMOTE=0
