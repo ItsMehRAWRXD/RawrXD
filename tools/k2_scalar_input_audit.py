@@ -53,7 +53,7 @@ def parse_manifest(manifest):
         raise ValueError("manifest name and identity differ")
     return {"layer": layer, "expert": expert_id, "stick": stick,
             "hidden_dim": hidden, "intermediate_dim": intermediate,
-            "stem": expected_stem}
+            "run_id": fields.get("run_id"), "stem": expected_stem}
 
 
 def read_float_vector(path, expected):
