@@ -1735,8 +1735,13 @@ void Win32IDE::handleToolsCommand(int commandId)
             appendToOutput(getFailureDetectorStats(), "General", OutputSeverity::Info);
             break;
 
-        case 5016:  // Settings Dialog
-            showSettingsDialog();
+        case 5016:  // IDM_SETTINGS_DIALOG — open Settings HWND (not MessageBox fallback)
+        case 502:   // IDM_TOOLS_SETTINGS — same product Settings GUI
+            showSettingsGUIDialog();
+            break;
+
+        case 5199:  // IDM_TOOLS_TASK_RUNNER — Background tasks / Run Task dialog
+            showTaskRunnerDialog();
             break;
 
         case 5017:  // Toggle Local Server
@@ -11130,6 +11135,8 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({5014, "AI: Toggle Failure Detector", "", "AI"});
     m_commandRegistry.push_back({5015, "AI: Show Failure Detector Stats", "", "AI"});
     m_commandRegistry.push_back({5016, "Settings: Open Settings Dialog", "Ctrl+,", "Settings"});
+    m_commandRegistry.push_back({502, "Tools: Settings...", "Ctrl+,", "Settings"});
+    m_commandRegistry.push_back({5199, "Tools: Run Task...", "", "Tools"});
     m_commandRegistry.push_back({5017, "Server: Toggle Local GGUF HTTP Server", "", "Server"});
     m_commandRegistry.push_back({5018, "Server: Show Server Status", "", "Server"});
 

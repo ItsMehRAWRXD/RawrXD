@@ -741,7 +741,7 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_SETTINGS_DIALOG 5016
 #endif
 #ifndef IDM_TOOLS_TASK_RUNNER
-#define IDM_TOOLS_TASK_RUNNER 5190
+#define IDM_TOOLS_TASK_RUNNER 5199
 #endif
 
 #define IDM_GIT_STATUS 3020

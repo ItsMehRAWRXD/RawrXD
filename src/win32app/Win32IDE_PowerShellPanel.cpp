@@ -57,7 +57,8 @@ bool parsePowerShellMetaLine(const std::string& line, std::string& version,
 #define IDC_PS_BTN_HISTORY 5013
 #define IDC_PS_BTN_RESTART 5014
 #define IDC_PS_BTN_LOAD_RAWRXD 5015
-#define IDC_PS_BTN_TOGGLE 5016
+/* Was 5016 — collided with IDM_SETTINGS_DIALOG; keep Settings HWND path clean */
+#define IDC_PS_BTN_TOGGLE 1416
 #define IDC_PS_SPLITTER 5017
 
 // ============================================================================

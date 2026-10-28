@@ -19,6 +19,9 @@
 //   4281–4299   FailureIntelligence Orchestrator (autonomous recovery)
 //   4300–4323   Reverse engineering / decompiler
 //   5001–5004   AI mode toggle controls (IDC_)
+//   5016        Settings dialog (IDM_SETTINGS_DIALOG → showSettingsGUIDialog)
+//   502         Tools > Settings (IDM_TOOLS_SETTINGS)
+//   5199        Tools > Run Task (IDM_TOOLS_TASK_RUNNER; 5190 reserved DevTooling)
 //   5037–5081   Backend switcher, LLM router, LSP, UX extras
 //   5200–5208   Plugin system
 //   5300–5321   AI extensions, Monaco/thermal, agent test
@@ -377,6 +380,17 @@
 #define IDM_ROUTER_SIMULATE         5079
 #define IDM_ROUTER_SIMULATE_LAST    5080
 #define IDM_ROUTER_SHOW_COST_STATS  5081
+
+// ---- Settings / Task Runner (Phase7 UI source wire) -----------------------
+#ifndef IDM_TOOLS_SETTINGS
+#define IDM_TOOLS_SETTINGS          502
+#endif
+#ifndef IDM_SETTINGS_DIALOG
+#define IDM_SETTINGS_DIALOG         5016
+#endif
+#ifndef IDM_TOOLS_TASK_RUNNER
+#define IDM_TOOLS_TASK_RUNNER       5199
+#endif
 
 // ---- Plugin system (5200–5208) ---------------------------------------------
 #define IDM_PLUGIN_SHOW_PANEL       5200

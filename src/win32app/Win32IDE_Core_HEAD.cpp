@@ -4516,9 +4516,13 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 "Output", OutputSeverity::Info);
             return;
         case 502:   // Tools > Settings (IDM_TOOLS_SETTINGS)
+        case 5016:  // Settings dialog command (IDM_SETTINGS_DIALOG) — HWND path
         case 1024:  // Title bar gear (IDC_BTN_SETTINGS)
         case 1106:  // Activity bar Settings (IDC_ACTBAR_SETTINGS)
             showSettingsGUIDialog();
+            return;
+        case 5199:  // Tools > Run Task... (IDM_TOOLS_TASK_RUNNER)
+            showTaskRunnerDialog();
             return;
         case 1022:  // Title bar GH button — toggle AI Chat panel (secondary sidebar)
             toggleSecondarySidebar();

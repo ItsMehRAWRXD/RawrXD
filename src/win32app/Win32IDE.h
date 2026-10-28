@@ -3601,6 +3601,27 @@ class Win32IDE
     // Settings state
     IDESettings m_settings;
 
+  public:
+    // ========================================================================
+    // Task Runner (Win32IDE_TaskRunner.cpp) — Phase7 U-BG menu wire
+    // Dialog WndProc is a free function; keep entry points public.
+    // Menu IDs IDM_TOOLS_TASK_RUNNER/SETTINGS/SETTINGS_DIALOG live as #defines
+    // in Win32IDE_Commands.h + ide_constants.h (no static constexpr here —
+    // macro expand would yield `int 502 = 502` → C2059).
+    // ========================================================================
+    struct TaskRunnerEntry
+    {
+        std::string label;
+        std::string command;
+        std::vector<std::string> args;
+    };
+    void showTaskRunnerDialog();
+    void runSelectedTask(int index);
+    const std::vector<TaskRunnerEntry>& getTaskRunnerTasks() const { return m_taskRunnerTasks; }
+
+  private:
+    std::vector<TaskRunnerEntry> m_taskRunnerTasks;
+
     // ========================================================================
     // Local GGUF HTTP Server (Win32IDE_LocalServer.cpp)
     // ========================================================================
