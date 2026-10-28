@@ -1,0 +1,33 @@
+WATCHDOG_HMAC_RUNTIME_001 smoke enter
+PATH=asm_watchdog_init->asm_camellia256_get_hmac_key
+OBJS=RawrXD_Watchdog_from_source.obj+RawrXD_Camellia256.obj
+SEALED_EXE_UNTOUCHED=1 RELINK=0 DO_FULL=0
+  pre_init get_hmac_key_rc=-1
+  [PASS] get_hmac_key pre-ready nonzero err
+  pre_ready asm_watchdog_init_rc=2 (expect NO_KEY=2)
+  [PASS] init NO_KEY == 2 (fail-closed nonzero)
+  [PASS] init NO_KEY nonzero
+  [PASS] get_baseline null -> -1
+  get_baseline_after_nokey_rc=0
+  [PASS] get_baseline after NO_KEY returns
+  verify_after_nokey_rc=-1
+  [PASS] verify after NO_KEY not OK
+  self_test_rc=-8
+  set_key_rc=0
+  [PASS] set_key
+  get_hmac_key_after_set_rc=0 nonzero=1
+  hmac_direct E672E53B48E7676D
+  [PASS] get_hmac_key after set_key
+  status_dword=2
+  HMAC_FULL=SKIPPED (pass --full to attempt CryptoAPI baseline)
+
+RESULTS pass=8 fail=0
+RUNTIME_REACHED=PASS
+HMAC_FULL=FAIL
+NO_KEY_FAILCLOSED=2
+HMAC_PRODUCT=NOT_CLAIMED
+SEALED_EXE_UNTOUCHED=1
+RELINK=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

@@ -40,7 +40,7 @@ Statuses: `SEALED` (earned, cited) | `OPEN` | `BLOCKED` | `HELD` | `PREP_OK` (pr
 | RC-03 | GhostText product absorb + full regression | **HELD** | `ABSORB=NOT_AUTHORIZED` (Phase 6 auth string required) |
 | RC-04 | Inno/NSIS/WiX installer build | **OPEN** | ISCC/makensis/WiX absent; ISS inputs missing (`RawrXD.exe`, ico, redist) |
 | RC-05 | CMake `install(TARGETS RawrXD-Win32IDE)` | **OPEN** | No install rule for product EXE |
-| RC-06 | `cmake --install` clean path | **BLOCKED** | `src/agentic/CMakeLists.txt` merge conflict markers on `install()` |
+| RC-06 | `cmake --install` clean path | **PREP_OK** (agentic conflicts cleared) | `RC06_CMAKE_CONFLICTS.txt` CONFLICTS_CLEARED=1; agentic configure PASS; product `cmake --install` still OPEN (RC-05; non-agentic CMake conflicts remain) |
 | RC-07 | Legacy release scripts tip-bound | **OPEN** | `create_release_package.ps1` tip-prefer partial; `create-release-package.ps1` still wrong binary names |
 | RC-08 | Closure matrix release blockers | **OPEN** | A02 BLOCKED; A04/A08/A09/A10/A12–A14 OPEN; A05/A06/A07 not MET; A11 BLOCKED_OOM |
 | RC-09 | Agentic G02 / swarm G07 RUNTIME | **OPEN** | `AGENT_RUN_LOOP_TIP_003` 503; swarm RUNTIME_PASS=0 on tip |

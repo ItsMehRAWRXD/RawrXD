@@ -1,0 +1,44 @@
+CAMOBJ=G:\~dev\rawrxd\evidence\WATCHDOG_HMAC_PRODUCT_001\RawrXD_Camellia256_e2e.obj
+Compiling wired batch_005 (SOURCE_WIRED get_baseline)...
+unlinked_symbols_batch_005.cpp
+runtime_hmac_product_smoke.c
+mag_stubs.c
+ods_stub.c
+ods_stub.c(4): warning C4273: 'OutputDebugStringA': inconsistent dll linkage
+C:\PROGRA~2\WI3CF2~1\10\Include\100261~1.0\um\debugapi.h(54): note: see previous definition of 'OutputDebugStringA'
+   Creating library runtime_hmac_product_smoke.lib and object runtime_hmac_product_smoke.exp
+BUILD_OK
+---- RUN ----
+RUNTIME_HMAC_PRODUCT smoke enter
+PATH=asm_watchdog_get_baseline->asm_camellia256_get_hmac_key
+TU=unlinked_symbols_batch_005.cpp (fresh obj) + RawrXD_Camellia256.obj
+  [PASS] get_baseline null -> -1
+  [PASS] get_baseline NO_KEY -> -1
+  [PASS] NO_KEY zeros buffer (no CRC-as-HMAC)
+  self_test_rc=-8
+  set_key_rc=0
+  [PASS] set_key
+  get_hmac_key_rc=0 nonzero=1
+  hmac_direct E672E53B48E7676D
+  [PASS] get_hmac_key after set_key
+  get_baseline_rc=0 nonzero=1
+  hmac_baseline E672E53B48E7676D
+  [PASS] get_baseline after set_key -> 0
+  [PASS] baseline matches get_hmac_key (join)
+  [PASS] nonzero non-CRC key material
+  init_rc=-8 (self_test gate; -8=SELF_TEST)
+
+RESULTS pass=8 fail=0
+RUNTIME_REACHED=PASS
+HMAC_PRODUCT=PASS
+CRC_AS_HMAC=0
+NO_KEY_FAILCLOSED=-1
+CAM_HMAC_AFTER_SET_KEY=NONZERO
+INIT_SELF_TEST_BLOCK=-8
+RELINK_REQUIRED=1
+SEALED_EXE_UNTOUCHED=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+----
+SMOKE_EXIT=0

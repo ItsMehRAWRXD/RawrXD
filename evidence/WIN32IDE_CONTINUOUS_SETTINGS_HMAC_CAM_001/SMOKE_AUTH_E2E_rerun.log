@@ -1,0 +1,30 @@
+RUNTIME_AUTH_E2E smoke enter
+RUNTIME_AUTH_E2E smoke (Auth.obj+Camellia256.obj; XOR=0)
+  before set_key
+  set_key_rc=0
+  before get_hmac_key
+  hmac_after_set_rc=0
+  [PASS] engine ready (init or set_key)
+  [PASS] write plaintext
+  [PASS] auth_encrypt_file
+  [PASS] read header
+  magic_bytes=32 4D 43 52 dword=0x52434D32
+  [PASS] RCM2 magic dword 0x52434D32
+  [PASS] auth_decrypt_file
+  [PASS] read decrypted
+  [PASS] round-trip match
+  [PASS] tamper byte@56
+  tamper_decrypt_rc=1 (ASM intends -7; VirtualFree may clobber)
+  [PASS] tampered HMAC rejected (nonzero)
+  [PASS] encrypt null in
+  [PASS] encrypt null out
+  [PASS] decrypt null in
+  [PASS] decrypt null out
+  [PASS] encrypt missing path
+  [PASS] decrypt missing path
+
+RESULTS pass=16 fail=0
+BACKEND_UNAVAILABLE=0
+XOR_PATH=0
+RUNTIME_AUTH_E2E=PASS
+PROMOTE=0

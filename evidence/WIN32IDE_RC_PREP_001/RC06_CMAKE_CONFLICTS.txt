@@ -1,0 +1,79 @@
+WIN32IDE_RC_PREP_001 / RC-06 CMake conflict clearance
+=====================================================
+ASOF_UTC=2026-10-28T17:20:00Z
+WORKSTREAM=RC06_CMAKE
+PROMOTE=0
+PRODUCT_CERTIFIED=0
+RC_PASS=NOT_CLAIMED
+TIP_CLIMB=HOLD
+REBUILD_THIS_DISPATCH=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+
+PRODUCT_TIP (untouched)
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+  TIP_EXE_OVERWRITE=0
+
+SCOPE
+-----
+Clear merge-conflict markers blocking coherent cmake parse/install rules in
+src/agentic/CMakeLists.txt (and any other CMakeLists under src/agentic/).
+
+BEFORE
+------
+FILE=src/agentic/CMakeLists.txt
+CONFLICT_MARKER_BLOCKS=12
+MARKER_STYLE=<<<<<<< HEAD / ======= / >>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+BLOCKERS=
+  - CXX_STANDARD 20 (HEAD) vs 17 (incoming)
+  - VULKAN_ASM empty (HEAD: no placeholder ASM) vs stub.asm (incoming)
+  - PLANNING/AGENT_LOOP/ORCHESTRATOR/T4/DISK_RECOVERY/SOURCEEDIT sources (HEAD) vs truncated planning-only (incoming)
+  - install(DIRECTORY) FILES_MATCHING *.hpp*.h (HEAD) vs broken mid-block install(TARGETS) splice (incoming)
+  - duplicate/orphan include + install fragments
+OTHER_AGENTIC_CMAKE=0 additional CMakeLists.txt under src/agentic/
+NOTE: many *.asm under src/agentic/ still carry conflict markers; they are
+NOT linked by this CMakeLists (VULKAN_ASM_SOURCES empty) and are out of
+RC-06 CMake-install scope.
+
+AFTER
+-----
+FILE=src/agentic/CMakeLists.txt
+CONFLICT_MARKER_BLOCKS=0
+RESOLUTION=
+  keep HEAD agentic product surface (C++20, agent loop, orchestrator, T4,
+  disk-recovery + SourceEdit ASM when MSVC)
+  keep VULKAN_ASM_SOURCES empty (no placeholder ASM link)
+  keep install(DIRECTORY) with PATTERN "*.hpp" PATTERN "*.h"
+  keep single install(TARGETS RawrXD-Agentic) for lib/bin — library only
+  do NOT add install(TARGETS RawrXD-Win32IDE) (RC-05 remains OPEN; tip-freeze
+  packaging remains dry-run script path)
+OTHER_AGENTIC_CMAKE_MARKERS=0
+
+CONFIGURE VERIFY (scratch; tip not rebuilt)
+-------------------------------------------
+METHOD=standalone cmake -S src/agentic -B evidence/WIN32IDE_RC_PREP_001/_rc06_cmake_scratch
+GENERATOR=Ninja
+TOOLCHAIN=VS2022 BuildTools MSVC 19.44.35228.0 + ml64
+BUILD_TESTING=OFF
+RESULT=CONFIGURING_DONE
+GENERATING_DONE=1
+PARSE_ERROR=0
+CONFLICT_PARSE_BLOCK=0
+LOG=evidence/WIN32IDE_RC_PREP_001/_rc06_configure_log.txt
+CMD=evidence/WIN32IDE_RC_PREP_001/_rc06_configure.cmd
+CMAKE_INSTALL_PRODUCT_EXE=NOT_RUN
+CMAKE_INSTALL_CLAIM=NOT_CLAIMED
+NOTE=root tree still has conflict markers in non-agentic CMakeLists
+(thermal, paint, Ship, etc.) — outside this RC-06 agentic scope; full-tree
+cmake --install may still fail until those are cleared by later workstreams.
+
+DISPOSITION
+-----------
+CONFLICTS_CLEARED=1
+RC06_AGENTIC_CMAKE_PARSE=PASS
+RC06_CMAKE_INSTALL_PRODUCT=OPEN (≠ certified)
+RC05_WIN32IDE_INSTALL_RULE=OPEN (not invented)
+PROMOTE=0
+PRODUCT_CERTIFIED=0
+RC_PASS=NOT_CLAIMED
+NO_INVENT_PASS=1
