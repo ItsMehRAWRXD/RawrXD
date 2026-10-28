@@ -1,0 +1,12 @@
+  12820628 | S_PUB32 [size = 72] `?setAgenticMode@Win32IDE@@AEAAXW4AgenticMode@RawrXD@@@Z`
+           flags = function, addr = 0001:5994864
+  5864104 | S_PUB32 [size = 52] `?onAgenticModeAsk@Win32IDE@@AEAAXXZ`
+           flags = function, addr = 0001:5968544
+  2983784 | S_PUB32 [size = 52] `?onAgenticModeAgent@Win32IDE@@AEAAXXZ`
+           flags = function, addr = 0001:5968528
+  34362616 | S_PUB32 [size = 52] `?HandleAgenticComposerUX@@YAXPEAX@Z`
+           flags = function, addr = 0001:6066272
+  37808152 | S_PUB32 [size = 48] `?g_pMainIDE@@3PEAVWin32IDE@@EA`
+           flags = none, addr = 0003:288886976
+  20557284 | S_PUB32 [size = 52] `?onAgenticModePlan@Win32IDE@@AEAAXXZ`
+           flags = function, addr = 0001:5968576

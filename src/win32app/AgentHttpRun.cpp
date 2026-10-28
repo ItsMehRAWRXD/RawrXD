@@ -23,9 +23,8 @@ static int FieldInt(const std::string& body, const char* key, int def) {
     p = body.find(':', p);
     if (p == std::string::npos) return def;
     char* end = nullptr;
-    long v = std::strtol(body.c_str() + static_cast<int>(p) + 1, &end, 10);
-    if (end == body.c_str() + static_cast<int>(p) + 1) return def;
-    return static_cast<int>(v);
+    long v = std::strtol(body.c_str() + (int)p + 1, &end, 10);
+    return (end == body.c_str() + (int)p + 1) ? def : (int)v;
 }
 
 static std::string Esc(const std::string& s) {
@@ -39,11 +38,11 @@ static std::string Esc(const std::string& s) {
     return o;
 }
 
-/* Non-stream ProductDeep2Infer — HeadlessIDE notes Stream as FIRST_CRASH_OWNER. */
+/* Non-stream — HeadlessIDE notes ProductDeep2InferStream as FIRST_CRASH_OWNER. */
 static std::string ProductInfer(void*, const std::string& prompt, int maxTokens) {
     char buf[65536];
     buf[0] = 0;
-    uint32_t mt = maxTokens > 0 ? static_cast<uint32_t>(maxTokens) : 0;
+    uint32_t mt = maxTokens > 0 ? (uint32_t)maxTokens : 0;
     if (!rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf), mt) || !buf[0])
         return {};
     return std::string(buf);
@@ -63,8 +62,7 @@ static const char* StateOf(void* ctx, const char* id) {
     static char buf[32];
     const SubAgent* agent =
         static_cast<SubAgentManager*>(ctx)->getSubAgent(id ? id : "");
-    std::string s = agent ? agent->stateString() : "missing";
-    strncpy_s(buf, s.c_str(), _TRUNCATE);
+    strncpy_s(buf, (agent ? agent->stateString() : "missing").c_str(), _TRUNCATE);
     return buf;
 }
 

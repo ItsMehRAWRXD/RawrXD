@@ -32,7 +32,7 @@ inline bool EnsureRoot(const char* root) {
 #endif
 }
 
-// Line: seq\top\tpayload\tCRC32\n  (CRC over "seq\top\tpayload")
+// Line: seq\top\tpayload\tCRC32\n (CRC over seq+op+payload body)
 inline bool Append(const char* root, uint64_t seq, const char* op, const char* payload) {
     if (!root || !op || !payload || !EnsureRoot(root)) return false;
 #ifdef _WIN32
@@ -41,7 +41,8 @@ inline bool Append(const char* root, uint64_t seq, const char* op, const char* p
     int bl = std::snprintf(body, sizeof(body), "%llu\t%s\t%s",
                            (unsigned long long)seq, op, payload);
     if (bl <= 0 || bl >= (int)sizeof(body)) return false;
-    int ll = std::snprintf(line, sizeof(line), "%s\t%08X\n", body, Fnv1a32(body, (size_t)bl));
+    int ll = std::snprintf(line, sizeof(line), "%s\t%08X\n", body,
+                           Fnv1a32(body, (size_t)bl));
     if (ll <= 0 || ll >= (int)sizeof(line)) return false;
     HANDLE h = CreateFileA(path, FILE_APPEND_DATA | SYNCHRONIZE, FILE_SHARE_READ,
                            nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);

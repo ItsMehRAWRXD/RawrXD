@@ -1,0 +1,4 @@
+curl: (6) Could not resolve host: application
+curl: (3) URL rejected: Bad hostname
+curl: (6) Could not resolve host: tip748b-g16r2-60322a092ec2
+curl: (6) Could not resolve host: evil.example

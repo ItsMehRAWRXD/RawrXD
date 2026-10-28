@@ -1,0 +1,1 @@
+{"RUNTIME_PASS":false,"disposition":"FAIL_CLOSED_EMPTY_INVENTORY","emptyFailClosed":true,"executeInvoked":false,"localOnly":true,"maxParallelPlan":1,"models":[],"path":"/api/swarm/orch","resolveInvoked":true,"sequential":false,"taskCount":0}

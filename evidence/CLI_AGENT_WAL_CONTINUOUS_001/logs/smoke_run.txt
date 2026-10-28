@@ -1,0 +1,2 @@
+[AgentWAL] SMOKE_PASS records=3 root=G:\~dev\rawrxd\evidence\RAWRXD_AGENT_WAL
+CLI_AGENT_WAL_SMOKE=PASS

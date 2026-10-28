@@ -1,0 +1,18 @@
+PHASE 8 DISPOSITIONS (tip 748B)
+===============================
+PROMOTE=0
+
+GATE                         | DISPOSITION              | NOTES
+-----------------------------|--------------------------|------
+Security deny (path/origin)  | RUNTIME_PARTIAL_PASS     | 403 deny + no FS escape on tip
+Security allow (motd/write)  | FAIL_CLOSED_NOT_RUN      | HTTP 403 under hosted key this wave
+Browser navigation (GUI)     | FAIL_CLOSED_NOT_RUN      | WebView2Loader.dll absent in tip bin
+Browser navigate tool        | FAIL_CLOSED_NOT_RUN      | HTTP 403; no product tool route
+Browser automation           | FAIL_CLOSED_NOT_RUN      | HTTP 403; no product tool route
+Native action tool           | FAIL_CLOSED_NOT_RUN      | HTTP 403; no product tool route
+OS Explorer product path     | FAIL_CLOSED_FEATURE_FICTION | source fail-closed; tip not exercised
+NavStarting COM allowlist    | SOURCE_GAP_OPEN          | minimal WebView2.h lacks typed binding
+Host navigate scheme filter  | SOURCE_WIRED_CANDIDATE   | not absorbed into tip 748B
+
+PHASE8_COMPLETE=0
+PHASE8_CERTIFIED=0

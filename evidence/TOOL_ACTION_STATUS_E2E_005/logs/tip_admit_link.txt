@@ -1,0 +1,11 @@
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+STR_reject_finished_without_receipt=1
+STR_reject_synthetic=1
+STR_reject_terminal_without_exit=1
+STR_reject_post_cancel_success=1
+STR_AdmitToolActionForProductHistory=0
+STR_GATED_STUB_SYNTHETIC=1_DEMO=1
+TIP_ADMIT_REASON_STRINGS_PRESENT=1
+TIP_EXE_PLAIN_ADMIT_SYMBOL_NAME=0
+NOTE=reasons present in tip image; mangled symbol name may be absent from plain strings

@@ -1,0 +1,55 @@
+WIN32IDE_CONTINUOUS_SETTINGS_HMAC_CAM_001 / LAW
+===============================================
+ASOF_UTC=2026-10-28T17:11:30Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+AUTHORITY
+---------
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+TIP_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+CAND_EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+CAND_SHA256=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  ROLE=GhostText witness / link001 live (≠ tip; ≠ absorb)
+PRIOR_ABSORB_EXE_SHA=866E9D1B3B6E617B7C6001EA3BFC754002C0CE61F8880FF6294C95B86E6A601F
+  (CAMELLIA_HMAC_PRODUCT_ABSORB_001; superseded on-disk by B421; not tip)
+
+MISSION
+-------
+Re-verify tip/candidate wiring for:
+  1) SettingsManager deadlock-free LoadUnlocked path
+  2) Watchdog HMAC product/runtime smokes + ASM bind status
+  3) Camellia auth wiring + self_test=-8 documentation
+Fail-close remaining stub theater. Seal dispositions. Do NOT invent
+CERTIFIED/PROMOTE. Do NOT absorb GhostText into tip.
+
+FAIL_CLOSED_LAW
+---------------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+SMOKE_PASS != IN_EXE_PRODUCT_E2E != TIP_CERTIFIED != PROMOTE
+HMAC_PRODUCT object smoke != MASM asm_watchdog_init product ownership
+ABSORB GhostText NOT_AUTHORIZED (user exact phrase required elsewhere)
+
+PRODUCT_MAP (candidate link001 RawrXD-Win32IDE.map)
+---------------------------------------------------
+asm_camellia256_set_key / get_hmac_key  -> RawrXD_Camellia256.obj
+asm_camellia256_auth_*_file/buf         -> RawrXD_Camellia256_Auth.obj
+wd_compute_hmac_sha256                  -> RawrXD_Watchdog.obj
+asm_watchdog_init                       -> win32ide_watchdog_init.cpp.obj (MagBuf CRC)
+asm_watchdog_get_baseline/verify/status -> unlinked_symbols_batch_005.cpp.obj
+  get_baseline -> asm_camellia256_get_hmac_key (product HMAC join; CRC-as-HMAC=0)
+MASM PUBLIC asm_watchdog_init shadowed by C (LNK2005 winner=C) — OPEN / documented
+
+OBJ_SHA (build_win32ide_link001; match ABSORB seal)
+---------------------------------------------------
+RawrXD_Camellia256.obj
+  SHA256=49CE60B7FE06C4D15C313F55638B241ABE394F2DC395515553797456AE4DDC24
+RawrXD_Watchdog.obj
+  SHA256=8A0244FDA2BDA1F8458B86B3C43C5E671F1585CE5DDCC7B900E13EF2604804E6
+RawrXD_Camellia256_Auth.obj
+  SHA256=74D031802C556BE608F3EB6E193A5F437499D876BAEA902A7274486961E2FB2D

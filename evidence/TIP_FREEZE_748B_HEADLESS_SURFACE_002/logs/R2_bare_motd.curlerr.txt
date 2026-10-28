@@ -1,0 +1,2 @@
+curl: (6) Could not resolve host: application
+curl: (3) URL rejected: Bad hostname

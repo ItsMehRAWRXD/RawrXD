@@ -1,0 +1,1 @@
+OK BYTES=40 companion_exit=0

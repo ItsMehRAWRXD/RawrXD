@@ -1,0 +1,5 @@
+curl: (6) Could not resolve host: application
+curl: (3) URL rejected: Bad hostname
+curl: (6) Could not resolve host: tip748b-g16r2-60322a092ec2
+curl: (7) Failed to connect to 127.0.0.1:18982 after 2088 ms: Could not connect to server
+curl: (7) Failed to connect to 127.0.0.1:18982 after 2030 ms: Could not connect to server

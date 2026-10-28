@@ -1,0 +1,16 @@
+PHASE 9 DISPOSITIONS (tip 748B)
+===============================
+PROMOTE=0
+PERFORMANCE_PASS=0
+
+GATE                         | DISPOSITION                 | NOTES
+-----------------------------|-----------------------------|------
+Tip TinyLlama TPS (64 tok)   | MEASURED_SEALED_AUTHORITY   | TOKEN64_PRODUCT_RUN_006; not PERF_PASS
+Tip TPS16 extend             | FAIL_CLOSED_INCOMPLETE      | EXITLEVEL=-1; no GENERATED_TOKENS receipt
+Vulkan submit optimize       | MEASURED_HOLD               | DEEP2_VULKAN_SUBMIT_OPT_001 parity FAIL
+Tip GPU forward              | NOT_ARMED                   | HOTPATH_GPU_FWD_ENABLED=0 HOST_DECODE
+Batching / concurrency       | HISTORICAL_ONLY             | DEEP2_CONCURRENCY_001 ≠ tip PERF_PASS
+IDE VulkanRenderer cmd       | FEATURE_FICTION             | fail-closed CommandResult
+
+PHASE9_COMPLETE=0
+PHASE9_CERTIFIED=0

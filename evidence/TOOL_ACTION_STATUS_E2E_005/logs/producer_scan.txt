@@ -1,0 +1,16 @@
+SCAN=m_currentToolActions producer
+ADD_ACTION_HITS=0
+ALL_REF_HITS=7
+Win32IDE_VSCodeUI.cpp:350:if (m_currentToolActions.workingBubbles().size() > 0) {
+Win32IDE_VSCodeUI.cpp:351:chatText += m_currentToolActions.renderBubblesPlainText();
+Win32IDE_VSCodeUI.cpp:403:if (m_currentToolActions.totalActions() > 0) {
+Win32IDE_VSCodeUI.cpp:406:for (const auto& a : m_currentToolActions.actions()) {
+Win32IDE_VSCodeUI.cpp:413:m_currentToolActions.clear();
+Win32IDE.h:2249:RawrXD::UI::ToolActionAccumulator m_currentToolActions;  // accumulator for current response
+Win32IDE_temp.h:2418:RawrXD::UI::ToolActionAccumulator m_currentToolActions;         // accumulator for current response
+PRODUCER_PRESENT=0
+BLOCKER=ACCUMULATOR_NO_PRODUCER
+CONSUMER=Win32IDE_VSCodeUI.cpp sendCopilotMessage AdmitToolActionForProductHistory
+GATE_REQUIRES=m_currentToolActions.totalActions()>0
+HANDLE_TOOL_ACTION_STATUS=GATED_STUB_ONLY (Win32IDE_ToolActionStatus.cpp)
+DISPATCH_MODEL_TOOL_CALLS=does_not_feed_m_currentToolActions

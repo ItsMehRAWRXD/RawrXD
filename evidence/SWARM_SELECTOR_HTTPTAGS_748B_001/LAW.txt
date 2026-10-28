@@ -1,0 +1,29 @@
+SWARM_SELECTOR_HTTPTAGS_748B_001
+================================
+SCOPE=Win32IDE SwarmModelSelector + Ollama HttpTags UI/product path on TIP 748B
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+REBUILD_TIP=0
+NO_INVENT_PASS=1
+
+PRODUCT_PATH
+------------
+1. TAG_FETCH  = tip GET /api/tags + appendLocalOllamaHttpTags (127.0.0.1:11434)
+2. SELECT     = resolveSwarmModelOrchPlan / enumerateSwarmModelCandidates
+3. ROUTE      = POST /api/swarm/orch (HeadlessIDE_SwarmOrch)
+
+FAIL_CLOSED
+-----------
+Empty inventory => HTTP 503 disposition=FAIL_CLOSED_EMPTY_INVENTORY RUNTIME_PASS=false
+LOCAL_ONLY_NO_OLLAMA + empty roots exercises this on tip without inventing models.
+
+UI
+--
+populateModelSelector merges enumerateSwarmModelCandidates (SOURCE_WIRED this turn).
+Tip binary not rebuilt (REBUILD=0). GhostText absorb NOT_AUTHORIZED.
+
+SOURCE_EXTRAS (not tip)
+-----------------------
+HeadlessIDE_SwarmOrch resolveOnly=true returns RESOLVE_ONLY_SELECTED without executeSwarm.
+PROMOTE remains 0.

@@ -1,0 +1,13 @@
+ASOF_UTC=2026-10-28T17:17:00Z
+TIP=748B210A…
+SHA_MATCH=1
+TAG_FETCH=PASS (tip /api/tags 200 + Ollama /api/tags 200)
+SELECT_ROUTE=PASS (POST /api/swarm/orch resolveInvoked models=[llama3.2:3b] RUNTIME_PASS=1)
+FAIL_CLOSED=PASS (503 EMPTY_INVENTORY under LOCAL_ONLY_NO_OLLAMA)
+UI_SOURCE_WIRED=1 (populateModelSelector)
+TIP_REBUILD=0
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NOTE=Worker completed with [Error: No Inference Engine] — orch accounting PASS ≠ inference quality PASS; PROMOTE held.

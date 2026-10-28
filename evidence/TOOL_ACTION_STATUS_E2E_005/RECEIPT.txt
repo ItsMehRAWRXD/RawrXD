@@ -1,0 +1,95 @@
+TOOL_ACTION_STATUS_E2E_005 / RECEIPT
+====================================
+ASOF_UTC=2026-10-28T17:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_THIS_DISPATCH=0
+FREEZE_UNTOUCHED=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+TIP
+---
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH=1
+TIP_REBUILD=N
+
+CASE
+----
+UI / chat AdmitToolActionForProductHistory runtime on frozen tip 748B
+
+ATTEMPTED
+---------
+1. Verified tip SHA == FROZEN 748B210A… (FREEZE_UNTOUCHED=1)
+2. Confirmed tip image contains Admit reason strings
+   (reject_finished_without_receipt / reject_synthetic /
+    reject_terminal_without_exit / reject_post_cancel_success) + GateStub DEMO
+3. Source producer scan: m_currentToolActions.addAction hits = 0
+4. Consumer path: Win32IDE_VSCodeUI.cpp sendCopilotMessage gate
+   requires totalActions()>0 before AdmitToolActionForProductHistory
+5. Cited E2E_004 unit PASS (ADMIT_UNIT_FAILS=0) — NOT promoted to RUNTIME
+
+CHECKS
+------
+TIP_SHA_MATCH=1
+TIP_ADMIT_REASON_STRINGS_PRESENT=1
+TIP_EXE_PLAIN_ADMIT_SYMBOL_NAME=0
+TIP_PDB_ADMIT_CITE_004=1
+ADMIT_UNIT_CITE_004=PASS
+PRODUCER_PRESENT=0
+ACCUMULATOR_ADD_ACTION_HITS=0
+ACCUMULATOR_REF_SITES=7 (render/admit/clear/decls only)
+HANDLE_TOOL_ACTION_STATUS=GATED_STUB_ONLY
+DISPATCH_FEEDS_ACCUMULATOR=0
+UI_CHAT_ADMIT_RUNTIME=NOT_RUN
+RUNTIME_REACHED=0
+A05_MET=0
+
+BLOCKER
+-------
+ID=ACCUMULATOR_NO_PRODUCER
+SCOPE=UI chat Admit path (sendCopilotMessage → AdmitToolActionForProductHistory)
+WHY=No win32app call site feeds m_currentToolActions; admit loop never entered
+NEXT_REQUIRES=wire real tool-result → ToolActionAccumulator producer
+  THEN rebuild+new freeze (explicit absorb) THEN re-run UI chat Admit E2E
+REBUILD_AUTHORIZED_THIS_DISPATCH=0
+
+DISPOSITION
+-----------
+FAIL_CLOSED_NOT_RUN
+UI_CHAT_ADMIT_RUNTIME=NOT_RUN
+DO_NOT_INVENT_MET_FROM_UNIT=1
+PRIOR_E2E_004_UNIT_PDB_EARNED_RETAINED=1
+HISTORICAL_2B9B_E2E_003=NO_TRANSFER
+B421_ABSORB=NOT_AUTHORIZED
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+
+ALIAS
+-----
+UI_ADMIT_TIP_001 → this seal (UI chat Admit tip exercise / FAIL_CLOSED)
+
+LOGS
+----
+logs/exe_sha.txt
+logs/producer_scan.txt
+logs/tip_admit_link.txt
+logs/admit_unit_cite_004.txt
+
+CITE_PRIOR
+----------
+TOOL_ACTION_STATUS_E2E_004 (unit+PDB EARNED; UI_CHAT NOT_RUN)
+TOOL_ACTION_STATUS_E2E_002 (4-case RUNTIME_PARTIAL on historical tip)
+TIP_FREEZE_001 / TIP_EXE_AUTHORITY (748B product tip)
+WIN32IDE_CLOSURE_MATRIX_001 A05 / S-001 (not MET)
+
+WORKSTREAM
+----------
+STATUS=CLOSED_FAIL_CLOSED
+UI_CHAT_ADMIT=NOT_RUN
+BLOCKER=ACCUMULATOR_NO_PRODUCER
+PROMOTE=0

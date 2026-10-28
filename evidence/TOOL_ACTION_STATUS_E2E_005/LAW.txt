@@ -1,0 +1,46 @@
+TOOL_ACTION_STATUS_E2E_005 / LAW
+=================================
+ASOF_UTC=2026-10-28T17:15:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_THIS_DISPATCH=0
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PRODUCT_EXE=evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+
+PURPOSE
+-------
+Exercise real UI/chat Admit path on frozen tip 748B after E2E_004
+(unit+PDB EARNED). Do not invent MET from unit-only.
+
+PRIOR (retained; no rewrite)
+----------------------------
+TOOL_ACTION_STATUS_E2E_004:
+  ADMIT_UNIT=PASS TIP_PDB_ADMIT=1 DISPOSITION=EARNED
+  UI_CHAT_ADMIT_RUNTIME=NOT_RUN
+
+VERDICT
+-------
+UI_CHAT_ADMIT_RUNTIME=NOT_RUN
+DISPOSITION=FAIL_CLOSED_NOT_RUN
+A05_MET=0
+BLOCKER=ACCUMULATOR_NO_PRODUCER
+
+LAW
+---
+1. SOURCE_WIRED != RUNTIME_REACHED != MET
+2. NOT_RUN != PASS
+3. Unit+PDB EARNED on 748B does NOT transfer to UI chat Admit RUNTIME
+4. REBUILD tip=0 this dispatch — cannot wire producer into freeze
+5. B421 GhostText absorb NOT_AUTHORIZED
+6. PROMOTE stays 0
+
+BLOCKER DETAIL
+--------------
+sendCopilotMessage admits only when m_currentToolActions.totalActions()>0.
+win32app has zero m_currentToolActions.addAction / begin* producers.
+HandleToolActionStatus = GateStub only (SYNTHETIC DEMO).
+DispatchModelToolCalls / hookToolResult do not feed the accumulator.
+Therefore UI chat Admit consumer is tip-linked but unreachable at runtime.

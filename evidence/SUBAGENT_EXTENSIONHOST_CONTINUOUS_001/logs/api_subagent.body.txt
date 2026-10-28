@@ -1,0 +1,1 @@
+{"success":true,"accepted":true,"status":"spawned","agentId":"hsub-41640-1","nativeHexMag":false}
