@@ -371,3 +371,60 @@ G05_G06=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 11: bounded all-routed-expert independent aggregate oracle
+
+The native GPU worklist previously captured scalar inputs from at most
+one cold expert per stick, preventing independent verification of a
+multi-expert weighted aggregate. With the **new opt-in**
+\`DEEP2_MOE_CAPTURE_ALL_EXPERTS=1\` and a valid same-run ID, it now
+attempts to capture every routed expert's host-visible Q4_K gate/up,
+Q6_K down, and normalized hidden input **before** command recording.
+This is bounded to 1–8 routed experts. It logs
+\`GPU_SCALAR_ALL_INPUT_CAPTURE\` with \`COMPLETE_DIAGNOSTIC\` only when
+all experts were saved, otherwise \`INCOMPLETE\`. Host-inaccessible
+resident experts fail the input coverage requirement; this diagnostic
+does not alter or disable the normal GPU inference path. Previous
+single-expert capture behavior remains the default.
+
+Added \`tools/k2_all_expert_aggregate_oracle.py\` to consume the
+post-EndDevice GPU/CPU aggregate witness and every ordered routed
+expert's input witness. All manifests must match the same run ID,
+layer, stick, and expert identity. Any missing expert, malformed
+tensor, nonfinite route, or shape mismatch fails closed. It
+independently evaluates each expert via Q4_K gate/up, SwiGLU and Q6_K
+down, applies its captured route weight, and sums the expert outputs
+before comparing **GPU vs oracle**, **CPU vs oracle**, and **GPU vs CPU**
+at explicit max-absolute and RMS tolerances. The receipt includes
+per-expert packed-input hashes, aggregate hashes and the weighted
+scalar-oracle hash.
+
+Example (with a freshly allocated private evidence directory):
+
+\`\`\`powershell
+$env:DEEP2_MOE_PARITY_RUN_ID = [guid]::NewGuid().ToString('N')
+$env:DEEP2_MOE_PARITY_CAPTURE_DIR = 'F:\rawrxd\evidence\KIMI_ALL_EXPERTS_001'
+$env:DEEP2_MOE_GPU_PARITY = '1'
+$env:DEEP2_MOE_GPU_PARITY_LIMIT = '8'
+$env:DEEP2_MOE_CAPTURE_ALL_EXPERTS = '1'
+# After a real GPU run and review of the COMPLETE_DIAGNOSTIC receipt:
+python tools/k2_all_expert_aggregate_oracle.py --aggregate-manifest "F:\rawrxd\evidence\KIMI_ALL_EXPERTS_001\k2_l2_s0_aggregate_comparison.manifest.txt" --scalar-dir "F:\rawrxd\evidence\KIMI_ALL_EXPERTS_001" --max-abs 0.01 --max-rms 0.001 --receipt "F:\rawrxd\evidence\KIMI_ALL_EXPERTS_001\all_expert_oracle_receipt.json"
+\`\`\`
+
+Layer 2 and tolerances are examples, **not real receipt values or approved
+thresholds**. The directory must already exist. Partial input capture
+is never sufficient for this audit. Captures remain CPU input evidence
+and completed GPU aggregate evidence only; no per-expert GPU output
+buffer identity is demonstrated. G05/G06 remain blocked.
+Eight synthetic scenarios are registered in CI and the Windows runner.
+No new native MSVC or Vulkan runtime result is claimed.
+
+\`\`\`ini
+ALL_EXPERT_INPUT_CAPTURE=SOURCE_COMMITTED_OPT_IN
+ALL_EXPERT_INDEPENDENT_ORACLE=SOURCE_COMMITTED
+SYNTHETIC_TESTS=ADDED_NOT_EXECUTED
+GPU_PER_EXPERT_BUFFER_IDENTITY=UNPROVEN
+CERTIFIED_GATES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
