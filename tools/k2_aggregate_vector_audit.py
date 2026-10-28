@@ -85,7 +85,16 @@ def read_capture(manifest):
 def compare(record, max_abs, max_rms):
     if not all(math.isfinite(x) and x >= 0 for x in (max_abs, max_rms)):
         raise ValueError("explicit finite nonnegative thresholds required")
+    rows = record["rows"]
     gpu, cpu = record["vectors"]["gpu"], record["vectors"]["cpu"]
+    # Never allow zip() to truncate a mismatched or incomplete vector:
+    # every element of both candidate and reference must be checked.
+    if (type(rows) is not int or rows < 1 or
+            len(gpu) != rows or len(cpu) != rows):
+        raise ValueError("full-vector length mismatch")
+    if any(not math.isfinite(v) for v in gpu) or any(
+            not math.isfinite(v) for v in cpu):
+        raise ValueError("nonfinite candidate/reference element")
     delta = [a - b for a, b in zip(gpu, cpu)]
     if any(not math.isfinite(v) for v in delta):
         raise ValueError("nonfinite difference")
