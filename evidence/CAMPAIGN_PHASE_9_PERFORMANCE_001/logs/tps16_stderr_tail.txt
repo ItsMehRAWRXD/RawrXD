@@ -1,0 +1,40 @@
+[LAYER_ENTER] ly=11
+[POST_ATTN] ly=11 output[0..7]= 0.00791889 0.0307424 -0.00585143 0.0406679 0.0508927 0.0154525 -0.0267065 0.0534117 
+[DEBUG] ly=11 entering attention check, array size=7, layer=11
+  [0]=5
+  [1]=12
+  [2]=19
+  [3]=26
+  [4]=33
+  [5]=42
+  [6]=52
+[DEBUG] ly=11 isAttentionOnly=0 (layer=11)
+[FFN_WEIGHT_DIAG] ly=11 intermediateDim=5632 gateBufNorm=3.060990e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=11 (normal path)
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=4.428397e+00 finite=2048/2048 output[0..7]= -0.0428499 0.0356461 0.0131834 -0.0491391 -0.0380757 -0.0904285 0.0554154 0.122724 
+[LAYER_ENTER] ly=12
+[POST_ATTN] ly=12 output[0..7]= -0.00414689 -0.0676104 -0.00665759 -0.026113 0.0223475 -0.0813176 0.0835441 0.0261197 
+[DEBUG] ly=12 entering attention check, array size=7, layer=12
+  [0]=5
+  [1]=12
+  [2]=19
+  [3]=26
+  [4]=33
+  [5]=42
+  [6]=52
+[DEBUG] ly=12 isAttentionOnly=1 (layer=12)
+[FFN_SKIP] ly=12 attention-only layer — attention residual passes through
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=4.958504e+00 finite=2048/2048 output[0..7]= -0.0469968 -0.0319644 0.00652579 -0.0752521 -0.0157282 -0.171746 0.138959 0.148844 
+[LAYER_ENTER] ly=13
+[POST_ATTN] ly=13 output[0..7]= 0.0021593 0.0304817 -0.076775 0.0880686 -0.067727 0.0896769 0.0159506 0.0335488 
+[DEBUG] ly=13 entering attention check, array size=7, layer=13
+  [0]=5
+  [1]=12
+  [2]=19
+  [3]=26
+  [4]=33
+  [5]=42
+  [6]=52
+[DEBUG] ly=13 isAttentionOnly=0 (layer=13)

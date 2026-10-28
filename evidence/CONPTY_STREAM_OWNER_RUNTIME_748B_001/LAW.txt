@@ -1,0 +1,63 @@
+CONPTY_STREAM_OWNER_RUNTIME_748B_001 / LAW
+==========================================
+ASOF_UTC=2026-10-28T17:22:29Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+NO_TIP_REBUILD=1
+
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_PATH=evidence/TIP_FREEZE_001/bin/RawrXD-Win32IDE.exe
+HISTORICAL_RELINK_GAP_TIP=6832F439… (CONPTY_STREAM_OWNER_001 / SHELLLAYOUT_PHASE5_001)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+PostMessage != PASS
+Pre-existing cmd.exe (agent pane) != PowerShell ConPTY witness
+CHROME_VIS absent != invent PHASE5_RUNTIME PASS
+
+MISSION
+-------
+Close CONPTY_STREAM_OWNER + ShellLayout phase5 RELINK gaps against frozen
+tip 748B without GhostText absorb / tip climb. Exercise tip GUI RUNTIME
+honestly; refuse fake success.
+
+RELINK_CLOSED (earned)
+----------------------
+Tip 748B binary contains:
+  CreatePseudoConsole_absent / CreatePseudoConsole_failed
+  CONPTY_STREAM_OWNER_001
+  SHELLLAYOUT_PHASE5_001 / null_hwnd / dead_hwnd / getPowerShellPanel
+SHA_MATCH_748B=1
+=> RELINK_REQUIRED from prior 6832F439 SOURCE_WIRED seals is CLOSED on tip 748B
+   (absorb already in freeze; NO new EXE rebuild this packet).
+
+RUNTIME (fail-closed this run)
+------------------------------
+Harness: harness_conpty_phase5.ps1
+  RAWRXD_SHELL_LAYOUT_REBUILD=1 RAWRXD_SHELL_LAYOUT_PHASE=5
+  MAIN_HWND != 0
+  Post WM_SIZE + WM_COMMAND 2029 + 4001
+  NEW_PS_CHILD=0 CONPTY_WITNESS=0 STREAM_IO=0
+  GATE_TERMINAL=0 GATE_STREAM=0
+  CHROME_VIS=0
+RUNTIME_REACHED=0
+RUNTIME_PASS=0
+PHASE5_RUNTIME=0 (soft HWND/no-gate only; chrome witness absent)
+
+OWNERSHIP (unchanged product split)
+-----------------------------------
+TERMINAL_CHROME_GEOMETRY_OWNER = getPowerShellPanel (SHELLLAYOUT_PHASE5_001)
+CONPTY_STREAM_PTY_OWNER        = Win32TerminalManager (CONPTY_STREAM_OWNER_001)
+
+OUT OF SCOPE
+------------
+GhostText absorb / new product SHA / PROMOTE / tip climb
+PHASE=6 spatial / MULTI_FAMILY reopen
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
