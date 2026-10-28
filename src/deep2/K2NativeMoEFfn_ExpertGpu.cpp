@@ -312,6 +312,31 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                      H - nonFinite, nonFinite);
         std::fflush(stderr);
 
+        /* Capture only fully evaluated finite aggregate pairs, after the
+           completed K2MoEStickEndDevice D2H. This evidence must never be
+           presented as one expert's GPU down-projection or activation. */
+        if (!nonFinite) {
+            std::vector<int> expertIds;
+            std::vector<float> routeWeights;
+            expertIds.reserve(work.size());
+            routeWeights.reserve(work.size());
+            for (const auto& r : work) {
+                expertIds.push_back(r.expertId);
+                routeWeights.push_back(r.weight);
+            }
+            const char* captureDir = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+            if (captureDir && captureDir[0]) {
+                const bool saved = k2_parity_capture::CaptureAggregateComparison(
+                    stick, layer, gpuAggregate, cpuAggregate.data(), H,
+                    expertIds.data(), routeWeights.data(), work.size());
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_VECTOR_CAPTURE layer=%u stick=%u "
+                             "status=%s scope=AGGREGATE_ONLY certified=0\n",
+                             layer, stick, saved ? "WRITTEN" : "SKIPPED");
+                std::fflush(stderr);
+            }
+        }
+
         const char* stageEnv = std::getenv("DEEP2_MOE_GPU_STAGE_PARITY");
         if (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0' &&
             lastExpert >= 0 && work.size() != 1u) {
