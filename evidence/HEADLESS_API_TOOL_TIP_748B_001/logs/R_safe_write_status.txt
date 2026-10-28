@@ -1,0 +1,1 @@
+safe_write_status|200|{"initialized":true,"owner":"SafeWriteAtomic","atomic":"tmp+ReplaceFileA|MoveFileExA","phase10_independent":true,"writes":1,"rollbacks":0,"stack":1,"next_id":2}

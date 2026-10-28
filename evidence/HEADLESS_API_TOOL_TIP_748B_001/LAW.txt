@@ -1,0 +1,54 @@
+HEADLESS_API_TOOL_TIP_748B_001 / LAW
+====================================
+ASOF_UTC=2026-10-28T17:12:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD=0
+LOCAL_ONLY=1
+P0=G16 tip-748B re-seal + critical ToolRoutes wave
+MATRIX=WIN32IDE_CLOSURE_MATRIX_001
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+Historical HEADLESS_API_TOOL_TIP_001 (6832F439…) = HISTORICAL_SHA_ONLY vs tip 748B
+GhostText B421… ABSORB=NOT_AUTHORIZED
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH=1
+NO_CLOBBER_TIP_FREEZE=1
+
+CMD
+---
+RawrXD-Win32IDE.exe --headless --local --port <N> --bind 127.0.0.1
+  --dir evidence/HEADLESS_API_TOOL_TIP_748B_001/sandbox
+ENV RAWRXD_HOSTED_API_KEY=<ephemeral>
+ENV RAWRXD_HOSTED_API_SCOPES=read,inference,models,github,admin
+ENV RAWRXD_IDE_EXEC_GRANT=1   # grant phase only
+CLIENT=curl.exe POST /api/tool  body={"tool":"...","args":{...}}
+
+G16 (tip 748B)
+--------------
+POS read_motd + list_directory → HTTP 200
+NEG Origin https://evil.example → HTTP 403 origin_denied
+G16_MET=1 on SHA 748B210A…
+
+CRITICAL WAVE
+-------------
+see ROUTE_TABLE.txt (HTTP + DISPOSITION + SHA per route)
+
+SOURCE GAP (no tip clobber)
+---------------------------
+grep|grep_files → search_files alias landed in
+  src/win32app/HeadlessIDE_ToolRoutes.cpp
+Tip binary still returns unknown_tool for grep_files (FAIL_CLOSED earned).
+RUNTIME for grep alias requires new freeze after explicit relink — not this dispatch.
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

@@ -1,0 +1,1 @@
+{"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\headless_api_tool_tip_748b_001\\sandbox\\w_curl.txt","name":"w_curl.txt","size":2,"atomic":true,"previewed":true,"rollback_id":1,"message":"File written atomically"}

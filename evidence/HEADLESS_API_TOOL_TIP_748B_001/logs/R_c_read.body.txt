@@ -1,0 +1,1 @@
+{"content":"seed748b\r\n","name":"seed.txt","size":10,"path":"g:\\~dev\\rawrxd\\evidence\\headless_api_tool_tip_748b_001\\sandbox\\seed.txt","tool":"read_file"}

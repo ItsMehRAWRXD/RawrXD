@@ -1,0 +1,47 @@
+UI_DIFF_CHAT_CONTINUOUS_001 / RECEIPT
+=====================================
+ASOF_UTC=2026-10-28T17:12:30Z
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+NO_TIP_GHOSTTEXT_CLAIM=1
+REBUILD=0
+NO_INVENT_PASS=1
+
+EXECUTED
+--------
+1) --headless --agent-gui-proof  EXIT=0
+   AGENT_GUI_PROOF files=1 review=1 stop=1 restore=1 session=69610937
+2) GUI launch (no stdout redirect) + EnumWindows Unicode
+   RawrXD_AnnotationOverlay hwnd=0x6D0A98
+   RawrXDAnnotationOverlay hwnd=0x327032A
+   AI Chat Static hwnd=0x180C6C
+   Model: Static hwnd=0x2E0632
+   RawrXD_IDE_MainWindow hwnd=0x200B4E
+3) --headless HTTP :11435
+   /gui -> 404
+   /ide_chatbot_engine.js -> 404
+   /gui/ide_chatbot_engine.js -> 404
+   /api/model/profiles -> 405
+   /api/models -> 200 {"models":[]}
+   /api/status -> 200 RawrXD-HeadlessIDE
+
+GATES
+-----
+DIFF_REVIEW_PASS=1
+CHAT_PANEL_HWND_PASS=1
+ANNOTATION_OVERLAY_HWND_PASS=1
+UI_TRIAD_PASS=1
+CHATBOT_ENGINE_PRODUCT_WIRED_RUNTIME=0
+CERTIFIED=0
+PROMOTE=0
+
+ARTIFACTS
+---------
+LAW.txt SUMMARY.txt RECEIPT.txt GATE.txt EXE_SHA256.txt
+AGENT_GUI_PROOF_LINE.txt HWND_SUMMARY.txt HWND_MATCHES.txt
+logs/agent_gui_proof_stdout.txt logs/hwnd_dump2.txt
+logs/chatbot_engine_probe.txt logs/http_probe.txt

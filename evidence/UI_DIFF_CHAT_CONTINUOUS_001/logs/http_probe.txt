@@ -1,0 +1,30 @@
+﻿PORT=18971 PATH=/ FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=18971 PATH=/gui FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=18971 PATH=/api/model/profiles FAIL code=405 err=The remote server returned an error: (405) Method Not Allowed.
+PORT=18971 PATH=/gui/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=18971 PATH=/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11435 PATH=/ FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11435 PATH=/gui FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11435 PATH=/api/model/profiles FAIL code=405 err=The remote server returned an error: (405) Method Not Allowed.
+PORT=11435 PATH=/gui/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11435 PATH=/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=8080 PATH=/ FAIL code= err=The operation has timed out.
+PORT=8080 PATH=/gui FAIL code= err=Unable to connect to the remote server
+PORT=8080 PATH=/api/model/profiles FAIL code= err=The operation has timed out.
+PORT=8080 PATH=/gui/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=8080 PATH=/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=8765 PATH=/ FAIL code= err=The operation has timed out.
+PORT=8765 PATH=/gui FAIL code= err=The operation has timed out.
+PORT=8765 PATH=/api/model/profiles FAIL code= err=The operation has timed out.
+PORT=8765 PATH=/gui/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=8765 PATH=/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=18951 PATH=/ FAIL code= err=The operation has timed out.
+PORT=18951 PATH=/gui FAIL code= err=The operation has timed out.
+PORT=18951 PATH=/api/model/profiles FAIL code= err=The operation has timed out.
+PORT=18951 PATH=/gui/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=18951 PATH=/ide_chatbot_engine.js FAIL code= err=The operation has timed out.
+PORT=11434 PATH=/ CODE=200 LEN=17
+PORT=11434 PATH=/gui FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11434 PATH=/api/model/profiles FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11434 PATH=/gui/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.
+PORT=11434 PATH=/ide_chatbot_engine.js FAIL code=404 err=The remote server returned an error: (404) Not Found.

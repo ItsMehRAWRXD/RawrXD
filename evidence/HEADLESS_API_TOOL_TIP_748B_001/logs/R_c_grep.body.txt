@@ -1,0 +1,1 @@
+{"error":"unknown_tool","message":"Unknown tool: grep_files","available":["read_motd","read_file","write_file","list_directory","execute_command","git_status","delete_file","rename_file","copy_file","move_file","mkdir","stat_file","search_files","safe_write_preview","safe_write_rollback","safe_write_status"]}

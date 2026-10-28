@@ -395,6 +395,8 @@ void HeadlessIDE::routeToolAndFileRequest(const HostedHttpRequest& request,
         /* Harness aliases — same ownership, not parallel tools. */
         if (tool == "list_dir") tool = "list_directory";
         if (tool == "cli" || tool == "command") tool = "execute_command";
+        /* AgentToolShell lists grep_files; Headless search owns the impl. */
+        if (tool == "grep" || tool == "grep_files") tool = "search_files";
     } else if (path == "/api/read-file" || path == "/api/file/read" || path == "/api/file") {
         tool = "read_file";
         args = body;

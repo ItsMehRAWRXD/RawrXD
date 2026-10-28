@@ -1,0 +1,1 @@
+list_directory|200|{"path":"g:\\~dev\\rawrxd\\evidence\\headless_api_tool_tip_748b_001\\sandbox","entries":[{"name":"headless_server.log","type":"file"},{"name":"rawrxd_audit.jsonl","type":"file"},{"name":"rawrxd_headless_history","type":"dir"},{"name":"seed.txt","type":"file"},{"name":"w_curl.txt","type":"file"}]}

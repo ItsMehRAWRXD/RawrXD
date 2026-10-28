@@ -1,0 +1,26 @@
+UI_DIFF_CHAT_CONTINUOUS_001 / LAW
+=================================
+ASOF_UTC=2026-10-28T17:12:00Z
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+NO_TIP_GHOSTTEXT_CLAIM=1
+REBUILD=0
+
+SCOPE
+-----
+Continuous Win32IDE E2E for:
+  (1) diff review (agent window proof path)
+  (2) chat panel (live HWND)
+  (3) AnnotationOverlay (live HWND)
+Plus chatbot engine product-wire check (gui/ide_chatbot_engine.js) if RUNTIME-reachable.
+
+FAIL-CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+Do not transfer historical ABSORB_SEAL gates onto tip 748B without re-run.

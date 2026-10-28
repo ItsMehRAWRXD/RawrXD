@@ -1,0 +1,24 @@
+# HEADLESS_TOOL_ROUTES extension — tip 748B RUNTIME wave
+# Authority: evidence/HEADLESS_API_TOOL_TIP_748B_001/ROUTE_TABLE.txt
+# TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+# PROMOTE=0 TIP_CLIMB=HOLD NO_INVENT_PASS=1 REBUILD=0
+
+ROUTE|TOOL|HTTP|DISPOSITION|NOTE
+POST /api/tool|read_motd|200|RUNTIME|MOTD gate
+POST /api/tool|read_file|200|RUNTIME|critical
+POST /api/tool|list_directory|200|RUNTIME|critical
+POST /api/tool|list_dir|200|RUNTIME|alias
+POST /api/tool|write_file|200|RUNTIME|safe_write path
+POST /api/tool|safe_write_preview|200|RUNTIME|
+POST /api/tool|safe_write_status|200|RUNTIME|
+POST /api/tool|safe_write_rollback|200|RUNTIME|
+POST /api/tool|search_files|200|RUNTIME|search present
+POST /api/tool|grep_files|400|FAIL_CLOSED|tip unknown_tool; source alias pending freeze
+POST /api/tool|execute_command|403/200|FAIL_CLOSED+RUNTIME|nogrant/grant
+NEG|origin_denied|403|FAIL_CLOSED|
+NEG|unauthorized (key cfg)|401|FAIL_CLOSED|
+NEG|bare no-key unset|200|RUNTIME_UNAUTH_LOCAL|documented
+NEG|write fence abs/..|403|FAIL_CLOSED|
+
+NEXT_OPEN=grep_files RUNTIME after new freeze (alias already SOURCE_WIRED)
+PROMOTE=0

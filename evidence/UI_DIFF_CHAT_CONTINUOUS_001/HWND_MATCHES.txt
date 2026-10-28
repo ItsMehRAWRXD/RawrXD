@@ -1,0 +1,7 @@
+TOP hwnd=0x6D0A98 visible=False class='RawrXD_AnnotationOverlay' title='RawrXD Annotation Overlay'
+TOP hwnd=0x200B4E visible=True class='RawrXD_IDE_MainWindow' title='RawrXD ScreenPilot â€” Desktop Preview'
+  CHILD hwnd=0x327032A visible=True class='RawrXDAnnotationOverlay' title=''
+    GCHILD hwnd=0x180C6C visible=True class='Static' title='AI Chat'
+    GCHILD hwnd=0x2E0632 visible=True class='Static' title='Model:'
+  CHILD hwnd=0x180C6C visible=True class='Static' title='AI Chat'
+  CHILD hwnd=0x2E0632 visible=True class='Static' title='Model:'
