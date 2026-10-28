@@ -1,0 +1,9 @@
+model=nemotron-3.5-lightning:30b
+completion_len=68
+completion_prefix=n 0; }<end_of_text></think>int main() {.    return 0;.}<end_of_text>
+model_b=nemotron-3-nano:4b
+completion_b_len=150
+multiline_fixture=1
+multiline_ghost_newlines=2
+multiline_nl_before=1
+multiline_nl_after=3

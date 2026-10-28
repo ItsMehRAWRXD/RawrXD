@@ -1,0 +1,9 @@
+model=nemotron-3-nano:4b
+completion_len=170
+completion_prefix=int main() { .    int a = 10;.    return 0;.}<|fim_ending|>.```..But note: the problem says "You must use ```python for just the final solution code block". So 
+model_b=qwen3:8b
+completion_b_len=129
+multiline_fixture=1
+multiline_ghost_newlines=2
+multiline_nl_before=1
+multiline_nl_after=3

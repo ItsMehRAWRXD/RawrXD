@@ -1,0 +1,20 @@
+cmdline=--test-ghost-text 
+PASS main_window_created
+PASS editor_window_created
+PASS ghost_text_timer_started
+PASS ollama_ghost_completion_nonempty
+PASS ollama_ghost_buffer_unchanged_until_tab
+PASS ollama_ghost_visible
+PASS ollama_ghost_esc_dismiss_no_mutation
+PASS ollama_ghost_pre_tab_buffer_unchanged
+PASS ollama_ghost_tab_accept_mutates
+PASS ollama_ghost_tab_accept_undo
+PASS ollama_ghost_stale_dismiss
+PASS ollama_ghost_model_switch_tags_differ
+PASS ollama_ghost_model_switch_completion
+PASS ghost_multiline_span_ge2
+PASS ghost_multiline_visible
+PASS ghost_multiline_esc_dismiss_no_mutation
+PASS ghost_multiline_tab_accept_mutates
+PASS ghost_multiline_tab_accept_into_buffer
+SUMMARY passed=18 failed=0

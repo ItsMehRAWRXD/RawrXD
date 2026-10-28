@@ -1,0 +1,7 @@
+PRODUCT_CANDIDATE_ABSORB=OUT_OF_SCOPE
+THIS_TURN=multiline_close_on_witness_only
+NEXT=new_freeze_plus_TOKEN64_MF_regression_on_new_SHA
+ABSORB_REQUIRES=separate_tip_absorb_decision
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_COPY_B421_OVER_748B=1

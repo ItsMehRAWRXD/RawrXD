@@ -1,0 +1,9 @@
+model=nemotron-3.5-bolt:latest
+completion_len=6
+completion_prefix=n 0;.}
+model_b=nemotron-3-nano:4b
+completion_b_len=150
+multiline_fixture=1
+multiline_ghost_newlines=2
+multiline_nl_before=1
+multiline_nl_after=3

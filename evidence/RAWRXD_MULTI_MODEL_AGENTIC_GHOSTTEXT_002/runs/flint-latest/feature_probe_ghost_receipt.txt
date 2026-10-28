@@ -1,0 +1,9 @@
+model=flint:latest
+completion_len=156
+completion_prefix=n = 10;.    for (int i = 0; i < n; i++) {.        cout << "Hello, World!" << endl;.    }.    return 0;.}<|fim_middle|>n = 5;.    for (int i = 0; i < n; i++)
+model_b=nemotron-3-nano:4b
+completion_b_len=236
+multiline_fixture=1
+multiline_ghost_newlines=2
+multiline_nl_before=1
+multiline_nl_after=3

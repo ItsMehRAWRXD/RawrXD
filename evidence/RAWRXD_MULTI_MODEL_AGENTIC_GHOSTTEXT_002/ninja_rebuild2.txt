@@ -1,0 +1,13 @@
+START=Wed 10/28/2026 10:37:43.16
+CONTENTION_CLEAR=1
+SINGLE_CANDIDATE=1
+NINJA_J=2
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\ninja.exe
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Links\ninja.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj
+[2/2] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe
+NINJA_EXIT=0
+END=Wed 10/28/2026 10:37:59.20
+SHA_FILE_WRITTEN

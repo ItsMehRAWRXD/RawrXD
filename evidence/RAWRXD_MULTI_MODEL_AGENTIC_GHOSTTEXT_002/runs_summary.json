@@ -1,0 +1,7 @@
+﻿[
+  {"Model":"nemotron-3-nano:4b","Exit":0,"ElapsedMs":17145,"Pass":true,"Summary":"passed=18 failed=0","Multiline":"PASS"},
+  {"Model":"qwen3:8b","Exit":0,"ElapsedMs":6040,"Pass":true,"Summary":"passed=18 failed=0","Multiline":"PASS"},
+  {"Model":"nemotron-3.5-bolt:latest","Exit":0,"ElapsedMs":47330,"Pass":true,"Summary":"passed=18 failed=0","Multiline":"PASS"},
+  {"Model":"nemotron-3.5-lightning:30b","Exit":0,"ElapsedMs":37273,"Pass":true,"Summary":"passed=18 failed=0","Multiline":"PASS"},
+  {"Model":"flint:latest","Exit":0,"ElapsedMs":39285,"Pass":true,"Summary":"passed=18 failed=0","Multiline":"PASS"}
+]

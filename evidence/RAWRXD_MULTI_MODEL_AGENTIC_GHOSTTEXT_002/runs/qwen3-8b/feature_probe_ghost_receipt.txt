@@ -1,0 +1,9 @@
+model=qwen3:8b
+completion_len=129
+completion_prefix=..The code you've provided has a few syntax errors. Let me correct them for you:..```cpp.#include <iostream>.using namespace std;
+model_b=nemotron-3-nano:4b
+completion_b_len=150
+multiline_fixture=1
+multiline_ghost_newlines=2
+multiline_nl_before=1
+multiline_nl_after=3
