@@ -27,13 +27,11 @@ def fixture(root, routes=((44, 0.25), (45, 0.75)), *, gpu=None, cpu=None,
                                      f"k2_l2_e{eid}_s0_scalar_inputs")
             file.rename(scalar_dir / name)
         new = scalar_dir / f"k2_l2_e{eid}_s0_scalar_inputs.manifest.txt"
-        new.write_text(new.read_text().replace("layer=1\n", "layer=2\n")
-                       .replace("expert=44\n", f"expert={eid}\n") +
-                       f"run_id={bad_run if eid == bad_run else RUN}\n"
-                       if isinstance(bad_run, int) else
-                       new.read_text().replace("layer=1\n", "layer=2\n")
-                       .replace("expert=44\n", f"expert={eid}\n") +
-                       f"run_id={bad_run if eid == routes[-1][0] and bad_run else RUN}\n")
+        run_id = bad_run if eid == routes[-1][0] and bad_run else RUN
+        new.write_text(
+            new.read_text().replace("layer=1\n", "layer=2\n")
+            .replace("expert=44\n", f"expert={eid}\n")
+            + f"run_id={run_id}\n")
     zeros = tuple(0.0 for _ in range(256))
     aggregate = create_aggregate(
         aggregate_dir, routes=routes,
