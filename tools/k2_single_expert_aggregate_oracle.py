@@ -38,17 +38,23 @@ def audit(aggregate_manifest, scalar_manifest, max_abs, max_rms):
     weighted_oracle = [float(route) * value for value in scalar["down"]]
     if not all(math.isfinite(value) for value in weighted_oracle):
         raise ValueError("NONFINITE_WEIGHTED_ORACLE")
-    # compare() is the existing finite full-vector absolute/RMS comparator.
+    # Three-way comparison: independently calculated oracle must agree with
+    # BOTH the completed GPU aggregate and the captured CPU aggregate.
+    # An optimized host kernel cannot be silently assumed to equal the oracle.
     record = dict(aggregate)
-    record["vectors"] = {
-        "gpu": aggregate["vectors"]["gpu"],
-        "cpu": weighted_oracle,
-    }
-    metrics = compare(record, max_abs, max_rms)
+    comparisons = {}
+    for label, candidate, reference in (
+        ("gpu_vs_oracle", aggregate["vectors"]["gpu"], weighted_oracle),
+        ("cpu_vs_oracle", aggregate["vectors"]["cpu"], weighted_oracle),
+        ("gpu_vs_cpu", aggregate["vectors"]["gpu"], aggregate["vectors"]["cpu"]),
+    ):
+        record["vectors"] = {"gpu": candidate, "cpu": reference}
+        comparisons[label] = compare(record, max_abs, max_rms)
+    passed = all(result["within_threshold"] for result in comparisons.values())
     oracle_bytes = "".join(f"{v:.17g}\n" for v in weighted_oracle).encode("utf-8")
     receipt = {
         "schema": "DEEP2_KIMI_SINGLE_EXPERT_AGGREGATE_ORACLE_001/v1",
-        "status": "PASS_DIAGNOSTIC" if metrics["within_threshold"] else "FAIL",
+        "status": "PASS_DIAGNOSTIC" if passed else "FAIL",
         "certified": False, "promote": 0,
         "gpu_post_swiglu_witness": "ABSENT",
         "gpu_unweighted_down_witness": "ABSENT",
@@ -64,8 +70,11 @@ def audit(aggregate_manifest, scalar_manifest, max_abs, max_rms):
         "scalar_input_sha256": hashes,
         "weighted_oracle_sha256": hashlib.sha256(oracle_bytes).hexdigest(),
         "thresholds": {"max_abs": max_abs, "max_rms": max_rms},
-        "metrics": metrics,
-        "note": "Single expert aggregate is weighted; no GPU per-stage output ownership proven",
+        "comparisons": comparisons,
+        "checks": {key: value["within_threshold"]
+                   for key, value in comparisons.items()},
+        "metrics": comparisons["gpu_vs_oracle"],
+        "note": "Three-way aggregate/host/oracle checks; no GPU per-stage ownership proven",
     }
     return receipt
 
