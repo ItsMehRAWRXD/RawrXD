@@ -111,6 +111,24 @@ inline bool Capture(unsigned stick, unsigned layer, int expert,
 /* Independent-oracle INPUT witness, not a GPU-output witness.
    Only captures a cold expert with host-accessible packed weights.
    Exclusive run-local directory is required; capture never certifies parity. */
+
+// An operator-supplied unique capture identity ties CPU scalar inputs and
+// completed GPU aggregate to the SAME invocation. It is not proof of
+// command-buffer ownership; missing/invalid IDs cannot qualify for joined audit.
+inline std::string CaptureRunId() {
+    const char* s = std::getenv("DEEP2_MOE_PARITY_RUN_ID");
+    if (!s) return {};
+    std::string value(s);
+    if (value.size() < 16 || value.size() > 128) return {};
+    for (char ch : value) {
+        if (!((ch >= 'a' && ch <= 'z') ||
+              (ch >= 'A' && ch <= 'Z') ||
+              (ch >= '0' && ch <= '9') ||
+              ch == '-' || ch == '_')) return {};
+    }
+    return value;
+}
+
 inline bool CaptureScalarInputs(unsigned stick, unsigned layer, int expert,
                                 int gt, const uint8_t* gate, size_t gateBytes,
                                 int ut, const uint8_t* up, size_t upBytes,
@@ -163,7 +181,7 @@ inline bool CaptureScalarInputs(unsigned stick, unsigned layer, int expert,
               saveBytes(downPath, down, downBytes) &&
               saveVector(hiddenPath, hidden, H);
     if (ok) {
-        const std::string receipt =
+        std::string receipt =
             "schema=DEEP2_KIMI_SCALAR_INPUTS_001\n"
             "layer=" + std::to_string(layer) +
             "\nexpert=" + std::to_string(expert) +
@@ -173,6 +191,7 @@ inline bool CaptureScalarInputs(unsigned stick, unsigned layer, int expert,
             "\ngate_ggml_type=12\nup_ggml_type=12\ndown_ggml_type=14\n"
             "source=CPU_PACKED_SLICES_AND_NORMED_HIDDEN\n"
             "scope=SCALAR_INPUT_ONLY_NO_GPU_OUTPUT\ncertified=0\n";
+        if (!CaptureRunId().empty()) receipt += "run_id=" + CaptureRunId() + "\n";
         ok = saveBytes(manifestPath, receipt.data(), receipt.size());
     }
     if (!ok) {
@@ -232,6 +251,7 @@ inline bool CaptureAggregateComparison(unsigned stick, unsigned layer,
         "\nsource=POST_END_DEVICE_GPU_PARTIAL_AND_COMPLETE_CPU_REFERENCE\n"
         "scope=AGGREGATE_ONLY_NOT_PER_EXPERT_PARITY\n"
         "certified=0\n";
+    if (!CaptureRunId().empty()) manifest += "run_id=" + CaptureRunId() + "\n";
     for (size_t i = 0; i < experts; ++i) {
         manifest += "expert=" + std::to_string(expertIds[i]) +
             " weight=" + std::to_string(weights[i]) + "\n";
