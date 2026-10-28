@@ -87,6 +87,12 @@ static std::string                         g_workspace;
 static std::string                         g_model;
 static std::string                         g_backend_name = "auto";
 static std::atomic<bool>                   g_streamed_response{false};
+// Per-run limits are owned by the CLI driver so every agent round (including
+// tool continuations) uses the same caller-approved budget.  The native
+// Deep2 bridge consumes max tokens directly; the Ollama/HTTP route receives
+// both values through BackendConfig below.
+static int                              g_run_max_tokens = 4096;
+static int                              g_run_context = 0;
 // The native IDE's approved source-edit workflow can request a narrow tool
 // surface for one task.  The tools remain real registry dispatches; this only
 // prevents a small model from spending its first turn on an unrelated
@@ -568,9 +574,52 @@ static bool EndsWithGguf(const std::string& model) {
     return model.size() >= 5 && _stricmp(model.c_str() + model.size() - 5, ".gguf") == 0;
 }
 
+static bool ParseBoundedRunOption(const std::map<std::string, std::string>& flags,
+                                  const char* name, int minimum, int maximum,
+                                  int& value, std::string& error) {
+    const auto it = flags.find(name);
+    if (it == flags.end()) return true;
+    try {
+        size_t consumed = 0;
+        const long long parsed = std::stoll(it->second, &consumed, 10);
+        if (consumed != it->second.size() || parsed < minimum || parsed > maximum) {
+            error = std::string("invalid --") + name + " value (expected " +
+                    std::to_string(minimum) + ".." + std::to_string(maximum) + ")";
+            return false;
+        }
+        value = static_cast<int>(parsed);
+        return true;
+    } catch (...) {
+        error = std::string("invalid --") + name + " value: " + it->second;
+        return false;
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Backend initialization
 // ---------------------------------------------------------------------------
+static void ApplyRunBackendConfig() {
+    if (!g_router) return;
+
+    // Configure both local backends before the first request.  This keeps
+    // explicit Ollama mode, auto mode, and a later backend switch consistent
+    // instead of applying the UI/CLI values only to whichever backend was
+    // active during initialization.
+    for (const auto kind : {BackendKind::Deep2, BackendKind::Ollama}) {
+        auto* backend = g_router->GetBackendPtr(kind);
+        if (!backend) continue;
+        auto config = backend->GetConfig();
+        config.max_tokens = g_run_max_tokens;
+        if (g_run_context > 0) config.num_ctx = g_run_context;
+        backend->SetConfig(config);
+    }
+
+    std::cerr << "RUN_CONFIG_MAX_TOKENS=" << g_run_max_tokens << "\n";
+    if (g_run_context > 0) {
+        std::cerr << "RUN_CONFIG_CONTEXT=" << g_run_context << "\n";
+    }
+}
+
 static bool InitBackend(BackendMode mode, const std::string& model) {
     CliTrace("InitBackend:enter");
     // Explicit --backend stays authoritative. Auto tries a local Deep2 resolve
@@ -668,6 +717,7 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
                 b->SetConfig(cfg);
             }
         }
+        ApplyRunBackendConfig();
         return true;
     }
 
@@ -700,6 +750,7 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
     CliTrace("InitBackend:router-initialize");
     const bool initialized = g_router->Initialize(cfg);
     CliTrace(initialized ? "InitBackend:router-ready" : "InitBackend:router-failed");
+    if (initialized) ApplyRunBackendConfig();
     return initialized;
 }
 
@@ -946,6 +997,20 @@ static int CmdRun(const std::vector<std::string>& args) {
     g_explicit_mutation_approval = flags.count("approve-mutations") != 0;
     g_source_edit_tool_scope =
         flags.count("tool-scope") != 0 && flags.at("tool-scope") == "source-edit";
+    g_run_max_tokens = 4096;
+    g_run_context = 0;
+    std::string runOptionError;
+    if (!ParseBoundedRunOption(flags, "max-tokens", 1, 65536,
+                               g_run_max_tokens, runOptionError) ||
+        !ParseBoundedRunOption(flags, "context", 512, 1048576,
+                               g_run_context, runOptionError)) {
+        std::cerr << "RUN_CONFIG_ERROR=" << runOptionError << "\n";
+        return 2;
+    }
+    std::cerr << "RUN_CONFIG_REQUESTED_MAX_TOKENS=" << g_run_max_tokens << "\n";
+    if (g_run_context > 0) {
+        std::cerr << "RUN_CONFIG_REQUESTED_CONTEXT=" << g_run_context << "\n";
+    }
     CliTrace("CmdRun:arguments-parsed");
 
     const int reapContractResult = HandleReapContract(model, flags, mode_str);
@@ -1250,7 +1315,7 @@ static int CmdRun(const std::vector<std::string>& args) {
         try {
             if (deep2CompleteFn) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
-                result = deep2CompleteFn(messages, 4096);
+                result = deep2CompleteFn(messages, g_run_max_tokens);
             } else if (g_router) {
                 CliTrace("CmdRun:router-chat-sync");
                 result = g_router->ChatSync(messages, BuildToolDefinitions());
@@ -1430,7 +1495,7 @@ static int CmdRun(const std::vector<std::string>& args) {
                 // Preserve the selected in-process Deep2 backend across tool
                 // rounds; do not silently switch to a null HTTP router after
                 // the first tool call.
-                result = deep2CompleteFn(messages, 4096);
+                result = deep2CompleteFn(messages, g_run_max_tokens);
             } else if (g_router) {
                 result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
@@ -1467,7 +1532,7 @@ static int CmdRun(const std::vector<std::string>& args) {
                     ""});
                 messages = std::move(compact_messages);
                 if (deep2CompleteFn) {
-                    result = deep2CompleteFn(messages, 4096);
+                    result = deep2CompleteFn(messages, g_run_max_tokens);
                 } else if (g_router) {
                     result = g_router->ChatSync(messages, BuildToolDefinitions());
                 } else {
@@ -1704,7 +1769,7 @@ static int CmdRun(const std::vector<std::string>& args) {
         try {
             if (deep2CompleteFn) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
-                result = deep2CompleteFn(messages, 4096);
+                result = deep2CompleteFn(messages, g_run_max_tokens);
             } else if (g_router) {
                 result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
@@ -2356,7 +2421,8 @@ static int RawrXDMain(int argc, char** argv) {
     if (argc < 2) {
     std::cout << "RawrXD CLI v2\n\n"
               << "Usage:\n"
-                          << "  rawr run <model> [mode] [--backend b] [--workspace d] [--fresh-session] [--approve-mutations] [--cancel-after-ms n]\n"
+                          << "  rawr run <model> [mode] [--backend b] [--workspace d] [--max-tokens n] [--context n]\n"
+                          << "             [--fresh-session] [--approve-mutations] [--cancel-after-ms n]\n"
               << "             interactive agent (mutations require explicit opt-in)\n"
               << "  rawr run <model> --reap --target-size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
