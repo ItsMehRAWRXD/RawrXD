@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 
 class NativeGhostTextController {
@@ -43,5 +44,9 @@ private:
     std::string m_snapshot;
     uint64_t m_generation = 0;
     UINT_PTR m_timer = 0;
+    // A per-attachment identity fences callbacks that outlive a controller
+    // detach/rebind.  The provider request API is intentionally unchanged;
+    // stale completions are discarded without dereferencing the old object.
+    std::shared_ptr<void> m_requestIdentity;
 };
 

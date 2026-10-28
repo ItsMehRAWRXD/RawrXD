@@ -703,8 +703,13 @@ void Win32IDE::onAgenticLoopRunTask() {
         // path. Never apply filesystem validation to an Ollama ID.
         const bool useOllama =
             m_selectedChatModel.source == ChatModelEntry::Source::Ollama;
+        const bool useLocalFile =
+            m_selectedChatModel.source == ChatModelEntry::Source::LocalFile;
         std::string modelPath;
-        if (useOllama) {
+        if (useOllama || useLocalFile) {
+            // The selector is authoritative for both Ollama IDs and GGUF
+            // paths.  Falling back to the previously loaded Deep2 model for
+            // a newly selected local entry silently ran the wrong model.
             modelPath = m_selectedChatModel.identifier;
         } else {
             if (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) {
@@ -720,8 +725,14 @@ void Win32IDE::onAgenticLoopRunTask() {
             }
         }
         if (modelPath.empty() ||
-            (!useOllama && GetFileAttributesA(modelPath.c_str()) == INVALID_FILE_ATTRIBUTES)) {
+            (useLocalFile && GetFileAttributesA(modelPath.c_str()) == INVALID_FILE_ATTRIBUTES)) {
             appendToOutput("Agent task rejected: select or configure a valid local model first.\n",
+                           "Errors", OutputSeverity::Error);
+            return;
+        }
+
+        if (m_selectedChatModel.source == ChatModelEntry::Source::KiloFree) {
+            appendToOutput("Agent task rejected: KiloFree is a chat-only route; select an Ollama or local GGUF model for tools.\n",
                            "Errors", OutputSeverity::Error);
             return;
         }

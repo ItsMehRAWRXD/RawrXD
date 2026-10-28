@@ -3756,6 +3756,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
                 ${CMAKE_SOURCE_DIR}/src/production
             )
             message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening")
+        else()
+            message(WARNING "RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the IDE will start without hardening")
         endif()
         if(RAWRXD_BUILD_SECURITY_LIB)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
@@ -3763,7 +3765,6 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             )
             message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_security")
         endif()
-            message(WARNING "RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the IDE will start without hardening")
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
@@ -5240,6 +5241,29 @@ else()
     target_link_libraries(rawrxd_agentic_backend PUBLIC Threads::Threads)
 endif()
     message(STATUS "rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled")
+
+# WorkspaceToolHost path-containment regression. This links the production
+# host implementation so sibling-prefix escapes cannot regress silently.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/workspace_path_policy_smoke.cpp")
+    add_executable(workspace_path_policy_smoke
+        tests/agentic/workspace_path_policy_smoke.cpp)
+    target_link_libraries(workspace_path_policy_smoke PRIVATE rawrxd_agentic_backend)
+    target_include_directories(workspace_path_policy_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(workspace_path_policy_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(workspace_path_policy_smoke PRIVATE /EHsc /W4)
+        target_compile_definitions(workspace_path_policy_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(workspace_path_policy_smoke PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(workspace_path_policy_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME workspace_path_policy_smoke COMMAND workspace_path_policy_smoke)
+endif()
 
 # Cursor-parity registry smoke test.  This is intentionally dependency-light:
 # it exercises the same native workspace registry and mode authority used by

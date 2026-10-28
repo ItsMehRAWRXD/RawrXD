@@ -8,7 +8,12 @@
 namespace {
 constexpr UINT_PTR kGhostTimer = 0x5247;
 constexpr UINT kGhostResult = WM_APP + 73;
-struct Result { NativeGhostTextController* owner; uint64_t generation; std::string text; };
+struct Result {
+    NativeGhostTextController* owner;
+    std::shared_ptr<void> requestIdentity;
+    uint64_t generation;
+    std::string text;
+};
 }
 
 NativeGhostTextController::~NativeGhostTextController() { detach(); }
@@ -21,6 +26,7 @@ bool NativeGhostTextController::attach(HWND host, HWND editor, Request request,
     m_editor = editor;
     m_request = std::move(request);
     m_promptPrefix = std::move(promptPrefix);
+    m_requestIdentity = std::make_shared<int>(0);
     SetPropA(m_editor, "RawrXD.GhostText", this);
     m_originalProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrA(
         m_editor, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&editorProc)));
@@ -41,7 +47,9 @@ void NativeGhostTextController::detach() {
     }
     if (m_hint) DestroyWindow(m_hint);
     m_hint = nullptr; m_editor = nullptr; m_host = nullptr; m_originalProc = nullptr;
-    m_timer = 0; m_completion.clear(); m_snapshot.clear(); m_promptPrefix.clear(); ++m_generation;
+    m_timer = 0; m_completion.clear(); m_snapshot.clear(); m_promptPrefix.clear();
+    m_requestIdentity.reset();
+    ++m_generation;
 }
 
 std::string NativeGhostTextController::editorText() const {
@@ -74,15 +82,25 @@ void NativeGhostTextController::triggerCompletion() {
 void NativeGhostTextController::requestCompletion() {
     if (!m_request || m_snapshot.empty()) return;
     const uint64_t generation = m_generation;
+    const std::weak_ptr<void> requestIdentity = m_requestIdentity;
+    const HWND host = m_host;
+    NativeGhostTextController* owner = this;
     const std::string prompt = (m_promptPrefix.empty()
         ? "Complete the following code. Return only the completion text, no markdown:\n"
         : m_promptPrefix + "\n") + m_snapshot;
     auto accumulated = std::make_shared<std::string>();
-    m_request(prompt, [this, generation, accumulated](const std::string& response, bool done) {
+    m_request(prompt, [owner, host, requestIdentity, generation, accumulated](
+        const std::string& response, bool done) {
         if (!response.empty()) *accumulated += response;
-        if (!done || accumulated->empty() || !m_host) return;
-        auto* result = new Result{this, generation, *accumulated};
-        if (!PostMessageA(m_host, kGhostResult, 0, reinterpret_cast<LPARAM>(result))) delete result;
+        if (!done || accumulated->empty() || !host) return;
+        // Do not touch the controller here: the provider may finish after a
+        // model switch, editor detach, or IDE teardown.  Locking the identity
+        // proves the attachment still exists; handleMessage performs the
+        // second identity check on the UI thread before rendering.
+        auto identity = requestIdentity.lock();
+        if (!identity) return;
+        auto* result = new Result{owner, std::move(identity), generation, *accumulated};
+        if (!PostMessageA(host, kGhostResult, 0, reinterpret_cast<LPARAM>(result))) delete result;
     });
 }
 
@@ -98,9 +116,30 @@ void NativeGhostTextController::showCompletion(const std::string& completion, ui
 
 void NativeGhostTextController::positionHint() {
     if (!m_editor || !m_hint) return;
-    RECT r{}; GetWindowRect(m_editor, &r);
-    POINT p{r.left, r.bottom - 24}; ScreenToClient(m_host, &p);
-    MoveWindow(m_hint, p.x + 8, p.y, std::max(120L, r.right - r.left - 16), 20, TRUE);
+    RECT editorRect{};
+    GetWindowRect(m_editor, &editorRect);
+    POINT p{editorRect.left + 8, editorRect.top + 4};
+
+    // RichEdit exposes the caret position in client coordinates.  Anchor the
+    // hint to that position instead of painting a misleading footer overlay.
+    // If a non-RichEdit surface does not support EM_POSFROMCHAR, retain a
+    // safe top-left fallback inside the editor bounds.
+    CHARRANGE selection{};
+    if (SendMessageA(m_editor, EM_EXGETSEL, 0,
+                     reinterpret_cast<LPARAM>(&selection)) != 0) {
+        const LRESULT packed = SendMessageA(
+            m_editor, EM_POSFROMCHAR, static_cast<WPARAM>(selection.cpMax), 0);
+        if (packed != -1) {
+            POINT clientPoint{static_cast<SHORT>(LOWORD(packed)),
+                              static_cast<SHORT>(HIWORD(packed))};
+            ClientToScreen(m_editor, &clientPoint);
+            p = clientPoint;
+        }
+    }
+    ScreenToClient(m_host, &p);
+    const LONG width = std::max<LONG>(120, editorRect.right - editorRect.left -
+        (p.x - (editorRect.left - (editorRect.left - p.x))));
+    MoveWindow(m_hint, p.x + 8, p.y, width, 20, TRUE);
 }
 
 void NativeGhostTextController::dismiss() {
@@ -110,7 +149,8 @@ void NativeGhostTextController::dismiss() {
 
 bool NativeGhostTextController::accept() {
     if (m_completion.empty() || !m_editor) return false;
-    SendMessageA(m_editor, EM_SETSEL, -1, -1);
+    // Replace the current selection at the caret.  Appending at EOF made
+    // accepted suggestions modify the wrong location in multi-line editors.
     SendMessageA(m_editor, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(m_completion.c_str()));
     dismiss();
     return true;
@@ -119,7 +159,10 @@ bool NativeGhostTextController::accept() {
 bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
     if (message == kGhostResult) {
         std::unique_ptr<Result> result(reinterpret_cast<Result*>(lParam));
-        if (result && result->owner == this) showCompletion(result->text, result->generation);
+        if (result && result->owner == this &&
+            result->requestIdentity && result->requestIdentity == m_requestIdentity) {
+            showCompletion(result->text, result->generation);
+        }
         return true;
     }
     return false;

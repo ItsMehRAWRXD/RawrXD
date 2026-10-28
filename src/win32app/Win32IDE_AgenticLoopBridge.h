@@ -122,6 +122,10 @@ private:
     
     TaskConfig m_currentConfig;
     std::string m_accumulatedOutput;
+    // ReadFile is allowed to split a newline-delimited ESP record at any
+    // byte. Keep the incomplete tail until the next read so structured
+    // events are never silently dropped or parsed twice.
+    std::string m_lineBuffer;
     std::queue<std::string> m_outputQueue;
     std::mutex m_queueMutex;
     std::condition_variable m_queueCv;

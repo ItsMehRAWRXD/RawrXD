@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <cwchar>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,6 +20,30 @@ static inline int   x_pclose(FILE* f) { return pclose(f); }
 #endif
 
 namespace fs = std::filesystem;
+
+namespace {
+
+bool SamePathComponent(const fs::path& left, const fs::path& right) {
+#ifdef _WIN32
+    return _wcsicmp(left.native().c_str(), right.native().c_str()) == 0;
+#else
+    return left == right;
+#endif
+}
+
+bool IsWithinRoot(const fs::path& root, const fs::path& candidate) {
+    auto root_it = root.begin();
+    auto candidate_it = candidate.begin();
+    for (; root_it != root.end(); ++root_it, ++candidate_it) {
+        if (candidate_it == candidate.end() ||
+            !SamePathComponent(*root_it, *candidate_it)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace
 
 namespace RawrXD {
 namespace Agent {
@@ -67,12 +92,10 @@ fs::path WorkspaceToolHost::ResolveInWorkspace(const std::string& path,
         if (ec) resolved = root / fs::path(effective);
     }
 
-    // Containment check: resolved must be the root or beneath it.
-    auto root_str = root.string();
-    auto res_str  = resolved.string();
-    bool inside = res_str == root_str ||
-                  res_str.rfind(root_str, 0) == 0;
-    if (!inside) {
+    // Containment check: resolved must be the root or beneath it.  Compare
+    // path components rather than strings so a sibling such as
+    // "F:\\rawrxd-escape" can never pass as a child of "F:\\rawrxd".
+    if (!IsWithinRoot(root, resolved)) {
         error = "Path '" + effective + "' resolves outside the workspace. " +
                 SuggestAlternatives(effective);
         return {};

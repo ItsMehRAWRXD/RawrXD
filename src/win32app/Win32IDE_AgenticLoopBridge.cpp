@@ -656,6 +656,7 @@ void AgenticLoopBridge::ReadProcessOutput()
 {
     char buffer[4096];
     DWORD bytesRead = 0;
+    m_lineBuffer.clear();
     
     while (m_running.load() || m_processStarted.load()) {
         if (!ReadFile(m_stdoutRead, buffer, sizeof(buffer) - 1, &bytesRead, nullptr)) {
@@ -666,20 +667,27 @@ void AgenticLoopBridge::ReadProcessOutput()
         buffer[bytesRead] = '\0';
         std::string chunk(buffer);
         m_accumulatedOutput += chunk;
+        m_lineBuffer += chunk;
         
-        // Split by lines and process
-        std::istringstream iss(chunk);
-        std::string line;
-        while (std::getline(iss, line)) {
-            if (!line.empty()) {
-                ParseOutput(line);
-            }
+        // Parse only complete records. The tail remains buffered for the
+        // next ReadFile call because pipe boundaries are not line boundaries.
+        size_t newline = 0;
+        while ((newline = m_lineBuffer.find('\n')) != std::string::npos) {
+            std::string line = m_lineBuffer.substr(0, newline);
+            m_lineBuffer.erase(0, newline + 1);
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            if (!line.empty()) ParseOutput(line);
         }
         
         // Progress callback
         if (m_progressCallback) {
             m_progressCallback(chunk);
         }
+    }
+
+    if (!m_lineBuffer.empty()) {
+        ParseOutput(m_lineBuffer);
+        m_lineBuffer.clear();
     }
     
     CloseHandle(m_stdoutRead);
@@ -715,6 +723,34 @@ void AgenticLoopBridge::ParseOutput(const std::string& line)
                 PublishESPEvent(displayKind,
                     "child_request=" + childRequest + " child_seq=" + childSeq +
                     " child_kind=" + childKind + " " + childMessage, value);
+
+                // Structured CLI events are the authoritative tool boundary.
+                // Convert tool_result into the same callback contract used by
+                // the legacy text parser so the GUI receives one real result,
+                // and keep tool_start as progress only.
+                if (childKind == "tool_start") {
+                    // The watchdog has no separate ToolStarted state; the
+                    // subsequent tool_result is the completion heartbeat.
+                } else if (childKind == "tool_result") {
+                    ToolResult result{};
+                    result.success = childMessage.find("status=PASS") != std::string::npos || value == 0;
+                    result.exitCode = result.success ? 0 : 1;
+                    result.output = childMessage;
+                    const auto namePos = childMessage.find("name=");
+                    if (namePos != std::string::npos) {
+                        const size_t start = namePos + 5;
+                        const size_t end = childMessage.find(' ', start);
+                        result.toolName = childMessage.substr(start, end == std::string::npos ? std::string::npos : end - start);
+                    }
+                    const auto targetPos = childMessage.find("target=");
+                    if (targetPos != std::string::npos) {
+                        const size_t start = targetPos + 7;
+                        const size_t end = childMessage.find(" status=", start);
+                        result.target = childMessage.substr(start, end == std::string::npos ? std::string::npos : end - start);
+                    }
+                    m_watchdog.Progress(rawrxd::watchdog::Activity::ToolCompleted);
+                    if (m_toolCallback) m_toolCallback(result);
+                }
             }
         }
         return;
