@@ -1,0 +1,1 @@
+{"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\tip_freeze_748b_headless_surface_001\\sandbox\\inside_ok_748b.txt","name":"inside_ok_748b.txt","size":6,"atomic":true,"previewed":true,"rollback_id":1,"message":"File written atomically"}

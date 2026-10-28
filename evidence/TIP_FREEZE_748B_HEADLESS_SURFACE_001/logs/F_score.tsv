@@ -1,0 +1,11 @@
+nokey|401|HTTP/1.1 401 Unauthorized
+evil|403|HTTP/1.1 403 Forbidden
+motd|200|HTTP/1.1 200 OK
+list|200|HTTP/1.1 200 OK
+write|200|HTTP/1.1 200 OK
+abs|403|HTTP/1.1 403 Forbidden
+dot|403|HTTP/1.1 403 Forbidden
+unc|403|HTTP/1.1 403 Forbidden
+execno|403|HTTP/1.1 403 Forbidden
+gmotd|?|
+execyes|?|

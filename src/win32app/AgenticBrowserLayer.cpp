@@ -277,6 +277,17 @@ bool AgenticBrowserLayer::navigate(const std::wstring& uri) {
     if (!m_webview || uri.empty()) {
         return false;
     }
+    // Fail-closed host navigate: http(s)/about only. file://, javascript:,
+    // unc, and opaque schemes blocked until NavigationStarting allowlist
+    // is bound in WebView2.h (SOURCE gap; tip RUNTIME still loader-blocked).
+    auto startsWith = [&](const wchar_t* pfx) -> bool {
+        const size_t n = wcslen(pfx);
+        return uri.size() >= n && _wcsnicmp(uri.c_str(), pfx, n) == 0;
+    };
+    if (!(startsWith(L"https://") || startsWith(L"http://") || startsWith(L"about:"))) {
+        RAWRXD_LOG_ERROR("AgenticBrowser") << "navigate blocked non-allowlisted scheme";
+        return false;
+    }
     return SUCCEEDED(m_webview->Navigate(uri.c_str()));
 }
 

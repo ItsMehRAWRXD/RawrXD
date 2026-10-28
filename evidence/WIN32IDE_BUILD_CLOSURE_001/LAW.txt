@@ -1,0 +1,37 @@
+WIN32IDE_BUILD_CLOSURE_001 / LAW
+=================================
+ASOF_UTC=2026-10-28T17:05:00Z
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+PHASE=2
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_INVENT_PASS=1
+MOTD_ACK=1
+
+TREE
+----
+BUILD_DIR=G:\~dev\rawrxd\build_win32ide_link001
+GENERATOR=Ninja
+CMAKE_BUILD_TYPE=Release
+TARGET=RawrXD-Win32IDE
+
+TIP_LOCK (must remain unchanged)
+--------------------------------
+PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+OVERWRITE_TIP_FREEZE_BIN=FORBIDDEN
+
+CANDIDATE (separate seal; ≠ tip absorb)
+---------------------------------------
+PATH=G:\~dev\rawrxd\evidence\WIN32IDE_BUILD_CLOSURE_001\candidate_bin\RawrXD-Win32IDE.exe
+SHA256=see CANDIDATE_SHA.txt
+NOTE_PRE=B421… was GhostText witness present in link001; ABSORB=NOT_AUTHORIZED
+NOTE_POST=post-minidump rebuild SHA recorded separately; not promoted
+
+RULES
+-----
+Historical freezes preserved.
+Every EXE SHA-256 recorded.
+Failed gates stay failed until reverified.
+No self-promote of uncertified builds.
+NOT_RUN != PASS

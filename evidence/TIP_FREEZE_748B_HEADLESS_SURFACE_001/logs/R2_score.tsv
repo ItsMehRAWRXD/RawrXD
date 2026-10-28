@@ -1,0 +1,12 @@
+bare_motd|200
+evil|403
+nullorig|403
+motd|200
+list|
+write_inside|401
+deny_abs|401
+deny_dotdot|401
+deny_unc|401
+exec_nogrant|401
+grant_motd|200
+exec_grant|200

@@ -1,0 +1,2 @@
+﻿status=200
+{"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\phase4_agentic_ide_e2e_001\\sandbox\\tracked.txt","name":"tracked.txt","size":10,"atomic":true,"previewed":true,"rollback_id":1,"message":"File written atomically"}

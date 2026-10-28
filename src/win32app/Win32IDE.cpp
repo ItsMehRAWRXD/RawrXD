@@ -22,6 +22,7 @@
 #include "VSIXInstaller.hpp"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Settings.h"
+#include "Win32IDE_SwarmModelSelector.h"
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
@@ -6493,10 +6494,15 @@ bool Win32IDE::initializeInference()
                 OutputDebugStringA("[AUDIT] m_nativeEngineLoaded = TRUE\n");
                 
                 // Wire completion system to native engine (VAL-063)
+                // SetCompletionBackendNative stores ptr only — GhostText ABSORB=NOT_AUTHORIZED.
                 InitAICompletion();
-                SetCompletionBackendNative(static_cast<void*>(engine));
-                appendToOutput("[AUDIT] ✅ AI Completion system wired to native engine.", "Output", OutputSeverity::Info);
-                OutputDebugStringA("[AUDIT] AI Completion system initialized\n");
+                if (SetCompletionBackendNative(static_cast<void*>(engine))) {
+                    appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
+                    OutputDebugStringA("[AUDIT] AI Completion backend ptr stored\n");
+                } else {
+                    appendToOutput("[AUDIT] AI Completion backend wire FAIL_CLOSED.", "Errors", OutputSeverity::Error);
+                    OutputDebugStringA("[AUDIT] AI Completion backend FAIL_CLOSED\n");
+                }
             }
             else
             {
@@ -6509,7 +6515,9 @@ bool Win32IDE::initializeInference()
         {
             m_nativeEngineLoaded = true;
             InitAICompletion();
-            SetCompletionBackendNative(static_cast<void*>(engine));
+            if (!SetCompletionBackendNative(static_cast<void*>(engine))) {
+                OutputDebugStringA("[AUDIT] AI Completion backend FAIL_CLOSED (model already loaded)\n");
+            }
             OutputDebugStringA("[AUDIT] Model already loaded in native engine\n");
         }
     }
@@ -7185,6 +7193,25 @@ void Win32IDE::createChatPanel()
     if (m_hwndChkNoRefusal)
         SendMessage(m_hwndChkNoRefusal, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+    // Agentic mode switcher (Ask/Plan/Agent/Debug) — IDs 5005–5008
+    toggleY += 25;
+    CreateWindowExW(0, L"STATIC", L"Mode:", WS_CHILD | WS_VISIBLE | SS_LEFT, toggleX, toggleY, 44, 20,
+                    m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndAgenticModeAsk =
+        CreateWindowExW(0, L"BUTTON", L"Ask", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP, toggleX + 48,
+                        toggleY, 52, 20, m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_ASK, m_hInstance, nullptr);
+    m_hwndAgenticModePlan =
+        CreateWindowExW(0, L"BUTTON", L"Plan", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, toggleX + 100, toggleY, 56,
+                        20, m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_PLAN, m_hInstance, nullptr);
+    m_hwndAgenticModeAgent =
+        CreateWindowExW(0, L"BUTTON", L"Agent", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, toggleX + 156, toggleY, 62,
+                        20, m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_AGENT, m_hInstance, nullptr);
+    m_hwndAgenticModeDebug =
+        CreateWindowExW(0, L"BUTTON", L"Debug", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, toggleX + 218, toggleY, 64,
+                        20, m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_DEBUG, m_hInstance, nullptr);
+    if (m_hwndAgenticModeAsk)
+        SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK, BST_CHECKED, 0);
+
     m_hwndCopilotChatOutput =
         CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
                         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, 200, 290,
@@ -7287,6 +7314,29 @@ void Win32IDE::populateModelSelector()
             size_t dot = name.find_last_of('.');
             if (dot != std::string::npos) name = name.substr(0, dot);
             if (!name.empty()) m_availableModels.push_back(name);
+        }
+    }
+
+    // Product path: SwarmModelSelector (GGUF roots + local Ollama /api/tags when up).
+    // Fail-closed: empty inventory stays empty — never invent models.
+    {
+        const auto swarmCandidates =
+            RawrXD::Win32App::enumerateSwarmModelCandidates(512);
+        for (const auto& c : swarmCandidates)
+        {
+            if (c.empty()) continue;
+            std::string display = c;
+            // GGUF full paths -> basename without extension for combo display
+            if (display.size() > 5 &&
+                (display.find(".gguf") != std::string::npos ||
+                 display.find(".GGUF") != std::string::npos))
+            {
+                size_t slash = display.find_last_of("\\/");
+                if (slash != std::string::npos) display = display.substr(slash + 1);
+                size_t dot = display.find_last_of('.');
+                if (dot != std::string::npos) display = display.substr(0, dot);
+            }
+            if (!display.empty()) m_availableModels.push_back(display);
         }
     }
 

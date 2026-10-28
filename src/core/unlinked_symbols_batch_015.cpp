@@ -22,7 +22,9 @@ void HealSymbolResolution(const char* /*symbolName*/) {
 }
 
 uint64_t ValidateDMAAlignment(void) {
-    return 0;
+    // Was: return 0 (looks like OK) with no DMA probe — fake success.
+    // FAIL_CLOSED: ~0ull = alignment not validated / probe absent.
+    return ~0ull;
 }
 
 void RawrXD_Trigger_Chat(void) {}

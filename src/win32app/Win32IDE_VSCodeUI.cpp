@@ -58,6 +58,12 @@
 #define IDC_COPILOT_CHAT_OUTPUT 1203
 #define IDC_COPILOT_SEND_BTN 1204
 #define IDC_COPILOT_CLEAR_BTN 1205
+#ifndef IDC_AGENTIC_MODE_ASK
+#define IDC_AGENTIC_MODE_ASK 5005
+#define IDC_AGENTIC_MODE_PLAN 5006
+#define IDC_AGENTIC_MODE_AGENT 5007
+#define IDC_AGENTIC_MODE_DEBUG 5008
+#endif
 
 // Panel IDs
 #define IDC_PANEL_CONTAINER 1300
@@ -282,7 +288,31 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         90, 555, 80, 28,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
-    
+
+    // Agentic mode switcher (Ask/Plan/Agent/Debug) — HWND-backed radios
+    m_hwndAgenticModeAsk = CreateWindowExA(
+        0, "BUTTON", "Ask",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
+        5, 528, 52, 22,
+        m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_ASK, m_hInstance, nullptr);
+    m_hwndAgenticModePlan = CreateWindowExA(
+        0, "BUTTON", "Plan",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+        60, 528, 56, 22,
+        m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_PLAN, m_hInstance, nullptr);
+    m_hwndAgenticModeAgent = CreateWindowExA(
+        0, "BUTTON", "Agent",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+        120, 528, 62, 22,
+        m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_AGENT, m_hInstance, nullptr);
+    m_hwndAgenticModeDebug = CreateWindowExA(
+        0, "BUTTON", "Debug",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+        186, 528, 64, 22,
+        m_hwndSecondarySidebar, (HMENU)IDC_AGENTIC_MODE_DEBUG, m_hInstance, nullptr);
+    if (m_hwndAgenticModeAsk)
+        SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK, BST_CHECKED, 0);
+
     // Set initial message
     SetWindowTextA(m_hwndCopilotChatOutput, 
         "GitHub Copilot Chat\r\n"
@@ -294,7 +324,6 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         "- Generate unit tests\r\n"
         "- Refactor this function\r\n");
 
-    // If the full chat panel added mode toggles elsewhere, this path has none — safe no-op when null.
     syncAgentModeUiFromBridge();
 }
 

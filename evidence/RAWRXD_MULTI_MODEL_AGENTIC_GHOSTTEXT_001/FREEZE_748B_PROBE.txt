@@ -1,0 +1,42 @@
+﻿FREEZE_748B_PROBE / GhostText
+=============================
+ASOF_UTC=2026-10-28T14:52:46Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_THIS_DISPATCH=0
+
+AUTHORITY_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+AUTHORITY_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH_748B=1
+
+CMD=RawrXD-Win32IDE.exe --test-ghost-text
+WORKING_DIR=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin
+EXIT=0
+
+ASSERT_LINES
+------------
+
+
+STDOUT_TAIL
+-----------
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-10-28 10:52:45 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+
+STDERR_TAIL
+-----------
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+
+DISPOSITION
+-----------
+CERTIFIED=0
+NOTE=Probe-only on TIP_FREEZE_001\bin; Ollama Tab/Esc NOT sealed; no rebuild
+PROMOTE=0

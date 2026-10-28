@@ -5019,19 +5019,31 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         HandleCopilotClear();
         return;
     }
-    if (id == 1206)
+    // Agentic mode radios (IDC_AGENTIC_MODE_* = 5005–5008). Do NOT use 1206–1208 —
+    // those collide with context slider / label / model selector.
+    if (id == IDC_AGENTIC_MODE_ASK)
     {
-        setAgenticMode(RawrXD::AgenticMode::Plan);
+        onAgenticModeAsk();
         return;
     }
-    if (id == 1207)
+    if (id == IDC_AGENTIC_MODE_PLAN)
     {
-        setAgenticMode(RawrXD::AgenticMode::Agent);
+        onAgenticModePlan();
         return;
     }
-    if (id == 1208)
+    if (id == IDC_AGENTIC_MODE_AGENT)
     {
-        setAgenticMode(RawrXD::AgenticMode::Ask);
+        onAgenticModeAgent();
+        return;
+    }
+    if (id == IDC_AGENTIC_MODE_DEBUG)
+    {
+        onAgenticModeDebug();
+        return;
+    }
+    if (id == 1208 && codeNotify == CBN_SELCHANGE)
+    {
+        onModelSelectionChanged();
         return;
     }
     if (id == 1209)  // IDC_MODEL_BROWSE_BTN

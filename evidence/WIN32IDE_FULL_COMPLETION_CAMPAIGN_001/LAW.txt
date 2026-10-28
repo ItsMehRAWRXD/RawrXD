@@ -1,0 +1,40 @@
+WIN32IDE_FULL_COMPLETION_CAMPAIGN_001 / LAW
+==========================================
+ASOF_UTC=2026-10-28T17:15:30Z
+CAMPAIGN=FULL_IDE_COMPLETION
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+NOT_RUN != PASS
+
+PRODUCT_TIP
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+GHOSTTEXT
+  WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  GHOSTTEXT_CERTIFIED=1 (witness only)
+  ABSORB=NOT_AUTHORIZED
+  PHASE_6_PRODUCT_BINARY=BLOCKED_PENDING_EXPLICIT_USER_AUTH
+
+PHASES (continuous audit→implement→build→test→repair→reverify)
+  1 Full source audit
+  2 Build closure
+  3 Deep2 inference
+  4 Agentic IDE — SEALED PHASE4_AGENTIC_IDE_E2E_001 (Ask/Plan/Debug/Multitask/Terminal/SafeWrite/StopRestore RUNTIME_REACHED; Agent FAIL_CLOSED 503 extend TIP_003)
+  5 Multi-model orchestration
+  6 GhostText product absorb — REQUIRES: "Authorize GhostText absorption into a new product candidate, with full regression testing"
+  7 UI completion
+  8 Browser/OS integration
+  9 Performance
+  10 Product certification / RC
+
+RULES
+  Multiple agents OK on separate workstreams
+  Compile+test before acceptance
+  No synthetic evidence
+  Every EXE SHA-256 recorded
+  Failed gates stay failed until reverified
+  Historical freezes preserved
+  No self-promote of uncertified builds

@@ -14,6 +14,7 @@ Installed local Ollama tags only (not Super/Ultra): `nemotron-3-nano:4b`, `nemot
 | Arg | `--test-ghost-text` |
 | Result | **BLOCKED** — exit `-1073740940` / `0xC0000374` (`STATUS_HEAP_CORRUPTION`) after RuntimeSurface bootstrap; no `[feature-probe]` lines |
 | Cite | `HWND_BLOCK_CITE.txt`, `ghost_probe_final_stdout.txt`, `ghost_probe_final_stderr.txt` |
+| Disposition | Crash EXE SHA `87314037…` (`build-fd`). Tip freeze `748B210A…` basic probe EXIT=0. Successor **`RAWRXD_MULTI_MODEL_AGENTIC_GHOSTTEXT_002`** (EXE `F0988009…`) seals real Ollama GhostText. This matrix stays NOT_CERTIFIED. |
 
 ## Headless (existing; not invented PASS)
 

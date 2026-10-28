@@ -1,0 +1,44 @@
+PRODUCT_GATEWAY_CONTINUOUS_001 / RECEIPT
+========================================
+ASOF_UTC=2026-10-28T17:10:00Z
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXE_SHA16=748B210A8F17C6C4
+TIP_STRING_PROBE=PRODUCT_DEEP2_OPEN_SEH+INFER_SEH+STREAM_SEH+PRODUCT_OPEN_PASS+PROMOTE=0 HIT
+
+HONESTY_AUDIT (source; tip product claims)
+------------------------------------------
+ProductOpenFacts: open_pass requires product_open::Evaluate && path_valid && IsOpen
+EmitOpenFacts: always prints PROMOTE=0; HEADLESS_READY_SCOPE=PRODUCT_OPEN_ONLY
+StreamBody: productPass = (rc.productPass != 0) only; no hardcoded success text
+LocalApi generate: requires ProductSessionOpen else model_not_loaded; fail => generate_failed
+SOFT_REUSE: R1_OPEN_SOFT_REUSE only when SameOpenPath + TensorsResident/open_pass
+TOKEN_PATH_LIVE_ON_TIP=NOT_RUN (no invent GENERATED_TOKENS/TOKEN_COMMIT_PASS)
+
+SEH_HOLES_FIXED (SOURCE_WIRED; tip EXE not absorbing)
+-----------------------------------------------------
+1. OpenSeh/StreamSeh moved out of headers into product_deep2_infer_seh.cpp
+   (/EHsc: __try must not share frame with C++ objects / C2712 risk)
+2. CloseSeh added — ProductCloseSession no longer naked CloseSession
+3. StreamSeh __except stamps failedStage=SEH / owner=product_deep2_infer
+   / exitReason=PRODUCT_DEEP2_INFER_STREAM_SEH (literals only; no C++ in filter)
+4. InferSeh remains in product_deep2_infer.cpp (no C++ locals in SEH frame)
+
+COMPILE_VERIFY (candidate build tree; NOT tip absorb)
+-----------------------------------------------------
+OBJ1=build_win32ide_link001\...\product_deep2_infer.cpp.obj OK
+OBJ2=build_win32ide_link001\...\product_deep2_infer_seh.cpp.obj OK
+CMAKE_WIRE=RawrXD_Product100.cmake + RawrProductLayer + RawrAgenticCli
+RELINK_TIP=0 ABSORB=0
+
+DISPOSITION
+-----------
+SEAL=PRODUCT_GATEWAY_CONTINUOUS_001
+PRODUCT_OPEN_SESSION_TOKEN_LIVE=NOT_RUN
+SOURCE_SEH_FIX=LANDED
+TIP_PRODUCT_SHA=748B210A… (authority unchanged)
+PROMOTE=0

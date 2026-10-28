@@ -1,0 +1,11 @@
+nokey|
+evil|
+motd|
+list|
+write_inside|
+deny_abs|
+deny_dotdot|401
+deny_unc|401
+exec_nogrant|
+grant_motd|200
+exec_grant|200

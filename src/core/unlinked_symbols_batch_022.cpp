@@ -8,15 +8,17 @@
 //   ZlibRuntimeLoader → src/compression/zlib_runtime_loader.cpp
 // Kept here (no other Win32IDE method bodies for these names):
 //   Deep2::Deep2APIServer (Deep2APIServer.cpp defines APIServer, not this class)
-//   Deep2::Production::* method stubs
+//   Deep2::Production::* method stubs — FAIL_CLOSED (no fake HTTP/compress ready)
 //   TreeAttention_Fused_VAL038 / SoftmaxLUT_AVX512 C fallbacks (ASM optional)
-// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 SYNTHETIC=partial (Production/API stubs)
+// PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+// UNLINKED_STUB_GATE_CONTINUOUS_001 — crush return-true without real bind.
 
 #include <cstdint>
 #include <cstddef>
 #include <vector>
 #include <string>
 #include <cmath>
+#include <windows.h>
 
 namespace Deep2 {
 
@@ -32,17 +34,27 @@ public:
     bool IsRunning() const;
 };
 
-static bool g_deep2ApiRunning = false;
 Deep2APIServer::Deep2APIServer() {}
-Deep2APIServer::~Deep2APIServer() { if (g_deep2ApiRunning) Stop(); }
-bool Deep2APIServer::Initialize(Deep2Engine*) { return true; }
+Deep2APIServer::~Deep2APIServer() { Stop(); }
+
+bool Deep2APIServer::Initialize(Deep2Engine* engine) {
+    (void)engine;
+    // Was: return true with no socket/bind — fake success. Fail-closed.
+    OutputDebugStringA(
+        "[Deep2APIServer] Initialize FAIL_CLOSED — no HTTP owner in this TU\n");
+    return false;
+}
+
 bool Deep2APIServer::Start(int port) {
     (void)port;
-    g_deep2ApiRunning = true;
-    return true;
+    OutputDebugStringA(
+        "[Deep2APIServer] Start FAIL_CLOSED — no listen/bind implemented\n");
+    return false;
 }
-void Deep2APIServer::Stop() { g_deep2ApiRunning = false; }
-bool Deep2APIServer::IsRunning() const { return g_deep2ApiRunning; }
+
+void Deep2APIServer::Stop() {}
+
+bool Deep2APIServer::IsRunning() const { return false; }
 
 }  // namespace Deep2
 
@@ -66,7 +78,9 @@ public:
 
 bool CompressionEngine::initialize(const CompressionConfig&,
                                    const std::vector<AcceleratorDevice*>&) {
-    return true;
+    OutputDebugStringA(
+        "[CompressionEngine] initialize FAIL_CLOSED — no compressor wired\n");
+    return false;
 }
 
 }  // namespace Compression
@@ -85,6 +99,7 @@ public:
     void start();
     void stop();
     bool isRunning() const;
+    std::string getEndpoint() const;
     void registerHealthRoutes();
     void registerModelRoutes();
     void registerInferenceRoutes();
@@ -97,18 +112,39 @@ public:
     void initialize(const std::vector<AcceleratorDevice>&);
 };
 
-void BackendScheduler::initialize(const std::vector<AcceleratorDevice>&) {}
-static bool g_prodApiRunning = false;
-bool ProductionAPIServer::initialize(const ServerConfig&) { return true; }
-void ProductionAPIServer::start() { g_prodApiRunning = true; }
-void ProductionAPIServer::stop() { g_prodApiRunning = false; }
-bool ProductionAPIServer::isRunning() const { return g_prodApiRunning; }
+void BackendScheduler::initialize(const std::vector<AcceleratorDevice>&) {
+    OutputDebugStringA(
+        "[BackendScheduler] initialize GATED — no device queues (void)\n");
+}
+
+bool ProductionAPIServer::initialize(const ServerConfig&) {
+    // Was: return true then start() flipped running_ — fake API ready.
+    OutputDebugStringA(
+        "[ProductionAPIServer] initialize FAIL_CLOSED — no HTTP serverImpl\n");
+    return false;
+}
+
+void ProductionAPIServer::start() {
+    OutputDebugStringA(
+        "[ProductionAPIServer] start ignored — not initialized (FAIL_CLOSED)\n");
+}
+
+void ProductionAPIServer::stop() {}
+
+bool ProductionAPIServer::isRunning() const { return false; }
+
+std::string ProductionAPIServer::getEndpoint() const { return {}; }
+
 void ProductionAPIServer::registerHealthRoutes() {}
 void ProductionAPIServer::registerModelRoutes() {}
 void ProductionAPIServer::registerInferenceRoutes() {}
 void ProductionAPIServer::registerPhaseRoutes() {}
 void ProductionAPIServer::registerBackendRoutes() {}
-void CertificationHarness::initialize(const std::vector<AcceleratorDevice>&) {}
+
+void CertificationHarness::initialize(const std::vector<AcceleratorDevice>&) {
+    OutputDebugStringA(
+        "[CertificationHarness] initialize GATED — no suite run (void)\n");
+}
 
 }  // namespace Production
 }  // namespace Deep2

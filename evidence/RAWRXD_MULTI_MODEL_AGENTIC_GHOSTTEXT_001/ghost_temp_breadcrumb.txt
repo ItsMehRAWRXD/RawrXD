@@ -1,0 +1,4 @@
+phase=enter cmdline=--test-ghost-text  
+phase=after_new_ide
+phase=createWindow_OK
+phase=after_show_pump

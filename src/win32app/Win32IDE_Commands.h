@@ -312,6 +312,13 @@
 #define IDC_AI_DEEP_RESEARCH        5003
 #define IDC_AI_NO_REFUSAL           5004
 
+// ---- Agentic mode switcher (Ask/Plan/Agent/Debug) — not 1206–1208 ----------
+// 1206–1208 are IDC_AI_CONTEXT_SLIDER / LABEL / IDC_MODEL_SELECTOR (collision).
+#define IDC_AGENTIC_MODE_ASK        5005
+#define IDC_AGENTIC_MODE_PLAN       5006
+#define IDC_AGENTIC_MODE_AGENT      5007
+#define IDC_AGENTIC_MODE_DEBUG      5008
+
 // ---- AI Backend Switcher (5037–5047) ----------------------------------------
 #define IDM_BACKEND_SWITCH_LOCAL    5037
 #define IDM_BACKEND_SWITCH_OLLAMA   5038

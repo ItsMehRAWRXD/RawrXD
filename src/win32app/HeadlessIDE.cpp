@@ -1154,7 +1154,10 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     }
 
     // G4_RUNTIME_READY: requests may now touch initialized runtime state.
+    // stderr marker: HEADLESS_READY (model) != RUNTIME_READY (route admit).
     RawrXD::HeadlessProduct::SetRuntimeReady(true);
+    std::fprintf(stderr, "RUNTIME_READY=1\n");
+    std::fflush(stderr);
     m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
     m_outputSink->flush();
     {

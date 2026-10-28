@@ -1,0 +1,15 @@
+PHASE4_AGENTIC_IDE_E2E_001 SUMMARY
+SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+
+| Workflow     | Disposition     | Notes                                      |
+|--------------|-----------------|--------------------------------------------|
+| Ask          | RUNTIME_REACHED | /ask + HWND 1208                           |
+| Agent        | FAIL_CLOSED     | /api/agent/run 503 empty; HWND 1207 ok     |
+| Plan         | RUNTIME_REACHED | list_directory + HWND 1206                 |
+| Debug        | RUNTIME_REACHED | debug status + Debug click                 |
+| Multitask    | RUNTIME_REACHED | /api/subagent 202 spawned                  |
+| Terminal     | RUNTIME_REACHED | execute_command phase4_terminal_ok         |
+| SafeWrite    | RUNTIME_REACHED | atomic=true + rollback                     |
+| Stop/restore | RUNTIME_REACHED | cancel + restore write                     |

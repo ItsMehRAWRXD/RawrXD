@@ -1,0 +1,2 @@
+﻿status=200
+{"status":"Native debugger: Not initialized\nSession: none\nBreakpoints: 0"}

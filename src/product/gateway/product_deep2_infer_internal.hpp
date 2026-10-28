@@ -1,5 +1,5 @@
 #pragma once
-/* Stream body — ≤99. SEH wrappers in product_deep2_infer_seh.hpp. */
+/* Stream body — ≤99. SEH wrappers live in product_deep2_infer.cpp (/EHsc). */
 #include "product_deep2_infer_open.hpp"
 #include "../../deep2/lavapath/ProductRun.hpp"
 #include <atomic>
@@ -28,19 +28,10 @@ inline product_run::ProductRuntime& Rt() {
     return product_run::SharedProductRuntime();
 }
 
-inline bool OpenSeh(const char* modelAliasOrPath) {
-#ifdef _WIN32
-    __try {
-        return OpenBody(modelAliasOrPath);
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        std::fprintf(stderr, "PRODUCT_DEEP2_OPEN_SEH=1 CODE=0x%08lX\n",
-                     (unsigned long)GetExceptionCode());
-        return false;
-    }
-#else
-    return OpenBody(modelAliasOrPath);
-#endif
-}
+/* Non-inline: __try must not share a frame with C++ objects (/EHsc C2712). */
+bool OpenSeh(const char* modelAliasOrPath);
+bool StreamSeh(const struct StreamPack& p);
+bool CloseSeh();
 
 struct StreamPack {
     const char* prompt;

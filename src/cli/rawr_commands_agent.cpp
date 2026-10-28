@@ -10,6 +10,7 @@
 #include "rawr_product_serve.hpp"
 #include "rawr_local_api.hpp"
 #include "terminal/rawr_terminal_commands.hpp"
+#include "../core/agent_wal.hpp"
 #include <string>
 
 namespace rawr {
@@ -24,6 +25,12 @@ int CmdAgent(const CliArgs& a) {
     ag.session.lastPlan = a.prompt.empty() ? "agent default" : a.prompt;
     ResolveModel(a.model, ag.session.modelPath);
     SaveSession(ag.session);
+    {
+        const char* wal = rawrxd::agent_wal::DefaultRoot();
+        rawrxd::agent_wal::Append(wal, 1, "SESSION_OPEN", ag.session.id.c_str());
+        Diag("AGENT_WAL_APPEND=%d\n",
+             rawrxd::agent_wal::VerifyAll(wal) > 0 ? 1 : 0);
+    }
     Diag("SESSION_CREATED=1\n");
     Diag("agent session=%s workspace=%s auto=%s model=%s\n",
          ag.session.id.c_str(), ag.session.workspace.c_str(),

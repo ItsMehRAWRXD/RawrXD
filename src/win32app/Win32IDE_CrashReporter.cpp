@@ -268,6 +268,30 @@ static void writeCrashLog(const CrashReport& report) {
     ofs.flush();
 }
 
+// MiniDump for A09 recovery — supersedes orphan rawr_crash_handler.cpp (GATED_OMIT).
+static void writeCrashMiniDump(EXCEPTION_POINTERS* pExceptions) {
+    if (!pExceptions) return;
+    CreateDirectoryA("crash_dumps", nullptr);
+    char path[MAX_PATH];
+    snprintf(path, sizeof(path), "crash_dumps\\rawrxd_%llu.dmp",
+             (unsigned long long)GetTickCount64());
+    HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                               FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    MINIDUMP_EXCEPTION_INFORMATION mdei{};
+    mdei.ThreadId = GetCurrentThreadId();
+    mdei.ExceptionPointers = pExceptions;
+    mdei.ClientPointers = FALSE;
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                      MiniDumpNormal, &mdei, nullptr, nullptr);
+    CloseHandle(hFile);
+    char note[MAX_PATH + 64];
+    snprintf(note, sizeof(note), "[CrashReporter] minidump=%s\n", path);
+    OutputDebugStringA(note);
+    std::ofstream ofs(CRASH_LOG_FILE, std::ios::app);
+    if (ofs.is_open()) ofs << "MiniDump: " << path << "\n";
+}
+
 // ============================================================================
 // Crash dialog window procedure
 // ============================================================================
@@ -521,8 +545,9 @@ static LONG WINAPI rawrxdUnhandledExceptionFilter(PEXCEPTION_POINTERS pException
     s_currentCrash.buildVersion  = "RawrXD-Shell v1.0";
     s_currentCrash.stackFrames   = captureCurrentStackTrace(0, 32);
 
-    // Write crash log immediately
+    // Write crash log + minidump immediately (A09 data-loss recovery)
     writeCrashLog(s_currentCrash);
+    writeCrashMiniDump(pExceptions);
     s_crashHistory.push_back(s_currentCrash);
 
     // Show crash dialog

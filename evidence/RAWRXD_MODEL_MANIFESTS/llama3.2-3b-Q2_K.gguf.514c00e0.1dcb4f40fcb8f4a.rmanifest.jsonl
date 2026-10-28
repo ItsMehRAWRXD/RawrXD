@@ -1,4 +1,4 @@
-{"record":"model","model_path":"F:\\OllamaModels\\_r1_iso\\03_llama32_3b\\llama3.2-3b-Q2_K.gguf","model_id":"llama3.2-3b-Q2_K.gguf:514c00e0:1dcb4f40fcb8f4a","arch":"llama","vocab":128256,"hidden":3072,"layers":28,"heads":24,"kv_heads":8,"head_dim":128,"intermediate":8192,"size":1363935456,"mtime":134181049244290890,"ready":1,"blocked_at":""}
+{"record":"model","model_path":"G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf","model_id":"llama3.2-3b-Q2_K.gguf:514c00e0:1dcb4f40fcb8f4a","arch":"llama","vocab":128256,"hidden":3072,"layers":28,"heads":24,"kv_heads":8,"head_dim":128,"intermediate":8192,"size":1363935456,"mtime":134181049244290890,"ready":1,"blocked_at":""}
 {"record":"root","role":"embed","tensor":"token_embd.weight"}
 {"record":"root","role":"final_norm","tensor":"output_norm.weight"}
 {"record":"layer","layer":0,"attention":"SPLIT_QKV","ffn":"SPLIT_GATE_UP_DOWN","q":"blk.0.attn_q.weight","k":"blk.0.attn_k.weight","v":"blk.0.attn_v.weight","o":"blk.0.attn_output.weight","qkv":"","projector":"","gate":"blk.0.ffn_gate.weight","up":"blk.0.ffn_up.weight","down":"blk.0.ffn_down.weight","ready":1,"blocked_at":""}

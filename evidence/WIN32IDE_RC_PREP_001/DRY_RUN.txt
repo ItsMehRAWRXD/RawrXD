@@ -1,0 +1,90 @@
+WIN32IDE_RC_PREP_001 / DRY_RUN
+==============================
+ASOF_UTC=2026-10-28T17:04:03Z
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+PHASE=10
+MODE=PREP_DRY_RUN_ONLY
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+RC_PASS=NOT_CLAIMED
+CERTIFY=NOT_RUN
+NO_INVENT_PASS=1
+NOT_RUN != PASS
+
+PRODUCT_TIP (historical preserved)
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+GHOSTTEXT
+  ABSORB=NOT_AUTHORIZED
+  GHOSTTEXT_CERTIFIED=1 (witness only; ≠ product absorb)
+
+SCRIPT
+  PATH=scripts/rc_prep_dry_run_package.ps1
+  ROLE=Stage TIP EXE+PDB+LICENSE into ZIP under evidence/WIN32IDE_RC_PREP_001/dry_run/
+  RESULT=DRY_RUN=OK (not certify)
+
+DRY_RUN ARTIFACT
+  ZIP=evidence/WIN32IDE_RC_PREP_001/dry_run/RawrXD-Win32IDE_TIP_FREEZE_748B_dry_run.zip
+  ZIP_SHA256=3EE6D5D43DC2D43257F1DDC1897B85A20FE0868E2C45E404C482558C1DD4DCE8
+  ZIP_BYTES=40090545
+  RECEIPT=evidence/WIN32IDE_RC_PREP_001/dry_run/DRY_RUN_RECEIPT.txt
+  STAGE=evidence/WIN32IDE_RC_PREP_001/dry_run/stage_RawrXD-Win32IDE_TIP_FREEZE
+  CONTENTS=bin/RawrXD-Win32IDE.exe + bin/RawrXD-Win32IDE.pdb + LICENSE + DRY_RUN_MANIFEST.txt
+
+NON-CLAIMS
+  DRY_RUN_ZIP ≠ RC_PASS ≠ PRODUCT_CERTIFIED ≠ PROMOTE ≠ CERTIFIED
+  INSTALLER=NOT_BUILT
+  CMAKE_INSTALL=NOT_RUN
+  SIGNING=NOT_RUN
+
+MISSING INSTALLER INPUTS (documented OPEN — do not invent PASS)
+----------------------------------------------------------------
+Tooling (machine)
+  ISCC (Inno Setup 6)     ABSENT
+  makensis (NSIS)         ABSENT
+  candle/light (WiX 3.11) ABSENT
+
+Inno Setup sources (installer/RawrXD.iss)
+  build/Release/RawrXD.exe              MISSING (ISS expects RawrXD.exe ≠ tip Win32IDE name)
+  build/Release/SovereignRuntime.dll    MISSING
+  build/Release/LSPClient.dll           MISSING
+  build/Release/GitIntegration.dll      MISSING
+  build/Release/SciLexer.dll            MISSING
+  resources/icons/rawrxd.ico            MISSING
+  redist/vulkan-1.dll                   MISSING
+  redist/amdhip64.dll                   MISSING
+  models/tinyllama-1.1b-chat.gguf       MISSING
+  samples/*                             MISSING
+  docs/README.pdf                       MISSING
+  docs/API_Reference.pdf                MISSING
+  LICENSE                               PRESENT (repo root)
+
+WiX packaging (packaging/windows/RawrXD.wxs)
+  build/RawrXD.exe                      MISSING (not tip-bound)
+  config/rawrxd.yaml                    OPEN (path assumed by WXS)
+
+CMake install path
+  install(TARGETS RawrXD-Win32IDE …)    NOT_WIRED in root CMakeLists
+  cmake --install                       NOT_RUN / BLOCKED (agentic CMakeLists merge markers)
+
+Legacy package scripts (not tip-bound)
+  scripts/create_release_package.ps1    expects build\bin\RawrXD-Win32IDE.exe — not tip default
+  scripts/create-release-package.ps1    expects RawrXD_Main.exe / rawrxd.dll — ABSENT
+  installer/create_installer.bat        expects bin\RawrXD_GUI_Minimal.exe — ABSENT
+
+PRESENT (dry-run only)
+  TIP EXE 748B…                         PRESENT (authority)
+  TIP PDB                               PRESENT
+  scripts/rc_prep_dry_run_package.ps1   PRESENT / EXECUTED
+
+CHECKLIST POINTER
+  See CHECKLIST.md in this evidence dir (RC-01..RC-12 remain OPEN/HELD).
+  See INVENTORY.md for packaging script matrix.
+
+DISPOSITION
+  PREP_OK for tip ZIP dry-run only.
+  Phase 10 Product certification / RC remains NOT_CLAIMED.
+  PROMOTE=0
+  PRODUCT_CERTIFIED=0

@@ -13,6 +13,7 @@ using product_infer_detail::Rt;
 using product_infer_detail::StreamPack;
 using product_infer_detail::StreamSeh;
 using product_infer_detail::InferBody;
+using product_infer_detail::CloseSeh;
 using product_infer_lane::Run;
 
 #ifdef _WIN32
@@ -41,7 +42,7 @@ bool ProductOpenSession(const char* modelAliasOrPath) {
 
 void ProductCloseSession() {
     Run([&]() -> int {
-        Rt().CloseSession();
+        (void)CloseSeh();
         return 0;
     });
 }

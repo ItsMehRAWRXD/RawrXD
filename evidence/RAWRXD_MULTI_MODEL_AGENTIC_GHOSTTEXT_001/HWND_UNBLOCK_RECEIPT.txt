@@ -1,0 +1,88 @@
+RAWRXD_MULTI_MODEL_AGENTIC_GHOSTTEXT_001 / HWND_UNBLOCK_RECEIPT
+================================================================
+ASOF_UTC=2026-10-28T14:35:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+AGENTIC_EDIT_NE_GHOSTTEXT=1
+
+COORDINATION
+------------
+SIBLING_TIP_RECOVER=3bd00c06
+SIBLING_OWNED_LINK_LOCK=1 (during tip absorb)
+SIBLING_NEW_SHA=2B9B5A677A4D40C999F3AC4BFA57BD3CA1AAE688D56B93E8033621F1DB1821E2
+GHOSTTEXT_ACTION_DURING_LOCK=SOURCE_WIRE_ONLY then ONE rebuild after lock clear
+
+ROOT_CAUSE
+----------
+1) PRIMARY (heap scribble when ghost paints):
+   Win32IDE_GhostText.cpp used Edit-control EM_POSFROMCHAR ABI
+   (wParam=cp, lParam=POINTL*) on RichEdit (MsftEdit).
+   Correct RichEdit ABI: wParam=POINTL*, lParam=cp.
+   Inverted args write POINTL through a small integer address → heap
+   corruption family 0xC0000374 on paint (build-fd SHA 87314037…).
+
+2) PRIMARY (feature-probe hang / fail-fast before asserts):
+   runFeatureProbeCLI used pumpMessages() which dispatched
+   WM_APP_RESTORE_SESSION → restoreSession() (+ deferred init).
+   That path hangs or fail-fasts (0xC0000409) before any
+   [feature-probe] lines. Normal startup already skips restore in
+   pumpMessagesTraced; feature probe did not.
+
+3) SECONDARY (delivery dead):
+   onGhostTextReady previously rejected all WM_GHOST_TEXT_READY
+   payloads (++m_ghostLegacyRejected). Product bind never ran from
+   the timer/completion path.
+
+4) SECONDARY (Ollama):
+   Local provider returned "" under LOCAL_ONLY_001 with no Ollama
+   fallthrough. Opt-in RAWRXD_GHOST_OLLAMA=1 + OllamaProvider FIM
+   wired for multi-model GhostText (nano default).
+
+SOURCE_FIXES
+------------
+- Win32IDE_GhostText.cpp: RichEdit EM_POSFROMCHAR order; Consolas
+  font fallback; onGhostTextReady → applyProductGhost; Ollama FIM
+  fallthrough behind RAWRXD_GHOST_OLLAMA=1
+- main_win32.cpp: feature_probe breadcrumbs (TEMP\rawrxd_feature_probe);
+  pumpMessagesTraced for feature probes; Ollama nano Tab/Esc/stale
+  asserts (env-gated) — may be mid-relink if header public API churn
+
+RUNNABLE_WITNESS (timer path)
+-----------------------------
+EXE=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+ARGV=--test-ghost-text
+EXIT=0
+FEATURE_PROBE_LAST=
+  PASS main_window_created
+  PASS editor_window_created
+  PASS ghost_text_timer_started
+  SUMMARY passed=3 failed=0
+BREADCRUMB=phase=createWindow_OK + after_show_pump
+CITE_TEMP=%TEMP%\rawrxd_feature_probe\feature_probe_last.txt
+
+NANO_OLLAMA_GHOSTTEXT
+---------------------
+MODEL=nemotron-3-nano:4b (installed_local_ollama=1)
+REAL_OLLAMA_GHOST_INLINE=SOURCE_WIRED / EXERCISE_PENDING_OR_IN_FLIGHT
+  (env RAWRXD_GHOST_OLLAMA=1 asserts added; full Tab/Esc/stale seal
+   requires post-header-churn EXE if mid-rebuild)
+BUFFER_UNCHANGED_UNTIL_TAB=NOT_SEALED
+TAB_ACCEPT_UNDO=NOT_SEALED
+ESC_DISMISS_NO_MUTATION=NOT_SEALED
+STALE_CANCEL=NOT_SEALED
+CERTIFIED_NANO=0
+NOTE=Do NOT transfer CLI agentic PASS from RAWRXD_MULTI_MODEL_AGENTIC_001
+
+PRIOR_BLOCK
+-----------
+build-fd EXE 87314037… EXIT=0xC0000374 after RuntimeSurface bootstrap
+HWND_BLOCK_CITE.txt preserved as historical block evidence
+
+LAW
+---
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+PROMOTE=0

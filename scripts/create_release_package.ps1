@@ -3,9 +3,19 @@
 
 param(
     [string]$Version = "1.0.0",
-    [string]$SourceDir = "d:\rawrxd",
-    [string]$OutputDir = "d:\rawrxd\releases"
+    # Defaults: repo root (was hardcoded d:\rawrxd — blocked dry-run on this machine).
+    # Prefer TIP_FREEZE for RC prep: scripts/rc_prep_dry_run_package.ps1 (PROMOTE=0).
+    [string]$SourceDir = "",
+    [string]$OutputDir = ""
 )
+
+if (-not $SourceDir) {
+    $here = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+    $SourceDir = (Resolve-Path (Join-Path $here "..")).Path
+}
+if (-not $OutputDir) {
+    $OutputDir = Join-Path $SourceDir "releases"
+}
 
 $ErrorActionPreference = 'Stop'
 $StartTime = Get-Date
@@ -61,10 +71,26 @@ Write-Status "Created release directory: $releaseDir" "OK"
 # =============================================================================
 Write-Header "Phase 2: Copying Binaries"
 
+# Resolve Win32IDE from tip freeze first (RC prep authority), then common build outs.
+function Resolve-FirstExisting([string[]]$Candidates) {
+    foreach ($c in $Candidates) {
+        if (Test-Path -LiteralPath $c) { return $c }
+    }
+    return $null
+}
+
+$win32IdeExe = Resolve-FirstExisting @(
+    "$SourceDir\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe"
+    "$SourceDir\build-ninja\bin\RawrXD-Win32IDE.exe"
+    "$SourceDir\build-win32\bin\RawrXD-Win32IDE.exe"
+    "$SourceDir\build\bin\RawrXD-Win32IDE.exe"
+)
+$win32IdePdb = if ($win32IdeExe) { [System.IO.Path]::ChangeExtension($win32IdeExe, ".pdb") } else { $null }
+
 $binaries = @(
-    @{ Source = "$SourceDir\build\bin\RawrXD-Win32IDE.exe"; Target = "bin\RawrXD-Win32IDE.exe"; Required = $true }
-    @{ Source = "$SourceDir\build\bin\RawrXD-Win32IDE.pdb"; Target = "bin\RawrXD-Win32IDE.pdb"; Required = $false }
-    @{ Source = "$SourceDir\build\bin\RawrXD-InferenceEngine.exe"; Target = "bin\RawrXD-InferenceEngine.exe"; Required = $true }
+    @{ Source = $win32IdeExe; Target = "bin\RawrXD-Win32IDE.exe"; Required = $true }
+    @{ Source = $win32IdePdb; Target = "bin\RawrXD-Win32IDE.pdb"; Required = $false }
+    @{ Source = "$SourceDir\build\bin\RawrXD-InferenceEngine.exe"; Target = "bin\RawrXD-InferenceEngine.exe"; Required = $false }
     @{ Source = "$SourceDir\build\bin\RawrXD_MultiWindow_Kernel.dll"; Target = "bin\RawrXD_MultiWindow_Kernel.dll"; Required = $false }
 )
 
@@ -73,8 +99,8 @@ $binariesFailed = 0
 
 foreach ($bin in $binaries) {
     $targetPath = Join-Path $releaseDir $bin.Target
-    if (Test-Path $bin.Source) {
-        Copy-Item $bin.Source $targetPath -Force
+    if ($bin.Source -and (Test-Path -LiteralPath $bin.Source)) {
+        Copy-Item -LiteralPath $bin.Source $targetPath -Force
         $size = (Get-Item $targetPath).Length / 1MB
         Write-Status "Copied: $($bin.Target) ($([math]::Round($size, 2)) MB)" "OK"
         $binariesCopied++

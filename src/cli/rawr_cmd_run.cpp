@@ -1,4 +1,4 @@
-// rawr_cmd_run.cpp ‚Äî product rawr run via Deep2StreamSession
+// rawr_cmd_run.cpp ù product rawr run via Deep2StreamSession
 #include "rawr_commands.hpp"
 #include "rawr_output_router.hpp"
 #include "rawr_model_registry.hpp"
@@ -10,6 +10,7 @@
 #include "../deep2/lavapath/ProductStreamerPrep.hpp"
 #include "../deep2/GpuPreflight.hpp"
 #include "../deep2/RawrAutoBackendPolicy.hpp"
+#include "../core/agent_wal.hpp"
 #include <cstdlib>
 #include <string>
 
@@ -94,13 +95,13 @@ int CmdRun(const CliArgs& a) {
     }
 
     // ========================================================================
-    // Gate before ProductStreamerPrep ‚Äî prep/engine noise ‚Üí stderr.
+    // Gate before ProductStreamerPrep ó prep/engine noise ? stderr.
     // ========================================================================
     OutGate gate;
     if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
     Deep2::Deep2Engine engine;
 
-    // GPU health preflight first ó Code 31 DevNode reset before Vulkan open.
+    // GPU health preflight first ù Code 31 DevNode reset before Vulkan open.
     if (!GpuPreflightCheck(!a.vulkan)) return ExitCode::Runtime;
 
     // Configure engine for selected backend
@@ -141,6 +142,8 @@ int CmdRun(const CliArgs& a) {
     d2_session_close_model(s);
     d2_session_destroy(s);
     if (!ok) { Diag("rawr: generate failed\n"); return ExitCode::Runtime; }
+    rawrxd::agent_wal::Append(rawrxd::agent_wal::DefaultRoot(), 1, "CMD_RUN_OK",
+                              ent.name.c_str());
     return ExitCode::Ok;
 }
 } // namespace rawr

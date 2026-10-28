@@ -1,0 +1,12 @@
+SOURCE_DIFF_NOTE — PRODUCT_GATEWAY_CONTINUOUS_001
+=================================================
+files:
+  src/product/gateway/product_deep2_infer.cpp
+  src/product/gateway/product_deep2_infer_seh.cpp (new)
+  src/product/gateway/product_deep2_infer_internal.hpp
+  src/product/gateway/product_deep2_infer_seh.hpp
+  cmake/RawrXD_Product100.cmake
+  cmake/RawrProductLayer.fragment.cmake
+  cmake/RawrAgenticCli.fragment.cmake
+
+tip freeze EXE unchanged (748B). SOURCE_WIRED != tip RUNTIME for new CloseSeh path.

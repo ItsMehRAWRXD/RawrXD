@@ -1,0 +1,12 @@
+ASOF_UTC=2026-10-28T17:12:11Z
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PORT=18784
+WRITE1={"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\safe_write_atomic_001\\sandbox_748b\\atomic_probe.txt","name":"atomic_probe.txt","size":14,"atomic":true,"previewed":true,"rollback_id":1,"message":"File written atomically"}
+STATUS1={"initialized":true,"owner":"SafeWriteAtomic","atomic":"tmp+ReplaceFileA|MoveFileExA","phase10_independent":true,"writes":1,"rollbacks":0,"stack":1,"next_id":2}
+PREVIEW={"success":true,"preview":"---\n\n+++\natomic-748B-v1"}
+ROLLBACK={"success":true,"message":"Rollback applied"}
+STATUS2={"initialized":true,"owner":"SafeWriteAtomic","atomic":"tmp+ReplaceFileA|MoveFileExA","phase10_independent":true,"writes":2,"rollbacks":1,"stack":1,"next_id":3}
+FS_CONTENT=atomic-748B-v1
+TMP_ABSENT=True
+RUNTIME_REACHED=1
+PROMOTE=0

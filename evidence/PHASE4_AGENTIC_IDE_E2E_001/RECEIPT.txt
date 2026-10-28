@@ -1,0 +1,54 @@
+PHASE4_AGENTIC_IDE_E2E_001 / RECEIPT
+====================================
+ASOF_UTC=2026-10-28T17:15:30Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+EXE_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+HARNESS=harness_phase4_agentic_ide_e2e.ps1
+PORT_HEADLESS=19141
+PORT_GUI=19142
+HWND=0xFB0BC4
+
+WORKFLOW TABLE (primary)
+------------------------
+WORKFLOW       DISPOSITION       PATH
+Ask            RUNTIME_REACHED   HTTP /ask 503 failclosed + HWND WM_COMMAND 1208
+Agent          FAIL_CLOSED       /api/agent/run HTTP=503 empty_body (EXTEND TIP_003)
+                                 HWND WM_COMMAND 1207 mode switch RUNTIME_REACHED
+Plan           RUNTIME_REACHED   /api/tool list_directory=200 + HWND WM_COMMAND 1206
+Debug          RUNTIME_REACHED   GET debug status HTTP=200 + BM_CLICK Debug
+Multitask      RUNTIME_REACHED   POST /api/subagent HTTP=202 accepted/spawned
+Terminal       RUNTIME_REACHED   execute_command → phase4_terminal_ok exitCode=0
+SafeWrite      RUNTIME_REACHED   write_file atomic=true + preview + rollback→v0
+Stop/restore   RUNTIME_REACHED   cancel probe + restore write v0_restored
+
+DETAIL CITES
+------------
+logs/ask.body.txt
+logs/agent_run_1.code.txt (HTTP=503) + agent_run_1.body.txt (empty)
+logs/plan_list.body.txt
+logs/debug.body.txt
+logs/subagent.body.txt (202 spawned agentId=hsub-39180-1)
+logs/terminal.body.txt
+logs/safewrite_write.body.txt (atomic=true rollback_id=1)
+logs/safewrite_rollback.body.txt
+logs/stop_restore.body.txt
+logs/gui_hwnd.txt (ASK/PLAN/AGENT WM_COMMAND True)
+
+AGENT_RUN_LOOP COORDINATION
+---------------------------
+NO_THRASH=1
+PRIOR=AGENT_RUN_LOOP_TIP_003 FAIL_CLOSED_NOT_ENTERED
+THIS_SEAL=re-verified same 503 empty_body on 748B; extend only
+
+GHOSTTEXT
+---------
+WITNESS_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+ABSORB=NOT_AUTHORIZED
+TIP_REMAINS=748B210A…
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

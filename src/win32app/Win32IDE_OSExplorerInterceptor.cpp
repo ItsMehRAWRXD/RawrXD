@@ -1,26 +1,14 @@
 #include "Win32IDE.h"
 #include <windows.h>
-#include <shellapi.h>
-#include <string>
 
+// Product path: OSExplorerInterceptor remains FEATURE_FICTION on tip.
+// Do not ShellExecute from this entry — CommandResult overload already
+// returns exit 1; keep void* dispatch fail-closed the same way.
 void HandleOSExplorerInterceptor(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
-    wchar_t cwd[MAX_PATH] = {};
-    GetCurrentDirectoryW(MAX_PATH, cwd);
-    const HINSTANCE r =
-        ShellExecuteW(ide ? ide->getMainWindow() : nullptr, L"explore", cwd,
-                      nullptr, nullptr, SW_SHOWNORMAL);
-    const bool ok = reinterpret_cast<INT_PTR>(r) > 32;
+    const char* msg =
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor\n";
     if (ide) {
-        ide->appendToOutput(
-            ok ? "[OSExplorer] ShellExecute explore cwd ok\n"
-               : "[OSExplorer] ShellExecute explore failed\n",
-            "Explorer",
-            ok ? Win32IDE::OutputSeverity::Info : Win32IDE::OutputSeverity::Error);
-    }
-    if (!ok) {
-        MessageBoxA(ide ? ide->getMainWindow() : nullptr,
-                    "Failed to open Explorer on workspace cwd.",
-                    "OS Explorer Interceptor", MB_ICONERROR | MB_OK);
+        ide->appendToOutput(msg, "Explorer", Win32IDE::OutputSeverity::Error);
     }
 }

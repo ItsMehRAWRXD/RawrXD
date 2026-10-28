@@ -1,0 +1,1 @@
+{"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\safe_write_atomic_001\\sandbox_748b\\atomic_probe.txt","name":"atomic_probe.txt","size":14,"atomic":true,"previewed":true,"rollback_id":1,"message":"File written atomically"}

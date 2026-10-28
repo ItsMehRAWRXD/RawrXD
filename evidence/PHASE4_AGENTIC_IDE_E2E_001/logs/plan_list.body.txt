@@ -1,0 +1,2 @@
+﻿status=200
+{"path":"g:\\~dev\\rawrxd\\evidence\\phase4_agentic_ide_e2e_001\\sandbox","entries":[{"name":"hello.cmd","type":"file"},{"name":"PassiveRoleNotRoleplay.mdc","type":"file"},{"name":"tracked.txt","type":"file"}]}

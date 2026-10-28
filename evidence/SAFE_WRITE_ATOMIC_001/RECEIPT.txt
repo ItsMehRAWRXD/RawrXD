@@ -10,8 +10,9 @@ NO_INVENT_PASS=1
 VERDICT
 -------
 SOURCE_WIRED atomic/preview/rollback product path on headless write_file.
-Tip rebuild deferred (Path A/B absorb) → RELINK_REQUIRED=1.
-RUNTIME_REACHED=NOT_RUN on tip SHA 6832F439… (pre-wire binary).
+SUPERSEDED_FOR_TIP_CLIMB: see RECEIPT_748B.txt — tip 748B RUNTIME_REACHED
+  (write/preview/rollback on AUTHORITY_SHA 748B210A…). This file keeps the
+  historical 6832 pre-wire SOURCE_WIRED seal intact.
 A06 MET=0. PROMOTE=0.
 SAFE_WRITE_APPROVAL_TIP_001 deny rows not rewritten.
 

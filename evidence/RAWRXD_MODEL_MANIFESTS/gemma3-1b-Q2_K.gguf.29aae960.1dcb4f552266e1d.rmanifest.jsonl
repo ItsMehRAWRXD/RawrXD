@@ -1,4 +1,4 @@
-{"record":"model","model_path":"G:\\~dev\\rawrxd\\gemma3-1b-Q2_K.gguf","model_id":"gemma3-1b-Q2_K.gguf:29aae960:1dcb4f552266e1d","arch":"gemma3","vocab":262144,"hidden":1152,"layers":26,"heads":0,"kv_heads":1,"head_dim":0,"intermediate":6912,"size":699066720,"mtime":134181054652509725,"ready":1,"blocked_at":""}
+{"record":"model","model_path":"G:\\~dev\\rawrxd\\models\\gemma3-1b-Q2_K.gguf","model_id":"gemma3-1b-Q2_K.gguf:29aae960:1dcb4f552266e1d","arch":"gemma3","vocab":262144,"hidden":1152,"layers":26,"heads":0,"kv_heads":1,"head_dim":0,"intermediate":6912,"size":699066720,"mtime":134181054652509725,"ready":1,"blocked_at":""}
 {"record":"root","role":"embed","tensor":"token_embd.weight"}
 {"record":"root","role":"final_norm","tensor":"output_norm.weight"}
 {"record":"layer","layer":0,"attention":"SPLIT_QKV","ffn":"SPLIT_GATE_UP_DOWN","q":"blk.0.attn_q.weight","k":"blk.0.attn_k.weight","v":"blk.0.attn_v.weight","o":"blk.0.attn_output.weight","qkv":"","projector":"","gate":"blk.0.ffn_gate.weight","up":"blk.0.ffn_up.weight","down":"blk.0.ffn_down.weight","ready":1,"blocked_at":""}

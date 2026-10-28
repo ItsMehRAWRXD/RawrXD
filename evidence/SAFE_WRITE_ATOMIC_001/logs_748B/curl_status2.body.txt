@@ -1,0 +1,1 @@
+{"initialized":true,"owner":"SafeWriteAtomic","atomic":"tmp+ReplaceFileA|MoveFileExA","phase10_independent":true,"writes":2,"rollbacks":1,"stack":1,"next_id":3}

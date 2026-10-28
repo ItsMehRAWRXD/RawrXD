@@ -1,0 +1,171 @@
+hwnd=0x8C50B02 class=ToolbarWindow32 title= visible=0
+hwnd=0x460B58 class=Static title=Untitled  �  bin visible=0
+hwnd=0x14F0832 class=Button title=GH visible=0
+hwnd=0x2DD066E class=Button title=MS visible=0
+hwnd=0x38C09FC class=Button title=Gear visible=0
+hwnd=0x845080A class=Button title=- visible=0
+hwnd=0x1CB0584 class=Button title=[] visible=0
+hwnd=0xED0824 class=Button title=X visible=0
+hwnd=0x142087A class=Static title= visible=0
+hwnd=0x7E8017C class=Button title=Files visible=0
+hwnd=0x2BB064A class=Button title=Search visible=0
+hwnd=0x45507B4 class=Button title=Source visible=0
+hwnd=0x470C9C class=Button title=Debug visible=0
+hwnd=0x1BD0340 class=Button title=Exts visible=0
+hwnd=0x2480A0E class=Button title=Recov visible=0
+hwnd=0xBA0AEC class=Button title=Chat visible=0
+hwnd=0xC90914 class=Edit title= visible=0
+
+--- after chat/agent toggle ---
+hwnd=0x99091C class=RawrXDAnnotationOverlay title= visible=1
+hwnd=0x8C50B02 class=ToolbarWindow32 title= visible=1
+hwnd=0x460B58 class=Static title=Untitled  �  bin visible=1
+hwnd=0x14F0832 class=Button title=GH visible=1
+hwnd=0x2DD066E class=Button title=MS visible=1
+hwnd=0x38C09FC class=Button title=Gear visible=1
+hwnd=0x845080A class=Button title=- visible=1
+hwnd=0x1CB0584 class=Button title=[] visible=1
+hwnd=0xED0824 class=Button title=X visible=1
+hwnd=0x142087A class=Static title= visible=1
+hwnd=0x7E8017C class=Button title=Files visible=1
+hwnd=0x2BB064A class=Button title=Search visible=1
+hwnd=0x45507B4 class=Button title=Source visible=1
+hwnd=0x470C9C class=Button title=Debug visible=1
+hwnd=0x1BD0340 class=Button title=Exts visible=1
+hwnd=0x2480A0E class=Button title=Recov visible=1
+hwnd=0xBA0AEC class=Button title=Chat visible=1
+hwnd=0xC90914 class=Edit title= visible=0
+hwnd=0x8B0270 class=Static title=RawrXD.IDE.Sidebar visible=1
+hwnd=0x2B0620 class=Static title=File Explorer visible=1
+hwnd=0x9B0336 class=Static title= visible=1
+hwnd=0x3060454 class=Static title= visible=1
+hwnd=0x4500184 class=Button title=New File visible=1
+hwnd=0x7100E0 class=Button title=New Folder visible=1
+hwnd=0x3370316 class=Button title=Refresh visible=1
+hwnd=0x13002D6 class=Button title=Collapse visible=1
+hwnd=0xD3D0902 class=SysTreeView32 title=RawrXD.IDE.FileExplorer visible=1
+hwnd=0x1E10B5C class=Edit title= visible=0
+hwnd=0x350044C class=Static title= visible=0
+hwnd=0x200CBE class=Button title=Regex visible=0
+hwnd=0x272019C class=Button title=Case visible=0
+hwnd=0x2490162 class=Button title=Whole visible=0
+hwnd=0x7410200 class=Static title=Include: visible=0
+hwnd=0x37B0548 class=Edit title=*.ps1,*.cpp visible=0
+hwnd=0x109031C class=Static title=Exclude: visible=0
+hwnd=0x3EC0C0A class=Edit title=node_modules,bin visible=0
+hwnd=0x1430786 class=ListBox title= visible=0
+hwnd=0x2020152 class=Static title= visible=0
+hwnd=0x2104A2 class=Button title=Stage visible=0
+hwnd=0x55C0508 class=Button title=Unstage visible=0
+hwnd=0x55A04C4 class=Button title=Commit visible=0
+hwnd=0x30B05F0 class=Button title=Sync visible=0
+hwnd=0x2040678 class=Static title=Message: visible=1
+hwnd=0x2305F8 class=Edit title= visible=0
+hwnd=0x34F069A class=SysListView32 title= visible=0
+hwnd=0x268077A class=SysHeader32 title= visible=0
+hwnd=0x4760780 class=Static title= visible=0
+hwnd=0x980788 class=Button title=Start visible=0
+hwnd=0x3D40792 class=Button title=Stop visible=0
+hwnd=0x36D0798 class=ComboBox title= visible=0
+hwnd=0x16A07EE class=Static title=Variables: visible=1
+hwnd=0x174080C class=SysListView32 title= visible=0
+hwnd=0x1E058A class=SysHeader32 title= visible=0
+hwnd=0xAF0282 class=Edit title= visible=0
+hwnd=0x16C052E class=Button title=Install VSIX... visible=1
+hwnd=0x4D8011A class=Button title=Install visible=1
+hwnd=0x410067C class=Button title=Uninstall visible=1
+hwnd=0x118D0782 class=Button title=Details visible=1
+hwnd=0x2A0630 class=SysListView32 title= visible=0
+hwnd=0x49020A class=SysHeader32 title= visible=0
+hwnd=0x26C042A class=Static title=DISK RECOVERY visible=0
+hwnd=0x28C00C0 class=ListBox title= visible=0
+hwnd=0x5620178 class=Button title=Scan visible=0
+hwnd=0x9A05FA class=Button title=Probe visible=0
+hwnd=0x930020 class=Button title=Start visible=0
+hwnd=0x2880150 class=Button title=Pause visible=0
+hwnd=0x18B049E class=Button title=Abort visible=0
+hwnd=0x27607C0 class=Button title=Key Extract visible=0
+hwnd=0x1D00248 class=Button title=Bad Map visible=0
+hwnd=0x25105C2 class=Static title=Output: visible=0
+hwnd=0x6E001C class=Edit title=C:\Users\Garrett\AppData\Roaming\RawrXD\recovery_output visible=0
+hwnd=0xD4001E class=Button title=... visible=0
+hwnd=0xDB04BE class=Static title=Status: Idle visible=0
+hwnd=0xC67084A class=msctls_progress32 title= visible=0
+hwnd=0x2F7085E class=Edit title= visible=0
+hwnd=0x242086E class=Static title=RawrXD.IDE.BreadcrumbBar visible=1
+hwnd=0xFAE08A8 class=Static title= visible=1
+hwnd=0x74F08AC class=RICHEDIT50W title= visible=1
+hwnd=0x2C0924 class=msctls_statusbar32 title= visible=1
+hwnd=0x67092A class=Static title=PowerShell Console visible=1
+hwnd=0x2CC0948 class=Static title= visible=1
+hwnd=0x45099C class=Button title=Clear visible=1
+hwnd=0x3409C0 class=Button title=Stop visible=1
+hwnd=0x2CB09C8 class=Button title=History visible=1
+hwnd=0x6009F4 class=Button title=Restart visible=1
+hwnd=0xF0A2A class=Button title=Load RawrXD visible=1
+hwnd=0x2AA096A class=RICHEDIT50W title= visible=1
+hwnd=0x59007E class=Edit title= visible=1
+hwnd=0x110494 class=Button title=Execute visible=1
+hwnd=0x11063E class=Static title=PowerShell: Not Active | pending visible=1
+hwnd=0x2DB0118 class=Edit title= visible=0
+hwnd=0x4860A3C class=RichEdit20W title= visible=1
+hwnd=0x2710A80 class=Edit title= visible=1
+hwnd=0x3830A92 class=Edit title= visible=0
+hwnd=0x8D0418 class=SysTabControl32 title= visible=1
+hwnd=0x2D108EE class=ComboBox title= visible=1
+hwnd=0x5C20574 class=RichEdit20W title= visible=1
+hwnd=0x1B0A38 class=RichEdit20W title= visible=0
+hwnd=0x4660906 class=RichEdit20W title= visible=0
+hwnd=0x1DC70B48 class=RichEdit20W title= visible=0
+hwnd=0x35C0AD2 class=Static title= visible=1
+hwnd=0x2A60AD4 class=Static title=AI Chat visible=1
+hwnd=0xB50AEE class=Static title=Model: visible=1
+hwnd=0x15D0AF2 class=ComboBox title= visible=1
+hwnd=0x5330B08 class=Edit title= visible=1
+hwnd=0xE9A0B10 class=Button title=Browse... visible=1
+hwnd=0x14CD0B1C class=Static title=Max Tokens: visible=1
+hwnd=0x1BF01D2 class=Static title=512 visible=1
+hwnd=0x2F70B30 class=msctls_trackbar32 title= visible=1
+hwnd=0x12095A class=Static title=Context: visible=1
+hwnd=0x7620A34 class=Static title=4K visible=1
+hwnd=0x8FC095C class=msctls_trackbar32 title= visible=1
+hwnd=0xB70962 class=Static title=Context (Mem): visible=1
+hwnd=0x2850964 class=ComboBox title= visible=1
+hwnd=0x4C3096E class=Button title=Max Mode visible=1
+hwnd=0x3530974 class=Button title=Deep Think visible=1
+hwnd=0x850920 class=Button title=Deep Research visible=1
+hwnd=0x12B009C class=Button title=No Refusal visible=1
+hwnd=0x5A09A8 class=Edit title= visible=1
+hwnd=0x54C0A44 class=Edit title= visible=1
+hwnd=0x3F00A62 class=Button title=Send visible=1
+hwnd=0xD700E2 class=Button title=Clear visible=1
+hwnd=0x180932 class=SysTabControl32 title= visible=1
+hwnd=0xCB05DC class=Static title= visible=1
+hwnd=0xAA108C2 class=ListBox title= visible=1
+hwnd=0x19490B04 class=Static title=RawrXD ScreenPilot  |  RAWRXD  |  bin  |  main visible=1
+hwnd=0x13B0AE4 class=Edit title= visible=1
+hwnd=0x2AF0B3C class=Static title=Output visible=1
+hwnd=0x2E90B06 class=Edit title= visible=1
+hwnd=0x5AC0B24 class=Static title=Remote steering â€” Coming next (EGRESS_001 open)
+Local GUI: http://127.0.0.1:11435/gui  Â·  LOCAL_ONLY_001 visible=1
+hwnd=0x2030B34 class=Static title=Engine control surface visible=1
+hwnd=0x2230B3E class=ListBox title= visible=1
+hwnd=0x620B40 class=ListBox title= visible=1
+hwnd=0x230B4E class=Button title=Load selected visible=1
+hwnd=0x4840B50 class=Button title=Browse .gguf visible=1
+hwnd=0x6FF0B68 class=Button title=Unload visible=1
+hwnd=0x1750B74 class=Button title=Reload visible=1
+hwnd=0x25E0B84 class=Button title=Cancel visible=1
+hwnd=0xFD0BC4 class=Static title= visible=1
+hwnd=0x1640C5C class=Static title= visible=1
+hwnd=0xDD01BC class=Static title=RawrXD Agent idle visible=1
+hwnd=0x7B08A6 class=Button title=Stop agent visible=1
+hwnd=0x130C62 class=Button title=Allow visible=0
+hwnd=0x42060C class=Button title=Deny visible=0
+hwnd=0x32A0300 class=Static title= visible=0
+hwnd=0x5502D2 class=Edit title= visible=1
+hwnd=0x2DD078A class=ComboBox title= visible=1
+hwnd=0x3BF07E6 class=ComboBox title= visible=1
+hwnd=0x12B207E0 class=Button title=Send visible=1
+hwnd=0x520818 class=Button title=Open workspace editor (Ctrl+Shift+W) visible=1
+hwnd=0xCF081A class=Static title=Desktop Preview Â· LOCAL_ONLY_001 Â· Deep2/GGUF Â· local authority retained Â· EGRESS_001 open visible=1

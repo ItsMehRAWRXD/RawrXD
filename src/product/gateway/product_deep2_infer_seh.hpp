@@ -1,28 +1,11 @@
 #pragma once
-/* Infer/Stream SEH wrappers — companion to product_deep2_infer_internal. ≤99. */
+/* InferBody (no __try) — SEH in product_deep2_infer.cpp. ≤99. */
 #include <cstdio>
 #include <cstring>
 #include <string>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 namespace rawr {
 namespace product_infer_detail {
-
-inline bool StreamSeh(const StreamPack& p) {
-#ifdef _WIN32
-    __try {
-        return StreamBody(p);
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        std::fprintf(stderr, "PRODUCT_DEEP2_INFER_STREAM_SEH=1 CODE=0x%08lX\n",
-                     (unsigned long)GetExceptionCode());
-        return false;
-    }
-#else
-    return StreamBody(p);
-#endif
-}
 
 inline bool InferBody(const char* prompt, char* out, size_t cap,
                       uint32_t maxTokens = 0) {

@@ -1,0 +1,52 @@
+PHASE4_AGENTIC_IDE_E2E_001 / LAW
+================================
+ASOF_UTC=2026-10-28T17:15:00Z
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+PHASE=4_AGENTIC_IDE
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+REBUILD_THIS_DISPATCH=0
+MOTD_ACK=1
+
+PRODUCT_TIP
+-----------
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+NEVER_ERASE_748B=1
+NEW_CANDIDATE_FREEZE=NOT_REQUIRED (source surface exercised on tip)
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+AgentRunLoop HTTP 503 empty_body = FAIL_CLOSED (extend AGENT_RUN_LOOP_TIP_003; no thrash)
+GhostText B421 witness = NOT_AUTHORIZED for absorb
+
+SCOPE
+-----
+Close verified workflows on tip via real HTTP/HWND:
+  Ask / Agent / Plan / Debug modes
+  Multitask (/api/subagent)
+  Terminal tools (execute_command)
+  File editing SafeWrite (atomic+preview+rollback)
+  Stop/restore (cancel + restore write)
+
+METHOD
+------
+harness_phase4_agentic_ide_e2e.ps1
+  Headless: --headless --local --port 19141 --bind 127.0.0.1 --dir G:\~dev\rawrxd
+  GUI HWND: --port 19142 ; WM_COMMAND 1208/1206/1207 (Ask/Plan/Agent)
+  Auth: RAWRXD_HOSTED_API_KEY + MOTD re-ack after /ask|/generate reset
+
+CROSS_CITE
+----------
+TIP_FREEZE_001 / TIP_EXE_AUTHORITY (748B)
+AGENT_RUN_LOOP_TIP_003 (Agent FAIL_CLOSED extend)
+SAFE_WRITE_ATOMIC_001 (SOURCE_WIRED → tip RUNTIME_REACHED here)
+GHOSTTEXT_SHA_AUTHORITY_HOLD_001 ABSORB=NOT_AUTHORIZED
+WIN32IDE_FULL_COMPLETION_CAMPAIGN_001 Phase 4
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

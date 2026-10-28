@@ -406,9 +406,11 @@ void Win32IDE::ensureAutonomousPipelineInitialized() {
                 return true;
             });
             LOG_INFO("Autonomous Pipeline wired to AgentCoordinator (dequeue tasks)");
+        } else {
+            LOG_INFO("Autonomous Pipeline AgentCoordinator FAIL_CLOSED (Create/Init stub)");
         }
     }
-    LOG_INFO("Autonomous Agentic Pipeline initialized and wired");
+    LOG_INFO("Autonomous Agentic Pipeline initialized (coordinator may be FAIL_CLOSED)");
 }
 
 // onPipelineRun / onPipelineAutonomyStart / onPipelineAutonomyStop defined after #endif below (outside #if 0)
@@ -558,9 +560,11 @@ void Win32IDE::ensureAutonomousPipelineInitialized()
                     return true;
                 });
             LOG_INFO("Autonomous Pipeline wired to AgentCoordinator (dequeue tasks)");
+        } else {
+            LOG_INFO("Autonomous Pipeline AgentCoordinator FAIL_CLOSED (Create/Init stub)");
         }
     }
-    LOG_INFO("Autonomous Agentic Pipeline initialized and wired");
+    LOG_INFO("Autonomous Agentic Pipeline initialized (coordinator may be FAIL_CLOSED)");
 }
 
 void Win32IDE::onPipelineRun()
@@ -2551,14 +2555,17 @@ void Win32IDE::setAgenticMode(RawrXD::AgenticMode mode)
     m_agenticMode = mode;
     LOG_INFO("Agentic mode set to " + std::string(RawrXD::AgenticModeToString(mode)));
     if (m_hwndAgenticModeAsk)
-        SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK, (mode == RawrXD::AgenticMode::Ask) ? BST_CHECKED : BST_UNCHECKED,
-                    0);
+        SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK,
+                    (mode == RawrXD::AgenticMode::Ask) ? BST_CHECKED : BST_UNCHECKED, 0);
     if (m_hwndAgenticModePlan)
         SendMessage(m_hwndAgenticModePlan, BM_SETCHECK,
                     (mode == RawrXD::AgenticMode::Plan) ? BST_CHECKED : BST_UNCHECKED, 0);
     if (m_hwndAgenticModeAgent)
         SendMessage(m_hwndAgenticModeAgent, BM_SETCHECK,
                     (mode == RawrXD::AgenticMode::Agent) ? BST_CHECKED : BST_UNCHECKED, 0);
+    if (m_hwndAgenticModeDebug)
+        SendMessage(m_hwndAgenticModeDebug, BM_SETCHECK,
+                    (mode == RawrXD::AgenticMode::Debug) ? BST_CHECKED : BST_UNCHECKED, 0);
     appendToOutput("Chat mode: " + std::string(RawrXD::AgenticModeToString(mode)) + "\n", "Output",
                    OutputSeverity::Info);
 }
@@ -2581,6 +2588,11 @@ void Win32IDE::onAgenticModePlan()
 void Win32IDE::onAgenticModeAgent()
 {
     setAgenticMode(RawrXD::AgenticMode::Agent);
+}
+
+void Win32IDE::onAgenticModeDebug()
+{
+    setAgenticMode(RawrXD::AgenticMode::Debug);
 }
 
 void Win32IDE::onAIContextSize(int sizeEnum)

@@ -12,6 +12,7 @@
  */
 
 #include "rawrxd_subsystem_api.hpp"
+#include "agent_wal.hpp"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -437,8 +438,20 @@ SubsystemResult SubsystemRegistry::handleTrace(const SubsystemParams& params) {
 }
 
 SubsystemResult SubsystemRegistry::handleAgent(const SubsystemParams& /*params*/) {
+    // AgenticMode() is GATED SYNTHETIC — do not claim loop PASS from it.
     AgenticMode();
-    return SubsystemResult::ok("Agent: Autonomous control loop executed");
+    static uint64_t seq = 0;
+    ++seq;
+    const char* root = rawrxd::agent_wal::DefaultRoot();
+    if (!rawrxd::agent_wal::Append(root, seq, "SUBSYS_AGENT", "invoke")) {
+        return SubsystemResult::error("Agent: WAL append failed", -3);
+    }
+    int n = rawrxd::agent_wal::VerifyAll(root);
+    if (n < 1) {
+        return SubsystemResult::error("Agent: WAL verify failed", -4);
+    }
+    // Durable subsystem invoke only — not full agent-loop RUNTIME_REACHED.
+    return SubsystemResult::ok("Agent: WAL record committed", 0, root);
 }
 
 SubsystemResult SubsystemRegistry::handleBBCov(const SubsystemParams& /*params*/) {

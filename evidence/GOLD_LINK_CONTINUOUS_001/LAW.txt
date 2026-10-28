@@ -1,0 +1,29 @@
+GOLD_LINK_CONTINUOUS_001 / LAW
+==============================
+ASOF_UTC=2026-10-28T17:05:00Z
+SEAL=GOLD_LINK_CONTINUOUS_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB=NOT_AUTHORIZED
+NO_INVENT_PASS=1
+NOT_RUN != PASS
+TIP_FREEZE_CLOBBER=0
+
+PRODUCT_TIP
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+CANDIDATE_WITNESS (no absorb)
+  PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+  SHA_PRE=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  ROLE=GhostText/link witness only; ≠ tip
+
+ML64
+  PATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe
+  VER=14.44.35228.0
+
+SCOPE
+  gold_link / ASM bridge / v280_link_bridge continuous verification
+  Camellia + Watchdog + ConPTY ASM + v280_link_bridge
+  Fix unresolved externals on candidate path only
+  Do not rewrite TIP_FREEZE_001\bin

@@ -1,4 +1,4 @@
-{"record":"model","model_path":"G:\\~dev\\rawrxd\\_r1_iso\\03_qwen38_27b\\Qwen3.8-27B-AD-Q4_K_M.gguf","model_id":"Qwen3.8-27B-AD-Q4_K_M.gguf:3fc7a65e0:1dd35aeb9d3cda5","arch":"qwen35","vocab":248320,"hidden":5120,"layers":65,"heads":24,"kv_heads":4,"head_dim":213,"intermediate":17408,"size":17120781792,"mtime":134322588449230245,"ready":1,"blocked_at":""}
+{"record":"model","model_path":"F:\\OllamaModels\\_r1_iso\\03_qwen38_27b\\Qwen3.8-27B-AD-Q4_K_M.gguf","model_id":"Qwen3.8-27B-AD-Q4_K_M.gguf:3fc7a65e0:1dd35aeb9d3cda5","arch":"qwen35","vocab":248320,"hidden":5120,"layers":65,"heads":24,"kv_heads":4,"head_dim":213,"intermediate":17408,"size":17120781792,"mtime":134322588449230245,"ready":1,"blocked_at":""}
 {"record":"root","role":"embed","tensor":"token_embd.weight"}
 {"record":"root","role":"final_norm","tensor":"output_norm.weight"}
 {"record":"root","role":"lm_head","tensor":"output.weight"}

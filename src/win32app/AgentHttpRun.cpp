@@ -2,6 +2,7 @@
 #include "AgentSession.hpp"
 #include "../product/gateway/product_deep2_infer.hpp"
 #include "../subagent_core.h"
+#include <cstdlib>
 #include <sstream>
 
 static std::string Field(const std::string& body, const char* key) {
@@ -15,6 +16,18 @@ static std::string Field(const std::string& body, const char* key) {
     return body.substr(a + 1, b - a - 1);
 }
 
+static int FieldInt(const std::string& body, const char* key, int def) {
+    const std::string pat = std::string("\"") + key + "\"";
+    auto p = body.find(pat);
+    if (p == std::string::npos) return def;
+    p = body.find(':', p);
+    if (p == std::string::npos) return def;
+    char* end = nullptr;
+    long v = std::strtol(body.c_str() + static_cast<int>(p) + 1, &end, 10);
+    if (end == body.c_str() + static_cast<int>(p) + 1) return def;
+    return static_cast<int>(v);
+}
+
 static std::string Esc(const std::string& s) {
     std::string o;
     for (unsigned char c : s) {
@@ -26,11 +39,14 @@ static std::string Esc(const std::string& s) {
     return o;
 }
 
+/* Non-stream ProductDeep2Infer — HeadlessIDE notes Stream as FIRST_CRASH_OWNER. */
 static std::string ProductInfer(void*, const std::string& prompt, int maxTokens) {
-    std::string out;
-    rawr::ProductDeep2InferStream(prompt.c_str(), maxTokens,
-        [](const std::string&) { return true; }, &out);
-    return out;
+    char buf[65536];
+    buf[0] = 0;
+    uint32_t mt = maxTokens > 0 ? static_cast<uint32_t>(maxTokens) : 0;
+    if (!rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf), mt) || !buf[0])
+        return {};
+    return std::string(buf);
 }
 
 static std::string Spawn(void* ctx, const char* d, const char* p) {
@@ -72,8 +88,14 @@ int AgentHttpRun(const std::string& body, bool modelReady, void* subAgentMgr,
         if (outJson) *outJson = "{\"error\":\"model_not_loaded\"}";
         return 503;
     }
+    int maxTok = FieldInt(body, "max_tokens", 64);
+    if (maxTok < 1) maxTok = 1;
+    if (maxTok > 2048) maxTok = 2048;
+    int maxIter = FieldInt(body, "max_iter", 8);
+    if (maxIter < 1) maxIter = 1;
+    if (maxIter > 16) maxIter = 16;
     Bind(static_cast<SubAgentManager*>(subAgentMgr));
-    AgentRunResult run = AgentRunLoop(prompt, 8, 2048, nullptr, ProductInfer);
+    AgentRunResult run = AgentRunLoop(prompt, maxIter, maxTok, nullptr, ProductInfer);
     std::ostringstream json;
     json << "{\"agent_session\":true," << AgentSessionCountersJson()
          << ",\"iterations\":" << run.iterations

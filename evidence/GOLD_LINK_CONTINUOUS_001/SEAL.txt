@@ -1,0 +1,54 @@
+GOLD_LINK_CONTINUOUS_001 / SEAL
+================================
+ASOF_UTC=2026-10-28T17:05:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB=NOT_AUTHORIZED
+PRODUCT_CERTIFIED=0
+TIP_FREEZE_INTACT=1
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+VERIFICATION (fail-closed)
+--------------------------
+1) TIP PDB (748B) string probe
+   asm_camellia256_init=1
+   RawrXD_Camellia256.obj=1
+   asm_watchdog_init=1
+   RawrXD_Watchdog.obj=1
+   V280_UI_WndProc_Hook=1
+   v280_link_bridge=1
+   CreatePseudoConsole=1
+   Win32TerminalManager=1
+   RawrXD_TUI_RenderThinkingBlock=0   # ConPTY ASM renderer historically not linked
+
+2) CANDIDATE map (B421) owners
+   asm_camellia256_init        -> RawrXD_Camellia256.obj          LINKED
+   asm_camellia256_encrypt_ctr -> RawrXD_Camellia256.obj          LINKED
+   RawrXD_Watchdog.obj         -> wd_* + wd_compute_hmac_sha256   OBJ_LINKED
+   asm_watchdog_init           -> win32ide_watchdog_init.cpp.obj  MAGBUF_C (FORCE:MULTIPLE)
+   asm_watchdog_verify         -> unlinked_symbols_batch_005.cpp  MAGBUF_C
+   V280_UI_WndProc_Hook        -> v280_link_bridge.cpp.obj        LINKED
+   V280_UI_IsGhostActive       -> v280_link_bridge.cpp.obj        LINKED
+   CreatePseudoConsole         -> Win32TerminalManager.cpp        SOURCE_WIRED
+   RawrXD_TUI_RenderThinkingBlock COUNT=0                         NOT_IN_PRIOR_LINK
+
+3) ml64 14.44 assemble-from-source (evidence/GOLD_LINK_CONTINUOUS_001/asm_assemble)
+   RawrXD_Camellia256.asm      EXIT=0 OBJ=32129
+   RawrXD_Camellia256_Auth.asm EXIT=0 OBJ=21773
+   RawrXD_Watchdog.asm         EXIT=0 OBJ=13252
+   RawrXD_ConPTY_Renderer.asm  EXIT=0 OBJ=3982
+
+4) CMake fix (candidate path only; no tip absorb)
+   WIN32IDE_EXTRA_ASM += src/asm/RawrXD_ConPTY_Renderer.asm
+   Ownership: VT100 TUI glyphs only; PTY stream remains Win32TerminalManager
+
+DISPOSITION
+-----------
+CAMELLIA_ASM=LINKED_TIP_AND_CAND
+WATCHDOG_ASM_OBJ=LINKED_TIP_AND_CAND
+WATCHDOG_API=MAGBUF_C_OWNER (HMAC body present under FORCE:MULTIPLE)
+CONPTY_STREAM=Win32TerminalManager SOURCE_WIRED
+CONPTY_ASM_RENDERER=ASSEMBLE_PASS + CMAKE_WIRED (relink candidate required)
+V280_LINK_BRIDGE=LINKED_TIP_AND_CAND
+GOLD_LINK_CONTINUOUS=SEALED
+PROMOTE=0

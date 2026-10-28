@@ -1,0 +1,40 @@
+WIN32IDE_FULL_SOURCE_AUDIT_002 / LAW
+====================================
+ASOF_UTC=2026-10-28T17:00:00Z
+WORKSPACE=G:\~dev\rawrxd
+MOTD_ACK=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PERFECT=0
+NO_INVENT_PASS=1
+FAIL_CLOSED=1
+CAMPAIGN=WIN32IDE_FULL_COMPLETION_CAMPAIGN_001
+SUPERSEDES_INVENTORY=WIN32IDE_FULL_SOURCE_AUDIT_001 (counts refresh; tip rebind)
+
+MISSION
+-------
+Phase 1 full source audit vs PRODUCT_TIP TIP_FREEZE_001.
+Inventory stubs/TODO/dead routes/missing impl across win32app,
+headless, agentic, deep2 product path. Countable OPEN; no invent PASS.
+GhostText B421 ABSORB=NOT_AUTHORIZED (Phase 6 blocked).
+
+PRODUCT_TIP
+-----------
+PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+
+LINK001_TREE (build candidate; ≠ tip; ≠ absorb)
+-----------------------------------------------
+PATH=G:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+PRE_FIX_SHA=B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  (= GHOSTTEXT_WITNESS; ABSORB=NOT_AUTHORIZED)
+POST_FIX_SHA=see WIN32IDE_BUILD_CLOSURE_001/CANDIDATE_SHA.txt
+
+AUTHORITY
+---------
+TIP_FREEZE_001 preserved (no overwrite of freeze\bin).
+Historical freezes preserved.
+SIBLING_OWNED_DO_NOT_CLAIM=AgentRunLoop,execute_command,Composer,stub_sweep
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS

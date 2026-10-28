@@ -1,0 +1,2 @@
+﻿status=200
+{"success":true,"command":"cmd /c evidence\\PHASE4_AGENTIC_IDE_E2E_001\\sandbox\\hello.cmd","exitCode":0,"output":"phase4_terminal_ok\r\n"}

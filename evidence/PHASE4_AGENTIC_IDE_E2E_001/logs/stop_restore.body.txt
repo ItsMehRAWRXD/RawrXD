@@ -1,0 +1,6 @@
+﻿cancel_job=Stopped_Exception
+cancel_http=200
+restore_status=200
+{"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\phase4_agentic_ide_e2e_001\\sandbox\\tracked.txt","name":"tracked.txt","size":12,"atomic":true,"previewed":true,"rollback_id":2,"message":"File written atomically"}
+disk=v0_restored
+

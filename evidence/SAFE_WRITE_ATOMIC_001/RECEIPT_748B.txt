@@ -1,0 +1,45 @@
+SAFE_WRITE_ATOMIC_001 / RECEIPT_748B (tip absorb RUNTIME)
+=========================================================
+ASOF_UTC=2026-10-28T17:12:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+VERDICT
+-------
+Tip authority 748B already contains SafeWriteAtomic product path.
+Headless /api/tool write_file + preview + rollback = RUNTIME_REACHED.
+A06_MET=0. PROMOTE=0. Prior APPROVAL_TIP deny rows untouched.
+
+TIP
+---
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH=1
+EXE_RELINK=0
+RELINK_REQUIRED=0 (atomic facet already in tip; prior 6832 RELINK closed by tip climb)
+
+INVOKE
+------
+METHOD=CreateProcess tip --headless --local --port 18784 --bind 127.0.0.1
+  --dir evidence/SAFE_WRITE_ATOMIC_001/sandbox_748B
+AUTH=RAWRXD_HOSTED_API_KEY + Origin loopback
+SEQ=read_motd → write_file → safe_write_status → safe_write_preview
+   → write_file v2 → safe_write_rollback → safe_write_status
+
+PROOF
+-----
+write_file body: "atomic":true,"previewed":true,"rollback_id":1
+status owner=SafeWriteAtomic writes/rollbacks counters advance
+rollback restores content atomic-748B-v1
+.tmp ABSENT after success
+LOGS=evidence/SAFE_WRITE_ATOMIC_001/logs_748B/
+
+DISPOSITION
+-----------
+SOURCE_WIRED=1
+RUNTIME_REACHED=1
+A06_MET=0
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

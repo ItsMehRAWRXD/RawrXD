@@ -71,6 +71,7 @@ void HeadlessIDE::routeSwarmOrchRequest(const HostedHttpRequest& request,
     std::string inputSnippet;
     bool doCleanup = true;
     int cancelAfterMs = 0;
+    bool resolveOnly = false; // tag-fetch+select without executeSwarm (no invent)
     try {
         if (!request.body.empty()) {
             auto j = nlohmann::json::parse(request.body);
@@ -81,6 +82,7 @@ void HeadlessIDE::routeSwarmOrchRequest(const HostedHttpRequest& request,
             inputSnippet = j.value("input", j.value("code", std::string()));
             doCleanup = j.value("cleanup", true);
             cancelAfterMs = j.value("cancelAfterMs", 0);
+            resolveOnly = j.value("resolveOnly", false);
         }
     } catch (...) {
         response.status = 400;
@@ -111,6 +113,19 @@ void HeadlessIDE::routeSwarmOrchRequest(const HostedHttpRequest& request,
         out["disposition"] = "FAIL_CLOSED_EMPTY_INVENTORY";
         out["RUNTIME_PASS"] = false;
         response.status = 503;
+        response.body = out.dump();
+        return;
+    }
+
+    if (resolveOnly) {
+        // Product path: HttpTags/GGUF select sealed without executeSwarm.
+        out["executeInvoked"] = false;
+        out["resolveOnly"] = true;
+        out["disposition"] = "RESOLVE_ONLY_SELECTED";
+        out["RUNTIME_REACHED"] = true;  // resolve+select reached
+        out["RUNTIME_PASS"] = false;    // execute not run — no invent PASS
+        out["PROMOTE"] = 0;
+        response.status = 200;
         response.body = out.dump();
         return;
     }

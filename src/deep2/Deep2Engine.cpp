@@ -9145,23 +9145,36 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     // otherwise Q4_K dequantization reads wrong offsets and produces garbage.
     // Detect fused gate/up pattern (e.g. Phi-3): wUp.rows == 2 * wDown.cols.
     // In that case, wDown.cols is the true intermediateDim, while wUp.rows = 2 * intermediateDim.
-// BUT first check if this is an attention-only layer that should skip FFN entirely.
-            // Nemotron-3.5-Lightning-30B has attention-only layers at specific indices.
-            static const std::array<size_t, 7> kAttentionOnlyLayers = {5, 12, 19, 26, 33, 42, 52};
-            fprintf(stderr, "[DEBUG] ly=%zu entering attention check, array size=%zu, layer=%zu\n", layer, kAttentionOnlyLayers.size(), layer);
-            fflush(stderr);
-            for (size_t i = 0; i < kAttentionOnlyLayers.size(); ++i) {
-                fprintf(stderr, "  [%zu]=%zu\n", i, kAttentionOnlyLayers[i]);
-                fflush(stderr);
-            }
-            bool isAttentionOnly = std::binary_search(kAttentionOnlyLayers.begin(), kAttentionOnlyLayers.end(), layer);
-            fprintf(stderr, "[DEBUG] ly=%zu isAttentionOnly=%d (layer=%zu)\n", layer, isAttentionOnly, layer);
-            fflush(stderr);
-            if (isAttentionOnly) {
-                fprintf(stderr, "[FFN_SKIP] ly=%zu attention-only layer — attention residual passes through\n", layer);
-                fflush(stderr);
-                memset(ffnOutput, 0, hiddenDim * sizeof(float));
-                return;
+// Nemotron hybrid attention-only indices — NEVER apply to llama/qwen/phi/gemma.
+            // Outer hasDenseFfn already skips true no-weight layers; this list is
+            // only for Nemotron layers that still present stub FFN tensors.
+            {
+                const bool isNemotronArch =
+                    (ggufResult.metadata.architecture.find("nemotron") !=
+                     std::string::npos);
+                static const std::array<size_t, 7> kNemotronAttnOnly = {
+                    5, 12, 19, 26, 33, 42, 52};
+                const bool isAttentionOnly =
+                    isNemotronArch &&
+                    std::binary_search(kNemotronAttnOnly.begin(),
+                                       kNemotronAttnOnly.end(), layer);
+                if (debugLogging_) {
+                    fprintf(stderr,
+                            "[DEBUG] ly=%zu nemotron=%d isAttentionOnly=%d\n",
+                            layer, isNemotronArch ? 1 : 0,
+                            isAttentionOnly ? 1 : 0);
+                    fflush(stderr);
+                }
+                if (isAttentionOnly) {
+                    fprintf(stderr,
+                            "[FFN_SKIP] ly=%zu nemotron attention-only — "
+                            "attention residual passes through\n",
+                            layer);
+                    fflush(stderr);
+                    if (output)
+                        memset(output, 0, hiddenDim * sizeof(float));
+                    return;
+                }
             }
 
     // Detect fused gate/up pattern (e.g. Phi-3): wUp.rows == 2 * wDown.cols.

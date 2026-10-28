@@ -1,0 +1,11 @@
+﻿WORKFLOW|DISPOSITION|PATH|DETAIL
+Ask|RUNTIME_REACHED|HTTP+/HWND| /ask HTTP=503 failclosed route + WM_COMMAND 1208 HWND=0xFB0BC4
+Agent|FAIL_CLOSED|HTTP| /api/agent/run HTTP=503 empty_body EXTEND AGENT_RUN_LOOP_TIP_003; HWND WM_COMMAND 1207 mode switch RUNTIME_REACHED (≠ loop enter)
+Plan|RUNTIME_REACHED|HTTP+/HWND| list_directory=200 + WM_COMMAND 1206
+Debug|RUNTIME_REACHED|HTTP+/HWND| native_debug_status HTTP=200 + BM_CLICK Debug
+Multitask|RUNTIME_REACHED|HTTP| POST /api/subagent HTTP=202 accepted spawned hsub-39180-1
+Terminal|RUNTIME_REACHED|HTTP|/api/tool execute_command exitCode=0 phase4_terminal_ok
+SafeWrite|RUNTIME_REACHED|HTTP| write_file atomic=true previewed=true rollback_id=1 → rollback v0
+Stop_restore|RUNTIME_REACHED|HTTP| cancel probe + write_file restore v0_restored
+TIP_SHA|RUNTIME_REACHED|freeze|748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PROMOTE|0|law|TIP_CLIMB=HOLD CERTIFIED=0 GHOSTTEXT_ABSORB=NOT_AUTHORIZED

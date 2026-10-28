@@ -1,0 +1,1 @@
+{"success":true,"command":"cmd /c echo exec_ok_748b","exitCode":0,"output":"exec_ok_748b\r\n"}

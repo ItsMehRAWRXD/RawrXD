@@ -2728,16 +2728,18 @@ class Win32IDE
     void clearLoadedModelPath();
 
   private:
-    // Agentic mode (Plan/Agent/Ask) — agentic_mode_switcher.hpp
+    // Agentic mode (Ask/Plan/Agent/Debug) — agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);
     void onAgenticModeChanged(RawrXD::AgenticMode mode);
     void onAgenticModeAsk();
     void onAgenticModePlan();
     void onAgenticModeAgent();
+    void onAgenticModeDebug();
     RawrXD::AgenticMode m_agenticMode = RawrXD::AgenticMode::Ask;
     HWND m_hwndAgenticModeAsk = nullptr;
     HWND m_hwndAgenticModePlan = nullptr;
     HWND m_hwndAgenticModeAgent = nullptr;
+    HWND m_hwndAgenticModeDebug = nullptr;
 
     // ========================================================================
     // Security Scans (Win32IDE_SecurityScans.cpp) — Top-50 P0
