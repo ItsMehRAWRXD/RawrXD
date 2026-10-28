@@ -18,11 +18,7 @@ endif()
 # Source files
 set(AGENT_HEADERS
     agent_kernel_main.hpp
-<<<<<<< HEAD
     StdReplacements.hpp
-=======
-    QtReplacements.hpp
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ToolExecutionEngine.hpp
     LLMClient.hpp
     AgentOrchestrator.hpp
@@ -67,12 +63,8 @@ if(MSVC)
     endif()
 endif()
 
-<<<<<<< HEAD
 # Console Agent — pure CLI with full chat and agentic autonomous capabilities.
 # Same binary as RawrXD_CLI; 101% parity with Win32 GUI (chat, tools, /tools, /status, /run-tool, HTTP API).
-=======
-# Console Agent
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 add_executable(RawrXD_Agent_Console
     ${AGENT_SOURCES}
     ${AGENT_HEADERS}
@@ -82,9 +74,9 @@ target_compile_definitions(RawrXD_Agent_Console PRIVATE
     _CONSOLE
 )
 
-<<<<<<< HEAD
 # Pure CLI — full chat and agentic autonomous parity with Win32 GUI (101%).
 # Same agent stack: AgentOrchestrator, ToolExecutionEngine, LLMClient, 44+ tools, /api/chat, /api/tool.
+# NOTE: RawrXD_InferenceEngine_Win32_DLL custom target is declared below; add_dependencies is deferred after it.
 add_executable(RawrXD_CLI
     ${AGENT_SOURCES}
     ${AGENT_HEADERS}
@@ -93,8 +85,6 @@ add_executable(RawrXD_CLI
 target_compile_definitions(RawrXD_CLI PRIVATE
     _CONSOLE
 )
-
-add_dependencies(RawrXD_CLI RawrXD_InferenceEngine_Win32_DLL)
 
 target_link_libraries(RawrXD_CLI PRIVATE
     winhttp
@@ -119,8 +109,6 @@ add_custom_command(TARGET RawrXD_CLI POST_BUILD
     COMMENT "Copying Inference Engine DLL to CLI output"
 )
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 # Build the Win32 inference engine DLL before linking the console executable
 add_custom_target(RawrXD_InferenceEngine_Win32_DLL ALL
     COMMAND ${CMAKE_COMMAND} -E echo "Building RawrXD_InferenceEngine_Win32.dll..."
@@ -136,8 +124,9 @@ add_executable(RawrXD_Agent_GUI WIN32
     ${AGENT_HEADERS}
 )
 
-# Ensure the console executable depends on the DLL build target
+# Ensure console/CLI/GUI executables depend on the DLL build target
 add_dependencies(RawrXD_Agent_Console RawrXD_InferenceEngine_Win32_DLL)
+add_dependencies(RawrXD_CLI RawrXD_InferenceEngine_Win32_DLL)
 add_dependencies(RawrXD_Agent_GUI RawrXD_InferenceEngine_Win32_DLL)
 
 target_link_libraries(RawrXD_Agent_Console PRIVATE
@@ -329,10 +318,7 @@ target_link_libraries(RawrXD_Agent_Benchmark PRIVATE
 install(TARGETS
     RawrXD_Agent_Console
     RawrXD_Agent_GUI
-<<<<<<< HEAD
     RawrXD_CLI
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     RawrXD_Agent_Example
     RawrXD_TestRunner
     RUNTIME DESTINATION bin

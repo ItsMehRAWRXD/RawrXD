@@ -107,16 +107,8 @@ if(TARGET thermal_masm_objects)
     add_dependencies(thermal_dashboard thermal_masm_objects)
 endif()
 
-<<<<<<< HEAD
 # Qt-free: uses pure Win32 + MASM
 set_target_properties(thermal_dashboard PROPERTIES
-=======
-# Qt6 setup
-set_target_properties(thermal_dashboard PROPERTIES
-    AUTOMOC ON
-    AUTOUIC ON
-    AUTORCC ON
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     # Plugin output name

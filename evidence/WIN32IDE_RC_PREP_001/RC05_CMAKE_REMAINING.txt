@@ -1,0 +1,103 @@
+WIN32IDE_RC_PREP_001 / RC-05 non-agentic CMake remaining
+========================================================
+ASOF_UTC=2026-10-28T17:42:00Z
+WORKSTREAM=RC05_CMAKE_REMAINING
+PROMOTE=0
+PRODUCT_CERTIFIED=0
+RC_PASS=NOT_CLAIMED
+TIP_CLIMB=HOLD
+REBUILD_THIS_DISPATCH=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+NO_INVENT_PASS=1
+
+PRODUCT_TIP (untouched)
+  PATH=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+  SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+  TIP_EXE_OVERWRITE=0
+  REBUILD_TIP=0
+
+AUTHORITY CROSS-CITE
+--------------------
+RC06_AGENTIC=CLEARED (evidence/WIN32IDE_RC_PREP_001/RC06_CMAKE_CONFLICTS.txt)
+PRODUCT_GATEWAY_CONTINUOUS_001=SEH SOURCE_WIRED tip-not-absorbed
+  (OpenSeh/StreamSeh/CloseSeh; RELINK_TIP=0 ABSORB=0; PROMOTE=0)
+
+SCOPE
+-----
+Clear remaining merge-conflict markers in non-agentic CMakeLists.txt / *.cmake
+left after RC-06 agentic clearance. Document RC-05 install-rule disposition
+without inventing install(TARGETS RawrXD-Win32IDE) as certified.
+
+BEFORE
+------
+CONFLICT_MARKER_BLOCKS (CMakeLists.txt + *.cmake, non-agentic):
+  src/thermal/CMakeLists.txt
+  RawrXD-ModelLoader/CMakeLists.txt (3 blocks)
+  src/orchestration/CMakeLists.txt (2)
+  src/terminal/CMakeLists.txt
+  src/setup/CMakeLists.txt (2)
+  src/registry_core/CMakeLists.txt (2)
+  src/paint/CMakeLists.txt
+  src/git/CMakeLists.txt
+  src/feedback/CMakeLists.txt
+  src/digestion/CMakeLists.txt (2)
+  src/auth/CMakeLists.txt
+  Ship/tools/CMakeLists.txt (2)
+  Ship/CMakeLists.txt (4)
+  cmake/MASMCompiler.cmake (7)
+MARKER_STYLE=<<<<<<< HEAD / ======= / >>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+THEME=HEAD Qt-free / Win32 / C++20 vs incoming Qt6 AUTOMOC / Qt shell remnants
+
+AFTER
+-----
+CONFLICTS_REMAINING=0
+RESOLUTION_LAW=keep HEAD Qt-free product surface; drop Qt AUTOMOC/QtShell/SimpleIDE
+  keep Win32 link libs (ws2_32/winmm/winhttp/Kernel32/Advapi32/bcrypt)
+  keep Ship RawrXD_CLI + StdReplacements; CLI depends on InferenceEngine DLL target
+  digestion: omit missing digestion_metrics.*; keep Win32 GUI + install both exes
+  paint: keep dummy_paint INTERFACE (no Qt paint exe)
+  ModelLoader: Qt eliminated; RawrXD-Win32IDE remains if(FALSE) stub in this tree
+  MASMCompiler: keep masm_solo_compiler.asm + Win32 IDE note; absorb
+    LARGEADDRESSAWARE:NO + RUNTIME_OUTPUT_DIRECTORY + static MSVC runtime
+
+RC-05 INSTALL RULE DISPOSITION (NOT CERTIFIED)
+----------------------------------------------
+GATE=RC-05 CMake install(TARGETS RawrXD-Win32IDE)
+STATUS=OPEN
+INSTALL_TARGETS_RAWRXD_WIN32IDE=ABSENT (root CMakeLists.txt + ModelLoader)
+INVENTED_INSTALL_RULE=0
+CLAIM=do NOT invent install(TARGETS RawrXD-Win32IDE) as certified
+PACKAGING_PATH=tip-freeze dry-run script only (WIN32IDE_RC_PREP_001/dry_run)
+CMAKE_INSTALL_PRODUCT_EXE=NOT_RUN
+CMAKE_INSTALL_CLAIM=NOT_CLAIMED
+NOTE=product EXE target exists in root CMakeLists (add_executable RawrXD-Win32IDE)
+  but no install(TARGETS RawrXD-Win32IDE) rule is present or claimed here.
+  Conflict clearance ≠ install-rule PASS ≠ RC_PASS.
+
+CONFIGURE VERIFY (scratch; tip not rebuilt)
+-------------------------------------------
+CMD=evidence/WIN32IDE_RC_PREP_001/_rc05_configure.cmd
+LOG=evidence/WIN32IDE_RC_PREP_001/_rc05_configure_log.txt
+GENERATOR=Ninja
+TOOLCHAIN=VS2022 BuildTools MSVC 19.44.35228.0 + ml64
+RESULTS=
+  RawrXD-ModelLoader  CONFIGURING_DONE GENERATING_DONE PARSE_ERROR=0
+  Ship                CONFIGURING_DONE GENERATING_DONE PARSE_ERROR=0
+  src/digestion       CONFIGURING_DONE GENERATING_DONE PARSE_ERROR=0
+  src/thermal         CONFIGURING_DONE GENERATING_DONE PARSE_ERROR=0
+    (thermal: author warning — no project(); parse still clean)
+CONFLICT_PARSE_BLOCK=0
+ROOT_FULL_TREE_CONFIGURE=NOT_RUN (out of this dispatch; leaf/subtree OK)
+REBUILD_TIP=0
+
+DISPOSITION
+-----------
+CONFLICTS_REMAINING=0
+RC05_NON_AGENTIC_CMAKE_MARKERS=CLEARED
+RC05_WIN32IDE_INSTALL_RULE=OPEN (not invented; ≠ certified)
+RC06_AGENTIC_CMAKE_PARSE=PASS (prior seal; unchanged)
+PROMOTE=0
+PRODUCT_CERTIFIED=0
+RC_PASS=NOT_CLAIMED
+NO_INVENT_PASS=1
+NOT_RUN != PASS

@@ -38,6 +38,8 @@ NEXT_OPEN=RC05_INSTALL_TARGETS_RAWRXD_WIN32IDE (OPEN; not invented) + NEW_FREEZE
 | `SWARM_16_RUNTIME_003` ENGINE_BIND | SOURCE_WIRE CPUInferenceEngine in SwarmOrch; tip still No Inference Engine → RELINK_REQUIRED |
 | `PHASE3_DEEP2_INFERENCE_CLOSURE_001` | Tip holds TOKEN64/CROSS_FAMILY; Llama32 crash / Phi no-gen; Nemotron-arch SOURCE_WIRED; rebuild wedged |
 | `WIN32IDE_P1_SURFACE_748B_001` | SafeWrite RUNTIME_REACHED on tip; Composer/ShellLayout/ConPTY HWND NOT_RUN |
+| `SUBAGENT_EXTENSIONHOST_CONTINUOUS_001` | Tip `/api/subagent` fiction FAIL_CLOSED; companion IPC smoke PASS; Headless SubAgent SOURCE_WIRED tip NOT_RUN; TerminalManager/CaretAnimation block relink |
+| `MODE_SWITCH_UI_001` | Tip HWND Ask/Plan/Agent RUNTIME_PARTIAL; Debug SOURCE_WIRED; IDC 5005–5008 source (not in tip) |
 | `MODE_SWITCH_UI_001` | Tip `748B` HWND Ask/Plan/Agent RUNTIME; Debug SOURCE_WIRED; ABSORB=NOT_AUTHORIZED; PROMOTE=0 |
 
 ## Law
