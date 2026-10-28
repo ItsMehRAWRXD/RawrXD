@@ -56,6 +56,33 @@ class PairedAggregateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_capture(capture(d, gpu=(1.0,)))
 
+    def test_in_memory_short_gpu_rejected(self):
+        record = {"rows": 2, "vectors": {"gpu": [1.0], "cpu": [1.0, 2.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_in_memory_short_cpu_rejected(self):
+        record = {"rows": 2, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_incorrect_declared_rows_rejected(self):
+        record = {"rows": 1, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0, 2.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_empty_vectors_rejected(self):
+        record = {"rows": 0, "vectors": {"gpu": [], "cpu": []}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_nonfinite_in_memory_inputs_rejected(self):
+        for which in ("gpu", "cpu"):
+            record = {"rows": 2, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0, 2.0]}}
+            record["vectors"][which][0] = float("nan")
+            with self.subTest(which=which), self.assertRaisesRegex(ValueError, "nonfinite"):
+                compare(record, 0, 0)
+
     def test_wrong_provenance_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             m = capture(d)
