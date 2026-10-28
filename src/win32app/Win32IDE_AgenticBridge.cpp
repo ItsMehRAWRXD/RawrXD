@@ -1195,18 +1195,12 @@ static RawrXD::UI::ToolActionStatus ToolStatusFromExec(
     return s;
 }
 
-static void FeedAccumulatorFromToolResult(Win32IDE* ide, const std::string& name,
-                                          const std::string& args,
-                                          const std::string& oneResult) {
-    if (!ide) return;
-    if (RawrXD::UI::ToolOutputLooksSyntheticSuccess(oneResult)) return;
-    ide->m_currentToolActions.addAction(ToolStatusFromExec(name, args, oneResult));
-}
-
 }  // namespace
 
 bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
 {
+    // FeedAccumulator must stay in AgenticBridge members — friend access to
+    // Win32IDE::m_currentToolActions does not extend to free functions.
     std::vector<AgentToolCall> calls;
     if (!AgentParseToolCalls(modelOutput, calls))
         return false;
@@ -1220,7 +1214,9 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
         toolResult += one;
         toolResult += "\n";
         if (!workerId.empty()) ids.push_back(workerId);
-        FeedAccumulatorFromToolResult(m_ide, call.name, call.arguments, one);
+        if (m_ide && !RawrXD::UI::ToolOutputLooksSyntheticSuccess(one))
+            m_ide->m_currentToolActions.addAction(
+                ToolStatusFromExec(call.name, call.arguments, one));
         if (m_ide) {
             FailureClassification fc = m_ide->hookToolResult(call.name, one);
             if (fc.reason != AgentFailureType::None) {

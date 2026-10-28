@@ -1,0 +1,59 @@
+SUBAGENT_EXTENSIONHOST_CONTINUOUS_001 / BUILD_UNBLOCK
+=====================================================
+ASOF_UTC=2026-10-28T18:15:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+MOTD_ACK=1
+
+BUILD_UNBLOCKED=1
+CANDIDATE_LINKED=1
+TIP_FREEZE_BIN_OVERWRITE=0
+
+TIP_AUTHORITY
+-------------
+PATH=evidence/TIP_FREEZE_001/bin/RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+UNTOUCHED=1
+
+CANDIDATE (for freeze worker 0527ad91)
+-------------------------------------
+PATH=build_win32ide_link001/bin/RawrXD-Win32IDE.exe
+SIZE=331755520
+MTIME_LOCAL=2026-10-28T14:14:10-04:00
+SHA256=8DC1406A0118AC6A2F6A1E991378A2730AAC07D5593BA3C9BF5E8852E468235B
+NOTE=≠ tip 748B; new freeze SHA is freeze-worker ownership (PROMOTE=0)
+
+ROOT_CAUSE (prior R01 blockers)
+-------------------------------
+B01 Win32IDE.h TaskRunner block declared static constexpr IDM_* that
+    collided with #define IDM_TOOLS_SETTINGS/SETTINGS_DIALOG/TASK_RUNNER
+    → C2059 'constant' when Win32IDE.h parsed (CaretAnimation + all
+    Win32IDE.h consumers). Fix: remove constexpr; keep #defines; make
+    TaskRunner entry points public (WndProc free-function access).
+    Landed in tree (HEAD includes c406749dbe Phase7 Settings/TaskRunner).
+
+B02 Win32IDE_AgenticBridge.cpp FeedAccumulatorFromToolResult was a free
+    function accessing private Win32IDE::m_currentToolActions → C2248
+    (friend AgenticBridge does not cover free functions). Fix: inline
+    feed into AgenticBridge::DispatchModelToolCalls member.
+
+B03 Win32TerminalManager.cpp itself compiled clean once header/world
+    unblocked (ConPTY owner TU; no residual error C in this seal).
+
+VERIFY
+------
+OBJ_Win32TerminalManager=OK (mtime 13:57:25 local)
+OBJ_Win32IDE_CaretAnimation=OK (mtime 14:04:15 local)
+logs/unblock_compile_verify.txt = EXIT=0 three-obj rebuild
+logs/candidate_link_j1.txt / candidate_link_unblock.txt = race notes
+  (parallel PDB C1041 / permission when contending with freeze worker;
+   candidate EXE nonetheless produced under build_win32ide_link001)
+
+COORDINATE_FREEZE_WORKER=0527ad91
+HANDOFF=candidate EXE ready at build_win32ide_link001/bin; tip 748B held
+NEXT=freeze worker may SHA-freeze candidate; re-exercise /api/subagent
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
