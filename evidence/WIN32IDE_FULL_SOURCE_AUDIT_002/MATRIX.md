@@ -40,7 +40,7 @@ Statuses: CLEARED | GATED | BLOCKED | OPEN | NOT_RUN | HISTORICAL_SHA_ONLY | SOU
 | A06 | Safe writes | RUNTIME_REACHED≠MET | partial |
 | A07 | Tool approval negatives | RUNTIME_REACHED≠MET | execute_command sibling |
 | A08 | Lifecycle safety | OPEN | no |
-| A09 | Crash + data-loss recovery | SOURCE_WIRED→OPEN | **this stream**: minidump added to CrashReporter; tip RUNTIME NOT_RUN |
+| A09 | Crash + data-loss recovery | SOURCE_WIRED→OPEN | minidump in CrashReporter.cpp (SOURCE_WIRED); tip RUNTIME NOT_RUN; tip-candidate relink incomplete (BUILD_CLOSURE) |
 | A10 | CMake-omit legitimacy | OPEN | this audit buckets |
 | A11 | K2 full gen | BLOCKED | no |
 | A12 | Source inventory | OPEN | refresh landed; PERFECT=0 |

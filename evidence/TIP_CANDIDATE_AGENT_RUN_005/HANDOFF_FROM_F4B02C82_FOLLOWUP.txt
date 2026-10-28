@@ -1,0 +1,49 @@
+TIP_CANDIDATE_AGENT_RUN_005 / HANDOFF (follow-up Phases 1+2 / f4b02c82)
+======================================================================
+ASOF_UTC=2026-10-28T18:00:00Z
+FROM=f4b02c82-followup worker
+TO=0527ad91 candidate freeze (or successor)
+PROMOTE=0
+TIP_CLIMB=HOLD
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+AUTHORITY
+---------
+TIP_FREEZE_001\bin SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+  NEVER overwrite.
+B4212E46598F6490241A531C88C8D9A8DA37532B8C940A2C38BB35226C5D869F
+  = GhostText witness only. ABSORB=NOT_AUTHORIZED. NOT tip-candidate.
+
+C2171 (SetCompletionBackendNative void→bool)
+--------------------------------------------
+SOURCE_FIXED=1 (on HEAD + working tree):
+  src/win32app/Win32IDE.cpp forward decl: bool SetCompletionBackendNative(void*)
+  src/core/unlinked_symbols_batch_021.cpp: extern "C" bool SetCompletionBackendNative(...)
+Call sites use if (SetCompletionBackendNative(...)) / if (!...).
+BUILD_VERIFIED=PENDING — sibling ninja RawrXD-Win32IDE was mid-compile of
+  Win32IDE.cpp.obj at handoff; do not invent PASS until that TU exits 0
+  without C2171.
+
+REQUIRED FREEZE STEPS (owner: candidate freeze)
+-----------------------------------------------
+1. Prefer ninja -j1 only (avoid -j8 PDB race / permission storms).
+2. Rebuild link001 → bin\RawrXD-Win32IDE.exe (never TIP_FREEZE_001\bin).
+3. Seal NEW CANDIDATE_SHA under this dir (SHA256 of NEW exe ≠ B421, ≠ 748B).
+4. Copy EXE+PDB into TIP_CANDIDATE_AGENT_RUN_005\bin\ (create if needed).
+5. Do NOT treat B421 / GhostText as absorb or tip-candidate.
+
+COORDINATION
+------------
+At handoff: ninja PID was actively building RawrXD-Win32IDE (parallel cl.exe,
+including Win32IDE.cpp). Do not start a second full tree rebuild until that
+job ends or is confirmed stuck. If stuck: take over with -j1 surgical path
+(see logs\rebuild_j1.cmd / surgical_rebuild.cmd).
+
+PUSH (this follow-up)
+---------------------
+evidence/WIN32IDE_BUILD_CLOSURE_001 RECEIPT + logs
+evidence/WIN32IDE_FULL_SOURCE_AUDIT_002 MATRIX refresh
+CrashReporter source already on origin (no push needed)
+GITHUB_PUSH_CONFIRM_001 MATCH refresh after push
+
+PROMOTE=0
