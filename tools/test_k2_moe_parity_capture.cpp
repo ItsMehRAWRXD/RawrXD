@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <string>
 #include <vector>
 #include <cstdlib>
 #ifdef _WIN32
@@ -40,18 +42,37 @@ int main() {
         SetCaptureDir(dir.string());
         using Deep2::k2_parity_capture::Capture;
         if (!Capture(0, 1, 44, 14, weights.data(), weights.size(),
-                     activation.data(), activation.size(), cpu, gpu, 1))
+                     activation.data(), activation.size(), cpu, gpu, 1,
+                     0xD0u, 0xA0u, 1u))
             code = 2;
         if (Capture(0, 1, 44, 14, weights.data(), weights.size(),
-                    activation.data(), activation.size(), cpu, gpu, 1))
+                    activation.data(), activation.size(), cpu, gpu, 1,
+                    0xD0u, 0xA0u, 1u))
             code = 3; // refuse overwrite
         if (Capture(0, 1, 45, 12, weights.data(), weights.size(),
-                    activation.data(), activation.size(), cpu, gpu, 1))
+                    activation.data(), activation.size(), cpu, gpu, 1,
+                    0xD0u, 0xA0u, 1u))
             code = 4; // wrong quant type
         const auto prefix = dir / "k2_l1_e44_s0";
         if (!std::filesystem::exists(prefix.string() + ".manifest.txt") ||
             std::filesystem::file_size(prefix.string() + ".down_q6k.bin") != 210)
             code = 5;
+        std::ifstream manifestFile(prefix.string() + ".manifest.txt");
+        const std::string manifestText(
+            (std::istreambuf_iterator<char>(manifestFile)),
+            std::istreambuf_iterator<char>());
+        if (!manifestFile ||
+            manifestText.find("completion_boundary=K2MoEStickEndDevice\n") ==
+                std::string::npos ||
+            manifestText.find("gpu_arena_owner_expert=44\n") ==
+                std::string::npos ||
+            manifestText.find("gpu_arena_owner_rule=LAST_SORTED_WORKLIST_EXPERT\n") ==
+                std::string::npos ||
+            manifestText.find("gpu_down_buffer_id=208\n") == std::string::npos ||
+            manifestText.find("gpu_activation_buffer_id=160\n") ==
+                std::string::npos ||
+            manifestText.find("gpu_submits=1\n") == std::string::npos)
+            code = 12;
         // Dedicated Q4_K gate/up + Q6_K down input-witness smoke.
         std::vector<unsigned char> gate(256 * 144, 0);
         std::vector<unsigned char> up(256 * 144, 0);

@@ -189,12 +189,20 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
        stick worklist and the helper refuses overwrites. */
     const char* captureDir = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
     const bool captureRequested = captureDir && captureDir[0] != '\0';
+    const Resolved* scalarCapture = nullptr;
+    int scalarCaptureExpert = -1;
     if (captureRequested) {
         bool written = false;
         int captureExpert = -1;
-        for (const auto& candidate : work) {
+        /* The fused arena is reused in sorted worklist order. Capture the
+           last host-visible expert so its post-fence arena contents have a
+           stable expert identity for the output witness. */
+        for (auto it = work.rbegin(); it != work.rend(); ++it) {
+            const auto& candidate = *it;
             if (!candidate.g || !candidate.u || !candidate.d) continue;
             captureExpert = candidate.expertId;
+            scalarCapture = &candidate;
+            scalarCaptureExpert = candidate.expertId;
             written = k2_parity_capture::CaptureScalarInputs(
                 stick, layer, candidate.expertId,
                 candidate.gt, candidate.g, candidate.gb,
@@ -228,9 +236,9 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
             parityLimit = static_cast<uint32_t>(parsed);
     }
     auto emitAggregateParity = [&](const float* gpuAggregate) {
-        if (!parityEnabled || !gpuAggregate)
+        if ((!parityEnabled && !captureRequested) || !gpuAggregate)
             return;
-        if (parityLimit < work.size()) {
+        if (parityEnabled && parityLimit < work.size()) {
             std::fprintf(stderr,
                          "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u status=SKIPPED "
                          "reason=PARITY_LIMIT limit=%u experts=%zu\n",
@@ -242,8 +250,15 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         std::vector<float> cpuLast(H, 0.0f);
         int lastExpert = -1;
         for (const auto& r : work) {
-            if (!r.g || !r.u || !r.d || !r.gb || !r.ub || !r.db)
-                continue;
+            if (!r.g || !r.u || !r.d || !r.gb || !r.ub || !r.db) {
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u "
+                             "status=BLOCKED reason=CPU_EXPERT_INPUT_UNAVAILABLE "
+                             "expert=%d\n",
+                             layer, stick, r.expertId);
+                std::fflush(stderr);
+                return;
+            }
             auto gate = QuantKernelRegistry::Instance().GetGEMV(r.gt);
             auto up = QuantKernelRegistry::Instance().GetGEMV(r.ut);
             auto down = QuantKernelRegistry::Instance().GetGEMV(r.dt);
@@ -293,7 +308,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         const double cosineDenom = std::sqrt(gpuSq) * std::sqrt(cpuSq);
         const double cosine = cosineDenom > 0.0 ? dot / cosineDenom : 0.0;
         std::fprintf(stderr,
-                     "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu status=OK "
+                     "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu "
+                     "status=DIAGNOSTIC scope=DIAGNOSTIC_ONLY "
                      "max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                      "max_rel=%.9e cosine=%.9e gpu_l2=%.9e cpu_l2=%.9e "
                      "finite=%zu nonfinite=%zu\n",
@@ -304,8 +320,10 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         std::fflush(stderr);
 
         const char* stageEnv = std::getenv("DEEP2_MOE_GPU_STAGE_PARITY");
-        if (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0' &&
-            lastExpert >= 0) {
+        const bool stageRequested =
+            (stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0') ||
+            captureRequested;
+        if (stageRequested && lastExpert >= 0) {
             auto* vc = DualStickVc(stick);
             std::vector<float> gpuLast(H, 0.0f);
             std::vector<float> gpuAct(I, 0.0f);
@@ -335,10 +353,10 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                                            : 0.0;
             std::fprintf(stderr,
                          "GPU_MOE_LAST_DOWN_PARITY layer=%u stick=%u expert=%d "
-                         "status=%s max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
+                         "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         downloaded ? "OK" : "DOWNLOAD_FAIL", stageMax,
+                         downloaded ? "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY" : "DOWNLOAD_FAIL", stageMax,
                          stageFinite > 0.0 ? stageSum / stageFinite : 0.0,
                          stageFinite > 0.0 ? std::sqrt(stageSq / stageFinite) : 0.0,
                          H - stageNonFinite, stageNonFinite);
@@ -364,14 +382,48 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                                          : 0.0;
             std::fprintf(stderr,
                          "GPU_MOE_LAST_ACT_PARITY layer=%u stick=%u expert=%d "
-                         "status=%s max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
+                         "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
                          "finite=%zu nonfinite=%zu\n",
                          layer, stick, lastExpert,
-                         actDownloaded ? "OK" : "DOWNLOAD_FAIL", actMax,
+                         actDownloaded ? "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY" : "DOWNLOAD_FAIL", actMax,
                          actFinite > 0.0 ? actSum / actFinite : 0.0,
                          actFinite > 0.0 ? std::sqrt(actSq / actFinite) : 0.0,
                          I - actNonFinite, actNonFinite);
             std::fflush(stderr);
+
+            /* Completion-ordered per-expert witness.  The helper requires
+               real device buffer identities and a nonzero submission count;
+               it refuses overwrite and records certified=0.  If the captured
+               host slices do not correspond to the final arena owner, fail
+               closed instead of attributing another expert's output. */
+            if (captureRequested) {
+                bool witnessWritten = false;
+                const char* reason = "IDENTITY_MISMATCH";
+                if (scalarCapture && scalarCaptureExpert == lastExpert &&
+                    downloaded && actDownloaded && vc &&
+                    scalarCapture->d && scalarCapture->db) {
+                    const uint64_t gpuDownBufferId =
+                        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(
+                            vc->ArenaDown().buffer));
+                    const uint64_t gpuActBufferId =
+                        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(
+                            vc->ArenaFFNAct().buffer));
+                    witnessWritten = k2_parity_capture::Capture(
+                        stick, layer, lastExpert, scalarCapture->dt,
+                        scalarCapture->d, scalarCapture->db,
+                        gateOut.data(), I, cpuLast.data(), gpuLast.data(), H,
+                        gpuDownBufferId, gpuActBufferId,
+                        ctr.gpu_submits);
+                    reason = witnessWritten ? "WRITTEN" : "CAPTURE_REJECTED";
+                }
+                std::fprintf(stderr,
+                             "GPU_EXPERT_OUTPUT_CAPTURE layer=%u stick=%u "
+                             "expert=%d status=%s scope=POST_DEVICE_COMPLETION "
+                             "completion=K2MoEStickEndDevice\n",
+                             layer, stick, lastExpert,
+                             witnessWritten ? "WRITTEN" : reason);
+                std::fflush(stderr);
+            }
         }
     };
 

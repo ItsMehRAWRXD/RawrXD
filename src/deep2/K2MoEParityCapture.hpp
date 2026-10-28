@@ -60,10 +60,13 @@ inline bool WriteVector(const std::filesystem::path& path, const float* data,
 inline bool Capture(unsigned stick, unsigned layer, int expert,
                     int ggmlType, const uint8_t* downBytes, size_t downLen,
                     const float* postSwiGlu, size_t intermediate,
-                    const float* cpuDown, const float* gpuDown, size_t hidden) {
+                    const float* cpuDown, const float* gpuDown, size_t hidden,
+                    uint64_t gpuDownBufferId, uint64_t gpuActBufferId,
+                    uint64_t gpuSubmits) {
     const char* raw = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
     if (!raw || !*raw || expert < 0 || !downBytes || !postSwiGlu ||
         !cpuDown || !gpuDown || !intermediate || !hidden ||
+        !gpuDownBufferId || !gpuActBufferId || !gpuSubmits ||
         ggmlType != 14 || intermediate % 256u ||
         intermediate > 1048576u || hidden > 1048576u)
         return false;
@@ -95,6 +98,12 @@ inline bool Capture(unsigned stick, unsigned layer, int expert,
             "\ncolumns=" + std::to_string(intermediate) +
             "\nweight_bytes=" + std::to_string(downLen) +
             "\nsource=GPU_EXPERT_PARITY_DIAGNOSTIC\n"
+            "completion_boundary=K2MoEStickEndDevice\n"
+            "gpu_arena_owner_expert=" + std::to_string(expert) + "\n"
+            "gpu_arena_owner_rule=LAST_SORTED_WORKLIST_EXPERT\n"
+            "gpu_down_buffer_id=" + std::to_string(gpuDownBufferId) +
+            "\ngpu_activation_buffer_id=" + std::to_string(gpuActBufferId) +
+            "\ngpu_submits=" + std::to_string(gpuSubmits) + "\n"
             "certified=0\n";
         ok = WriteNew(manifest, receipt.data(), receipt.size());
     }

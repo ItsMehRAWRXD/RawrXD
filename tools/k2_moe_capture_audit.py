@@ -29,7 +29,10 @@ def parse_manifest(path):
             raise ValueError("missing or duplicate manifest key")
         fields[k] = v
     for k in ("schema", "layer", "expert", "stick", "ggml_type",
-              "rows", "columns", "weight_bytes", "source", "certified"):
+              "rows", "columns", "weight_bytes", "source", "certified",
+              "completion_boundary", "gpu_arena_owner_expert",
+              "gpu_arena_owner_rule", "gpu_down_buffer_id",
+              "gpu_activation_buffer_id", "gpu_submits"):
         if k not in fields:
             raise ValueError(f"missing manifest key: {k}")
     if fields["schema"] != "DEEP2_KIMI_MOE_EXPERT_CAPTURE_001":
@@ -38,12 +41,23 @@ def parse_manifest(path):
         raise ValueError("capture must explicitly report uncertified")
     if fields["source"] != "GPU_EXPERT_PARITY_DIAGNOSTIC":
         raise ValueError("unexpected capture source")
+    if fields["completion_boundary"] != "K2MoEStickEndDevice":
+        raise ValueError("capture is not completion-ordered")
+    if fields["gpu_arena_owner_rule"] != "LAST_SORTED_WORKLIST_EXPERT":
+        raise ValueError("unknown GPU arena ownership rule")
     for k in ("layer", "expert", "stick", "ggml_type", "rows",
-              "columns", "weight_bytes"):
+              "columns", "weight_bytes", "gpu_arena_owner_expert",
+              "gpu_down_buffer_id",
+              "gpu_activation_buffer_id", "gpu_submits"):
         val = int(fields[k])
         if val < 0:
             raise ValueError(f"negative manifest field {k}")
         fields[k] = val
+    for k in ("gpu_down_buffer_id", "gpu_activation_buffer_id", "gpu_submits"):
+        if fields[k] == 0:
+            raise ValueError(f"missing completion provenance: {k}")
+    if fields["gpu_arena_owner_expert"] != fields["expert"]:
+        raise ValueError("arena owner does not match captured expert")
     if fields["ggml_type"] != 14 or not 1 <= fields["rows"] <= 1048576:
         raise ValueError("invalid ggml type or row count")
     if not 1 <= fields["columns"] <= 1048576 or fields["columns"] % 256:
@@ -110,7 +124,8 @@ def audit(manifest, max_abs, max_rms, min_cosine):
                    "min_cosine": min_cosine},
         "checks": checks, "metrics": metrics,
         "limitations": [
-            "GPU post-SwiGLU input identity is not independently witnessed",
+            "GPU post-SwiGLU and down vectors are diagnostic post-fence captures;"
+            " production certification still requires frozen model provenance",
             "Q6_K unpack must be cross-checked against authoritative GGML fixture",
             "CPU down vector uses existing optimized CPU GEMV",
             "No production certification without model provenance and frozen tolerances",

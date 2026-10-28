@@ -28,7 +28,12 @@ class CaptureAuditTests(unittest.TestCase):
             "layer": 1, "expert": 44, "stick": 0,
             "ggml_type": 14, "rows": 1, "columns": columns,
             "weight_bytes": 210,
-            "source": "GPU_EXPERT_PARITY_DIAGNOSTIC", "certified": 0
+            "source": "GPU_EXPERT_PARITY_DIAGNOSTIC", "certified": 0,
+            "completion_boundary": "K2MoEStickEndDevice",
+            "gpu_arena_owner_expert": 44,
+            "gpu_arena_owner_rule": "LAST_SORTED_WORKLIST_EXPERT",
+            "gpu_down_buffer_id": 208, "gpu_activation_buffer_id": 160,
+            "gpu_submits": 1
         }
         fields.update(manifest_overrides or {})
         manifest = root / (stem + ".manifest.txt")
@@ -76,6 +81,13 @@ class CaptureAuditTests(unittest.TestCase):
     def test_nonfinite_gpu(self):
         with tempfile.TemporaryDirectory() as t:
             manifest = self.write_capture(t, gpu="nan\n")
+            with self.assertRaises(ValueError):
+                mod.audit(manifest, 0, 0, 1)
+
+    def test_missing_completion_provenance(self):
+        with tempfile.TemporaryDirectory() as t:
+            manifest = self.write_capture(
+                t, manifest_overrides={"gpu_submits": 0})
             with self.assertRaises(ValueError):
                 mod.audit(manifest, 0, 0, 1)
 

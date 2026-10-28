@@ -39,8 +39,17 @@ class FusedParitySafetyTests(unittest.TestCase):
         self.assertEqual(header.count('std::fopen(path.string().c_str(), "wbx")'), 2)
         self.assertNotIn('std::fopen(path.string().c_str(), "wb")', header)
 
-    def test_no_capture_called_during_fused_recording(self):
-        self.assertNotIn("k2_parity_capture::Capture(", self.source)
+    def test_capture_called_only_after_completed_device(self):
+        # A witness is now allowed, but only after the device completion
+        # boundary.  This prevents the old in-recording read/ownership bug.
+        capture = self.source.index("k2_parity_capture::Capture(")
+        lambda_start = self.source.index("auto emitAggregateParity =")
+        end = self.source.index("if (!K2MoEStickEndDevice(stick, partial, H, ctr))")
+        fused = self.source.index("if (!K2MoEStickEndFused(stick, ctr))")
+        invoke = self.source.index("emitAggregateParity(partial)")
+        self.assertLess(fused, end)
+        self.assertGreater(capture, lambda_start)
+        self.assertGreater(invoke, end)
 
     def test_aggregate_capture_after_completed_device_partial(self):
         end = self.source.index("if (!K2MoEStickEndDevice(stick, partial, H, ctr))")
