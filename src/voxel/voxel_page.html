@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--
+  The page of the voxel world.
+
+  The page receives the rendered frames from the native engine over the
+  web message bridge and draws them into a canvas. It can also send
+  commands back, so that the camera can be driven from the browser.
+
+  The bridge is the RawrXD web message channel. The page listens with
+  window.chrome.webview.addEventListener("message", ...) and the engine
+  posts with PostWebMessageAsJson.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sunshine Voxel World</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: #10141c;
+    color: #d8dee9;
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  header {
+    padding: 8px 12px;
+    background: #161b24;
+    border-bottom: 1px solid #262c38;
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    font-size: 12px;
+  }
+  header h1 { font-size: 13px; margin: 0; font-weight: 600; letter-spacing: .04em; }
+  header .stat { color: #7d8799; }
+  header .stat b { color: #9fd0ff; font-weight: 600; }
+  #stage { position: relative; flex: 1 1 auto; min-height: 0; background: #0b0e14; }
+  #view { display: block; width: 100%; height: 100%; image-rendering: auto; }
+  footer {
+    padding: 6px 12px;
+    background: #161b24;
+    border-top: 1px solid #262c38;
+    font-size: 11px;
+    color: #6f7a8c;
+    display: flex;
+    gap: 18px;
+  }
+  #log { flex: 1 1 auto; overflow: hidden; white-space: nowrap; }
+  .key { color: #8b96a8; }
+  .key b { color: #c3cede; font-weight: 600; }
+  button {
+    background: #1d2530; color: #c3cede; border: 1px solid #2c3644;
+    border-radius: 3px; padding: 3px 9px; font: inherit; font-size: 11px; cursor: pointer;
+  }
+  button:hover { background: #253040; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SUNSHINE VOXEL WORLD</h1>
+  <span class="stat">adapter <b id="adapter">-</b></span>
+  <span class="stat">frames <b id="frames">0</b></span>
+  <span class="stat">chunks <b id="chunks">0</b></span>
+  <span class="stat">tris <b id="tris">0</b></span>
+  <span class="stat">fps <b id="fps">0</b></span>
+  <span class="stat">pos <b id="pos">0, 0, 0</b></span>
+  <span class="stat" style="margin-left:auto">
+    <button id="capture">capture</button>
+    <button id="walk">walk</button>
+  </span>
+</header>
+
+<div id="stage">
+  <canvas id="view" width="1280" height="720"></canvas>
+</div>
+
+<footer>
+  <span class="key"><b>W A S D</b> walk</span>
+  <span class="key"><b>Q E</b> down / up</span>
+  <span class="key"><b>drag</b> turn</span>
+  <span class="key"><b>space</b> up</span>
+  <span class="key"><b>F</b> capture</span>
+  <span id="log"></span>
+</footer>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("view");
+const ctx = canvas.getContext("2d", { alpha: false });
+const logEl = document.getElementById("log");
+
+let stats = { frames: 0, chunks: 0, tris: 0, fps: 0, pos: [0, 0, 0], adapter: "-" };
+let lastLog = "";
+let walking = false;
+let certified = false;
+const keys = new Set();
+
+// ---------------------------------------------------------------------------
+// The certification.
+//
+// When the engine asks the page to certify itself, the page moves the
+// camera and says so. The engine checks that the camera it holds has
+// actually moved and that the picture has actually changed, so the
+// picture that is sent back has to be a different picture and not the
+// same one again.
+// ---------------------------------------------------------------------------
+function certify() {
+  if (certified) return;
+  certified = true;
+  writeLog("certifying: the page is asking the engine to move the camera");
+  post({ type: "move", forward: 1.0, strafe: 0.35, rise: 0.0 });
+}
+
+// ---------------------------------------------------------------------------
+// The bridge.
+//
+// The engine posts a JSON message with the rendered frame. The frame
+// itself is a data URL of a PNG, so the page can draw it straight into
+// the canvas.
+// ---------------------------------------------------------------------------
+function isWebView2() {
+  return typeof window.chrome !== "undefined" && window.chrome.webview !== undefined;
+}
+
+function post(message) {
+  if (isWebView2()) {
+    window.chrome.webview.postMessage(message);
+  }
+}
+
+function onEngineMessage(event) {
+  let data = event.data;
+  if (typeof data === "string") {
+    try { data = JSON.parse(data); } catch (e) { return; }
+  }
+  if (!data || typeof data !== "object") return;
+
+  switch (data.type) {
+    case "frame": {
+      const image = new Image();
+      image.onload = function () {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0);
+      };
+      image.src = data.png;
+      stats.frames = data.frame;
+      stats.chunks = data.chunks;
+      stats.tris = data.triangles;
+      stats.fps = data.fps;
+      stats.pos = data.position;
+      stats.adapter = data.adapter || "-";
+      updateStats();
+      if (data.certify) certify();
+      break;
+    }
+    case "status": {
+      writeLog(data.message || "");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+function updateStats() {
+  document.getElementById("frames").textContent = stats.frames;
+  document.getElementById("chunks").textContent = stats.chunks;
+  document.getElementById("tris").textContent = stats.tris;
+  document.getElementById("fps").textContent = stats.fps.toFixed(1);
+  document.getElementById("pos").textContent =
+    stats.pos.map(function (v) { return v.toFixed(0); }).join(", ");
+  document.getElementById("adapter").textContent = stats.adapter;
+}
+
+function writeLog(text) {
+  if (text === lastLog) return;
+  lastLog = text;
+  logEl.textContent = text;
+}
+
+// ---------------------------------------------------------------------------
+// The camera.
+//
+// The page sends the movement the user asked for. The engine applies it
+// and sends the next frame back, so the page never guesses where the
+// camera is.
+// ---------------------------------------------------------------------------
+let lastSent = 0;
+
+function sendMovement(force) {
+  const now = performance.now();
+  if (!force && now - lastSent < 33) return;   // about thirty times a second
+  lastSent = now;
+
+  let forward = 0, strafe = 0, rise = 0;
+  if (keys.has("KeyW")) forward += 1;
+  if (keys.has("KeyS")) forward -= 1;
+  if (keys.has("KeyA")) strafe -= 1;
+  if (keys.has("KeyD")) strafe += 1;
+  if (keys.has("KeyE")) rise += 1;
+  if (keys.has("KeyQ")) rise -= 1;
+  if (keys.has("Space")) rise += 1;
+
+  if (forward === 0 && strafe === 0 && rise === 0 && !force) return;
+
+  post({ type: "move", forward: forward, strafe: strafe, rise: rise });
+}
+
+window.addEventListener("keydown", function (event) {
+  keys.add(event.code);
+  if (event.code === "KeyF") post({ type: "capture" });
+  sendMovement(true);
+});
+window.addEventListener("keyup", function (event) {
+  keys.delete(event.code);
+  sendMovement(true);
+});
+
+// The turn, from a drag over the canvas.
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+canvas.addEventListener("mousedown", function (event) {
+  dragging = true;
+  lastX = event.clientX;
+  lastY = event.clientY;
+});
+window.addEventListener("mouseup", function () { dragging = false; });
+window.addEventListener("mousemove", function (event) {
+  if (!dragging) return;
+  const dx = event.clientX - lastX;
+  const dy = event.clientY - lastY;
+  lastX = event.clientX;
+  lastY = event.clientY;
+  post({ type: "turn", turnX: dx, turnY: dy });
+});
+
+document.getElementById("capture").addEventListener("click", function () {
+  post({ type: "capture" });
+});
+document.getElementById("walk").addEventListener("click", function () {
+  walking = !walking;
+  post({ type: "walk", forward: walking ? 1 : 0 });
+  this.textContent = walking ? "stop" : "walk";
+});
+
+setInterval(function () { sendMovement(false); }, 33);
+
+if (isWebView2()) {
+  window.chrome.webview.addEventListener("message", onEngineMessage);
+  post({ type: "ready" });
+} else {
+  writeLog("the page is not inside the browser panel; the engine will still drive it");
+}
+</script>
+</body>
+</html>

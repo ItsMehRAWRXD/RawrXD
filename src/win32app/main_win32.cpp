@@ -1950,6 +1950,68 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
                 assertBehavior(model != modelB, "ollama_ghost_model_switch_tags_differ");
                 assertBehavior(!completionB.empty(), "ollama_ghost_model_switch_completion");
             }
+
+            // Multiline GhostText: deterministic fixture via applyProductGhost (SOURCE_WIRED).
+            // Not an invented Ollama completion; probes Tab/Esc with ghost spanning >=2 lines.
+            {
+                const char* multilineGhost = "n 0;\n    // multiline ghost\n}";
+                int ghostNewlines = 0;
+                for (const char* p = multilineGhost; *p; ++p)
+                {
+                    if (*p == '\n')
+                        ++ghostNewlines;
+                }
+                assertBehavior(ghostNewlines >= 1, "ghost_multiline_span_ge2");
+
+                const std::string prefixMl = "int main() {\n    retur";
+                SetWindowTextA(editor, prefixMl.c_str());
+                SendMessageA(editor, EM_SETSEL, (WPARAM)prefixMl.size(), (LPARAM)prefixMl.size());
+                char beforeMl[1024] = {};
+                GetWindowTextA(editor, beforeMl, (int)sizeof(beforeMl));
+                const uint64_t genMl = ide->editorDocGen() ? ide->editorDocGen() : 1;
+                const bool boundMl =
+                    ide->applyProductGhost(multilineGhost, genMl, 0, 1, (int)prefixMl.size());
+                assertBehavior(boundMl && ide->isGhostTextVisible(), "ghost_multiline_visible");
+
+                ide->handleGhostTextKey(VK_ESCAPE);
+                char afterEscMl[1024] = {};
+                GetWindowTextA(editor, afterEscMl, (int)sizeof(afterEscMl));
+                assertBehavior(!ide->isGhostTextVisible() && strcmp(beforeMl, afterEscMl) == 0,
+                               "ghost_multiline_esc_dismiss_no_mutation");
+
+                ide->applyProductGhost(multilineGhost, genMl, 0, 1, (int)prefixMl.size());
+                char beforeTabMl[1024] = {};
+                GetWindowTextA(editor, beforeTabMl, (int)sizeof(beforeTabMl));
+                int nlBefore = 0;
+                for (const char* p = beforeTabMl; *p; ++p)
+                {
+                    if (*p == '\n')
+                        ++nlBefore;
+                }
+                ide->handleGhostTextKey(VK_TAB);
+                char afterTabMl[1024] = {};
+                GetWindowTextA(editor, afterTabMl, (int)sizeof(afterTabMl));
+                int nlAfter = 0;
+                for (const char* p = afterTabMl; *p; ++p)
+                {
+                    if (*p == '\n')
+                        ++nlAfter;
+                }
+                assertBehavior(strcmp(beforeTabMl, afterTabMl) != 0,
+                               "ghost_multiline_tab_accept_mutates");
+                assertBehavior(nlAfter > nlBefore, "ghost_multiline_tab_accept_into_buffer");
+                {
+                    std::ofstream rcpt("feature_probe_ghost_receipt.txt",
+                                       std::ios::app | std::ios::binary);
+                    if (rcpt)
+                    {
+                        rcpt << "multiline_fixture=1\n";
+                        rcpt << "multiline_ghost_newlines=" << ghostNewlines << "\n";
+                        rcpt << "multiline_nl_before=" << nlBefore << "\n";
+                        rcpt << "multiline_nl_after=" << nlAfter << "\n";
+                    }
+                }
+            }
         }
     }
 

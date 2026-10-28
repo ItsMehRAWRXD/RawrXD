@@ -253,8 +253,12 @@ if(RAWRXD_BUILD_CLI)
         src/win32app/cli_main_headless.cpp
         src/win32app/HeadlessIDE.cpp
         src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/SafeWriteAtomic.cpp
+        src/win32app/SafeWriteRollback.cpp
         src/win32app/HeadlessIDE_GuiRoutes.cpp
         src/win32app/HeadlessIDE_FileAliases.cpp
+        src/win32app/HeadlessIDE_SwarmOrch.cpp
+        src/win32app/HeadlessIDE_AgentRun.cpp
         src/win32app/IdeAuthSession.cpp
         src/win32app/IdeAuthDecide.cpp
         src/win32app/IdeAuthPath.cpp
@@ -264,6 +268,7 @@ if(RAWRXD_BUILD_CLI)
         src/win32app/AgentToolShell.cpp
         src/win32app/AgentRunLoop.cpp
         src/win32app/AgentHttp.cpp
+        src/win32app/AgentHttpRun.cpp
         src/win32app/AgentSession.cpp
         src/win32app/AgentSessionRestore.cpp
         src/win32app/AgentSessionKill.cpp
@@ -2751,19 +2756,23 @@ set(SOURCES
     src/core/unlinked_symbols_batch_006.cpp
     src/core/unlinked_symbols_batch_007.cpp
     src/core/unlinked_symbols_batch_008.cpp
-    # src/core/unlinked_symbols_batch_009.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
-    # src/core/unlinked_symbols_batch_010.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
-    # src/core/unlinked_symbols_batch_011.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
+    src/core/unlinked_symbols_batch_009.cpp  # hwsynth continued only; Mode* owned by rawrxd_subsystem_api.cpp
+    # src/core/unlinked_symbols_batch_010.cpp  # EXCLUDED: Mode*/SO_* owned by rawrxd_subsystem_api.cpp (LNK2005)
+    # src/core/unlinked_symbols_batch_011.cpp  # EXCLUDED: AD_*/SO_* → rawrxd_subsystem_api.cpp (CMake omit)
     src/core/unlinked_symbols_batch_012.cpp
-    # src/core/unlinked_symbols_batch_022.cpp  # moved to WIN32IDE_SOURCES
-    # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
+    # src/core/unlinked_symbols_batch_013.cpp  # EXCLUDED when MASM: AgenticOrchestrator/QuadBuffer ASM; C→quad_registry
+    # src/core/unlinked_symbols_batch_014.cpp  # headless Outline/Dock factories (object smoke only)
+    # src/core/unlinked_symbols_batch_015.cpp  # Sovereign C — Win32IDE only; GOLD uses gold_link_closure
+    # src/core/unlinked_symbols_batch_016.cpp  # Win32IDE: g_AgentRegistry + Sentinel; GOLD->gold_link_closure
+    # src/core/unlinked_symbols_batch_017.cpp  # Titan/NLShell C fallback — object smoke / GOLD-only if needed
+    # src/core/unlinked_symbols_batch_022.cpp  # Win32IDE: Deep2APIServer + Production + VAL038 C fallbacks
     
-    # Batch 018-020: AgentOllamaClient, Win32IDE methods, Sovereign subsystem, Camellia256, Watchdog, Performance
-    # src/core/unlinked_symbols_batch_018.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_001.cpp
-    # src/core/unlinked_symbols_batch_019.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_005.cpp and unlinked_symbols_batch_011.cpp
-    # src/core/unlinked_symbols_batch_020.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_001.cpp
+    # Batch 018-020: CMake omit vs real owners (not #ifndef dual-link)
+    # src/core/unlinked_symbols_batch_018.cpp  # AgentOllamaClient.cpp + MagBuf batch_001 close/shutdown
+    # src/core/unlinked_symbols_batch_019.cpp  # subsystem_api SO/AD; batch_005 Camellia; hotpatcher pattern
+    # src/core/unlinked_symbols_batch_020.cpp  # MagBuf batch_001 asm_perf_* slot API
 
-    # Streaming orchestrator and analyzer distiller removed - symbols provided by unlinked_symbols_batch_*.cpp
+    # Streaming orchestrator / analyzer_distiller: RawrEngine uses subsystem_api; GOLD uses streaming_orchestrator.cpp
     # src/core/streaming_orchestrator.cpp
     # src/core/analyzer_distiller.cpp
 
@@ -3540,6 +3549,7 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
+        # COMMAND_HANDLERS_FICTION_GATE_001: GATED_FICTION_EXPLICIT (fail-closed; ≠ PASS)
         src/core/command_handlers_comprehensive.cpp
         src/inference/NegativeSpaceProfiler.cpp
         # src/core/asm_symbols_stub.cpp  # Removed - has compile errors and duplicates symbols
@@ -3611,6 +3621,17 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_009
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_010\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_011\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_012\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_013\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_014\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_015\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_016\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_017\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_018\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_019\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_020\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_021\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unlinked_symbols_batch_022\\.cpp$")
+# GOLD SO_* owner = streaming_orchestrator.cpp; Sovereign symbols = gold_link_closure.cpp
 # Remove RawrXD_LSPServer.cpp - it has its own main() function and is built as a separate executable
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/RawrXD_LSPServer\\.cpp$")
 # Remove lsp_hotpatch_bridge.cpp - it depends on RawrXD_LSPServer symbols
@@ -4383,25 +4404,18 @@ if(MSVC)
     endif()
 
     # Phase Camellia-Auth: Authenticated Encrypt/Decrypt (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
+    # B01: NEVER prefer prebuilt Auth.obj — historical prebuilts are END-only stubs (~800B).
+    # Always assemble from src/asm/RawrXD_Camellia256_Auth.asm (restored Full Source ~42KB).
     set(ASM_CAMELLIA256_AUTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm")
-    set(_ASM_CAMELLIA256_AUTH_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Camellia256_Auth.obj")
-    set(_ASM_CAMELLIA256_AUTH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256_Auth.obj")
-    if(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
-        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj")
-    elseif(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
-        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj (genesis)")
-    else()
-        set(ASM_CAMELLIA256_AUTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256_Auth.obj")
-        add_custom_command(
-            OUTPUT ${ASM_CAMELLIA256_AUTH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_AUTH_OBJ} ${ASM_CAMELLIA256_AUTH_SRC}
-            DEPENDS ${ASM_CAMELLIA256_AUTH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)"
-            VERBATIM
-        )
-    endif()
+    set(ASM_CAMELLIA256_AUTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256_Auth.obj")
+    add_custom_command(
+        OUTPUT ${ASM_CAMELLIA256_AUTH_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_AUTH_OBJ} ${ASM_CAMELLIA256_AUTH_SRC}
+        DEPENDS ${ASM_CAMELLIA256_AUTH_SRC}
+        COMMENT "[MASM] Assembling RawrXD_Camellia256_Auth.asm from source (skip stub prebuilts)"
+        VERBATIM
+    )
+    message(STATUS "[MASM] Camellia Auth: assemble-from-source (prebuilt stub bypass)")
 
     # Phase KQ: Q4_K Bare-Metal Dequantization Kernel (AVX2 + AVX-512, CPUID Dispatch)
     set(ASM_KQUANT_KERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm")
@@ -4421,21 +4435,18 @@ if(MSVC)
     endif()
 
     # Phase WD: Agentic Watchdog ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶ .text Section Integrity Verification (HMAC-SHA256)
+    # WATCHDOG_ASM_BIND_001: NEVER prefer prebuilt Watchdog.obj — historical prebuilts are END-only stubs (~816B).
+    # Always assemble from src/asm/RawrXD_Watchdog.asm (restored Full Source ~25KB).
     set(ASM_WATCHDOG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
-    set(_ASM_WATCHDOG_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Watchdog.obj")
-    if(EXISTS "${_ASM_WATCHDOG_PREBUILT}")
-        set(ASM_WATCHDOG_OBJ "${_ASM_WATCHDOG_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Watchdog.obj")
-    else()
-        set(ASM_WATCHDOG_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Watchdog.obj")
-        add_custom_command(
-            OUTPUT ${ASM_WATCHDOG_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_WATCHDOG_OBJ} ${ASM_WATCHDOG_SRC}
-            DEPENDS ${ASM_WATCHDOG_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)"
-            VERBATIM
-        )
-    endif()
+    set(ASM_WATCHDOG_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Watchdog.obj")
+    add_custom_command(
+        OUTPUT ${ASM_WATCHDOG_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_WATCHDOG_OBJ} ${ASM_WATCHDOG_SRC}
+        DEPENDS ${ASM_WATCHDOG_SRC}
+        COMMENT "[MASM] Assembling RawrXD_Watchdog.asm from source (skip stub prebuilts)"
+        VERBATIM
+    )
+    message(STATUS "[MASM] Watchdog: assemble-from-source (prebuilt stub bypass)")
 
     # Phase E: SelfHost Engine ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶ Recursive Self-Compilation
     set(ASM_SELFHOST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
@@ -5065,6 +5076,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2MultiGpuLayerPlan.cpp
     src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
+    src/deep2/Deep2Engine_GpuLostReset.cpp
     src/deep2/Deep2Engine_GpuToken.cpp
     src/deep2/Deep2SsVkProductBind.cpp
     src/deep2/Deep2SsVkPackedDualAdapter.cpp
@@ -5582,8 +5594,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/main_win32.cpp
         src/win32app/HeadlessIDE.cpp
         src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/SafeWriteAtomic.cpp
+        src/win32app/SafeWriteRollback.cpp
         src/win32app/HeadlessIDE_GuiRoutes.cpp
         src/win32app/HeadlessIDE_FileAliases.cpp
+        src/win32app/HeadlessIDE_SwarmOrch.cpp
+        src/win32app/HeadlessIDE_AgentRun.cpp
         src/win32app/IdeAuthSession.cpp
         src/win32app/IdeAuthDecide.cpp
         src/win32app/IdeAuthPath.cpp
@@ -5593,6 +5609,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/AgentToolShell.cpp
         src/win32app/AgentRunLoop.cpp
         src/win32app/AgentHttp.cpp
+        src/win32app/AgentHttpRun.cpp
         src/win32app/AgentSession.cpp
         src/win32app/AgentSessionRestore.cpp
         src/win32app/AgentSessionKill.cpp
@@ -5701,6 +5718,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ReverseEngineering.cpp
         src/win32app/Win32IDE_Logger.cpp
         src/win32app/Win32IDE_AgenticBridge.cpp
+        # GATED_OMIT LORA_KERNEL_STUB_GATE_001: do NOT add these TUs to Win32IDE
+        # (orphan fake-success stubs; fail-closed in source if ever linked):
+        #   Win32IDE_AgenticFeatures.cpp  (LoRAKernel_Initialize / WAL / ghost)
+        #   Win32IDE_LoRAKernelBridge.cpp (ApplyLoRA not product-wired)
+        #   Win32IDE_AgentBridge_Init.cpp (calls LoRAKernel_Initialize)
+        #   ASM_Bridge_Implementation.cpp / agent_wal_cli_smoke_test.cpp
+        #   ghost_pipeline_probe.cpp
+        # GATED_OMIT WIN32IDE_BRIDGE_SWEEP_002 (+ IDE_BRIDGE_STUB_GATE_001 cite):
+        #   Win32IDE_LogpointBridge.cpp   (owner: native_debugger_conditional_bp)
+        #   Win32IDE_SidebarBridge.cpp    (MASM WndProc absent; product=Sidebar.cpp)
+        # Do NOT add without real owners + product wire; PROMOTE=0
         src/full_agentic_ide/FullAgenticIDE.cpp
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
@@ -5730,8 +5758,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/production/Deep2ProductionRuntime.cpp
         src/reverse/ReverseEngine.cpp
         src/reverse/ReverseModelLoader.cpp
-        src/inference/NegativeSpaceProfiler.cpp
-        src/core/unlinked_symbols_batch_022.cpp
+        src/inference/NegativeSpaceProfiler.cpp  # Profiler_* owner (batch_022 stripped)
+        src/core/unlinked_symbols_batch_022.cpp  # Deep2APIServer + Production + VAL038 only; no Profiler/Zlib/Reverse
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
@@ -5774,6 +5802,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/win32app/Win32IDE_AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/win32app/Win32IDE_ModelDiscovery.cpp
         src/win32app/Win32IDE_SwarmModelSelector.cpp
+        src/win32app/Win32IDE_SwarmOllamaHttpTags.cpp
         src/win32app/Win32IDE_AsmSemantic.cpp
         src/win32app/Win32IDE_LSP_AI_Bridge.cpp
         src/win32app/Win32IDE_MultiResponse.cpp
@@ -5844,15 +5873,21 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_006.cpp
         src/core/unlinked_symbols_batch_007.cpp
         src/core/unlinked_symbols_batch_008.cpp
-        src/core/unlinked_symbols_batch_009.cpp
-        src/core/unlinked_symbols_batch_010.cpp
-        src/core/unlinked_symbols_batch_011.cpp
-        src/core/unlinked_symbols_batch_012.cpp
-        # Prefer single provider for symbols that also live in batch_001/005 (ODR).
-        # src/core/unlinked_symbols_batch_018.cpp
-        # src/core/unlinked_symbols_batch_019.cpp
-        # src/core/unlinked_symbols_batch_020.cpp
-        src/core/unlinked_symbols_batch_021.cpp
+        src/core/unlinked_symbols_batch_009.cpp  # hwsynth continued; Mode* stripped (subsystem_api owner)
+        # src/core/unlinked_symbols_batch_010.cpp  # EXCLUDED: Mode*/SO_* → rawrxd_subsystem_api.cpp (LNK2005)
+        # src/core/unlinked_symbols_batch_011.cpp  # EXCLUDED: AD_*/SO_* → rawrxd_subsystem_api.cpp (CMake omit)
+        src/core/unlinked_symbols_batch_012.cpp  # HotSwapModel / Native_Log / asm_spengine_cpu_optimize(void)
+        # src/core/unlinked_symbols_batch_013.cpp  # EXCLUDED: AgenticOrchestrator/QuadBuffer ASM; C fallback→quad_registry
+        # src/core/unlinked_symbols_batch_014.cpp  # headless Outline/Dock factories; product uses OutlinePanel path
+        src/core/unlinked_symbols_batch_015.cpp  # Sovereign C symbols (not GOLD — gold_link_closure owns there)
+        src/core/unlinked_symbols_batch_016.cpp  # g_AgentRegistry + Sentinel hash (GOLD: gold_link_closure)
+        # src/core/unlinked_symbols_batch_017.cpp  # Titan/Sampler/NLShell C fallback — omit Win32IDE (ASM/gold owners)
+        # Prefer single provider for symbols that also live in batch_001/005/subsystem_api (ODR).
+        # src/core/unlinked_symbols_batch_018.cpp  # EXCLUDED: AgentOllamaClient.cpp + MagBuf batch_001 close/shutdown
+        # src/core/unlinked_symbols_batch_019.cpp  # EXCLUDED: subsystem_api SO/AD; batch_005 Camellia; hotpatcher pattern
+        # src/core/unlinked_symbols_batch_020.cpp  # EXCLUDED: MagBuf batch_001 asm_perf_* (slot API)
+        src/core/unlinked_symbols_batch_021.cpp  # SetCompletionBackendNative + AgentCoordinator C + BraidedLoader only
+        src/win32app/AnnotationOverlay.cpp  # real UI owner (batch_021 stubs removed)
         src/ANSIParser.cpp
         src/vulkan_kernel_bridge.cpp
 
@@ -5861,11 +5896,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
-        # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
-        # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
-        # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
-        # src/core/pattern_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_019.cpp (find_pattern_asm)
-        # src/core/perf_telemetry_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_perf_init, asm_perf_begin, asm_perf_end), batch_020.cpp
+        # src/core/subsystem_api_stubs.cpp  # REMOVED: AD_*/SO_* owned by rawrxd_subsystem_api.cpp (batch_010/011 CMake-omitted)
+        # src/core/crypto_stubs.cpp  # REMOVED: Camellia auth → batch_005 (SYNTHETIC until ASM); not batch_019
+        # src/core/watchdog_stubs.cpp  # REMOVED: win32ide_watchdog_init + batch_001/005 MagBuf
+        # src/core/pattern_stubs.cpp  # REMOVED: find_pattern_asm → byte_level_hotpatcher.cpp
+        # src/core/perf_telemetry_stubs.cpp  # REMOVED: MagBuf batch_001 asm_perf_*; batch_020 CMake-omitted
         # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/native_log_stub.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
@@ -5879,7 +5914,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
-        src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
+        src/spengine_bridge.cpp  # Real memory patch + asm_spengine_shutdown journal rollback
+        # Do NOT add rawrxd_{mesh,neural,hwsynth,speciator,watchdog}_bridge here:
+        # those collide with batch_005..008 / win32ide_watchdog_init (LNK2005).
+        # MagShutdown for those symbols stays in batch_001 (sole C owner on Win32IDE).
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
         src/win32app/Win32IDE_CodexCommands.cpp  # Qt conversion: real Codex command and ghost completion handlers
@@ -7382,6 +7420,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/lavapath/GgufStaticResidency.cpp
         src/deep2/RawrAutoBackendPolicy.cpp
         src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp
     )
 
     # ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ²ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
@@ -7467,6 +7507,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
+    # UNLINKED_SYMBOLS_E2E LINK_WIN32IDE_002: real owners for LNK2001 gaps (not batch_018/019/020)
+    list(APPEND WIN32IDE_SOURCES
+        # COMMAND_HANDLERS_FICTION_GATE_001: GATED_FICTION_EXPLICIT (fail-closed; ≠ PASS)
+        src/core/command_handlers_comprehensive.cpp  # handleAIStopGeneration + GateFiction×276
+        src/SettingsManager.cpp                      # RawrXD::SettingsManager WindowState API
+        src/gui/ModelConversionDialog.cpp            # ModelConversionDialog ctor/dtor/showModal
+    )
+    list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
@@ -10561,7 +10610,9 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         OUTPUT_NAME rawrxd_run_modelname_001
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    add_executable(rawr src/deep2/rawr_run.cpp src/deep2/GpuPreflight.cpp src/deep2/RawrAutoBackendPolicy.cpp)
+    add_executable(rawr src/deep2/rawr_run.cpp src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp src/deep2/RawrAutoBackendPolicy.cpp)
     target_link_libraries(rawr PRIVATE InferenceEngine dxgi setupapi.lib cfgmgr32.lib)
     if(MSVC)
         target_compile_options(rawr PRIVATE
@@ -14278,6 +14329,8 @@ if(NOT TARGET rawrxd)
         src/deep2/lavapath/GgufStaticResidency.cpp
         src/deep2/RawrAutoBackendPolicy.cpp
         src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp
         src/runtime/Deep2ExecutionTelemetry.cpp
         src/runtime/elastic/ElasticEngine.cpp
         src/runtime/elastic/ElasticGGUFIndex.cpp
