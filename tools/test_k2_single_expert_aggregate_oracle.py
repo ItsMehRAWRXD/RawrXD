@@ -20,6 +20,7 @@ def paired(root, *, routes=((44, 0.75),), gpu=None, layer=2):
         f.rename(s_dir / f.name.replace(original, renamed))
     scalar = s_dir / (renamed + ".manifest.txt")
     scalar.write_text(scalar.read_text().replace("layer=1\n", "layer=2\n"))
+    scalar.write_text(scalar.read_text() + "run_id=fixture20261027unique01\n")
     if gpu is None:
         gpu = tuple(0.0 for _ in range(256))
     aggregate = create_aggregate(
@@ -27,6 +28,7 @@ def paired(root, *, routes=((44, 0.75),), gpu=None, layer=2):
     stem = "k2_l2_s0_aggregate_comparison"
     aggregate.write_text(
         aggregate.read_text().replace("rows=2\n", "rows=256\n"))
+    aggregate.write_text(aggregate.read_text() + "run_id=fixture20261027unique01\n")
     return aggregate, scalar
 
 
@@ -85,6 +87,23 @@ class SingleExpertAggregateOracleTests(unittest.TestCase):
             a, s = paired(d)
             with self.assertRaises(ValueError):
                 audit(a, s, float("nan"), 0)
+
+    def test_mismatched_run_identity_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            a, s = paired(d)
+            s.write_text(s.read_text().replace(
+                "run_id=fixture20261027unique01",
+                "run_id=fixture20261027unique02"))
+            with self.assertRaisesRegex(ValueError, "RUN_ID"):
+                audit(a, s, 1, 1)
+
+    def test_missing_run_identity_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            a, s = paired(d)
+            s.write_text(s.read_text().replace(
+                "run_id=fixture20261027unique01\\n", ""))
+            with self.assertRaisesRegex(ValueError, "RUN_ID"):
+                audit(a, s, 1, 1)
 
     def test_cli_fail_closed_receipt_and_overwrite(self):
         with tempfile.TemporaryDirectory() as d:
