@@ -989,14 +989,31 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_COMMAND:
+        {
             // Route compiler/build commands before the generic command table.
             // The bridge owns only its reserved IDs; all other commands keep
             // the existing Win32IDE path.
-            if (RawrXD::Win32App::CompilerIntegration_HandleCommand(LOWORD(wParam)))
+            //
+            // SWARM_PATH_B_4111_SOURCE_001: SubAgent band (4110–4119) must reach
+            // CmdDiag → onCommand → onSubAgentSwarm. Tip 748B FAIL_CLOSED when
+            // an early HandleCommand TRUE return skipped sehCallOnCommand for
+            // id=4111 while id=1001 still earned crumbs. Never let the compiler
+            // bridge claim this band; crumb before any early return.
+            const WORD cmdId = LOWORD(wParam);
+            const bool subAgentBand =
+                (cmdId >= IDM_SUBAGENT_CHAIN && cmdId <= (IDM_SUBAGENT_CHAIN + 9));
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(
+                static_cast<int>(cmdId), "WM_COMMAND_PRE_COMPILER");
+            if (!subAgentBand &&
+                RawrXD::Win32App::CompilerIntegration_HandleCommand(cmdId)) {
+                RawrXD::CommandTelemetry::CmdDiagBreadcrumb(
+                    static_cast<int>(cmdId), "WM_COMMAND_COMPILER_HANDLED");
                 return 0;
-            sehCallOnCommand(onCommandCpp, this, hwnd, LOWORD(wParam), (HWND)lParam,
-                             HIWORD(wParam));
+            }
+            sehCallOnCommand(onCommandCpp, this, hwnd, static_cast<int>(cmdId),
+                             (HWND)lParam, HIWORD(wParam));
             return 0;
+        }
 
         case RAWRXD_WM_COMPILER_DETECTED:
             // Detection completes off-thread; only menu mutation occurs on the
@@ -5440,9 +5457,13 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 "Output", OutputSeverity::Info);
             return;
         case 502:   // Tools > Settings (IDM_TOOLS_SETTINGS)
+        case 5016:  // Settings dialog command (IDM_SETTINGS_DIALOG) — HWND path
         case 1024:  // Title bar gear (IDC_BTN_SETTINGS)
         case 1106:  // Activity bar Settings (IDC_ACTBAR_SETTINGS)
             showSettingsGUIDialog();
+            return;
+        case 5190:  // Tools > Run Task... (IDM_TOOLS_TASK_RUNNER)
+            showTaskRunnerDialog();
             return;
         case 1022:  // Title bar GH button — toggle AI Chat panel (secondary sidebar)
             toggleSecondarySidebar();

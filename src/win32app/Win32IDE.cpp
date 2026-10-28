@@ -733,6 +733,16 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_TOOLS_PROFILE_RESULTS 3012
 #define IDM_TOOLS_ANALYZE_SCRIPT 3013
 #define IDM_TOOLS_GGUF_INSPECTOR 3014
+/* Phase7 UI: Settings HWND path + Task Runner menu wire (RELINK_REQUIRED) */
+#ifndef IDM_TOOLS_SETTINGS
+#define IDM_TOOLS_SETTINGS 502
+#endif
+#ifndef IDM_SETTINGS_DIALOG
+#define IDM_SETTINGS_DIALOG 5016
+#endif
+#ifndef IDM_TOOLS_TASK_RUNNER
+#define IDM_TOOLS_TASK_RUNNER 5190
+#endif
 
 #define IDM_GIT_STATUS 3020
 #define IDM_GIT_COMMIT 3021
@@ -962,6 +972,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     HMENU hViewMenu = CreatePopupMenu();
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_MINIMAP, L"&Minimap");
     AppendMenuW(hViewMenu, MF_STRING, IDM_T1_BREADCRUMBS_TOGGLE, L"&Breadcrumbs");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_T1_SETTINGS_GUI, L"&Settings...\tCtrl+,");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_TABS, L"&Output Tabs");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_PANEL, L"Output &Panel");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_MODULE_BROWSER, L"Module &Browser");
@@ -1002,6 +1013,10 @@ void Win32IDE::createMenuBar(HWND hwnd)
 
     // Tools menu (Unicode)
     HMENU hToolsMenu = CreatePopupMenu();
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_SETTINGS, L"&Settings...\tCtrl+,");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_SETTINGS_DIALOG, L"Settings &Dialog...");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_TASK_RUNNER, L"&Run Task...");
+    AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_START, L"Start &Profiling");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_STOP, L"Stop P&rofiling");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_RESULTS, L"Profile &Results...");

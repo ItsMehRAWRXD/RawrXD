@@ -757,13 +757,13 @@ static FeatureEntry g_featureManifest[] = {
      FeatureStatus::Real, FeatureStatus::Real, FeatureStatus::Missing, FeatureStatus::Partial, nullptr},
     
     {"subagent.chain", "Prompt Chain", "Sequential multi-step prompt chain (executeChain)",
-     FeatureCategory::SubAgent, 4111, "", "Win32IDE_SubAgent.cpp",
+     FeatureCategory::SubAgent, 4110, "", "Win32IDE_SubAgent.cpp",
      FeatureStatus::Real, FeatureStatus::Real, FeatureStatus::Missing, FeatureStatus::Missing, nullptr},
-    
+
     {"subagent.swarm", "HexMag Swarm", "Parallel agent swarm execution (executeSwarm)",
      FeatureCategory::SubAgent, 4111, "", "Win32IDE_SubAgent.cpp",
      FeatureStatus::Real, FeatureStatus::Real, FeatureStatus::Missing, FeatureStatus::Missing, nullptr},
-    
+
     {"subagent.todoList", "Agent Todo List", "Track agent task progress (TodoItem)",
      FeatureCategory::SubAgent, 4112, "", "Win32IDE_SubAgent.cpp",
      FeatureStatus::Real, FeatureStatus::Real, FeatureStatus::Missing, FeatureStatus::Missing, nullptr},

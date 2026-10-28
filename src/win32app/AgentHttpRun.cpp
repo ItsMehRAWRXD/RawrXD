@@ -38,7 +38,7 @@ static std::string Esc(const std::string& s) {
     return o;
 }
 
-/* Non-stream — HeadlessIDE notes ProductDeep2InferStream as FIRST_CRASH_OWNER. */
+/* Non-stream — HeadlessIDE: ProductDeep2InferStream = FIRST_CRASH_OWNER. */
 static std::string ProductInfer(void*, const std::string& prompt, int maxTokens) {
     char buf[65536];
     buf[0] = 0;
@@ -48,28 +48,24 @@ static std::string ProductInfer(void*, const std::string& prompt, int maxTokens)
     return std::string(buf);
 }
 
-static std::string Spawn(void* ctx, const char* d, const char* p) {
-    return static_cast<SubAgentManager*>(ctx)->spawnSubAgent(
-        "agent", d ? d : "", p ? p : "");
+static std::string Spawn(void* c, const char* d, const char* p) {
+    return static_cast<SubAgentManager*>(c)->spawnSubAgent("agent", d ? d : "", p ? p : "");
 }
-static bool Wait(void* ctx, const char* id, int ms) {
-    return static_cast<SubAgentManager*>(ctx)->waitForSubAgent(id ? id : "", ms);
+static bool Wait(void* c, const char* id, int ms) {
+    return static_cast<SubAgentManager*>(c)->waitForSubAgent(id ? id : "", ms);
 }
-static std::string Result(void* ctx, const char* id) {
-    return static_cast<SubAgentManager*>(ctx)->getSubAgentResult(id ? id : "");
+static std::string Result(void* c, const char* id) {
+    return static_cast<SubAgentManager*>(c)->getSubAgentResult(id ? id : "");
 }
-static const char* StateOf(void* ctx, const char* id) {
+static const char* StateOf(void* c, const char* id) {
     static char buf[32];
-    const SubAgent* agent =
-        static_cast<SubAgentManager*>(ctx)->getSubAgent(id ? id : "");
-    strncpy_s(buf, (agent ? agent->stateString() : "missing").c_str(), _TRUNCATE);
+    const SubAgent* a = static_cast<SubAgentManager*>(c)->getSubAgent(id ? id : "");
+    strncpy_s(buf, (a ? a->stateString() : "missing").c_str(), _TRUNCATE);
     return buf;
 }
-
 static void Bind(SubAgentManager* mgr) {
     if (mgr) AgentBindWorker(mgr, Spawn, Wait, Result, StateOf);
 }
-
 void AgentBindManager(void* manager) { Bind(static_cast<SubAgentManager*>(manager)); }
 
 int AgentHttpRun(const std::string& body, bool modelReady, void* subAgentMgr,

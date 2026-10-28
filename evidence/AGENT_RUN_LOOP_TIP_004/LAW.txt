@@ -1,0 +1,40 @@
+AGENT_RUN_LOOP_TIP_004 / LAW
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+NO_INVENT_PASS=1
+GhostText ABSORB=NOT_AUTHORIZED
+
+TIP_EXE=evidence/TIP_FREEZE_001/bin/RawrXD-Win32IDE.exe
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_NEVER_ERASE=1
+
+ROOT_CAUSE (exact)
+------------------
+1) HTTP 503 body Content-Length=54 =
+   {"error":"runtime_warming","ready":false,"retry":true}
+   HeadlessIDE::routeHttpRequest gates ALL routes (incl /api/agent/run)
+   on HeadlessProduct::RuntimeReady() while G4_EARLY_LISTENER has already
+   bound the port. HEADLESS_READY=1 (model ProductOpen) != RUNTIME_READY.
+   Prior TIP_003 BODY_EMPTY was PowerShell failing to read the 54-byte body.
+
+2) After RuntimeReady, AgentHttpRun on tip hardcodes AgentRunLoop(..., 2048)
+   ignoring body max_tokens. DECODE_BEGIN max_out=2025 → long decode →
+   client connection reset before HTTP 200. PREFILL proves loop ENTRY on tip.
+
+SOURCE_FIX (this dispatch; tip 748B lacks it)
+--------------------------------------------
+AgentHttpRun.cpp: honor max_tokens/max_iter; ProductDeep2Infer (non-stream).
+HeadlessIDE.cpp: emit RUNTIME_READY=1 on stderr when SetRuntimeReady(true).
+Win32IDE.cpp: void SetCompletionBackendNative call-site unblock for rebuild.
+
+CANDIDATE_REBUILD
+-----------------
+AgentHttpRun.cpp.obj + HeadlessIDE.cpp.obj compiled in build_win32ide_link001.
+Full link HARD_BLOCKED: concurrent ninja/cl swarm on same build tree
+(permission denied / 1422-step dirty InferenceEngine rebuild / hung -t commands).
+NEW freeze dir NOT created (no linked candidate SHA). TIP 748B untouched.
+
+NEXT
+----
+Solo-link bin\RawrXD-Win32IDE.exe when build tree idle → TIP_FREEZE_002
+(copy; never overwrite 748B) → prove POST /api/agent/run ENTERED=1
+with max_tokens<=64 after RUNTIME_READY=1.

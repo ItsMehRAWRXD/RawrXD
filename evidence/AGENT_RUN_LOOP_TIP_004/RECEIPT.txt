@@ -1,15 +1,39 @@
 AGENT_RUN_LOOP_TIP_004 / RECEIPT
 ================================
-ASOF_UTC=2026-10-28T17:04:09.3711897Z
+ASOF_UTC=2026-10-28T18:00:00Z
 PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
 NO_INVENT_PASS=1
-EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
-EXE_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
-PORT=18971
-READY=True
-HTTP=503
-BODY_LEN=28
-BODY_EMPTY=0
+GhostText ABSORB=NOT_AUTHORIZED
+
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+TIP_ERASED=0
+
+REPRO_503_WARMING
+-----------------
+Port wait on HEADLESS_READY=1 only ? HTTP=503 Content-Length=54
+BODY={"error":"runtime_warming","ready":false,"retry":true}
 ENTERED_AGENT_RUN_LOOP=0
-DISPOSITION=FAIL_CLOSED_HTTP_503
+
+REPRO_AFTER_INIT (tip 748B)
+---------------------------
+Wait "initialized successfully" ? POST /api/agent/run
+srv: [AGENT] PREFILL_BEGIN / PREFILL_DONE / DECODE_BEGIN max_out=2025
+HTTP client: curl exit 56 connection reset (no 200 body)
+ENTERED_HTTP_200=0
+RUNTIME_LOOP_REACHED=1 (log witness only; ? PASS seal)
+
+SOURCE_PATCHED=1
+  src/win32app/AgentHttpRun.cpp
+  src/win32app/HeadlessIDE.cpp (RUNTIME_READY=1)
+  src/win32app/Win32IDE.cpp (void SetCompletionBackendNative)
+
+OBJ_COMPILED=1 (AgentHttpRun / HeadlessIDE in build_win32ide_link001)
+CANDIDATE_LINKED=0
+NEW_FREEZE_DIR=0
+HARD_BLOCKER=CONCURRENT_NINJA_BUILD_TREE_build_win32ide_link001
+
+DISPOSITION=FAIL_CLOSED_TIP_748B
+  CAUSE_A=runtime_warming_when_probed_before_RUNTIME_READY
+  CAUSE_B=AgentHttpRun_hardcodes_maxTokens_2048_reset_before_200
 PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

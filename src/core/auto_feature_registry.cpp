@@ -278,11 +278,13 @@ static LocalReasoningEngine& getLocalReasoningEngine() {
 #define IDM_AGENT_MEMORY_CLEAR                        4108
 #define IDM_AGENT_MEMORY_EXPORT                       4109
 #define IDM_AGENT_AUDIT_DRIVE                         4296
-#define IDM_SUBAGENT_CHAIN                            4111
-#define IDM_SUBAGENT_SWARM                            4112
-#define IDM_SUBAGENT_TODO_LIST                        4113
-#define IDM_SUBAGENT_TODO_CLEAR                       4114
-#define IDM_SUBAGENT_STATUS                           4115
+// Align with Win32IDE_Commands.h / command_registry.hpp (was off-by-one:
+// CHAIN=4111/SWARM=4112 collided with IDM_SUBAGENT_SWARM menu id and PathB 4111).
+#define IDM_SUBAGENT_CHAIN                            4110
+#define IDM_SUBAGENT_SWARM                            4111
+#define IDM_SUBAGENT_TODO_LIST                        4112
+#define IDM_SUBAGENT_TODO_CLEAR                       4113
+#define IDM_SUBAGENT_STATUS                           4114
 #define IDM_AGENT_BOUNDED_LOOP                        4120
 #define IDM_AUTONOMY_TOGGLE                           4150
 #define IDM_AUTONOMY_START                            4151

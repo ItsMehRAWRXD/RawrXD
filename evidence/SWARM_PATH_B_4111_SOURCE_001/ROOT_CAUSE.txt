@@ -1,0 +1,39 @@
+SWARM_PATH_B_4111_SOURCE_001 / ROOT_CAUSE (source)
+==================================================
+ASOF_UTC=2026-10-28T17:45:00Z
+PRIOR=SWARM_16_RUNTIME_004_PATH_B (tip 748B observation)
+
+FINDINGS (source tree)
+----------------------
+1) ID COLLISION — AgentSessionBar.cpp attached to main IDE used child
+   control HMENU ids 4110/4111/4112 overlapping IDM_SUBAGENT_CHAIN/SWARM/TODO.
+   Cite: AgentSessionBar CreateWindow STATIC (HMENU)4111 vs IDM_SUBAGENT_SWARM.
+
+2) MENU ID REMAP DRIFT — SSOT Win32IDE_Commands.h / command_registry.hpp:
+     CHAIN=4110 SWARM=4111 TODO_LIST=4112 …
+   Drifted copies (off-by-one / dual-claim):
+     auto_feature_registry.cpp had CHAIN=4111 SWARM=4112
+     vscode_extension_api.cpp had chain→4111 swarm→4112
+     Win32IDE_FeatureManifest.cpp claimed BOTH chain and swarm as 4111
+
+3) EARLY SWALLOW RISK — Win32IDE_Core WM_COMMAND called
+   CompilerIntegration_HandleCommand BEFORE sehCallOnCommand/CmdDiag.
+   Tip 748B differential (1001 crumbs, 4111 none) matches an early TRUE
+   return path that skips CmdDiag. Source HandleCommand does not list 4111,
+   but SubAgent band had no hard exclusion before this seal.
+
+SOURCE FIXES (this seal; RELINK_REQUIRED)
+-----------------------------------------
+- Win32IDE_Core.cpp: crumb WM_COMMAND_PRE_COMPILER; never route 4110–4119
+  through CompilerIntegration_HandleCommand; SubAgent → sehCallOnCommand.
+- CompilerIntegration{,_Real}.cpp: explicit return false for 4110–4119.
+- AgentSessionBar.cpp + AgentSessionGuiProof.cpp: remap controls to 48101+.
+- auto_feature_registry.cpp / vscode_extension_api.cpp /
+  Win32IDE_FeatureManifest.cpp: align SubAgent IDs to Commands.h SSOT.
+
+NON-CLAIMS
+----------
+RUNTIME_REACHED=NOT_RUN (no tip rebuild / no PathB re-run this seal)
+TIP_FREEZE_001\bin untouched
+GhostText / B421 absorb NOT_AUTHORIZED
+PROMOTE=0

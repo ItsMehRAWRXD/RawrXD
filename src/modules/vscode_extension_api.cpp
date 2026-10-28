@@ -2816,8 +2816,8 @@ void VSCodeExtensionAPI::bridgeCommandToIDM(const char* commandId) {
         { "rawrxd.agent.start",                      4100 },  // IDM_AGENT_START_LOOP
         { "rawrxd.agent.stop",                       4105 },  // IDM_AGENT_STOP
         { "rawrxd.agent.configure",                  4102 },  // IDM_AGENT_CONFIGURE_MODEL
-        { "rawrxd.subagent.chain",                   4111 },  // IDM_SUBAGENT_CHAIN
-        { "rawrxd.subagent.swarm",                   4112 },  // IDM_SUBAGENT_SWARM
+        { "rawrxd.subagent.chain",                   4110 },  // IDM_SUBAGENT_CHAIN
+        { "rawrxd.subagent.swarm",                   4111 },  // IDM_SUBAGENT_SWARM
         { "rawrxd.ai.maxMode",                       4200 },  // IDM_AI_MODE_MAX
         { "rawrxd.ai.deepThink",                     4201 },  // IDM_AI_MODE_DEEP_THINK
         { "rawrxd.ai.deepResearch",                  4202 },  // IDM_AI_MODE_DEEP_RESEARCH

@@ -456,6 +456,10 @@ void CompilerIntegration::UpdateStatusBar() {
 }
 
 bool CompilerIntegration::HandleCommand(WORD command_id) {
+    // SWARM_PATH_B_4111_SOURCE_001: never claim SubAgent menu band (4110–4119).
+    if (command_id >= 4110 && command_id <= 4119)
+        return false;
+
     if (command_id == ID_BUILD_COMPILE) {
         CompileCurrentFile();
         return true;
@@ -477,7 +481,7 @@ bool CompilerIntegration::HandleCommand(WORD command_id) {
     } else if (command_id == ID_BUILD_SELF_HEAL) {
         ToggleSelfHeal(!self_heal_enabled_);
         return true;
-    } else if (command_id >= ID_COMPILER_DETECTED_START && 
+    } else if (command_id >= ID_COMPILER_DETECTED_START &&
                command_id < ID_COMPILER_DETECTED_START + 100) {
         int index = command_id - ID_COMPILER_DETECTED_START;
         if (index >= 0 && index < (int)detected_compilers_.size()) {
@@ -485,18 +489,17 @@ bool CompilerIntegration::HandleCommand(WORD command_id) {
         }
         return true;
     } else if (command_id == ID_COMPILER_MENU_START + 1) {
-        // Detect compilers
         Compiler::GetCompilerRegistry().DetectAllCompilers();
         detected_compilers_ = Compiler::GetCompilerRegistry().GetAvailableCompilers();
         UpdateCompilerMenu();
-        ShowBuildProgress("Compiler detection complete: " + 
+        ShowBuildProgress("Compiler detection complete: " +
                          std::to_string(detected_compilers_.size()) + " compilers found");
         return true;
     } else if (command_id == ID_COMPILER_MENU_START + 99) {
         ShowOutputWindow();
         return true;
     }
-    
+
     return false;
 }
 
