@@ -58,6 +58,7 @@ set_target_properties(rawrxd_product_layer_002 PROPERTIES
 function(rawr_product_cert name src)
   add_executable(${name} ${src}
     ${CMAKE_SOURCE_DIR}/src/product/gateway/product_deep2_infer.cpp
+    ${CMAKE_SOURCE_DIR}/src/product/gateway/product_deep2_infer_seh.cpp
     ${RAWR_PRODUCT_ASM_OBJS})
   add_dependencies(${name} rawr_product_x64_asm rawr_product_pipe_x64_asm)
   target_include_directories(${name} PRIVATE

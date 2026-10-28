@@ -51,6 +51,7 @@ set(RAWR_AGENTIC_SOURCES
   src/cli/rawr_agent_tools.cpp
   src/cli/rawr_product_serve.cpp
   src/product/gateway/product_deep2_infer.cpp
+  src/product/gateway/product_deep2_infer_seh.cpp
   src/cli/tools/rawr_file_tool.cpp
   src/cli/tools/rawr_search_tool.cpp
   src/cli/tools/rawr_patch_tool.cpp
