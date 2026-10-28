@@ -418,6 +418,23 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                          actDownloaded ? I - actNonFinite : 0u,
                          actNonFinite);
             std::fflush(stderr);
+            // The post-device scratch arena identity is not independently
+            // proven. Persist the full vectors for forensic inspection only
+            // when both downloads and all finite checks succeed.
+            if (downloaded && actDownloaded &&
+                !stageNonFinite && !actNonFinite) {
+                const char* captureDir = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+                if (captureDir && captureDir[0]) {
+                    const bool saved = k2_parity_capture::CaptureProvisionalStage(
+                        stick, layer, lastExpert, gpuAct.data(),
+                        gateOut.data(), I, gpuLast.data(), cpuLast.data(), H);
+                    std::fprintf(stderr,
+                                 "GPU_MOE_PROVISIONAL_STAGE_CAPTURE layer=%u stick=%u "
+                                 "expert=%d status=%s identity=UNPROVEN certified=0\n",
+                                 layer, stick, lastExpert, saved ? "WRITTEN" : "BLOCKED");
+                    std::fflush(stderr);
+                }
+            }
         }
     };
 
