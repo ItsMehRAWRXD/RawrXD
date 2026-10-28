@@ -1,6 +1,7 @@
 #pragma once
 // RawrXD native tool host foundation. C++20, standard library + Win32 only.
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
@@ -50,7 +51,19 @@ public:
   }
 };
 inline std::string arg(const Request& r,const std::string& k){auto it=r.args.find(k);if(it==r.args.end())throw std::runtime_error("missing "+k);return it->second;}
+inline std::string optional_arg(const Request& r,const std::string& k,const std::string& fallback){auto it=r.args.find(k);return it==r.args.end()?fallback:it->second;}
+inline size_t optional_limit(const Request& r,const std::string& k,size_t fallback,size_t maximum){
+ auto it=r.args.find(k); if(it==r.args.end()||it->second.empty()) return fallback;
+ try { size_t used=0; unsigned long long value=std::stoull(it->second,&used); if(used!=it->second.size()||value==0) return fallback; return static_cast<size_t>(std::min<unsigned long long>(value,maximum)); }
+ catch(...) { return fallback; }
+}
 inline fs::path canonical_root(const fs::path& p){return fs::weakly_canonical(fs::absolute(p));}
+inline std::string trim_path_argument(std::string value){
+ size_t first=0,last=value.size();
+ while(first<last&&std::isspace(static_cast<unsigned char>(value[first])))++first;
+ while(last>first&&std::isspace(static_cast<unsigned char>(value[last-1])))--last;
+ return value.substr(first,last-first);
+}
 #ifdef _WIN32
 // Atomic same-volume file replacement through ReplaceFileW: preserves the
 // original file's ACLs, attributes and alternate data streams instead of the
@@ -59,7 +72,8 @@ inline fs::path canonical_root(const fs::path& p){return fs::weakly_canonical(fs
 inline bool replace_windows_file(const fs::path& target,const fs::path& replacement);
 #endif
 inline fs::path scoped(const fs::path& root,const std::string& rel){
- fs::path r=canonical_root(root),p=fs::weakly_canonical(r/fs::path(rel));
+ const std::string clean=trim_path_argument(rel);
+ fs::path r=canonical_root(root),p=fs::weakly_canonical(r/fs::path(clean.empty()?".":clean));
  auto a=r.begin(),b=p.begin();for(;a!=r.end()&&b!=p.end()&&*a==*b;++a,++b){} if(a!=r.end())throw std::runtime_error("path outside workspace");return p;
 }
 inline std::string read_text(const fs::path& p,size_t max_bytes=2*1024*1024){
@@ -96,10 +110,37 @@ inline const char* canonicalize_tool_name(const std::string& name){
 
 inline void register_workspace_tools(Registry& reg,fs::path root){
  root=canonical_root(root);
- reg.add({"readFile","Read bounded workspace file",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{return {true,read_text(scoped(root,arg(r,"path"))),""};}});
- reg.add({"listDirectory","List workspace directory",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::is_directory(p))throw std::runtime_error("not directory");std::ostringstream out;size_t n=0;for(auto& e:fs::directory_iterator(p)){if(++n>2000)break;out<<(e.is_directory()?"D ":"F ")<<e.path().filename().string()<<'\n';}return {true,out.str(),""};}});
- reg.add({"fileSearch","Find paths by filename substring",Risk::ReadOnly,{"pattern"},[root](const Request& r)->Result{std::ostringstream out;auto pattern=arg(r,"pattern");size_t count=0;std::error_code ec;for(fs::recursive_directory_iterator it(root,fs::directory_options::skip_permission_denied,ec),end;it!=end&&count<500&&!ec;it.increment(ec)){if(it.depth()>24){it.disable_recursion_pending();continue;}if(it->path().filename().string().find(pattern)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<'\n';++count;}}return {true,out.str(),""};}});
- reg.add({"textSearch","Search bounded text files",Risk::ReadOnly,{"needle"},[root](const Request& r)->Result{std::ostringstream out;auto needle=arg(r,"needle");if(needle.empty())throw std::runtime_error("empty needle");size_t matches=0;std::error_code ec;for(fs::recursive_directory_iterator it(root,fs::directory_options::skip_permission_denied,ec),end;it!=end&&matches<250&&!ec;it.increment(ec)){if(it.depth()>24){it.disable_recursion_pending();continue;}if(!it->is_regular_file(ec)||it->file_size(ec)>1024*1024)continue;std::ifstream f(it->path());std::string line;size_t ln=0;while(std::getline(f,line)&&matches<250){++ln;if(line.find(needle)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}}return {true,out.str(),""};}});
+ reg.add({"readFile","Read one bounded workspace file by path",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{return {true,read_text(scoped(root,arg(r,"path"))),""};}});
+ reg.add({"listDirectory","List immediate children only; bounded output. Prefer fileSearch/textSearch for repository audits and never enumerate the workspace root recursively",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{
+   auto p=scoped(root,arg(r,"path")); if(!fs::is_directory(p)) throw std::runtime_error("not directory");
+   const size_t limit=optional_limit(r,"maxEntries",128,256); const size_t maxBytes=48*1024;
+   std::vector<std::string> entries; std::error_code ec;
+   for(auto& e:fs::directory_iterator(p,fs::directory_options::skip_permission_denied,ec)){
+     if(ec) break; entries.push_back(std::string(e.is_directory(ec)?"D ":"F ")+e.path().filename().string());
+   }
+   std::sort(entries.begin(),entries.end()); const bool countTruncated=entries.size()>limit;
+   std::ostringstream out; out<<"DIRECTORY="<<arg(r,"path")<<" ENTRIES="<<entries.size()<<" RETURN_LIMIT="<<limit<<" TRUNCATED="<<(countTruncated?"true":"false")<<'\n';
+   size_t returned=0; for(const auto& entry:entries){ if(returned>=limit||out.tellp()>=static_cast<std::streamoff>(maxBytes)) break; out<<entry<<'\n'; ++returned; }
+   if(returned<entries.size()) out<<"...[directory output truncated; use a narrower path or fileSearch]...\n";
+   return {true,out.str(),""};
+ }});
+ reg.add({"fileSearch","Find paths by filename substring; optional path and maxResults scope the search",Risk::ReadOnly,{"pattern"},[root](const Request& r)->Result{
+   std::ostringstream out; auto pattern=arg(r,"pattern"); const auto start=scoped(root,optional_arg(r,"path",".")); const size_t limit=optional_limit(r,"maxResults",100,250); size_t count=0; std::error_code ec;
+   if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
+   for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&count<limit&&!ec;it.increment(ec)){
+     if(it.depth()>24){it.disable_recursion_pending();continue;} if(it->path().filename().string().find(pattern)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<'\n';++count;}
+   }
+   if(count==limit) out<<"...[file search truncated at maxResults]...\n"; return {true,out.str(),""};
+ }});
+ reg.add({"textSearch","Search bounded text files; optional path and maxResults scope the search",Risk::ReadOnly,{"needle"},[root](const Request& r)->Result{
+   std::ostringstream out; auto needle=arg(r,"needle"); if(needle.empty()) throw std::runtime_error("empty needle"); const auto start=scoped(root,optional_arg(r,"path",".")); const size_t limit=optional_limit(r,"maxResults",100,250); size_t matches=0; std::error_code ec;
+   if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
+   for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&matches<limit&&!ec;it.increment(ec)){
+     if(it.depth()>24){it.disable_recursion_pending();continue;} if(!it->is_regular_file(ec)||it->file_size(ec)>1024*1024) continue; std::ifstream f(it->path()); std::string line; size_t ln=0;
+     while(std::getline(f,line)&&matches<limit){++ln;if(line.find(needle)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}
+   }
+   if(matches==limit) out<<"...[text search truncated at maxResults]...\n"; return {true,out.str(),""};
+ }});
  reg.add({"createDirectory","Create directory inside workspace",Risk::Write,{"path"},[root](const Request& r)->Result{fs::create_directories(scoped(root,arg(r,"path")));return {true,"created",""};}});
  reg.add({"createFile","Create a new file without overwriting",Risk::Write,{"path","content"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(fs::exists(p))throw std::runtime_error("file already exists");write_atomic(p,arg(r,"content"));return {true,"created",""};}});
  reg.add({"writeFile","Write/overwrite a workspace file",Risk::Write,{"path","content"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::exists(p.parent_path()))fs::create_directories(p.parent_path());write_atomic(p,arg(r,"content"));return {true,"written",""};}});

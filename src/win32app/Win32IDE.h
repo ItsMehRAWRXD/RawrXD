@@ -15,6 +15,35 @@
 #define DOC_TAB_HEIGHT 26
 #endif
 
+// Activity-bar IDs are shared by the VS Code-style UI implementation and the
+// lifecycle command router.  Keep them in the common header so the live
+// startup path can route activity-bar clicks without relying on TU-local
+// defines.
+#ifndef IDC_ACTIVITY_BAR
+#define IDC_ACTIVITY_BAR 1100
+#endif
+#ifndef IDC_ACTBAR_EXPLORER
+#define IDC_ACTBAR_EXPLORER 1101
+#endif
+#ifndef IDC_ACTBAR_SEARCH
+#define IDC_ACTBAR_SEARCH 1102
+#endif
+#ifndef IDC_ACTBAR_SCM
+#define IDC_ACTBAR_SCM 1103
+#endif
+#ifndef IDC_ACTBAR_DEBUG
+#define IDC_ACTBAR_DEBUG 1104
+#endif
+#ifndef IDC_ACTBAR_EXTENSIONS
+#define IDC_ACTBAR_EXTENSIONS 1105
+#endif
+#ifndef IDC_ACTBAR_SETTINGS
+#define IDC_ACTBAR_SETTINGS 1106
+#endif
+#ifndef IDC_ACTBAR_ACCOUNTS
+#define IDC_ACTBAR_ACCOUNTS 1107
+#endif
+
 // Chat session tabs are created by Win32IDE.cpp but their TCN_SELCHANGE
 // notification is owned by the lifecycle/window-procedure translation unit.
 // Keep the control ID in the shared header so both translation units use the
@@ -31,6 +60,18 @@
 #ifndef IDC_ROLLBACK_CHAT
 #define IDC_ROLLBACK_CHAT 1216
 #endif
+#ifndef IDC_COPILOT_REASONING_SELECTOR
+#define IDC_COPILOT_REASONING_SELECTOR 1217
+#endif
+#ifndef IDC_COPILOT_WEB_BROWSE
+#define IDC_COPILOT_WEB_BROWSE 1218
+#endif
+#ifndef IDC_COPILOT_MAX_TOKENS_SELECTOR
+#define IDC_COPILOT_MAX_TOKENS_SELECTOR 1219
+#endif
+#ifndef IDC_COPILOT_CONTEXT_SELECTOR
+#define IDC_COPILOT_CONTEXT_SELECTOR 1220
+#endif
 
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
@@ -39,11 +80,13 @@
 
 #include <commctrl.h>
 #include <shlobj.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -75,14 +118,36 @@ struct ChatModelEntry {
     std::string identifier;
 };
 
+// Discovery results are fenced to the UI request that created them.  The
+// generation is carried with the owned payload so a queued WM_APP+106 from an
+// older worker can never overwrite a newer model catalog.
+struct ModelDiscoveryPayload {
+    uint64_t generationID = 0;
+    std::vector<ChatModelEntry> models;
+    // The first payload replaces the old discovered catalog; later scoped
+    // payloads merge into it so the fast Ollama catalog is never regressed
+    // while local GGUF scanning finishes.
+    bool mergeOnly = false;
+};
+
 enum class GhostTextMode { Disabled, AutoLocal, FollowChat, Independent };
+
+// Ollama's native API currently exposes reasoning as a boolean on the
+// /api/generate route.  These UI modes are deliberately client-side policies:
+// Instant disables reasoning; the remaining levels enable it and reserve a
+// bounded amount of the generation budget for the model's thinking stream.
+// This keeps the control honest across Ollama versions instead of sending
+// unsupported provider-specific strings such as "high" to /api/generate.
+enum class ReasoningMode { Instant, Low, Medium, High, Max };
 
 struct ChatSessionCheckpoint {
     std::string reason;
     ChatModelEntry model;
     ChatModelEntry ghostTextModel;
     GhostTextMode ghostTextMode = GhostTextMode::AutoLocal;
+    ReasoningMode reasoningMode = ReasoningMode::Instant;
     bool allowCloudGhostText = false;
+    bool webBrowsingEnabled = false;
     int maxTokens = 4096;
     int contextTokens = 65536;
     std::vector<std::pair<std::string, std::string>> history;
@@ -99,6 +164,8 @@ struct ChatSessionState {
     std::vector<std::pair<std::string, std::string>> history;
     std::string responseBuffer;
     bool running = false;
+    ReasoningMode reasoningMode = ReasoningMode::Instant;
+    bool webBrowsingEnabled = false;
     std::vector<ChatSessionCheckpoint> checkpoints;
 };
 
@@ -285,6 +352,10 @@ public:
 
     // Agentic Loop Bridge (connects to deep2_agentic_loop.exe)
     std::unique_ptr<AgenticLoopBridge> m_agenticLoopBridge;
+    // Chat session receiving the canonical CLI agent's streamed stdout/stderr.
+    // Keeping the origin session explicit prevents a later chat-tab switch
+    // from attaching agent output to the wrong conversation.
+    int m_agenticChatSessionId = 0;
     void initializeAgenticLoopBridge();
     void onAgenticLoopRunTask();
     void onAgenticLoopCancel();
@@ -665,6 +736,9 @@ private:
 
     // Utility
     std::string getWindowText(HWND hwnd);
+    // Explicit UTF-8 boundary for text that crosses into JSON/agent APIs.
+    std::string getWindowTextUtf8(HWND hwnd);
+    void appendCopilotChatUtf8(const std::string& text);
     void setWindowText(HWND hwnd, const std::string& text);
     void appendText(HWND hwnd, const std::string& text);
     void syncEditorToGpuSurface();
@@ -1142,10 +1216,15 @@ private:
     HWND m_hwndAllowCloudGhostText = nullptr;
     HWND m_hwndMaxTokensCaption = nullptr;
     HWND m_hwndMaxTokensSlider = nullptr;
+    HWND m_hwndMaxTokensSelector = nullptr;
     HWND m_hwndMaxTokensLabel = nullptr;
     HWND m_hwndContextCaption = nullptr;
     HWND m_hwndContextLabel = nullptr;
     HWND m_hwndContextSlider = nullptr;
+    HWND m_hwndContextSelector = nullptr;
+    HWND m_hwndReasoningLabel = nullptr;
+    HWND m_hwndReasoningSelector = nullptr;
+    HWND m_hwndWebBrowseToggle = nullptr;
     HWND m_hwndChatSessionTabs = nullptr;
     HWND m_hwndNewChatBtn = nullptr;
     HWND m_hwndCloseChatBtn = nullptr;
@@ -1155,6 +1234,8 @@ private:
     int m_secondarySidebarWidth;
     int m_currentMaxTokens;
     int m_currentContextTokens = 65536;
+    ReasoningMode m_reasoningMode = ReasoningMode::Instant;
+    bool m_webBrowsingEnabled = false;
     std::vector<ChatModelEntry> m_availableModels;
     ChatModelEntry m_selectedChatModel;
     ChatModelEntry m_ghostTextModel;
@@ -1165,9 +1246,15 @@ private:
     std::vector<std::unique_ptr<NativeGhostTextController>> m_ghostTextInputs;
     std::string m_agenticChatLoadedModelPath;
     std::thread m_modelDiscoveryThread;
+    uint64_t m_currentModelGenID = 0;
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
         std::make_shared<std::atomic_bool>(false);
     std::atomic_bool m_modelDiscoveryRunning{false};
+    // Model discovery results are delivered on the UI thread.  Keep the
+    // newest result staged while either model combo's popup is open so that
+    // CB_RESETCONTENT cannot tear down an active native dropdown.
+    std::unique_ptr<ModelDiscoveryPayload> m_deferredModelDiscovery;
+    bool m_modelDiscoveryUpdateDeferred = false;
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
     std::vector<ChatSessionState> m_chatSessions;
     std::vector<ChatSessionState> m_closedChatSessions;
@@ -1409,8 +1496,12 @@ private:
     void onModelSelectionChanged();
     void onGhostTextSelectionChanged();
     void onGhostTextCloudConsentChanged();
-    void onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered);
+    void onModelDiscoveryComplete(ModelDiscoveryPayload* discovered);
     void onMaxTokensChanged(int newValue);
+    void onContextPresetChanged();
+    void onReasoningModeChanged();
+    void onWebBrowsingChanged();
+    void updateReasoningControls();
     void updateContextControls();
     int effectiveMaxTokensForPrompt(const std::string& prompt) const;
     void initializeNativeGhostText();
@@ -1486,6 +1577,10 @@ private:
     std::vector<rawrxd::esp::Event> m_espEvents; // Recent events for display
     static constexpr size_t MAX_ESP_EVENTS = 1000;
     std::mutex m_espEventsMutex;
+    // Presentation-level idempotence. Raw CLI output and the structured ESP
+    // recorder can both reach the UI; a request/sequence pair is rendered
+    // once while the raw JSONL evidence remains untouched on disk.
+    std::unordered_set<std::string> m_espDisplayedKeys;
     uint64_t m_espRequestId = 1;
 
     // Debugger UI Components

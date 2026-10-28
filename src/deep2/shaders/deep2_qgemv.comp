@@ -48,6 +48,8 @@ float geth(uint byteIndex) {
 
 void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
     if (sb < 4u) {
+        // base points at the start of the packed block: d/dmin occupy the
+        // first four bytes, followed by GGML's 12-byte scales array.
         sc = getb(base + 4u + sb) & 63u;
         mn = getb(base + 8u + sb) & 63u;
     } else {

@@ -8,6 +8,36 @@
 #include "ModelConnection.h"
 #include "IDELogger.h"
 #include <sstream>
+#include <cstdlib>
+#include <filesystem>
+
+namespace {
+
+// The CLI's structured [ESP] records are already rendered by the ESP panel.
+// Keep them in the raw evidence log, but do not append the same records again
+// through the progress-text path into Output/Chat.
+std::string FilterStructuredEspLines(const std::string& raw)
+{
+    std::string visible;
+    size_t cursor = 0;
+    while (cursor < raw.size()) {
+        const size_t end = raw.find_first_of("\r\n", cursor);
+        const size_t length = (end == std::string::npos) ? raw.size() - cursor : end - cursor;
+        const std::string line = raw.substr(cursor, length);
+        size_t first = 0;
+        while (first < line.size() && (line[first] == ' ' || line[first] == '\t')) ++first;
+        if (line.compare(first, 5, "[ESP]") != 0 && !line.empty()) {
+            visible.append(line);
+            visible.append("\r\n");
+        }
+        if (end == std::string::npos) break;
+        cursor = end + 1;
+        if (cursor < raw.size() && raw[end] == '\r' && raw[cursor] == '\n') ++cursor;
+    }
+    return visible;
+}
+
+}
 
 // Initialize the Agentic Bridge
 void Win32IDE::initializeAgenticBridge() {
@@ -27,8 +57,7 @@ void Win32IDE::initializeAgenticBridge() {
             // Also send to Copilot Chat if available
             if (m_hwndCopilotChatOutput) {
                 std::string formatted = " " + title + "\n" + content + "\n\n";
-                SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
-                SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)formatted.c_str());
+                appendCopilotChatUtf8(formatted);
             }
         });
         
@@ -146,7 +175,7 @@ void Win32IDE::onAgentExecuteCommand() {
         }).detach();
         
         // Clear input
-        SetWindowTextA(m_hwndCopilotChatInput, "");
+        SetWindowTextW(m_hwndCopilotChatInput, L"");
     } else {
         MessageBoxA(m_hwndMain, "Copilot Chat input not available", "Agent Error", MB_OK | MB_ICONERROR);
     }
@@ -354,8 +383,7 @@ void Win32IDE::initializeDeep2Bridge() {
             // Also send to Copilot Chat if available
             if (m_hwndCopilotChatOutput) {
                 std::string formatted = " " + title + "\n" + content + "\n\n";
-                SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
-                SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)formatted.c_str());
+                appendCopilotChatUtf8(formatted);
             }
         });
         
@@ -440,19 +468,16 @@ void Win32IDE::onDeep2Generate() {
     
     // Get prompt from Copilot Chat input
     if (m_hwndCopilotChatInput) {
-        char input[4096] = {0};
-        GetWindowTextA(m_hwndCopilotChatInput, input, sizeof(input));
-        
-        if (strlen(input) == 0) {
+        const std::string prompt = getWindowTextUtf8(m_hwndCopilotChatInput);
+
+        if (prompt.empty()) {
             MessageBoxA(m_hwndMain, "Enter a prompt in the Copilot Chat input box", "Deep2", MB_OK | MB_ICONINFORMATION);
             return;
         }
-        
-        std::string prompt(input);
         appendToOutput(" Generating with Deep2: " + prompt + "\n", "Output", OutputSeverity::Info);
         
         // Clear input
-        SetWindowTextA(m_hwndCopilotChatInput, "");
+        SetWindowTextW(m_hwndCopilotChatInput, L"");
         
         // Stream generation in background
         std::thread([this, prompt]() {
@@ -664,16 +689,14 @@ void Win32IDE::onAgenticLoopRunTask() {
     
     // Get task from Copilot Chat input
     if (m_hwndCopilotChatInput) {
-        char input[4096] = {0};
-        GetWindowTextA(m_hwndCopilotChatInput, input, sizeof(input));
-        
-        if (strlen(input) == 0) {
+        const std::string task = getWindowTextUtf8(m_hwndCopilotChatInput);
+
+        if (task.empty()) {
             MessageBoxA(m_hwndMain, "Enter a task description in the Copilot Chat input box", "Agentic Loop", MB_OK | MB_ICONINFORMATION);
             return;
         }
-        
-        std::string task(input);
-        SetWindowTextA(m_hwndCopilotChatInput, "");
+
+        SetWindowTextW(m_hwndCopilotChatInput, L"");
         
         // Route the selected model explicitly. Ollama entries contain a
         // model ID (for example qwen3:8b), while local entries contain a GGUF
@@ -703,14 +726,80 @@ void Win32IDE::onAgenticLoopRunTask() {
             return;
         }
         
-        // Get work directory
-        char workDir[MAX_PATH];
-        GetCurrentDirectoryA(MAX_PATH, workDir);
-        std::string workDirStr(workDir);
+        // Resolve the agent workspace from the active explorer/file context
+        // first, then from the executable's checkout marker.  A GUI launched
+        // from a shell/desktop can have a process CWD inside the host app
+        // (for example WindowsApps), which is not a valid RawrXD workspace
+        // and prevents MOTD authorization from finding .cursor/rules.
+        std::string workDirStr;
+        auto directoryForPath = [](const std::string& path) -> std::string {
+            if (path.empty()) return {};
+            const DWORD attributes = GetFileAttributesA(path.c_str());
+            if (attributes != INVALID_FILE_ATTRIBUTES &&
+                (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                return path;
+            }
+            const size_t slash = path.find_last_of("\\/");
+            return slash == std::string::npos ? std::string{} : path.substr(0, slash);
+        };
+        auto findWorkspaceRoot = [](const std::string& path) -> std::string {
+            if (path.empty()) return {};
+            std::error_code ec;
+            std::filesystem::path probe(path);
+            if (!std::filesystem::is_directory(probe, ec)) probe = probe.parent_path();
+            for (int depth = 0; !probe.empty() && depth < 12; ++depth) {
+                ec.clear();
+                const bool gitRoot = std::filesystem::exists(probe / ".git", ec);
+                ec.clear();
+                const bool policyRoot = std::filesystem::is_regular_file(
+                    probe / ".cursor" / "rules" / "PassiveRoleNotRoleplay.mdc", ec) ||
+                    std::filesystem::is_regular_file(
+                        probe / ".cursor" / "rules" / "PassiveRoleNotRoleplay.md", ec);
+                if (gitRoot || policyRoot) return probe.string();
+                const auto parent = probe.parent_path();
+                if (parent == probe) break;
+                probe = parent;
+            }
+            return {};
+        };
+        workDirStr = findWorkspaceRoot(m_currentExplorerPath);
+        if (workDirStr.empty()) workDirStr = findWorkspaceRoot(m_currentFile);
+
+        if (workDirStr.empty()) {
+            char modulePath[MAX_PATH] = {};
+            const DWORD moduleLength = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+            if (moduleLength > 0 && moduleLength < MAX_PATH) {
+                std::error_code ec;
+                std::filesystem::path probe(std::string(modulePath, moduleLength));
+                probe = probe.parent_path();
+                for (int depth = 0; !probe.empty() && depth < 10; ++depth) {
+                    const auto gitMarker = probe / ".git";
+                    const auto motdMarker = probe / ".cursor" / "rules" /
+                        "PassiveRoleNotRoleplay.mdc";
+                    const auto motdMarkdown = probe / ".cursor" / "rules" /
+                        "PassiveRoleNotRoleplay.md";
+                    if (std::filesystem::exists(gitMarker, ec) ||
+                        std::filesystem::is_regular_file(motdMarker, ec) ||
+                        std::filesystem::is_regular_file(motdMarkdown, ec)) {
+                        workDirStr = probe.string();
+                        break;
+                    }
+                    ec.clear();
+                    const auto parent = probe.parent_path();
+                    if (parent == probe) break;
+                    probe = parent;
+                }
+            }
+        }
+
+        if (workDirStr.empty()) {
+            char workDir[MAX_PATH] = {};
+            if (GetCurrentDirectoryA(MAX_PATH, workDir) > 0) workDirStr.assign(workDir);
+        }
         
         // Build task config
         AgenticLoopBridge::TaskConfig config;
-        config.provider = useOllama ? "ollama" : "local";
+        config.provider = useOllama ? "ollama-cli" : "local";
         config.modelPath = modelPath;
         config.workDir = workDirStr;
         config.task = task;
@@ -720,6 +809,19 @@ void Win32IDE::onAgenticLoopRunTask() {
         config.maxWallTimeSec = 300;
         config.maxTotalTokens = 8192;
         config.quiet = true;
+        // Ollama chat tasks use the same canonical `rawr run` path as the
+        // CLI smoke-tested backend.  Keep GUI chat read-only by default; an
+        // explicit environment opt-in is required before this UI route can
+        // authorize mutations.
+        config.useCliAgent = useOllama;
+        const char* approveGuiMutations = std::getenv("RAWRXD_GUI_APPROVE_MUTATIONS");
+        config.approveMutations = approveGuiMutations &&
+            std::string(approveGuiMutations) == "YES";
+        config.readOnly = !config.approveMutations;
+
+        if (auto* session = activeChatSession()) {
+            m_agenticChatSessionId = session->id;
+        }
         
         // Also check if there's an open file to use as target
         if (!m_currentFile.empty()) {
@@ -732,7 +834,7 @@ void Win32IDE::onAgenticLoopRunTask() {
         appendToOutput(" Work dir: " + workDirStr + "\n", "Output", OutputSeverity::Info);
         
         // Start the task
-        m_agenticLoopBridge->StartTask(config,
+        const bool started = m_agenticLoopBridge->StartTask(config,
             [this](const std::string& progressMsg) {
                 // Progress callback - runs on worker thread, post to UI
                 PostMessageA(m_hwndMain, WM_APP + 103, 0, (LPARAM)new std::string(progressMsg));
@@ -746,6 +848,10 @@ void Win32IDE::onAgenticLoopRunTask() {
                 PostMessageA(m_hwndMain, WM_APP + 105, success ? 1 : 0, (LPARAM)new std::string(summary));
             }
         );
+        if (!started) {
+            m_agenticChatSessionId = 0;
+            appendToOutput("Agent task could not be started.\n", "Errors", OutputSeverity::Error);
+        }
     } else {
         MessageBoxA(m_hwndMain, "Copilot Chat input not available", "Agentic Loop", MB_OK | MB_ICONERROR);
     }
@@ -790,7 +896,14 @@ void Win32IDE::onAgenticLoopStatus() {
 LRESULT Win32IDE::handleAgenticLoopProgress(WPARAM wParam, LPARAM lParam) {
     if (lParam) {
         std::string* msg = reinterpret_cast<std::string*>(lParam);
-        appendToOutput(*msg, "Output", OutputSeverity::Info);
+        const std::string visible = FilterStructuredEspLines(*msg);
+        if (!visible.empty()) {
+            appendToOutput(visible, "Output", OutputSeverity::Info);
+        }
+        if (m_agenticChatSessionId != 0 && !visible.empty()) {
+            handleCopilotUiUpdate(m_agenticChatSessionId,
+                                  "\r\n[agent] " + visible + "\r\n", false);
+        }
         delete msg;
     }
     return 0;
@@ -809,6 +922,10 @@ LRESULT Win32IDE::handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam) {
         output += "\n";
         
         appendToOutput(output, "Output", result->success ? OutputSeverity::Info : OutputSeverity::Error);
+        if (m_agenticChatSessionId != 0) {
+            handleCopilotUiUpdate(m_agenticChatSessionId,
+                                  "\r\n[tool] " + output, false);
+        }
         
         // Also send to ESP panel
         if (m_hwndESPList) {
@@ -830,9 +947,11 @@ LRESULT Win32IDE::handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam) {
         output += *summary + "\n";
         
         appendToOutput(output, "Output", success ? OutputSeverity::Info : OutputSeverity::Error);
-        
-        // Publish ESP event
-        m_espBus.publish(rawrxd::esp::Kind::Finished, success ? "PASS" : "FAIL", m_espRequestId++);
+        if (m_agenticChatSessionId != 0) {
+            const int sessionId = m_agenticChatSessionId;
+            handleCopilotUiUpdate(sessionId, *summary + "\r\n", true);
+            m_agenticChatSessionId = 0;
+        }
         
         delete summary;
     }

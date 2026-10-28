@@ -1,0 +1,23 @@
+{
+  "run": 2,
+  "workspace_root": "F:\\rawrxd",
+  "mode": "agent",
+  "motd_gate": "PASS",
+  "model": "qwen3:8b",
+  "model_inference": "REAL",
+  "tool_sequence": [
+    "readFile",
+    "editFiles",
+    "readFile"
+  ],
+  "read_tool": "PASS",
+  "edit_tool": "PASS",
+  "file_changed_count": 1,
+  "before_sha256": "DF0FE62CE5998E83BCC59A965E0534FA9F128E407A3FD46D4A25130B2F8282",
+  "after_sha256": "23980928473207E433B68B474984E9F5CD5232AF4255C8E4AA9CE775AD5E594E",
+  "diff_verified": "PASS",
+  "build_exit": 0,
+  "run_exit": 0,
+  "synthetic_success": 0,
+  "cli_output": "run_2_raw.txt"
+}

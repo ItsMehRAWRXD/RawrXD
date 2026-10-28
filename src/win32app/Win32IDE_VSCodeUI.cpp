@@ -93,6 +93,29 @@ static const char* ICON_EXTENSIONS = "++";   // Extensions
 static const char* ICON_SETTINGS = "*";      // Settings gear
 static const char* ICON_ACCOUNTS = "@";      // User account
 
+// The activity bar is hosted by a STATIC window for lightweight painting, but
+// STATIC controls do not forward child button notifications to the IDE.  Keep
+// the native button behavior and explicitly forward the completed click to
+// the main window so the live sidebar views are reachable.
+static LRESULT CALLBACK ActivityBarButtonForwardProc(
+    HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam,
+    UINT_PTR, DWORD_PTR)
+{
+    const bool activate = message == WM_LBUTTONUP ||
+        (message == WM_KEYUP && (wParam == VK_SPACE || wParam == VK_RETURN));
+    const LRESULT result = DefSubclassProc(hwnd, message, wParam, lParam);
+    if (activate) {
+        HWND activityBar = GetParent(hwnd);
+        HWND mainWindow = activityBar ? GetParent(activityBar) : nullptr;
+        if (mainWindow) {
+            SendMessageA(mainWindow, WM_COMMAND,
+                MAKEWPARAM(GetDlgCtrlID(hwnd), BN_CLICKED),
+                reinterpret_cast<LPARAM>(hwnd));
+        }
+    }
+    return result;
+}
+
 // ============================================================================
 // Activity Bar (Far Left) - VS Code style vertical icon bar
 // ============================================================================
@@ -125,12 +148,13 @@ void Win32IDE::createActivityBarUI(HWND hwndParent)
         
         m_activityBarButtons[i] = CreateWindowExA(
             0, "BUTTON", buttonLabels[i],
-            WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             0, yPos, ACTIVITY_BAR_WIDTH, buttonHeight,
             m_hwndActivityBar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_ACTBAR_EXPLORER + i)), m_hInstance, nullptr);
         
         // Store IDE pointer for button subclass
         SetWindowLongPtr(m_activityBarButtons[i], GWLP_USERDATA, (LONG_PTR)this);
+        SetWindowSubclass(m_activityBarButtons[i], ActivityBarButtonForwardProc, 1, 0);
         
         // Create tooltip
         HWND hwndTip = CreateWindowEx(0, TOOLTIPS_CLASS, nullptr,
@@ -992,8 +1016,17 @@ void Win32IDE::updateESPPanel()
 void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
 {
     std::lock_guard<std::mutex> lock(m_espEventsMutex);
+    const std::string eventKey =
+        std::to_string(event.request_id) + ":" + std::to_string(event.sequence);
+    if (!m_espDisplayedKeys.insert(eventKey).second) {
+        return;
+    }
     m_espEvents.push_back(event);
     if (m_espEvents.size() > MAX_ESP_EVENTS) {
+        const auto& evicted = m_espEvents.front();
+        m_espDisplayedKeys.erase(
+            std::to_string(evicted.request_id) + ":" +
+            std::to_string(evicted.sequence));
         m_espEvents.erase(m_espEvents.begin());
     }
 

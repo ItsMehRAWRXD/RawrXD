@@ -3,14 +3,26 @@
 // =============================================================================
 #include "BackendRouter.h"
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 
 namespace RawrXD {
 namespace Agent {
+
+namespace {
+void CliTrace(const char* stage) noexcept {
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-router-trace] %s\n", stage ? stage : "(null)");
+        std::fflush(stderr);
+    }
+}
+}
 
 BackendRouter::BackendRouter() = default;
 BackendRouter::~BackendRouter() { Shutdown(); }
 
 bool BackendRouter::Initialize(const RouterConfig& config) {
+    CliTrace("Initialize:enter");
     if (m_initialized.load()) return true;
 
     m_config = config;
@@ -31,7 +43,9 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
     deep2_cfg.num_gpu      = 99;
 
     m_deep2 = std::make_unique<Deep2Backend>();
+    CliTrace("Initialize:deep2-created");
     m_deep2->Initialize(deep2_cfg);
+    CliTrace("Initialize:deep2-initialized");
 
     // Initialize Ollama backend (fallback)
     BackendConfig ollama_cfg;
@@ -45,10 +59,12 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
     ollama_cfg.num_ctx      = 8192;
     ollama_cfg.timeout_ms   = 120000;
     ollama_cfg.use_gpu      = true;
-    ollama_cfg.num_gpu      = 99;
+    ollama_cfg.num_gpu      = config.ollama_num_gpu;
 
     m_ollama = std::make_unique<OllamaBackend>();
+    CliTrace("Initialize:ollama-created");
     m_ollama->Initialize(ollama_cfg);
+    CliTrace("Initialize:ollama-initialized");
 
     // Determine active backend based on mode
     {
@@ -77,10 +93,12 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
     });
 
     m_initialized.store(true);
+    CliTrace("Initialize:ready");
     return true;
 }
 
 void BackendRouter::Shutdown() {
+    CliTrace("Shutdown:enter");
     m_health_running.store(false);
     m_health_cv.notify_all();
     if (m_health_thread.joinable()) {
@@ -89,6 +107,7 @@ void BackendRouter::Shutdown() {
     if (m_deep2)   m_deep2->Shutdown();
     if (m_ollama)  m_ollama->Shutdown();
     m_initialized.store(false);
+    CliTrace("Shutdown:done");
 }
 
 void BackendRouter::SetMode(BackendMode mode) {
@@ -245,6 +264,7 @@ InferenceResult BackendRouter::ChatSync(
         return InferenceResult::Error("BackendRouter not initialized");
     }
 
+    CliTrace("ChatSync:enter");
     m_total_requests.fetch_add(1);
 
     // Select backend
@@ -270,7 +290,10 @@ InferenceResult BackendRouter::ChatSync(
     }
 
     RouteToBackend(selected, backend->GetConfig().model);
-    return backend->ChatSync(messages, tools);
+    CliTrace(selected == BackendKind::Ollama ? "ChatSync:ollama" : "ChatSync:deep2");
+    InferenceResult result = backend->ChatSync(messages, tools);
+    CliTrace("ChatSync:return");
+    return result;
 }
 
 bool BackendRouter::ChatStream(

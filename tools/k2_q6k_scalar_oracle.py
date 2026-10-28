@@ -55,13 +55,17 @@ def gemv(blob, x, rows, columns):
         raise ValueError(f"weight size mismatch: got {len(blob)}, expected {needed}")
     out = []
     offset = 0
+    # Avoid building a 14M-element products list: fsum per 256-block, then fsum of
+    # the few block partials (secondary FP32 telemetry only).
     for _ in range(rows):
-        products = []
+        partials = []
         for start in range(0, columns, QK_K):
             decoded = unpack_block(blob[offset:offset + BLOCK_BYTES])
             offset += BLOCK_BYTES
-            products.extend(decoded[i] * x[start + i] for i in range(QK_K))
-        result = math.fsum(products)
+            partials.append(
+                math.fsum(decoded[i] * x[start + i] for i in range(QK_K))
+            )
+        result = math.fsum(partials)
         if not math.isfinite(result):
             raise ValueError("nonfinite oracle output")
         out.append(result)

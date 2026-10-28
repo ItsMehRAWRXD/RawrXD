@@ -6,6 +6,46 @@
 #include <sstream>
 #include <chrono>
 #include <algorithm>
+#include <cstdlib>
+
+namespace {
+
+std::atomic<uint64_t> g_nextAgentRequestId{1};
+
+std::string EspField(const std::string& line, const char* name, bool rest = false)
+{
+    const std::string prefix = std::string(name) + "=";
+    const size_t start = line.find(prefix);
+    if (start == std::string::npos) return {};
+    const size_t valueStart = start + prefix.size();
+    if (rest) return line.substr(valueStart);
+    const size_t end = line.find(' ', valueStart);
+    return line.substr(valueStart, end == std::string::npos ? std::string::npos : end - valueStart);
+}
+
+rawrxd::esp::Kind EspKind(const std::string& name)
+{
+    using rawrxd::esp::Kind;
+    if (name == "model_load") return Kind::ModelLoad;
+    if (name == "tokenizer_check") return Kind::TokenizerCheck;
+    if (name == "prefill_start") return Kind::PrefillStart;
+    if (name == "prefill_end") return Kind::PrefillEnd;
+    if (name == "token_generated") return Kind::TokenGenerated;
+    if (name == "gpu_dispatch") return Kind::GPUDispatch;
+    if (name == "cpu_fallback") return Kind::CPUFallback;
+    if (name == "snap_stop") return Kind::SnapStop;
+    if (name == "tool_start") return Kind::ToolStart;
+    if (name == "tool_result") return Kind::ToolResult;
+    if (name == "file_changed") return Kind::FileChanged;
+    if (name == "build_result") return Kind::BuildResult;
+    if (name == "test_result") return Kind::TestResult;
+    if (name == "error") return Kind::Error;
+    if (name == "finished") return Kind::Finished;
+    if (name == "heartbeat") return Kind::Heartbeat;
+    return Kind::AgentStep;
+}
+
+}
 
 AgenticLoopBridge::AgenticLoopBridge(Win32IDE* ide)
     : m_ide(ide)
@@ -57,6 +97,8 @@ bool AgenticLoopBridge::StartTask(const TaskConfig& config, ProgressCallback pro
     m_running.store(true);
     m_processStarted.store(false);
     m_completionSent.store(false);
+    m_espRequestId = g_nextAgentRequestId.fetch_add(1, std::memory_order_relaxed);
+    m_forwardedChildEvents.clear();
 
     // Publish ESP: task start
     if (m_espBus) {
@@ -144,10 +186,11 @@ void AgenticLoopBridge::WorkerThread()
         // Run startup recovery before launching
         StartupRecovery();
 
-        // Build command line for deep2_agentic_loop.exe without embedding a
-        // checkout-specific absolute path.  Prefer the configured workdir,
-        // then the canonical IDE output directory and its parents.
-        std::string exePath = m_currentConfig.workDir + "\\deep2_agentic_loop.exe";
+        // Build command line for the selected agent runtime without embedding
+        // a checkout-specific absolute path.  The canonical CLI path is
+        // preferred for Ollama chat tasks so the GUI and `rawr run` share one
+        // actual agent/tool implementation.
+        std::string exePath;
         char modulePath[MAX_PATH];
         GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
         std::string ideDir = std::string(modulePath);
@@ -156,13 +199,27 @@ void AgenticLoopBridge::WorkerThread()
             ideDir = ideDir.substr(0, pos);
         }
 
-        std::vector<std::string> loopCandidates = {
-            exePath,
-            ideDir + "\\deep2_agentic_loop.exe",
-            ideDir + "\\..\\deep2_agentic_loop.exe",
-            ideDir + "\\..\\..\\deep2_agentic_loop.exe",
-            ".\\deep2_agentic_loop.exe"
-        };
+        std::vector<std::string> loopCandidates;
+        if (m_currentConfig.useCliAgent) {
+            if (const char* configured = std::getenv("RAWRXD_CLI_PATH");
+                configured && *configured) {
+                loopCandidates.emplace_back(configured);
+            }
+            loopCandidates.insert(loopCandidates.end(), {
+                m_currentConfig.workDir + "\\build_ide\\bin-msvc\\rawr.exe",
+                ideDir + "\\..\\bin-msvc\\rawr.exe",
+                ideDir + "\\..\\..\\build_ide\\bin-msvc\\rawr.exe",
+                ".\\build_ide\\bin-msvc\\rawr.exe"
+            });
+        } else {
+            loopCandidates = {
+                m_currentConfig.workDir + "\\deep2_agentic_loop.exe",
+                ideDir + "\\deep2_agentic_loop.exe",
+                ideDir + "\\..\\deep2_agentic_loop.exe",
+                ideDir + "\\..\\..\\deep2_agentic_loop.exe",
+                ".\\deep2_agentic_loop.exe"
+            };
+        }
         exePath.clear();
         for (const auto& candidate : loopCandidates) {
             if (GetFileAttributesA(candidate.c_str()) != INVALID_FILE_ATTRIBUTES) {
@@ -176,22 +233,75 @@ void AgenticLoopBridge::WorkerThread()
             return;
         }
 
+        auto quoteWindowsArg = [](const std::string& value) {
+            std::string out;
+            out.reserve(value.size() + 2);
+            out.push_back('"');
+            size_t slashes = 0;
+            for (const char ch : value) {
+                if (ch == '\\') {
+                    ++slashes;
+                } else if (ch == '"') {
+                    out.append(slashes * 2 + 1, '\\');
+                    out += "\\\"";
+                    slashes = 0;
+                } else {
+                    out.append(slashes, '\\');
+                    slashes = 0;
+                    out.push_back(ch);
+                }
+            }
+            out.append(slashes * 2, '\\');
+            out.push_back('"');
+            return out;
+        };
+
         std::ostringstream cmd;
-        cmd << "\"" << exePath << "\" ";
-        if (m_currentConfig.provider == "ollama") {
-            cmd << "--provider ollama ";
+        if (m_currentConfig.useCliAgent) {
+            cmd << quoteWindowsArg(exePath) << " run "
+                << quoteWindowsArg(m_currentConfig.modelPath)
+                << " --backend ollama"
+                << " --workspace " << quoteWindowsArg(m_currentConfig.workDir)
+                << " --prompt " << quoteWindowsArg(m_currentConfig.task)
+                << " --esp=tps";
+            // An approved GUI run is an autonomous agent run, not an ordinary
+            // code/chat request.  Pass the mode explicitly so the CLI applies
+            // its tool protocol and mutation policy instead of defaulting to
+            // the model's non-agent path.
+            if (m_currentConfig.readOnly) {
+                cmd << " --mode ask";
+            } else if (m_currentConfig.approveMutations) {
+                cmd << " --mode agent";
+            }
+            if (m_currentConfig.approveMutations) cmd << " --approve-mutations";
+            // Concrete GUI source-edit tasks use a bounded, real tool surface
+            // so the model must begin with readFile/editFiles/writeFile rather
+            // than an unrelated workspace enumeration.  Dispatch and policy
+            // enforcement remain in the CLI registry.
+            if (m_currentConfig.approveMutations &&
+                (m_currentConfig.task.find(".cpp") != std::string::npos ||
+                 m_currentConfig.task.find(".h") != std::string::npos ||
+                 m_currentConfig.task.find("source") != std::string::npos ||
+                 m_currentConfig.task.find("edit") != std::string::npos)) {
+                cmd << " --tool-scope source-edit";
+            }
+        } else {
+            cmd << quoteWindowsArg(exePath) << " ";
+            if (m_currentConfig.provider == "ollama") {
+                cmd << "--provider ollama ";
+            }
+            cmd << "--model " << quoteWindowsArg(m_currentConfig.modelPath) << " ";
+            cmd << "--workdir " << quoteWindowsArg(m_currentConfig.workDir) << " ";
+            if (!m_currentConfig.targetFile.empty()) {
+                cmd << "--target-file " << quoteWindowsArg(m_currentConfig.targetFile) << " ";
+            }
+            cmd << "--max-steps " << m_currentConfig.maxSteps << " ";
+            cmd << "--max-new " << m_currentConfig.maxNewTokens << " ";
+            cmd << "--max-retries " << m_currentConfig.maxRetries << " ";
+            cmd << "--max-wall-time-sec " << m_currentConfig.maxWallTimeSec << " ";
+            cmd << "--max-total-tokens " << m_currentConfig.maxTotalTokens << " ";
+            if (m_currentConfig.quiet) cmd << "--quiet ";
         }
-        cmd << "--model \"" << m_currentConfig.modelPath << "\" ";
-        cmd << "--workdir \"" << m_currentConfig.workDir << "\" ";
-        if (!m_currentConfig.targetFile.empty()) {
-            cmd << "--target-file \"" << m_currentConfig.targetFile << "\" ";
-        }
-        cmd << "--max-steps " << m_currentConfig.maxSteps << " ";
-        cmd << "--max-new " << m_currentConfig.maxNewTokens << " ";
-        cmd << "--max-retries " << m_currentConfig.maxRetries << " ";
-        cmd << "--max-wall-time-sec " << m_currentConfig.maxWallTimeSec << " ";
-        cmd << "--max-total-tokens " << m_currentConfig.maxTotalTokens << " ";
-        if (m_currentConfig.quiet) cmd << "--quiet ";
 
         std::string commandLine = cmd.str();
         LOG_INFO("Launching agentic loop: " + commandLine);
@@ -216,23 +326,45 @@ void AgenticLoopBridge::WorkerThread()
         SetHandleInformation(m_stdoutRead, HANDLE_FLAG_INHERIT, 0);
         SetHandleInformation(m_stdinWrite, HANDLE_FLAG_INHERIT, 0);
 
+        // The GUI text control is UTF-16 and the CLI/JSON boundary is UTF-8.
+        // Convert explicitly before CreateProcessW. CreateProcessA would use
+        // the active ANSI code page and can turn an em dash into a stray
+        // 0x97 byte, which is invalid UTF-8 when the CLI serializes JSON.
+        auto utf8ToWide = [](const std::string& value) -> std::wstring {
+            if (value.empty()) return {};
+            const int needed = MultiByteToWideChar(
+                CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
+                static_cast<int>(value.size()), nullptr, 0);
+            if (needed <= 0) {
+                throw std::runtime_error("invalid UTF-8 in agent command line");
+            }
+            std::wstring wide(static_cast<size_t>(needed), L'\0');
+            if (MultiByteToWideChar(
+                    CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
+                    static_cast<int>(value.size()), wide.data(), needed) != needed) {
+                throw std::runtime_error("UTF-8 command-line conversion failed");
+            }
+            return wide;
+        };
+
         // Start process
-        STARTUPINFOA si = { sizeof(STARTUPINFOA) };
+        STARTUPINFOW si = { sizeof(STARTUPINFOW) };
         si.dwFlags = STARTF_USESTDHANDLES;
         si.hStdOutput = m_stdoutWrite;
         si.hStdError = m_stdoutWrite;
         si.hStdInput = m_stdinRead;
 
         PROCESS_INFORMATION pi = { 0 };
-        std::string cmdMutable = commandLine; // CreateProcess modifies the string
+        std::wstring cmdMutable = utf8ToWide(commandLine); // CreateProcess modifies the buffer
+        std::wstring workDirWide = utf8ToWide(m_currentConfig.workDir);
         
-        if (!CreateProcessA(
+        if (!CreateProcessW(
             nullptr,
-            &cmdMutable[0],
+            cmdMutable.data(),
             nullptr, nullptr, TRUE,
             CREATE_NO_WINDOW,
             nullptr,
-            m_currentConfig.workDir.c_str(),
+            workDirWide.c_str(),
             &si, &pi)) {
             DWORD err = GetLastError();
             std::string errMsg = "CreateProcess failed: " + std::to_string(err);
@@ -299,6 +431,38 @@ void AgenticLoopBridge::WorkerThread()
             // Process output queue
             std::string finalOutput = m_accumulatedOutput;
             bool success = (exitCode == 0);
+
+            // `rawr run` can complete an ordinary chat turn with exit code
+            // zero even when the selected Ollama model cannot execute tools.
+            // The GUI bridge is used for audit/agent tasks, so that condition
+            // must remain visible as a failed capability check rather than a
+            // misleading successful task.
+            if (success && m_currentConfig.useCliAgent) {
+                const bool toolCapabilityRejected =
+                    finalOutput.find("does not support tools") != std::string::npos ||
+                    finalOutput.find("doesn't support tools") != std::string::npos;
+                const bool toolWasRequested =
+                    m_currentConfig.task.find("readFile") != std::string::npos ||
+                    m_currentConfig.task.find("writeFile") != std::string::npos ||
+                    m_currentConfig.task.find("audit") != std::string::npos ||
+                    m_currentConfig.task.find("inspect") != std::string::npos;
+                const bool toolWasObserved =
+                    finalOutput.find("tool_start") != std::string::npos ||
+                    finalOutput.find("TOOL ") != std::string::npos;
+
+                if (toolCapabilityRejected || (toolWasRequested && !toolWasObserved)) {
+                    success = false;
+                    if (toolCapabilityRejected) {
+                        finalOutput = "Selected model does not support agent tools. "
+                                      "Choose a tool-capable Ollama model (for example qwen3:8b).\n" +
+                                      finalOutput;
+                    } else {
+                        finalOutput = "Agent task completed without an observable tool call; "
+                                      "the requested read-only operation was not certified.\n" +
+                                      finalOutput;
+                    }
+                }
+            }
             
             LOG_INFO("Agentic loop exited with code: " + std::to_string(exitCode));
             
@@ -398,11 +562,13 @@ void AgenticLoopBridge::StartupRecovery()
         CloseHandle(recoveryMutex);
     }
 
-    // GPU residency check would go here
+    // No GPU residency probe is executed in this startup recovery path.  Do
+    // not publish a completion event for work that was not performed; the
+    // dashboard must keep this capability visibly unverified.
     if (m_progressCallback) {
-        m_progressCallback("[SNAP] GPU residency check complete");
+        m_progressCallback("[SNAP] GPU residency check not run");
     }
-    PublishESPEvent(rawrxd::esp::Kind::AgentStep, "snap_gpu_check_complete");
+    PublishESPEvent(rawrxd::esp::Kind::AgentStep, "snap_gpu_check_not_run");
 
     if (m_progressCallback) {
         m_progressCallback("[SNAP] Startup preflight PASS");
@@ -527,8 +693,31 @@ void AgenticLoopBridge::ParseOutput(const std::string& line)
     // [ESP] seq=X ...
     
     if (line.find("[ESP]") != std::string::npos) {
-        // ESP events are already published by agentic loop
-        // We could forward them, but they go to file
+        // Forward the child's structured event once.  The bridge owns the
+        // GUI bus, while the child JSONL remains the raw evidence record.
+        const std::string childSeq = EspField(line, "seq");
+        const std::string childRequest = EspField(line, "req");
+        const std::string childKind = EspField(line, "kind");
+        const std::string childValue = EspField(line, "value");
+        const std::string childMessage = EspField(line, "message", true);
+        if (!childSeq.empty() && !childRequest.empty() && !childKind.empty()) {
+            const std::string key = childRequest + ":" + childSeq;
+            if (m_forwardedChildEvents.insert(key).second) {
+                int value = 0;
+                try { value = std::stoi(childValue); } catch (...) { value = 0; }
+                // CompleteTask below is the sole owner of the GUI terminal
+                // event. Preserve child terminal/error evidence as a normal
+                // step so the UI cannot render a second terminal transition.
+                const auto kind = EspKind(childKind);
+                const auto displayKind = kind == rawrxd::esp::Kind::Finished ||
+                                         kind == rawrxd::esp::Kind::Error
+                    ? rawrxd::esp::Kind::AgentStep : kind;
+                PublishESPEvent(displayKind,
+                    "child_request=" + childRequest + " child_seq=" + childSeq +
+                    " child_kind=" + childKind + " " + childMessage, value);
+            }
+        }
+        return;
     }
     
     if (line.find("TOOL read") != std::string::npos || 
@@ -597,7 +786,7 @@ void AgenticLoopBridge::ParseOutput(const std::string& line)
 void AgenticLoopBridge::PublishESPEvent(rawrxd::esp::Kind kind, const std::string& message, int value)
 {
     if (m_espBus) {
-        m_espBus->publish(kind, message, m_espRequestId++, 0, value);
+        m_espBus->publish(kind, message, m_espRequestId, 0, value);
     }
 }
 

@@ -1,0 +1,42 @@
+{
+  "schema": "RAWRXD_AGENT_ACCEPTANCE_001",
+  "timestamp_utc": "2026-10-28T12:28:18.5531130Z",
+  "request_id": "53036813545300",
+  "workspace_root": "F:/rawrxd",
+  "mode_requested": "agent",
+  "mode_runtime": "autonomous",
+  "motd_gate": "PASS",
+  "motd_ack": true,
+  "motd_sha256": "3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de",
+  "model": "qwen3:8b",
+  "backend": "ollama",
+  "model_inference": "REAL",
+  "ollama_num_gpu": 0,
+  "native_metrics": {
+    "prompt_eval_count": 1696,
+    "eval_count": 9,
+    "eval_duration_ns": 1256650000,
+    "eval_tps": 7.16189869892,
+    "source": "ollama"
+  },
+  "tool_trace": {
+    "readFile": 2,
+    "editFiles": 1,
+    "writeFile": 3,
+    "all_tool_results_passed": true,
+    "target": "F:/rawrxd/tmp_build/agent_acceptance/calc.cpp"
+  },
+  "before_sha256": "429D65992258F97583629989D162E8F118F0B90D29FF1E88CB15232574A76D8F",
+  "after_sha256": "2DA169699EF5626FAD81EB27B12086D0671BCDC1FE09F11E83F03039ED32A01D",
+  "tool_read": "PASS",
+  "tool_edit": "PASS",
+  "file_changed_count": 1,
+  "diff_verified": "PASS",
+  "final_content_verified": "return 0;",
+  "source_diff_check": "PASS",
+  "compile_run_exit": 0,
+  "compile_run_output": "RAWRXD_AGENT_ACCEPTANCE",
+  "synthetic_success": 0,
+  "cli_sha256": "279D15673E645E2BAB8404D9A50B20CC7754141FC42ED6A7BF5F6F69D812217E",
+  "result": "PASS"
+}

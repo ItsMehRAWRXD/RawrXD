@@ -36,28 +36,6 @@ LRESULT CALLBACK Win32IDE::ModelSelectorSubclassProc(HWND hwnd, UINT uMsg,
                                                        UINT_PTR subclassId,
                                                        DWORD_PTR refData)
 {
-    if (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONUP) {
-        const bool wasDropped =
-            SendMessageA(hwnd, CB_GETDROPPEDSTATE, 0, 0) != 0;
-        const LRESULT result = DefSubclassProc(hwnd, uMsg, wParam, lParam);
-        // Forward the click through the stock control first.  Some native
-        // Common Controls builds close the popup again if CB_SHOWDROPDOWN is
-        // sent from WM_LBUTTONDOWN, so defer only the fallback open until the
-        // button-up dispatch has returned.
-        if (uMsg == WM_LBUTTONUP && !wasDropped && IsWindow(hwnd)) {
-            // The stock control normally opens on the button-down path. Only
-            // post a fallback request when it demonstrably stayed closed;
-            // blindly posting TRUE after a successful native open causes the
-            // popup to oscillate on Common Controls builds that re-notify the
-            // parent while the list is being shown.
-            const bool opened =
-                SendMessageA(hwnd, CB_GETDROPPEDSTATE, 0, 0) != 0;
-            if (!opened) {
-                PostMessageA(hwnd, CB_SHOWDROPDOWN, TRUE, 0);
-            }
-        }
-        return result;
-    }
     const LRESULT result = DefSubclassProc(hwnd, uMsg, wParam, lParam);
     if (uMsg == WM_NCDESTROY) {
         RemoveWindowSubclass(hwnd, &Win32IDE::ModelSelectorSubclassProc,
@@ -280,9 +258,9 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
         case WM_APP + 106: {
             if (ide) {
                 ide->onModelDiscoveryComplete(
-                    reinterpret_cast<std::vector<ChatModelEntry>*>(lParam));
+                    reinterpret_cast<ModelDiscoveryPayload*>(lParam));
             } else {
-                delete reinterpret_cast<std::vector<ChatModelEntry>*>(lParam);
+                delete reinterpret_cast<ModelDiscoveryPayload*>(lParam);
             }
             return 0;
         }
@@ -353,9 +331,14 @@ void Win32IDE::onCreate(HWND hwnd)
             return DefSubclassProc(pane, message, wp, lp);
         };
     createDocumentTabs();
-    createSidebar(hwnd);
+    // Use the complete primary-sidebar implementation on the production
+    // startup path.  The old createSidebar()/createFileExplorer() pair only
+    // created an empty activity-bar shell plus a second legacy tree, leaving
+    // Search, Source Control, Debug, and Extensions unreachable.
+    createActivityBarUI(hwnd);
+    createPrimarySidebar(hwnd);
     if (m_hwndSidebar) SetWindowSubclass(m_hwndSidebar, forwardPaneNotifications, 2, 0);
-    createFileExplorer();
+    if (m_hwndSidebarContent) SetWindowSubclass(m_hwndSidebarContent, forwardPaneNotifications, 4, 0);
     createStatusBar(hwnd);
     createOutputTabs();
     createChatPanel();
@@ -379,11 +362,35 @@ void Win32IDE::onCreate(HWND hwnd)
 void Win32IDE::onDestroy()
 {
     if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
+    ++m_currentModelGenID;
+    m_deferredModelDiscovery.reset();
+    m_modelDiscoveryUpdateDeferred = false;
     m_hwndMain = nullptr;
 }
 
 void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
+    if (id >= IDC_ACTBAR_EXPLORER && id <= IDC_ACTBAR_ACCOUNTS &&
+        codeNotify == BN_CLICKED) {
+        switch (id) {
+        case IDC_ACTBAR_EXPLORER: setSidebarView(SidebarView::Explorer); break;
+        case IDC_ACTBAR_SEARCH: setSidebarView(SidebarView::Search); break;
+        case IDC_ACTBAR_SCM: setSidebarView(SidebarView::SourceControl); break;
+        case IDC_ACTBAR_DEBUG: setSidebarView(SidebarView::RunDebug); break;
+        case IDC_ACTBAR_EXTENSIONS: setSidebarView(SidebarView::Extensions); break;
+        case IDC_ACTBAR_SETTINGS:
+            routeCommand(IDM_VIEW_THEME_EDITOR);
+            return;
+        case IDC_ACTBAR_ACCOUNTS:
+            SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                reinterpret_cast<LPARAM>("Unsupported: account integration is unavailable in this build."));
+            return;
+        default: return;
+        }
+        m_activeActivityBarButton = id - IDC_ACTBAR_EXPLORER;
+        updateActivityBarState();
+        return;
+    }
     if (hwndCtl == m_hwndCopilotSendBtn && codeNotify == BN_CLICKED) {
         HandleCopilotSend();
         return;
@@ -412,16 +419,54 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         rollbackActiveChat();
         return;
     }
-    if (hwndCtl == m_hwndModelSelector && codeNotify == CBN_SELCHANGE) {
+    if (hwndCtl == m_hwndModelSelector &&
+        (codeNotify == CBN_SELCHANGE || codeNotify == CBN_SELENDOK)) {
         onModelSelectionChanged();
         return;
     }
-    if (hwndCtl == m_hwndGhostModelSelector && codeNotify == CBN_SELCHANGE) {
+    if (hwndCtl == m_hwndGhostModelSelector &&
+        (codeNotify == CBN_SELCHANGE || codeNotify == CBN_SELENDOK)) {
         onGhostTextSelectionChanged();
+        return;
+    }
+    if ((hwndCtl == m_hwndModelSelector || hwndCtl == m_hwndGhostModelSelector) &&
+        codeNotify == CBN_CLOSEUP) {
+        // CBN_CLOSEUP is the authoritative lifecycle boundary.  Do not
+        // re-query CB_GETDROPPEDSTATE here: common controls can report the
+        // old state during notification delivery and strand a staged catalog.
+        if (m_modelDiscoveryUpdateDeferred && m_deferredModelDiscovery) {
+            auto deferred = std::move(m_deferredModelDiscovery);
+            m_modelDiscoveryUpdateDeferred = false;
+            onModelDiscoveryComplete(deferred.release());
+        }
         return;
     }
     if (hwndCtl == m_hwndAllowCloudGhostText && codeNotify == BN_CLICKED) {
         onGhostTextCloudConsentChanged();
+        return;
+    }
+    if (hwndCtl == m_hwndReasoningSelector &&
+        (codeNotify == CBN_SELCHANGE || codeNotify == CBN_SELENDOK)) {
+        onReasoningModeChanged();
+        return;
+    }
+    if (hwndCtl == m_hwndWebBrowseToggle && codeNotify == BN_CLICKED) {
+        onWebBrowsingChanged();
+        return;
+    }
+    if (hwndCtl == m_hwndMaxTokensSelector &&
+        (codeNotify == CBN_SELCHANGE || codeNotify == CBN_SELENDOK)) {
+        const LRESULT row = SendMessageA(m_hwndMaxTokensSelector, CB_GETCURSEL, 0, 0);
+        if (row >= 0) {
+            const LRESULT value = SendMessageA(m_hwndMaxTokensSelector, CB_GETITEMDATA,
+                static_cast<WPARAM>(row), 0);
+            if (value > 0) onMaxTokensChanged(static_cast<int>(value));
+        }
+        return;
+    }
+    if (hwndCtl == m_hwndContextSelector &&
+        (codeNotify == CBN_SELCHANGE || codeNotify == CBN_SELENDOK)) {
+        onContextPresetChanged();
         return;
     }
     if ((hwndCtl == m_hwndModelSelector || hwndCtl == m_hwndGhostModelSelector) &&
@@ -607,6 +652,19 @@ void Win32IDE::onSize(int width, int height)
     if (m_hwndActivityBar) {
         MoveWindow(m_hwndActivityBar, 0, contentTop, activityWidth, workHeight, TRUE);
         ShowWindow(m_hwndActivityBar, activityWidth ? SW_SHOW : SW_HIDE);
+        // Keep the bottom activity actions anchored to the resized bar. The
+        // activity bar is created before the first WM_SIZE with a bootstrap
+        // height, so leaving the original coordinates would strand Settings
+        // and Accounts in the middle of a taller window.
+        const int buttonHeight = 48;
+        for (int i = 0; i < 7; ++i) {
+            if (!m_activityBarButtons[i]) continue;
+            const int y = (i < 5)
+                ? (i * buttonHeight)
+                : std::max(0, workHeight - (7 - i) * buttonHeight);
+            MoveWindow(m_activityBarButtons[i], 0, y,
+                       activityWidth, buttonHeight, TRUE);
+        }
     }
     if (m_hwndSidebar) {
         MoveWindow(m_hwndSidebar, activityWidth, contentTop, sidebarWidth, workHeight, TRUE);
@@ -630,10 +688,18 @@ void Win32IDE::onSize(int width, int height)
                    editorWidth, std::max(0, workHeight - breadcrumbHeight), TRUE);
     }
 
+    if (m_hwndSplitter) {
+        const int splitterHeight = 4;
+        const int splitterY = std::max(contentTop, bottomTop - splitterHeight);
+        m_splitterY = splitterY;
+        MoveWindow(m_hwndSplitter, 0, splitterY, std::max(0, width), splitterHeight, TRUE);
+        ShowWindow(m_hwndSplitter, bottomHeight > 0 ? SW_SHOW : SW_HIDE);
+    }
+
     if (m_hwndSecondarySidebar) {
         MoveWindow(m_hwndSecondarySidebar, width - rightWidth, contentTop, rightWidth, workHeight, TRUE);
         ShowWindow(m_hwndSecondarySidebar, rightWidth > 0 ? SW_SHOW : SW_HIDE);
-        constexpr int chatContentTop = 193;
+        constexpr int chatContentTop = 245;
         const int buttonY = std::max(chatContentTop + 5, workHeight - 35);
         const int inputHeight = std::min(80, std::max(45, buttonY - chatContentTop - 5));
         const int inputY = std::max(chatContentTop, buttonY - inputHeight - 5);
@@ -658,12 +724,26 @@ void Win32IDE::onSize(int width, int height)
         }
         if (m_hwndAllowCloudGhostText) MoveWindow(m_hwndAllowCloudGhostText, 5, 89, std::max(0, rightWidth - 10), 18, TRUE);
         if (m_hwndMaxTokensCaption) MoveWindow(m_hwndMaxTokensCaption, 5, 110, 85, 18, TRUE);
-        if (m_hwndMaxTokensSlider) MoveWindow(m_hwndMaxTokensSlider, 5, 128, std::max(0, rightWidth - 10), 25, TRUE);
-        if (m_hwndMaxTokensLabel) MoveWindow(m_hwndMaxTokensLabel, std::max(5, rightWidth - 55), 108, 50, 18, TRUE);
+        if (m_hwndMaxTokensSlider) ShowWindow(m_hwndMaxTokensSlider, SW_HIDE);
+        if (m_hwndMaxTokensSelector) {
+            MoveWindow(m_hwndMaxTokensSelector, 95, 128, std::max(0, rightWidth - 100), 24, TRUE);
+            SendMessageA(m_hwndMaxTokensSelector, CB_SETDROPPEDWIDTH, 180, 0);
+        }
+        if (m_hwndMaxTokensLabel) ShowWindow(m_hwndMaxTokensLabel, SW_HIDE);
         if (m_hwndContextCaption) MoveWindow(m_hwndContextCaption, 5, 145, 85, 18, TRUE);
-        if (m_hwndContextLabel) MoveWindow(m_hwndContextLabel, std::max(5, rightWidth - 120), 143, 115, 18, TRUE);
-        if (m_hwndContextSlider) MoveWindow(m_hwndContextSlider, 5, 163, std::max(0, rightWidth - 10), 25, TRUE);
-        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, 193, std::max(0, rightWidth - 10), outputHeight, TRUE);
+        if (m_hwndContextLabel) ShowWindow(m_hwndContextLabel, SW_HIDE);
+        if (m_hwndContextSlider) ShowWindow(m_hwndContextSlider, SW_HIDE);
+        if (m_hwndContextSelector) {
+            MoveWindow(m_hwndContextSelector, 95, 163, std::max(0, rightWidth - 100), 24, TRUE);
+            SendMessageA(m_hwndContextSelector, CB_SETDROPPEDWIDTH, 180, 0);
+        }
+        if (m_hwndReasoningLabel) MoveWindow(m_hwndReasoningLabel, 5, 190, 85, 18, TRUE);
+        if (m_hwndReasoningSelector) {
+            MoveWindow(m_hwndReasoningSelector, 95, 188, std::max(0, rightWidth - 100), 24, TRUE);
+            SendMessageA(m_hwndReasoningSelector, CB_SETDROPPEDWIDTH, 260, 0);
+        }
+        if (m_hwndWebBrowseToggle) MoveWindow(m_hwndWebBrowseToggle, 5, 217, std::max(0, rightWidth - 10), 18, TRUE);
+        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, chatContentTop, std::max(0, rightWidth - 10), outputHeight, TRUE);
         if (m_hwndCopilotChatInput) MoveWindow(m_hwndCopilotChatInput, 5, inputY, std::max(0, rightWidth - 10), inputHeight, TRUE);
         const int buttonWidth = std::max(0, (rightWidth - 20) / 3);
         if (m_hwndCopilotSendBtn) MoveWindow(m_hwndCopilotSendBtn, 5, buttonY, buttonWidth, 30, TRUE);
@@ -699,11 +779,12 @@ void Win32IDE::onSize(int width, int height)
         if (m_hwndPanelContainer) ShowWindow(m_hwndPanelContainer, SW_HIDE);
         if (m_hwndDebuggerContainer) ShowWindow(m_hwndDebuggerContainer, SW_HIDE);
 
-        const int panelHeight = std::max(0, bottomHeight);
+        const int panelTop = bottomTop + 24;
+        const int panelHeight = std::max(0, bottomHeight - 24);
         // The editor ends at bottomTop; the shared strip occupies 24px; the
         // shell body starts below it.  Keeping the panel below the strip is
         // what prevents the shell toolbar from covering Output/Debug tabs.
-        SetWindowPos(m_hwndPowerShellPanel, nullptr, 0, bottomTop,
+        SetWindowPos(m_hwndPowerShellPanel, nullptr, 0, panelTop,
             std::max(0, width), panelHeight,
             SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         updatePowerShellPanelLayout(std::max(0, width), panelHeight);

@@ -89,11 +89,20 @@ OllamaResponse OllamaClient::generateSync(const OllamaGenerateRequest& request) 
 }
 
 OllamaResponse OllamaClient::chatSync(const OllamaChatRequest& request) {
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-ollama-client-trace] chatSync:request model=%s messages=%zu\n",
+                     request.model.c_str(), request.messages.size());
+        std::fflush(stderr);
+    }
     OllamaChatRequest sync_req = request;
     sync_req.stream = false;
     
     std::string json = createChatRequestJson(sync_req);
     std::string response = makePostRequest("/api/chat", json);
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-ollama-client-trace] chatSync:response bytes=%zu\n", response.size());
+        std::fflush(stderr);
+    }
     
     return parseResponse(response);
 }

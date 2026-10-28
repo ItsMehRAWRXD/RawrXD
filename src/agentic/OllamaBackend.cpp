@@ -5,9 +5,20 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 
 namespace RawrXD {
 namespace Agent {
+
+namespace {
+void CliTrace(const char* stage) noexcept {
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-ollama-trace] %s\n", stage ? stage : "(null)");
+        std::fflush(stderr);
+    }
+}
+}
 
 OllamaBackend::OllamaBackend() = default;
 OllamaBackend::~OllamaBackend() { Shutdown(); }
@@ -28,6 +39,7 @@ BackendConfig OllamaBackend::DefaultConfig() const {
 }
 
 bool OllamaBackend::Initialize(const BackendConfig& config) {
+    CliTrace("Initialize:enter");
     if (m_initialized.load()) return true;
 
     m_config = config;
@@ -39,10 +51,12 @@ bool OllamaBackend::Initialize(const BackendConfig& config) {
     }
 
     m_client = std::make_unique<Backend::OllamaClient>(m_config.endpoint);
+    CliTrace("Initialize:client-created");
     m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
 
     // Test connection
     if (!m_client->testConnection()) {
+        CliTrace("Initialize:first-health-failed");
         m_config = DefaultConfig();
         m_client = std::make_unique<Backend::OllamaClient>(m_config.endpoint);
         m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
@@ -53,14 +67,17 @@ bool OllamaBackend::Initialize(const BackendConfig& config) {
     }
 
     m_initialized.store(true);
+    CliTrace("Initialize:ready");
     return true;
 }
 
 void OllamaBackend::Shutdown() {
+    CliTrace("Shutdown:enter");
     m_cancelRequested.store(true);
     m_streaming.store(false);
     m_initialized.store(false);
     m_client.reset();
+    CliTrace("Shutdown:done");
 }
 
 bool OllamaBackend::IsInitialized() const {
@@ -237,6 +254,7 @@ InferenceResult OllamaBackend::ChatSync(
         return InferenceResult::Error("Ollama backend not initialized");
     }
 
+    CliTrace("ChatSync:request-start");
     m_cancelRequested.store(false);
 
     Backend::OllamaChatRequest req;
@@ -248,6 +266,7 @@ InferenceResult OllamaBackend::ChatSync(
     req.options["temperature"] = std::to_string(m_config.temperature);
     req.options["top_p"] = std::to_string(m_config.top_p);
     req.options["num_ctx"] = std::to_string(m_config.num_ctx);
+    req.options["num_gpu"] = std::to_string(m_config.num_gpu);
     if (m_config.max_tokens > 0) {
         req.options["num_predict"] = std::to_string(m_config.max_tokens);
     }
@@ -260,6 +279,7 @@ InferenceResult OllamaBackend::ChatSync(
 
     try {
         resp = m_client->chatSync(req);
+        CliTrace("ChatSync:client-returned");
     } catch (const std::exception& e) {
         RecordFailure("Ollama chatSync exception: " + std::string(e.what()));
         return InferenceResult::Error(e.what());
@@ -309,16 +329,31 @@ InferenceResult OllamaBackend::ChatSync(
 
     uint64_t ptok = resp.prompt_eval_count;
     uint64_t ctok = resp.eval_count;
-    double tps = (elapsed_ms > 0 && ctok > 0)
-        ? (ctok / (elapsed_ms / 1000.0)) : 0.0;
+    const double eval_ms = resp.eval_duration > 0
+        ? static_cast<double>(resp.eval_duration) / 1.0e6
+        : elapsed_ms;
+    const double tps = (eval_ms > 0 && ctok > 0)
+        ? (ctok / (eval_ms / 1000.0)) : 0.0;
 
     RecordSuccess(tps, ptok, ctok);
 
     result.prompt_tokens = ptok;
     result.completion_tokens = ctok;
     result.tokens_per_sec = tps;
-    result.total_duration_ms = elapsed_ms;
+    result.total_duration_ms = resp.total_duration > 0
+        ? static_cast<double>(resp.total_duration) / 1.0e6
+        : elapsed_ms;
+    result.native_metrics_valid = resp.total_duration > 0 ||
+                                  resp.prompt_eval_count > 0 ||
+                                  resp.eval_count > 0 ||
+                                  resp.eval_duration > 0;
+    result.metrics_source = "ollama";
+    result.total_duration_ns = resp.total_duration;
+    result.load_duration_ns = resp.load_duration;
+    result.prompt_eval_duration_ns = resp.prompt_eval_duration;
+    result.eval_duration_ns = resp.eval_duration;
 
+    CliTrace("ChatSync:success");
     return result;
 }
 
@@ -345,6 +380,7 @@ bool OllamaBackend::ChatStream(
     req.options["temperature"] = std::to_string(m_config.temperature);
     req.options["top_p"] = std::to_string(m_config.top_p);
     req.options["num_ctx"] = std::to_string(m_config.num_ctx);
+    req.options["num_gpu"] = std::to_string(m_config.num_gpu);
     if (m_config.max_tokens > 0) {
         req.options["num_predict"] = std::to_string(m_config.max_tokens);
     }
@@ -470,8 +506,11 @@ InferenceResult OllamaBackend::FIMSync(
 
     uint64_t ptok = resp.prompt_eval_count;
     uint64_t ctok = resp.eval_count;
-    double tps = (elapsed_ms > 0 && ctok > 0)
-        ? (ctok / (elapsed_ms / 1000.0)) : 0.0;
+    const double eval_ms = resp.eval_duration > 0
+        ? static_cast<double>(resp.eval_duration) / 1.0e6
+        : elapsed_ms;
+    const double tps = (eval_ms > 0 && ctok > 0)
+        ? (ctok / (eval_ms / 1000.0)) : 0.0;
 
     RecordSuccess(tps, ptok, ctok);
 
@@ -488,7 +527,20 @@ InferenceResult OllamaBackend::FIMSync(
         cleaned.erase(pos, 12);
     }
 
-    return InferenceResult::Ok(cleaned, ptok, ctok, tps, elapsed_ms);
+    InferenceResult result = InferenceResult::Ok(cleaned, ptok, ctok, tps,
+                                                 resp.total_duration > 0
+                                                     ? static_cast<double>(resp.total_duration) / 1.0e6
+                                                     : elapsed_ms);
+    result.native_metrics_valid = resp.total_duration > 0 ||
+                                  resp.prompt_eval_count > 0 ||
+                                  resp.eval_count > 0 ||
+                                  resp.eval_duration > 0;
+    result.metrics_source = "ollama";
+    result.total_duration_ns = resp.total_duration;
+    result.load_duration_ns = resp.load_duration;
+    result.prompt_eval_duration_ns = resp.prompt_eval_duration;
+    result.eval_duration_ns = resp.eval_duration;
+    return result;
 }
 
 bool OllamaBackend::FIMStream(

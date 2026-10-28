@@ -8,6 +8,7 @@
 #include <mutex>
 #include <functional>
 #include <queue>
+#include <unordered_set>
 #include <condition_variable>
 #include "IDELogger.h"
 #include "agent_esp.hpp"
@@ -43,6 +44,12 @@ public:
         int maxWallTimeSec = 300;
         int maxTotalTokens = 8192;
         bool quiet = true;
+        // When true, use the canonical RawrXD CLI one-shot agent.  This is
+        // the same backend exercised by `rawr run`, so GUI chat does not
+        // silently use a second, divergent agent implementation.
+        bool useCliAgent = false;
+        bool approveMutations = false;
+        bool readOnly = true;
     };
 
     using ProgressCallback = std::function<void(const std::string& message)>;
@@ -122,6 +129,9 @@ private:
     // ESP Telemetry
     rawrxd::esp::Bus* m_espBus = nullptr;
     uint64_t m_espRequestId = 0;
+    // Child CLI events are forwarded once per child request/sequence pair.
+    // The child JSONL remains the authoritative raw record.
+    std::unordered_set<std::string> m_forwardedChildEvents;
     
     // SNAP Detector for process monitoring
     rawrxd::snap::Detector m_snapDetector;
