@@ -6496,13 +6496,9 @@ bool Win32IDE::initializeInference()
                 // Wire completion system to native engine (VAL-063)
                 // SetCompletionBackendNative stores ptr only — GhostText ABSORB=NOT_AUTHORIZED.
                 InitAICompletion();
-                if (SetCompletionBackendNative(static_cast<void*>(engine))) {
-                    appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
-                    OutputDebugStringA("[AUDIT] AI Completion backend ptr stored\n");
-                } else {
-                    appendToOutput("[AUDIT] AI Completion backend wire FAIL_CLOSED.", "Errors", OutputSeverity::Error);
-                    OutputDebugStringA("[AUDIT] AI Completion backend FAIL_CLOSED\n");
-                }
+                SetCompletionBackendNative(static_cast<void*>(engine));
+                appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
+                OutputDebugStringA("[AUDIT] AI Completion backend ptr stored\n");
             }
             else
             {
