@@ -9,7 +9,7 @@ from test_k2_scalar_input_audit import create_capture
 from test_k2_aggregate_vector_audit import capture as create_aggregate
 
 
-def paired(root, *, routes=((44, 0.75),), gpu=None, layer=2):
+def paired(root, *, routes=((44, 0.75),), gpu=None, cpu=None, layer=2):
     root = Path(root)
     a_dir, s_dir = root / "aggregate", root / "scalar"
     a_dir.mkdir()
@@ -23,8 +23,10 @@ def paired(root, *, routes=((44, 0.75),), gpu=None, layer=2):
     scalar.write_text(scalar.read_text() + "run_id=fixture20261027unique01\n")
     if gpu is None:
         gpu = tuple(0.0 for _ in range(256))
+    if cpu is None:
+        cpu = tuple(0.0 for _ in range(256))
     aggregate = create_aggregate(
-        a_dir, gpu=gpu, cpu=tuple(0.0 for _ in range(256)), routes=routes)
+        a_dir, gpu=gpu, cpu=cpu, routes=routes)
     stem = "k2_l2_s0_aggregate_comparison"
     aggregate.write_text(
         aggregate.read_text().replace("rows=2\n", "rows=256\n"))
@@ -49,6 +51,33 @@ class SingleExpertAggregateOracleTests(unittest.TestCase):
             result = audit(a, s, 0, 0)
             self.assertEqual(result["status"], "FAIL")
             self.assertEqual(result["metrics"]["worst_index"], 0)
+
+    def test_gpu_matches_oracle_but_cpu_differs_fails(self):
+        with tempfile.TemporaryDirectory() as d:
+            a, s = paired(d, cpu=(2.0,) + (0.0,) * 255)
+            result = audit(a, s, 0, 0)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(result["checks"]["gpu_vs_oracle"])
+            self.assertFalse(result["checks"]["cpu_vs_oracle"])
+            self.assertFalse(result["checks"]["gpu_vs_cpu"])
+
+    def test_cpu_matches_oracle_but_gpu_differs_fails(self):
+        with tempfile.TemporaryDirectory() as d:
+            a, s = paired(d, gpu=(3.0,) + (0.0,) * 255)
+            result = audit(a, s, 0, 0)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(result["checks"]["cpu_vs_oracle"])
+            self.assertFalse(result["checks"]["gpu_vs_oracle"])
+
+    def test_cpu_and_gpu_agree_but_both_differ_from_oracle_fails(self):
+        with tempfile.TemporaryDirectory() as d:
+            wrong = (4.0,) + (0.0,) * 255
+            a, s = paired(d, gpu=wrong, cpu=wrong)
+            result = audit(a, s, 0, 0)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(result["checks"]["gpu_vs_cpu"])
+            self.assertFalse(result["checks"]["gpu_vs_oracle"])
+            self.assertFalse(result["checks"]["cpu_vs_oracle"])
 
     def test_multi_expert_rejected(self):
         with tempfile.TemporaryDirectory() as d:
