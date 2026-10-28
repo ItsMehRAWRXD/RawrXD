@@ -1,0 +1,63 @@
+TOOL_ACTION_STATUS_ACCUMULATOR_SOURCE_001 / LAW
+================================================
+ASOF_UTC=2026-10-28T17:30:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_TIP=0
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+A05_MET=0
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+PRODUCT_EXE=evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+
+PURPOSE
+-------
+Close ACCUMULATOR_NO_PRODUCER (UI_ADMIT_TIP_001 / E2E_005) at SOURCE only:
+wire real AgentExecTool results into m_currentToolActions so
+sendCopilotMessage Admit loop can enter after DispatchModelToolCalls.
+
+PRIOR (retained; no rewrite)
+----------------------------
+TOOL_ACTION_STATUS_E2E_005:
+  UI_CHAT_ADMIT_RUNTIME=NOT_RUN BLOCKER=ACCUMULATOR_NO_PRODUCER
+  A05_MET=0 DISPOSITION=FAIL_CLOSED_NOT_RUN
+TOOL_ACTION_STATUS_E2E_004: ADMIT_UNIT=PASS TIP_PDB_ADMIT=1 (retained)
+TOOL_ACTION_STATUS_TRUTH_001 / RUNTIME_001: GateStub fail-closed retained
+
+SOURCE_WIRED FIX
+----------------
+F1 src/win32app/Win32IDE_AgenticBridge.cpp::DispatchModelToolCalls
+  After each AgentExecTool: FeedAccumulatorFromToolResult →
+  m_currentToolActions.addAction (skip SYNTHETIC/GATED_STUB fiction)
+  beginWorkingBubble / endWorkingBubble around dispatch batch
+  hookToolResult restored at funnel (failure classify; not PASS invent)
+F2 src/win32app/Win32IDE_VSCodeUI.cpp::sendCopilotMessage
+  Calls DispatchModelToolCalls on model response before Admit loop
+F3 HandleToolActionStatus / GateStub: remains fiction fail-closed
+  (Win32IDE_ToolActionStatus.cpp + rawrengine + CommandHandlers)
+  NO FinishedAction / NO success toast / NO invent product exit
+
+VERDICT
+-------
+SOURCE_WIRED=1
+RELINK_REQUIRED=1
+UI_CHAT_ADMIT_RUNTIME=NOT_RUN (tip 748B image unchanged)
+RUNTIME_REACHED=0
+A05_MET=0
+PROMOTE=0
+
+LAW
+---
+1. SOURCE_WIRED != RUNTIME_REACHED != MET
+2. NOT_RUN != PASS
+3. Tip freeze 748B UNTOUCHED — REBUILD tip=0 this seal
+4. A05_MET stays 0 until tip re-prove after new freeze
+5. ABSORB GhostText NOT_AUTHORIZED
+6. Do not invent UI RUNTIME on frozen tip
+7. AgentRunLoop / Phase4 Agent HTTP 503 owned by siblings — out of scope
+
+NOTE_PHASE4_AGENT
+-----------------
+AGENT_RUN_LOOP_TIP_004: tip prove FAIL_CLOSED / HTTP agent path still open.
+This seal does not thrash AgentRunLoop.

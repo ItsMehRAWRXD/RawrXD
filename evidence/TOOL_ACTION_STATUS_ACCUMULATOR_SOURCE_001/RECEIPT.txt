@@ -1,0 +1,86 @@
+TOOL_ACTION_STATUS_ACCUMULATOR_SOURCE_001 / RECEIPT
+===================================================
+ASOF_UTC=2026-10-28T17:30:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD_TIP=0
+FREEZE_UNTOUCHED=1
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+A05_MET=0
+
+TIP (authority; not rebuilt)
+----------------------------
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH=1
+TIP_REBUILD=N
+RELINK_REQUIRED=1
+
+CASE
+----
+Wire SOURCE producer: real tool-result → m_currentToolActions
+so sendCopilotMessage AdmitToolActionForProductHistory loop can enter.
+
+LANDED (source)
+---------------
+1. DispatchModelToolCalls feeds accumulator via addAction after AgentExecTool
+2. beginWorkingBubble / endWorkingBubble around tool batch
+3. hookToolResult at funnel (synthetic success still reject-classified)
+4. sendCopilotMessage invokes DispatchModelToolCalls before Admit gate
+5. GateStub HandleToolActionStatus remains fail-closed fiction (no FinishedAction)
+
+CHECKS
+------
+TIP_SHA_MATCH=1
+FREEZE_UNTOUCHED=1
+PRODUCER_PRESENT=1
+ACCUMULATOR_ADD_ACTION_HITS>=1
+ACCUMULATOR_BEGIN_HITS>=1
+DISPATCH_FEEDS_ACCUMULATOR=1
+HANDLE_TOOL_ACTION_STATUS=GATED_STUB_ONLY
+SOURCE_WIRED=1
+RELINK_REQUIRED=1
+UI_CHAT_ADMIT_RUNTIME=NOT_RUN
+RUNTIME_REACHED=0
+A05_MET=0
+NO_INVENT_UI_RUNTIME_ON_TIP=1
+
+DISPOSITION
+-----------
+SOURCE_WIRED_RELINK_REQUIRED
+PRIOR_E2E_005_FAIL_CLOSED_RETAINED=1
+DO_NOT_INVENT_MET=1
+B421_ABSORB=NOT_AUTHORIZED
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+
+NEXT
+----
+1) Explicit new freeze (own SHA; never overwrite TIP_FREEZE_001/748B)
+2) Relink tip image including producer + Admit consumer
+3) Re-run UI chat Admit E2E → only then RUNTIME_REACHED candidacy
+4) A05_MET remains 0 until tip re-prove after that freeze
+
+CITE_PRIOR
+----------
+UI_ADMIT_TIP_001 / TOOL_ACTION_STATUS_E2E_005 (ACCUMULATOR_NO_PRODUCER)
+TOOL_ACTION_STATUS_E2E_004 (unit+PDB EARNED)
+TOOL_ACTION_STATUS_TRUTH_001 / RUNTIME_001 (GateStub)
+TIP_FREEZE_001 / TIP_EXE_AUTHORITY (748B)
+AGENT_RUN_LOOP_TIP_004 (Phase4 Agent still open — sibling-owned; not thrashed)
+
+LOGS
+----
+logs/tip_sha.txt
+logs/producer_wire_scan.txt
+
+WORKSTREAM
+----------
+STATUS=SOURCE_WIRED_RELINK_REQUIRED
+UI_CHAT_ADMIT=NOT_RUN
+A05_MET=0
+PROMOTE=0

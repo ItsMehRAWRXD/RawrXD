@@ -1145,6 +1145,66 @@ std::string AgenticBridge::GetSubAgentStatus() const
     return "SubAgentManager not initialized";
 }
 
+namespace {
+
+// SOURCE wire: real AgentExecTool result → ToolActionAccumulator (Admit consumer).
+// Never invent FinishedAction. Skip GateStub/SYNTHETIC fiction outputs.
+static std::string JsonArgLocal(const std::string& json, const char* key) {
+    const std::string pat = std::string("\"") + key + "\"";
+    auto p = json.find(pat);
+    if (p == std::string::npos) return {};
+    p = json.find(':', p);
+    auto a = p == std::string::npos ? std::string::npos : json.find('"', p + 1);
+    auto b = a == std::string::npos ? std::string::npos : json.find('"', a + 1);
+    if (a == std::string::npos || b == std::string::npos) return {};
+    return json.substr(a + 1, b - a - 1);
+}
+
+static RawrXD::UI::ToolActionStatus ToolStatusFromExec(
+    const std::string& name, const std::string& args, const std::string& result) {
+    using RawrXD::UI::ToolActionStatus;
+    using RawrXD::UI::ToolActionState;
+    const bool err = result.find("\"error\"") != std::string::npos;
+    const std::string path = JsonArgLocal(args, "path");
+    ToolActionStatus s;
+    if (name == "read_file")
+        s = ToolActionStatus::ReadFileAction(path.empty() ? "?" : path, 1, 1);
+    else if (name == "write_file")
+        s = ToolActionStatus::EditFileAction(path.empty() ? "?" : path);
+    else if (name == "grep_files")
+        s = ToolActionStatus::SearchGrepAction(
+            JsonArgLocal(args, "query").empty() ? JsonArgLocal(args, "pattern")
+                                                : JsonArgLocal(args, "query"),
+            path, 0, true);
+    else if (name == "search_files")
+        s = ToolActionStatus::SearchFilesAction(
+            JsonArgLocal(args, "query").empty() ? JsonArgLocal(args, "pattern")
+                                                : JsonArgLocal(args, "query"),
+            0);
+    else if (name == "list_directory")
+        s = ToolActionStatus::ListDirAction(path.empty() ? "." : path);
+    else if (name == "execute_command" || name == "git_status")
+        s = ToolActionStatus::RunTerminalAction(
+            name == "git_status" ? "git status" : JsonArgLocal(args, "command"));
+    else if (name == "run_subagent")
+        s = ToolActionStatus::SubagentAction(JsonArgLocal(args, "description"));
+    else
+        s = ToolActionStatus::CustomAction(std::string("tool:") + name);
+    if (err) s.state = ToolActionState::Failed;
+    s.detail = result.size() > 240 ? result.substr(0, 237) + "..." : result;
+    return s;
+}
+
+static void FeedAccumulatorFromToolResult(Win32IDE* ide, const std::string& name,
+                                          const std::string& args,
+                                          const std::string& oneResult) {
+    if (!ide) return;
+    if (RawrXD::UI::ToolOutputLooksSyntheticSuccess(oneResult)) return;
+    ide->m_currentToolActions.addAction(ToolStatusFromExec(name, args, oneResult));
+}
+
+}  // namespace
+
 bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
 {
     std::vector<AgentToolCall> calls;
@@ -1152,13 +1212,26 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
         return false;
     toolResult.clear();
     std::vector<std::string> ids;
+    if (m_ide && !calls.empty())
+        m_ide->m_currentToolActions.beginWorkingBubble("Tool dispatch", "model tool calls");
     for (const auto& call : calls) {
         std::string workerId;
-        toolResult += AgentExecTool(call.name, call.arguments, &workerId);
+        std::string one = AgentExecTool(call.name, call.arguments, &workerId);
+        toolResult += one;
         toolResult += "\n";
         if (!workerId.empty()) ids.push_back(workerId);
+        FeedAccumulatorFromToolResult(m_ide, call.name, call.arguments, one);
+        if (m_ide) {
+            FailureClassification fc = m_ide->hookToolResult(call.name, one);
+            if (fc.reason != AgentFailureType::None) {
+                LOG_WARNING(std::string("[AdmitAccum] tool '") + call.name +
+                            "' failure: " + m_ide->failureTypeString(fc.reason));
+            }
+        }
     }
     if (!ids.empty()) toolResult += AgentJoinWorkers(ids);
+    if (m_ide && !calls.empty())
+        m_ide->m_currentToolActions.endWorkingBubble(/*success=*/true);
     return true;
 }
 

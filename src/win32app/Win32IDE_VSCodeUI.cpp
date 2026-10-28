@@ -396,6 +396,15 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
                    "• Code generation\r\n"
                    "• Programming questions";
     }
+
+    // SOURCE: funnel model tool calls → m_currentToolActions (DispatchModelToolCalls).
+    // Admit loop below stays unreachable until producer fills; tip still RELINK_REQUIRED.
+    if (m_agenticBridge) {
+        std::string toolResult;
+        if (m_agenticBridge->DispatchModelToolCalls(response, toolResult) && !toolResult.empty()) {
+            response += "\r\n\r\n[Tool Execution Result]\r\n" + toolResult;
+        }
+    }
     
     m_chatHistory.push_back({"assistant", response});
 

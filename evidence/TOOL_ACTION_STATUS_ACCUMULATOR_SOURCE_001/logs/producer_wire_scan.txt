@@ -1,0 +1,11 @@
+G:\~dev\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp:400:    // SOURCE: funnel model tool calls GåÆ m_currentToolActions (DispatchModelToolCalls).
+G:\~dev\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp:404:        if (m_agenticBridge->DispatchModelToolCalls(response, toolResult) && !toolResult.empty()) {
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:58:// AgenticBridge DispatchModelToolCalls GÇö Phase 31 implementation complete
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:379:    // NOTE: hookToolResult fires inside DispatchModelToolCalls (the funnel)
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:383:    if (DispatchModelToolCalls(response, toolResult))
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1198:static void FeedAccumulatorFromToolResult(Win32IDE* ide, const std::string& name,
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1203:    ide->m_currentToolActions.addAction(ToolStatusFromExec(name, args, oneResult));
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1208:bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1216:        m_ide->m_currentToolActions.beginWorkingBubble("Tool dispatch", "model tool calls");
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1223:        FeedAccumulatorFromToolResult(m_ide, call.name, call.arguments, one);
+G:\~dev\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp:1234:        m_ide->m_currentToolActions.endWorkingBubble(/*success=*/true);
