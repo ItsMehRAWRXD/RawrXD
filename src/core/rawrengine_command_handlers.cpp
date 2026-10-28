@@ -111,83 +111,48 @@ CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
 }
 
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
-#if RAWR_HAS_VULKAN
-    CPUInference::VulkanCompute compute;
-    if (!compute.Initialize()) {
-        return errorResult(ctx, "Vulkan renderer initialization failed");
-    }
-    const std::string message = std::string("Vulkan renderer initialized");
-    compute.Cleanup();
-    return okResult(ctx, message);
-#else
-    return okResult(ctx, "Vulkan renderer not available (CPU fallback)");
-#endif
+    // Was: Initialize/Cleanup theater or "CPU fallback" ok — not product Vulkan path.
+    // Cite: COMMAND_HANDLERS_FICTION_GATE_001 / WIN32IDE_STUB_GATE_003
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer",
+        /*code=*/1);
 }
 
 CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) {
-    WIN32_FIND_DATAW findData{};
-    HANDLE h = FindFirstFileW(L"C:\\Windows\\*", &findData);
-    if (h == INVALID_HANDLE_VALUE) {
-        return errorResult(ctx, "OS explorer interceptor probe failed", static_cast<int>(GetLastError()));
-    }
-    uint32_t entries = 0;
-    do { ++entries; } while (entries < 128 && FindNextFileW(h, &findData));
-    FindClose(h);
-    return okResult(ctx, "OS explorer interceptor probe succeeded (enumerated " + std::to_string(entries) + " entries)");
+    // Was: FindFirstFileW enum labeled "interceptor succeeded" — probe ≠ product owner.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor",
+        /*code=*/1);
 }
 
 CommandResult HandleMCPHooks(const CommandContext& ctx) {
-    const std::string request = R"({"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}})";
-    RawrXD::RPC::RPCBatch batch = RawrXD::RPC::RPCBatch::parse(request);
-    if (batch.requests.empty()) {
-        return errorResult(ctx, "MCP JSON-RPC parsing failed");
-    }
-    const std::string framed = RawrXD::RPC::LSPFrameParser::encode(request);
-    if (framed.find("Content-Length:") == std::string::npos) {
-        return errorResult(ctx, "MCP frame encoding failed");
-    }
-    return okResult(ctx, "MCP hook protocol pipeline validated");
+    // Was: local JSON-RPC parse/encode labeled "MCP hook validated" — no live MCP.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks",
+        /*code=*/1);
 }
 
 CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) {
-    HANDLE port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 1);
-    if (!port) {
-        return errorResult(ctx, "IOCP completion port creation failed", static_cast<int>(GetLastError()));
-    }
-    const std::wstring root = std::filesystem::current_path().wstring();
-    HANDLE dir = CreateFileW(root.c_str(), FILE_LIST_DIRECTORY,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             nullptr, OPEN_EXISTING,
-                             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
-    if (dir == INVALID_HANDLE_VALUE) {
-        CloseHandle(port);
-        return errorResult(ctx, "IOCP watcher directory bind failed", static_cast<int>(GetLastError()));
-    }
-    HANDLE associated = CreateIoCompletionPort(dir, port, 1, 0);
-    CloseHandle(dir);
-    CloseHandle(port);
-    if (!associated) {
-        return errorResult(ctx, "IOCP watcher association failed", static_cast<int>(GetLastError()));
-    }
-    return okResult(ctx, "IOCP file watcher primitives initialized");
+    // Was: create/associate/close IOCP labeled "initialized" — no persistent watcher.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher",
+        /*code=*/1);
 }
 
 CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) {
-    auto& validator = RawrXD::Core::ConfigurationValidator::instance();
-    validator.addRule("ide", {"workspace", [](const std::string& v) { return !v.empty(); }, "workspace missing", true});
-    std::unordered_map<std::string, std::string> config{
-        {"workspace", std::filesystem::current_path().string()}
-    };
-    auto result = validator.validateSection("ide", config);
-    if (!result.valid) {
-        return errorResult(ctx, "IDE diagnostic auto-heal validation failed");
-    }
-    return okResult(ctx, "IDE diagnostic auto-heal validation passed");
+    // Was: addRule+validateSection smoke labeled "auto-heal passed" — no healer runtime.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer",
+        /*code=*/1);
 }
 
 CommandResult HandleConsentPrompt(const CommandContext& ctx) {
+    // Headless "available" was fake ok. GUI MessageBox is a real receipt.
     if (!ctx.isGui || ctx.hwnd == nullptr) {
-        return okResult(ctx, "Consent prompt available (GUI interaction required)");
+        return errorResult(ctx,
+            "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ConsentPrompt "
+            "headless; no GUI consent receipt",
+            /*code=*/1);
     }
     const int answer = MessageBoxA(static_cast<HWND>(ctx.hwnd),
                                    "Allow diagnostic and telemetry features?",
@@ -200,33 +165,17 @@ CommandResult HandleConsentPrompt(const CommandContext& ctx) {
 }
 
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
-    auto& perf = RawrXD::Inference::PerformanceMonitor::instance();
-    auto& sanitizer = RawrXD::Security::InputSanitizer::instance();
-    auto& recovery = RawrXD::Agentic::ErrorRecoveryManager::instance();
-
-    perf.startOperation("autonomous_agent_cycle");
-    const auto prompt = sanitizer.sanitizePrompt("analyze workspace and propose fixes");
-    if (prompt.sanitized.empty()) {
-        perf.recordError("autonomous_agent_cycle");
-        perf.endOperation("autonomous_agent_cycle");
-        recovery.recordFailure("autonomous_agent_cycle");
-        return errorResult(ctx, "Autonomous agent cycle failed");
-    }
-    recovery.recordSuccess("autonomous_agent_cycle");
-    perf.endOperation("autonomous_agent_cycle");
-    return okResult(ctx, "Autonomous agent cycle executed");
+    // Was: sanitizePrompt + recordSuccess labeled "cycle executed" — no agent run.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent",
+        /*code=*/1);
 }
 
 CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
-    RawrXD::UI::ChatMessage msg;
-    msg.id = "rawrengine-smoke";
-    msg.role = RawrXD::UI::MessageRole::ASSISTANT;
-    msg.rawContent = "```cpp\nint main() { return 0; }\n```";
-    const auto render = RawrXD::UI::ChatMessageRenderer::Global().renderMessage(msg);
-    if (!render.success) {
-        return errorResult(ctx, render.detail, render.errorCode);
-    }
-    return okResult(ctx, "Chat message renderer produced HTML output");
+    // Was: in-process smoke render labeled product PASS — not chat product path.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer",
+        /*code=*/1);
 }
 
 CommandResult HandleToolActionStatus(const CommandContext& ctx) {
@@ -238,8 +187,12 @@ CommandResult HandleToolActionStatus(const CommandContext& ctx) {
 }
 
 CommandResult HandleChatPanel(const CommandContext& ctx) {
+    // Headless "available" was fake ok. Create+append only when GUI parent exists.
     if (!ctx.isGui || ctx.hwnd == nullptr) {
-        return okResult(ctx, "Chat panel available (GUI parent window required)");
+        return errorResult(ctx,
+            "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatPanel "
+            "headless; no GUI parent",
+            /*code=*/1);
     }
     RawrXD::UI::ChatPanel panel;
     if (!panel.create(static_cast<HWND>(ctx.hwnd), 9100)) {
@@ -250,17 +203,10 @@ CommandResult HandleChatPanel(const CommandContext& ctx) {
 }
 
 CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
-    auto& perf = RawrXD::Perf::PerfTelemetry::instance();
-    const auto init = perf.initialize();
-    if (!init.success) {
-        return errorResult(ctx, init.detail, init.errorCode);
-    }
-    perf.captureBaseline();
-    const std::string diagnostics = perf.getDiagnostics();
-    if (diagnostics.empty()) {
-        return errorResult(ctx, "Performance telemetry diagnostics are empty");
-    }
-    return okResult(ctx, "Performance telemetry initialized");
+    // Was: initialize+captureBaseline labeled product PASS — not tip telemetry owner.
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry",
+        /*code=*/1);
 }
 
 CommandResult HandleUpdateSignature(const CommandContext& ctx) {

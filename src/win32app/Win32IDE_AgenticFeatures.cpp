@@ -603,39 +603,29 @@ extern "C" {
 #endif // !defined(RAWR_HAS_MASM) || !RAWR_HAS_MASM
 
 // ============================================================================
-// Matmul kernel stubs
+// Matmul kernel stubs — WIN32IDE_STUB_GATE_003
+// This TU is CMake-omitted from tip Win32IDE. Naive float loops labeled
+// "Production Q4_0" were fiction. Fail-closed: GateStub + zero C (no PASS).
+// Product owner when linked: unlinked_symbols_batch_002 / real GEMM path.
 // ============================================================================
 
 extern "C" {
     void matmul_kernel_avx2(const float* a, const float* b, float* c, int m, int n, int k) {
         FMF_REAL_ENTRY("matmul_kernel_avx2");
-        // Production: Matmul kernel AVX2 - simple fallback
-        for (int i = 0; i < m; ++i) {
-            for (int j = 0; j < n; ++j) {
-                float sum = 0.0f;
-                for (int l = 0; l < k; ++l) {
-                    sum += a[i * k + l] * b[l * n + j];
-                }
-                c[i * n + j] = sum;
-            }
+        (void)a; (void)b;
+        GateStub("matmul_kernel_avx2");
+        if (c && m > 0 && n > 0) {
+            for (int i = 0; i < m * n; ++i) c[i] = 0.0f;
         }
     }
     
     void ggml_rxd_gemm_q4_0(int m, int n, int k, const void* a, const void* b, void* c) {
         FMF_REAL_ENTRY("ggml_rxd_gemm_q4_0");
-        // Production: GGML Q4_0 GEMM
-        const float* fa = static_cast<const float*>(a);
-        const float* fb = static_cast<const float*>(b);
+        (void)a; (void)b; (void)k;
+        GateStub("ggml_rxd_gemm_q4_0");
         float* fc = static_cast<float*>(c);
-        
-        for (int i = 0; i < m; ++i) {
-            for (int j = 0; j < n; ++j) {
-                float sum = 0.0f;
-                for (int l = 0; l < k; ++l) {
-                    sum += fa[i * k + l] * fb[l * n + j];
-                }
-                fc[i * n + j] = sum;
-            }
+        if (fc && m > 0 && n > 0) {
+            for (int i = 0; i < m * n; ++i) fc[i] = 0.0f;
         }
     }
 }

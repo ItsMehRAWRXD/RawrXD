@@ -54,9 +54,10 @@ CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) {
 }
 
 CommandResult HandleConsentPrompt(const CommandContext& ctx) {
+	// Omit companion: do not invent ok without verified GUI consent receipt.
 	HandleConsentPrompt(ctx.idePtr);
-	emitStatus(ctx, "Consent Prompt shown");
-	return CommandResult::ok("Consent Prompt shown");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ConsentPrompt");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ConsentPrompt", nullptr};
 }
 
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
@@ -81,8 +82,8 @@ CommandResult HandleToolActionStatus(const CommandContext& ctx) {
 
 CommandResult HandleChatPanel(const CommandContext& ctx) {
 	HandleChatPanel(ctx.idePtr);
-	emitStatus(ctx, "Chat Panel invoked");
-	return CommandResult::ok("Chat Panel invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatPanel");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatPanel", nullptr};
 }
 
 CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
@@ -91,13 +92,16 @@ CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
 }
 
 CommandResult HandleUpdateSignature(const CommandContext& ctx) {
+	// Omit companion: product Authenticode lives in rawrengine_command_handlers.
 	HandleUpdateSignature(ctx.idePtr);
-	emitStatus(ctx, "Update Signature executed");
-	return CommandResult::ok("Update Signature executed");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 UpdateSignature omit-companion");
+	return CommandResult{1,
+		"NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 UpdateSignature omit-companion", nullptr};
 }
 
 CommandResult HandlePluginSignature(const CommandContext& ctx) {
 	HandlePluginSignature(ctx.idePtr);
-	emitStatus(ctx, "Plugin Signature executed");
-	return CommandResult::ok("Plugin Signature executed");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PluginSignature omit-companion");
+	return CommandResult{1,
+		"NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PluginSignature omit-companion", nullptr};
 }

@@ -184,18 +184,15 @@ bool ExtensionHost::SendMessageToExtension(
         target = it->second;
     }
 
-    // In production, this would route through the target extension's IPC channel
-    // For now, broadcast as an event that the target can listen for
-    nlohmann::json envelope;
-    envelope["from"] = fromExtensionId;
-    envelope["to"] = toExtensionId;
-    envelope["payload"] = message;
-
-    BroadcastEvent("extension.message", envelope.dump());
-    ++m_totalMessages;
-
-    LOG_INFO("Message from " + fromExtensionId + " to " + toExtensionId);
-    return true;
+    // Fail-closed: broadcast-as-success was IPC fiction (no target channel).
+    // WIN32IDE_STUB_GATE_003 — ExtensionHost product-omit; still no invent PASS.
+    (void)fromExtensionId;
+    (void)message;
+    (void)target;
+    LOG_WARNING(
+        "SendMessageToExtension GATED FEATURE_FICTION=1 SYNTHETIC=partial "
+        "no IPC channel to " + toExtensionId);
+    return false;
 }
 
 // ============================================================================

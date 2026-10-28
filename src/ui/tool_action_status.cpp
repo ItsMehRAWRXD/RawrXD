@@ -604,8 +604,11 @@ std::string ToolActionStatusFormatter::formatJson(const ToolActionStatus& action
 
 bool ToolOutputLooksSyntheticSuccess(const std::string& toolOutput) {
     // Fail-closed markers from GateStub / fiction gates — never invent toast PASS.
+    // SYNTHETIC=partial (bridge GateStub idiom) must reject same as SYNTHETIC=1.
     if (toolOutput.find("SYNTHETIC=1") != std::string::npos) return true;
+    if (toolOutput.find("SYNTHETIC=partial") != std::string::npos) return true;
     if (toolOutput.find("GATED_STUB") != std::string::npos) return true;
+    if (toolOutput.find("GATED SYNTHETIC") != std::string::npos) return true;
     if (toolOutput.find("FEATURE_FICTION=1") != std::string::npos) return true;
     if (toolOutput.find("NOT_PRODUCT_PATH=1") != std::string::npos) return true;
     if (toolOutput.find("FinishedAction forbidden") != std::string::npos) return true;

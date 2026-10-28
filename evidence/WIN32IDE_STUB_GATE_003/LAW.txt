@@ -1,0 +1,35 @@
+WIN32IDE_STUB_GATE_003 / LAW
+============================
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+NOT_RUN!=PASS
+ABSORB_GHOSTTEXT_B421=NOT_AUTHORIZED
+TIP_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+TIP_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+RELINK=NO
+SOURCE_FAILCLOSE_ONLY=1
+
+LAW
+---
+1. Product-linked command handlers must not return CommandResult::ok for
+   probe/smoke/theater that is not the tip product owner path.
+2. AdmitToolActionForProductHistory must reject SYNTHETIC=partial the same
+   as SYNTHETIC=1 (bridge GateStub idiom).
+3. LoRAKernelBridge must not initialize with simulated weights and claim
+   ready while ApplyLoRA remains NOT_PRODUCT_WIRED / CMake GATED_OMIT.
+4. AgenticFeatures matmul/Q4_0 naive float loops must not claim Production.
+5. Tip 748B… must not be overwritten; B421 GhostText absorb NOT_AUTHORIZED.
+6. Sibling AgentRunLoop/swarm continuous closure is out of scope here.
+
+CROSS_CITE
+----------
+IDE_BRIDGE_STUB_GATE_001
+LORA_KERNEL_STUB_GATE_001
+AGENTIC_CAMELLIA_STUB_GATE_001
+COMMAND_HANDLERS_FICTION_GATE_001
+TOOL_ACTION_STATUS_TRUTH_001
+WIN32IDE_BRIDGE_SWEEP_002
+CONPTY_STREAM_OWNER_001 (SOURCE_WIRED; RUNTIME_REACHED=NOT_RUN)
+SHELLLAYOUT_PHASE5_001 (geometry; stream owner separate)

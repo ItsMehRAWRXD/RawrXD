@@ -1,9 +1,10 @@
 // ============================================================================
 // Win32IDE_LoRAKernelBridge.cpp — LoRA MASM Kernel Integration
 // ============================================================================
-// Bridges the AgentBridge async thread to the MASM LoRA kernel
-// Processes editor context through optimized assembly inference
-// Signals UI thread via PostMessage on completion
+// GATED_OMIT LORA_KERNEL_STUB_GATE_001 / WIN32IDE_STUB_GATE_003:
+// Not in RawrXD-Win32IDE product link. ApplyLoRA ASM not product-wired.
+// initialize()/IsReady must fail-closed — no "simulating trained LoRA" PASS.
+// Header presence / worker scaffolding != RUNTIME_REACHED / PASS.
 
 #include "Win32IDE.h"
 #include "Win32IDE_AgentBridge.hpp"
@@ -12,6 +13,7 @@
 #include <mutex>
 #include <queue>
 #include <atomic>
+#include <cstdio>
 
 // MASM Kernel Declaration
 extern "C" {
@@ -111,36 +113,14 @@ private:
 // ============================================================================
 
 bool LoRAKernelBridge::initialize() {
-    if (m_initialized) return true;
-    
-    // Allocate aligned memory for matrices
-    m_matrix_A.resize(768 * 8);  // hidden_dim * rank
-    m_matrix_B.resize(768 * 8);
-    
-    // Initialize with small random values (simulating trained LoRA)
-    for (auto& val : m_matrix_A) val = 0.001f;
-    for (auto& val : m_matrix_B) val = 0.001f;
-    
-    // Setup context
-    m_context.matrix_A = m_matrix_A.data();
-    m_context.matrix_B = m_matrix_B.data();
-    
-    // Verify alignment
-    if ((reinterpret_cast<uintptr_t>(m_matrix_A.data()) & 31) != 0 ||
-        (reinterpret_cast<uintptr_t>(m_matrix_B.data()) & 31) != 0) {
-        OutputDebugStringA("[LoRAKernelBridge] ERROR: Matrix memory not 32-byte aligned\n");
-        return false;
-    }
-    
-    // Start worker thread
-    m_running = true;
-    m_worker_thread = std::thread(&LoRAKernelBridge::workerLoop, this);
-    
-    m_kernel_ready = true;
-    m_initialized = true;
-    
-    OutputDebugStringA("[LoRAKernelBridge] Initialized successfully\n");
-    return true;
+    // Fail-closed: simulated weights + worker start was fake-success theater.
+    // Real path requires product-linked ApplyLoRA ASM + non-omit CMake wire.
+    OutputDebugStringA(
+        "[LoRAKernelBridge] GATED_STUB SYNTHETIC=partial "
+        "LORA_KERNEL_STUB_GATE_001 ApplyLoRA NOT_PRODUCT_WIRED NOT_PASS\n");
+    m_kernel_ready = false;
+    m_initialized = false;
+    return false;
 }
 
 void LoRAKernelBridge::shutdown() {
