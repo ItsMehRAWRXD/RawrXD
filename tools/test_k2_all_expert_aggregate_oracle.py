@@ -17,7 +17,17 @@ def fixture(root, routes=((44, 0.25), (45, 0.75)), *, gpu=None, cpu=None,
     aggregate_dir = root / "aggregate"
     scalar_dir.mkdir()
     aggregate_dir.mkdir()
+    seen_ids = set()
     for eid, _ in routes:
+        # The aggregate manifest is intentionally allowed to contain a
+        # duplicate route for the negative test, but the scalar-input
+        # directory can only contain one uniquely identified manifest for
+        # that expert.  Avoid attempting to create the same destination
+        # files twice; read_capture() must reject the duplicate route before
+        # the oracle looks up scalar inputs.
+        if eid in seen_ids:
+            continue
+        seen_ids.add(eid)
         if eid == missing:
             continue
         directory = root / f"temporary_{eid}"
