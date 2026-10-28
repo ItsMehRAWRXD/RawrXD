@@ -1,0 +1,52 @@
+SUBAGENT_EXTENSIONHOST_CONTINUOUS_001 / LAW
+==========================================
+ASOF_UTC=2026-10-28T21:35:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+TIP_AUTHORITY=TIP_FREEZE_001 SHA=748B210A…
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+journal-only success:true != SubAgent worker PASS
+companion smoke != product tip ExtensionHost PASS
+GATED_OMIT != linked product IPC
+
+MISSION
+-------
+Continuous Win32IDE closure: SubAgent + ExtensionHost IPC.
+Fail-close fake success; wire real IPC or seal NOT_RUN with blocker.
+Exercise tip 748B; new freeze only after verified candidate relink.
+
+RESULTS (this seal)
+-------------------
+E01 ExtensionHostIpcBridge — restored Win32IDE_ChatIpcProtocol.h;
+    implemented real ConnectAsClient / WriteLogicalMessage / WriteMessage
+    (MessageSegmenter framed named-pipe client). Still GATED_OMIT from
+    WIN32IDE_SOURCES (product tip unchanged for this TU).
+E02 Companion RawrXD-ExtensionHost — built under evidence/.../bin;
+    no-server exit 101 FAIL_CLOSED; pipe roundtrip BYTES=40 EXIT=0
+    (smoke RUNTIME only; ≠ product).
+E03 Tip 748B headless /api/subagent — HTTP 202 body success:true
+    status=spawned journal-only (HeadlessIDE FEATURE_FICTION on tip EXE).
+E04 Tip /api/agent/run — HTTP 503 model_not_loaded FAIL_CLOSED.
+E05 HeadlessIDE.cpp SOURCE_WIRED: replace journal theater with
+    SubAgentManager::spawnSubAgent; response pending/thread_started
+    without success:true. Tip RUNTIME of fix = NOT_RUN.
+E06 Tip candidate RELINK = NOT_RUN. Blocker: ninja rebuild failed on
+    Win32TerminalManager.cpp.obj + Win32IDE_CaretAnimation.cpp.obj
+    (unrelated TUs; mid-tree compile). No new freeze (NO invent SHA).
+
+BLOCKERS (next)
+---------------
+B01 Relink RawrXD-Win32IDE after TerminalManager/CaretAnimation compile fix
+    → new TIP_FREEZE + re-exercise /api/subagent (expect no success:true)
+B02 Product ExtensionHost server pipe in tip (still GATED_OMIT)
+B03 AgentRunLoop /api/agent/run model_not_loaded on tip (OPEN)
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0

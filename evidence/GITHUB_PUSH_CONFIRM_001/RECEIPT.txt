@@ -1,13 +1,13 @@
 GITHUB_PUSH_CONFIRM_001 / RECEIPT
 =================================
-ASOF_UTC=2026-10-28T17:34:38Z
+ASOF_UTC=2026-10-28T17:40:00Z
 BRANCH=feature/ide-agentic-product-path-20261026
 REMOTE=origin
-URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/3d7e2e45aaa6db4e02b12fd15cae980b984a2622
-LOCAL_SHA=e0c503b3ec54541008ab558038cd9b16ef361bcf
-REMOTE_SHA=3d7e2e45aaa6db4e02b12fd15cae980b984a2622
-MATCH=0
-PUSH_CONFIRMED=0
+URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/b4dc67ded37419c7d23aeafe4ee4cc2057f71207
+LOCAL_SHA=b4dc67ded37419c7d23aeafe4ee4cc2057f71207
+REMOTE_SHA=b4dc67ded37419c7d23aeafe4ee4cc2057f71207
+MATCH=1
+PUSH_CONFIRMED=1
 LS_REMOTE_CMD=git ls-remote origin refs/heads/feature/ide-agentic-product-path-20261026
 
 PRODUCT_TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
@@ -20,10 +20,18 @@ SHA_SPLIT=PRESERVED
 NO_ABSORB=1
 NO_INVENT_PASS=1
 NOT_RUN != PASS
-CONFIRMED_VIA_LS_REMOTE=1
+
+SWARM_16_RUNTIME_003
+--------------------
+ON_REMOTE=1
+ENGINE_BIND=FAIL_CLOSED
+BLOCKER=RELINK_REQUIRED
+SOURCE_WIRE=HeadlessIDE_SwarmOrch.cpp setInferenceEngine(CPU shared)
+TIP_EXE_OVERWRITE=0
+REPROVE_ON_TIP=0
 
 NOTE
 ----
-Hygiene sealed campaign source+evidence (*.exe *.pdb *.gguf excluded).
-Tip authority retains ABSORB=NOT_AUTHORIZED ? PROMOTE=0 ? tip 748B.
-Witness GhostText CERTIFIED scope only; ? product CERTIFIED / ? invented PASS.
+Follow-up SWARM_16_RUNTIME_003 (809319f7): evidence + ENGINE_BIND + SOURCE_WIRE
+pushed; tip 748B freeze authority preserved. Ollama /api/tags ≠ inference bind.
+LOCAL_ONLY forbids Ollama HTTP chat; null m_inferenceEngine was the Path A blocker.

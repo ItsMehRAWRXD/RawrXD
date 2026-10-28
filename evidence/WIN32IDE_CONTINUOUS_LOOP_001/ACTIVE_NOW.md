@@ -15,6 +15,7 @@ NEXT_OPEN=NEW_FREEZE_CANDIDATE_FOR_AGENT_RUN_SOURCE_FIX
 | Seal | Disposition |
 |------|-------------|
 | `AGENT_RUN_LOOP_TIP_004` | Tip **FAIL_CLOSED_CRASH_AT_LOGITS** after model_loaded; ENTERED=1; HTTP 200 never; **SOURCE_FIX_LANDED=1 SOURCE_FIX_IN_TIP=0** → needs **new freeze SHA** (not tip clobber) |
+| `SWARM_16_RUNTIME_004_PATH_B` | Tip **FAIL_CLOSED** RUNTIME_REACHED=0; HWND+MENU_READY; **IDM 4111 never enters CmdDiag** → SOURCE fix + new freeze (not tip clobber) |
 
 ## Also sealed this wave (cite ≠ PROMOTE)
 

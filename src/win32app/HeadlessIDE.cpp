@@ -15,6 +15,7 @@
 #include "IOutputSink.h"
 #include <nlohmann/json.hpp>
 #include "../agentic_engine.h"
+#include "../subagent_core.h"
 #include "../../include/chain_of_thought_engine.h"
 #include "HeadlessIDE_ProductLocalOnly.hpp"
 #include "IdeAuthBoundary.hpp"
@@ -3099,15 +3100,42 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
 void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
                                      HostedHttpResponse& response) {
 #if !RAWRXD_HEADLESS_NATIVE_HEXMAG
-    // Product continue-ensure spawn does not require HexMag MASM path.
-    if (request.path == "/api/subagent" || request.path == "/api/chain") {
+    // Product continue-ensure spawn: real SubAgentManager thread (no HexMag MASM).
+    // Prior journal-only success:true theater = FEATURE_FICTION — fail-closed / wired.
+    // Cite: evidence/SUBAGENT_EXTENSIONHOST_CONTINUOUS_001
+    if (request.path == "/api/subagent" || request.path == "/api/chain" ||
+        request.path == "/api/subagent/status") {
+        static std::unique_ptr<SubAgentManager> s_headlessSubAgents;
+        if (!s_headlessSubAgents) {
+            s_headlessSubAgents =
+                std::make_unique<SubAgentManager>(m_agenticEngine.get());
+        }
+
         nlohmann::json input = nlohmann::json::object();
         try { if (!request.body.empty()) input = nlohmann::json::parse(request.body); }
         catch (...) {
             response.status = 400;
-            response.body = "{\"error\":\"invalid_json\"}";
+            response.body = "{\"error\":\"invalid_json\",\"success\":false}";
             return;
         }
+
+        if (request.path == "/api/subagent/status") {
+            std::string id = input.value("agentId", "");
+            const SubAgent* agent = s_headlessSubAgents->getSubAgent(id);
+            std::string state = agent ? agent->stateString() : "missing";
+            std::string result = agent ? agent->result : "";
+            if (result.size() > 4000) result.resize(4000);
+            for (char& c : result) {
+                if (c == '"' || c == '\n' || c == '\r') c = ' ';
+            }
+            response.status = 200;
+            response.body = "{\"agentId\":\"" + jsonEscape(id) +
+                "\",\"state\":\"" + jsonEscape(state) +
+                "\",\"result\":\"" + jsonEscape(result) +
+                "\",\"success\":false}";
+            return;
+        }
+
         std::string task = input.value("task",
             input.value("prompt", input.value("question", "")));
         if (request.path == "/api/chain" && task.empty() &&
@@ -3116,15 +3144,24 @@ void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
             task = "chain";
         if (task.empty() || task.size() > 256 * 1024) {
             response.status = 400;
-            response.body = "{\"error\":\"missing_task\"}";
+            response.body = "{\"error\":\"missing_task\",\"success\":false}";
             return;
         }
-        static std::atomic<uint64_t> seq{1};
-        std::string agentId = "hsub-" + std::to_string(GetCurrentProcessId()) + "-" +
-            std::to_string(seq.fetch_add(1, std::memory_order_relaxed));
+
+        const std::string desc = task.substr(0, 80);
+        std::string agentId =
+            s_headlessSubAgents->spawnSubAgent("http", desc, task);
+        if (agentId.empty()) {
+            response.status = 503;
+            response.body =
+                "{\"error\":\"worker_unavailable\",\"status\":\"not_started\","
+                "\"success\":false,\"nativeHexMag\":false}";
+            return;
+        }
+
         std::string record = "{\"agentId\":\"" + jsonEscape(agentId) +
             "\",\"path\":\"" + jsonEscape(request.path) +
-            "\",\"status\":\"spawned\",\"taskChars\":" +
+            "\",\"status\":\"pending\",\"worker\":\"thread_started\",\"taskChars\":" +
             std::to_string(task.size()) + "}\r\n";
         std::string jobPath = m_config.workingDir.empty()
             ? "rawrxd_subagent_jobs.jsonl"
@@ -3133,14 +3170,16 @@ void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
             std::lock_guard<std::mutex> lock(m_auditMutex);
             appendBoundedFile(jobPath, record, 8ULL * 1024 * 1024);
         }
+        // Match Win32 LocalServer: accept/pending only — never invent success:true.
         response.status = 202;
-        response.body = "{\"success\":true,\"accepted\":true,\"status\":\"spawned\","
-            "\"agentId\":\"" + jsonEscape(agentId) + "\",\"nativeHexMag\":false}";
+        response.body = "{\"accepted\":true,\"status\":\"pending\","
+            "\"worker\":\"thread_started\",\"agentId\":\"" + jsonEscape(agentId) +
+            "\",\"nativeHexMag\":false}";
         return;
     }
     (void)request;
     response.status = 503;
-    response.body = "{\"error\":\"hexmag_unavailable_on_platform\"}";
+    response.body = "{\"error\":\"hexmag_unavailable_on_platform\",\"success\":false}";
 #else
     nlohmann::json input;
     try { input = nlohmann::json::parse(request.body); }

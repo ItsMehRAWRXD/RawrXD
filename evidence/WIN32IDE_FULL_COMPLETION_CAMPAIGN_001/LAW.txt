@@ -25,7 +25,9 @@ PHASES (continuous audit→implement→build→test→repair→reverify)
   4 Agentic IDE — SEALED PHASE4_AGENTIC_IDE_E2E_001 (Ask/Plan/Debug/Multitask/Terminal/SafeWrite/StopRestore RUNTIME_REACHED; Agent FAIL_CLOSED 503 extend TIP_003)
   5 Multi-model orchestration
   6 GhostText product absorb — REQUIRES: "Authorize GhostText absorption into a new product candidate, with full regression testing"
-  7 UI completion
+  7 UI completion — SEALED_OBSERVED WIN32IDE_UI_COMPLETION_PHASE7_001
+     (UI_ACCEPTANCE_PASS=0; chat/diff/files/model RUNTIME_REACHED;
+      background FAIL_CLOSED_NOT_WIRED_MENU; settings FAIL_CLOSED; PROMOTE=0)
   8 Browser/OS integration
   9 Performance
   10 Product certification / RC
