@@ -138,6 +138,31 @@ int main() {
         };
         if (!containsRunId(scalarReceipt) || !containsRunId(aggregateReceipt))
             code = 17;
+        // Provisional GPU-stage scratch capture: diagnostic-only, run-stamped.
+        using Deep2::k2_parity_capture::CaptureProvisionalStage;
+        std::vector<float> stageGpuAct(256, 2.0f), stageCpuAct(256, 2.0f);
+        std::vector<float> stageGpuDown(256, 3.0f), stageCpuDown(256, 3.0f);
+        if (!CaptureProvisionalStage(0, 6, 8,
+                                     stageGpuAct.data(), stageCpuAct.data(), 256,
+                                     stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 18;
+        const auto stageStem = dir / "k2_l6_e8_s0_provisional_stage";
+        if (!std::filesystem::exists(stageStem.string() + ".manifest.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".gpu_act.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".cpu_act.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".gpu_down.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".cpu_down.txt"))
+            code = 19;
+        if (CaptureProvisionalStage(0, 6, 8,
+                                    stageGpuAct.data(), stageCpuAct.data(), 256,
+                                    stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 20; // no overwrite
+        stageGpuAct[0] = std::numeric_limits<float>::quiet_NaN();
+        if (CaptureProvisionalStage(0, 7, 8,
+                                    stageGpuAct.data(), stageCpuAct.data(), 256,
+                                    stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 21; // reject nonfinite GPU activation
+        stageGpuAct[0] = 2.0f;
         SetCaptureRunId("");
         SetCaptureDir("");
     } catch (const std::exception& e) {
