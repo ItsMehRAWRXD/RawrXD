@@ -43,7 +43,8 @@ def read_capture(manifest):
         if not key or key in fields:
             raise ValueError("empty or duplicate manifest field")
         fields[key] = val
-    if set(fields) != set(EXPECTED) | {"layer", "stick", "rows", "experts"}:
+    if set(fields) not in (set(EXPECTED) | {"layer", "stick", "rows", "experts"},
+                          set(EXPECTED) | {"layer", "stick", "rows", "experts", "run_id"}):
         raise ValueError("missing or unknown manifest field")
     for key, val in EXPECTED.items():
         if fields[key] != val:
@@ -77,7 +78,8 @@ def read_capture(manifest):
         vectors[name] = numbers
         hashes[name] = hashlib.sha256(vector_raw).hexdigest()
     return {"layer": layer, "stick": stick, "rows": rows,
-            "experts": experts, "vectors": vectors, "sha256": hashes}
+            "experts": experts, "vectors": vectors, "sha256": hashes,
+            "run_id": fields.get("run_id")}
 
 
 def compare(record, max_abs, max_rms):
