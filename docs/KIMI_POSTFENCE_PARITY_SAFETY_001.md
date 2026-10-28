@@ -184,3 +184,46 @@ G05_G06=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 6: explicit same-invocation identity for independent scalar comparison
+
+Previously a scalar-input witness and a completed aggregate witness could
+be joined using matching layer, stick, and expert ID even when captured
+from different Kimi inference executions. This is insufficient for a
+same-execution numerical claim.
+
+Both \`CaptureScalarInputs\` and \`CaptureAggregateComparison\` can now
+stamp the same \`run_id\` from \`DEEP2_MOE_PARITY_RUN_ID\` into their manifest.
+Set this variable to a freshly generated unique identifier before **one**
+bounded Kimi diagnostic execution; it must consist of 16–128 ASCII letters,
+digits, hyphens or underscores. The run ID is not independently attested
+and must never be reused between inference invocations.
+
+Example (PowerShell, prior to starting the Kimi executable):
+
+\`\`\`powershell
+$env:DEEP2_MOE_PARITY_RUN_ID = [guid]::NewGuid().ToString('N')
+$env:DEEP2_MOE_GPU_PARITY = '1'
+$env:DEEP2_MOE_GPU_PARITY_LIMIT = '64'
+$env:DEEP2_MOE_PARITY_CAPTURE_DIR = 'F:\rawrxd\evidence\KIMI_ONE_RUN_001'
+\`\`\`
+
+The private evidence directory must already exist. Legacy aggregate
+audits still accept previously captured manifests without \`run_id\`,
+but \`k2_single_expert_aggregate_oracle.py\` now fails closed without
+matching valid run IDs in *both* manifest files. The report includes the
+matched run ID. A matching value is necessary but **not sufficient** to
+establish buffer ownership or identical source tensor generations.
+
+Added same-run/native manifest smoke and wrong-run/missing-run synthetic
+negative tests. Their execution on the user's Windows GPU remains pending.
+
+\`\`\`ini
+SAME_RUN_ID_MANIFESTS=SOURCE_WIRED
+SINGLE_EXPERT_AUDIT_REQUIRES_MATCH=SOURCE_WIRED
+NATIVE_MSVC_SMOKE_THIS_INCREMENT=NOT_VERIFIED
+GPU_POST_SWIGLU_BUFFER_OWNERSHIP=NOT_PROVEN
+CERTIFIED_GATES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
