@@ -263,5 +263,82 @@ inline bool CaptureAggregateComparison(unsigned stick, unsigned layer,
     return false;
 }
 
+
+/* Single-routed-expert post-device scratch diagnostic.
+   Only a retained, attributed command-buffer copy can promote this later.
+   All four vectors are captured together; partial writes are rolled back.
+   This never constitutes a verified GPU per-expert output witness. */
+inline bool CaptureProvisionalStage(unsigned stick, unsigned layer, int expert,
+                                    const float* gpuAct, const float* cpuAct,
+                                    size_t intermediate,
+                                    const float* gpuDown, const float* cpuDown,
+                                    size_t hidden) {
+    const char* raw = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+    if (!raw || !*raw || stick > 1u || expert < 0 ||
+        !gpuAct || !cpuAct || !gpuDown || !cpuDown ||
+        !intermediate || !hidden ||
+        intermediate > 16384u || hidden > 16384u)
+        return false;
+    if (CaptureRunId().empty()) return false;
+    for (size_t i = 0; i < intermediate; ++i)
+        if (!std::isfinite(gpuAct[i]) || !std::isfinite(cpuAct[i])) return false;
+    for (size_t i = 0; i < hidden; ++i)
+        if (!std::isfinite(gpuDown[i]) || !std::isfinite(cpuDown[i])) return false;
+
+    std::filesystem::path dir(raw);
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dir, ec) || ec) return false;
+    const std::string stem = "k2_l" + std::to_string(layer) +
+        "_e" + std::to_string(expert) +
+        "_s" + std::to_string(stick) + "_provisional_stage";
+    const auto gpuActFile = dir / (stem + ".gpu_act.txt");
+    const auto cpuActFile = dir / (stem + ".cpu_act.txt");
+    const auto gpuDownFile = dir / (stem + ".gpu_down.txt");
+    const auto cpuDownFile = dir / (stem + ".cpu_down.txt");
+    const auto manifestFile = dir / (stem + ".manifest.txt");
+    const std::vector<std::filesystem::path> files = {
+        gpuActFile, cpuActFile, gpuDownFile, cpuDownFile, manifestFile
+    };
+    for (const auto& path : files) {
+        ec.clear();
+        if (std::filesystem::exists(path, ec) || ec) return false;
+    }
+
+    std::vector<std::filesystem::path> created;
+    auto write = [&](const std::filesystem::path& path,
+                     const float* data, size_t count) {
+        if (!WriteVector(path, data, count)) return false;
+        created.push_back(path);
+        return true;
+    };
+    bool ok = write(gpuActFile, gpuAct, intermediate) &&
+              write(cpuActFile, cpuAct, intermediate) &&
+              write(gpuDownFile, gpuDown, hidden) &&
+              write(cpuDownFile, cpuDown, hidden);
+    if (ok) {
+        const std::string receipt =
+            "schema=DEEP2_KIMI_PROVISIONAL_STAGE_001\n"
+            "layer=" + std::to_string(layer) +
+            "\nexpert=" + std::to_string(expert) +
+            "\nstick=" + std::to_string(stick) +
+            "\nintermediate_dim=" + std::to_string(intermediate) +
+            "\nhidden_dim=" + std::to_string(hidden) +
+            "\nrun_id=" + CaptureRunId() +
+            "\nsource=POST_END_DEVICE_SCRATCH_DOWNLOAD\n"
+            "gpu_buffer_identity=UNPROVEN\n"
+            "scope=DIAGNOSTIC_NOT_PER_EXPERT_GPU_PARITY\n"
+            "certified=0\n";
+        ok = WriteNew(manifestFile, receipt.data(), receipt.size());
+        if (ok) created.push_back(manifestFile);
+    }
+    if (!ok) {
+        for (const auto& path : created) {
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+        }
+    }
+    return ok;
+}
+
 } // namespace k2_parity_capture
 } // namespace Deep2
