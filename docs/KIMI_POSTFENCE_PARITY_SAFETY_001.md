@@ -29,3 +29,43 @@ CERTIFIED_GATES=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 2: paired completed aggregate vectors
+
+Added `k2_parity_capture::CaptureAggregateComparison`, used only after
+`K2MoEStickEndDevice` returns and the aggregate diagnostic has evaluated
+**all** required CPU reference experts. It writes paired complete vectors
+into a pre-existing private directory under
+`DEEP2_MOE_PARITY_CAPTURE_DIR`:
+
+- `k2_l<L>_s<S>_aggregate_comparison.gpu.txt`
+- `k2_l<L>_s<S>_aggregate_comparison.cpu.txt`
+- `k2_l<L>_s<S>_aggregate_comparison.manifest.txt`
+
+The manifest records layer, stick, vector size, ordered routed expert IDs
+and weights, provenance `POST_END_DEVICE_GPU_PARTIAL_AND_COMPLETE_CPU_REFERENCE`,
+`scope=AGGREGATE_ONLY_NOT_PER_EXPERT_PARITY`, and `certified=0`.
+Malformed input, nonfinite vectors or routing coefficients, duplicate
+expert identities, incorrect dimensions, existing filenames, and missing
+directories fail closed. Exclusive-create file writes preserve existing
+evidence. On partial failure, only newly written files are cleaned up.
+
+Enable `DEEP2_MOE_GPU_PARITY=1`, raise
+`DEEP2_MOE_GPU_PARITY_LIMIT` to cover the entire worklist, and set a
+new private capture directory before the native Kimi run. Pair outputs
+are diagnostic evidence suitable for a later aggregate full-vector
+numerical comparator, **not** a GPU expert activation/down witness.
+The GPU scratch buffer identity limitation remains. In particular,
+G05 and G06 cannot be promoted from this output.
+
+Added standalone C++ capture smoke cases and a source regression check.
+No new MSVC/Vulkan execution evidence has been collected for this PR.
+
+```ini
+POST_DEVICE_AGGREGATE_PAIR_CAPTURE=SOURCE_ADDED
+REAL_MODEL_AGGREGATE_VECTOR_RECEIPT=NOT_RUN
+PER_EXPERT_BUFFER_IDENTITY=UNPROVEN
+G05_G06=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
