@@ -1,11 +1,11 @@
-﻿GITHUB_PUSH_CONFIRM_001 / RECEIPT
+GITHUB_PUSH_CONFIRM_001 / RECEIPT
 =================================
-ASOF_UTC=2026-10-28T17:24:21Z
+ASOF_UTC=2026-10-28T17:25:36Z
 BRANCH=feature/ide-agentic-product-path-20261026
 REMOTE=origin
-URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/1f3f26986cb3748bda33b0d3b3b3e502c7495698
-LOCAL_SHA=1f3f26986cb3748bda33b0d3b3b3e502c7495698
-REMOTE_SHA=1f3f26986cb3748bda33b0d3b3b3e502c7495698
+URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/acfd110ec15309eda3f47dee884be7d533e05d2c
+LOCAL_SHA=acfd110ec15309eda3f47dee884be7d533e05d2c
+REMOTE_SHA=acfd110ec15309eda3f47dee884be7d533e05d2c
 MATCH=1
 PUSH_CONFIRMED=1
 LS_REMOTE_CMD=git ls-remote origin refs/heads/feature/ide-agentic-product-path-20261026
@@ -23,6 +23,7 @@ NOT_RUN != PASS
 
 NOTE
 ----
-Hygiene commit sealed campaign source+evidence (exe/pdb/gguf excluded).
-Tip authority docs retain ABSORB=NOT_AUTHORIZED · PROMOTE=0 · tip 748B.
-GHOSTTEXT_WITNESS_CERTIFIED remains witness-scope only; ≠ product CERTIFIED.
+Hygiene sealed campaign source+evidence (*.exe *.pdb *.gguf excluded).
+Tip authority retains ABSORB=NOT_AUTHORIZED ? PROMOTE=0 ? tip 748B.
+Witness GhostText CERTIFIED scope only; ? product CERTIFIED / ? invented PASS.
+CONFIRMED_VIA_LS_REMOTE=1
