@@ -27,6 +27,14 @@ static void SetCaptureDir(const std::string& v) {
 #endif
 }
 
+static void SetCaptureRunId(const std::string& value) {
+#ifdef _WIN32
+    _putenv_s("DEEP2_MOE_PARITY_RUN_ID", value.c_str());
+#else
+    setenv("DEEP2_MOE_PARITY_RUN_ID", value.c_str(), 1);
+#endif
+}
+
 int main() {
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto dir = std::filesystem::temp_directory_path() /
@@ -39,6 +47,7 @@ int main() {
         float cpu[1] = {2.f};
         float gpu[1] = {2.f};
         SetCaptureDir(dir.string());
+        SetCaptureRunId("capture20261027receipt001");
         using Deep2::k2_parity_capture::Capture;
         if (!Capture(0, 1, 44, 14, weights.data(), weights.size(),
                      activation.data(), activation.size(), cpu, gpu, 1))
@@ -116,6 +125,20 @@ int main() {
                                        duplicateExperts, routingWeights, 2))
             code = 16; // refuse duplicate expert identities
 
+        // Both scalar inputs and the completed aggregate must carry
+        // the same run identity for an independently joined audit.
+        const auto scalarReceipt = dir / "k2_l2_e8_s0_scalar_inputs.manifest.txt";
+        const auto aggregateReceipt = dir / "k2_l3_s0_aggregate_comparison.manifest.txt";
+        auto containsRunId = [](const std::filesystem::path& file) {
+            std::ifstream in(file);
+            const std::string content((std::istreambuf_iterator<char>(in)),
+                                      std::istreambuf_iterator<char>());
+            return content.find("run_id=capture20261027receipt001\n") !=
+                   std::string::npos;
+        };
+        if (!containsRunId(scalarReceipt) || !containsRunId(aggregateReceipt))
+            code = 17;
+        SetCaptureRunId("");
         SetCaptureDir("");
     } catch (const std::exception& e) {
         std::cerr << e.what() << "\n";
