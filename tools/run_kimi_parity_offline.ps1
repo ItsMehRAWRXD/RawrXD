@@ -27,6 +27,7 @@ $tests = @(
     'test_k2_stick_partial_repeatability.py',
     'test_k2_aggregate_vector_audit.py',
     'test_k2_single_expert_aggregate_oracle.py',
+    'test_k2_provisional_stage_oracle_audit.py',
     'test_k2_aggregate_batch_audit.py',
     'test_k2_fused_parity_safety.py',
     'test_k2_postfence_parity_safety.py'
