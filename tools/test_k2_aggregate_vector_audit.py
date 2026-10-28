@@ -56,6 +56,35 @@ class PairedAggregateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_capture(capture(d, gpu=(1.0,)))
 
+    def test_in_memory_truncated_candidate_cannot_pass(self):
+        # Regression: zip() previously compared only the first element,
+        # allowing a shortened candidate to pass with zero error.
+        record = {"rows": 2, "vectors": {"gpu": [1.0], "cpu": [1.0, 2.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_in_memory_truncated_reference_cannot_pass(self):
+        record = {"rows": 2, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_forged_row_count_cannot_pass(self):
+        record = {"rows": 1, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0, 2.0]}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_empty_vectors_cannot_pass(self):
+        record = {"rows": 0, "vectors": {"gpu": [], "cpu": []}}
+        with self.assertRaisesRegex(ValueError, "length mismatch"):
+            compare(record, 0, 0)
+
+    def test_nonfinite_candidate_and_reference_cannot_pass(self):
+        for name in ("gpu", "cpu"):
+            record = {"rows": 2, "vectors": {"gpu": [1.0, 2.0], "cpu": [1.0, 2.0]}}
+            record["vectors"][name][0] = float("nan")
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "nonfinite"):
+                compare(record, 0, 0)
+
     def test_wrong_provenance_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             m = capture(d)
