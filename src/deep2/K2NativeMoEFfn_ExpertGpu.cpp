@@ -182,6 +182,52 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                   return a.expertId < b.expertId;
               });
 
+    /* Diagnostic-only single-expert isolation.  This is deliberately
+       opt-in and layer-scoped: the production routed worklist is unchanged
+       unless both variables are valid and the current layer matches.  It
+       exists to make the shared scratch arena attributable to exactly one
+       routed expert while investigating a numerical divergence. */
+    const char* isolateLayerEnv =
+        std::getenv("DEEP2_MOE_PARITY_SINGLE_LAYER");
+    const char* isolateExpertEnv =
+        std::getenv("DEEP2_MOE_PARITY_SINGLE_EXPERT");
+    if (isolateLayerEnv && isolateLayerEnv[0] && isolateExpertEnv &&
+        isolateExpertEnv[0]) {
+        char* layerEnd = nullptr;
+        char* expertEnd = nullptr;
+        const long isolateLayer = std::strtol(isolateLayerEnv, &layerEnd, 10);
+        const long isolateExpert = std::strtol(isolateExpertEnv, &expertEnd, 10);
+        if (layerEnd == isolateLayerEnv || *layerEnd != '\0' ||
+            expertEnd == isolateExpertEnv || *expertEnd != '\0' ||
+            isolateLayer < 0 || isolateExpert < 0) {
+            error = "invalid single-expert parity selector";
+            return false;
+        }
+        if (layer == static_cast<uint32_t>(isolateLayer)) {
+            std::vector<Resolved> isolated;
+            isolated.reserve(1);
+            for (auto& candidate : work) {
+                if (candidate.expertId == static_cast<int>(isolateExpert))
+                    isolated.push_back(std::move(candidate));
+            }
+            if (isolated.size() != 1u) {
+                std::fprintf(stderr,
+                             "GPU_MOE_SINGLE_EXPERT status=BLOCKED "
+                             "layer=%u expert=%ld matches=%zu routed=%zu\n",
+                             layer, isolateExpert, isolated.size(), work.size());
+                std::fflush(stderr);
+                error = "requested single-expert parity target was not routed";
+                return false;
+            }
+            std::fprintf(stderr,
+                         "GPU_MOE_SINGLE_EXPERT status=ISOLATED "
+                         "layer=%u expert=%ld routed=%zu retained=1\n",
+                         layer, isolateExpert, work.size());
+            std::fflush(stderr);
+            work.swap(isolated);
+        }
+    }
+
     /* Capture only the CPU-side packed inputs for an independent scalar
        oracle.  This is deliberately before fused command recording and
        never reads ArenaDown/ArenaFFNAct, so it cannot be mistaken for a GPU
