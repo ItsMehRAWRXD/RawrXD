@@ -1,0 +1,68 @@
+MODE_SWITCH_UI_001 / LAW
+========================
+ASOF_UTC=2026-10-28T17:35:00Z
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+ABSORB=NOT_AUTHORIZED
+REBUILD=0
+TIP_REBUILD=NO
+
+FAIL_CLOSED
+-----------
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS
+ABSORB NOT_AUTHORIZED → tip 748B frozen; source gaps fixed for next absorb only
+
+TIP EXE (authority)
+-------------------
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+SHA_MATCH=1
+
+TIP SURFACE (earned)
+--------------------
+onAgenticModeAsk  RVA=0x5B22A0
+onAgenticModePlan RVA=0x5B22C0
+onAgenticModeAgent RVA=0x5B2290
+setAgenticMode    RVA=0x5B8970
+g_pMainIDE        RVA=0x13AE80C0
+(dbghelp-confirmed; tip PDB)
+
+RUNTIME (this seal)
+-------------------
+METHOD=GUI tip HWND + PostMessage WM_COMMAND
+  tip Core frozen map: 1206=Plan, 1207=Agent, 1208=Ask
+PORT=18971
+HWND_PATH_OK=1
+HWND_POST_PLAN=1 HWND_POST_AGENT=1 HWND_POST_ASK=1
+TIP_ALIVE_AFTER_HWND=1
+RUNTIME_REACHED=1 (Ask/Plan/Agent HWND path only)
+DEBUG_HWND=NOT_ON_TIP_IDC
+HEADLESS=CLI path (no Win32IDE HWND) — not used for mode UI
+MET_CLAIM=0
+CreateRemoteThread member invoke = CRASH observed; not claimed
+
+SOURCE GAPS FIXED (not tip-absorbed)
+------------------------------------
+1. IDC_AGENTIC_MODE_ASK/PLAN/AGENT/DEBUG = 5005–5008 (Win32IDE_Commands.h)
+   — removes collision with 1206–1208 context slider / model selector
+2. createChatPanel + createSecondarySidebar: Ask/Plan/Agent/Debug radios + HWND assign
+3. onAgenticModeDebug + setAgenticMode Debug BM_SETCHECK
+4. Core.cpp routes 5005–5008; 1208 CBN_SELCHANGE → onModelSelectionChanged
+5. g_pMainIDE = this in Win32IDE ctor (was ProblemsPanel-only → headless null)
+
+G04 Debug: SOURCE_WIRED (handlers+UI); tip RUNTIME NOT_RUN (no IDC on freeze)
+G05 Auto: unchanged OPEN (out of this seal Ask/Agent/Plan/Debug scope)
+
+CROSS_CITE
+----------
+agentic_mode_switcher.hpp
+Win32IDE_VSCodeUI.cpp / Win32IDE.cpp createChatPanel
+AGENTIC_COMPOSER_RUNTIME_001 (prior tip 6832 surface; superseded SHA for product tip)
+WIN32IDE_CLOSURE_MATRIX_001 G01–G04
+TIP_FREEZE_001 / TIP_EXE_AUTHORITY 748B
+
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 ABSORB=NOT_AUTHORIZED

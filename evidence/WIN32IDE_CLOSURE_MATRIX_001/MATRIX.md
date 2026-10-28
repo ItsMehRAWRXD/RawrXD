@@ -56,10 +56,10 @@ Rule: cite required for MET/BLOCKED/HELD/RUNTIME_REACHED/RUNTIME_PARTIAL; SOURCE
 
 | ID | Feature | Status | Cite / note |
 |----|---------|--------|-------------|
-| G01 | Ask mode | **SOURCE** | INVOKED_SURFACE tip map `onAgenticModeAsk` RVA `0x5A8850` (`AGENTIC_COMPOSER_RUNTIME_001`); E2E/RUNTIME NOT_RUN â€” not MET |
-| G02 | Agent mode E2E tool loop | **SOURCE** | INVOKED_SURFACE tip map `onAgenticModeAgent` / `AgentRunLoop` LINKED; `AGENT_RUN_LOOP_TIP_003` on FROZEN `748B210A…` POST `/api/agent/run` HTTP **503** empty → ENTERED=0 FAIL_CLOSED; prior TIP_002 on `5540BF18…` also 503 — not MET |
-| G03 | Plan mode | **SOURCE** | INVOKED_SURFACE tip map `onAgenticModePlan` RVA `0x5A8870` (`AGENTIC_COMPOSER_RUNTIME_001`); E2E/RUNTIME NOT_RUN â€” not MET |
-| G04 | Debug mode | **OPEN** | **NOT_INVOKED** on tip â€” no `AgenticMode::Debug` (`agentic_mode_switcher.hpp` / `AGENTIC_COMPOSER_RUNTIME_001`) |
+| G01 | Ask mode | **RUNTIME_PARTIAL** | `MODE_SWITCH_UI_001` tip `748B` HWND WM_COMMAND 1208 POST=1 (mode switch RUNTIME); chat E2E not MET |
+| G02 | Agent mode E2E tool loop | **RUNTIME_PARTIAL** | Mode switch HWND 1207 RUNTIME (`MODE_SWITCH_UI_001`); `AGENT_RUN_LOOP_TIP_003` `/api/agent/run` still HTTP **503** ENTERED=0 — Agent loop not MET |
+| G03 | Plan mode | **RUNTIME_PARTIAL** | `MODE_SWITCH_UI_001` tip `748B` HWND WM_COMMAND 1206 POST=1; plan E2E not MET |
+| G04 | Debug mode | **SOURCE_WIRED** | Source IDC 5008 + `onAgenticModeDebug` + radios (`MODE_SWITCH_UI_001`); tip HWND NOT_ON_TIP_IDC — ABSORB=NOT_AUTHORIZED; not MET |
 | G05 | Auto mode routing | **OPEN** | **NOT_INVOKED** on tip â€” no `AgenticMode::Auto` (`agentic_mode_switcher.hpp` / `AGENTIC_COMPOSER_RUNTIME_001`) |
 | G06 | Model registry live list | **SOURCE** | Swarm/Ollama dir scan wiring exists (S-003); live registry E2E OPEN |
 | G07 | Model ensemble 1â€“16 | **SOURCE_WIRED** | S-002/S-003 tip-linked; `SWARM_16_RUNTIME_001` INVOKED=NOT_RUN on `6832F439â€¦` (GUI createWindow exit=2; headless distributed swarm â‰  orch; `/api/subagent` nativeHexMag=false; TIP_REBUILD=NO); Ollama `SWARM_TIP_16_HI_AUDIT_001` 16/16 â‰  tip EXE RUNTIME_PASS â€” **G07 not MET** |
