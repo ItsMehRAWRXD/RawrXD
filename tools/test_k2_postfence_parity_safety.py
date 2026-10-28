@@ -59,6 +59,13 @@ class PostFenceDiagnosticSafetyTests(unittest.TestCase):
         self.assertLess(self.source.index("if (!K2MoEStickEndDevice(stick, partial, H, ctr))"),
                         self.source.index("emitAggregateParity(partial);"))
 
+    def test_provisional_stage_is_strictly_diagnostic(self):
+        self.assertIn("CaptureProvisionalStage(", self.source)
+        self.assertIn("identity=UNPROVEN certified=0", self.source)
+        self.assertIn("downloaded && actDownloaded", self.source)
+        self.assertIn("!stageNonFinite && !actNonFinite", self.source)
+        self.assertIn("lastExpert >= 0 && work.size() == 1u", self.source)
+
     def test_production_path_stays_present(self):
         for anchor in ("K2MoEStickPinExpert(stick",
                        "K2MoEStickBeginFused(stick)",
