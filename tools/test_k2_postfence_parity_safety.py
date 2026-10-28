@@ -52,6 +52,13 @@ class PostFenceDiagnosticSafetyTests(unittest.TestCase):
         self.assertIn("downloaded ? H - stageNonFinite : 0u", self.source)
         self.assertIn("actDownloaded ? I - actNonFinite : 0u", self.source)
 
+    def test_aggregate_evidence_is_post_device_and_uncertified(self):
+        self.assertIn("CaptureAggregateComparison(", self.source)
+        self.assertIn("scope=AGGREGATE_ONLY certified=0", self.source)
+        self.assertIn("if (!nonFinite)", self.source)
+        self.assertLess(self.source.index("if (!K2MoEStickEndDevice(stick, partial, H, ctr))"),
+                        self.source.index("emitAggregateParity(partial);"))
+
     def test_production_path_stays_present(self):
         for anchor in ("K2MoEStickPinExpert(stick",
                        "K2MoEStickBeginFused(stick)",
