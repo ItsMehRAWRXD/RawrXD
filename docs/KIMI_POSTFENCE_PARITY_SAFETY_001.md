@@ -227,3 +227,27 @@ CERTIFIED_GATES=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 7: three-way independent parity decision
+
+The single-expert joined audit now calculates three complete vector checks:
+\`gpu_vs_oracle\`, \`cpu_vs_oracle\`, and \`gpu_vs_cpu\`. Every check
+must satisfy both explicit absolute and RMS limits before the receipt can
+report \`PASS_DIAGNOSTIC\`. This closes a source-level false-positive gap:
+a completed GPU aggregate matching the scalar oracle no longer masks a
+broken optimized CPU aggregate, and a GPU/CPU match cannot mask both
+agreeing on the wrong numerical answer.
+
+The receipt now includes \`checks\` and \`comparisons\` maps with per-pair
+worst-index and error metrics, plus the legacy \`metrics\` alias for
+\`gpu_vs_oracle\` consumers. Three synthetic disagreement cases were added.
+
+\`\`\`ini
+INDEPENDENT_THREE_WAY_PARITY=SOURCE_COMMITTED
+SYNTHETIC_REGRESSION_CASES=ADDED_NOT_VERIFIED
+REAL_GPU_RUN=NOT_EXECUTED_THIS_INCREMENT
+GPU_PER_EXPERT_STAGE_WITNESS=ABSENT
+CERTIFIED_GATES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
