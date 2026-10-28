@@ -1,0 +1,20 @@
+HEADLESS_EXECUTE_COMMAND_003 / LAW
+==================================
+PROMOTE=0 TIP_CLIMB=HOLD PRODUCT_CERTIFIED=0
+NO_INVENT_PASS=1
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+HISTORICAL_2B9B5A67=PRESERVED_UNCHANGED (earned gates stay historical; this seal is independent on tip 748B)
+GHOSTTEXT_B421=NOT_AUTHORIZED_ABSORB
+
+GATES (tip EXE RUNTIME)
+-----------------------
+no-grant execute_command -> HTTP 403 body execution_not_granted
+grant RAWRXD_IDE_EXEC_GRANT=1 -> HTTP 200 + exitCode 0 + output exec_ok
+MOTD read_motd ack before tool (both legs)
+
+AUDIT
+-----
+Tip already included execute_command + 403 mapping + LoadUnlocked strings.
+No tip rebuild. No TIP_FREEZE overwrite. No new freeze dir.
+
+DISPOSITION=EARNED RUNTIME_REACHED=1 (see RECEIPT.txt)

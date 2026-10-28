@@ -1,0 +1,3 @@
+GRANT_MOTD_HTTP=200
+GRANT_EXEC_HTTP=200
+{"success":true,"command":"cmd /c echo exec_ok","exitCode":0,"output":"exec_ok\r\n"}

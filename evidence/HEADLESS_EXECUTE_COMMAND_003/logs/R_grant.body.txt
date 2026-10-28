@@ -1,0 +1,1 @@
+{"success":true,"command":"cmd /c echo exec_ok","exitCode":0,"output":"exec_ok\r\n"}

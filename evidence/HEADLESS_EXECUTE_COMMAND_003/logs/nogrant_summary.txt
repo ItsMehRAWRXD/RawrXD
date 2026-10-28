@@ -1,0 +1,3 @@
+NOGRANT_MOTD_HTTP=200
+NOGRANT_EXEC_HTTP=403
+{"error":"execution_not_granted"}
