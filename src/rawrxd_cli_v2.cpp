@@ -32,6 +32,7 @@
 #include "agentic/AgentSession.h"
 #include "agentic/WorkspaceToolHost.h"
 #include "agentic/tool_core.hpp"
+#include "agentic/NativeToolProtocol.h"
 #ifdef _WIN32
 #include "agentic/process_win32.hpp"
 #include <windows.h>
@@ -513,6 +514,14 @@ static bool TextHasToken(const std::string& text, const char* token) {
 
 static std::string FormatDeep2Prompt(const std::string& modelId,
                                     const std::vector<ChatMessage>& msgs) {
+    constexpr const char* kNativeToolProtocol =
+        "\nNATIVE RAWRXD TOOL PROTOCOL (use only when the task requires a tool):\n"
+        "Reply with exactly one complete command and no prose.\n"
+        "TOOL read <relative-path>\n"
+        "TOOL write <relative-path> @@<complete-file-content>@@\n"
+        "TOOL build\nTOOL test\n"
+        "A command is dispatched only after its complete terminator is present; "
+        "never emit arbitrary shell commands.\n";
     if (TextHasToken(modelId, "qwen")) {
         bool sawSystem = false;
         for (const auto& m : msgs) if (m.role == "system") sawSystem = true;
@@ -521,11 +530,13 @@ static std::string FormatDeep2Prompt(const std::string& modelId,
             prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
         }
         for (const auto& m : msgs) {
-            if (m.role != "system" && m.role != "user" && m.role != "assistant") continue;
+            if (m.role != "system" && m.role != "user" && m.role != "assistant" &&
+                m.role != "tool") continue;
             prompt += "<|im_start|>";
             prompt += m.role;
             prompt += "\n";
             prompt += m.content;
+            if (m.role == "system") prompt += kNativeToolProtocol;
             prompt += "<|im_end|>\n";
         }
         prompt += "<|im_start|>assistant\n";
@@ -533,6 +544,8 @@ static std::string FormatDeep2Prompt(const std::string& modelId,
     }
     std::string prompt = "<|system|>\n"
         "You are a helpful assistant. Follow the user's instructions directly and concisely.\n"
+        "NATIVE RAWRXD TOOL PROTOCOL: use exactly one complete TOOL read/write/build/test "
+        "command when a tool is required; never emit arbitrary shell text.\n"
         "<|user|>\n";
     for (size_t i = 0; i < msgs.size(); ++i) {
         const auto& m = msgs[i];
@@ -542,6 +555,10 @@ static std::string FormatDeep2Prompt(const std::string& modelId,
         } else if (m.role == "assistant") {
             prompt += m.content;
             if (i + 1 < msgs.size() && msgs[i + 1].role == "user") prompt += "<|user|>\n";
+        } else if (m.role == "tool") {
+            prompt += "\n<|tool|>\n";
+            prompt += m.content;
+            prompt += "\n<|assistant|>\n";
         }
     }
     return prompt;
@@ -615,6 +632,24 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
             r.completion_tokens = static_cast<int>(text.size() / 4);
             r.tokens_per_sec = 0.0;
             r.total_duration_ms = 0;
+            const auto nativeCommand = rawrxd::agentic::ParseNativeToolCommand(text);
+            if (nativeCommand.finish) {
+                return InferenceResult::Error(
+                    "NATIVE_TOOL_FINISH_UNVERIFIED: host verification is required before completion");
+            }
+            if (nativeCommand.valid && !nativeCommand.finish) {
+                r.has_tool_calls = true;
+                r.tool_calls.emplace_back(
+                    nativeCommand.tool,
+                    nativeCommand.tool == "writeFile"
+                        ? json{{"path", nativeCommand.path}, {"content", nativeCommand.content}}
+                        : nativeCommand.tool == "readFile"
+                            ? json{{"path", nativeCommand.path}}
+                            : json{{"command", nativeCommand.command}});
+                // Keep the exact model response in the assistant transcript,
+                // but the surrounding agent loop will dispatch the structured
+                // call instead of presenting the command as the final answer.
+            }
             return r;
         };
 

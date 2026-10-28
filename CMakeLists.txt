@@ -5265,6 +5265,28 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/workspace_path_policy_smoke.cpp")
     add_test(NAME workspace_path_policy_smoke COMMAND workspace_path_policy_smoke)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/native_tool_protocol_smoke.cpp")
+    add_executable(native_tool_protocol_smoke
+        tests/agentic/native_tool_protocol_smoke.cpp
+    )
+    target_include_directories(native_tool_protocol_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+    )
+    if(MSVC)
+        target_compile_options(native_tool_protocol_smoke PRIVATE /EHsc /std:c++20)
+    else()
+        target_compile_options(native_tool_protocol_smoke PRIVATE -std=c++20)
+    endif()
+    set_target_properties(native_tool_protocol_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    add_test(NAME native_tool_protocol_smoke
+        COMMAND native_tool_protocol_smoke
+    )
+endif()
+
 # Cursor-parity registry smoke test.  This is intentionally dependency-light:
 # it exercises the same native workspace registry and mode authority used by
 # the IDE/agent, without pulling in Qt, Deep2, or a network backend.  Keeping
