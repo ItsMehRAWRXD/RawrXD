@@ -1,0 +1,31 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[STARTUP] createWindow ENTER (Core)
+[STARTUP] before IDEConfig::getInstance
+[STARTUP] after IDEConfig::getInstance
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\rawrxd.config.json — using defaults.
+[Win32IDE] LOCAL_ONLY_001: clearing forbidden Ollama URL
+[Win32IDE] Using config fallback: (empty/local-only)
+[STARTUP] after agenticConfig locals (before nested scope exit)
+[STARTUP] after agenticConfig nested scope exit
+[STARTUP] config complete
+[STARTUP] before config scope exit
+[STARTUP] after config scope exit
+[STARTUP] before SettingsManager
+[STARTUP] SettingsManager::Initialize CALL
+[SettingsManager] Initialize ENTER path=(default)
+[SettingsManager] configPath=C:\Users\Garrett\AppData\Roaming\RawrXD\settings.ini
+[SettingsManager] LoadUnlocked OK
+[SettingsManager] Initialize OK
+[STARTUP] SettingsManager::Initialize RETURN ok=1
+[STARTUP] after SettingsManager Initialize OK
+[STARTUP] after GetWindowState
+[STARTUP] after windowState apply (before Settings scope exit)
+[STARTUP] after SettingsManager scope exit
+[STARTUP] onCreate_EXIT (returning to CreateWindowExA)
+[STARTUP] after CreateWindowExA returned
+[STARTUP] pump skip WM_APP_RESTORE_SESSION tag=post_create_1
+[STARTUP] WM_APP_RESTORE_SESSION re-armed after pumps
+[STARTUP] post_create pumps complete (no WM_APP+201 to flush)

@@ -1,0 +1,1 @@
+MAIN_HWND=0x7703AE tick=2 alive_at_find=1 proc_alive_end=True pid=41464 exited=False exit= title=RawrXD ScreenPilot â€” Desktop Preview
