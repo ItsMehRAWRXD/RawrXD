@@ -5735,6 +5735,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_TabManager.cpp
         src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_TaskRunner.cpp
         src/win32app/Win32IDE_AutonomousCommunicator.cpp
         src/win32app/Win32IDE_AgenticComposerUX.cpp
         src/win32app/Win32IDE_ContextMentionParser.cpp
@@ -5789,6 +5790,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_FailureDetector.cpp
         src/win32app/Win32IDE_FailureIntelligence.cpp
         src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_TaskRunner.cpp
         src/win32app/Win32IDE_LocalServer.cpp
         src/win32app/Win32IDE_BackendSwitcher.cpp
         src/security/ProviderKeyStore.cpp
