@@ -348,9 +348,11 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
 }
 
 void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
+    bool foundExpertCount = false;
     for (auto& entry : metadata) {
         const std::string key = [&] { std::string s = entry.key; std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return (char)std::tolower(c); }); return s; }();
         if (key.find("expert_count") == std::string::npos && key.find("expert_used_count") == std::string::npos) continue;
+        foundExpertCount = true;
         if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
             std::memcpy(entry.value.data(), &activeExperts, 4);
         } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
@@ -375,6 +377,14 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
                 }
             }
         }
+    }
+    if (!foundExpertCount) {
+        MetaEntry entry;
+        entry.key = "rawrxd.reap.active_experts";
+        entry.type = static_cast<uint32_t>(GGUFMetaType::UINT32);
+        entry.value.resize(sizeof(uint32_t));
+        std::memcpy(entry.value.data(), &activeExperts, sizeof(uint32_t));
+        metadata.emplace_back(std::move(entry));
     }
 }
 
@@ -407,6 +417,23 @@ bool writeZeros(std::ofstream& out, uint64_t bytes) {
     }
     return true;
 }
+
+struct OutputCleanup {
+    fs::path path;
+    bool active = false;
+    bool removeDirectory = false;
+    std::vector<fs::path> files;
+
+    ~OutputCleanup() {
+        if (!active) return;
+        std::error_code error;
+        for (const auto& file : files) {
+            std::error_code fileError;
+            fs::remove(file, fileError);
+        }
+        if (removeDirectory) fs::remove_all(path, error);
+    }
+};
 
 } // namespace
 
@@ -449,6 +476,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
 
     std::error_code ec;
     const fs::path outputDir(request.outputDirectory);
+    const bool outputExisted = fs::exists(outputDir, ec);
     if (fs::exists(outputDir, ec)) {
         if (!fs::is_directory(outputDir, ec) || fs::directory_iterator(outputDir, ec) != fs::directory_iterator()) {
             result.error = "output directory must be new or empty";
@@ -458,6 +486,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         result.error = "output directory could not be created";
         return result;
     }
+    OutputCleanup cleanup{outputDir, true, !outputExisted};
 
     for (const auto& shard : shards) {
         std::vector<TensorDesc> outputTensors;
@@ -489,6 +518,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         auto metadata = shard.metadata;
         patchMetadata(metadata, request.activeExperts);
         const fs::path outputPath = outputDir / shard.path.filename();
+        cleanup.files.push_back(outputPath);
         std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);
         if (!out) { result.error = "output shard open failed: " + outputPath.string(); return result; }
         if (!writeU32(out, 0x46554747u) || !writeU32(out, shard.version) ||
@@ -544,10 +574,14 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
                 const auto it = selection.find(layer);
                 for (uint32_t expert : it->second) {
                     // Overflow guard already checked in validateExpertTensorGeometry.
-                    const uint64_t srcOffset = dataStart + original->offset + stride * expert;
+                    // Tensor offsets are relative to the source shard's data
+                    // section.  Using the output data base here silently
+                    // corrupts every selected expert whenever the rebuilt
+                    // header has a different length from the source header.
+                    const uint64_t srcOffset = shard.dataStart + original->offset + stride * expert;
                     if (!copyRange(in, out, srcOffset, stride)) { result.error = "expert slice copy failed"; return result; }
                 }
-            } else if (!copyRange(in, out, dataStart + original->offset, original->bytes)) {
+            } else if (!copyRange(in, out, shard.dataStart + original->offset, original->bytes)) {
                 result.error = "tensor copy failed: " + tensor.name; return result;
             }
             const auto written = static_cast<uint64_t>(out.tellp());
@@ -559,6 +593,13 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         if (!out.good()) { result.error = "output shard flush failed"; return result; }
         result.outputBytes += static_cast<uint64_t>(fs::file_size(outputPath, ec));
         result.outputTensors += outputTensors.size();
+    }
+
+    if (request.targetSizeBytes != 0 && result.outputBytes > request.targetSizeBytes) {
+        result.error = "rewritten GGUF exceeds target size: output=" +
+                       std::to_string(result.outputBytes) +
+                       " target=" + std::to_string(request.targetSizeBytes);
+        return result;
     }
 
     const fs::path outputFirst = marker != std::string::npos
@@ -577,6 +618,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     result.outputFirstShard = outputFirst.string();
     result.sourceShardCount = shardCount;
     result.outputShardCount = verify.shardCount();
+    cleanup.active = false;
     return result;
 }
 

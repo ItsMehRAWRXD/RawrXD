@@ -32,7 +32,7 @@ static void usage() {
                  "rawr-reap topology <first-shard.gguf> [--output <topology.json>]\n"
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
-                 "rawr-reap reap <first-shard.gguf> --target-size <B|MB|GB|TB> "
+                 "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
                  "[--selection-output <selection.json>] [--output-model <dir>] "
@@ -648,6 +648,7 @@ static bool writeSelectionManifest(const std::string& path,
                                    uint64_t activeExperts,
                                    uint64_t expertBudget,
                                    uint64_t targetSize,
+                                   bool qualityFloorPass,
                                    bool authorizeRewrite,
                                    std::string& error) {
     if (path.empty()) return true;
@@ -685,10 +686,22 @@ static bool writeSelectionManifest(const std::string& path,
         }
     }
     const uint64_t logical = inventory.logicalExperts ? inventory.logicalExperts : 1;
+    if (inventory.expertBytes != 0 && selected > std::numeric_limits<uint64_t>::max() / inventory.expertBytes) {
+        error = "expert selection size arithmetic overflow";
+        return false;
+    }
     const uint64_t estimatedExpertBytes = inventory.expertBytes * selected / logical;
     const uint64_t estimatedOutputBytes = inventory.totalBytes >= inventory.expertBytes
         ? inventory.totalBytes - inventory.expertBytes + estimatedExpertBytes
         : inventory.totalBytes;
+    if (expertBudget != 0 && estimatedExpertBytes > expertBudget) {
+        error = "selected expert residency exceeds --expert-budget";
+        return false;
+    }
+    if (targetSize != 0 && estimatedOutputBytes > targetSize) {
+        error = "estimated reduced model exceeds --target-size";
+        return false;
+    }
     json manifest = {
         {"schema", "RAWRXD_REAP_EXPERT_SELECTION_001"},
         {"status", evidence.calibrationComplete ? "CANDIDATE" : "BLOCKED"},
@@ -704,10 +717,10 @@ static bool writeSelectionManifest(const std::string& path,
         {"source_metrics", evidence.metrics.size()},
         {"layers", layers},
         {"reference_parity_pass", evidence.referenceParity},
-        {"quality_floor_pass", false},
-        {"rewrite_authorized", authorizeRewrite && evidence.calibrationComplete && evidence.referenceParity},
+        {"quality_floor_pass", qualityFloorPass},
+        {"rewrite_authorized", authorizeRewrite && qualityFloorPass && evidence.calibrationComplete && evidence.referenceParity},
         {"reason", evidence.calibrationComplete
-            ? (authorizeRewrite && evidence.referenceParity
+            ? (authorizeRewrite && qualityFloorPass && evidence.referenceParity
                 ? "selection derived from complete calibrated evidence"
                 : "selection derived from route metrics; explicit parity authorization is still required")
             : "continuous calibration and parity gates are incomplete"}
@@ -730,6 +743,7 @@ static int reapPlan(int argc, char** argv) {
     std::string outputModelPath;
     std::string outputPath;
     bool authorizeRewrite = false;
+    bool targetSizeSeen = false;
     for (int i = 3; i < argc; ++i) {
         const std::string option = argv[i];
         if (option == "--authorize-rewrite") {
@@ -738,7 +752,14 @@ static int reapPlan(int argc, char** argv) {
         }
         if (i + 1 >= argc) { usage(); return 2; }
         const std::string value = argv[++i];
-        if (option == "--target-size") request.targetSizeText = value;
+        if (option == "--target-size" || option == "--size") {
+            if (targetSizeSeen) {
+                std::cerr << "REAP_SIZE_OPTION_CONFLICT: specify only one of --target-size or --size\n";
+                return 2;
+            }
+            targetSizeSeen = true;
+            request.targetSizeText = value;
+        }
         else if (option == "--active-experts") request.activeExpertsText = value;
         else if (option == "--expert-budget") request.expertBudgetText = value;
         else if (option == "--quality-floor") request.qualityFloorText = value;
@@ -806,6 +827,7 @@ static int reapPlan(int argc, char** argv) {
         writeSelectionManifest(selectionOutputPath, request.model, calibrationPath,
                                calibration, inventory, request.activeExperts,
                                request.expertBudgetBytes, request.targetSizeBytes,
+                               admission.qualityFloorPass,
                                authorizeRewrite,
                                selectionError);
     if (!selectionOutputPath.empty() && !selectionWritten && status == "BLOCKED" &&
@@ -815,7 +837,9 @@ static int reapPlan(int argc, char** argv) {
 
     Deep2::ReapMoETransformResult transform;
     if (!outputModelPath.empty()) {
-        if (!selectionWritten || !authorizeRewrite || !calibration.calibrationComplete ||
+        if (!selectionWritten || !authorizeRewrite || !admission.transformationEnabled ||
+            !admission.rewriterCertified || !admission.selectionComplete ||
+            !admission.qualityFloorPass || !calibration.calibrationComplete ||
             !calibration.referenceParity) {
             transform.error = "REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY";
         } else {
@@ -824,6 +848,7 @@ static int reapPlan(int argc, char** argv) {
             transformRequest.outputDirectory = outputModelPath;
             transformRequest.selectionManifest = selectionOutputPath;
             transformRequest.activeExperts = static_cast<uint32_t>(request.activeExperts);
+            transformRequest.targetSizeBytes = request.targetSizeBytes;
             transform = Deep2::transformMoEGGUF(transformRequest);
         }
         if (!transform.success) {
@@ -904,9 +929,13 @@ int main(int argc, char** argv) {
         }
         return topology(argv[2], outputPath);
     }
-    if (argc >= 3 && std::string(argv[1]) == "capabilities") return capabilities(argv[2]);
+    if (argc >= 3 && std::string(argv[1]) == "capabilities") {
+        if (argc != 3) { usage(); return 2; }
+        return capabilities(argv[2]);
+    }
     if (argc >= 3 && (std::string(argv[1]) == "reap" || std::string(argv[1]) == "--reap")) return reapPlan(argc, argv);
     if (argc < 3 || (std::string(argv[1]) != "inspect" && std::string(argv[1]) != "plan")) { usage(); return 2; }
+    if (std::string(argv[1]) == "inspect" && argc != 3) { usage(); return 2; }
     const std::string path = argv[2];
     Deep2::GGUFLoader loader;
     if (!loader.load(path)) { std::cerr << "GGUF_LOAD_FAILED: " << loader.error() << "\n"; return 1; }

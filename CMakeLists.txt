@@ -5558,15 +5558,28 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_expert_layout_test.cpp" AND
     add_test(NAME rawr_reap_expert_layout COMMAND rawr-reap-expert-layout-test)
 endif()
 
-# Read-only REAP inventory/planning surface.  This intentionally does not
-# rewrite checkpoints until calibration, router remapping and parity gates
-# are implemented; it is the only safe way to expose real model evidence.
+# REAP inventory/planning and guarded candidate-rewrite surface.  The writer
+# remains fail-closed behind the independent evidence gates and explicit
+# authorization; source shards are never overwritten.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp
         src/deep2/ReapMoETransformer.cpp)
     target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_moe_transform_test.cpp")
+    add_executable(reap-moe-transform-test
+        tests/reap_moe_transform_test.cpp
+        src/deep2/ReapMoETransformer.cpp)
+    target_include_directories(reap-moe-transform-test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(reap-moe-transform-test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-moe-transform-test PRIVATE /W4 /EHsc /std:c++20)
+    endif()
+    enable_testing()
+    add_test(NAME reap_moe_transform COMMAND reap-moe-transform-test)
 endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_corpus_cli.cpp")
     add_executable(rawr-reap-corpus src/reap_corpus_cli.cpp)

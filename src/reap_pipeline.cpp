@@ -95,6 +95,7 @@ PipelineResult RunPipeline(const CliRequest& request, const std::string& prompt)
     writer.outputDirectory = request.outputDirectory;
     writer.selectionManifest = request.selectionManifestPath;
     writer.activeExperts = request.activeExperts;
+    writer.targetSizeBytes = request.targetSizeBytes;
     writer.replaceExisting = false;
     const Deep2::ReapMoETransformResult published = Deep2::transformMoEGGUF(writer);
     const std::string candidate = published.success ? published.outputFirstShard : std::string();

@@ -358,9 +358,21 @@ Admission EvaluateAdmission(const CliRequest& request) {
         }
         if (!ValidateSchema(qfDoc, kQualityFloorSchema, admission.reason)) return admission;
         if (!GatePassed(qfDoc, "quality_floor_met", admission.reason)) return admission;
+        if (request.qualityFloor > 0.0) {
+            if (!qfDoc.contains("quality_score") || !qfDoc["quality_score"].is_number()) {
+                admission.reason = "REAP_QUALITY_SCORE_MISSING";
+                return admission;
+            }
+            const double observed = qfDoc["quality_score"].get<double>();
+            if (!std::isfinite(observed) || observed < request.qualityFloor) {
+                admission.reason = "REAP_QUALITY_FLOOR_BELOW_REQUEST";
+                return admission;
+            }
+        }
 
         admission.rewriterCertified = true;
         admission.calibrationComplete = true;
+        admission.qualityFloorPass = true;
     }
 
     // All gates passed.  Transformation is enabled only when every independent

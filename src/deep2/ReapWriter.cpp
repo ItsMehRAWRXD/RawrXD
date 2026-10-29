@@ -161,8 +161,58 @@ ReapWriteResult ReapWriter::writeRoundTrip(const std::string& src, const std::st
         result.error = "lossless copy produced no readable output";
         return result;
     }
+
+    // A successful filesystem copy is not sufficient evidence for a GGUF
+    // publication.  Parse both files and compare the complete tensor
+    // inventory before returning success.  This catches truncated/corrupt
+    // output and keeps the writer's positive path tied to the real loader.
+    GGUFLoader sourceLoader;
+    GGUFLoader outputLoader;
+    if (!sourceLoader.load(src)) {
+        result.error = "source GGUF validation failed: " + sourceLoader.error();
+        std::error_code cleanup;
+        std::filesystem::remove(dst, cleanup);
+        return result;
+    }
+    if (!outputLoader.load(dst)) {
+        result.error = "output GGUF validation failed: " + outputLoader.error();
+        std::error_code cleanup;
+        std::filesystem::remove(dst, cleanup);
+        return result;
+    }
+    if (sourceLoader.tensorCountHeader() != outputLoader.tensorCountHeader() ||
+        sourceLoader.metadataCountHeader() != outputLoader.metadataCountHeader() ||
+        sourceLoader.tensorCount() != outputLoader.tensorCount()) {
+        result.error = "round-trip GGUF inventory mismatch";
+        std::error_code cleanup;
+        std::filesystem::remove(dst, cleanup);
+        return result;
+    }
+    const auto sourceNames = sourceLoader.listTensors();
+    const auto outputNames = outputLoader.listTensors();
+    if (sourceNames != outputNames) {
+        result.error = "round-trip tensor names mismatch";
+        std::error_code cleanup;
+        std::filesystem::remove(dst, cleanup);
+        return result;
+    }
+    for (const auto& name : sourceNames) {
+        const auto* sourceTensor = sourceLoader.getTensor(name);
+        const auto* outputTensor = outputLoader.getTensor(name);
+        if (!sourceTensor || !outputTensor || sourceTensor->type != outputTensor->type ||
+            sourceTensor->shape != outputTensor->shape ||
+            sourceTensor->sizeBytes != outputTensor->sizeBytes ||
+            sha256Hex(sourceTensor->data, sourceTensor->sizeBytes) !=
+                sha256Hex(outputTensor->data, outputTensor->sizeBytes)) {
+            result.error = "round-trip tensor validation failed: " + name;
+            std::error_code cleanup;
+            std::filesystem::remove(dst, cleanup);
+            return result;
+        }
+    }
     result.success = true;
     result.outputPath = dst;
+    result.tensorsWritten = static_cast<uint64_t>(sourceNames.size());
     result.bytesWritten = static_cast<uint64_t>(copiedSize);
     result.dataSize = static_cast<uint64_t>(copiedSize);
     result.originalDataOffset = 0;
@@ -300,10 +350,6 @@ ReapWriteResult ReapWriter::writeRoundTrip(const std::string& src, const std::st
     // Update metadata count in header
     writeU64(headerSection.data() + 16, metadataCount);
 
-    // --- Compute table end and data start ---
-    uint64_t tableEnd = static_cast<uint64_t>(headerSection.size() + metaBuf.size());
-    uint64_t dataStart = computeDataStart(tableEnd, alignment);
-
     // --- Tensor descriptors ---
     // For each tensor: name(string) + dims(u32 count + dims*u64) + type(u32) + offset(u64)
     std::vector<uint8_t> tensorDirBuf;
@@ -426,10 +472,6 @@ std::string ReapWriter::sha256Hex(const uint8_t* data, size_t len)
 ReapWriteResult ReapWriter::verifyRoundTrip(const std::string& src, const std::string& dst)
 {
     ReapWriteResult result;
-
-    // Verify the safe byte-preserving publication directly.  This also
-    // covers metadata arrays that the lightweight loader intentionally does
-    // not expose as typed accessors.
     std::error_code sec, dec;
     const auto srcSize = std::filesystem::file_size(src, sec);
     const auto dstSize = std::filesystem::file_size(dst, dec);
@@ -452,87 +494,47 @@ ReapWriteResult ReapWriter::verifyRoundTrip(const std::string& src, const std::s
         if (sn == 0) break;
     }
     result.success = true;
+    result.outputPath = dst;
     result.bytesWritten = static_cast<uint64_t>(srcSize);
+    result.dataSize = static_cast<uint64_t>(srcSize);
     return result;
-
     GGUFLoader srcLoader;
-    if (!srcLoader.load(src)) {
-        result.error = "source load failed: " + srcLoader.error();
-        return result;
-    }
-
     GGUFLoader dstLoader;
+    if (!srcLoader.load(src)) {
+        result.error = "source GGUF validation failed: " + srcLoader.error();
+        return result;
+    }
     if (!dstLoader.load(dst)) {
-        result.error = "destination load failed: " + dstLoader.error();
+        result.error = "destination GGUF validation failed: " + dstLoader.error();
         return result;
     }
-
-    // Compare metadata counts
-    if (srcLoader.tensorCountHeader() != dstLoader.tensorCountHeader()) {
-        result.error = "tensor count mismatch: src=" +
-            std::to_string(srcLoader.tensorCountHeader()) +
-            " dst=" + std::to_string(dstLoader.tensorCountHeader());
+    if (srcLoader.tensorCountHeader() != dstLoader.tensorCountHeader() ||
+        srcLoader.metadataCountHeader() != dstLoader.metadataCountHeader() ||
+        srcLoader.tensorCount() != dstLoader.tensorCount()) {
+        result.error = "round-trip GGUF inventory mismatch";
         return result;
     }
-    if (srcLoader.metadataCountHeader() != dstLoader.metadataCountHeader()) {
-        result.error = "metadata count mismatch: src=" +
-            std::to_string(srcLoader.metadataCountHeader()) +
-            " dst=" + std::to_string(dstLoader.metadataCountHeader());
+    const auto srcNames = srcLoader.listTensors();
+    const auto dstNames = dstLoader.listTensors();
+    if (srcNames != dstNames) {
+        result.error = "round-trip tensor names mismatch";
         return result;
     }
-
-    // Compare tensor names
-    auto srcNames = srcLoader.listTensors();
-    auto dstNames = dstLoader.listTensors();
-    if (srcNames.size() != dstNames.size()) {
-        result.error = "tensor name count mismatch: src=" +
-            std::to_string(srcNames.size()) +
-            " dst=" + std::to_string(dstNames.size());
-        return result;
-    }
-    for (size_t i = 0; i < srcNames.size(); ++i) {
-        if (srcNames[i] != dstNames[i]) {
-            result.error = "tensor name mismatch at index " + std::to_string(i) +
-                ": src=" + srcNames[i] + " dst=" + dstNames[i];
-            return result;
-        }
-    }
-
-    // Compare each tensor's type, shape, size, and data hash
     for (const auto& name : srcNames) {
-        const auto* srcT = srcLoader.getTensor(name);
-        const auto* dstT = dstLoader.getTensor(name);
-        if (!srcT || !dstT) {
-            result.error = "tensor missing in comparison: " + name;
-            return result;
-        }
-        if (srcT->type != dstT->type) {
-            result.error = "tensor type mismatch: " + name +
-                " src=" + std::to_string(static_cast<uint32_t>(srcT->type)) +
-                " dst=" + std::to_string(static_cast<uint32_t>(dstT->type));
-            return result;
-        }
-        if (srcT->shape != dstT->shape) {
-            result.error = "tensor shape mismatch: " + name;
-            return result;
-        }
-        if (srcT->sizeBytes != dstT->sizeBytes) {
-            result.error = "tensor size mismatch: " + name +
-                " src=" + std::to_string(srcT->sizeBytes) +
-                " dst=" + std::to_string(dstT->sizeBytes);
-            return result;
-        }
-        // Compare data hashes
-        std::string srcHash = sha256Hex(srcT->data, srcT->sizeBytes);
-        std::string dstHash = sha256Hex(dstT->data, dstT->sizeBytes);
-        if (srcHash != dstHash) {
-            result.error = "tensor data hash mismatch: " + name;
+        const auto* srcTensor = srcLoader.getTensor(name);
+        const auto* dstTensor = dstLoader.getTensor(name);
+        if (!srcTensor || !dstTensor || srcTensor->type != dstTensor->type ||
+            srcTensor->shape != dstTensor->shape ||
+            srcTensor->sizeBytes != dstTensor->sizeBytes ||
+            sha256Hex(srcTensor->data, srcTensor->sizeBytes) !=
+                sha256Hex(dstTensor->data, dstTensor->sizeBytes)) {
+            result.error = "round-trip tensor validation failed: " + name;
             return result;
         }
     }
-
     result.success = true;
     result.tensorsWritten = static_cast<uint64_t>(srcNames.size());
+    result.bytesWritten = static_cast<uint64_t>(srcSize);
     return result;
 }
 

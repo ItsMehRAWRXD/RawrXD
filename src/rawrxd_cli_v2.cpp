@@ -419,15 +419,17 @@ static int HandleReapContract(const std::string& model,
     }
     if (!requested) return -1;
 
-    if (flags.count("size") != 0) {
-        std::cerr << "REAP_SIZE_OPTION_CONFLICT: use --target-size with --reap;"
-                     " --size is not a REAP admission option\n";
-        return 2;
-    }
-
     RawrXD::Reap::CliRequest request;
     request.model = model;
-    request.targetSizeText = flags.count("target-size") ? flags.at("target-size") : "";
+    if (flags.count("target-size") != 0 && flags.count("size") != 0) {
+        std::cerr << "REAP_SIZE_OPTION_CONFLICT: specify only one of --target-size or --size\n";
+        return 2;
+    }
+    // `--size` is a compatibility alias only inside an explicit --reap
+    // request. A plain rawr run --size remains fail-closed below.
+    request.targetSizeText = flags.count("target-size")
+        ? flags.at("target-size")
+        : (flags.count("size") ? flags.at("size") : "");
     request.activeExpertsText = flags.count("active-experts") ? flags.at("active-experts") : "";
     request.expertBudgetText = flags.count("expert-budget") ? flags.at("expert-budget") : "";
     request.qualityFloorText = flags.count("quality-floor") ? flags.at("quality-floor") : "";

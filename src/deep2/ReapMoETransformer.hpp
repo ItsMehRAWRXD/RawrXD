@@ -11,6 +11,9 @@ struct ReapMoETransformRequest {
     std::string outputDirectory;
     std::string selectionManifest;
     uint32_t activeExperts = 0;
+    // A non-zero value is a hard upper bound on the measured output shard
+    // bytes.  The writer must reject a candidate that only fits on paper.
+    uint64_t targetSizeBytes = 0;
     bool replaceExisting = false;
 };
 
