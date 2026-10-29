@@ -59,10 +59,11 @@ is covered by a regression test.
 ## Agentic model readiness
 
 The current CLI hash in `evidence/RAWRXD_AGENTIC_MODEL_READINESS_20261029/SUMMARY.json`
-matches `rawr.exe` above. Four independent real-model receipts are PASS:
+matches `rawr.exe` above. Five independent real-model receipts are PASS:
 
 `nemotron-3-nano:4b`, `nemotron-3.5-bolt:latest`,
-`nemotron-3.5-lightning:30b`, and `flint:latest`.
+`nemotron-3.5-lightning:30b`, `flint:latest`, and the `qwen3:8b`
+baseline.
 
 Each receipt records real Ollama inference, MOTD authorization,
 `readFile -> editFiles -> readFile`, zero tool failures, exactly one changed
