@@ -3,6 +3,7 @@
 #include "deep2/GGUFLoader.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -44,6 +45,40 @@ bool parsePositive(std::string_view text, bool expert, uint64_t& value,
         return false;
     }
     const std::string number = s.substr(0, split);
+    const std::string suffix = s.substr(split);
+
+    // Expert counts are cardinalities, not sizes.  Parse them as exact
+    // decimal uint64 values so the full representable range is accepted
+    // without long-double rounding, and reject fractional counts instead of
+    // silently truncating them.
+    if (expert) {
+        if (number.find('.') != std::string::npos ||
+            (suffix != "" && suffix != "E")) {
+            error = suffix == "" || suffix == "E"
+                ? "EXPERT_TARGET_MUST_BE_INTEGER"
+                : "EXPERT_TARGET_MUST_BE_COUNT_OR_E_SUFFIX";
+            return false;
+        }
+        uint64_t parsedInteger = 0;
+        const auto parsed = std::from_chars(number.data(),
+                                             number.data() + number.size(),
+                                             parsedInteger, 10);
+        if (parsed.ec == std::errc::result_out_of_range) {
+            error = "EXPERT_TARGET_OVERFLOW";
+            return false;
+        }
+        if (parsed.ec != std::errc{} || parsed.ptr != number.data() + number.size()) {
+            error = "INVALID_EXPERT_TARGET";
+            return false;
+        }
+        if (parsedInteger == 0) {
+            error = "EXPERT_TARGET_ZERO";
+            return false;
+        }
+        value = parsedInteger;
+        return true;
+    }
+
     char* end = nullptr;
     const long double parsed = std::strtold(number.c_str(), &end);
     if (!end || *end != '\0' || !std::isfinite(parsed) || parsed <= 0.0L) {
@@ -51,7 +86,6 @@ bool parsePositive(std::string_view text, bool expert, uint64_t& value,
         return false;
     }
 
-    std::string suffix = s.substr(split);
     long double multiplier = 1.0L;
     if (!expert) {
         if (suffix == "K") multiplier = 1.0e3L;

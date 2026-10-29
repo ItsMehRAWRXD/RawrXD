@@ -45,10 +45,19 @@ router configuration. The streamer path remains the production
 `MoEWeightProxy+VulkanPrefetch` path.
 
 For multi-shard models, router admission and the production
-`GlobalTensorIndex`/`TensorResidencyCache` mapping path are enabled. A receipt
-must report `working_set_configured=false` until the active residency cache
-exposes a byte-budget setter; no receipt may claim that a byte budget was
-applied when only mapping-count limits are active.
+`GlobalTensorIndex`/`TensorResidencyCache` mapping path are enabled. The
+requested working-set budget is applied to the residency cache, including the
+alignment delta charged by each Windows mapping. Pinned mappings are never
+evicted to satisfy the budget; acquisition fails closed when the requested
+window cannot be admitted. A receipt reports `working_set_configured=true`
+only after the active cache exposes the exact configured byte budget.
+
+The parser has no arbitrary application cap in either direction. A target may
+be smaller or larger than the inspected model, and an expert count may be
+larger or smaller than the model's current top-k. Runtime admission still
+rejects physically impossible topology requests (for example, selecting more
+physical experts than the GGUF declares) rather than clamping or fabricating
+experts.
 
 ## Evidence contract
 

@@ -2381,6 +2381,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         // represent a 62-layer standard-MoE model such as MiniMax-M2.
         gguf_shard_cache::TensorResidencyCache::Config residencyConfig;
         residencyConfig.max_active = 1024;
+        if (reapRuntimeInjection_.enabled)
+        {
+            if (reapRuntimeInjection_.workingSetBytes >
+                static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+            {
+                fitRejectReason_ = "runtime working-set target does not fit host size type";
+                reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+                reapRuntimeReceipt_.reason = "WORKING_SET_EXCEEDS_HOST_SIZE_T";
+                return false;
+            }
+            residencyConfig.max_resident_bytes =
+                static_cast<uint64_t>(reapRuntimeInjection_.workingSetBytes);
+        }
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>(residencyConfig);
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s)
         {
@@ -3912,18 +3925,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             if (reapRuntimeInjection_.enabled)
             {
                 // Multi-shard execution uses the production GlobalTensorIndex
-                // and TensorResidencyCache path.  It has real aligned mapping
-                // and LRU streaming, but no byte-budget setter in this build;
-                // do not claim that the requested byte budget was applied.
+                // and TensorResidencyCache path. Its aligned LRU mapper now
+                // enforces the requested resident-byte budget.
                 reapRuntimeReceipt_.routeConfigured = true;
                 reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
-                reapRuntimeReceipt_.workingSetConfigured = false;
+                reapRuntimeReceipt_.workingSetConfigured =
+                    residencyCache_ != nullptr &&
+                    residencyCache_->resident_budget_bytes() ==
+                        reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
                 reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
                     ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
                     : "STREAMER_UNAVAILABLE";
                 reapRuntimeReceipt_.reason = reapRuntimeReceipt_.streamerConfigured
-                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_APPLIED_BYTE_BUDGET_NOT_AVAILABLE"
+                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
                     : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
             }
         }

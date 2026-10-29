@@ -71,7 +71,11 @@ bool resolveModel(const std::string& input, std::string& enginePath,
     enginePath = alias.path;
     fs::path first;
     if (!firstShardFor(fs::path(alias.path), first, error)) return false;
-    planPath = first.string();
+    // Deep2Engine's multi-shard loader expects the canonical first shard, not
+    // the directory that contains it. Keep planning and execution on the same
+    // resolved file so the receipt identifies the exact loaded source.
+    enginePath = first.string();
+    planPath = enginePath;
     return true;
 }
 

@@ -5575,6 +5575,20 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_runtime_plan_test.cpp" AND
     add_test(NAME rawr_reap_runtime_plan COMMAND rawr-reap-runtime-plan-test)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/tensor_residency_budget_test.cpp")
+    add_executable(rawr-tensor-residency-budget-test
+        tests/tensor_residency_budget_test.cpp)
+    target_include_directories(rawr-tensor-residency-budget-test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(rawr-tensor-residency-budget-test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(rawr-tensor-residency-budget-test PRIVATE /EHsc /std:c++17)
+    endif()
+    enable_testing()
+    add_test(NAME rawr_tensor_residency_budget
+             COMMAND rawr-tensor-residency-budget-test)
+endif()
+
 # REAP inventory/planning and guarded candidate-rewrite surface.  The writer
 # remains fail-closed behind the independent evidence gates and explicit
 # authorization; source shards are never overwritten.
