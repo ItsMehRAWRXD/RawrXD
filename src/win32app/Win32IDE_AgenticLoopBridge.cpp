@@ -93,6 +93,9 @@ bool AgenticLoopBridge::StartTask(const TaskConfig& config, ProgressCallback pro
     m_toolCallback = toolCb;
     m_completeCallback = completeCb;
     m_accumulatedOutput.clear();
+    m_structuredToolResults = 0;
+    m_successfulToolResults = 0;
+    m_failedToolResults = 0;
     m_cancelRequested.store(false);
     m_running.store(true);
     m_processStarted.store(false);
@@ -446,19 +449,26 @@ void AgenticLoopBridge::WorkerThread()
                     m_currentConfig.task.find("writeFile") != std::string::npos ||
                     m_currentConfig.task.find("audit") != std::string::npos ||
                     m_currentConfig.task.find("inspect") != std::string::npos;
-                const bool toolWasObserved =
-                    finalOutput.find("tool_start") != std::string::npos ||
-                    finalOutput.find("TOOL ") != std::string::npos;
+                // A tool_start event is only an attempted dispatch.  Require
+                // a structured successful tool_result so a model cannot make
+                // the GUI report PASS by printing a TOOL line or by exiting 0
+                // without executing the requested operation.
+                const bool toolWasObserved = m_structuredToolResults > 0;
+                const bool toolSucceeded = m_successfulToolResults > 0;
 
-                if (toolCapabilityRejected || (toolWasRequested && !toolWasObserved)) {
+                if (toolCapabilityRejected ||
+                    (toolWasRequested && (!toolWasObserved || !toolSucceeded))) {
                     success = false;
                     if (toolCapabilityRejected) {
                         finalOutput = "Selected model does not support agent tools. "
                                       "Choose a tool-capable Ollama model (for example qwen3:8b).\n" +
                                       finalOutput;
+                    } else if (m_failedToolResults > 0 && !toolSucceeded) {
+                        finalOutput = "Agent task tool execution failed; no successful "
+                                      "tool_result was observed.\n" + finalOutput;
                     } else {
-                        finalOutput = "Agent task completed without an observable tool call; "
-                                      "the requested read-only operation was not certified.\n" +
+                        finalOutput = "Agent task completed without a successful structured "
+                                      "tool_result; the requested operation was not certified.\n" +
                                       finalOutput;
                     }
                 }
@@ -733,9 +743,19 @@ void AgenticLoopBridge::ParseOutput(const std::string& line)
                     // subsequent tool_result is the completion heartbeat.
                 } else if (childKind == "tool_result") {
                     ToolResult result{};
-                    result.success = childMessage.find("status=PASS") != std::string::npos || value == 0;
-                    result.exitCode = result.success ? 0 : 1;
+                    const bool hasExplicitPass =
+                        childMessage.find("status=PASS") != std::string::npos;
+                    const bool hasExplicitFail =
+                        childMessage.find("status=FAIL") != std::string::npos;
+                    // The CLI contract emits both status and value.  Missing
+                    // status is not success, even when the parser's default
+                    // numeric value happens to be zero.
+                    result.success = hasExplicitPass && !hasExplicitFail && value == 0;
+                    result.exitCode = result.success ? 0 : (value == 0 ? 1 : value);
                     result.output = childMessage;
+                    ++m_structuredToolResults;
+                    if (result.success) ++m_successfulToolResults;
+                    else ++m_failedToolResults;
                     const auto namePos = childMessage.find("name=");
                     if (namePos != std::string::npos) {
                         const size_t start = namePos + 5;
@@ -759,39 +779,11 @@ void AgenticLoopBridge::ParseOutput(const std::string& line)
     if (line.find("TOOL read") != std::string::npos || 
         line.find("TOOL write") != std::string::npos ||
         line.find("TOOL bash") != std::string::npos) {
-        // Tool call detected
-        ToolResult result;
-        result.toolName = "unknown";
-        result.target = "";
-        result.success = true;
-        result.output = line;
-        result.exitCode = 0;
-        
-        if (line.find("TOOL read") != std::string::npos) {
-            result.toolName = "read";
-            m_watchdog.Progress(rawrxd::watchdog::Activity::ToolCompleted);
-        } else if (line.find("TOOL write") != std::string::npos) {
-            result.toolName = "write";
-            m_watchdog.Progress(rawrxd::watchdog::Activity::ToolCompleted);
-        } else if (line.find("TOOL bash") != std::string::npos) {
-            result.toolName = "bash";
-            m_watchdog.Progress(rawrxd::watchdog::Activity::ToolCompleted);
-        }
-        
-        // Extract target
-        size_t pos = line.find("TOOL " + result.toolName + " ");
-        if (pos != std::string::npos) {
-            size_t start = pos + result.toolName.size() + 6;
-            size_t end = line.find(' ', start);
-            if (end == std::string::npos) end = line.size();
-            result.target = line.substr(start, end - start);
-        }
-        
-        if (m_toolCallback) {
-            m_toolCallback(result);
-        }
-        
-        PublishESPEvent(rawrxd::esp::Kind::ToolStart, result.toolName + " " + result.target);
+        // Legacy text is only an attempted tool call.  It has no trustworthy
+        // execution result, so never turn it into a synthetic PASS callback.
+        std::string toolName = line.find("TOOL read") != std::string::npos
+            ? "read" : (line.find("TOOL write") != std::string::npos ? "write" : "bash");
+        PublishESPEvent(rawrxd::esp::Kind::ToolStart, toolName + " (result pending)");
     }
     
     if (line.find("BUILD") != std::string::npos || line.find("build") != std::string::npos) {

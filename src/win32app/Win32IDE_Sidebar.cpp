@@ -7,6 +7,8 @@
 #include <commdlg.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <algorithm>
+#include <cctype>
 #include <regex>     
 #include <filesystem>
 #include <fstream>   
@@ -37,6 +39,80 @@ namespace fs = std::filesystem;
 // message loop, with the owner disabled so it behaves modally.
 // ---------------------------------------------------------------------------
 namespace {
+
+bool isWorkspaceCandidate(const std::string& path)
+{
+    if (path.empty()) return false;
+
+    std::string normalized = path;
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    if (normalized.find("\\windowsapps\\") != std::string::npos ||
+        normalized.find("/windowsapps/") != std::string::npos) {
+        return false;
+    }
+
+    const DWORD attributes = GetFileAttributesA(path.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES ||
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+        return false;
+    }
+
+    const std::string gitMarker = path + "\\.git";
+    const std::string cmakeMarker = path + "\\CMakeLists.txt";
+    const std::string sourceMarker = path + "\\src";
+    const bool hasGit = GetFileAttributesA(gitMarker.c_str()) != INVALID_FILE_ATTRIBUTES;
+    const bool hasBuildLayout =
+        GetFileAttributesA(cmakeMarker.c_str()) != INVALID_FILE_ATTRIBUTES &&
+        GetFileAttributesA(sourceMarker.c_str()) != INVALID_FILE_ATTRIBUTES;
+    return hasGit || hasBuildLayout;
+}
+
+std::string resolveWorkspaceRoot()
+{
+    // Installations and launchers can provide an explicit checkout without
+    // forcing a developer-specific absolute path into the binary.
+    constexpr const char* kWorkspaceOverrides[] = {
+        "RAWRXD_WORKSPACE",
+        "RAWRXD_WORKSPACE_ROOT",
+        "RAWRXD_PROJECT_ROOT"
+    };
+    for (const char* variable : kWorkspaceOverrides) {
+        char value[MAX_PATH] = {};
+        const DWORD length = GetEnvironmentVariableA(variable, value, MAX_PATH);
+        if (length > 0 && length < MAX_PATH && isWorkspaceCandidate(value)) {
+            return value;
+        }
+    }
+
+    // Resolve from the executable first.  This keeps a launch from a shell,
+    // desktop shortcut, or the Codex host independent of its inherited CWD.
+    char executablePath[32768] = {};
+    const DWORD executableLength = GetModuleFileNameA(
+        nullptr, executablePath, static_cast<DWORD>(sizeof(executablePath)));
+    if (executableLength > 0 && executableLength < sizeof(executablePath)) {
+        std::string candidate(executablePath, executableLength);
+        size_t slash = candidate.find_last_of("\\/");
+        if (slash != std::string::npos) candidate.resize(slash);
+
+        for (int depth = 0; depth < 16 && !candidate.empty(); ++depth) {
+            if (isWorkspaceCandidate(candidate)) return candidate;
+            const size_t parentSlash = candidate.find_last_of("\\/");
+            if (parentSlash == std::string::npos || parentSlash <= 2) break;
+            candidate.resize(parentSlash);
+        }
+    }
+
+    // A valid project CWD is still supported, but arbitrary launch locations
+    // (especially WindowsApps) must never become the active workspace.
+    char currentDirectory[MAX_PATH] = {};
+    const DWORD currentLength = GetCurrentDirectoryA(MAX_PATH, currentDirectory);
+    if (currentLength > 0 && currentLength < MAX_PATH &&
+        isWorkspaceCandidate(currentDirectory)) {
+        return currentDirectory;
+    }
+    return {};
+}
 
 constexpr wchar_t PROMPT_CLASS_NAME[] = L"RawrXDPromptClass";
 
@@ -611,15 +687,13 @@ void Win32IDE::createExplorerView(HWND hwndParent)
     m_explorerTreeOriginalProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrA(
         m_hwndExplorerTree, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ExplorerTreeProc)));
 
-    // Derive the workspace from the process instead of embedding a developer
-    // machine path.  The tree itself is populated with every mounted logical
-    // drive below, while this path remains the default for workspace actions.
-    char currentDirectory[MAX_PATH] = {};
-    if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
-        m_explorerRootPath = currentDirectory;
-    } else {
-        m_explorerRootPath.clear();
-    }
+    // Resolve the workspace independently of the inherited CWD.  A desktop
+    // or host-app launch commonly inherits a WindowsApps directory, which is
+    // not a project and must never become the agent/model workspace.  Keep
+    // both explorer state fields synchronized because model discovery and the
+    // legacy file actions still consume m_currentExplorerPath.
+    m_explorerRootPath = resolveWorkspaceRoot();
+    m_currentExplorerPath = m_explorerRootPath;
 
     appendToOutput("Explorer view created; workspace root: " +
                    (m_explorerRootPath.empty() ? std::string("(unavailable)") : m_explorerRootPath) + "\n",

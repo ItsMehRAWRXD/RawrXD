@@ -122,6 +122,12 @@ private:
     
     TaskConfig m_currentConfig;
     std::string m_accumulatedOutput;
+    // Completion truth is derived from structured tool_result events, never
+    // from model text that merely says "TOOL ...".  These counters are reset
+    // per task and read after the output thread has been joined.
+    size_t m_structuredToolResults = 0;
+    size_t m_successfulToolResults = 0;
+    size_t m_failedToolResults = 0;
     // ReadFile is allowed to split a newline-delimited ESP record at any
     // byte. Keep the incomplete tail until the next read so structured
     // events are never silently dropped or parsed twice.

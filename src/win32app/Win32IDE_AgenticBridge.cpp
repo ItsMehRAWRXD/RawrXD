@@ -27,6 +27,8 @@ AgenticBridge::AgenticBridge(Win32IDE* ide)
 }
 
 AgenticBridge::~AgenticBridge() {
+    StopAgentLoop();
+    KillPowerShellProcess();
     LOG_INFO("AgenticBridge destroyed");
 }
 
@@ -223,7 +225,34 @@ bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const 
     siStartInfo.hStdInput = m_hStdinRead;
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
     
-    std::wstring wcmdLine(cmdLine.begin(), cmdLine.end());
+    // The command line is assembled as UTF-8.  Widening bytes directly
+    // corrupts non-ASCII paths/prompts (for example an em dash becomes the
+    // invalid UTF-8 byte 0x97 before JSON serialization).  Convert through
+    // the Windows UTF-8 codec explicitly before calling CreateProcessW.
+    const int wideLength = MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, cmdLine.data(),
+        static_cast<int>(cmdLine.size()), nullptr, 0);
+    if (wideLength <= 0) {
+        LOG_ERROR("SpawnPowerShellProcess: invalid UTF-8 command line");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
+    std::wstring wcmdLine(static_cast<size_t>(wideLength), L'\0');
+    if (MultiByteToWideChar(
+            CP_UTF8, MB_ERR_INVALID_CHARS, cmdLine.data(),
+            static_cast<int>(cmdLine.size()), wcmdLine.data(), wideLength) != wideLength) {
+        LOG_ERROR("SpawnPowerShellProcess: UTF-8 command line conversion failed");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
     
     BOOL success = CreateProcessW(
         NULL,               // No module name (use command line)
@@ -331,26 +360,32 @@ void AgenticBridge::SetOutputCallback(OutputCallback callback) {
 
 bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) {
     if (!m_initialized || !m_nativeAgent) return false;
-    if (m_agentLoopRunning) return true;
+    if (m_agentLoopRunning.load()) return true;
+    if (m_agentThread.joinable()) {
+        m_agentThread.join();
+    }
     
-    m_agentLoopRunning = true;
+    m_agentLoopRunning.store(true);
     m_agentThread = std::thread([this, initialPrompt, maxIterations]() {
         int iteration = 0;
-        while (m_agentLoopRunning && iteration < maxIterations) {
+        while (m_agentLoopRunning.load() && iteration < maxIterations) {
             // Process one agent iteration
             m_nativeAgent->Ask(initialPrompt);
             ++iteration;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        m_agentLoopRunning = false;
+        m_agentLoopRunning.store(false);
     });
-    m_agentThread.detach();
     
     return true;
 }
 
 void AgenticBridge::StopAgentLoop() {
-    m_agentLoopRunning = false;
+    m_agentLoopRunning.store(false);
+    if (m_agentThread.joinable() &&
+        m_agentThread.get_id() != std::this_thread::get_id()) {
+        m_agentThread.join();
+    }
 }
 
 AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
