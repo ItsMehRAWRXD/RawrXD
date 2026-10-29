@@ -101,6 +101,51 @@ static LRESULT CALLBACK ActivityBarButtonForwardProc(
     HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam,
     UINT_PTR, DWORD_PTR)
 {
+    // The original implementation created ordinary pushbuttons while a
+    // separate, unused WM_DRAWITEM routine attempted to paint them.  The
+    // stock button therefore repainted the icon surface with the system
+    // theme, producing blended labels and stale pixels.  Paint the button in
+    // the subclass that actually owns it, while leaving native click and
+    // keyboard behavior intact.
+    if (message == WM_ERASEBKGND) {
+        return 1;
+    }
+    if (message == WM_PAINT) {
+        PAINTSTRUCT ps{};
+        HDC hdc = BeginPaint(hwnd, &ps);
+        RECT rc{};
+        GetClientRect(hwnd, &rc);
+
+        const bool active = GetPropA(hwnd, "RawrXD.ActivityActive") != nullptr;
+        const bool pressed = (GetKeyState(VK_LBUTTON) & 0x8000) != 0 &&
+            (GetCapture() == hwnd);
+        const COLORREF bg = pressed ? VSCODE_ACTIVITY_BAR_HOVER
+            : (active ? VSCODE_ACTIVITY_BAR_ACTIVE : VSCODE_ACTIVITY_BAR_BG);
+        HBRUSH brush = CreateSolidBrush(bg);
+        FillRect(hdc, &rc, brush);
+        DeleteObject(brush);
+
+        if (active) {
+            RECT indicator = rc;
+            indicator.right = 3;
+            HBRUSH indicatorBrush = CreateSolidBrush(VSCODE_ACTIVITY_BAR_INDICATOR);
+            FillRect(hdc, &indicator, indicatorBrush);
+            DeleteObject(indicatorBrush);
+        }
+
+        char label[32]{};
+        GetWindowTextA(hwnd, label, static_cast<int>(sizeof(label)));
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, VSCODE_ACTIVITY_BAR_ICON);
+        DrawTextA(hdc, label, -1, &rc,
+                  DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (message == WM_NCDESTROY) {
+        RemovePropA(hwnd, "RawrXD.ActivityActive");
+    }
+
     const bool activate = message == WM_LBUTTONUP ||
         (message == WM_KEYUP && (wParam == VK_SPACE || wParam == VK_RETURN));
     const LRESULT result = DefSubclassProc(hwnd, message, wParam, lParam);
@@ -154,6 +199,8 @@ void Win32IDE::createActivityBarUI(HWND hwndParent)
         
         // Store IDE pointer for button subclass
         SetWindowLongPtr(m_activityBarButtons[i], GWLP_USERDATA, (LONG_PTR)this);
+        SetPropA(m_activityBarButtons[i], "RawrXD.ActivityActive",
+                 reinterpret_cast<HANDLE>(static_cast<INT_PTR>(i == 0 ? 1 : 0)));
         SetWindowSubclass(m_activityBarButtons[i], ActivityBarButtonForwardProc, 1, 0);
         
         // Create tooltip
@@ -180,7 +227,11 @@ void Win32IDE::updateActivityBarState()
     // Repaint all activity bar buttons to reflect current state
     for (int i = 0; i < 7; i++) {
         if (m_activityBarButtons[i]) {
+            SetPropA(m_activityBarButtons[i], "RawrXD.ActivityActive",
+                     reinterpret_cast<HANDLE>(static_cast<INT_PTR>(
+                         i == m_activeActivityBarButton ? 1 : 0)));
             InvalidateRect(m_activityBarButtons[i], nullptr, TRUE);
+            UpdateWindow(m_activityBarButtons[i]);
         }
     }
 }

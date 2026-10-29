@@ -43,6 +43,9 @@
 #ifndef IDC_ACTBAR_ACCOUNTS
 #define IDC_ACTBAR_ACCOUNTS 1107
 #endif
+#ifndef IDC_TITLE_TEXT
+#define IDC_TITLE_TEXT 1018
+#endif
 
 // Chat session tabs are created by Win32IDE.cpp but their TCN_SELCHANGE
 // notification is owned by the lifecycle/window-procedure translation unit.

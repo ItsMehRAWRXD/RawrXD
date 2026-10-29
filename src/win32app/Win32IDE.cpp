@@ -988,7 +988,9 @@ std::string generateOllamaModel(const std::string& baseUrl,
 #define IDC_OUTPUT_EDIT_FIND 1015
 #define IDC_SPLITTER 1016
 #define IDC_SEVERITY_FILTER 1017
+#ifndef IDC_TITLE_TEXT
 #define IDC_TITLE_TEXT 1018
+#endif
 #define IDC_FILE_TREE 1026
 
 // Activity Bar (Far Left) - VS Code style icon bar
@@ -2752,16 +2754,22 @@ void Win32IDE::createToolbar(HWND hwnd)
 
 void Win32IDE::createTitleBarControls()
 {
-    DWORD labelStyle = WS_CHILD | WS_VISIBLE | SS_CENTER | SS_NOPREFIX;
+    // These controls live inside the native toolbar.  Owner-draw keeps the
+    // title and settings affordance on the same dark surface as the rest of
+    // the IDE instead of allowing the system theme to paint an off-white
+    // button/label over it.
+    DWORD labelStyle = WS_CHILD | WS_VISIBLE | SS_CENTER | SS_NOPREFIX | SS_OWNERDRAW;
     m_hwndTitleLabel = CreateWindowExA(0, "STATIC", "RawrXD IDE", labelStyle,
                                       0, 0, 200, 24, m_hwndToolbar, (HMENU)IDC_TITLE_TEXT, m_hInstance, nullptr);
 
-    DWORD buttonStyle = WS_CHILD | WS_VISIBLE | BS_FLAT;
+    DWORD buttonStyle = WS_CHILD | WS_VISIBLE | BS_FLAT | BS_OWNERDRAW | BS_NOTIFY;
     auto createButton = [&](HWND& target, int controlId, const char* caption) {
         target = CreateWindowExA(0, "BUTTON", caption, buttonStyle,
                                  0, 0, 32, 24, m_hwndToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(controlId)), m_hInstance, nullptr);
     };
 
+    // Keep an accessible caption; the toolbar owner-draw handler renders the
+    // actual gear glyph and a high-contrast hover/pressed state.
     createButton(m_hwndBtnSettings, IDC_BTN_SETTINGS, "Gear");
 
     RECT client{};

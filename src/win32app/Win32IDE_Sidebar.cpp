@@ -513,19 +513,21 @@ void Win32IDE::setSidebarView(SidebarView view)
 {
     if (m_currentSidebarView == view) return;
 
-    // Hide all views
-    ShowWindow(m_hwndExplorerTree, SW_HIDE);
-    ShowWindow(m_hwndExplorerToolbar, SW_HIDE);
-    ShowWindow(m_hwndSearchInput, SW_HIDE);
-    ShowWindow(m_hwndSearchResults, SW_HIDE);
-    ShowWindow(m_hwndSearchOptions, SW_HIDE);
-    ShowWindow(m_hwndSCMFileList, SW_HIDE);
-    ShowWindow(m_hwndSCMToolbar, SW_HIDE);
-    ShowWindow(m_hwndSCMMessageBox, SW_HIDE);
-    ShowWindow(m_hwndDebugConfigs, SW_HIDE);
-    ShowWindow(m_hwndDebugToolbar, SW_HIDE);
-    ShowWindow(m_hwndExtensionsList, SW_HIDE);
-    ShowWindow(m_hwndExtensionSearch, SW_HIDE);
+    // Every view also owns static labels and nested controls whose HWNDs are
+    // intentionally not all retained as members.  Hiding only the headline
+    // controls left those children visible, so switching the activity bar
+    // painted Search/Debug words over the Explorer tree.  Enumerate the
+    // complete content subtree before showing the selected view; this makes
+    // the activity-bar transition atomic and prevents stale pixels/controls
+    // from leaking between views.
+    if (m_hwndSidebarContent) {
+        EnumChildWindows(m_hwndSidebarContent,
+            [](HWND child, LPARAM) -> BOOL {
+                ShowWindow(child, SW_HIDE);
+                return TRUE;
+            }, 0);
+        ShowWindow(m_hwndSidebarContent, SW_SHOW);
+    }
 
     m_currentSidebarView = view;
 
@@ -557,6 +559,7 @@ void Win32IDE::setSidebarView(SidebarView view)
     case SidebarView::RunDebug:
         ShowWindow(m_hwndDebugConfigs, SW_SHOW);
         ShowWindow(m_hwndDebugToolbar, SW_SHOW);
+        ShowWindow(m_hwndDebugVariables, SW_SHOW);
         appendToOutput("Run and Debug view activated\n", "Output", OutputSeverity::Info);
         break;
 

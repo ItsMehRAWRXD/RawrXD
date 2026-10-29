@@ -320,6 +320,54 @@ void Win32IDE::onCreate(HWND hwnd)
             [](HWND control, UINT message, WPARAM wp, LPARAM lp,
                UINT_PTR, DWORD_PTR) -> LRESULT {
                 if (message == WM_COMMAND) return SendMessageA(GetParent(control), message, wp, lp);
+                if (message == WM_ERASEBKGND) {
+                    HDC hdc = reinterpret_cast<HDC>(wp);
+                    RECT rc{};
+                    GetClientRect(control, &rc);
+                    HBRUSH brush = CreateSolidBrush(RGB(30, 33, 42));
+                    FillRect(hdc, &rc, brush);
+                    DeleteObject(brush);
+                    return 1;
+                }
+                if (message == WM_DRAWITEM) {
+                    auto* item = reinterpret_cast<DRAWITEMSTRUCT*>(lp);
+                    if (!item || !item->hwndItem) return 0;
+
+                    const COLORREF surface = RGB(30, 33, 42);
+                    const COLORREF text = RGB(230, 240, 255);
+                    const COLORREF hover = RGB(0, 92, 120);
+                    const COLORREF accent = RGB(0, 220, 255);
+                    const COLORREF fill = (item->itemState & ODS_SELECTED) ? hover : surface;
+                    HBRUSH brush = CreateSolidBrush(fill);
+                    FillRect(item->hDC, &item->rcItem, brush);
+                    DeleteObject(brush);
+
+                    SetBkMode(item->hDC, TRANSPARENT);
+                    SetTextColor(item->hDC, text);
+                    if (item->CtlID == IDC_TITLE_TEXT) {
+                        char title[512]{};
+                        GetWindowTextA(item->hwndItem, title,
+                                       static_cast<int>(sizeof(title)));
+                        DrawTextA(item->hDC, title, -1, &item->rcItem,
+                                  DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+                    } else if (item->CtlID == IDC_BTN_SETTINGS) {
+                        RECT gearRect = item->rcItem;
+                        SetTextColor(item->hDC, accent);
+                        HFONT gearFont = CreateFontW(
+                            -18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                            CLEARTYPE_QUALITY, FF_DONTCARE, L"Segoe UI Symbol");
+                        HGDIOBJ oldFont = gearFont
+                            ? SelectObject(item->hDC, gearFont) : nullptr;
+                        DrawTextW(item->hDC, L"\x2699", -1, &gearRect,
+                                  DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        if (oldFont) SelectObject(item->hDC, oldFont);
+                        if (gearFont) DeleteObject(gearFont);
+                    } else {
+                        return 0;
+                    }
+                    return TRUE;
+                }
                 return DefSubclassProc(control, message, wp, lp);
             }, 1, 0);
     }
