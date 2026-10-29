@@ -8,7 +8,7 @@ param(
         'flint:latest'
     ),
     [int]$TimeoutSeconds = 900,
-    [string]$EvidenceRoot = 'F:\rawrxd\evidence\RAWRXD_AGENTIC_MODEL_READINESS_20261028'
+    [string]$EvidenceRoot = 'F:\rawrxd\evidence\RAWRXD_AGENTIC_MODEL_READINESS_20261029'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -230,14 +230,39 @@ int main() { std::puts("RAWRXD_AGENTIC_BEFORE"); return 0; }
     Write-Output ("{0} | {1}" -f $model, $rec.status)
 }
 
+# A caller may intentionally run one model at a time (for example, to avoid
+# concurrent Ollama residency pressure). Rebuild the summary from every
+# per-model receipt in the evidence root so the last invocation cannot hide
+# earlier verified models. Current-run receipts win when a model is repeated.
+$receiptByModel = @{}
+Get-ChildItem -LiteralPath $EvidenceRoot -Directory -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        $receiptPath = Join-Path $_.FullName 'receipt.json'
+        if (Test-Path -LiteralPath $receiptPath) {
+            try {
+                $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+                if ($null -ne $receipt -and -not [string]::IsNullOrWhiteSpace([string]$receipt.model)) {
+                    $receiptByModel[[string]$receipt.model] = $receipt
+                }
+            } catch { }
+        }
+    }
+foreach ($current in @($results)) {
+    if ($null -ne $current -and -not [string]::IsNullOrWhiteSpace([string]$current.model)) {
+        $receiptByModel[[string]$current.model] = $current
+    }
+}
+$allResults = @($receiptByModel.Values | Sort-Object model)
+
 $summary = [ordered]@{
     schema = 'RAWRXD_AGENTIC_MODEL_READINESS_001'
     cli = $cli
     cli_sha256 = (Get-FileHash -LiteralPath $cli -Algorithm SHA256).Hash
     timestamp_utc = [DateTime]::UtcNow.ToString('o')
-    results = @($results)
-    pass = @($results | Where-Object status -eq 'PASS').Count
-    nonpass = @($results | Where-Object status -ne 'PASS').Count
+    requested_models = @($Models)
+    results = $allResults
+    pass = @($allResults | Where-Object status -eq 'PASS').Count
+    nonpass = @($allResults | Where-Object status -ne 'PASS').Count
     promotion = 'DISABLED'
 }
 $summary | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $EvidenceRoot 'SUMMARY.json') -Encoding utf8

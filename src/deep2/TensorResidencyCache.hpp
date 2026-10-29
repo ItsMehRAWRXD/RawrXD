@@ -178,12 +178,12 @@ public:
         uint64_t pgsz = cfg_.page_size;
         uint64_t aligned_off = offset & ~(pgsz - 1);
         uint64_t delta = offset - aligned_off;
-        if (bytes > std::numeric_limits<uint64_t>::max() - delta) return nullptr;
+        if (bytes > (std::numeric_limits<uint64_t>::max)() - delta) return nullptr;
         uint64_t map_len = bytes + delta;
 #if defined(_WIN32)
-        if (map_len > static_cast<uint64_t>(std::numeric_limits<SIZE_T>::max())) return nullptr;
+        if (map_len > static_cast<uint64_t>((std::numeric_limits<SIZE_T>::max)())) return nullptr;
 #else
-        if (map_len > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) return nullptr;
+        if (map_len > static_cast<uint64_t>((std::numeric_limits<size_t>::max)())) return nullptr;
 #endif
 
         // Reuse any resident view at this aligned offset that covers the
