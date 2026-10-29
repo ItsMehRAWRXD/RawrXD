@@ -30,15 +30,20 @@ int main() {
         std::cerr << "RUNTIME_TARGET_UINT64_EXPERT_FAIL " << error << "\n";
         return 4;
     }
+    if (!ParseRuntimeTarget("30GB/8", target, error) ||
+        target.parameterCount != 30000000000ULL || target.expertCount != 8) {
+        std::cerr << "RUNTIME_TARGET_DECIMAL_GB_FAIL " << error << "\n";
+        return 5;
+    }
     if (ParseRuntimeTarget("1B/8.5", target, error) ||
         error != "EXPERT_TARGET_MUST_BE_INTEGER") {
         std::cerr << "RUNTIME_TARGET_FRACTIONAL_EXPERT_FAIL " << error << "\n";
-        return 5;
+        return 6;
     }
     if (ParseRuntimeTarget("30B/8/2", target, error) ||
         error != "RUNTIME_TARGET_EXPECTED_PARAMETERS_SLASH_EXPERTS") {
         std::cerr << "RUNTIME_TARGET_MALFORMED_FAIL " << error << "\n";
-        return 6;
+        return 7;
     }
     std::cout << "REAP_RUNTIME_PLAN_TEST_PASS\n";
     return 0;

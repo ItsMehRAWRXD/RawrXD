@@ -88,10 +88,10 @@ bool parsePositive(std::string_view text, bool expert, uint64_t& value,
 
     long double multiplier = 1.0L;
     if (!expert) {
-        if (suffix == "K") multiplier = 1.0e3L;
-        else if (suffix == "M") multiplier = 1.0e6L;
-        else if (suffix == "B") multiplier = 1.0e9L;
-        else if (suffix == "T") multiplier = 1.0e12L;
+        if (suffix == "K" || suffix == "KB") multiplier = 1.0e3L;
+        else if (suffix == "M" || suffix == "MB") multiplier = 1.0e6L;
+        else if (suffix == "B" || suffix == "GB") multiplier = 1.0e9L;
+        else if (suffix == "T" || suffix == "TB") multiplier = 1.0e12L;
         else if (suffix == "KI") multiplier = 1024.0L;
         else if (suffix == "MI") multiplier = 1024.0L * 1024.0L;
         else if (suffix == "GI") multiplier = 1024.0L * 1024.0L * 1024.0L;

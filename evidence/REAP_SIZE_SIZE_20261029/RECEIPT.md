@@ -39,10 +39,22 @@ SHA-256: `748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145`
 - `rawr run __missing_model__ --reap --size 30GB --active-experts 8
   --expert-budget 30GB --quality-floor 0.9`: fail-closed inventory denial,
   exit 4, no output model written.
+- Real Kimi K2 runtime (`--target 30GB/8`) loaded all 13 shards and 1,096
+  tensors, admitted 384 experts with 8 active experts, and exited 0 with
+  `working_set_configured=true`, `streamer_configured=true`, and
+  `MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED`. The raw
+  receipt is `evidence/REAP_SIZE_SIZE_20261029/kimi_runtime_receipt.json`.
+- A dense Phi-3 runtime probe with the same target was rejected as
+  `DENSE_MODEL_HAS_NO_MOE_EXPERT_TOPOLOGY`, exit 4, with no generation or
+  rewrite. This is the required architecture guard, not a synthetic success.
 
 The multi-shard runtime now applies the requested working-set bytes to the
 active `TensorResidencyCache`; mapping alignment deltas count toward the exact
 resident budget and pinned mappings cannot be evicted.
+
+The documented decimal forms `KB`, `MB`, `GB`, and `TB` are accepted by the
+runtime target parser alongside the existing short and binary forms; `30GB/8`
+is covered by a regression test.
 
 ## Agentic model readiness
 
