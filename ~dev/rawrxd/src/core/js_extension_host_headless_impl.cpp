@@ -20,14 +20,14 @@ JSExtensionHost::~JSExtensionHost() = default;
 
 PatchResult JSExtensionHost::initialize()
 {
-    m_initialized = true;
-    return PatchResult::ok("JSExtensionHost stub initialized");
+    m_initialized = false;
+    return PatchResult::error("JSExtensionHost not available in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::shutdown()
 {
     m_initialized = false;
-    return PatchResult::ok("JSExtensionHost stub shutdown");
+    return PatchResult::error("JSExtensionHost not available in RawrEngine headless lane");
 }
 
 bool JSExtensionHost::isInitialized() const
@@ -38,13 +38,13 @@ bool JSExtensionHost::isInitialized() const
 PatchResult JSExtensionHost::activateExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("activateExtension (stub)");
+    return PatchResult::error("activateExtension not available in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::deactivateExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("deactivateExtension (stub)");
+    return PatchResult::error("deactivateExtension not available in RawrEngine headless lane");
 }
 
 void JSExtensionHost::getLoadedExtensions(JSExtensionState* outStates, size_t maxStates, size_t* outCount) const
@@ -71,7 +71,7 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir)
 PatchResult JSExtensionHost::unloadExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("unloadExtension (stub)");
+    return PatchResult::error("unloadExtension not available in RawrEngine headless lane");
 }
 
 bool JSExtensionHost::isJSExtension(const VSCodeExtensionManifest* manifest) const
@@ -92,14 +92,14 @@ PatchResult JSExtensionHost::fireEvent(const char* eventName, const char* dataJs
 {
     (void)eventName;
     (void)dataJson;
-    return PatchResult::ok("fireEvent (stub)");
+    return PatchResult::error("fireEvent not available in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::registerModuleResolver(const char* moduleName, const char* jsSource)
 {
     (void)moduleName;
     (void)jsSource;
-    return PatchResult::ok("registerModuleResolver (stub)");
+    return PatchResult::error("registerModuleResolver not available in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::executeScript(const char* extensionId, const char* script, char* outResult,
@@ -117,12 +117,15 @@ uint64_t JSExtensionHost::createTimer(uint64_t delayMs, bool repeat, void* jsCal
     (void)delayMs;
     (void)repeat;
     (void)jsCallback;
+    // Headless mode cannot schedule JS callbacks. Zero is the failure
+    // sentinel; no timer is created or reported as active.
     return 0;
 }
 
 void JSExtensionHost::cancelTimer(uint64_t timerId)
 {
     (void)timerId;
+    // No timers are created in the headless lane.
 }
 
 JSExtensionHost::Stats JSExtensionHost::getStats() const
