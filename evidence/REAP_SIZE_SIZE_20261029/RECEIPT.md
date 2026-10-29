@@ -1,7 +1,7 @@
 # REAP size/size runtime-budget follow-up
 
 Timestamp: 2026-10-29T04:30:00Z  
-Source HEAD: `3ebe209092add6cac9bef6c5fcd18aa1f3b7ebff`  
+Source HEAD: `3cd4ec6db22bcdf691fd92c8398a00592fff579e`  
 Promotion: `PROMOTE=0`
 
 This receipt records the rebuilt REAP runtime budget path and the model-agent
