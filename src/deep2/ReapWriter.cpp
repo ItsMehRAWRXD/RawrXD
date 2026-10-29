@@ -493,11 +493,6 @@ ReapWriteResult ReapWriter::verifyRoundTrip(const std::string& src, const std::s
         }
         if (sn == 0) break;
     }
-    result.success = true;
-    result.outputPath = dst;
-    result.bytesWritten = static_cast<uint64_t>(srcSize);
-    result.dataSize = static_cast<uint64_t>(srcSize);
-    return result;
     GGUFLoader srcLoader;
     GGUFLoader dstLoader;
     if (!srcLoader.load(src)) {
@@ -533,8 +528,10 @@ ReapWriteResult ReapWriter::verifyRoundTrip(const std::string& src, const std::s
         }
     }
     result.success = true;
+    result.outputPath = dst;
     result.tensorsWritten = static_cast<uint64_t>(srcNames.size());
     result.bytesWritten = static_cast<uint64_t>(srcSize);
+    result.dataSize = static_cast<uint64_t>(srcSize);
     return result;
 }
 
