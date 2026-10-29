@@ -26,6 +26,7 @@
 #ifndef CR_ACCESS_DENIED
 #define CR_ACCESS_DENIED ((CONFIGRET)0x33)
 #endif
+#pragma comment(lib, "advapi32.lib")
 #endif
 
 namespace Deep2 {
@@ -140,6 +141,23 @@ bool Usable(const DeviceIdentity& d) noexcept {
 }
 
 #ifdef _WIN32
+bool DeviceResetOptIn() noexcept {
+    const char* p = std::getenv("DEEP2_GPU_DEVICE_RESET");
+    if (!p || !*p) p = std::getenv("RAWRXD_GPU_DEVICE_RESET");
+    return p && (HasI(p, "1") || HasI(p, "ON") || HasI(p, "TRUE") || HasI(p, "YES"));
+}
+
+bool IsProcessElevated() noexcept {
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return false;
+    TOKEN_ELEVATION elevation{};
+    DWORD returned = 0;
+    const BOOL ok = GetTokenInformation(token, TokenElevation, &elevation,
+                                        sizeof(elevation), &returned);
+    CloseHandle(token);
+    return ok && elevation.TokenIsElevated != 0;
+}
+
 bool MatchHwId(const wchar_t* hw, uint32_t vendorId, uint32_t deviceId) noexcept {
     if (!hw) return false;
     wchar_t needle[64];
@@ -211,6 +229,13 @@ bool QueryProblemForIds(uint32_t vendorId, uint32_t deviceId, ULONG* outCode,
 bool AttemptDevNodeReset(const char* instanceIdUtf8, bool* accessDenied) noexcept {
     if (accessDenied) *accessDenied = false;
     if (!instanceIdUtf8 || !*instanceIdUtf8) return false;
+    // CM_Disable_DevNode/CM_Enable_DevNode require elevation.  Refuse before
+    // touching the device tree so a normal IDE launch never performs a futile
+    // privileged call or reports a misleading reset attempt.
+    if (!IsProcessElevated()) {
+        if (accessDenied) *accessDenied = true;
+        return false;
+    }
     wchar_t iid[256]{};
     MultiByteToWideChar(CP_UTF8, 0, instanceIdUtf8, -1, iid, 256);
     DEVINST node = 0;
@@ -329,12 +354,26 @@ void Deep2Device_RefreshPnPHealth(DeviceManagerSnapshot& snap) noexcept {
             d.healthy = true;
             continue;
         }
-        // Any CM_PROB_* (incl. 31 FAILED_ADD): unhealthy, one reset attempt.
+        // Any CM_PROB_* (incl. 31 FAILED_ADD): unhealthy. Device-node reset is
+        // deliberately opt-in and requires an elevated process; a skipped or
+        // denied reset never changes the unhealthy disposition.
         d.healthy = false;
         d.duty = DeviceDuty::Excluded;
-        d.resetAttempted = true;
-        d.resetOk = AttemptDevNodeReset(d.instanceId, &d.accessDenied);
-        Sleep(500);
+        d.resetAttempted = false;
+        d.resetOk = false;
+        d.resetSkipped = false;
+        d.resetRequiresElevation = false;
+        if (!DeviceResetOptIn()) {
+            d.resetSkipped = true;
+        } else if (!IsProcessElevated()) {
+            d.resetSkipped = true;
+            d.resetRequiresElevation = true;
+            d.accessDenied = true;
+        } else {
+            d.resetAttempted = true;
+            d.resetOk = AttemptDevNodeReset(d.instanceId, &d.accessDenied);
+            Sleep(500);
+        }
         ULONG after = 0;
         QueryProblemForIds(d.vendorId, d.deviceId, &after, d.instanceId,
                            sizeof(d.instanceId));
@@ -344,10 +383,13 @@ void Deep2Device_RefreshPnPHealth(DeviceManagerSnapshot& snap) noexcept {
             d.duty = DeviceDuty::Unused;
         std::fprintf(stderr,
                      "[Deep2Device] PnP name=%s PROBLEM_CODE=%u "
-                     "RESET_ATTEMPTED=%d RESET_OK=%d ACCESS_DENIED=%d "
+                     "RESET_ATTEMPTED=%d RESET_OK=%d RESET_SKIPPED=%d "
+                     "RESET_REQUIRES_ELEVATION=%d ACCESS_DENIED=%d "
                      "HEALTHY=%d instance=%s\n",
                      d.name, d.problemCode, (int)d.resetAttempted,
-                     (int)d.resetOk, (int)d.accessDenied, (int)d.healthy,
+                     (int)d.resetOk, (int)d.resetSkipped,
+                     (int)d.resetRequiresElevation, (int)d.accessDenied,
+                     (int)d.healthy,
                      d.instanceId);
         std::fflush(stderr);
     }
@@ -386,6 +428,8 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
             id.problemCode = 0;
             id.resetAttempted = false;
             id.resetOk = false;
+            id.resetSkipped = false;
+            id.resetRequiresElevation = false;
             id.duty = DeviceDuty::Unused;
             MakeStableId(id);
             bool dupPci = false;
@@ -716,6 +760,10 @@ void Deep2Device_EmitWitnesses(FILE* f, const DeviceManagerSnapshot& snap) noexc
             fprintf(o, "DEEP2_DEVICE_%u_RESET_ATTEMPTED=%d\n", i,
                     (int)d.resetAttempted);
             fprintf(o, "DEEP2_DEVICE_%u_RESET_OK=%d\n", i, (int)d.resetOk);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_SKIPPED=%d\n", i,
+                    (int)d.resetSkipped);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_REQUIRES_ELEVATION=%d\n", i,
+                    (int)d.resetRequiresElevation);
             fprintf(o, "DEEP2_DEVICE_%u_ACCESS_DENIED=%d\n", i, (int)d.accessDenied);
             if (d.instanceId[0])
                 fprintf(o, "DEEP2_DEVICE_%u_INSTANCE_ID=%s\n", i, d.instanceId);

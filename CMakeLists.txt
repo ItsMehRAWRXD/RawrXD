@@ -12,6 +12,27 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_code31_reset_smoke.cpp" AND
     target_compile_features(deep2_gpu_code31_reset_smoke PRIVATE cxx_std_20)
 endif()
 
+# PnP Code 31 recognition/reset-permission witness.  Keep this separate from
+# the Vulkan device-lost smoke: it exercises the real DeviceManager path and
+# must remain able to report an unelevated/opt-in hold without claiming that a
+# privileged device-node reset occurred.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/gpu_code31_reset_probe.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Deep2DeviceManager.cpp")
+    add_executable(deep2_gpu_code31_pnp_probe
+        tests/gpu_code31_reset_probe.cpp
+        src/deep2/Deep2DeviceManager.cpp)
+    target_include_directories(deep2_gpu_code31_pnp_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(deep2_gpu_code31_pnp_probe PRIVATE cxx_std_20)
+    if(WIN32)
+        target_link_libraries(deep2_gpu_code31_pnp_probe PRIVATE
+            dxgi setupapi cfgmgr32 advapi32)
+    endif()
+    enable_testing()
+    add_test(NAME deep2_gpu_code31_pnp_probe
+             COMMAND deep2_gpu_code31_pnp_probe)
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_roundtrip.cpp")
     add_executable(deep2_rom_roundtrip tools/deep2_rom_roundtrip.cpp)
     target_include_directories(deep2_rom_roundtrip PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")

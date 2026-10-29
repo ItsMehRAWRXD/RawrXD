@@ -58,18 +58,30 @@ int main() {
     std::printf("GPU_CODE31_RESET_001\n");
     std::printf("ENUM_OK=%d POLICY_OK=%d DETECTED=%u OPENED=%u\n",
                 (int)enumOk, (int)policyOk, snap.plan.detected, snap.plan.opened);
-    std::printf("UNHEALTHY=%u RESET_ATTEMPTED=%u RESET_OK=%u PROBLEM_31=%u RECOVERED_31=%u\n",
-                unhealthy, resetAttempted, resetOk, saw31, recovered31);
+    unsigned resetSkipped = 0, resetNeedsElevation = 0;
+    for (unsigned i = 0; i < snap.deviceCount; ++i) {
+        const Deep2::DeviceIdentity& d = snap.devices[i];
+        if (d.resetSkipped) ++resetSkipped;
+        if (d.resetRequiresElevation) ++resetNeedsElevation;
+    }
+    std::printf("UNHEALTHY=%u RESET_ATTEMPTED=%u RESET_OK=%u RESET_SKIPPED=%u "
+                "RESET_REQUIRES_ELEVATION=%u PROBLEM_31=%u RECOVERED_31=%u\n",
+                unhealthy, resetAttempted, resetOk, resetSkipped,
+                resetNeedsElevation, saw31, recovered31);
     std::printf("PLAN_REASON=%s PRIMARY=%s\n",
                 snap.plan.reason,
                 snap.plan.primaryIndex >= 0 ? snap.plan.primaryName : "(none)");
     std::printf("PROMOTE=0\n");
     const bool recognize = enumOk && snap.deviceCount > 0;
     std::printf("RECOGNIZE=%s\n", recognize ? "PASS" : "FAIL");
-    std::printf("RESET_DISPOSITION=%s\n",
-                resetAttempted == 0 ? "NO_CODE31_AT_REFRESH"
-                : (recovered31 ? "RESET_CLEARED_31"
-                   : (resetOk ? "RESET_OK_BUT_CODE_REMAINS" : "RESET_ATTEMPTED_FAILED")));
+    const char* resetDisposition =
+        recovered31 ? "RESET_CLEARED_31"
+        : (resetAttempted
+           ? (resetOk ? "RESET_OK_BUT_CODE_REMAINS" : "RESET_ATTEMPTED_FAILED")
+           : (saw31 ? (resetNeedsElevation ? "RESET_BLOCKED_REQUIRES_ELEVATION"
+                            : "RESET_SKIPPED_OPT_IN_REQUIRED")
+                    : "NO_CODE31_AT_REFRESH"));
+    std::printf("RESET_DISPOSITION=%s\n", resetDisposition);
     std::fflush(stdout);
     return recognize ? 0 : 1;
 }

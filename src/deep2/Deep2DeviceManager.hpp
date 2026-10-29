@@ -49,6 +49,8 @@ struct DeviceIdentity {
     bool healthy = true;
     bool resetAttempted = false;
     bool resetOk = false;
+    bool resetSkipped = false;
+    bool resetRequiresElevation = false;
     bool accessDenied = false;
     DeviceDuty duty = DeviceDuty::Unused;
 };
