@@ -12,28 +12,47 @@ void Win32IDE::initializeNativeGhostText() {
             }
             ChatModelEntry route;
             if (m_ghostTextMode == GhostTextMode::Independent) {
-                route = m_ghostTextModel;
+                // The independent selector stores an identifier across async
+                // catalog refreshes. Resolve it against the current catalog
+                // before dispatching so a stale row can never silently fall
+                // back to another model.
+                const auto found = std::find_if(
+                    m_availableModels.begin(), m_availableModels.end(),
+                    [this](const ChatModelEntry& candidate) {
+                        return candidate.source == m_ghostTextModel.source &&
+                            candidate.identifier == m_ghostTextModel.identifier &&
+                            !candidate.identifier.empty();
+                    });
+                if (found == m_availableModels.end()) {
+                    logWarning("GhostText", "Selected GhostText model is no longer available; request rejected.");
+                    callback("", true, false);
+                    return;
+                }
+                route = *found;
             } else if (m_ghostTextMode == GhostTextMode::FollowChat) {
                 route = m_selectedChatModel;
             } else {
-                // Auto Local must use the stable, independently validated
-                // local service before attempting an experimental native
-                // GGUF route.  The native route remains available through
-                // an explicit GhostText model selection, but it must not be
-                // selected implicitly while an editor change is in flight.
-                // Cloud Kilo is never selected by Auto Local.
-                for (const auto& candidate : m_availableModels) {
-                    if (candidate.source == ChatModelEntry::Source::Ollama) {
-                        route = candidate;
-                        break;
+                // Auto Local follows the currently selected chat model when
+                // it is an Ollama route.  Previously it always chose the
+                // first catalog row, which pinned every completion to the
+                // discovery-order default (often
+                // bigdaddyg-productivity-local:latest) even after the user
+                // selected GPT-OSS or Nemotron in the model selector.
+                if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
+                    !m_selectedChatModel.identifier.empty()) {
+                    route = m_selectedChatModel;
+                } else {
+                    // If chat is on a native GGUF or cloud route, choose the
+                    // first currently available Ollama model. Never invent a
+                    // model ID and never silently use a stale entry.
+                    for (const auto& candidate : m_availableModels) {
+                        if (candidate.source == ChatModelEntry::Source::Ollama &&
+                            !candidate.identifier.empty()) {
+                            route = candidate;
+                            break;
+                        }
                     }
                 }
-                // Do not silently fall back to a native GGUF route.  The
-                // native agent has a separate lifecycle and may be loading a
-                // large model or running a tool transaction; using it from a
-                // 250 ms GhostText timer can corrupt that lifecycle.  When
-                // Ollama is unavailable, GhostText is intentionally inert
-                // until the user explicitly selects a certified route.
             }
             if (route.identifier.empty()) {
                 logWarning("GhostText", "No eligible GhostText model route is available.");
@@ -46,7 +65,11 @@ void Win32IDE::initializeNativeGhostText() {
                 return;
             }
             m_pendingInferenceModel = route;
-            logInfo("GhostText inference route: " + route.identifier);
+            const char* backend = route.source == ChatModelEntry::Source::Ollama
+                ? "ollama" : (route.source == ChatModelEntry::Source::LocalFile
+                    ? "native" : "cloud");
+            logInfo("GhostText inference route: " + route.identifier +
+                    " backend=" + backend);
             requestNativeGhostText(prompt, std::move(callback));
         };
 

@@ -202,14 +202,18 @@ public:
         // Enforce both the entry count and the optional byte budget before
         // creating a new mapping. The mapped length includes the alignment
         // delta, so this is the exact resident charge, not tensor_bytes alone.
+        const auto over_budget = [&]() {
+            if (cfg_.max_resident_bytes == 0) return false;
+            const uint64_t resident = total_resident_bytes_locked();
+            return resident > cfg_.max_resident_bytes ||
+                   map_len > cfg_.max_resident_bytes - resident;
+        };
         if (cfg_.max_resident_bytes != 0 &&
-            (map_len > cfg_.max_resident_bytes ||
-             resident_bytes_ > cfg_.max_resident_bytes - map_len)) {
+            over_budget()) {
             size_t attempts = map_.size();
             while (attempts-- > 0 &&
                    (map_.size() >= cfg_.max_active ||
-                    (resident_bytes_ > cfg_.max_resident_bytes ||
-                     map_len > cfg_.max_resident_bytes - resident_bytes_))) {
+                    over_budget())) {
                 evict_lru();
             }
         } else {
@@ -218,8 +222,7 @@ public:
         }
         if (map_.size() >= cfg_.max_active ||
             (cfg_.max_resident_bytes != 0 &&
-             (resident_bytes_ > cfg_.max_resident_bytes ||
-              map_len > cfg_.max_resident_bytes - resident_bytes_))) {
+             over_budget())) {
             return nullptr;  // pinned entries or hard budget prevent admission
         }
 
@@ -291,7 +294,37 @@ public:
 
     uint64_t resident_bytes() const {
         std::lock_guard<std::mutex> lk(m_);
-        return resident_bytes_;
+        return total_resident_bytes_locked();
+    }
+
+    // Charge a bounded non-mapped buffer (for example, browser evidence
+    // retained by HEXMag) against the same hard residency budget used by
+    // tensor mappings.  A zero budget intentionally rejects external
+    // charges: callers must opt into a finite REAP budget before retaining
+    // data.  The caller must release exactly the amount it reserved.
+    bool reserve_external(uint64_t bytes) {
+        if (bytes == 0) return false;
+        std::lock_guard<std::mutex> lk(m_);
+        if (cfg_.max_resident_bytes == 0) return false;
+        const uint64_t resident = total_resident_bytes_locked();
+        if (bytes > cfg_.max_resident_bytes ||
+            resident > cfg_.max_resident_bytes - bytes) {
+            return false;
+        }
+        external_resident_bytes_ += bytes;
+        return true;
+    }
+
+    void release_external(uint64_t bytes) {
+        if (bytes == 0) return;
+        std::lock_guard<std::mutex> lk(m_);
+        external_resident_bytes_ = bytes >= external_resident_bytes_
+            ? 0 : external_resident_bytes_ - bytes;
+    }
+
+    uint64_t external_resident_bytes() const {
+        std::lock_guard<std::mutex> lk(m_);
+        return external_resident_bytes_;
     }
 
     uint64_t resident_budget_bytes() const {
@@ -306,6 +339,15 @@ private:
     mutable std::mutex m_;
     uint64_t tick_;
     uint64_t resident_bytes_ = 0;
+    uint64_t external_resident_bytes_ = 0;
+
+    uint64_t total_resident_bytes_locked() const {
+        if (external_resident_bytes_ >
+            (std::numeric_limits<uint64_t>::max)() - resident_bytes_) {
+            return (std::numeric_limits<uint64_t>::max)();
+        }
+        return resident_bytes_ + external_resident_bytes_;
+    }
 
     struct PairHash {
         size_t operator()(const MappingKey& key) const noexcept {

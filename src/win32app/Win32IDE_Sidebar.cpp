@@ -1692,9 +1692,24 @@ void Win32IDE::showExtensionDetails(const std::string& extensionId)
 
 void Win32IDE::loadInstalledExtensions()
 {
-    if (!m_hwndExtensionsList) return;
+    if (!m_hwndExtensionsList || !IsWindow(m_hwndExtensionsList)) return;
+    // setSidebarView() and updateSidebarContent() can both be reached from a
+    // single activity-bar click. Do not re-enter filesystem enumeration or
+    // mutate the list view while a prior refresh is still active.
+    if (m_extensionsLoadInProgress) return;
+    m_extensionsLoadInProgress = true;
+    struct LoadingReset {
+        bool& flag;
+        ~LoadingReset() { flag = false; }
+    } loadingReset{m_extensionsLoadInProgress};
 
-    ListView_DeleteAllItems(m_hwndExtensionsList);
+    // Extension discovery touches user-controlled filesystem roots and JSON
+    // manifests.  A malformed manifest, transient reparse point, or STL
+    // filesystem exception must never terminate the IDE while the user is
+    // merely opening the Extensions view.
+    try {
+        if (!IsWindow(m_hwndExtensionsList)) return;
+        ListView_DeleteAllItems(m_hwndExtensionsList);
 
     // Discover the actual installed VS Code/Cursor extensions.  The previous
     // implementation inserted a hard-coded list, which made GitHub Copilot
@@ -1714,28 +1729,67 @@ void Win32IDE::loadInstalledExtensions()
         roots.push_back(local / "Programs" / "Microsoft VS Code Insiders" / "resources" / "app" / "extensions");
     }
 
+    // package.json files are untrusted user data. Do not use std::regex here:
+    // the ECMAScript implementation can allocate heavily for a long or
+    // malformed manifest and throw regex_error(error_stack) on the UI thread.
+    // This scanner extracts one JSON string property without regex backtracking.
     auto jsonString = [](const std::string& text, const char* key) -> std::string {
-        const std::regex pattern(std::string("\\\"") + key +
-            "\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"\\\\])*)\\\"");
-        std::smatch match;
-        if (!std::regex_search(text, match, pattern) || match.size() < 2) return {};
-        std::string value = match[1].str();
-        // Decode the JSON escapes needed for display without depending on a
-        // second JSON runtime in the native Win32 IDE.
-        std::string decoded;
-        decoded.reserve(value.size());
-        bool escaped = false;
-        for (char c : value) {
-            if (escaped) {
-                decoded.push_back(c == 'n' ? '\n' : c == 'r' ? '\r' : c);
-                escaped = false;
-            } else if (c == '\\') {
-                escaped = true;
-            } else {
-                decoded.push_back(c);
+        const std::string quotedKey = std::string("\"") + key + "\"";
+        size_t searchFrom = 0;
+        while (searchFrom < text.size()) {
+            const size_t keyStart = text.find(quotedKey, searchFrom);
+            if (keyStart == std::string::npos) return {};
+
+            size_t before = keyStart;
+            while (before > 0 && std::isspace(static_cast<unsigned char>(text[before - 1]))) {
+                --before;
             }
+            if (before == 0 || (text[before - 1] != '{' && text[before - 1] != ',')) {
+                searchFrom = keyStart + quotedKey.size();
+                continue;
+            }
+
+            size_t cursor = keyStart + quotedKey.size();
+            while (cursor < text.size() && std::isspace(static_cast<unsigned char>(text[cursor]))) {
+                ++cursor;
+            }
+            if (cursor >= text.size() || text[cursor] != ':') {
+                searchFrom = keyStart + quotedKey.size();
+                continue;
+            }
+            ++cursor;
+            while (cursor < text.size() && std::isspace(static_cast<unsigned char>(text[cursor]))) {
+                ++cursor;
+            }
+            if (cursor >= text.size() || text[cursor] != '"') return {};
+            ++cursor;
+
+            std::string decoded;
+            decoded.reserve(64);
+            bool escaped = false;
+            for (; cursor < text.size(); ++cursor) {
+                const char c = text[cursor];
+                if (escaped) {
+                    switch (c) {
+                    case 'n': decoded.push_back('\n'); break;
+                    case 'r': decoded.push_back('\r'); break;
+                    case 't': decoded.push_back('\t'); break;
+                    case 'b': decoded.push_back('\b'); break;
+                    case 'f': decoded.push_back('\f'); break;
+                    default: decoded.push_back(c); break;
+                    }
+                    escaped = false;
+                } else if (c == '\\') {
+                    escaped = true;
+                } else if (c == '"') {
+                    return decoded;
+                } else {
+                    decoded.push_back(c);
+                }
+            }
+            return {};
         }
-        return decoded;
+        return {};
     };
 
     std::unordered_set<std::string> seen;
@@ -1748,6 +1802,14 @@ void Win32IDE::loadInstalledExtensions()
             const fs::path manifest = it->path() / "package.json";
             std::ifstream file(manifest, std::ios::binary);
             if (!file) continue;
+            std::error_code sizeEc;
+            const auto manifestBytes = fs::file_size(manifest, sizeEc);
+            constexpr uintmax_t kMaxExtensionManifestBytes = 4u * 1024u * 1024u;
+            if (sizeEc || manifestBytes > kMaxExtensionManifestBytes) {
+                appendToOutput("Skipped oversized or unreadable extension manifest: " +
+                               manifest.string() + "\n", "Errors", OutputSeverity::Warning);
+                continue;
+            }
             std::string text((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             if (text.empty()) continue;
             std::string publisher = jsonString(text, "publisher");
@@ -1771,6 +1833,7 @@ void Win32IDE::loadInstalledExtensions()
     item.mask = LVIF_TEXT;
 
     for (size_t i = 0; i < m_extensions.size(); i++) {
+        if (!IsWindow(m_hwndExtensionsList)) return;
         item.iItem = (int)i;
         item.iSubItem = 0;
         item.pszText = (LPSTR)m_extensions[i].name.c_str();
@@ -1781,9 +1844,20 @@ void Win32IDE::loadInstalledExtensions()
         ListView_SetItem(m_hwndExtensionsList, &item);
     }
 
-    appendToOutput("Discovered " + std::to_string(m_extensions.size()) +
-                   " installed extensions from local VS Code/Cursor roots\n",
-                   "Output", OutputSeverity::Info);
+        appendToOutput("Discovered " + std::to_string(m_extensions.size()) +
+                       " installed extensions from local VS Code/Cursor roots\n",
+                       "Output", OutputSeverity::Info);
+    } catch (const std::exception& ex) {
+        m_extensions.clear();
+        ListView_DeleteAllItems(m_hwndExtensionsList);
+        appendToOutput(std::string("Extensions discovery failed safely: ") +
+                       ex.what() + "\n", "Errors", OutputSeverity::Error);
+    } catch (...) {
+        m_extensions.clear();
+        ListView_DeleteAllItems(m_hwndExtensionsList);
+        appendToOutput("Extensions discovery failed safely: unknown exception\n",
+                       "Errors", OutputSeverity::Error);
+    }
 }
 
 // ============================================================================

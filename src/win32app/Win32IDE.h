@@ -389,6 +389,8 @@ public:
 private:
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK AgentModelDialogProc(HWND hwnd, UINT uMsg,
+                                                 WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ModelSelectorSubclassProc(HWND hwnd, UINT uMsg,
                                                        WPARAM wParam, LPARAM lParam,
                                                        UINT_PTR subclassId,
@@ -1161,6 +1163,7 @@ private:
         bool enabled;
     };
     std::vector<Extension> m_extensions;
+    bool m_extensionsLoadInProgress = false;
     
     // Outline View (code structure)
     HWND m_hwndOutlineTree = nullptr;
@@ -1244,6 +1247,9 @@ private:
     ChatModelEntry m_selectedChatModel;
     ChatModelEntry m_ghostTextModel;
     ChatModelEntry m_pendingInferenceModel;
+    HWND m_hwndAgentModelDialog = nullptr;
+    std::vector<std::string> m_agentModelDialogModels;
+    std::string m_agentModelDialogCurrent;
     GhostTextMode m_ghostTextMode = GhostTextMode::AutoLocal;
     bool m_allowCloudGhostText = false;
     std::unique_ptr<NativeGhostTextController> m_ghostText;

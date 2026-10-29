@@ -5599,6 +5599,42 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
+
+# HEXMag live bridge: browser-style HTTPS retrieval is admitted through the
+# existing REAP runtime plan and charges retained evidence through the same
+# TensorResidencyCache byte budget.  This target is deliberately separate from
+# the frozen product executable and never invokes the GGUF writer.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/hexmag/HexMagReapBridge.cpp" AND
+   TARGET deep2_engine_lib)
+    add_executable(hexmag-reap-live
+        src/hexmag/hexmag_reap_live_cli.cpp
+        src/hexmag/HexMagReapBridge.cpp)
+    target_include_directories(hexmag-reap-live PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_link_libraries(hexmag-reap-live PRIVATE deep2_engine_lib winhttp bcrypt)
+    target_compile_features(hexmag-reap-live PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(hexmag-reap-live PRIVATE /W4 /EHsc /std:c++20)
+    endif()
+    set_target_properties(hexmag-reap-live PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/hexmag_reap_live_test.cpp")
+        add_executable(hexmag-reap-live-test
+            tests/hexmag_reap_live_test.cpp
+            src/hexmag/HexMagReapBridge.cpp)
+        target_include_directories(hexmag-reap-live-test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/deep2)
+        target_link_libraries(hexmag-reap-live-test PRIVATE deep2_engine_lib winhttp bcrypt)
+        target_compile_features(hexmag-reap-live-test PRIVATE cxx_std_20)
+        if(MSVC)
+            target_compile_options(hexmag-reap-live-test PRIVATE /W4 /EHsc /std:c++20)
+        endif()
+        enable_testing()
+        add_test(NAME hexmag_reap_live_fail_closed COMMAND hexmag-reap-live-test)
+    endif()
+endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_moe_transform_test.cpp")
     add_executable(reap-moe-transform-test
         tests/reap_moe_transform_test.cpp
