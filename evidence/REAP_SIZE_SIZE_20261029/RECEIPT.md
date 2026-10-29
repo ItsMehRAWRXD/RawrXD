@@ -1,7 +1,7 @@
 # REAP size/size runtime-budget follow-up
 
 Timestamp: 2026-10-29T04:30:00Z  
-Source HEAD: `d2b163dde097f1b8a421d239360ef1b9bddd4b68`  
+Source HEAD: `3ebe209092add6cac9bef6c5fcd18aa1f3b7ebff`  
 Promotion: `PROMOTE=0`
 
 This receipt records the rebuilt REAP runtime budget path and the model-agent
@@ -12,11 +12,11 @@ product executable.
 
 | Artifact | SHA-256 | Result |
 |---|---|---|
-| `build_ide/bin-msvc/rawr.exe` | `6CE967FDA329B34DCB9939635F08756F80FA7BC3D0C2DB7B2323D1C1FBAE836D` | linked |
-| `build_ide/bin-msvc/rawr-reap.exe` | `7B0AAF9E8088F2BB5B69D97533FF8F7C104B246C085A044B1782BD6FDB92D86F` | linked |
-| `build_ide/bin-msvc/rawr-reap-runtime-plan-test.exe` | `EB385F12319B4A1B8E1B4F71BF61C8DE5A2188FC077FF820431FB1069CD3047F` | linked |
+| `build_ide/bin-msvc/rawr.exe` | `AE8A178F8942FDFD510EBD15BD242392273DDAD87971EC291A4BAD470DA568CA` | linked |
+| `build_ide/bin-msvc/rawr-reap.exe` | `9F8FBC5D41ADCE293B28FEFABF80243D116C6EDF10F6BFA3965679C6DF9F32A1` | linked |
+| `build_ide/bin-msvc/rawr-reap-runtime-plan-test.exe` | `6FD83DE101D718286B3BFD1C3ACB13AE6CA89BE46BD1D9C418BAB70A42AEDBA7` | linked |
 | `build_ide/rawr-tensor-residency-budget-test.exe` | `B5866F7F6BEED700C55A1036B2B5390EA866F95079B4E077FFD81C4BDD66BCDC` | linked |
-| `build_ide/bin/RawrXD-Win32IDE-Native.exe` | `92A4B396F1ED3674152F971B5C4067A644A16EDA8B3FAC2D71591D44DAACCCA2` | linked |
+| `build_ide/bin/RawrXD-Win32IDE-Native.exe` | `C73E4DEE399EA3E1DFDA3DA1B0A01772BDF11D938E2CC0544855F6A4F43B918F` | linked |
 
 The frozen product authority remains unchanged and was not rebuilt:
 
