@@ -1951,6 +1951,66 @@ else()
     message(STATUS "deep2_gpu_certify EXCLUDED: source or Vulkan SDK unavailable")
 endif()
 
+# Reproducible dual-device split-forward witness.  This target is deliberately
+# separate from the full-model GPU certification target: it proves that the
+# executor can route later blocks to a second Vulkan device and records
+# per-device submissions plus CPU-fallback state.  It must never be confused
+# with device discovery alone or with the frozen product executable.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND
+   Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_dualgpu_forward
+        tools/deep2_dualgpu_forward.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp)
+    target_include_directories(deep2_dualgpu_forward PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc})
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_dualgpu_forward PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_dualgpu_forward PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_dualgpu_forward PRIVATE ggml-vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_dualgpu_forward PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_dualgpu_forward PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_dualgpu_forward PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders")
+    set_target_properties(deep2_dualgpu_forward PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_dualgpu_forward enabled (split-device dispatch witness)")
+else()
+    message(STATUS "deep2_dualgpu_forward EXCLUDED: source or Vulkan SDK unavailable")
+endif()
+
 # Native Qwen4Exp reverse-engineering contract extractor.  This target is
 # intentionally dependency-free and read-only: it audits real shard manifests
 # before any operator is lowered into the executable Vulkan graph.
