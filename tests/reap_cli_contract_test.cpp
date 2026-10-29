@@ -21,8 +21,12 @@ int main() {
     const auto admission = RawrXD::Reap::EvaluateAdmission(valid);
     assert(!admission.transformationEnabled);
     const auto receipt = RawrXD::Reap::BlockedReceipt(valid, admission);
-    assert(receipt.find("REAP_EVIDENCE_") != std::string::npos ||
-           receipt.find("REAP_RUNTIME_UNAVAILABLE") != std::string::npos);
+    // The first denied gate is intentionally environment-dependent (missing
+    // evidence, inventory mismatch, stale schema, etc.).  Require the stable
+    // fail-closed status and a namespaced REAP denial reason instead of
+    // coupling this contract test to one particular workspace receipt.
+    assert(receipt.find("\"status\":\"BLOCKED\"") != std::string::npos);
+    assert(receipt.find("\"reason\":\"REAP_") != std::string::npos);
     assert(receipt.find("\"transformation_enabled\":false") != std::string::npos);
 
     RawrXD::Reap::AdmissionEvidence evidence;
