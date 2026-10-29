@@ -63,6 +63,7 @@
 #include "vulkan_compute_cpu_ns.hpp"
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
+#include "reap/ReapRuntimePlan.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -491,6 +492,14 @@ namespace Deep2
         void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
         bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
 
+        // Runtime REAP injection. This stages a non-destructive residency and
+        // MoE top-k policy for the next model load. It never rewrites GGUF.
+        bool configureReapRuntimeInjection(
+            const RawrXD::Reap::RuntimeInjection& injection);
+        const RawrXD::Reap::RuntimeInjectionReceipt& reapRuntimeReceipt() const {
+            return reapRuntimeReceipt_;
+        }
+
         // Production profiler (Batch 1)
         void enableProfiling(bool enable);
         bool isProfilingEnabled() const { return profilingEnabled_; }
@@ -905,6 +914,9 @@ namespace Deep2
         // Key: layerId, Value: vector of job handles returned by PrefetchAsync
         std::unordered_map<int, std::vector<uint64_t>> pendingPrefetches_;
         bool asyncPrefetchEnabled_ = false;
+
+        RawrXD::Reap::RuntimeInjection reapRuntimeInjection_{};
+        RawrXD::Reap::RuntimeInjectionReceipt reapRuntimeReceipt_{};
 
         // BP16 streaming support (zero-copy mapped weight access)
         std::unique_ptr<BP16Streamer> bp16Streamer_;

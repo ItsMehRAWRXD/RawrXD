@@ -3468,6 +3468,8 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntimePlan.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntime.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/tool_call_parser.cpp
@@ -5556,6 +5558,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_expert_layout_test.cpp" AND
     endif()
     enable_testing()
     add_test(NAME rawr_reap_expert_layout COMMAND rawr-reap-expert-layout-test)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_runtime_plan_test.cpp" AND
+   TARGET deep2_engine_lib)
+    add_executable(rawr-reap-runtime-plan-test
+        tests/reap_runtime_plan_test.cpp)
+    target_include_directories(rawr-reap-runtime-plan-test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(rawr-reap-runtime-plan-test PRIVATE deep2_engine_lib)
+    target_compile_features(rawr-reap-runtime-plan-test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawr-reap-runtime-plan-test PRIVATE /EHsc /std:c++20)
+    endif()
+    enable_testing()
+    add_test(NAME rawr_reap_runtime_plan COMMAND rawr-reap-runtime-plan-test)
 endif()
 
 # REAP inventory/planning and guarded candidate-rewrite surface.  The writer

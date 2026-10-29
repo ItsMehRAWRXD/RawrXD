@@ -1,6 +1,7 @@
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/ReapMoETransformer.hpp"
 #include "reap_cli_contract.hpp"
+#include "reap/ReapRuntime.hpp"
 #include "reap_expert_layout.hpp"
 #include "reap_inventory.hpp"
 #include "deep2/deep2_sha256.hpp"
@@ -32,6 +33,8 @@ static void usage() {
                  "rawr-reap topology <first-shard.gguf> [--output <topology.json>]\n"
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
+                 "rawr-reap runtime <model-or-alias> --target <parameters>/<experts> "
+                 "[--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
                  "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
@@ -901,6 +904,37 @@ static int reapPlan(int argc, char** argv) {
     return resultCode;
 }
 
+static int runtimeInjection(int argc, char** argv) {
+    if (argc < 5) { usage(); return 2; }
+    RawrXD::Reap::RuntimeRequest request;
+    request.model = argv[2];
+    for (int i = 3; i < argc; ++i) {
+        const std::string option = argv[i];
+        if (i + 1 >= argc) { usage(); return 2; }
+        const std::string value = argv[++i];
+        if (option == "--target") request.target = value;
+        else if (option == "--prompt") request.prompt = value;
+        else if (option == "--max-tokens") {
+            char* end = nullptr;
+            const unsigned long parsed = std::strtoul(value.c_str(), &end, 10);
+            if (!end || *end != '\0' || parsed == 0 || parsed > UINT32_MAX) {
+                std::cerr << "REAP_RUNTIME_INVALID_MAX_TOKENS\n";
+                return 2;
+            }
+            request.maxTokens = static_cast<uint32_t>(parsed);
+        }
+        else if (option == "--receipt") request.receiptPath = value;
+        else { std::cerr << "REAP_RUNTIME_UNKNOWN_OPTION: " << option << "\n"; return 2; }
+    }
+    if (request.target.empty()) {
+        std::cerr << "REAP_RUNTIME_TARGET_REQUIRED\n";
+        return 2;
+    }
+    const auto result = RawrXD::Reap::RunRuntime(request);
+    std::cout << result.receipt;
+    return result.exitCode;
+}
+
 int main(int argc, char** argv) {
     if (argc >= 3 && std::string(argv[1]) == "verify") {
         std::string receiptPath;
@@ -933,6 +967,7 @@ int main(int argc, char** argv) {
         if (argc != 3) { usage(); return 2; }
         return capabilities(argv[2]);
     }
+    if (argc >= 3 && std::string(argv[1]) == "runtime") return runtimeInjection(argc, argv);
     if (argc >= 3 && (std::string(argv[1]) == "reap" || std::string(argv[1]) == "--reap")) return reapPlan(argc, argv);
     if (argc < 3 || (std::string(argv[1]) != "inspect" && std::string(argv[1]) != "plan")) { usage(); return 2; }
     if (std::string(argv[1]) == "inspect" && argc != 3) { usage(); return 2; }
@@ -1042,7 +1077,7 @@ int main(int argc, char** argv) {
         for (const auto& e : fs::directory_iterator(dir, ec)) if (!ec && e.path().filename().string().rfind(prefix + "-", 0) == 0 && e.path().extension() == ".gguf") total += fs::file_size(e.path(), ec);
     } else total = fs::file_size(first, ec);
     if (!total) total = loader.mappedBytes();
-    std::cout << "{\"source\":\"" << path << "\",\"shards\":" << loader.shardCount()
+    std::cout << "{\"source\":" << json_quote(path) << ",\"shards\":" << loader.shardCount()
               << ",\"tensors\":" << loader.tensorCount() << ",\"bytes\":" << total
               << ",\"expert_tensors\":" << expertTensors << ",\"expert_bytes\":" << expertBytes
               << ",\"logical_experts\":" << logicalExperts

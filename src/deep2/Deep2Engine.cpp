@@ -1551,6 +1551,37 @@ static void fp16GEMV(const uint16_t* weights, const float* input, float* output,
 
 Deep2Engine::Deep2Engine() = default;
 
+bool Deep2Engine::configureReapRuntimeInjection(
+    const RawrXD::Reap::RuntimeInjection& injection)
+{
+    reapRuntimeReceipt_ = {};
+    reapRuntimeReceipt_.sourceImmutable = true;
+
+    if (modelWeights.loaded)
+    {
+        reapRuntimeReceipt_.status = "REQUIRES_PRELOAD";
+        reapRuntimeReceipt_.reason = "RUNTIME_INJECTION_MUST_BE_STAGED_BEFORE_MODEL_LOAD";
+        return false;
+    }
+    if (!injection.enabled || injection.parameterCount == 0 ||
+        injection.expertCount == 0 || injection.workingSetBytes == 0)
+    {
+        reapRuntimeReceipt_.status = "INVALID_TARGET";
+        reapRuntimeReceipt_.reason = "PARAMETERS_EXPERTS_AND_WORKING_SET_MUST_BE_NONZERO";
+        return false;
+    }
+
+    reapRuntimeInjection_ = injection;
+    asyncPrefetchEnabled_ = true;
+    reapRuntimeReceipt_.active = true;
+    reapRuntimeReceipt_.requestedParameters = injection.parameterCount;
+    reapRuntimeReceipt_.requestedExperts = injection.expertCount;
+    reapRuntimeReceipt_.workingSetBytes = injection.workingSetBytes;
+    reapRuntimeReceipt_.status = "STAGED";
+    reapRuntimeReceipt_.reason = "APPLY_ON_NEXT_MODEL_LOAD";
+    return true;
+}
+
 Deep2Engine::~Deep2Engine()
 {
     // LIFECYCLE-CERT-001: staged teardown markers only — no inference changes.
@@ -3607,6 +3638,38 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
     }
 
+    // Runtime REAP admission is deliberately separate from offline GGUF
+    // rewriting.  The first target controls the resident working-set policy;
+    // the second controls router top-k.  There is no software size ceiling,
+    // but a router cannot select experts that do not exist in the model.
+    if (reapRuntimeInjection_.enabled)
+    {
+        const uint64_t requestedExperts = reapRuntimeInjection_.expertCount;
+        const bool denseModel = modelWeights.numExperts == 0;
+        if (denseModel && requestedExperts != 1)
+        {
+            fitRejectReason_ = "runtime expert target requires one expert for a dense model";
+            reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+            reapRuntimeReceipt_.reason = "DENSE_MODEL_HAS_NO_MOE_EXPERT_TOPOLOGY";
+            return false;
+        }
+        if (!denseModel && requestedExperts > modelWeights.numExperts)
+        {
+            fitRejectReason_ = "runtime expert target exceeds model topology";
+            reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+            reapRuntimeReceipt_.reason = "REQUESTED_EXPERTS_EXCEED_PHYSICAL_MODEL_EXPERTS";
+            return false;
+        }
+        if (requestedExperts > static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+        {
+            fitRejectReason_ = "runtime expert target does not fit the host size type";
+            reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+            reapRuntimeReceipt_.reason = "EXPERT_TARGET_EXCEEDS_HOST_SIZE_T";
+            return false;
+        }
+        reapRuntimeReceipt_.effectiveExperts = requestedExperts;
+    }
+
     // Wire MoE streaming loader
     if (modelWeights.numExperts > 0)
     {
@@ -3622,7 +3685,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         if (!isMultiShard)
         {
             moeWeightsLoader_ = std::make_unique<MoEWeightsLoader>();
-            moeWeightsLoader_->SetMaxCacheSize(4ULL * 1024 * 1024 * 1024);
+            size_t maxCacheBytes = 4ULL * 1024 * 1024 * 1024;
+            if (reapRuntimeInjection_.enabled)
+            {
+                if (reapRuntimeInjection_.workingSetBytes >
+                    static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+                {
+                    fitRejectReason_ = "runtime working-set target does not fit host size type";
+                    reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+                    reapRuntimeReceipt_.reason = "WORKING_SET_EXCEEDS_HOST_SIZE_T";
+                    return false;
+                }
+                maxCacheBytes = static_cast<size_t>(reapRuntimeInjection_.workingSetBytes);
+                if (maxCacheBytes == 0) maxCacheBytes = 1;
+            }
+            moeWeightsLoader_->SetMaxCacheSize(maxCacheBytes);
             if (!moeWeightsLoader_->Open(firstShard.string().c_str()))
             {
                 printf("[Deep2Engine] WARNING: MoE streaming loader failed to open %s\n", firstShard.string().c_str());
@@ -3633,7 +3710,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 printf("[Deep2Engine] MoE streaming loader ready\n");
 
                 moeConfig_.numExperts = modelWeights.numExperts;
-                moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+                moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
+                    ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
+                    : modelWeights.numExpertsPerToken;
                 moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
                 moeConfig_.expertDim = modelWeights.moeIntermediateDim > 0 ? modelWeights.moeIntermediateDim : config.intermediateDim;
                 // Shared expert GGUF packs n_shared * expert_ff into one shexp tensor
@@ -3788,13 +3867,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                        modelWeights.numLayers, meta.numExperts);
 
                 moeInitialized_ = true;
+                if (reapRuntimeInjection_.enabled)
+                {
+                    reapRuntimeReceipt_.routeConfigured = true;
+                    reapRuntimeReceipt_.streamerConfigured = true;
+                    reapRuntimeReceipt_.workingSetConfigured = true;
+                    reapRuntimeReceipt_.active = true;
+                    reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
+                    reapRuntimeReceipt_.reason = "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                }
             }
         }
         else
         {
             printf("[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache\n");
             moeConfig_.numExperts = meta.numExperts;
-            moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+            moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
+                ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
+                : modelWeights.numExpertsPerToken;
             moeConfig_.useSharedExpert = meta.numSharedExperts > 0;
             moeConfig_.expertDim = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : meta.intermediateSize;
             if (meta.sharedExpertIntermediateSize > 0)
@@ -3819,7 +3909,38 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             printf("[Deep2Engine] Created %zu per-layer routers (multi-shard)\n", moeRouters_.size());
 
             moeInitialized_ = true;
+            if (reapRuntimeInjection_.enabled)
+            {
+                // Multi-shard execution uses the production GlobalTensorIndex
+                // and TensorResidencyCache path.  It has real aligned mapping
+                // and LRU streaming, but no byte-budget setter in this build;
+                // do not claim that the requested byte budget was applied.
+                reapRuntimeReceipt_.routeConfigured = true;
+                reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
+                reapRuntimeReceipt_.workingSetConfigured = false;
+                reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
+                reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
+                    ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
+                    : "STREAMER_UNAVAILABLE";
+                reapRuntimeReceipt_.reason = reapRuntimeReceipt_.streamerConfigured
+                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_APPLIED_BYTE_BUDGET_NOT_AVAILABLE"
+                    : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+            }
         }
+    }
+
+    if (reapRuntimeInjection_.enabled && modelWeights.numExperts == 0)
+    {
+        // Dense models have no expert streamer to retune.  Keep the request
+        // explicit and successful only for the semantically valid /1 target;
+        // never report a fake MoE or residency activation.
+        reapRuntimeReceipt_.active = true;
+        reapRuntimeReceipt_.routeConfigured = false;
+        reapRuntimeReceipt_.streamerConfigured = false;
+        reapRuntimeReceipt_.workingSetConfigured = false;
+        reapRuntimeReceipt_.effectiveExperts = 1;
+        reapRuntimeReceipt_.status = "ACTIVE_DENSE_MODEL";
+        reapRuntimeReceipt_.reason = "NO_MOE_STREAMER_REQUIRED";
     }
 
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);

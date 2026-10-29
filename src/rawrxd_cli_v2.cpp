@@ -43,6 +43,7 @@
 #include "deep2/QuantParityRegistry.h"
 #include "reap_cli_contract.hpp"
 #include "reap_pipeline.hpp"
+#include "reap/ReapRuntime.hpp"
 #include "project_wizard/project_spec.hpp"
 #include "project_wizard/project_state_manager.hpp"
 #include "project_wizard/project_wizard.hpp"
@@ -466,6 +467,30 @@ static int HandleReapContract(const std::string& model,
                      " writer receipts pass EvaluateAdmission\n";
     }
     return pipeline.exitCode;
+}
+
+// Runtime REAP is a live streamer/router injection, not the offline GGUF
+// writer.  A valued --reap is the explicit <parameters>/<experts> form; the
+// legacy bare --reap switch continues to use the guarded writer contract.
+static int HandleRuntimeReap(const std::string& model,
+                             const std::map<std::string, std::string>& flags,
+                             const std::string& promptIn) {
+    auto it = flags.find("reap");
+    if (it == flags.end() || it->second == "true") return -1;
+
+    RawrXD::Reap::RuntimeRequest request;
+    request.model = model;
+    request.target = it->second;
+    request.prompt = promptIn;
+    if (request.prompt.empty()) {
+        if (auto p = flags.find("prompt"); p != flags.end()) request.prompt = p->second;
+        else if (auto t = flags.find("task"); t != flags.end()) request.prompt = t->second;
+    }
+    request.maxTokens = static_cast<uint32_t>((std::max)(1, g_run_max_tokens));
+    if (auto r = flags.find("receipt"); r != flags.end()) request.receiptPath = r->second;
+    const auto result = RawrXD::Reap::RunRuntime(request);
+    std::cout << result.receipt;
+    return result.exitCode;
 }
 
 // ---------------------------------------------------------------------------
@@ -1014,6 +1039,9 @@ static int CmdRun(const std::vector<std::string>& args) {
         std::cerr << "RUN_CONFIG_REQUESTED_CONTEXT=" << g_run_context << "\n";
     }
     CliTrace("CmdRun:arguments-parsed");
+
+    const int runtimeReapResult = HandleRuntimeReap(model, flags, mode_str);
+    if (runtimeReapResult >= 0) return runtimeReapResult;
 
     const int reapContractResult = HandleReapContract(model, flags, mode_str);
     if (reapContractResult >= 0) return reapContractResult;
@@ -2426,9 +2454,11 @@ static int RawrXDMain(int argc, char** argv) {
                           << "  rawr run <model> [mode] [--backend b] [--workspace d] [--max-tokens n] [--context n]\n"
                           << "             [--fresh-session] [--approve-mutations] [--cancel-after-ms n]\n"
               << "             interactive agent (mutations require explicit opt-in)\n"
-              << "  rawr run <model> --reap --target-size <size> --active-experts <n>\n"
+              << "  rawr run <model> --reap --target-size|--size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
-              << "  rawr reap <model> --target-size <size> --active-experts <n>\n"
+              << "  rawr run <model> --reap <parameters>/<experts> [--receipt <json>]\n"
+              << "             non-destructive runtime streamer/router injection\n"
+              << "  rawr reap <model> --target-size|--size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
               << "             [--selection-output <json> --output-model <dir>\n"
               << "              --authorize-rewrite --prompt <text>]              candidate-only rewrite\n"
