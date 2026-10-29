@@ -1046,9 +1046,9 @@ static int CmdRun(const std::vector<std::string>& args) {
     const int reapContractResult = HandleReapContract(model, flags, mode_str);
     if (reapContractResult >= 0) return reapContractResult;
 
-    // REAP expert pruning/residency is not part of this production binary
-    // yet. Reject the option explicitly instead of silently running an
-    // unmodified model and reporting a misleading success.
+    // A legacy bare --size request has no live runtime target. Reject it
+    // explicitly instead of silently running an unmodified model. The
+    // production live form is --reap <parameters>/<experts>, handled above.
     if (flags.count("size")) {
         uint64_t budget = 0;
         if (!ParseMemoryBudget(flags["size"], budget)) {
