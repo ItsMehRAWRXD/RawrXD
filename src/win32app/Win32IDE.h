@@ -54,6 +54,9 @@
 #ifndef IDC_CHAT_SESSIONS
 #define IDC_CHAT_SESSIONS 1208
 #endif
+#ifndef IDC_NEW_CHAT
+#define IDC_NEW_CHAT 1209
+#endif
 #ifndef IDC_CLOSE_CHAT
 #define IDC_CLOSE_CHAT 1214
 #endif
@@ -1247,9 +1250,6 @@ private:
     ChatModelEntry m_selectedChatModel;
     ChatModelEntry m_ghostTextModel;
     ChatModelEntry m_pendingInferenceModel;
-    HWND m_hwndAgentModelDialog = nullptr;
-    std::vector<std::string> m_agentModelDialogModels;
-    std::string m_agentModelDialogCurrent;
     GhostTextMode m_ghostTextMode = GhostTextMode::AutoLocal;
     bool m_allowCloudGhostText = false;
     std::unique_ptr<NativeGhostTextController> m_ghostText;

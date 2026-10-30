@@ -13,6 +13,12 @@
 
 namespace {
 
+struct AgentModelDialogState {
+    Win32IDE* ide = nullptr;
+    std::vector<std::string> models;
+    std::string current;
+};
+
 // The CLI's structured [ESP] records are already rendered by the ESP panel.
 // Keep them in the raw evidence log, but do not append the same records again
 // through the progress-text path into Output/Chat.
@@ -349,14 +355,16 @@ void Win32IDE::onAgentConfigureModel() {
 LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
                                                  WPARAM wParam, LPARAM lParam)
 {
-    auto* ide = reinterpret_cast<Win32IDE*>(
+    auto* state = reinterpret_cast<AgentModelDialogState*>(
         GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+    auto* ide = state ? state->ide : nullptr;
 
     if (message == WM_NCCREATE) {
         const auto* create = reinterpret_cast<const CREATESTRUCTA*>(lParam);
-        ide = static_cast<Win32IDE*>(create->lpCreateParams);
+        state = static_cast<AgentModelDialogState*>(create->lpCreateParams);
+        ide = state ? state->ide : nullptr;
         SetWindowLongPtrA(hwnd, GWLP_USERDATA,
-                          reinterpret_cast<LONG_PTR>(ide));
+                          reinterpret_cast<LONG_PTR>(state));
     }
 
     switch (message) {
@@ -364,7 +372,7 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
         if (!ide) return -1;
         constexpr int kComboId = 1001;
         constexpr int kDialogWidth = 460;
-        constexpr int kDialogHeight = 220;
+        constexpr int kDialogHeight = 250;
         const HFONT font = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
 
         HWND label = CreateWindowExA(
@@ -384,13 +392,13 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
         HWND use = CreateWindowExA(
             0, "BUTTON", "Use Model",
             WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-            kDialogWidth - 205, kDialogHeight - 54, 90, 30, hwnd,
+            kDialogWidth - 205, kDialogHeight - 74, 90, 30, hwnd,
             reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDOK)),
             ide->m_hInstance, nullptr);
         HWND cancel = CreateWindowExA(
             0, "BUTTON", "Cancel",
             WS_CHILD | WS_VISIBLE,
-            kDialogWidth - 105, kDialogHeight - 54, 90, 30, hwnd,
+            kDialogWidth - 105, kDialogHeight - 74, 90, 30, hwnd,
             reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDCANCEL)),
             ide->m_hInstance, nullptr);
 
@@ -400,11 +408,11 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
         }
 
         int selectedIndex = 0;
-        for (size_t i = 0; i < ide->m_agentModelDialogModels.size(); ++i) {
-            const auto& model = ide->m_agentModelDialogModels[i];
+        for (size_t i = 0; i < state->models.size(); ++i) {
+            const auto& model = state->models[i];
             SendMessageA(combo, CB_ADDSTRING, 0,
                          reinterpret_cast<LPARAM>(model.c_str()));
-            if (model == ide->m_agentModelDialogCurrent) {
+            if (model == state->current) {
                 selectedIndex = static_cast<int>(i);
             }
         }
@@ -436,7 +444,6 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
                     ide->appendToOutput(
                         " Agent model set to: " + model + "\n",
                         "Output", Win32IDE::OutputSeverity::Info);
-                    ide->m_agentModelDialogCurrent = model;
                 }
             }
         }
@@ -460,10 +467,26 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
         DestroyWindow(hwnd);
         return 0;
 
-    case WM_NCDESTROY:
-        if (ide && ide->m_hwndAgentModelDialog == hwnd) {
-            ide->m_hwndAgentModelDialog = nullptr;
+    case WM_SYSCOMMAND:
+        // Handle the caption close command explicitly.  This popup is a
+        // modeless owned window, so relying on the default system-menu
+        // translation can leave the visible X unresponsive when focus is in
+        // the combo box or another child control.
+        if ((wParam & 0xFFF0u) == SC_CLOSE) {
+            DestroyWindow(hwnd);
+            return 0;
         }
+        break;
+
+    case WM_NCLBUTTONDOWN:
+        if (wParam == HTCLOSE) {
+            DestroyWindow(hwnd);
+            return 0;
+        }
+        break;
+
+    case WM_NCDESTROY:
+        delete state;
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         break;
     }
@@ -485,42 +508,38 @@ void Win32IDE::onAgentConfigureModel()
         return;
     }
 
-    if (m_hwndAgentModelDialog && IsWindow(m_hwndAgentModelDialog)) {
-        SetForegroundWindow(m_hwndAgentModelDialog);
+    constexpr char kDialogClass[] = "RawrXD.AgentModelDialog";
+    if (HWND existing = FindWindowExA(m_hwndMain, nullptr, kDialogClass, nullptr)) {
+        SetForegroundWindow(existing);
         return;
     }
 
     // Use the already-fenced model-discovery cache. The previous synchronous
     // /api/tags request could freeze the UI while Ollama was unavailable.
-    m_agentModelDialogModels.clear();
+    std::vector<std::string> models;
     for (const auto& entry : m_availableModels) {
         if (!entry.identifier.empty() &&
-            std::find(m_agentModelDialogModels.begin(),
-                      m_agentModelDialogModels.end(),
-                      entry.identifier) == m_agentModelDialogModels.end()) {
-            m_agentModelDialogModels.push_back(entry.identifier);
+            std::find(models.begin(), models.end(),
+                      entry.identifier) == models.end()) {
+            models.push_back(entry.identifier);
         }
     }
-    if (m_agentModelDialogModels.empty()) {
-        m_agentModelDialogModels = {
+    if (models.empty()) {
+        models = {
             "bigdaddyg-personalized-agentic:latest",
             "codestral:latest",
             "llama3.3:latest"
         };
     }
 
-    m_agentModelDialogCurrent = m_agenticBridge->GetCurrentModel();
-    if (m_agentModelDialogCurrent.empty()) {
-        m_agentModelDialogCurrent = m_agentModelDialogModels.front();
+    std::string current = m_agenticBridge->GetCurrentModel();
+    if (current.empty()) {
+        current = models.front();
     }
-    if (std::find(m_agentModelDialogModels.begin(),
-                  m_agentModelDialogModels.end(),
-                  m_agentModelDialogCurrent) == m_agentModelDialogModels.end()) {
-        m_agentModelDialogModels.insert(m_agentModelDialogModels.begin(),
-                                        m_agentModelDialogCurrent);
+    if (std::find(models.begin(), models.end(), current) == models.end()) {
+        models.insert(models.begin(), current);
     }
 
-    constexpr char kDialogClass[] = "RawrXD.AgentModelDialog";
     WNDCLASSA existing{};
     if (!GetClassInfoA(m_hInstance, kDialogClass, &existing)) {
         WNDCLASSA dialogClass{};
@@ -540,36 +559,63 @@ void Win32IDE::onAgentConfigureModel()
     RECT parentRect{};
     GetWindowRect(m_hwndMain, &parentRect);
     constexpr int kDialogWidth = 460;
-    constexpr int kDialogHeight = 220;
+    constexpr int kDialogHeight = 250;
     HMONITOR monitor = MonitorFromWindow(m_hwndMain, MONITOR_DEFAULTTONEAREST);
     MONITORINFO monitorInfo{sizeof(monitorInfo)};
     RECT workArea = parentRect;
     if (monitor && GetMonitorInfoA(monitor, &monitorInfo)) {
         workArea = monitorInfo.rcWork;
     }
+    // Keep the model dialog inside the usable editor area.  The old screen-
+    // centered placement could put the lower half behind the docked Output /
+    // PowerShell surface, making Use Model and Cancel unreachable even though
+    // the dialog itself was alive.
+    RECT usableArea = parentRect;
+    RECT dockRect{};
+    const HWND dock = (m_hwndPowerShellPanel &&
+                       IsWindowVisible(m_hwndPowerShellPanel))
+        ? m_hwndPowerShellPanel
+        : m_hwndOutputTabs;
+    if (dock && IsWindow(dock) && IsWindowVisible(dock) &&
+        GetWindowRect(dock, &dockRect) && dockRect.top > usableArea.top) {
+        usableArea.bottom = (std::min)(usableArea.bottom, dockRect.top - 8);
+    }
+    usableArea.top += 48;
+    if (usableArea.bottom - usableArea.top < kDialogHeight) {
+        usableArea = parentRect;
+    }
     const int dialogX = (std::max)(workArea.left,
         workArea.left + ((workArea.right - workArea.left - kDialogWidth) / 2));
-    const int dialogY = (std::max)(workArea.top,
-        workArea.top + ((workArea.bottom - workArea.top - kDialogHeight) / 2));
+    const int dialogY = (std::max)(usableArea.top,
+        usableArea.top + ((usableArea.bottom - usableArea.top - kDialogHeight) / 2));
 
-    m_hwndAgentModelDialog = CreateWindowExA(
+    auto* state = new (std::nothrow) AgentModelDialogState{
+        this, std::move(models), std::move(current)};
+    if (!state) {
+        appendToOutput("Agent model configuration unavailable: dialog state allocation failed.\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
+
+    HWND dialog = CreateWindowExA(
         WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW,
         kDialogClass, "Select Agent Model",
         WS_POPUP | WS_CAPTION | WS_SYSMENU,
         dialogX, dialogY, kDialogWidth, kDialogHeight,
-        m_hwndMain, nullptr, m_hInstance, this);
-    if (!m_hwndAgentModelDialog) {
+        m_hwndMain, nullptr, m_hInstance, state);
+    if (!dialog) {
+        delete state;
         appendToOutput("Agent model configuration unavailable: dialog creation failed.\n",
                        "Errors", OutputSeverity::Error);
         return;
     }
 
-    ShowWindow(m_hwndAgentModelDialog, SW_SHOWNORMAL);
-    UpdateWindow(m_hwndAgentModelDialog);
-    SetWindowPos(m_hwndAgentModelDialog, HWND_TOP, dialogX, dialogY,
+    ShowWindow(dialog, SW_SHOWNORMAL);
+    UpdateWindow(dialog);
+    SetWindowPos(dialog, HWND_TOP, dialogX, dialogY,
                  kDialogWidth, kDialogHeight, SWP_SHOWWINDOW);
-    SetForegroundWindow(m_hwndAgentModelDialog);
-    SetActiveWindow(m_hwndAgentModelDialog);
+    SetForegroundWindow(dialog);
+    SetActiveWindow(dialog);
 }
 
 // View available agent tools

@@ -445,6 +445,31 @@ LRESULT CALLBACK Win32IDE::SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wPa
 {
     Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetPropA(hwnd, "IDE_PTR"));
 
+    // Route the session-strip action buttons directly from the owning sidebar.
+    // These controls are children of the subclassed STATIC container; relying
+    // only on a forwarded WM_COMMAND made the close button sensitive to the
+    // parent-procedure chain and left the visible X inert in some launches.
+    if (uMsg == WM_COMMAND && pThis && HIWORD(wParam) == BN_CLICKED) {
+        const int commandId = LOWORD(wParam);
+        const HWND source = reinterpret_cast<HWND>(lParam);
+        if (commandId == IDC_CLOSE_CHAT || source == pThis->m_hwndCloseChatBtn) {
+            pThis->closeActiveChatSession();
+            return 0;
+        }
+        if (commandId == IDC_NEW_CHAT || source == pThis->m_hwndNewChatBtn) {
+            pThis->createChatSession();
+            return 0;
+        }
+        if (commandId == IDC_RESTORE_CHAT || source == pThis->m_hwndRestoreChatBtn) {
+            pThis->restoreClosedChatSession();
+            return 0;
+        }
+        if (commandId == IDC_ROLLBACK_CHAT || source == pThis->m_hwndRollbackChatBtn) {
+            pThis->rollbackActiveChat();
+            return 0;
+        }
+    }
+
     // Child controls are owned by this sidebar, while the command router lives
     // on the main IDE window. Forward notifications with their original
     // control HWND so routing remains unambiguous (especially New Chat and

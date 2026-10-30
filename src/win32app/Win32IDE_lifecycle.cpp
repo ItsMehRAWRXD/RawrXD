@@ -104,6 +104,24 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
         case WM_CLOSE:
             if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) DestroyWindow(hwnd);
             return 0;
+        case WM_SYSCOMMAND:
+            // Keep the title-bar close action deterministic even when a child
+            // popup or custom toolbar currently owns focus.  DefWindowProc
+            // normally translates this to WM_CLOSE, but the explicit path
+            // prevents the native X from becoming inert after launch.
+            if ((wParam & 0xFFF0u) == SC_CLOSE) {
+                if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) {
+                    DestroyWindow(hwnd);
+                }
+                return 0;
+            }
+            return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        case WM_NCLBUTTONDOWN:
+            if (wParam == HTCLOSE) {
+                SendMessageA(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+                return 0;
+            }
+            return DefWindowProcA(hwnd, uMsg, wParam, lParam);
         case WM_SIZE:
             if (ide) {
                 ide->onSize(static_cast<int>(LOWORD(lParam)), static_cast<int>(HIWORD(lParam)));
