@@ -1275,6 +1275,9 @@ static int CmdRun(const std::vector<std::string>& args) {
         const bool explicitReadTask =
             prompt_lower.find("readfile") != std::string::npos ||
             prompt_lower.find("read file") != std::string::npos;
+        const bool toolDependentAgentTask =
+            mode == AgentMode::Autonomous &&
+            (g_explicit_mutation_approval || g_source_edit_tool_scope || explicitReadTask);
         const bool readTaskMarkerRequired =
             prompt.find("RAWRXD_AGENT_READ_PASS") != std::string::npos;
         if (readOnlyAuditRequested) {
@@ -1626,6 +1629,24 @@ static int CmdRun(const std::vector<std::string>& args) {
             g_ledger->Flush();
             esp->phase("BLOCKED");
             esp->fail("tool_round_limit_reached");
+            return 1;
+        }
+
+        // An autonomous coding request that was explicitly authorized for
+        // mutations or scoped source editing cannot succeed on a model that
+        // only returned prose.  Process exit 0 and a model response are not
+        // evidence that the requested tool workflow happened.
+        if (result.success && toolDependentAgentTask &&
+            executed_tool_signatures.empty()) {
+            constexpr const char* kToolsUnsupported =
+                "MODEL_TOOLS_UNSUPPORTED: autonomous task produced no tool calls";
+            std::cerr << "[error] " << kToolsUnsupported << "\n";
+            g_ledger->RecordFailure(kToolsUnsupported);
+            g_ledger->SetTermination(TerminationReason::MalformedModelOutput, 1);
+            g_ledger->SetVerdict("model tools unsupported");
+            g_ledger->Flush();
+            esp->phase("BLOCKED");
+            esp->fail("model_tools_unsupported");
             return 1;
         }
 
