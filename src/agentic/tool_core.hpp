@@ -58,6 +58,27 @@ inline size_t optional_limit(const Request& r,const std::string& k,size_t fallba
  catch(...) { return fallback; }
 }
 inline fs::path canonical_root(const fs::path& p){return fs::weakly_canonical(fs::absolute(p));}
+// Tool arguments and JSON payloads are UTF-8, while Windows filesystem APIs
+// are wide-character based.  Never route a model-supplied UTF-8 path through
+// fs::path(std::string) or path::string() on Windows: those conversions use
+// the active multi-byte code page and throw when a repository entry contains
+// a character that CP_ACP cannot represent.  Keep the boundary explicitly
+// UTF-8 in both directions so search/read results remain valid JSON.
+inline fs::path utf8_path(const std::string& value){
+#ifdef _WIN32
+ return fs::u8path(value);
+#else
+ return fs::path(value);
+#endif
+}
+inline std::string path_utf8(const fs::path& value){
+#ifdef _WIN32
+ const auto encoded=value.u8string();
+ return std::string(reinterpret_cast<const char*>(encoded.data()),encoded.size());
+#else
+ return value.u8string();
+#endif
+}
 inline std::string trim_path_argument(std::string value){
  size_t first=0,last=value.size();
  while(first<last&&std::isspace(static_cast<unsigned char>(value[first])))++first;
@@ -73,7 +94,7 @@ inline bool replace_windows_file(const fs::path& target,const fs::path& replacem
 #endif
 inline fs::path scoped(const fs::path& root,const std::string& rel){
  const std::string clean=trim_path_argument(rel);
- fs::path r=canonical_root(root),p=fs::weakly_canonical(r/fs::path(clean.empty()?".":clean));
+ fs::path r=canonical_root(root),p=fs::weakly_canonical(r/utf8_path(clean.empty()?".":clean));
  auto a=r.begin(),b=p.begin();for(;a!=r.end()&&b!=p.end()&&*a==*b;++a,++b){} if(a!=r.end())throw std::runtime_error("path outside workspace");return p;
 }
 inline std::string read_text(const fs::path& p,size_t max_bytes=2*1024*1024){
@@ -116,7 +137,7 @@ inline void register_workspace_tools(Registry& reg,fs::path root){
    const size_t limit=optional_limit(r,"maxEntries",128,256); const size_t maxBytes=48*1024;
    std::vector<std::string> entries; std::error_code ec;
    for(auto& e:fs::directory_iterator(p,fs::directory_options::skip_permission_denied,ec)){
-     if(ec) break; entries.push_back(std::string(e.is_directory(ec)?"D ":"F ")+e.path().filename().string());
+     if(ec) break; entries.push_back(std::string(e.is_directory(ec)?"D ":"F ")+path_utf8(e.path().filename()));
    }
    std::sort(entries.begin(),entries.end()); const bool countTruncated=entries.size()>limit;
    std::ostringstream out; out<<"DIRECTORY="<<arg(r,"path")<<" ENTRIES="<<entries.size()<<" RETURN_LIMIT="<<limit<<" TRUNCATED="<<(countTruncated?"true":"false")<<'\n';
@@ -128,7 +149,7 @@ inline void register_workspace_tools(Registry& reg,fs::path root){
    std::ostringstream out; auto pattern=arg(r,"pattern"); const auto start=scoped(root,optional_arg(r,"path",".")); const size_t limit=optional_limit(r,"maxResults",100,250); size_t count=0; std::error_code ec;
    if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
    for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&count<limit&&!ec;it.increment(ec)){
-     if(it.depth()>24){it.disable_recursion_pending();continue;} if(it->path().filename().string().find(pattern)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<'\n';++count;}
+     if(it.depth()>24){it.disable_recursion_pending();continue;} if(path_utf8(it->path().filename()).find(pattern)!=std::string::npos){out<<path_utf8(fs::relative(it->path(),root))<<'\n';++count;}
    }
    if(count==limit) out<<"...[file search truncated at maxResults]...\n"; return {true,out.str(),""};
  }});
@@ -137,7 +158,7 @@ inline void register_workspace_tools(Registry& reg,fs::path root){
    if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
    for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&matches<limit&&!ec;it.increment(ec)){
      if(it.depth()>24){it.disable_recursion_pending();continue;} if(!it->is_regular_file(ec)||it->file_size(ec)>1024*1024) continue; std::ifstream f(it->path()); std::string line; size_t ln=0;
-     while(std::getline(f,line)&&matches<limit){++ln;if(line.find(needle)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}
+     while(std::getline(f,line)&&matches<limit){++ln;if(line.find(needle)!=std::string::npos){out<<path_utf8(fs::relative(it->path(),root))<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}
    }
    if(matches==limit) out<<"...[text search truncated at maxResults]...\n"; return {true,out.str(),""};
  }});
@@ -151,10 +172,10 @@ inline void register_workspace_tools(Registry& reg,fs::path root){
    if(cmd.empty())throw std::runtime_error("empty command");
    if(cmd.size()>8192)throw std::runtime_error("command too long");
 #ifdef _WIN32
-   std::string full=std::string("cmd.exe /d /c cd /d \"")+root.string()+"\" && "+cmd;
+   std::string full=std::string("cmd.exe /d /c cd /d \"")+path_utf8(root)+"\" && "+cmd;
    FILE* pipe=_popen(full.c_str(),"r");
 #else
-   std::string full=std::string("cd \"")+root.string()+"\" && "+cmd;
+   std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
    FILE* pipe=popen(full.c_str(),"r");
 #endif
    if(!pipe)throw std::runtime_error("failed to start process");

@@ -1373,10 +1373,19 @@ static int CmdRun(const std::vector<std::string>& args) {
         // Complete bounded agentic turns: execute returned tool calls, feed
         // their real results back to the model, and stop only on final text.
         std::string completed_tool_history;
+        // Keep duplicate model requests from turning a bounded agent turn
+        // into an unbounded sequence of filesystem/process operations.
+        std::set<std::string> executed_tool_signatures;
+        size_t mutation_epoch = 0;
+        constexpr size_t kMaxToolCallsPerRound = 32;
+        constexpr size_t kMaxUniqueToolCallsPerTask = 128;
         for (int tool_round = 0; result.success && result.has_tool_calls && tool_round < 8;
              ++tool_round) {
             json assistant_calls = json::array();
             std::string last_tool_output;
+            std::vector<std::pair<std::string, json>> pending_tool_calls;
+            std::set<std::string> round_tool_signatures;
+            size_t duplicate_tool_calls_suppressed = 0;
             auto tool_target = [](const json& args) {
                 if (!args.is_object()) return std::string();
                 for (const char* key : {"path", "file", "directory", "command", "workspace"}) {
@@ -1387,12 +1396,40 @@ static int CmdRun(const std::vector<std::string>& args) {
                 }
                 return std::string();
             };
+            for (const auto& call : result.tool_calls) {
+                const std::string signature = call.first + "\n" + call.second.dump();
+                const std::string execution_key = signature +
+                    "\nmutation_epoch=" + std::to_string(mutation_epoch);
+                if (!round_tool_signatures.insert(signature).second ||
+                    executed_tool_signatures.find(execution_key) != executed_tool_signatures.end()) {
+                    ++duplicate_tool_calls_suppressed;
+                    continue;
+                }
+                if (pending_tool_calls.size() >= kMaxToolCallsPerRound ||
+                    executed_tool_signatures.size() + pending_tool_calls.size() >=
+                        kMaxUniqueToolCallsPerTask) {
+                    result = InferenceResult::Error(
+                        "TOOL_CALL_LIMIT_REACHED: bounded agent tool budget exhausted");
+                    break;
+                }
+                pending_tool_calls.push_back(call);
+            }
+            if (!result.success) break;
+            if (duplicate_tool_calls_suppressed != 0) {
+                esp->stage("duplicate_tool_calls_suppressed count=" +
+                           std::to_string(duplicate_tool_calls_suppressed));
+            }
+            if (pending_tool_calls.empty()) {
+                result = InferenceResult::Error(
+                    "TOOL_LOOP_DETECTED: model repeated completed tool calls");
+                break;
+            }
             // The assistant tool-call message must precede every tool result
             // in the chat transcript.  Appending a tool result first creates
             // an invalid Ollama conversation and commonly yields an empty
             // continuation even when the tool executed successfully.
-            for (size_t i = 0; i < result.tool_calls.size(); ++i) {
-                const auto& call = result.tool_calls[i];
+            for (size_t i = 0; i < pending_tool_calls.size(); ++i) {
+                const auto& call = pending_tool_calls[i];
                 const std::string id = "rawr-call-" + std::to_string(tool_round) + "-" + std::to_string(i);
                 const std::string target = tool_target(call.second);
                 esp->tool_start("TOOL_START id=" + id + " name=" + call.first +
@@ -1404,8 +1441,8 @@ static int CmdRun(const std::vector<std::string>& args) {
             }
             messages.push_back({"assistant", result.response, "", assistant_calls});
 
-            for (size_t i = 0; i < result.tool_calls.size(); ++i) {
-                const auto& call = result.tool_calls[i];
+            for (size_t i = 0; i < pending_tool_calls.size(); ++i) {
+                const auto& call = pending_tool_calls[i];
                 const std::string id = "rawr-call-" + std::to_string(tool_round) + "-" + std::to_string(i);
                 const std::string target = tool_target(call.second);
                 const auto toolStarted = std::chrono::steady_clock::now();
@@ -1433,6 +1470,9 @@ static int CmdRun(const std::vector<std::string>& args) {
                         "tool denied: " + request.name + " (" + g_gate->ExplainDenial(tool) + ")");
                     break;
                 }
+                executed_tool_signatures.insert(
+                    call.first + "\n" + call.second.dump() +
+                    "\nmutation_epoch=" + std::to_string(mutation_epoch));
                 auto tool_result = g_tools->call(request, approve);
                 const auto toolElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - toolStarted).count();
@@ -1448,6 +1488,7 @@ static int CmdRun(const std::vector<std::string>& args) {
                 if (tool_result.ok &&
                     (request.name == "editFiles" || request.name == "createFile" ||
                      request.name == "writeFile")) {
+                    ++mutation_epoch;
                     const auto path_it = request.args.find("path");
                     if (path_it != request.args.end() && !path_it->second.empty()) {
                         g_ledger->RecordFileModified(path_it->second);
