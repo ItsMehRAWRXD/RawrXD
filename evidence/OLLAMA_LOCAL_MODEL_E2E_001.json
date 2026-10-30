@@ -1,0 +1,249 @@
+{
+  "schema": "rawrxd.ollama.local-model-e2e/1",
+  "timestamp": "2026-10-24T08:23:37.3339685Z",
+  "endpoint": "http://127.0.0.1:11434",
+  "model_count": 34,
+  "results": [
+    {
+      "model": "nemotron-3.5-bolt:latest",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 28788
+    },
+    {
+      "model": "nemotron-3-nano:4b",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 41314
+    },
+    {
+      "model": "qwen2.5-coder:1.5b-base",
+      "status": "FAIL",
+      "response": ", RAWRXD",
+      "error": null,
+      "elapsed_ms": 46561
+    },
+    {
+      "model": "deepseek-r1:32b",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 61586
+    },
+    {
+      "model": "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90031
+    },
+    {
+      "model": "n4-tiny-oracle:latest",
+      "status": "FAIL",
+      "response": "To return exactly RA",
+      "error": null,
+      "elapsed_ms": 86569
+    },
+    {
+      "model": "bluehawana/deepseek-v4-flash:iq2_m",
+      "status": "FAIL",
+      "response": null,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error).",
+      "elapsed_ms": 86508
+    },
+    {
+      "model": "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90016
+    },
+    {
+      "model": "nemotron-3.5-lightning:30b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90014
+    },
+    {
+      "model": "gpt-oss:120b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90010
+    },
+    {
+      "model": "gpt-oss:latest",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90004
+    },
+    {
+      "model": "deepseek-coder-v2:16b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90005
+    },
+    {
+      "model": "kiminoto/T0.0.1:latest",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 56219
+    },
+    {
+      "model": "starcoder2:15b",
+      "status": "FAIL",
+      "response": " if the model is",
+      "error": null,
+      "elapsed_ms": 69091
+    },
+    {
+      "model": "ornith-1.5:35b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90007
+    },
+    {
+      "model": "gemma3:latest",
+      "status": "FAIL",
+      "response": "RAWRXD_",
+      "error": null,
+      "elapsed_ms": 88825
+    },
+    {
+      "model": "deepseek-v4-flash:0731-cloud",
+      "status": "FAIL",
+      "response": null,
+      "error": "Response status code does not indicate success: 410 (Gone).",
+      "elapsed_ms": 189
+    },
+    {
+      "model": "bigdaddygnative:latest",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90007
+    },
+    {
+      "model": "bigdaddyglocal:latest",
+      "status": "FAIL",
+      "response": "  Hello! I",
+      "error": null,
+      "elapsed_ms": 87840
+    },
+    {
+      "model": "deepseek-r1:70b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90011
+    },
+    {
+      "model": "gpt-oss:20b",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 47477
+    },
+    {
+      "model": "blackgrg26/WORMGPT-14:latest",
+      "status": "FAIL",
+      "response": null,
+      "error": "Response status code does not indicate success: 410 (Gone).",
+      "elapsed_ms": 300
+    },
+    {
+      "model": "laguna-s-2.1:Q4_K_M",
+      "status": "FAIL",
+      "response": null,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error).",
+      "elapsed_ms": 73353
+    },
+    {
+      "model": "qwen3-next:80b",
+      "status": "FAIL",
+      "response": null,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 90 seconds elapsing.",
+      "elapsed_ms": 90002
+    },
+    {
+      "model": "llama3.1:8b",
+      "status": "FAIL",
+      "response": "It looks like you",
+      "error": null,
+      "elapsed_ms": 83374
+    },
+    {
+      "model": "qwen3:8b",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 45505
+    },
+    {
+      "model": "gemma3:4b",
+      "status": "FAIL",
+      "response": "RAWRXD_",
+      "error": null,
+      "elapsed_ms": 26194
+    },
+    {
+      "model": "llama3.2:3b",
+      "status": "FAIL",
+      "response": "I can't provide",
+      "error": null,
+      "elapsed_ms": 43255
+    },
+    {
+      "model": "bigdaddyg-productivity-native:latest",
+      "status": "FAIL",
+      "response": "RAWRXD",
+      "error": null,
+      "elapsed_ms": 78117
+    },
+    {
+      "model": "bigdaddyg-productivity-local:latest",
+      "status": "FAIL",
+      "response": "  Hello! I",
+      "error": null,
+      "elapsed_ms": 88548
+    },
+    {
+      "model": "granite3.3:8b",
+      "status": "FAIL",
+      "response": "RAWRXD_",
+      "error": null,
+      "elapsed_ms": 76676
+    },
+    {
+      "model": "qwen3.8:27b",
+      "status": "FAIL",
+      "response": "",
+      "error": null,
+      "elapsed_ms": 58977
+    },
+    {
+      "model": "qwen35-40b-heretic-q8:latest",
+      "status": "FAIL",
+      "response": "\nAs an A",
+      "error": null,
+      "elapsed_ms": 65754
+    },
+    {
+      "model": "llama3.2:latest",
+      "status": "FAIL",
+      "response": "I can't provide",
+      "error": null,
+      "elapsed_ms": 47620
+    }
+  ],
+  "passed": 0,
+  "failed": 34,
+  "verdict": "PARTIAL"
+}

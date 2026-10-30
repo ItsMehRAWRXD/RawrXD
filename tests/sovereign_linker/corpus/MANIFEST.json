@@ -1,0 +1,28 @@
+{
+  "schema": "RAWRXD_SOVEREIGN_LINKER_CORPUS",
+  "version": "1.0",
+  "linker": "rawrxd_link",
+  "mode": "freestanding_exit_codes",
+  "note": "CRT/DLL/TLS/exception five_os variants mapped to freestanding exit-code equivalents until those imports exist. PROMOTE=0.",
+  "tests": [
+    { "id": "01_minimal_return_zero", "type": "positive", "sources": ["test01_minimal_return_zero.c"], "expect": "exit=0" },
+    { "id": "02_exit_sentinel", "type": "positive", "sources": ["test02_exit_sentinel.c"], "expect": "exit=42" },
+    { "id": "03_multi_tu_linking", "type": "positive", "sources": ["test03_multi_tu_a.c", "test03_multi_tu_b.c"], "expect": "exit=42" },
+    { "id": "04_static_library", "type": "positive", "sources": ["test04_static_main.c", "test04_static_lib.c"], "expect": "exit=42" },
+    { "id": "05_shared_library", "type": "positive", "sources": ["test05_shared_main.c", "test05_shared_lib.c", "test05_shared_core.c"], "expect": "exit=42" },
+    { "id": "06_undefined_symbol", "type": "negative", "sources": ["test06_undefined_symbol.c"], "expect": "link_fail" },
+    { "id": "07_relocation", "type": "positive", "sources": ["test07_relocation_a.c", "test07_relocation_b.c"], "expect": "exit=100" },
+    { "id": "08_cross_ref", "type": "positive", "sources": ["test08_cross_ref_a.c", "test08_cross_ref_b.c"], "expect": "exit=42" },
+    { "id": "09_global_init", "type": "positive", "sources": ["test09_global_init.c"], "expect": "exit=42" },
+    { "id": "10_bss_zero", "type": "positive", "sources": ["test10_bss_zero.c"], "expect": "exit=42" },
+    { "id": "11_nested_calls", "type": "positive", "sources": ["test11_nested_calls.c"], "expect": "exit=42" },
+    { "id": "12_rodata_len", "type": "positive", "sources": ["test12_rodata_len.c"], "expect": "exit=5" },
+    { "id": "13_data_roundtrip", "type": "positive", "sources": ["test13_data_roundtrip.c"], "expect": "exit=0" },
+    { "id": "14_fixed_argc", "type": "positive", "sources": ["test14_fixed_argc.c"], "expect": "exit=3" },
+    { "id": "15_branch_table", "type": "positive", "sources": ["test15_branch_table.c"], "expect": "exit=42" },
+    { "id": "16_debug_release", "type": "positive", "sources": ["test16_debug_release.c"], "expect": "exit=42", "variants": ["/Od", "/O2"] },
+    { "id": "17_optimization", "type": "positive", "sources": ["test17_optimization.c"], "expect": "exit=4950" },
+    { "id": "18_incremental_rebuild", "type": "positive", "sources": ["test18_incremental_a.c", "test18_incremental_b.c"], "expect": "exit=7" },
+    { "id": "19_deliberate_compiler_fail", "type": "negative", "sources": ["test19_deliberate_compiler_fail.c"], "expect": "compile_fail" }
+  ]
+}

@@ -1,0 +1,25 @@
+GATE=DEEP2_GPU_CODE31_RESET_001
+DISPOSITION=PASS
+SCOPE=injected_device_lost_reset_sequence
+CODE_31_RECOGNIZED=1
+VK_ERROR_DEVICE_LOST_RECOGNIZED=1
+RESET_SEQ_DEMONSTRATED=1
+FAIL_CLOSED_DEMONSTRATED=1
+LIVE_WINDOWS_CODE31_TDR=NOT_RUN
+OPT_IN=DEEP2_GPU_DEVICE_RESET=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+
+SUMMARY=
+  Before: only VK_ERROR_DEVICE_LOST tagged in SubmitOne; Deep2 hot path had no
+  mark→teardown→recreate; code 31 unmapped; MoE D2H last_d2h phase not synced.
+  After: GpuLost maps -4 and 31; NoteVkResult wired in endSubmitWait/EndFusedLayer;
+  DownloadBuf syncs phase and opt-in RecoverDeviceIfOptIn; smoke PASS.
+
+SMOKE_STDOUT=
+DEEP2_GPU_DEVICE_LOST mark=1 code=-4 phase=device_lost
+DEEP2_GPU_DEVICE_LOST mark=2 code=31 phase=code_31
+DEEP2_GPU_DEVICE_RESET teardown_begin / recreate_OK / retry_OK
+recreate_FAIL → fail_closed
+RESULT=PASS code31_mapped=1 vk_lost_mapped=1 reset_seq=1 fail_closed=1

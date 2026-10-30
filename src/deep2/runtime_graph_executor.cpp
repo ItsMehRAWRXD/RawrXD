@@ -2095,6 +2095,77 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     //   gpu fail: linear: x=3072 n_in=2048 weight=blk.0.attn_output.weight
     const size_t outW = vPerHead;
     y.assign(H * outW, 0.0f);
+    // DEEP2_VULKAN_SUBMIT_OPT_001: opt-in GPU AttnDecode (GQA/MHA only).
+    bool gpu_attn_done = false;
+    if (!isMla && !qwen35Gated && !force_cpu_ &&
+        qPerHead == outW && kPerHead == qPerHead && kvW == vW &&
+        std::getenv("DEEP2_RUNTIME_GPU_ATTN") != nullptr) {
+        gpu_attn_done = QuantDot::AttnDecodeGqa(
+            qr.data(), qr.size(),
+            K.data(), T * kvW,
+            V.data(), T * vW,
+            y.data(), y.size(),
+            (uint32_t)qPerHead, (uint32_t)H, (uint32_t)hk,
+            (uint32_t)T, (float)scoreScale);
+        if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+            std::fprintf(stderr, "SUBMIT_TRACE kind=OpAttention gpu_attn=%d\n",
+                         gpu_attn_done ? 1 : 0);
+            std::fflush(stderr);
+        }
+        // DEEP2_ATTN_PARITY_DUMP=1: CPU ref on same QKV; emit score/prob/out errs.
+        // Once per (block0,pos) to localize first numerical divergence. PROMOTE=0.
+        if (gpu_attn_done && in.block == 0 &&
+            std::getenv("DEEP2_ATTN_PARITY_DUMP") &&
+            score_seen_ != (int)position + 1) {
+            const size_t grp =
+                std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
+            std::vector<float> cref(y.size(), 0.0f);
+            std::vector<float> sc(T), pr(T);
+            for (size_t h = 0; h < H; ++h) {
+                const size_t g = h / grp;
+                const float* qp = qr.data() + h * qPerHead;
+                for (size_t t = 0; t < T; ++t) {
+                    const float* kp = K.data() + t * kvW + g * kPerHead;
+                    double acc = 0.0;
+                    for (size_t d = 0; d < qPerHead; ++d)
+                        acc += double(qp[d]) * double(kp[d]);
+                    sc[t] = (float)(acc * scoreScale);
+                }
+                pr = sc;
+                SoftmaxVec(pr);
+                float* op = cref.data() + h * outW;
+                for (size_t t = 0; t < T; ++t) {
+                    const float* vp = V.data() + t * vW + g * vPerHead;
+                    for (size_t d = 0; d < outW; ++d)
+                        op[d] += pr[t] * vp[d];
+                }
+                if (h == 0) {
+                    std::fprintf(stderr,
+                        "[attn-parity] pos=%zu T=%zu scale=%.9f\n",
+                        position, T, scoreScale);
+                    for (size_t t = 0; t < T; ++t)
+                        std::fprintf(stderr,
+                            "[attn-parity] h0 t=%zu score=%.8f prob=%.8f\n",
+                            t, (double)sc[t], (double)pr[t]);
+                }
+            }
+            double maxAbs = 0.0, maxRel = 0.0;
+            size_t maxIdx = 0;
+            for (size_t i = 0; i < y.size(); ++i) {
+                const double a = std::fabs(double(y[i]) - double(cref[i]));
+                const double den = std::max(1e-12, std::fabs(double(cref[i])));
+                const double r = a / den;
+                if (a > maxAbs) { maxAbs = a; maxIdx = i; }
+                if (r > maxRel) maxRel = r;
+            }
+            std::fprintf(stderr,
+                "[attn-parity] out maxAbs=%.8g maxRel=%.8g at=%zu "
+                "gpu0=%.8g cpu0=%.8g\n",
+                maxAbs, maxRel, maxIdx, (double)y[0], (double)cref[0]);
+            std::fflush(stderr);
+            score_seen_ = (int)position + 1;
+        }
+    }
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
@@ -2106,7 +2177,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // while the embedding-path contribution survived - the degenerate-output
     // signature. In a GQA model there is no split and the whole head is dotted.
     const size_t nopeD = isMla ? qk_nope : 0;
-    for (size_t h = 0; h < H; ++h) {
+    for (size_t h = 0; !gpu_attn_done && h < H; ++h) {
         const size_t g = isMla ? h : (h / group);
         const float* qp = qr.data() + h * qPerHead;
         const float* qrope = qp + qRopeOff;
@@ -4118,6 +4189,20 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         !std::getenv("DEEP2_DUMP_FFN") && !std::getenv("ATTN_DUMP") &&
         !std::getenv("ATTN_TRACE");
     const bool wide_batch_ = can_batch_ && std::getenv("DEEP2_WIDE_DOT_BATCH") != nullptr;
+    // DEEP2_VULKAN_SUBMIT_OPT_001: open QuantDot BeginFusedLayer window for
+    // this token so EndQuantDotBatch / ForceHostSync are classified under one
+    // command-buffer lifecycle (same names as deep2 fused path).
+    const bool runtime_fuse_ = std::getenv("DEEP2_RUNTIME_FUSE") != nullptr;
+    bool fuse_opened_ = false;
+    if (runtime_fuse_) {
+        fuse_opened_ = QuantDot::BeginFusedLayer();
+    }
+    struct FuseGuard {
+        bool opened = false;
+        ~FuseGuard() {
+            if (opened) (void)QuantDot::EndFusedLayer();
+        }
+    } fuse_guard{fuse_opened_};
     std::unordered_set<std::string> dot_batch_pending_outputs;
     auto queueable_linear = [&](const Instr& candidate) {
         if (candidate.op != OpKind::Linear || candidate.b < 0 ||
@@ -4177,9 +4262,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             dot_batch_last_out_slot_.clear();
         }
         dot_batch_pending_outputs.clear();
+        // True host-data dependency: next op (Attention/RMS/Silu/Residual)
+        // reads the batch outputs on the host. Classify under fuse window.
+        if (fuse_opened_) (void)QuantDot::ForceHostSync();
         // FlushDotBatch already performed CPU replay internally if EndBatch
         // failed. Output buffers hold real numbers; GPU counters already
         // adjusted. Return true so the prefill continues with valid results.
+        (void)ok;
         return true;
     };
 

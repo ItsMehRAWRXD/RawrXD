@@ -12,6 +12,10 @@
 
 namespace Deep2 {
 
+bool K2MoEExecDense(const GlobalTensorIndex& index, const KimiK2Config& cfg,
+                    uint32_t layer, const float* hidden, float* output,
+                    std::string& error);
+
 bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                           uint32_t layer, bool decodePhase, float* hiddenIO,
                           float* scratch, std::string& error) {
@@ -34,14 +38,13 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     const size_t H = cfg.hiddenDim;
     char denseGate[64];
     std::snprintf(denseGate, sizeof(denseGate), "blk.%u.ffn_gate.weight", layer);
-    if (layer == 0 && index.Find(denseGate)) {
+    if (cfg.numExperts == 0 || index.Find(denseGate)) {
         MoEPlaceLive().ffn_dispatch_dense++;
-        moe_ltrace::BC(layer, "EXIT_DENSE");
-        return true;
-    }
-    if (cfg.numExperts == 0) {
-        MoEPlaceLive().ffn_dispatch_dense++;
-        moe_ltrace::BC(layer, "EXIT_NO_EXPERTS");
+        if (!K2MoEExecDense(index, cfg, layer, scratch, hiddenIO, error)) {
+            moe_ltrace::BC(layer, "DENSE_FAIL");
+            return false;
+        }
+        moe_ltrace::BC(layer, "DENSE_DONE");
         return true;
     }
     MoEPlaceLive().ffn_dispatch_moe++;

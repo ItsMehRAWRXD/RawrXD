@@ -33,7 +33,7 @@
 #pragma once
 
 #include "QuantTypeTable.hpp"
-#include "../modelgenie/ModelGenome.hpp"
+#include "modelgenie/ModelGenome.hpp"
 
 #include <cstdint>
 #include <string>

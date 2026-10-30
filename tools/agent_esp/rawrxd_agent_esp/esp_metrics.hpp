@@ -47,6 +47,18 @@ public:
   prefill_tokens_+=prefill_pending_;prefill_pending_=0;prefill_start_.reset();
   progress_=now;
  }
+  // A prefill may be cancelled part-way through a planned batch.  The
+  // no-argument form intentionally commits the planned count for legacy
+  // callers, but production inference must report the number of tokens that
+  // actually reached ExecuteToken.  Keeping this as an explicit overload
+  // prevents a watchdog timeout from being reported as successful work.
+  void end_prefill(uint64_t completed_tokens, Clock::time_point now=Clock::now()) {
+    std::lock_guard lk(mu_);
+    if(phase_!=Phase::Prefill || !prefill_start_)return;
+    prefill_elapsed_+=std::chrono::duration<double>(now-*prefill_start_).count();
+    prefill_tokens_+=completed_tokens;prefill_pending_=0;prefill_start_.reset();
+    progress_=now;
+  }
  void begin_decode(Clock::time_point now=Clock::now()) {
   std::lock_guard lk(mu_);transition_locked(Phase::Decode,now);
   if(!decode_segment_)decode_segment_=now;

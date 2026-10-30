@@ -4,6 +4,9 @@
 #include "K2ShardIo.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
+#include "K2MoEExpertAccounting.hpp"
+#include "K2MoEParityCapture.hpp"
+#include "QuantKernelRegistry.hpp"
 #include "StickGpuLocal.hpp"
 #include "StreamPathTiming.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
@@ -12,7 +15,9 @@
 #include "lavapath/EndDeviceStep3Diag.hpp"
 #include "vulkan_compute.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
@@ -123,6 +128,11 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
     for (uint32_t k = 0; k < n; ++k) {
         MoEPlaceSlot& mut = plan.slots[idx[k]];
         if (mut.expertId < 0) continue;
+        /* The stick worklist is the production GPU route and bypasses
+           K2MoEExecExpert().  Record selection here so the opt-in matrix
+           remains complete for both CPU and GPU backends. */
+        K2MoEExpertAccounting::Instance().Selected(
+            layer, mut.expertId);
         ctr.bundle_lookups++;
         Resolved r{};
         r.expertId = mut.expertId;
@@ -172,6 +182,331 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                   return a.expertId < b.expertId;
               });
 
+    /* Diagnostic-only single-expert isolation.  This is deliberately
+       opt-in and layer-scoped: the production routed worklist is unchanged
+       unless both variables are valid and the current layer matches.  It
+       exists to make the shared scratch arena attributable to exactly one
+       routed expert while investigating a numerical divergence. */
+    const char* isolateLayerEnv =
+        std::getenv("DEEP2_MOE_PARITY_SINGLE_LAYER");
+    const char* isolateExpertEnv =
+        std::getenv("DEEP2_MOE_PARITY_SINGLE_EXPERT");
+    if (isolateLayerEnv && isolateLayerEnv[0] && isolateExpertEnv &&
+        isolateExpertEnv[0]) {
+        char* layerEnd = nullptr;
+        char* expertEnd = nullptr;
+        const long isolateLayer = std::strtol(isolateLayerEnv, &layerEnd, 10);
+        const long isolateExpert = std::strtol(isolateExpertEnv, &expertEnd, 10);
+        if (layerEnd == isolateLayerEnv || *layerEnd != '\0' ||
+            expertEnd == isolateExpertEnv || *expertEnd != '\0' ||
+            isolateLayer < 0 || isolateExpert < 0) {
+            error = "invalid single-expert parity selector";
+            return false;
+        }
+        if (layer == static_cast<uint32_t>(isolateLayer)) {
+            std::vector<Resolved> isolated;
+            isolated.reserve(1);
+            for (auto& candidate : work) {
+                if (candidate.expertId == static_cast<int>(isolateExpert))
+                    isolated.push_back(std::move(candidate));
+            }
+            if (isolated.size() != 1u) {
+                std::fprintf(stderr,
+                             "GPU_MOE_SINGLE_EXPERT status=BLOCKED "
+                             "layer=%u expert=%ld matches=%zu routed=%zu\n",
+                             layer, isolateExpert, isolated.size(), work.size());
+                std::fflush(stderr);
+                error = "requested single-expert parity target was not routed";
+                return false;
+            }
+            std::fprintf(stderr,
+                         "GPU_MOE_SINGLE_EXPERT status=ISOLATED "
+                         "layer=%u expert=%ld routed=%zu retained=1\n",
+                         layer, isolateExpert, work.size());
+            std::fflush(stderr);
+            work.swap(isolated);
+        }
+    }
+
+    /* Capture only the CPU-side packed inputs for an independent scalar
+       oracle.  This is deliberately before fused command recording and
+       never reads ArenaDown/ArenaFFNAct, so it cannot be mistaken for a GPU
+       output witness.  At most one cold, host-visible expert is captured per
+       stick worklist and the helper refuses overwrites. */
+    const char* captureDir = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+    const bool captureRequested = captureDir && captureDir[0] != '\0';
+    const Resolved* scalarCapture = nullptr;
+    int scalarCaptureExpert = -1;
+    if (captureRequested) {
+        bool written = false;
+        int captureExpert = -1;
+        /* The fused arena is reused in sorted worklist order. Capture the
+           last host-visible expert so its post-fence arena contents have a
+           stable expert identity for the output witness. */
+        for (auto it = work.rbegin(); it != work.rend(); ++it) {
+            const auto& candidate = *it;
+            if (!candidate.g || !candidate.u || !candidate.d) continue;
+            captureExpert = candidate.expertId;
+            scalarCapture = &candidate;
+            scalarCaptureExpert = candidate.expertId;
+            written = k2_parity_capture::CaptureScalarInputs(
+                stick, layer, candidate.expertId,
+                candidate.gt, candidate.g, candidate.gb,
+                candidate.ut, candidate.u, candidate.ub,
+                candidate.dt, candidate.d, candidate.db,
+                normed, H, I);
+            break;
+        }
+        std::fprintf(stderr,
+                     "GPU_SCALAR_INPUT_CAPTURE layer=%u stick=%u expert=%d "
+                     "status=%s scope=CPU_INPUTS_ONLY\n",
+                     layer, stick, captureExpert,
+                     written ? "WRITTEN" : "SKIPPED");
+        std::fflush(stderr);
+    }
+
+    /* Optional aggregate parity.  The fused worklist keeps each expert's
+       down-vector in a device scratch arena and accumulates it into the
+       partial vector before the command buffer is submitted.  Reading
+       ArenaDown() between expert enqueues would compare an unsubmitted or
+       stale scratch value.  Compare the post-D2H aggregate instead, using the
+       same expert inputs, slices, and route weights through the reference CPU
+       kernels.  This remains diagnostic-only and never changes admission. */
+    const char* parityEnv = std::getenv("DEEP2_MOE_GPU_PARITY");
+    const bool parityEnabled = parityEnv && parityEnv[0] == '1' && parityEnv[1] == '\0';
+    uint32_t parityLimit = 1u;
+    if (const char* lim = std::getenv("DEEP2_MOE_GPU_PARITY_LIMIT")) {
+        char* end = nullptr;
+        const unsigned long parsed = std::strtoul(lim, &end, 10);
+        if (end != lim && *end == '\0' && parsed > 0 && parsed <= 64u)
+            parityLimit = static_cast<uint32_t>(parsed);
+    }
+    auto emitAggregateParity = [&](const float* gpuAggregate) {
+        if ((!parityEnabled && !captureRequested) || !gpuAggregate)
+            return;
+        if (parityEnabled && parityLimit < work.size()) {
+            std::fprintf(stderr,
+                         "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u status=SKIPPED "
+                         "reason=PARITY_LIMIT limit=%u experts=%zu\n",
+                         layer, stick, parityLimit, work.size());
+            return;
+        }
+        std::vector<float> cpuAggregate(H, 0.0f);
+        std::vector<float> gateOut(I, 0.0f), upOut(I, 0.0f), cpuOut(H, 0.0f);
+        std::vector<float> cpuLast(H, 0.0f);
+        int lastExpert = -1;
+        for (const auto& r : work) {
+            if (!r.g || !r.u || !r.d || !r.gb || !r.ub || !r.db) {
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u "
+                             "status=BLOCKED reason=CPU_EXPERT_INPUT_UNAVAILABLE "
+                             "expert=%d\n",
+                             layer, stick, r.expertId);
+                std::fflush(stderr);
+                return;
+            }
+            auto gate = QuantKernelRegistry::Instance().GetGEMV(r.gt);
+            auto up = QuantKernelRegistry::Instance().GetGEMV(r.ut);
+            auto down = QuantKernelRegistry::Instance().GetGEMV(r.dt);
+            if (!gate || !up || !down) {
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u "
+                             "status=CPU_KERNEL_MISSING expert=%d\n",
+                             layer, stick, r.expertId);
+                return;
+            }
+            std::fill(gateOut.begin(), gateOut.end(), 0.0f);
+            std::fill(upOut.begin(), upOut.end(), 0.0f);
+            std::fill(cpuOut.begin(), cpuOut.end(), 0.0f);
+            gate(r.g, normed, gateOut.data(), I, H);
+            up(r.u, normed, upOut.data(), I, H);
+            for (size_t i = 0; i < I; ++i) {
+                const float x = gateOut[i];
+                gateOut[i] = (x / (1.0f + std::exp(-x))) * upOut[i];
+            }
+            down(r.d, gateOut.data(), cpuOut.data(), H, I);
+            for (size_t i = 0; i < H; ++i)
+                cpuAggregate[i] += r.weight * cpuOut[i];
+            cpuLast = cpuOut;
+            lastExpert = r.expertId;
+        }
+        double maxAbs = 0.0, sumAbs = 0.0, sumSq = 0.0;
+        double gpuSq = 0.0, cpuSq = 0.0, dot = 0.0, maxRel = 0.0;
+        size_t nonFinite = 0;
+        for (size_t i = 0; i < H; ++i) {
+            if (!std::isfinite(gpuAggregate[i]) || !std::isfinite(cpuAggregate[i])) {
+                ++nonFinite;
+                continue;
+            }
+            const double d = std::abs((double)gpuAggregate[i] -
+                                      (double)cpuAggregate[i]);
+            if (d > maxAbs) maxAbs = d;
+            const double denom = std::max(1.0e-12, std::abs((double)cpuAggregate[i]));
+            if (d / denom > maxRel) maxRel = d / denom;
+            sumAbs += d;
+            sumSq += d * d;
+            gpuSq += (double)gpuAggregate[i] * (double)gpuAggregate[i];
+            cpuSq += (double)cpuAggregate[i] * (double)cpuAggregate[i];
+            dot += (double)gpuAggregate[i] * (double)cpuAggregate[i];
+        }
+        const double finiteCount = H > nonFinite ? (double)(H - nonFinite) : 0.0;
+        const double rmsAbs = finiteCount > 0.0 ? std::sqrt(sumSq / finiteCount) : 0.0;
+        const double cosineDenom = std::sqrt(gpuSq) * std::sqrt(cpuSq);
+        const double cosine = cosineDenom > 0.0 ? dot / cosineDenom : 0.0;
+        std::fprintf(stderr,
+                     "GPU_MOE_AGGREGATE_PARITY layer=%u stick=%u experts=%zu "
+                     "status=%s scope=DIAGNOSTIC_ONLY "
+                     "max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
+                     "max_rel=%.9e cosine=%.9e gpu_l2=%.9e cpu_l2=%.9e "
+                     "finite=%zu nonfinite=%zu\n",
+                     layer, stick, work.size(),
+                     nonFinite ? "NONFINITE" : "DIAGNOSTIC", maxAbs,
+                     H ? sumAbs / (double)H : 0.0, rmsAbs, maxRel,
+                     cosine, std::sqrt(gpuSq), std::sqrt(cpuSq),
+                     H - nonFinite, nonFinite);
+        std::fflush(stderr);
+
+        /* Persist only the completed aggregate pair.  This is useful for
+           layer/stick coverage audits but is never a per-expert witness. */
+        if (!nonFinite) {
+            if (captureRequested) {
+                std::vector<int> expertIds;
+                std::vector<float> routeWeights;
+                expertIds.reserve(work.size());
+                routeWeights.reserve(work.size());
+                for (const auto& r : work) {
+                    expertIds.push_back(r.expertId);
+                    routeWeights.push_back(r.weight);
+                }
+                const bool saved = k2_parity_capture::CaptureAggregateComparison(
+                    stick, layer, gpuAggregate, cpuAggregate.data(), H,
+                    expertIds.data(), routeWeights.data(), work.size());
+                std::fprintf(stderr,
+                             "GPU_MOE_AGGREGATE_VECTOR_CAPTURE layer=%u stick=%u "
+                             "status=%s scope=AGGREGATE_ONLY certified=0\n",
+                             layer, stick, saved ? "WRITTEN" : "SKIPPED");
+                std::fflush(stderr);
+            }
+        }
+
+        const char* stageEnv = std::getenv("DEEP2_MOE_GPU_STAGE_PARITY");
+        const bool stageRequested =
+            stageEnv && stageEnv[0] == '1' && stageEnv[1] == '\0';
+        if (stageRequested && lastExpert >= 0 && work.size() != 1u) {
+            std::fprintf(stderr,
+                         "GPU_MOE_LAST_STAGE_PARITY layer=%u stick=%u "
+                         "status=BLOCKED reason=MULTI_EXPERT_SCRATCH_IDENTITY_UNPROVEN "
+                         "experts=%zu\n", layer, stick, work.size());
+            std::fflush(stderr);
+        }
+        if (stageRequested && lastExpert >= 0 && work.size() == 1u) {
+            auto* vc = DualStickVc(stick);
+            std::vector<float> gpuLast(H, 0.0f);
+            std::vector<float> gpuAct(I, 0.0f);
+            const bool downloaded =
+                vc && vc->DownloadBuf(vc->ArenaDown(), gpuLast.data(),
+                                      static_cast<uint32_t>(H));
+            const bool actDownloaded =
+                vc && vc->DownloadBuf(vc->ArenaFFNAct(), gpuAct.data(),
+                                      static_cast<uint32_t>(I));
+            double stageMax = 0.0, stageSum = 0.0, stageSq = 0.0;
+            size_t stageNonFinite = 0;
+            if (downloaded) {
+                for (size_t i = 0; i < H; ++i) {
+                    if (!std::isfinite(gpuLast[i]) || !std::isfinite(cpuLast[i])) {
+                        ++stageNonFinite;
+                        continue;
+                    }
+                    const double d = std::abs(static_cast<double>(gpuLast[i]) -
+                                               static_cast<double>(cpuLast[i]));
+                    stageMax = std::max(stageMax, d);
+                    stageSum += d;
+                    stageSq += d * d;
+                }
+            }
+            const double stageFinite = downloaded && H > stageNonFinite
+                                           ? static_cast<double>(H - stageNonFinite)
+                                           : 0.0;
+            std::fprintf(stderr,
+                         "GPU_MOE_LAST_DOWN_PARITY layer=%u stick=%u expert=%d "
+                         "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
+                         "finite=%zu nonfinite=%zu\n",
+                         layer, stick, lastExpert,
+                         downloaded ? (stageNonFinite ? "NONFINITE" :
+                                      "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                   : "DOWNLOAD_FAIL", stageMax,
+                         stageFinite > 0.0 ? stageSum / stageFinite : 0.0,
+                         stageFinite > 0.0 ? std::sqrt(stageSq / stageFinite) : 0.0,
+                         downloaded ? H - stageNonFinite : 0u, stageNonFinite);
+            std::fflush(stderr);
+
+            double actMax = 0.0, actSum = 0.0, actSq = 0.0;
+            size_t actNonFinite = 0;
+            if (actDownloaded) {
+                for (size_t i = 0; i < I; ++i) {
+                    if (!std::isfinite(gpuAct[i]) || !std::isfinite(gateOut[i])) {
+                        ++actNonFinite;
+                        continue;
+                    }
+                    const double d = std::abs(static_cast<double>(gpuAct[i]) -
+                                               static_cast<double>(gateOut[i]));
+                    actMax = std::max(actMax, d);
+                    actSum += d;
+                    actSq += d * d;
+                }
+            }
+            const double actFinite = actDownloaded && I > actNonFinite
+                                         ? static_cast<double>(I - actNonFinite)
+                                         : 0.0;
+            std::fprintf(stderr,
+                         "GPU_MOE_LAST_ACT_PARITY layer=%u stick=%u expert=%d "
+                         "status=%s scope=DIAGNOSTIC_ONLY max_abs=%.9e mean_abs=%.9e rms_abs=%.9e "
+                         "finite=%zu nonfinite=%zu\n",
+                         layer, stick, lastExpert,
+                         actDownloaded ? (actNonFinite ? "NONFINITE" :
+                                         "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY")
+                                       : "DOWNLOAD_FAIL", actMax,
+                         actFinite > 0.0 ? actSum / actFinite : 0.0,
+                         actFinite > 0.0 ? std::sqrt(actSq / actFinite) : 0.0,
+                         actDownloaded ? I - actNonFinite : 0u, actNonFinite);
+            std::fflush(stderr);
+
+            /* Completion-ordered per-expert witness.  The helper requires
+               real device buffer identities and a nonzero submission count;
+               it refuses overwrite and records certified=0.  If the captured
+               host slices do not correspond to the final arena owner, fail
+               closed instead of attributing another expert's output. */
+            if (captureRequested) {
+                bool witnessWritten = false;
+                const char* reason = "IDENTITY_MISMATCH";
+                if (scalarCapture && scalarCaptureExpert == lastExpert &&
+                    downloaded && actDownloaded && vc &&
+                    scalarCapture->d && scalarCapture->db) {
+                    const uint64_t gpuDownBufferId =
+                        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(
+                            vc->ArenaDown().buffer));
+                    const uint64_t gpuActBufferId =
+                        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(
+                            vc->ArenaFFNAct().buffer));
+                    witnessWritten = k2_parity_capture::Capture(
+                        stick, layer, lastExpert, scalarCapture->dt,
+                        scalarCapture->d, scalarCapture->db,
+                        gateOut.data(), I, cpuLast.data(), gpuLast.data(), H,
+                        gpuDownBufferId, gpuActBufferId,
+                        ctr.gpu_submits);
+                    reason = witnessWritten ? "WRITTEN" : "CAPTURE_REJECTED";
+                }
+                std::fprintf(stderr,
+                             "GPU_EXPERT_OUTPUT_CAPTURE layer=%u stick=%u "
+                             "expert=%d status=%s scope=POST_DEVICE_COMPLETION "
+                             "completion=K2MoEStickEndDevice\n",
+                             layer, stick, lastExpert,
+                             witnessWritten ? "WRITTEN" : reason);
+                std::fflush(stderr);
+            }
+        }
+    };
+
     /* Hold MoE pins for this stick worklist — peer eviction ⇒ DEVICE_LOST. */
     if (vcHold) vcHold->BeginMoePinHold();
     /* HARD_GATE: pin all weights before fuse (no mid-graph Upload submit). */
@@ -190,6 +525,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         return false;
     }
     for (auto& r : work) {
+        const uint64_t expertStartNs = K2MoEExpertAccounting::NowNs();
         if (!K2MoEStickExpertDevice(stick, r.gt, r.g, r.gb, r.ut, r.u, r.ub,
                                     r.dt, r.d, r.db, r.weight, H, I, layer,
                                     r.expertId, r.acquireMiss, ctr)) {
@@ -198,6 +534,13 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
             error = "K2MoEStickExpertDevice failed";
             return false;
         }
+        K2MoEExpertTiming gpuTiming{};
+        gpuTiming.acquireNs = 0;
+        gpuTiming.readBytes = static_cast<uint64_t>(r.gb) + r.ub + r.db;
+        gpuTiming.totalNs = K2MoEExpertAccounting::NowNs() - expertStartNs;
+        gpuTiming.computeNs = gpuTiming.totalNs;
+        K2MoEExpertAccounting::Instance().Executed(
+            layer, r.expertId, true, r.acquireMiss == 0, gpuTiming);
         hotExperts.push_back(r.expertId);
     }
     if (!K2MoEStickEndFused(stick, ctr)) {
@@ -215,6 +558,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         error = "K2MoEStickEndDevice failed";
         return false;
     }
+    emitAggregateParity(partial);
     return true;
 }
 

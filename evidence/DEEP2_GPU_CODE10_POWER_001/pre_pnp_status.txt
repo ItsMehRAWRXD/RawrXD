@@ -1,0 +1,10 @@
+﻿
+
+Status       : Error
+Class        : Display
+FriendlyName : AMD Radeon RX 7800 XT
+InstanceId   : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+Problem      : CM_PROB_FAILED_START
+
+
+

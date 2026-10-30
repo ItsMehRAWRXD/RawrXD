@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "lavapath/GpuDeviceLostReset.hpp"
 
 namespace Deep2 {
 
@@ -144,6 +145,16 @@ public:
     bool Initialize() { return initialize(); }
     void cleanup();
 
+    /* Device-lost / Win32 code-31: detect→mark; opt-in reset via
+     * DEEP2_GPU_DEVICE_RESET=1 (teardown→recreate). Fail closed otherwise. */
+    bool NoteVkResult(int vk, const char* stage);
+    bool DeviceIsLost() const noexcept;
+    uint64_t DeviceLostCount() const noexcept;
+    int LastLostVk() const noexcept;
+    const char* LastLostPhase() const noexcept;
+    void InjectDeviceLostForTest(int code);
+    bool RecoverDeviceIfOptIn();
+
     bool initialized() const noexcept { return initialized_; }
     bool computeReady() const noexcept { return opsPipeline_ != VK_NULL_HANDLE; }
     bool quantComputeReady() const noexcept { return qPipeline_ != VK_NULL_HANDLE; }
@@ -215,7 +226,8 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
                            DeviceBuf& input, DeviceBuf& output,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols,
+                           uint64_t cacheKey = 0);
 
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
@@ -1382,6 +1394,7 @@ private:
         uint32_t rows = 0;
         uint32_t cols = 0;
         uint32_t weightBytes = 0;
+        uint32_t strictOrder = 0;
     };
 
     bool createInstance();
@@ -1424,7 +1437,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t cacheKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state
@@ -1444,6 +1457,10 @@ private:
     uint32_t requestedOrdinal_ = 0;
     VulkanPhysicalInfo info_{};
     bool initialized_ = false;
+    int lastLostVk_ = 0;
+    const char* lastLostPhase_ = "none";
+    uint64_t deviceLostCount_ = 0;
+    GpuLost::Seq lostSeq_{};
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 

@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <atomic>
 #include "../native_agent.hpp"
 #include "../cpu_inference_engine.h"
 
@@ -86,7 +87,7 @@ private:
     
     Win32IDE* m_ide;
     bool m_initialized;
-    bool m_agentLoopRunning;
+    std::atomic<bool> m_agentLoopRunning{false};
     
     std::string m_frameworkPath;
     std::string m_toolsModulePath;

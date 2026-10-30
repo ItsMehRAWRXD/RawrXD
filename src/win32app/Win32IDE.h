@@ -15,6 +15,70 @@
 #define DOC_TAB_HEIGHT 26
 #endif
 
+// Activity-bar IDs are shared by the VS Code-style UI implementation and the
+// lifecycle command router.  Keep them in the common header so the live
+// startup path can route activity-bar clicks without relying on TU-local
+// defines.
+#ifndef IDC_ACTIVITY_BAR
+#define IDC_ACTIVITY_BAR 1100
+#endif
+#ifndef IDC_ACTBAR_EXPLORER
+#define IDC_ACTBAR_EXPLORER 1101
+#endif
+#ifndef IDC_ACTBAR_SEARCH
+#define IDC_ACTBAR_SEARCH 1102
+#endif
+#ifndef IDC_ACTBAR_SCM
+#define IDC_ACTBAR_SCM 1103
+#endif
+#ifndef IDC_ACTBAR_DEBUG
+#define IDC_ACTBAR_DEBUG 1104
+#endif
+#ifndef IDC_ACTBAR_EXTENSIONS
+#define IDC_ACTBAR_EXTENSIONS 1105
+#endif
+#ifndef IDC_ACTBAR_SETTINGS
+#define IDC_ACTBAR_SETTINGS 1106
+#endif
+#ifndef IDC_ACTBAR_ACCOUNTS
+#define IDC_ACTBAR_ACCOUNTS 1107
+#endif
+#ifndef IDC_TITLE_TEXT
+#define IDC_TITLE_TEXT 1018
+#endif
+
+// Chat session tabs are created by Win32IDE.cpp but their TCN_SELCHANGE
+// notification is owned by the lifecycle/window-procedure translation unit.
+// Keep the control ID in the shared header so both translation units use the
+// same routing contract.
+#ifndef IDC_CHAT_SESSIONS
+#define IDC_CHAT_SESSIONS 1208
+#endif
+#ifndef IDC_NEW_CHAT
+#define IDC_NEW_CHAT 1209
+#endif
+#ifndef IDC_CLOSE_CHAT
+#define IDC_CLOSE_CHAT 1214
+#endif
+#ifndef IDC_RESTORE_CHAT
+#define IDC_RESTORE_CHAT 1215
+#endif
+#ifndef IDC_ROLLBACK_CHAT
+#define IDC_ROLLBACK_CHAT 1216
+#endif
+#ifndef IDC_COPILOT_REASONING_SELECTOR
+#define IDC_COPILOT_REASONING_SELECTOR 1217
+#endif
+#ifndef IDC_COPILOT_WEB_BROWSE
+#define IDC_COPILOT_WEB_BROWSE 1218
+#endif
+#ifndef IDC_COPILOT_MAX_TOKENS_SELECTOR
+#define IDC_COPILOT_MAX_TOKENS_SELECTOR 1219
+#endif
+#ifndef IDC_COPILOT_CONTEXT_SELECTOR
+#define IDC_COPILOT_CONTEXT_SELECTOR 1220
+#endif
+
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
 #undef ERROR
@@ -22,11 +86,13 @@
 
 #include <commctrl.h>
 #include <shlobj.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -41,6 +107,7 @@
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "agent_esp.hpp"
+#include "Win32IDE_GhostText.h"
 
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
@@ -56,6 +123,80 @@ struct ChatModelEntry {
     std::string breadcrumb;
     std::string identifier;
 };
+
+// Discovery results are fenced to the UI request that created them.  The
+// generation is carried with the owned payload so a queued WM_APP+106 from an
+// older worker can never overwrite a newer model catalog.
+struct ModelDiscoveryPayload {
+    uint64_t generationID = 0;
+    std::vector<ChatModelEntry> models;
+    // The first payload replaces the old discovered catalog; later scoped
+    // payloads merge into it so the fast Ollama catalog is never regressed
+    // while local GGUF scanning finishes.
+    bool mergeOnly = false;
+};
+
+enum class GhostTextMode { Disabled, AutoLocal, FollowChat, Independent };
+
+// Ollama's native API currently exposes reasoning as a boolean on the
+// /api/generate route.  These UI modes are deliberately client-side policies:
+// Instant disables reasoning; the remaining levels enable it and reserve a
+// bounded amount of the generation budget for the model's thinking stream.
+// This keeps the control honest across Ollama versions instead of sending
+// unsupported provider-specific strings such as "high" to /api/generate.
+enum class ReasoningMode { Instant, Low, Medium, High, Max };
+
+struct ChatSessionCheckpoint {
+    std::string reason;
+    ChatModelEntry model;
+    ChatModelEntry ghostTextModel;
+    GhostTextMode ghostTextMode = GhostTextMode::AutoLocal;
+    ReasoningMode reasoningMode = ReasoningMode::Instant;
+    bool allowCloudGhostText = false;
+    bool webBrowsingEnabled = false;
+    int maxTokens = 4096;
+    int contextTokens = 65536;
+    std::vector<std::pair<std::string, std::string>> history;
+    std::string responseBuffer;
+};
+
+// A chat session owns its route, transcript, and bounded rollback history
+// independently. The workspace/file snapshot system remains separate: chat
+// rollback never writes or restores project files.
+struct ChatSessionState {
+    int id = 0;
+    std::string title;
+    ChatModelEntry model;
+    std::vector<std::pair<std::string, std::string>> history;
+    std::string responseBuffer;
+    bool running = false;
+    ReasoningMode reasoningMode = ReasoningMode::Instant;
+    bool webBrowsingEnabled = false;
+    std::vector<ChatSessionCheckpoint> checkpoints;
+};
+
+// Inference workers post owned updates to the UI thread instead of touching
+// Win32 controls or chat-session containers directly.
+struct CopilotChatUiUpdate {
+    int sessionId = 0;
+    std::string response;
+    bool complete = false;
+};
+
+inline constexpr UINT kRawrxdCopilotUiUpdate = WM_APP + 107;
+
+// Dedicated PowerShell terminal callbacks originate on reader/monitor threads.
+// Own the payload and marshal it through the main window before touching any
+// RichEdit or status-bar control.
+struct PowerShellUiUpdate {
+    enum class Kind { Output, Error, Finished };
+    Kind kind = Kind::Output;
+    std::string text;
+    COLORREF color = RGB(200, 200, 200);
+    int exitCode = 0;
+};
+
+inline constexpr UINT kRawrxdPowerShellUiUpdate = WM_APP + 108;
 
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
@@ -191,6 +332,10 @@ public:
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
+    void runNativeCodexPrompt(const std::string& prompt);
+    void requestNativeGhostText(const std::string& prompt,
+                                std::function<void(const std::string&, bool, bool)> callback);
+    void appendNativeDebugOutput(const std::string& text, bool error = false);
 
     // Agentic Framework
     std::unique_ptr<AgenticBridge> m_agenticBridge;
@@ -213,6 +358,10 @@ public:
 
     // Agentic Loop Bridge (connects to deep2_agentic_loop.exe)
     std::unique_ptr<AgenticLoopBridge> m_agenticLoopBridge;
+    // Chat session receiving the canonical CLI agent's streamed stdout/stderr.
+    // Keeping the origin session explicit prevents a later chat-tab switch
+    // from attaching agent output to the wrong conversation.
+    int m_agenticChatSessionId = 0;
     void initializeAgenticLoopBridge();
     void onAgenticLoopRunTask();
     void onAgenticLoopCancel();
@@ -243,6 +392,13 @@ public:
 private:
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK AgentModelDialogProc(HWND hwnd, UINT uMsg,
+                                                 WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ModelSelectorSubclassProc(HWND hwnd, UINT uMsg,
+                                                       WPARAM wParam, LPARAM lParam,
+                                                       UINT_PTR subclassId,
+                                                       DWORD_PTR refData);
+    void installModelSelectorProc(HWND combo);
 
     // Message handlers
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -260,6 +416,7 @@ private:
     void createTitleBarControls();
     void layoutTitleBar(int width);
     void updateTitleBarText();
+    void updateEditorBreadcrumb();
     std::string extractLeafName(const std::string& path) const;
     void setCurrentDirectoryFromFile(const std::string& filePath);
     void createEditor(HWND hwnd);
@@ -307,7 +464,8 @@ private:
     void shutdownInference();
     bool isModelLoaded() const;
     std::string generateResponse(const std::string& prompt);
-    void generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback);
+    void generateResponseAsync(const std::string& prompt,
+                               std::function<void(const std::string&, bool, bool)> callback);
     void stopInference();
     void setInferenceConfig(const InferenceConfig& config);
     InferenceConfig getInferenceConfig() const;
@@ -587,6 +745,9 @@ private:
 
     // Utility
     std::string getWindowText(HWND hwnd);
+    // Explicit UTF-8 boundary for text that crosses into JSON/agent APIs.
+    std::string getWindowTextUtf8(HWND hwnd);
+    void appendCopilotChatUtf8(const std::string& text);
     void setWindowText(HWND hwnd, const std::string& text);
     void appendText(HWND hwnd, const std::string& text);
     void syncEditorToGpuSurface();
@@ -804,13 +965,13 @@ private:
     
     // AI Inference State
     InferenceConfig m_inferenceConfig;
-    bool m_inferenceRunning = false;
-    bool m_inferenceStopRequested = false;
+    std::atomic_bool m_inferenceRunning{false};
+    std::atomic_bool m_inferenceStopRequested{false};
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
     std::mutex m_inferenceMutex;
-    std::function<void(const std::string&, bool)> m_inferenceCallback;
+    std::function<void(const std::string&, bool, bool)> m_inferenceCallback;
 
     // File Explorer Sidebar - tree view items
     HWND m_hwndFileTree = nullptr;
@@ -819,6 +980,7 @@ private:
     HINSTANCE m_hInstance = nullptr;
     HWND m_hwndMain = nullptr;
     HWND m_hwndEditor = nullptr;
+    HWND m_hwndEditorBreadcrumb = nullptr;
     HWND m_hwndCommandInput = nullptr;
     HWND m_hwndStatusBar = nullptr;
     HWND m_hwndOutputTabs = nullptr;
@@ -949,6 +1111,8 @@ private:
     int m_lastFoundPos;
     HWND m_hwndFindDialog = nullptr;
     HWND m_hwndReplaceDialog = nullptr;
+    HWND m_hwndFindInput = nullptr;
+    HWND m_hwndReplaceInput = nullptr;
     
     // Primary Sidebar state
     HWND m_hwndActivityBar = nullptr;
@@ -963,6 +1127,7 @@ private:
     HWND m_hwndExplorerToolbar = nullptr;
     HIMAGELIST m_hImageListExplorer = nullptr;
     std::string m_explorerRootPath;
+    WNDPROC m_explorerTreeOriginalProc = nullptr;
     
     // Search View
     HWND m_hwndSearchInput = nullptr;
@@ -1001,6 +1166,7 @@ private:
         bool enabled;
     };
     std::vector<Extension> m_extensions;
+    bool m_extensionsLoadInProgress = false;
     
     // Outline View (code structure)
     HWND m_hwndOutlineTree = nullptr;
@@ -1051,21 +1217,59 @@ private:
     HWND m_hwndCopilotChatInput = nullptr;
     HWND m_hwndCopilotChatOutput = nullptr;
     HWND m_hwndCopilotSendBtn = nullptr;
+    HWND m_hwndCopilotStopBtn = nullptr;
     HWND m_hwndCopilotClearBtn = nullptr;
+    HWND m_hwndModelLabel = nullptr;
     HWND m_hwndModelSelector = nullptr;
+    HWND m_hwndGhostTextModelLabel = nullptr;
+    HWND m_hwndGhostModelSelector = nullptr;
+    HWND m_hwndAllowCloudGhostText = nullptr;
+    HWND m_hwndMaxTokensCaption = nullptr;
     HWND m_hwndMaxTokensSlider = nullptr;
+    HWND m_hwndMaxTokensSelector = nullptr;
     HWND m_hwndMaxTokensLabel = nullptr;
+    HWND m_hwndContextCaption = nullptr;
+    HWND m_hwndContextLabel = nullptr;
+    HWND m_hwndContextSlider = nullptr;
+    HWND m_hwndContextSelector = nullptr;
+    HWND m_hwndReasoningLabel = nullptr;
+    HWND m_hwndReasoningSelector = nullptr;
+    HWND m_hwndWebBrowseToggle = nullptr;
+    HWND m_hwndChatSessionTabs = nullptr;
+    HWND m_hwndNewChatBtn = nullptr;
+    HWND m_hwndCloseChatBtn = nullptr;
+    HWND m_hwndRestoreChatBtn = nullptr;
+    HWND m_hwndRollbackChatBtn = nullptr;
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
     int m_currentMaxTokens;
+    int m_currentContextTokens = 65536;
+    ReasoningMode m_reasoningMode = ReasoningMode::Instant;
+    bool m_webBrowsingEnabled = false;
     std::vector<ChatModelEntry> m_availableModels;
     ChatModelEntry m_selectedChatModel;
+    ChatModelEntry m_ghostTextModel;
+    ChatModelEntry m_pendingInferenceModel;
+    GhostTextMode m_ghostTextMode = GhostTextMode::AutoLocal;
+    bool m_allowCloudGhostText = false;
+    std::unique_ptr<NativeGhostTextController> m_ghostText;
+    std::vector<std::unique_ptr<NativeGhostTextController>> m_ghostTextInputs;
     std::string m_agenticChatLoadedModelPath;
     std::thread m_modelDiscoveryThread;
+    uint64_t m_currentModelGenID = 0;
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
         std::make_shared<std::atomic_bool>(false);
     std::atomic_bool m_modelDiscoveryRunning{false};
+    // Model discovery results are delivered on the UI thread.  Keep the
+    // newest result staged while either model combo's popup is open so that
+    // CB_RESETCONTENT cannot tear down an active native dropdown.
+    std::unique_ptr<ModelDiscoveryPayload> m_deferredModelDiscovery;
+    bool m_modelDiscoveryUpdateDeferred = false;
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
+    std::vector<ChatSessionState> m_chatSessions;
+    std::vector<ChatSessionState> m_closedChatSessions;
+    int m_activeChatSession = -1;
+    int m_nextChatSessionId = 1;
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
     // Panel (Bottom) - Terminal, Output, Problems, Debug Console
@@ -1293,12 +1497,35 @@ private:
     
     void createChatPanel();
     void HandleCopilotSend();
+    void HandleCopilotStop();
     void HandleCopilotClear();
+    void handleCopilotUiUpdate(int sessionId, const std::string& response,
+                               bool complete);
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
     void populateModelSelector();
     void onModelSelectionChanged();
-    void onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered);
+    void onGhostTextSelectionChanged();
+    void onGhostTextCloudConsentChanged();
+    void onModelDiscoveryComplete(ModelDiscoveryPayload* discovered);
     void onMaxTokensChanged(int newValue);
+    void onContextPresetChanged();
+    void onReasoningModeChanged();
+    void onWebBrowsingChanged();
+    void updateReasoningControls();
+    void updateContextControls();
+    int effectiveMaxTokensForPrompt(const std::string& prompt) const;
+    void initializeNativeGhostText();
+    bool handleNativeGhostTextMessage(UINT message, WPARAM wParam, LPARAM lParam);
+    void invalidateNativeGhostText();
+    void notifyGhostTextInputChanged(HWND input);
+    void createChatSession(const std::string& title = "");
+    void switchChatSession(int index);
+    void updateChatSessionTabs();
+    void closeActiveChatSession();
+    void restoreClosedChatSession();
+    void checkpointActiveChat(const std::string& reason);
+    void rollbackActiveChat();
+    ChatSessionState* activeChatSession();
     
     // Debugger Execution Control
     void pauseExecution();
@@ -1361,6 +1588,10 @@ private:
     std::vector<rawrxd::esp::Event> m_espEvents; // Recent events for display
     static constexpr size_t MAX_ESP_EVENTS = 1000;
     std::mutex m_espEventsMutex;
+    // Presentation-level idempotence. Raw CLI output and the structured ESP
+    // recorder can both reach the UI; a request/sequence pair is rendered
+    // once while the raw JSONL evidence remains untouched on disk.
+    std::unordered_set<std::string> m_espDisplayedKeys;
     uint64_t m_espRequestId = 1;
 
     // Debugger UI Components

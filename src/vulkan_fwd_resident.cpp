@@ -163,7 +163,12 @@ bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
     const VkResult sr = vkQueueSubmit(compute_queue_, 1, &si, fence);
     last_d2h_vk_ = (int)sr;
     if (sr != VK_SUCCESS) {
-        last_d2h_phase_ = (sr == VK_ERROR_DEVICE_LOST) ? "device_lost" : "submit";
+        /* Map VK_ERROR_DEVICE_LOST (-4) and Win32 code 31 (ERROR_GEN_FAILURE). */
+        const int code = (int)sr;
+        last_d2h_phase_ =
+            (code == (int)VK_ERROR_DEVICE_LOST || code == 31) ? "device_lost"
+                                                             : "submit";
+        if (code == 31) last_d2h_phase_ = "code_31";
         vkDestroyFence(device_, fence, nullptr);
         vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
         return false;
@@ -174,8 +179,13 @@ bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
     vkDestroyFence(device_, fence, nullptr);
     vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     if (wr != VK_SUCCESS) {
-        last_d2h_phase_ =
-            (wr == VK_ERROR_DEVICE_LOST) ? "device_lost" : "fence";
+        const int code = (int)wr;
+        if (code == 31)
+            last_d2h_phase_ = "code_31";
+        else if (code == (int)VK_ERROR_DEVICE_LOST)
+            last_d2h_phase_ = "device_lost";
+        else
+            last_d2h_phase_ = "fence";
         return false;
     }
     last_d2h_phase_ = "ok";

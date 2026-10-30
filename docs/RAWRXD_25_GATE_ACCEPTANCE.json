@@ -1,0 +1,186 @@
+{
+  "schema": "RAWRXD_25_GATE_ACCEPTANCE_001/v1",
+  "base_branch": "fix/deep2-multimodel-safety-20261025",
+  "base_sha": "ef97b24938f81692cd5aaf305284ebd3150a6822",
+  "parity_branch": "cert/kimi-gpu0-vector-parity-002",
+  "promotion_policy": "MANUAL_REVIEW_ONLY",
+  "certified": false,
+  "tip_climb": "HOLD",
+  "gates": [
+    {
+      "id": "G01",
+      "phase": "PROVENANCE",
+      "title": "Canonical source, model, and executable SHA-256 frozen",
+      "receipt": "G01.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G02",
+      "phase": "NUMERICAL",
+      "title": "Q4_K dequantization vs independently compiled GGML",
+      "receipt": "G02.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G03",
+      "phase": "NUMERICAL",
+      "title": "Q6_K dequantization vs independently compiled GGML",
+      "receipt": "G03.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G04",
+      "phase": "NUMERICAL",
+      "title": "Same-expert packed weights and normalized hidden input validated",
+      "receipt": "G04.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G05",
+      "phase": "NUMERICAL",
+      "title": "GPU post-SwiGLU activation captured after completion with provenance",
+      "receipt": "G05.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G06",
+      "phase": "NUMERICAL",
+      "title": "One-expert GPU down output vs independent oracle full vector",
+      "receipt": "G06.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G07",
+      "phase": "NUMERICAL",
+      "title": "All GPU0 routed experts full-vector parity",
+      "receipt": "G07.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G08",
+      "phase": "NUMERICAL",
+      "title": "GPU0 repeated-run deterministic vector parity",
+      "receipt": "G08.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G09",
+      "phase": "NUMERICAL",
+      "title": "Host-to-device and device-to-host transfer integrity",
+      "receipt": "G09.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G10",
+      "phase": "NUMERICAL",
+      "title": "Frozen tolerances and worst-index receipts accepted",
+      "receipt": "G10.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G11",
+      "phase": "MODEL",
+      "title": "All Kimi layers and routed experts complete",
+      "receipt": "G11.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G12",
+      "phase": "MODEL",
+      "title": "MoE routing weights and aggregation parity",
+      "receipt": "G12.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G13",
+      "phase": "MODEL",
+      "title": "Prefill complete with finite logits",
+      "receipt": "G13.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G14",
+      "phase": "MODEL",
+      "title": "Decode 8 tokens with full logits and no fallback",
+      "receipt": "G14.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G15",
+      "phase": "MODEL",
+      "title": "Decode 32 tokens with full logits and no fallback",
+      "receipt": "G15.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G16",
+      "phase": "MODEL",
+      "title": "Decode 128 tokens with full logits and no fallback",
+      "receipt": "G16.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G17",
+      "phase": "MODEL",
+      "title": "Full-model logits parity vs independent runner",
+      "receipt": "G17.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G18",
+      "phase": "MODEL",
+      "title": "KV cache advancement and context state parity",
+      "receipt": "G18.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G19",
+      "phase": "MODEL",
+      "title": "Reset, cancel, replay, resource release",
+      "receipt": "G19.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G20",
+      "phase": "MODEL",
+      "title": "GPU_ONLY fail-closed admission and no silent CPU fallback",
+      "receipt": "G20.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G21",
+      "phase": "MULTIGPU",
+      "title": "GPU1 confirmed nonzero compute contribution",
+      "receipt": "G21.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G22",
+      "phase": "MULTIGPU",
+      "title": "Dual-GPU deterministic scheduler and expert accounting",
+      "receipt": "G22.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G23",
+      "phase": "MULTIGPU",
+      "title": "Device-loss, synchronization, memory lifetime recovery",
+      "receipt": "G23.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G24",
+      "phase": "REAP",
+      "title": "REAP model-size, quality floor, GGUF export and replay",
+      "receipt": "G24.json",
+      "status": "PENDING"
+    },
+    {
+      "id": "G25",
+      "phase": "IDE",
+      "title": "Native IDE chat-agent-tools end-to-end with real model and receipts",
+      "receipt": "G25.json",
+      "status": "PENDING"
+    }
+  ]
+}

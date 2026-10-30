@@ -1,0 +1,12 @@
+[
+  {
+    "name": "doctor",
+    "status": "PASS",
+    "exitCode": 0
+  },
+  {
+    "name": "models",
+    "status": "PASS",
+    "exitCode": 0
+  }
+]

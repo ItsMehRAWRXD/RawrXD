@@ -1,0 +1,36 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+[ESP] seq=1 req=53551498695500 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=53551498695500 kind=model_load value=0 message=qwen3:8b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=53551498695500 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=53551498695500 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=53551498695500 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=53551498695500 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=53551498695500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=490 eval_count=42 total_duration_ns=7070281100 load_duration_ns=6381903100 prompt_eval_duration_ns=197383000 eval_duration_ns=488115000 eval_tps=86.0452967026
+[ESP] seq=8 req=53551498695500 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=53551498695500 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp
+[ESP] seq=10 req=53551498695500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=53551498695500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=565 eval_count=56 total_duration_ns=705970300 load_duration_ns=8086800 prompt_eval_duration_ns=39986000 eval_duration_ns=654840000 eval_tps=85.5170728728
+[ESP] seq=12 req=53551498695500 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=editFiles target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp
+[ESP] seq=13 req=53551498695500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-1-0 name=editFiles target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp status=PASS duration_ms=8 PASS
+[ESP] seq=14 req=53551498695500 kind=file_changed value=0 message=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp
+[ESP] seq=15 req=53551498695500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=634 eval_count=41 total_duration_ns=527933900 load_duration_ns=7957500 prompt_eval_duration_ns=39274000 eval_duration_ns=477310000 eval_tps=85.8980536758
+[ESP] seq=16 req=53551498695500 kind=tool_start value=0 message=TOOL_START id=rawr-call-2-0 name=readFile target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp
+[ESP] seq=17 req=53551498695500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-2-0 name=readFile target=evidence/CLI_AUTONOMOUS_REPEAT_20261028/fixture_1.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=18 req=53551498695500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=709 eval_count=42 total_duration_ns=538511400 load_duration_ns=7287600 prompt_eval_duration_ns=39056000 eval_duration_ns=489566000 eval_tps=85.7902713832
+[ESP] seq=20 req=53551498695500 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=21 req=53551498695500 kind=heartbeat value=0 message={"request":53551498695500,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":121.125,"prefill_tps":0.000,"task_tps":0.113,"ttft_ms":8871.633,"prefill_ms":0.000,"decode_ms":8.256,"task_ms":8879.889,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":3,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=22 req=53551498695500 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown
+The file has been successfully modified. The final content of the file is:
+
+```cpp
+#include <cstdio>
+int main() { std::puts("CLI_REPEAT_1"); return 0; }
+```

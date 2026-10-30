@@ -3500,11 +3500,19 @@ std::future<BrowserTestResult> BrowserTestAgentImpl::runTestCode(const std::stri
             result.screenshots.push_back("screenshot_test_initial.png");
 
             // Execute the test code as JavaScript on the page
-            auto jsResult = page->evaluateJavaScript(testCode).get();
+            auto jsResult = page->evaluate(testCode).get();
             result.stepsExecuted.push_back("Execute test code");
 
             // Parse JavaScript result for pass/fail
-            if (jsResult.contains("passed") || jsResult.contains("true")) {
+            bool passed = false;
+            if (jsResult.is_boolean()) {
+                passed = jsResult.get<bool>();
+            } else if (jsResult.is_object()) {
+                passed = jsResult.value("passed", false);
+            } else if (jsResult.is_string()) {
+                passed = jsResult.get<std::string>() == "true";
+            }
+            if (passed) {
                 result.success = true;
                 result.summary = "Test code executed successfully";
                 result.testsRun = 1;

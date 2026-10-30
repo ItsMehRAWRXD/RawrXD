@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <cwchar>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,6 +20,30 @@ static inline int   x_pclose(FILE* f) { return pclose(f); }
 #endif
 
 namespace fs = std::filesystem;
+
+namespace {
+
+bool SamePathComponent(const fs::path& left, const fs::path& right) {
+#ifdef _WIN32
+    return _wcsicmp(left.native().c_str(), right.native().c_str()) == 0;
+#else
+    return left == right;
+#endif
+}
+
+bool IsWithinRoot(const fs::path& root, const fs::path& candidate) {
+    auto root_it = root.begin();
+    auto candidate_it = candidate.begin();
+    for (; root_it != root.end(); ++root_it, ++candidate_it) {
+        if (candidate_it == candidate.end() ||
+            !SamePathComponent(*root_it, *candidate_it)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace
 
 namespace RawrXD {
 namespace Agent {
@@ -67,12 +92,10 @@ fs::path WorkspaceToolHost::ResolveInWorkspace(const std::string& path,
         if (ec) resolved = root / fs::path(effective);
     }
 
-    // Containment check: resolved must be the root or beneath it.
-    auto root_str = root.string();
-    auto res_str  = resolved.string();
-    bool inside = res_str == root_str ||
-                  res_str.rfind(root_str, 0) == 0;
-    if (!inside) {
+    // Containment check: resolved must be the root or beneath it.  Compare
+    // path components rather than strings so a sibling such as
+    // "F:\\rawrxd-escape" can never pass as a child of "F:\\rawrxd".
+    if (!IsWithinRoot(root, resolved)) {
         error = "Path '" + effective + "' resolves outside the workspace. " +
                 SuggestAlternatives(effective);
         return {};
@@ -326,7 +349,10 @@ BuildEvidence WorkspaceToolHost::RunBuild(const std::string& target,
     int exit_code = -1;
     std::string log = RunProcess(cmd, exit_code, timeout_minutes);
     ev.process_exit_code = exit_code;
-    ev.tool_ok = !log.empty() || exit_code == 0;
+    // A captured log is not evidence that the build succeeded.  The process
+    // exit code is authoritative; a missing log on a zero-exit build remains
+    // a diagnostic issue, not a reason to turn a failed process into PASS.
+    ev.tool_ok = (exit_code == 0);
     ev.compiler_errors   = CountCompilerErrors(log);
     ev.compiler_warnings = CountCompilerWarnings(log);
 
@@ -405,18 +431,28 @@ bool WorkspaceToolHost::VerifyArtifact(const fs::path& build_dir,
     if (found.empty()) return false;
 
     if (!target.empty()) {
+        std::string requested = target;
+        std::transform(requested.begin(), requested.end(), requested.begin(),
+                       [](unsigned char c) { return static_cast<char>(::tolower(c)); });
+        if (requested == "all") return true;
         for (const auto& f : found) {
-            std::string lower = f;
+            const std::string filename = fs::path(f).filename().string();
+            std::string lower = filename;
             std::transform(lower.begin(), lower.end(), lower.begin(),
                            [](unsigned char c) { return static_cast<char>(::tolower(c)); });
-            std::string t = target;
-            std::transform(t.begin(), t.end(), t.begin(),
+            const std::string stem = fs::path(filename).stem().string();
+            std::string lowerStem = stem;
+            std::transform(lowerStem.begin(), lowerStem.end(), lowerStem.begin(),
                            [](unsigned char c) { return static_cast<char>(::tolower(c)); });
-            if (lower.find(t) != std::string::npos) return true;
+            if (lower == requested || lowerStem == requested ||
+                lower == requested + ".exe" || lower == requested + ".lib" ||
+                lower == requested + ".dll") {
+                return true;
+            }
         }
-        // Target named explicitly but no matching artifact: still a real build
-        // if exe/lib artifacts exist at all.
-        return true;
+        // Never accept an unrelated artifact as proof that the requested
+        // target built.  The target name is part of the certificate.
+        return false;
     }
     return true;
 }
@@ -439,7 +475,9 @@ TestEvidence WorkspaceToolHost::RunTests(const std::string& filter,
     int exit_code = -1;
     std::string log = RunProcess(cmd, exit_code, timeout_minutes);
     ev.process_exit_code = exit_code;
-    ev.tool_ok = !log.empty();
+    // Parse the result before deciding whether the test wrapper succeeded.
+    // Non-empty output alone can be a compiler/shell error transcript.
+    ev.tool_ok = false;
     ev.tests_total = 0;
 
     // Parse ctest output: "100% tests passed, 0 tests failed out of N"
@@ -473,6 +511,8 @@ TestEvidence WorkspaceToolHost::RunTests(const std::string& filter,
             ev.tests_total = ev.tests_passed + ev.tests_failed;
         }
     }
+
+    ev.tool_ok = (exit_code == 0 && ev.tests_total > 0);
 
     // Capture individual failures.
     {

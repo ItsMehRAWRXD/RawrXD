@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <cstdlib>
 #include <nlohmann/json.hpp>
 
 #ifdef _WIN32
@@ -17,6 +19,19 @@ using json = nlohmann::json;
 
 namespace RawrXD {
 namespace Backend {
+
+namespace {
+void TraceOllamaExchange(const char* endpoint,
+                         const std::string& request,
+                         const std::string& response) {
+    const char* path = std::getenv("RAWRXD_OLLAMA_TRACE_PATH");
+    if (!path || !*path) return;
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    if (!out) return;
+    out << "ENDPOINT " << endpoint << "\nREQUEST\n" << request
+        << "\nRESPONSE\n" << response << "\n";
+}
+}
 
 OllamaClient::OllamaClient(const std::string& base_url)
     : m_base_url(base_url), m_timeout_seconds(300) {
@@ -40,6 +55,9 @@ bool OllamaClient::testConnection() {
 
 std::string OllamaClient::getVersion() {
     std::string response = makeGetRequest("/api/version");
+    if (response.find_first_not_of(" \t\r\n") == std::string::npos) {
+        return {};
+    }
     
     // Production-ready JSON parsing
     try {
@@ -71,11 +89,20 @@ OllamaResponse OllamaClient::generateSync(const OllamaGenerateRequest& request) 
 }
 
 OllamaResponse OllamaClient::chatSync(const OllamaChatRequest& request) {
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-ollama-client-trace] chatSync:request model=%s messages=%zu\n",
+                     request.model.c_str(), request.messages.size());
+        std::fflush(stderr);
+    }
     OllamaChatRequest sync_req = request;
     sync_req.stream = false;
     
     std::string json = createChatRequestJson(sync_req);
     std::string response = makePostRequest("/api/chat", json);
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::fprintf(stderr, "[rawr-ollama-client-trace] chatSync:response bytes=%zu\n", response.size());
+        std::fflush(stderr);
+    }
     
     return parseResponse(response);
 }
@@ -97,11 +124,8 @@ bool OllamaClient::chat(const OllamaChatRequest& request,
 }
 
 std::vector<float> OllamaClient::embeddings(const std::string& model, const std::string& prompt) {
-    // Create JSON: {"model": "...", "prompt": "..."}
-    std::ostringstream oss;
-    oss << "{\"model\":\"" << model << "\",\"prompt\":\"" << prompt << "\"}";
-    
-    std::string response = makePostRequest("/api/embeddings", oss.str());
+    const json payload = {{"model", model}, {"prompt", prompt}};
+    std::string response = makePostRequest("/api/embeddings", payload.dump());
     
     // Parse embeddings array from JSON
     std::vector<float> result;
@@ -124,54 +148,80 @@ std::vector<float> OllamaClient::embeddings(const std::string& model, const std:
 }
 
 // JSON creation helpers
-std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest& req) {
-    std::ostringstream oss;
-    oss << "{";
-    oss << "\"model\":\"" << req.model << "\",";
-    oss << "\"prompt\":\"" << req.prompt << "\",";
-    oss << "\"stream\":" << (req.stream ? "true" : "false")
-        << ",\"think\":false";
-    
-    if (!req.options.empty()) {
-        oss << ",\"options\":{";
-        bool first = true;
-        for (const auto& [key, value] : req.options) {
-            if (!first) oss << ",";
-            oss << "\"" << key << "\":" << value;
-            first = false;
-        }
-        oss << "}";
+namespace {
+
+// Request options are kept as strings in the public compatibility structs, but
+// Ollama expects numbers and booleans as JSON values.  Parse the scalar when it
+// is unambiguously numeric; retain other values as strings rather than emitting
+// invalid JSON or silently changing their meaning.
+json OllamaOptionValue(const std::string& value) {
+    if (value == "true") return true;
+    if (value == "false") return false;
+
+    try {
+        size_t consumed = 0;
+        const long long integer = std::stoll(value, &consumed);
+        if (consumed == value.size()) return integer;
+    } catch (...) {
     }
-    
-    oss << "}";
-    return oss.str();
+
+    try {
+        size_t consumed = 0;
+        const double real = std::stod(value, &consumed);
+        if (consumed == value.size()) return real;
+    } catch (...) {
+    }
+
+    return value;
+}
+
+} // namespace
+
+std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest& req) {
+    json payload = {
+        {"model", req.model},
+        {"prompt", req.prompt},
+        {"stream", req.stream},
+        {"think", false}
+    };
+    if (!req.options.empty()) {
+        payload["options"] = json::object();
+        for (const auto& [key, value] : req.options) {
+            payload["options"][key] = OllamaOptionValue(value);
+        }
+    }
+    if (!req.stop.empty()) payload["stop"] = req.stop;
+    return payload.dump();
 }
 
 std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
-    std::ostringstream oss;
-    oss << "{";
-    oss << "\"model\":\"" << req.model << "\",";
-    oss << "\"messages\":[";
-    
-    for (size_t i = 0; i < req.messages.size(); ++i) {
-        if (i > 0) oss << ",";
-        oss << "{\"role\":\"" << req.messages[i].role << "\",";
-        oss << "\"content\":\"" << req.messages[i].content << "\"";
-        if (!req.messages[i].tool_call_id.empty())
-            oss << ",\"tool_call_id\":\"" << req.messages[i].tool_call_id << "\"";
-        if (!req.messages[i].tool_calls.is_null() && req.messages[i].tool_calls.is_array())
-            oss << ",\"tool_calls\":" << req.messages[i].tool_calls.dump();
-        oss << "}";
+    json payload = {
+        {"model", req.model},
+        {"messages", json::array()},
+        {"stream", req.stream},
+        {"think", false}
+    };
+    for (const auto& message : req.messages) {
+        json item = {
+            {"role", message.role},
+            {"content", message.content}
+        };
+        if (!message.tool_call_id.empty()) item["tool_call_id"] = message.tool_call_id;
+        if (!message.tool_calls.is_null() && message.tool_calls.is_array()) {
+            item["tool_calls"] = message.tool_calls;
+        }
+        payload["messages"].push_back(std::move(item));
     }
-    
-    oss << "],";
-    oss << "\"stream\":" << (req.stream ? "true" : "false")
-        << ",\"think\":false";
+    if (!req.options.empty()) {
+        payload["options"] = json::object();
+        for (const auto& [key, value] : req.options) {
+            payload["options"][key] = OllamaOptionValue(value);
+        }
+    }
     if (!req.tools.is_null() && req.tools.is_array() && !req.tools.empty()) {
-        oss << ",\"tools\":" << req.tools.dump();
+        payload["tools"] = req.tools;
     }
-    oss << "}";
-    return oss.str();
+    return payload.dump();
 }
 
 OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
@@ -186,6 +236,15 @@ OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
         resp.response = j.value("response", std::string());
         resp.done = j.value("done", false);
         resp.done_reason = j.value("done_reason", std::string());
+
+        // Ollama reports transport/model failures as {"error":"..."}
+        // without a chat message. Preserve that diagnostic so callers can
+        // distinguish an upstream rejection from an empty successful answer.
+        if (j.contains("error") && j["error"].is_string()) {
+            resp.response = j["error"].get<std::string>();
+            resp.done = true;
+            resp.done_reason = "error";
+        }
 
         // Chat-mode fields (used by /api/chat)
         if (j.contains("message")) {
@@ -263,19 +322,59 @@ std::vector<OllamaModel> OllamaClient::parseModels(const std::string& json_str) 
 // Platform-specific HTTP implementations
 #ifdef _WIN32
 
+namespace {
+
+bool CrackOllamaBaseUrl(const std::string& base_url,
+                        std::wstring& host,
+                        INTERNET_PORT& port) {
+    std::wstring wide(base_url.begin(), base_url.end());
+    if (wide.empty()) return false;
+
+    wchar_t host_buffer[256]{};
+    URL_COMPONENTS parts{};
+    parts.dwStructSize = sizeof(parts);
+    parts.lpszHostName = host_buffer;
+    parts.dwHostNameLength = static_cast<DWORD>(std::size(host_buffer));
+
+    if (!WinHttpCrackUrl(wide.c_str(), 0, 0, &parts) ||
+        parts.dwHostNameLength == 0) {
+        return false;
+    }
+
+    host.assign(parts.lpszHostName, parts.dwHostNameLength);
+    port = parts.nPort != 0
+        ? parts.nPort
+        : (parts.nScheme == INTERNET_SCHEME_HTTPS
+            ? INTERNET_DEFAULT_HTTPS_PORT
+            : INTERNET_DEFAULT_HTTP_PORT);
+    return true;
+}
+
+void ConfigureWinHttpTimeouts(HINTERNET session, int timeout_seconds) {
+    const int bounded = std::clamp(timeout_seconds, 1, 3600);
+    const DWORD timeout_ms = static_cast<DWORD>(bounded * 1000);
+    WinHttpSetTimeouts(session, timeout_ms, timeout_ms, timeout_ms, timeout_ms);
+}
+
+} // namespace
+
 std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
-    // Parse URL
-    std::string host = "localhost";
-    int port = 11434;
-    
     // Initialize WinHTTP
     HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0",
                                      WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                      WINHTTP_NO_PROXY_NAME,
                                      WINHTTP_NO_PROXY_BYPASS, 0);
     if (!hSession) return "";
-    
-    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", port, 0);
+
+    std::wstring host;
+    INTERNET_PORT port = INTERNET_DEFAULT_HTTP_PORT;
+    if (!CrackOllamaBaseUrl(m_base_url, host, port)) {
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+    ConfigureWinHttpTimeouts(hSession, m_timeout_seconds);
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
     if (!hConnect) {
         WinHttpCloseHandle(hSession);
         return "";
@@ -332,8 +431,16 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
                                      WINHTTP_NO_PROXY_NAME,
                                      WINHTTP_NO_PROXY_BYPASS, 0);
     if (!hSession) return "";
-    
-    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 11434, 0);
+
+    std::wstring host;
+    INTERNET_PORT port = INTERNET_DEFAULT_HTTP_PORT;
+    if (!CrackOllamaBaseUrl(m_base_url, host, port)) {
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+    ConfigureWinHttpTimeouts(hSession, m_timeout_seconds);
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
     if (!hConnect) {
         WinHttpCloseHandle(hSession);
         return "";
@@ -380,6 +487,7 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
         }
     }
     
+    TraceOllamaExchange(endpoint.c_str(), json_body, response);
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);

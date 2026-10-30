@@ -1,5 +1,34 @@
 # RawrXD REAP CLI contract
 
+REAP has two explicit modes. The production `--reap <parameters>/<experts>`
+form is a live, non-destructive streamer/router injection. It changes the
+resident parameter working-set budget and the active MoE expert target for
+the model session, then runs that model. It does not quantize, prune, rewrite,
+or replace GGUF files.
+
+```text
+rawr run <model> --reap 1B/8 "run the model with the requested runtime policy"
+rawr run <model> --reap 100T/16 "run the model with the requested runtime policy"
+rawr-reap runtime <model> --target 1B/8
+```
+
+The first value is the requested parameter/working-set target. It may be
+smaller or larger than the inspected model and is applied as the runtime
+working-set budget. The second value is the requested active MoE expert target
+and is likewise allowed to move below or above the model's normal top-k. The
+only expert limit is physical topology: a model cannot route to experts that
+do not exist, and dense models require `/1`. Impossible topology requests fail
+closed; they are never silently clamped or fabricated.
+
+Every live invocation emits `rawrxd.reap.runtime_receipt.v1` with the
+requested values, effective values, direction (`DOWNSIZE`, `UPSIZE`, `MIXED`,
+or `MATCH`), runtime activation, generation result, `source_immutable`, and
+`writer_invoked=false`.
+
+The separate `rawr reap ... --target-size ...` form below remains the guarded
+offline model-reduction/writer contract. It is not used by the live
+`--reap A/B` execution path.
+
 The native CLI accepts the guarded REAP request in either form:
 
 ```text

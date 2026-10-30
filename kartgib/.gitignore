@@ -1,0 +1,8 @@
+build/
+evidence/
+startup.log
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.spv

@@ -1,0 +1,31 @@
+SCHEMA=E2E_FULL_AUTH_LEDGER_001
+TS=2026-10-27
+AUTH_SCOPE=RawrXD + Deep2 + REAP + all local models
+AUTH_INCLUDES=source_mod,build,debug,inference,perf_opt,integration,regression,certification
+ENGINEERING_HOLD_SUPERSEDED=1
+CERT_GATES_AUTO_CLEARED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE_FORBIDDEN=1
+
+P1_K2_RECOVER=
+  target=independent 256-token reference receipt
+  model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\...00001-of-00013.gguf
+  harness=evidence\run_k2_oracle_vulkan.bat (-n 256, --cpu-moe, mmap)
+  prior=ABORTED @ 86 gen tokens; GATE2_TIMING_BREAKDOWN_RE_001 locked
+  instrument=ggml-cpu MUL_MAT_ID moe_stage_counters SOURCE_WIRED; rebuild required
+  receipt_target=independent_reference_receipt_k2.json
+  status=IN_PROGRESS
+
+P2_DEEP2_OPT=
+  track=Lite Gate2 (DeepSeek-V2-Lite) separate from K2 llama.exe
+  measured=FFN~91% host; DEEP2_REAL_GPU_FORWARD=0
+  change=LinearW dual-emit stderr + MoEProxyStats dump on generate teardown
+  status=SOURCE_EDIT; rebuild+rerun pending
+
+P3_LOCAL_MODELS=PENDING_INVENTORY
+P4_RAWRXD_INTEGRATION=PENDING
+P5_PRODUCTION_VALIDATION=PENDING
+
+LAW=SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN!=PASS

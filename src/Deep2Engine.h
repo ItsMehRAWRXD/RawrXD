@@ -63,6 +63,7 @@
 #include "vulkan_compute_cpu_ns.hpp"
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
+#include "reap/ReapRuntimePlan.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -491,6 +492,14 @@ namespace Deep2
         void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
         bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
 
+        // Runtime REAP injection. This stages a non-destructive residency and
+        // MoE top-k policy for the next model load. It never rewrites GGUF.
+        bool configureReapRuntimeInjection(
+            const RawrXD::Reap::RuntimeInjection& injection);
+        const RawrXD::Reap::RuntimeInjectionReceipt& reapRuntimeReceipt() const {
+            return reapRuntimeReceipt_;
+        }
+
         // Production profiler (Batch 1)
         void enableProfiling(bool enable);
         bool isProfilingEnabled() const { return profilingEnabled_; }
@@ -879,6 +888,12 @@ namespace Deep2
         bool k2ShardIndexOpen_ = false;
         Deep2::KimiK2Config k2ShardConfig_{};
 
+        // Keep lookup keys rather than Mapping* addresses. TensorResidencyCache
+        // stores mappings in an unordered_map, so inserting another mapping can
+        // rehash and invalidate raw Mapping pointers even though the mapped data
+        // itself remains valid.
+        std::vector<std::pair<uint32_t, uint64_t>> standardMultiShardMappingKeys_;
+
         // VAL-051.7: Bounded-window tensor residency manager (legacy)
         std::unique_ptr<ResidencyManager> residencyManager_;
         bool residencyEnabled_ = false;
@@ -899,6 +914,9 @@ namespace Deep2
         // Key: layerId, Value: vector of job handles returned by PrefetchAsync
         std::unordered_map<int, std::vector<uint64_t>> pendingPrefetches_;
         bool asyncPrefetchEnabled_ = false;
+
+        RawrXD::Reap::RuntimeInjection reapRuntimeInjection_{};
+        RawrXD::Reap::RuntimeInjectionReceipt reapRuntimeReceipt_{};
 
         // BP16 streaming support (zero-copy mapped weight access)
         std::unique_ptr<BP16Streamer> bp16Streamer_;
@@ -1005,8 +1023,14 @@ namespace Deep2
 
         // Buffers
         float *hiddenStates = nullptr;
+        // Resident hidden-state slots are intentionally independent from the
+        // model's logical context limit.  Large-context GGUF metadata must not
+        // force a multi-gigabyte allocation before a request actually needs
+        // those positions; growContext() expands this storage on demand.
+        size_t hiddenStatesCapacity = 0;
         float *attentionOutput = nullptr;
         float *ffnOutput = nullptr;
+        size_t ffnOutputCapacity = 0; // element capacity for shared projection scratch
         float *logits = nullptr;
         float *qProj = nullptr;
         float *kProj = nullptr;
@@ -1095,6 +1119,12 @@ namespace Deep2
         // Used when modelWeights.tokenEmbed.data is null (multi-shard models
         // do not eagerly load tensor data). Returns false on any failure.
         bool embedTokenFromShard(int tokenId, float *output);
+
+        // Bind standard-MHA multi-shard tensors for the generic execution
+        // path. Kimi/DeepSeek MLA continues to use K2NativeStreamGate; this
+        // binding is for real standard-GQA/MoE families such as MiniMax-M2.
+        bool bindStandardMultiShardWeights(std::string &error);
+        void releaseStandardMultiShardWeights();
 
         // Transformer layer forward pass (real implementation)
         void forwardLayer(size_t layer, const float *input, float *output, size_t seqLen);

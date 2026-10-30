@@ -19,7 +19,10 @@
 // instead of reporting an inflated TPS.
 //
 // Usage: deep2_bench_tps.exe --model <gguf> --tokens "1 185 ..." [--decode N]
-//                            [--runs N] [--cpu]
+//                            [--runs N] [--cpu] [--serial-prefill] [--no-batch]
+//                            [--wide-batch]
+// Default GPU path: PrefillBatch + DEEP2_WIDE_DOT_BATCH (fewer host fences).
+// --serial-prefill / --no-batch restore the prior differential baselines.
 // ============================================================================
 #include <algorithm>
 #include <chrono>
@@ -40,6 +43,14 @@
 using namespace RawrXD::Deep2;
 
 namespace {
+
+void SetEnv1(const char* key, const char* val) {
+#ifdef _WIN32
+    _putenv_s(key, val);
+#else
+    setenv(key, val, 1);
+#endif
+}
 
 double MsSince(std::chrono::steady_clock::time_point t0) {
     return std::chrono::duration<double, std::milli>(
@@ -88,9 +99,12 @@ int main(int argc, char* argv[]) {
 
     std::string model, tokensArg = "1 185 278 20606 23808 7936 14336 28416";
     std::string dumpLogitsDir;   // optional: full-vocab logits per position
+    std::string forceGenArg;     // optional: force first N gen tokens (shared-prefix A/B)
     size_t decode_n = 128;
     size_t runs = 1;
     bool gpu = true;
+    bool serial_prefill = false;
+    bool wide_batch = true;
     int device_index = -1;   // -1 = score-based auto-select; >=0 pins the Vulkan device
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -101,19 +115,30 @@ int main(int argc, char* argv[]) {
         else if (a == "--cpu") gpu = false;
         else if (a == "--device" && i + 1 < argc) device_index = (int)std::strtol(argv[++i], nullptr, 10);
         else if (a == "--dump-logits" && i + 1 < argc) dumpLogitsDir = argv[++i];
+        else if (a == "--force-gen" && i + 1 < argc) forceGenArg = argv[++i];
+        else if (a == "--serial-prefill") serial_prefill = true;
+        else if (a == "--no-wide-batch") wide_batch = false;
+        else if (a == "--wide-batch") wide_batch = true;
         else if (a == "--no-batch") {
-#ifdef _WIN32
-            _putenv_s("DEEP2_NO_DOT_BATCH", "1");
-#else
-            setenv("DEEP2_NO_DOT_BATCH", "1", 1);
-#endif
+            SetEnv1("DEEP2_NO_DOT_BATCH", "1");
+            wide_batch = false;
         }
         else { std::printf("unknown arg %s\n", a.c_str()); return 1; }
     }
     if (model.empty()) {
         std::printf("usage: deep2_bench_tps.exe --model <gguf> --tokens \"1 185\" "
-                    "[--decode N] [--runs N] [--cpu] [--device N]\n");
+                    "[--decode N] [--runs N] [--cpu] [--device N] "
+                    "[--serial-prefill] [--wide-batch|--no-wide-batch] [--no-batch]\n");
         return 1;
+    }
+    // Keep PrefillBatch when dumping decode logits (shared-prefix A/B). Opt into
+    // serial via --serial-prefill if a caller needs per-pos prefill dumps that way.
+    if (gpu && wide_batch && !std::getenv("DEEP2_NO_DOT_BATCH")) {
+        SetEnv1("DEEP2_WIDE_DOT_BATCH", "1");
+    }
+    // DEEP2_VULKAN_SUBMIT_OPT_001: RuntimeGraph <-> QuantDot BeginFusedLayer.
+    if (gpu && !std::getenv("DEEP2_RUNTIME_FUSE") && !std::getenv("DEEP2_NO_RUNTIME_FUSE")) {
+        SetEnv1("DEEP2_RUNTIME_FUSE", "1");
     }
 
     // STRATA_S05 device pin (multi-GPU): apply BEFORE the first QuantDot::Gpu()
@@ -123,8 +148,10 @@ int main(int argc, char* argv[]) {
         std::printf("device-pin requested index=%d\n", device_index);
     }
 
-    std::printf("BENCH model=%s decode=%zu runs=%zu backend=%s\n", model.c_str(),
-                decode_n, runs, gpu ? "vulkan-native" : "cpu-pinned");
+    std::printf("BENCH model=%s decode=%zu runs=%zu backend=%s prefill=%s wide_dot_batch=%s\n",
+                model.c_str(), decode_n, runs, gpu ? "vulkan-native" : "cpu-pinned",
+                (gpu && !serial_prefill) ? "PrefillBatch" : "serial ExecuteToken",
+                (gpu && wide_batch && !std::getenv("DEEP2_NO_DOT_BATCH")) ? "1" : "0");
 
     std::vector<uint32_t> tokens;
     {
@@ -142,6 +169,22 @@ int main(int argc, char* argv[]) {
     std::printf("prompt tokens: %zu:", tokens.size());
     for (uint32_t t : tokens) std::printf(" %u", t);
     std::printf("\n");
+
+    std::vector<uint32_t> force_gen;
+    if (!forceGenArg.empty()) {
+        const char* p = forceGenArg.c_str();
+        char* end = nullptr;
+        for (long v = std::strtol(p, &end, 10); end != p; v = std::strtol(p, &end, 10)) {
+            if (v < 0) break;
+            force_gen.push_back((uint32_t)v);
+            p = end;
+            while (*p == ' ' || *p == ',') ++p;
+            if (!*p) break;
+        }
+        std::printf("force-gen tokens: %zu:", force_gen.size());
+        for (uint32_t t : force_gen) std::printf(" %u", t);
+        std::printf("\n");
+    }
 
     for (size_t run = 1; run <= runs; ++run) {
         // ---- ingest + bind (reported, excluded from the TPS windows) -------
@@ -171,14 +214,35 @@ int main(int argc, char* argv[]) {
         const QuantDot::BackendStats bs0 = QuantDot::BackendCounters();
         if (!dumpLogitsDir.empty()) std::filesystem::create_directories(dumpLogitsDir);
         const auto t_pf0 = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < tokens.size(); ++i) {
-            const auto tt = std::chrono::steady_clock::now();
-            if (!ex.ExecuteToken(tokens[i], i)) {
-                std::printf("PREFILL_FAIL pos=%zu err=%s\n", i, ex.LastError().c_str());
-                return 1;
+        if (gpu && !serial_prefill) {
+            std::vector<std::vector<float>> perPos;
+            std::vector<std::vector<float>>* perPosPtr =
+                dumpLogitsDir.empty() ? nullptr : &perPos;
+            if (!ex.PrefillBatch(tokens, 0, perPosPtr)) {
+                std::printf("PREFILL_BATCH_FAIL err=%s; falling back to serial\n",
+                            ex.LastError().c_str());
+                for (size_t i = 0; i < tokens.size(); ++i) {
+                    if (!ex.ExecuteToken(tokens[i], i)) {
+                        std::printf("PREFILL_FAIL pos=%zu err=%s\n", i, ex.LastError().c_str());
+                        return 1;
+                    }
+                    DumpLogits(dumpLogitsDir, i, ex.Logits());
+                }
+            } else if (perPosPtr) {
+                for (size_t i = 0; i < perPos.size(); ++i)
+                    DumpLogits(dumpLogitsDir, i, perPos[i]);
             }
-            DumpLogits(dumpLogitsDir, i, ex.Logits());
-            std::printf("  prefill pos=%zu token=%u (%.1f ms)\n", i, tokens[i], MsSince(tt));
+            std::printf("  prefill PrefillBatch n=%zu\n", tokens.size());
+        } else {
+            for (size_t i = 0; i < tokens.size(); ++i) {
+                const auto tt = std::chrono::steady_clock::now();
+                if (!ex.ExecuteToken(tokens[i], i)) {
+                    std::printf("PREFILL_FAIL pos=%zu err=%s\n", i, ex.LastError().c_str());
+                    return 1;
+                }
+                DumpLogits(dumpLogitsDir, i, ex.Logits());
+                std::printf("  prefill pos=%zu token=%u (%.1f ms)\n", i, tokens[i], MsSince(tt));
+            }
         }
         const double prefill_ms = MsSince(t_pf0);
         // Snapshot after prefill so the decode phase's GPU/kernel/sync counters
@@ -187,11 +251,15 @@ int main(int argc, char* argv[]) {
         // the wall interval it is divided by - no overlapping timers.
         const QuantDot::BackendStats bs1 = QuantDot::BackendCounters();
 
-        // ---- decode (greedy, persistent KV) ---------------------------------
+        // ---- decode (greedy, persistent KV; optional --force-gen prefix) ----
         std::vector<uint32_t> gen;
         std::vector<double> gen_ms;
-        uint32_t tok = ArgmaxOf(ex.Logits());
-        gen.push_back(tok);  // the argmax of the last prefill logits is gen[0]
+        // gen[0] comes from last-prefill logits; force overrides argmax when set.
+        uint32_t tok = (!force_gen.empty()) ? force_gen[0] : ArgmaxOf(ex.Logits());
+        gen.push_back(tok);
+        if (!dumpLogitsDir.empty())
+            DumpLogits(dumpLogitsDir, tokens.size() > 0 ? tokens.size() - 1 : 0,
+                       ex.Logits());
         const auto t_dc0 = std::chrono::steady_clock::now();
         for (size_t i = 1; i < decode_n; ++i) {
             const size_t pos = tokens.size() + i - 1;
@@ -201,7 +269,9 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
             gen_ms.push_back(MsSince(tt));
-            gen.push_back(ArgmaxOf(ex.Logits()));
+            const uint32_t next = (i < force_gen.size()) ? force_gen[i]
+                                                        : ArgmaxOf(ex.Logits());
+            gen.push_back(next);
             DumpLogits(dumpLogitsDir, tokens.size() + i - 1, ex.Logits());
         }
         const double decode_ms = MsSince(t_dc0);

@@ -64,6 +64,7 @@ struct RouterConfig {
     std::string fallback_endpoint = "http://127.0.0.1:11434";
     std::string primary_model;
     std::string fallback_model    = "qwen2.5-coder:32b";
+    int         ollama_num_gpu    = 99;
     int         health_check_interval_s = 30;
     bool        retry_from_complete_context = true;  // Retry with full history on failover
     bool        retry_after_tool_side_effects = false; // DANGER: can duplicate side-effects

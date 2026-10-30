@@ -1,10 +1,13 @@
 // deep2_dualgpu_forward.cpp -- RAWRXD_MULTI_GPU split-model dual-GPU forward.
-// Routes blocks [split, blockCount) to a SECOND Vulkan device (default index 4
-// = RX 7800 XT) via Executor::SetBlockVulkanDevice, keeping blocks [0,split) on
+// Routes blocks [split, blockCount) to a SECOND Vulkan device via
+// Executor::SetBlockVulkanDevice, keeping blocks [0,split) on
 // the primary device. Run once WITHOUT --split (single-GPU baseline) and once
 // WITH --split, each dumping logits; compare full vocab to prove split-model
 // numerical parity. Activations are host-mediated between blocks, so the
 // device boundary is implicit; cpu_calls must stay 0 (no silent CPU fallback).
+// A split run must pass --ctx-dev explicitly. Vulkan enumeration can include
+// D3D12 translation devices, so a baked-in index is unsafe and may silently
+// route work to the wrong adapter.
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
@@ -27,7 +30,7 @@ static void Dump(const std::string& dir, size_t pos, const std::vector<float>& l
 
 int main(int argc, char** argv){
     std::string model, tokensArg="1 185 278 20606 23808 7936 14336 28416", dump;
-    size_t decode_n=1; long split=-1, ctx_dev=4; bool prefetch=false;
+    size_t decode_n=1; long split=-1, ctx_dev=-1; bool prefetch=false;
     for(int i=1;i<argc;++i){ std::string a=argv[i];
         if(a=="--model"&&i+1<argc) model=argv[++i];
         else if(a=="--tokens"&&i+1<argc) tokensArg=argv[++i];
@@ -41,6 +44,11 @@ int main(int argc, char** argv){
     const Universal::IngestReport& rep = Universal::Ingest(model,false);
     if(!rep.ok){ std::printf("INGEST_FAIL: %s\n",rep.error.c_str()); return 1; }
     const uint32_t blocks=(uint32_t)rep.spec.block_count;
+
+    if (split >= 0 && ctx_dev < 0) {
+        std::printf("SPLIT_FAIL: --ctx-dev is required for a split run; refusing implicit Vulkan device selection\n");
+        return 1;
+    }
 
     RuntimeGraph::Executor ex; ex.SetForceCpu(false);
     if (prefetch) { ex.SetStrataExpertTracking(true); ex.SetStrataExpertPrefetch(true); }

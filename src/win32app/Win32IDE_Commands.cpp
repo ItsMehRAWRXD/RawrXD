@@ -258,7 +258,10 @@ void Win32IDE::handleViewCommand(int commandId) {
             MF_BYCOMMAND | (m_useStreamingLoader ? MF_CHECKED : MF_UNCHECKED));
         break;
     case IDM_VIEW_THEME_EDITOR:
-        unsupported("Unsupported: interactive theme editing is unavailable in this build."); break;
+        // The built-in theme gallery is a real, modal editor backed by
+        // applyTheme(); route the menu item to it instead of reporting a
+        // stale unsupported placeholder.
+        showThemeEditor(); break;
     case IDM_VIEW_FLOATING_PANEL:
         if (m_hwndFloatingPanel && IsWindow(m_hwndFloatingPanel)) toggleFloatingPanel();
         else unsupported("Unsupported: floating panel has no window in this build.");
@@ -266,7 +269,10 @@ void Win32IDE::handleViewCommand(int commandId) {
     case IDM_VIEW_USE_VULKAN_RENDERER:
         unsupported("Unsupported: switching the Vulkan editor renderer is not integrated."); break;
     case IDM_VIEW_OUTPUT_TABS: case IDM_VIEW_OUTPUT_PANEL: case IDM_VIEW_PANEL:
-        unsupported("Unsupported: output-panel layout is not integrated in this build."); break;
+        // Output tabs, PowerShell, terminals, and the debugger all share the
+        // live docked bottom surface.  Toggle that surface through the real
+        // layout path so these menu aliases cannot create overlapping panes.
+        toggleOutputPanel(); break;
     case IDM_VIEW_TERMINAL:
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
         for (auto& pane : m_terminalPanes) {

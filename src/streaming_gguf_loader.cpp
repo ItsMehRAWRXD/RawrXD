@@ -5,6 +5,9 @@
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <limits>
+#include <regex>
+#include <fstream>
 
 // Compiled at global scope; bring the RawrXD interface vocabulary in explicitly
 // (the header no longer re-declares these at file scope, because it is also
@@ -16,7 +19,7 @@ using RawrXD::IGGUFLoader;
 using RawrXD::TensorInfo;
 
 StreamingGGUFLoader::StreamingGGUFLoader()
-    : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB) {
+    : is_open_(false), current_file_(nullptr), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB) {
     std::memset(&header_, 0, sizeof(GGUFHeader));
 }
 
@@ -26,28 +29,48 @@ StreamingGGUFLoader::~StreamingGGUFLoader() {
 
 bool StreamingGGUFLoader::Open(const std::string& filepath) {
     filepath_ = filepath;
-    file_.open(filepath, std::ios::binary);
-    if (!file_.is_open()) {
-        std::cerr << "❌ Failed to open GGUF file: " << filepath << std::endl;
+    
+    // Discover all GGUF shard files matching the pattern:
+    // {basename}-{NNNNN}-of-{MMMMM}.gguf
+    auto shard_paths = discover_shard_files(filepath_);
+    if (shard_paths.empty()) {
+        std::cerr << "❌ No GGUF shard files found: " << filepath << std::endl;
         return false;
+    }
+    
+    // Open all shard files
+    for (size_t i = 0; i < shard_paths.size(); ++i) {
+        auto f = std::make_unique<std::ifstream>(shard_paths[i], std::ios::binary);
+        if (!f->is_open()) {
+            std::cerr << "❌ Failed to open shard: " << shard_paths[i] << std::endl;
+            Close();
+            return false;
+        }
+        shard_files_[static_cast<uint32_t>(i)] = std::move(f);
     }
     
     is_open_ = true;
+
+    // Independently validate every shard header (uint64 tensor/kv counts).
+    for (const auto& kv : shard_files_) {
+        if (!ParseHeaderFromShard(kv.first)) {
+            std::cerr << "❌ Shard header validation failed for shard "
+                      << kv.first << std::endl;
+            Close();
+            return false;
+        }
+    }
     
-    // Parse header first
-    if (!ParseHeader()) {
+    // Model-level metadata (tokenizer / arch) is on shard 0.
+    if (!ParseMetadataFromShard(0)) {
         Close();
         return false;
     }
+    header_ = shard_headers_[0];
+    metadata_ = shard_metadata_[0];
     
-    // Parse metadata
-    if (!ParseMetadata()) {
-        Close();
-        return false;
-    }
-    
-    // Build tensor index (no data loaded yet!)
-    if (!BuildTensorIndex()) {
+    // Build tensor index from ALL shards (each uses own header/dir/dataStart).
+    if (!BuildTensorIndexFromAllShards()) {
         Close();
         return false;
     }
@@ -57,56 +80,24 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
     
     std::cout << "✅ GGUF Model opened in streaming mode" << std::endl;
     std::cout << "   File: " << filepath << std::endl;
+    std::cout << "   Shards: " << shard_files_.size() << std::endl;
     std::cout << "   Tensors: " << tensor_index_.size() << std::endl;
     std::cout << "   Zones: " << zones_.size() << std::endl;
     std::cout << "   Memory (header+index): ~" << ((tensor_index_.size() * 100) / (1024*1024)) << " MB" << std::endl;
+    std::cerr << "MULTISHARD_SHARDS_INDEXED=" << shard_files_.size() << "/"
+              << shard_files_.size() << "\n"
+              << "MULTISHARD_TENSORS_INDEXED=" << tensor_index_.size() << "\n"
+              << "MULTISHARD_DUPLICATES=0\n";
     
     return true;
 }
 
-bool StreamingGGUFLoader::Close() {
-    if (file_.is_open()) {
-        file_.close();
-    }
-    is_open_ = false;
-    tensor_index_.clear();
-    zones_.clear();
-    active_zones_.clear();
-    current_zone_ = "";
-    return true;
-}
+// ============================================================================
+// IGGUFLoader INTERFACE IMPLEMENTATIONS (wrappers around shard-specific methods)
+// ============================================================================
 
 bool StreamingGGUFLoader::ParseHeader() {
-    if (!file_.is_open()) return false;
-    
-    file_.seekg(0);
-    
-    // Read magic
-    if (!ReadValue(header_.magic)) return false;
-    if (header_.magic != GGUFConstants::GGUF_MAGIC) {
-        std::cerr << "❌ Invalid GGUF magic: 0x" << std::hex << header_.magic << std::endl;
-        Diagnostics::error("Invalid GGUF magic number", "StreamingGGUFLoader");
-        return false;
-    }
-    
-    // Read version
-    if (!ReadValue(header_.version)) return false;
-    if (header_.version != GGUFConstants::GGUF_VERSION) {
-        std::cerr << "❌ Unsupported GGUF version: " << header_.version << std::endl;
-        Diagnostics::error("Unsupported GGUF version: " + std::to_string(header_.version), "StreamingGGUFLoader");
-        return false;
-    }
-    
-    // Read tensor count
-    if (!ReadValue(header_.tensor_count)) return false;
-    
-    // Read metadata KV count
-    if (!ReadValue(header_.metadata_kv_count)) return false;
-    
-    // Calculate metadata offset
-    header_.metadata_offset = file_.tellg();
-    
-    return true;
+    return ParseHeaderFromShard(0);
 }
 
 GGUFHeader StreamingGGUFLoader::GetHeader() const {
@@ -114,62 +105,7 @@ GGUFHeader StreamingGGUFLoader::GetHeader() const {
 }
 
 bool StreamingGGUFLoader::ParseMetadata() {
-    if (!file_.is_open() || header_.metadata_kv_count == 0) {
-        return false;
-    }
-    
-    file_.seekg(header_.metadata_offset);
-    
-    for (uint64_t i = 0; i < header_.metadata_kv_count; ++i) {
-        std::string key, value;
-        
-        if (!ReadString(key)) {
-            std::cerr << "❌ Failed to read metadata key at index " << i << std::endl;
-            return false;
-        }
-        
-        uint32_t value_type;
-        if (!ReadValue(value_type)) {
-            std::cerr << "❌ Failed to read metadata value type for key: " << key << std::endl;
-            return false;
-        }
-        
-        // Value type 1 = UTF-8 string
-        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
-            if (!ReadString(value)) {
-                std::cerr << "❌ Failed to read metadata string value for key: " << key << std::endl;
-                return false;
-            }
-            metadata_.kv_pairs[key] = value;
-            
-            // Parse important metadata
-            if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
-                if (value == "llama") metadata_.architecture_type = 1;
-            } else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT) {
-                metadata_.layer_count = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_CONTEXT_LENGTH) {
-                metadata_.context_length = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_EMBEDDING_LENGTH) {
-                metadata_.embedding_dim = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE) {
-                metadata_.vocab_size = std::stoul(value);
-            }
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {  // uint32
-            uint32_t uint_val;
-            if (!ReadValue(uint_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(uint_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {  // int32
-            int32_t int_val;
-            if (!ReadValue(int_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(int_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {  // float32
-            float float_val;
-            if (!ReadValue(float_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(float_val);
-        }
-    }
-    
-    return true;
+    return ParseMetadataFromShard(0);
 }
 
 GGUFMetadata StreamingGGUFLoader::GetMetadata() const {
@@ -177,77 +113,413 @@ GGUFMetadata StreamingGGUFLoader::GetMetadata() const {
 }
 
 bool StreamingGGUFLoader::BuildTensorIndex() {
-    if (!file_.is_open()) {
+    return BuildTensorIndexFromAllShards();
+}
+
+std::string StreamingGGUFLoader::GetTensorZone(const std::string& tensor_name) const {
+    return GetZoneForTensor(tensor_name);
+}
+
+// ============================================================================
+// MULTI-SHARD SUPPORT
+// ============================================================================
+
+// Discover all GGUF shard files matching the pattern:
+// {basename}-{NNNNN}-of-{MMMMM}.gguf
+std::vector<std::string> StreamingGGUFLoader::discover_shard_files(const std::string& filepath) {
+    std::vector<std::string> result;
+    
+    // Check if the filepath itself is a shard file (ends with -NNNNN-of-MMMMM.gguf)
+    static const std::regex shard_pattern(R"((.+)-(\d{5})-of-(\d{5})\.gguf$)");
+    std::smatch match;
+    
+    std::string base_path = filepath;
+    int target_shard = -1;
+    int total_shards = -1;
+    
+    if (std::regex_match(filepath, match, shard_pattern)) {
+        base_path = match[1].str();  // Everything before -NNNNN-of-MMMMM.gguf
+        target_shard = std::stoi(match[2].str());
+        total_shards = std::stoi(match[3].str());
+    } else {
+        // Not a shard pattern - check if it's a plain .gguf file
+        if (filepath.size() >= 5 && filepath.substr(filepath.size() - 5) == ".gguf") {
+            result.push_back(filepath);
+            return result;
+        }
+        // Otherwise, try appending -00001-of-00001.gguf
+        base_path = filepath + "-00001-of-00001";
+    }
+    
+    if (target_shard > 0 && total_shards > 0) {
+        // Build all shard paths from the pattern
+        for (int i = 1; i <= total_shards; ++i) {
+            char shard_name[256];
+            std::snprintf(shard_name, sizeof(shard_name), "%s-%05d-of-%05d.gguf",
+                         base_path.c_str(), i, total_shards);
+            result.push_back(shard_name);
+        }
+    } else {
+        // Single shard: try -00001-of-00001.gguf
+        char shard_name[256];
+        std::snprintf(shard_name, sizeof(shard_name), "%s-00001-of-00001.gguf", base_path.c_str());
+        result.push_back(shard_name);
+    }
+    
+    // Verify all files exist
+    std::vector<std::string> valid_shards;
+    for (const auto& p : result) {
+        std::ifstream test(p, std::ios::binary);
+        if (test.is_open()) {
+            valid_shards.push_back(p);
+        } else {
+            std::cerr << "[GGUF] Shard not found: " << p << std::endl;
+        }
+    }
+    
+    return valid_shards;
+}
+
+bool StreamingGGUFLoader::Close() {
+    // Close all shard files
+    for (auto& [shard_id, f] : shard_files_) {
+        if (f && f->is_open()) {
+            f->close();
+        }
+    }
+    shard_files_.clear();
+    shard_data_starts_.clear();
+    current_file_ = nullptr;
+    is_open_ = false;
+    tensor_index_.clear();
+    zones_.clear();
+    active_zones_.clear();
+    current_zone_ = "";
+    current_zone_memory_ = 0;
+    data_start_ = 0;
+    return true;
+}
+
+bool StreamingGGUFLoader::ParseHeaderFromShard(uint32_t shard_id) {
+    auto it = shard_files_.find(shard_id);
+    if (it == shard_files_.end() || !it->second->is_open()) return false;
+    
+    auto& f = *it->second;
+    f.seekg(0);
+    
+    // Read magic
+    RawrXD::GGUFHeader hdr;
+    if (!ReadValueFromStream(f, hdr.magic)) return false;
+    if (hdr.magic != GGUFConstants::GGUF_MAGIC) {
+        std::cerr << "❌ Invalid GGUF magic in shard " << shard_id << ": 0x" << std::hex << hdr.magic << std::endl;
+        Diagnostics::error("Invalid GGUF magic number", "StreamingGGUFLoader");
         return false;
     }
     
-    // Skip metadata to get to tensor info
-    file_.seekg(header_.metadata_offset);
-    
-    // Skip metadata entries
-    for (uint64_t i = 0; i < header_.metadata_kv_count; ++i) {
-        std::string key, value;
-        if (!ReadString(key)) return false;
-        
-        uint32_t value_type;
-        if (!ReadValue(value_type)) return false;
-        
-        if (value_type == 1) {
-            if (!ReadString(value)) return false;
-        } else if (value_type == 4 || value_type == 5 || value_type == 6) {
-            uint32_t dummy;
-            if (!ReadValue(dummy)) return false;
-        }
+    // Read version
+    if (!ReadValueFromStream(f, hdr.version)) return false;
+    if (hdr.version != GGUFConstants::GGUF_VERSION) {
+        std::cerr << "❌ Unsupported GGUF version in shard " << shard_id << ": " << hdr.version << std::endl;
+        Diagnostics::error("Unsupported GGUF version", "StreamingGGUFLoader");
+        return false;
     }
     
-    // Now read tensor info (no data!)
-    for (uint64_t i = 0; i < header_.tensor_count; ++i) {
-        TensorRef ref;
+    // Read tensor count
+    if (!ReadValueFromStream(f, hdr.tensor_count)) return false;
+    if (hdr.tensor_count > 10'000'000ULL) {
+        std::cerr << "[GGUF] tensor count exceeds safety limit in shard " << shard_id << ": "
+                  << hdr.tensor_count << std::endl;
+        return false;
+    }
+    
+    // Read metadata KV count
+    if (!ReadValueFromStream(f, hdr.metadata_kv_count)) return false;
+    if (hdr.metadata_kv_count > 1'000'000ULL) {
+        std::cerr << "[GGUF] metadata count exceeds safety limit in shard " << shard_id << ": "
+                  << hdr.metadata_kv_count << std::endl;
+        return false;
+    }
+    
+    // Calculate metadata offset
+    hdr.metadata_offset = static_cast<uint64_t>(f.tellg());
+    
+    shard_headers_[shard_id] = hdr;
+    
+    return true;
+}
+
+bool StreamingGGUFLoader::ParseMetadataFromShard(uint32_t shard_id) {
+    auto it = shard_files_.find(shard_id);
+    if (it == shard_files_.end() || !it->second->is_open()) return false;
+    
+    auto& f = *it->second;
+    if (shard_headers_[shard_id].metadata_kv_count == 0) {
+        return false;
+    }
+    
+    for (uint64_t i = 0; i < shard_headers_[shard_id].metadata_kv_count; ++i) {
+        std::streampos key_start = f.tellg();
+        std::string key, value;
         
-        if (!ReadString(ref.name)) {
-            std::cerr << "❌ Failed to read tensor name at index " << i << std::endl;
+        std::cerr << "[DEBUG] Key[" << i << "] start_pos=" << key_start << std::endl;
+        
+        if (!ReadStringFromStream(f, key)) {
+            std::cerr << "❌ Failed to read metadata key at index " << i << " pos=" << key_start << std::endl;
             return false;
         }
         
-        uint32_t n_dims;
-        if (!ReadValue(n_dims)) return false;
+        std::cerr << "[DEBUG] Key[" << i << "]=" << key << " key_start=" << key_start
+                  << " key_end=" << f.tellg() << std::endl;
         
-        ref.shape.resize(n_dims);
-        for (uint32_t d = 0; d < n_dims; ++d) {
-            if (!ReadValue(ref.shape[d])) return false;
+        if (i < 5 || i == shard_headers_[shard_id].metadata_kv_count - 1 || i < 10) {
+            std::cerr << "[DEBUG] Metadata key[" << i << "]=" << key << std::endl;
         }
         
-        uint32_t type_val;
-        if (!ReadValue(type_val)) return false;
-        ref.type = static_cast<GGMLType>(type_val);
+        uint32_t value_type;
+        if (!ReadValueFromStream(f, value_type)) {
+            std::cerr << "❌ Failed to read metadata value type for key: " << key << std::endl;
+            return false;
+        }
         
-        if (!ReadValue(ref.offset)) return false;
+        std::cerr << "[DEBUG] Key[" << i << "] value_type=" << value_type << " pos=" << f.tellg() << std::endl;
         
-        ref.size = CalculateTensorSize(ref.shape, ref.type);
-        ref.zone_name = "";  // Will be assigned later
-        
-        tensor_index_[ref.name] = ref;
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
+            std::streampos val_start = f.tellg();
+            if (!ReadStringFromStream(f, value)) {
+                std::cerr << "❌ Failed to read metadata string value for key: " << key << std::endl;
+                return false;
+            }
+            std::cerr << "[DEBUG] Key[" << i << "] value=" << value.substr(0, 50) 
+                      << " val_start=" << val_start << " val_end=" << f.tellg() << std::endl;
+            shard_metadata_[shard_id].kv_pairs[key] = value;
+            
+            if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
+                if (value == "llama") shard_metadata_[shard_id].architecture_type = 1;
+                else if (value == "qwen3") shard_metadata_[shard_id].architecture_type = 2;
+            } else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT) {
+                shard_metadata_[shard_id].layer_count = std::stoul(value);
+            } else if (key == GGUFConstants::META_LLAMA_CONTEXT_LENGTH) {
+                shard_metadata_[shard_id].context_length = std::stoul(value);
+            } else if (key == GGUFConstants::META_LLAMA_EMBEDDING_LENGTH) {
+                shard_metadata_[shard_id].embedding_dim = std::stoul(value);
+            } else if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE) {
+                shard_metadata_[shard_id].vocab_size = std::stoul(value);
+            }
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {
+            uint32_t v; if (!ReadValueFromStream(f, v)) return false;
+            shard_metadata_[shard_id].kv_pairs[key] = std::to_string(v);
+            if (key == "llama.block_count" || key == "qwen3.block_count") shard_metadata_[shard_id].layer_count = v;
+            if (key == "llama.context_length" || key == "qwen3.context_length") shard_metadata_[shard_id].context_length = v;
+            if (key == "llama.embedding_length" || key == "qwen3.embedding_length") shard_metadata_[shard_id].embedding_dim = v;
+            if (key == "llama.vocab_size" || key == "qwen3.vocab_size") shard_metadata_[shard_id].vocab_size = v;
+            if (key == "llama.head_count" || key == "qwen3.head_count") shard_metadata_[shard_id].head_count = v;
+            if (key == "llama.head_count_kv" || key == "qwen3.head_count_kv") shard_metadata_[shard_id].head_count_kv = v;
+            if (key == "llama.feed_forward_length" || key == "qwen3.feed_forward_length") shard_metadata_[shard_id].feed_forward_length = v;
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {
+            int32_t v; if (!ReadValueFromStream(f, v)) return false;
+            shard_metadata_[shard_id].kv_pairs[key] = std::to_string(v);
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {
+            float v; if (!ReadValueFromStream(f, v)) return false;
+            shard_metadata_[shard_id].kv_pairs[key] = std::to_string(v);
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_ARRAY) {
+            uint32_t elem_type;
+            uint64_t count;
+            if (!ReadValueFromStream(f, elem_type) || !ReadValueFromStream(f, count) || count > 10'000'000ULL) return false;
+            if (key == "tokenizer.ggml.tokens" && elem_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
+                shard_metadata_[shard_id].tokens.clear();
+                shard_metadata_[shard_id].tokens.reserve(static_cast<size_t>(count));
+                for (uint64_t j = 0; j < count; ++j) {
+                    std::string token;
+                    if (!ReadStringFromStream(f, token)) return false;
+                    shard_metadata_[shard_id].tokens.push_back(std::move(token));
+                }
+            } else if (key == "tokenizer.ggml.scores" && elem_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {
+                shard_metadata_[shard_id].token_scores.clear();
+                shard_metadata_[shard_id].token_scores.reserve(static_cast<size_t>(count));
+                for (uint64_t j = 0; j < count; ++j) {
+                    float score; if (!ReadValueFromStream(f, score)) return false;
+                    shard_metadata_[shard_id].token_scores.push_back(score);
+                }
+            } else {
+                for (uint64_t j = 0; j < count; ++j) {
+                    if (!SkipMetadataValueFromStream(f, elem_type)) return false;
+                }
+            }
+        } else if (!SkipMetadataValueFromStream(f, value_type)) {
+            std::cerr << "[GGUF] unsupported metadata value type " << value_type
+                      << " for key " << key << std::endl;
+            return false;
+        }
     }
     
     return true;
 }
 
-std::vector<TensorRef> StreamingGGUFLoader::GetTensorIndex() const {
-    std::vector<TensorRef> result;
-    for (const auto& [name, ref] : tensor_index_) {
-        result.push_back(ref);
+bool StreamingGGUFLoader::BuildTensorIndexFromAllShards() {
+    tensor_index_.clear();
+    shard_data_starts_.clear();
+    
+    for (const auto& [shard_id, f] : shard_files_) {
+        (void)f;
+        if (!BuildTensorIndexFromShard(shard_id)) {
+            return false;
+        }
     }
-    return result;
+    
+    return true;
+}
+
+bool StreamingGGUFLoader::BuildTensorIndexFromShard(uint32_t shard_id) {
+    // INVARIANT: AbsoluteTensorOffset = ShardDataStart + ShardLocalTensorOffset
+    // Never mix this shard's stream with another shard's header/kv/tensor counts.
+    auto it = shard_files_.find(shard_id);
+    if (it == shard_files_.end() || !it->second->is_open()) return false;
+    auto& f = *it->second;
+
+    // Use this shard's own validated header (uint64 tensor_count + kv_count).
+    if (!ParseHeaderFromShard(shard_id)) return false;
+    const auto hit = shard_headers_.find(shard_id);
+    if (hit == shard_headers_.end()) return false;
+    const GGUFHeader& hdr = hit->second;
+    const uint64_t shard_tensor_count = hdr.tensor_count;
+    const uint64_t shard_metadata_kv_count = hdr.metadata_kv_count;
+
+    // Stream is at metadata start after ParseHeaderFromShard.
+    // Skip THIS shard's metadata only (capture alignment if present).
+    uint64_t alignment = 32;
+    for (uint64_t i = 0; i < shard_metadata_kv_count; ++i) {
+        std::string key;
+        if (!ReadStringFromStream(f, key)) {
+            std::cerr << "[GGUF] shard " << shard_id
+                      << " metadata key read failed at i=" << i << std::endl;
+            return false;
+        }
+        uint32_t value_type = 0;
+        if (!ReadValueFromStream(f, value_type)) return false;
+
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32 &&
+            key == "general.alignment") {
+            uint32_t v = 0;
+            if (!ReadValueFromStream(f, v)) return false;
+            if (v != 0 && (v & (v - 1)) == 0) alignment = v;
+            shard_metadata_[shard_id].kv_pairs[key] = std::to_string(v);
+            continue;
+        }
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT64 &&
+            key == "general.alignment") {
+            uint64_t v = 0;
+            if (!ReadValueFromStream(f, v)) return false;
+            if (v != 0 && (v & (v - 1)) == 0) alignment = v;
+            shard_metadata_[shard_id].kv_pairs[key] = std::to_string(v);
+            continue;
+        }
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_ARRAY) {
+            uint32_t elem_type = 0;
+            uint64_t count = 0;
+            if (!ReadValueFromStream(f, elem_type) ||
+                !ReadValueFromStream(f, count) || count > 10'000'000ULL) {
+                return false;
+            }
+            for (uint64_t j = 0; j < count; ++j) {
+                if (!SkipMetadataValueFromStream(f, elem_type)) return false;
+            }
+        } else if (!SkipMetadataValueFromStream(f, value_type)) {
+            return false;
+        }
+    }
+
+    // Parse THIS shard's tensor directory using THIS shard's tensor_count.
+    std::vector<TensorRef> local;
+    local.reserve(static_cast<size_t>(shard_tensor_count));
+    for (uint64_t i = 0; i < shard_tensor_count; ++i) {
+        TensorRef ref;
+        ref.shard_id = shard_id;
+        if (!ReadStringFromStream(f, ref.name)) {
+            std::cerr << "❌ Failed to read tensor name at index " << i
+                      << " in shard " << shard_id << std::endl;
+            return false;
+        }
+        uint32_t n_dims = 0;
+        if (!ReadValueFromStream(f, n_dims)) return false;
+        if (n_dims == 0 || n_dims > 16) {
+            std::cerr << "[GGUF] invalid tensor rank " << n_dims
+                      << " for tensor " << ref.name << " in shard " << shard_id
+                      << std::endl;
+            return false;
+        }
+        ref.shape.resize(n_dims);
+        for (uint32_t d = 0; d < n_dims; ++d) {
+            if (!ReadValueFromStream(f, ref.shape[d])) return false;
+        }
+        uint32_t type_val = 0;
+        if (!ReadValueFromStream(f, type_val)) return false;
+        ref.type = static_cast<GGMLType>(type_val);
+        // Local offset relative to this shard's data section (not absolute yet).
+        if (!ReadValueFromStream(f, ref.offset)) return false;
+        ref.size = CalculateTensorSize(ref.shape, ref.type);
+        ref.zone_name = "";
+        local.push_back(std::move(ref));
+    }
+
+    const std::streampos info_end_pos = f.tellg();
+    if (info_end_pos < 0) return false;
+    const uint64_t info_end = static_cast<uint64_t>(info_end_pos);
+    if (alignment > 1 &&
+        info_end > std::numeric_limits<uint64_t>::max() - (alignment - 1)) {
+        return false;
+    }
+    const uint64_t shard_data_start =
+        (info_end + alignment - 1) & ~(alignment - 1);
+    shard_data_starts_[shard_id] = shard_data_start;
+
+    f.seekg(0, std::ios::end);
+    const uint64_t shard_file_size = static_cast<uint64_t>(f.tellg());
+
+    for (auto& ref : local) {
+        if (tensor_index_.find(ref.name) != tensor_index_.end()) {
+            std::cerr << "[GGUF] DUPLICATE tensor name across shards: " << ref.name
+                      << " (shard " << shard_id << " vs prior)" << std::endl;
+            return false;
+        }
+        if (ref.offset > shard_file_size - shard_data_start ||
+            ref.size > shard_file_size - shard_data_start - ref.offset) {
+            std::cerr << "[GGUF] tensor exceeds file in shard " << shard_id
+                      << ": " << ref.name << " local_off=" << ref.offset
+                      << " size=" << ref.size
+                      << " data_start=" << shard_data_start
+                      << " file_size=" << shard_file_size << std::endl;
+            return false;
+        }
+        // AbsoluteTensorOffset = ShardDataStart + ShardLocalTensorOffset
+        ref.offset = shard_data_start + ref.offset;
+        tensor_index_[ref.name] = std::move(ref);
+    }
+
+    std::cerr << "[GGUF] shard " << shard_id
+              << " tensors=" << local.size()
+              << " data_start=" << shard_data_start
+              << " file_size=" << shard_file_size << std::endl;
+    return true;
+}
+
+// ============================================================================
+// ZONE ASSIGNMENT
+// ============================================================================
+
+std::string StreamingGGUFLoader::GetZoneForTensor(const std::string& tensor_name) const {
+    auto it = tensor_index_.find(tensor_name);
+    if (it != tensor_index_.end()) {
+        return it->second.zone_name;
+    }
+    return "";
 }
 
 void StreamingGGUFLoader::AssignTensorsToZones() {
-    // Zone assignment strategy (like a game engine):
-    // Group tensors into zones (8 layers per zone)
+    std::cerr << "[ZONE_ASSIGN_START] tensor_index_size=" << tensor_index_.size() << '\n';
     
     for (auto& [tensor_name, tensor_ref] : tensor_index_) {
         std::string zone;
         
-        // Pattern matching to assign zones
         if (tensor_name.find("token_embd") != std::string::npos ||
             tensor_name.find("embedding") != std::string::npos) {
             zone = "embedding";
@@ -258,16 +530,14 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
             zone = "output_head";
         }
         else if (tensor_name.find("blk.") != std::string::npos) {
-            // Extract layer number: blk.0.attn → layer 0
             int layer = ExtractLayerNumber(tensor_name);
-            int zone_num = layer / 8;  // 8 layers per zone
+            int zone_num = layer / 8;
             zone = "layers_" + std::to_string(zone_num);
         }
         else {
             zone = "misc";
         }
         
-        // Add to zone
         if (zones_.find(zone) == zones_.end()) {
             zones_[zone] = {zone, {}, 0, false, {}};
         }
@@ -275,9 +545,12 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
         zones_[zone].total_bytes += tensor_ref.size;
         
         tensor_ref.zone_name = zone;
+        
+        if (tensor_name == "blk.0.attn_norm.weight") {
+            std::cerr << "[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: '" << tensor_ref.zone_name << "'\n";
+        }
     }
     
-    // Print zone info
     std::cout << "\n📊 Zone Assignment Summary:" << std::endl;
     for (const auto& [zone_name, zone_info] : zones_) {
         std::cout << "   " << zone_name << ": " << zone_info.tensors.size() 
@@ -287,11 +560,10 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
 }
 
 int32_t StreamingGGUFLoader::ExtractLayerNumber(const std::string& tensor_name) const {
-    // Look for "blk.N" pattern
     size_t pos = tensor_name.find("blk.");
     if (pos == std::string::npos) return 0;
     
-    pos += 4;  // Skip "blk."
+    pos += 4;
     size_t end = tensor_name.find_first_not_of("0123456789", pos);
     if (end == std::string::npos) end = tensor_name.length();
     
@@ -302,17 +574,91 @@ int32_t StreamingGGUFLoader::ExtractLayerNumber(const std::string& tensor_name) 
     }
 }
 
-std::string StreamingGGUFLoader::GetZoneForTensor(const std::string& tensor_name) const {
-    auto it = tensor_index_.find(tensor_name);
-    if (it != tensor_index_.end()) {
-        return it->second.zone_name;
-    }
-    return "";
+template<typename T>
+bool StreamingGGUFLoader::ReadValueFromStream(std::ifstream& f, T& value) {
+    f.clear();
+    f.seekg(f.tellg());
+    f.read(reinterpret_cast<char*>(&value), sizeof(T));
+    std::cerr << "[DEBUG] ReadValueFromStream: type_size=" << sizeof(T) 
+              << " pos_before=" << (f.tellg() - static_cast<std::streamoff>(sizeof(T)))
+              << " pos_after=" << f.tellg() << " good=" << f.good() << std::endl;
+    return f.good();
 }
 
-std::string StreamingGGUFLoader::GetTensorZone(const std::string& tensor_name) const {
-    return GetZoneForTensor(tensor_name);
+bool StreamingGGUFLoader::ReadStringFromStream(std::ifstream& f, std::string& value) {
+    uint64_t len;
+    if (!ReadValueFromStream(f, len)) return false;
+
+    std::cerr << "[DEBUG] ReadStringFromStream: len=" << len << " pos_before=" << f.tellg() << std::endl;
+
+    // GGUF strings are metadata, never tensor payloads.  Bound them before
+    // resize() so a corrupt length cannot request an arbitrary allocation.
+    constexpr uint64_t kMaxMetadataString = 64ULL * 1024ULL * 1024ULL;
+    if (len > kMaxMetadataString ||
+        len > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        std::cerr << "[GGUF] metadata string exceeds safety limit: " << len
+                  << " bytes" << std::endl;
+        return false;
+    }
+
+    const std::streampos payload = f.tellg();
+    if (payload < 0) return false;
+    f.seekg(0, std::ios::end);
+    const std::streampos end = f.tellg();
+    f.seekg(payload, std::ios::beg);
+    if (end < payload || static_cast<uint64_t>(end - payload) < len) {
+        std::cerr << "[GGUF] metadata string extends beyond file" << std::endl;
+        return false;
+    }
+
+    value.resize(static_cast<size_t>(len));
+    if (len != 0) {
+        f.read(value.data(), static_cast<std::streamsize>(len));
+    }
+    std::cerr << "[DEBUG] ReadStringFromStream: read " << len << " bytes, pos_after=" << f.tellg() << ", good=" << f.good() << ", eof=" << f.eof() << std::endl;
+    return f.good() || f.eof();
 }
+
+bool StreamingGGUFLoader::SkipMetadataValueFromStream(std::ifstream& f, uint32_t value_type) {
+    switch (value_type) {
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_BOOL: {
+            uint8_t v{}; return ReadValueFromStream(f, v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT16:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT16: {
+            uint16_t v{}; return ReadValueFromStream(f, v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32: {
+            uint32_t v{}; return ReadValueFromStream(f, v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT64: {
+            uint64_t v{}; return ReadValueFromStream(f, v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_STRING: {
+            std::string ignored; return ReadStringFromStream(f, ignored);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_ARRAY: {
+            uint32_t elem_type{}; uint64_t count{};
+            if (!ReadValueFromStream(f, elem_type) || !ReadValueFromStream(f, count) || count > 10'000'000ULL) return false;
+            for (uint64_t i = 0; i < count; ++i) {
+                if (!SkipMetadataValueFromStream(f, elem_type)) return false;
+            }
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
+// ============================================================================
+// ZONE-BASED LOADING
+// ============================================================================
 
 bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_memory_mb) {
     auto zone_it = zones_.find(zone_name);
@@ -334,9 +680,26 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         UnloadZone(current_zone_);
     }
     
-    // Check file is open
-    if (!is_open_ || !file_.is_open()) {
-        std::cerr << "❌ File not open for streaming" << std::endl;
+    // Check if any shard file is open
+    if (shard_files_.empty()) {
+        std::cerr << "❌ No shard files open for streaming" << std::endl;
+        return false;
+    }
+
+    // Never reserve an entire multi-gigabyte zone implicitly.
+    const uint64_t maxBytes =
+        max_memory_mb > (std::numeric_limits<uint64_t>::max() / (1024ULL * 1024ULL))
+            ? std::numeric_limits<uint64_t>::max()
+            : max_memory_mb * 1024ULL * 1024ULL;
+    if (zone.total_bytes > maxBytes) {
+        std::cerr << "[GGUF] zone " << zone_name << " requires "
+                  << (zone.total_bytes / (1024.0 * 1024.0))
+                  << " MiB, above the " << max_memory_mb
+                  << " MiB streaming budget; refusing allocation" << std::endl;
+        return false;
+    }
+    if (zone.total_bytes > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        std::cerr << "[GGUF] zone size exceeds addressable memory" << std::endl;
         return false;
     }
     
@@ -358,16 +721,26 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         
         const TensorRef& ref = tensor_it->second;
         
-        // Seek to tensor offset in file
-        file_.seekg(ref.offset, std::ios::beg);
+        // Switch to the correct shard file
+        current_file_ = shard_files_[ref.shard_id].get();
+        
+        // Seek to tensor offset in the correct shard
+        current_file_->seekg(static_cast<std::streamoff>(ref.offset), std::ios::beg);
         
         // Read from disk into zone buffer
         size_t old_size = zone.data.size();
-        zone.data.resize(old_size + ref.size);
+        if (ref.size > static_cast<uint64_t>(std::numeric_limits<size_t>::max()) - old_size ||
+            ref.size > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+            std::cerr << "[GGUF] tensor allocation/read size is not representable: "
+                      << tensor_name << std::endl;
+            zone.data.resize(old_size);
+            return false;
+        }
+        zone.data.resize(old_size + static_cast<size_t>(ref.size));
         
-        file_.read(reinterpret_cast<char*>(zone.data.data() + old_size), ref.size);
+        current_file_->read(reinterpret_cast<char*>(zone.data.data() + old_size), ref.size);
         
-        if (!file_.good()) {
+        if (!current_file_->good()) {
             std::cerr << "❌ Failed to read tensor: " << tensor_name << std::endl;
             zone.data.resize(old_size);
             return false;
@@ -411,8 +784,17 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
         return false;
     }
     
-    // Load zone if not already loaded
+    // Large zones are intentionally not materialized. Read a single tensor
+    // directly when it fits the same bounded budget; callers that need only a
+    // row should use LoadTensorSlice instead.
     if (!zones_[zone_name].is_loaded) {
+        const auto& zone = zones_[zone_name];
+        const uint64_t budgetBytes = max_zone_memory_mb_ * 1024ULL * 1024ULL;
+        auto tensor_it = tensor_index_.find(tensor_name);
+        if (tensor_it != tensor_index_.end() && zone.total_bytes > budgetBytes &&
+            tensor_it->second.size <= budgetBytes) {
+            return LoadTensorSlice(tensor_name, 0, tensor_it->second.size, data);
+        }
         if (!LoadZone(zone_name)) {
             return false;
         }
@@ -444,6 +826,42 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
     return true;
 }
 
+bool StreamingGGUFLoader::LoadTensorSlice(const std::string& tensor_name,
+                                           uint64_t byte_offset,
+                                           uint64_t byte_count,
+                                           std::vector<uint8_t>& data) {
+    auto it = tensor_index_.find(tensor_name);
+    if (it == tensor_index_.end()) return false;
+    const TensorRef& ref = it->second;
+    if (byte_offset > ref.size || byte_count > ref.size - byte_offset) {
+        std::cerr << "[GGUF] tensor slice outside bounds: " << tensor_name << std::endl;
+        return false;
+    }
+    const uint64_t budgetBytes = max_zone_memory_mb_ * 1024ULL * 1024ULL;
+    if (byte_count > budgetBytes ||
+        byte_count > static_cast<uint64_t>(std::numeric_limits<size_t>::max()) ||
+        byte_count > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+        std::cerr << "[GGUF] tensor slice exceeds bounded residency budget: " << tensor_name << std::endl;
+        return false;
+    }
+    if (ref.offset > std::numeric_limits<uint64_t>::max() - byte_offset ||
+        ref.offset + byte_offset > std::numeric_limits<uint64_t>::max() - byte_count) {
+        return false;
+    }
+    const uint64_t absolute = ref.offset + byte_offset;
+    
+    // Switch to the correct shard file
+    current_file_ = shard_files_[ref.shard_id].get();
+    current_file_->clear();
+    current_file_->seekg(static_cast<std::streamoff>(absolute), std::ios::beg);
+    if (!current_file_->good()) { data.clear(); return false; }
+    if (byte_count != 0) {
+        current_file_->read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(byte_count));
+    }
+    if (!current_file_->good() && !current_file_->eof()) { data.clear(); return false; }
+    return byte_count == 0 || current_file_->gcount() == static_cast<std::streamsize>(byte_count);
+}
+
 TensorZoneInfo StreamingGGUFLoader::GetZoneInfo(const std::string& zone_name) const {
     auto it = zones_.find(zone_name);
     if (it != zones_.end()) {
@@ -453,13 +871,16 @@ TensorZoneInfo StreamingGGUFLoader::GetZoneInfo(const std::string& zone_name) co
 }
 
 uint64_t StreamingGGUFLoader::GetTotalFileSize() const {
-    if (!file_.is_open()) return 0;
-    
-    std::streampos current = file_.tellg();
-    file_.seekg(0, std::ios::end);
-    uint64_t size = file_.tellg();
-    file_.seekg(current);
-    return size;
+    uint64_t total = 0;
+    for (const auto& [shard_id, f] : shard_files_) {
+        if (f && f->is_open()) {
+            std::streampos current = f->tellg();
+            f->seekg(0, std::ios::end);
+            total += static_cast<uint64_t>(f->tellg());
+            f->seekg(current);
+        }
+    }
+    return total;
 }
 
 uint64_t StreamingGGUFLoader::GetCurrentMemoryUsage() const {
@@ -516,16 +937,53 @@ std::vector<TensorInfo> StreamingGGUFLoader::GetTensorInfo() const {
 
 const TensorInfo* StreamingGGUFLoader::GetTensorInfo(const std::string& name) const {
     auto it = tensor_index_.find(name);
-    if (it == tensor_index_.end()) return nullptr;
-    static thread_local TensorInfo cache;
-    cache = TensorInfo{};
-    cache.name = it->second.name;
-    cache.shape = it->second.shape;
-    cache.type = it->second.type;
-    cache.offset = it->second.offset;
-    cache.size = it->second.size;
-    cache.size_bytes = it->second.size;
-    return &cache;
+    if (it != tensor_index_.end()) {
+        static thread_local TensorInfo cache;
+        cache = TensorInfo{};
+        cache.name = it->second.name;
+        cache.shape = it->second.shape;
+        cache.type = it->second.type;
+        cache.offset = it->second.offset;
+        cache.size = it->second.size;
+        cache.size_bytes = it->second.size;
+        return &cache;
+    }
+    
+    // Diagnostic: log failed lookup details
+    std::cerr << "[TENSOR_LOOKUP_FAIL]"
+              << " name=" << name
+              << " len=" << name.size()
+              << " index_size=" << tensor_index_.size()
+              << " loader=" << static_cast<const void*>(this)
+              << '\n';
+    
+    // Dump candidate keys matching "attn_norm.weight"
+    for (const auto& [key, ref] : tensor_index_) {
+        if (key.find("attn_norm.weight") != std::string::npos) {
+            std::cerr << "[INDEX_CANDIDATE]"
+                      << " name=" << key
+                      << " len=" << key.size()
+                      << '\n';
+        }
+    }
+    
+    // Fallback: linear scan (handles any map lookup anomaly)
+    for (const auto& [key, ref] : tensor_index_) {
+        if (key == name) {
+            static thread_local TensorInfo cache;
+            cache = TensorInfo{};
+            cache.name = ref.name;
+            cache.shape = ref.shape;
+            cache.type = ref.type;
+            cache.offset = ref.offset;
+            cache.size = ref.size;
+            cache.size_bytes = ref.size;
+            return &cache;
+        }
+    }
+    
+    std::cerr << "[GGUF] GetTensorInfo not found: " << name << " (index size=" << tensor_index_.size() << ")\n";
+    return nullptr;
 }
 
 const std::vector<std::string>& StreamingGGUFLoader::GetVocabulary() const {
@@ -571,38 +1029,99 @@ std::string StreamingGGUFLoader::GetTypeString(GGMLType type) const {
 }
 
 // ============================================================================
-// PRIVATE TEMPLATE FUNCTIONS
+// PRIVATE TEMPLATE FUNCTIONS (operate on current_file_)
+// ============================================================================
+
 template<typename T>
 bool StreamingGGUFLoader::ReadValue(T& value) {
-    file_.read(reinterpret_cast<char*>(&value), sizeof(T));
-    return file_.good();
+    if (!current_file_) return false;
+    current_file_->read(reinterpret_cast<char*>(&value), sizeof(T));
+    return current_file_->good();
+}
+
+bool StreamingGGUFLoader::SkipMetadataValue(uint32_t value_type) {
+    switch (value_type) {
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_BOOL: {
+            uint8_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT16:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT16: {
+            uint16_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32: {
+            uint32_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT64: {
+            uint64_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_STRING: {
+            std::string ignored; return ReadString(ignored);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_ARRAY: {
+            uint32_t elem_type{}; uint64_t count{};
+            if (!ReadValue(elem_type) || !ReadValue(count) || count > 10'000'000ULL) return false;
+            for (uint64_t i = 0; i < count; ++i) {
+                if (!SkipMetadataValueFromStream(*current_file_, elem_type)) return false;
+            }
+            return true;
+        }
+        default:
+            return false;
+    }
 }
 
 bool StreamingGGUFLoader::ReadString(std::string& value) {
+    if (!current_file_) return false;
     uint64_t len;
     if (!ReadValue(len)) return false;
-    
-    value.resize(len);
-    file_.read(&value[0], len);
-    return file_.good();
+
+    constexpr uint64_t kMaxMetadataString = 64ULL * 1024ULL * 1024ULL;
+    if (len > kMaxMetadataString ||
+        len > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        std::cerr << "[GGUF] metadata string exceeds safety limit: " << len
+                  << " bytes" << std::endl;
+        return false;
+    }
+
+    const std::streampos payload = current_file_->tellg();
+    if (payload < 0) return false;
+    current_file_->seekg(0, std::ios::end);
+    const std::streampos end = current_file_->tellg();
+    current_file_->seekg(payload, std::ios::beg);
+    if (end < payload || static_cast<uint64_t>(end - payload) < len) {
+        std::cerr << "[GGUF] metadata string extends beyond file" << std::endl;
+        return false;
+    }
+
+    value.resize(static_cast<size_t>(len));
+    if (len != 0) {
+        current_file_->read(value.data(), static_cast<std::streamsize>(len));
+    }
+    return current_file_->good() || current_file_->eof();
 }
 
 uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const {
     uint64_t num_elements = 1;
     for (uint64_t dim : shape) {
+        if (dim != 0 && num_elements > std::numeric_limits<uint64_t>::max() / dim) {
+            return 0;
+        }
         num_elements *= dim;
     }
 
-    // Helper lambda for block-aligned size calculation
-    // Formula: block_size × ceil(num_elements / block_elements)
-    // Block geometries match ggml.h and include/gguf_loader.h (canonical IDs).
     auto block_aligned_size = [num_elements](uint64_t block_elements, uint64_t block_size) -> uint64_t {
-        uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;  // Ceiling division
+        uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;
+        if (num_blocks > std::numeric_limits<uint64_t>::max() / block_size) return 0;
         return num_blocks * block_size;
     };
 
     switch (type) {
-        // --- Non-block types: one stored value per element ------------------
         case GGMLType::F32:   return num_elements * 4;
         case GGMLType::F16:   return num_elements * 2;
         case GGMLType::I8:    return num_elements * 1;
@@ -611,14 +1130,12 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
         case GGMLType::I64:   return num_elements * 8;
         case GGMLType::F64:   return num_elements * 8;
 
-        // --- Q quants (32 elements / block) ---------------------------------
         case GGMLType::Q4_0:  return block_aligned_size(32,  18);
         case GGMLType::Q4_1:  return block_aligned_size(32,  20);
         case GGMLType::Q5_0:  return block_aligned_size(32,  22);
         case GGMLType::Q5_1:  return block_aligned_size(32,  24);
         case GGMLType::Q8_0:  return block_aligned_size(32,  34);
 
-        // --- K-quants (256 elements / super-block) --------------------------
         case GGMLType::Q2_K:  return block_aligned_size(256, 84);
         case GGMLType::Q3_K:  return block_aligned_size(256, 110);
         case GGMLType::Q4_K:  return block_aligned_size(256, 144);
@@ -626,7 +1143,6 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
         case GGMLType::Q6_K:  return block_aligned_size(256, 210);
         case GGMLType::Q8_K:  return block_aligned_size(256, 292);
 
-        // --- Imatrix (IQ) quants --------------------------------------------
         case GGMLType::IQ2_XXS: return block_aligned_size(256,  66);
         case GGMLType::IQ2_XS:  return block_aligned_size(256,  74);
         case GGMLType::IQ3_XXS: return block_aligned_size(256,  98);
@@ -692,4 +1208,3 @@ size_t StreamingGGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {
 uint64_t StreamingGGUFLoader::GetFileSize() const {
     return GetTotalFileSize();
 }
-

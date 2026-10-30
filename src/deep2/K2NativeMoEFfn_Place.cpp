@@ -5,6 +5,7 @@
 #include "MoEPlaceLiveCounters.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
+#include "K2ShardIo.hpp"
 #include "K2MLA_GpuGemv.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
@@ -17,6 +18,7 @@
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
+#include <cmath>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -24,6 +26,7 @@
 #include <thread>
 #include <atomic>
 #include <algorithm>
+#include "QuantKernelRegistry.hpp"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -182,7 +185,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
        actual K2 quantized GEMV path.  The replay does not run the separate
        streamer arm harness, so requiring only dsRequested would silently
        send a GPU-admitted run through host MoE. */
-    const bool gpuRequested = dsRequested || MLA_GpuGemvWanted();
+    const bool moeGpuOnly = [] {
+        const char* v = std::getenv("DEEP2_MOE_GPU_ONLY");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    const bool gpuRequested = dsRequested || MLA_GpuGemvWanted() || moeGpuOnly;
     const bool useGpuMoE = gpuRequested && vc0Ready;
     const bool useDualStick = useGpuMoE && vc1Ready;
     const uint32_t sticks = useDualStick ? 2u : 1u;
@@ -338,15 +345,20 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         MoEPlaceLive().experts_executed += executedHost;
         if (decodePhase) MoEPlaceLive().decode_experts_executed += executedHost;
 
-        std::vector<float> shared(H, 0.f);
-        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
-        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
-            moe_ltrace::BC(layer, "SHARED_FAIL");
-            return false;
+        // MiniMax-M2 has no shared expert tensor. A zero shared-expert count
+        // is a real topology contract; do not call the Kimi shared-expert
+        // path with missing tensors.
+        if (cfg.sharedExperts > 0) {
+            std::vector<float> shared(H, 0.f);
+            moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+            if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+                moe_ltrace::BC(layer, "SHARED_FAIL");
+                return false;
+            }
+            moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+            MoEPlaceLive().shared_expert_calls++;
+            for (size_t i = 0; i < H; ++i) accum[i] += shared[i];
         }
-        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
-        MoEPlaceLive().shared_expert_calls++;
-        for (size_t i = 0; i < H; ++i) accum[i] += shared[i];
         moe_ltrace::BC(layer, "HOST_MOE_DONE");
         return true;
     }
@@ -536,15 +548,126 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         return false;
     }
 
-    std::vector<float> shared(cfg.hiddenDim, 0.f);
-    moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
-    if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
-        moe_ltrace::BC(layer, "SHARED_FAIL");
-        return false;
+    if (cfg.sharedExperts > 0) {
+        std::vector<float> shared(cfg.hiddenDim, 0.f);
+        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+            moe_ltrace::BC(layer, "SHARED_FAIL");
+            return false;
+        }
+        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+        MoEPlaceLive().shared_expert_calls++;
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
     }
-    moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
-    MoEPlaceLive().shared_expert_calls++;
-    for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
+
+    // Layer-1 FFN diagnostic: CPU reference vs native output
+    std::fprintf(stderr, "[L1_DIAG_PROBE] layer=%u env=%p\n", layer, (void*)std::getenv("DEEP2_L1_DIAG"));
+    std::fflush(stderr);
+    if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))
+    {
+        const size_t H = cfg.hiddenDim;
+        const size_t I = cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u;
+        std::vector<float> cpuRef(H, 0.0f);
+        auto& reg = QuantKernelRegistry::Instance();
+        auto gemv = [&](int qt, const uint8_t* w, const float* x, float* y,
+                        size_t rows, size_t cols) -> bool {
+            auto k = reg.GetGEMV(qt);
+            if (!k) return false;
+            std::memset(y, 0, rows * sizeof(float));
+            k(w, x, y, rows, cols);
+            return true;
+        };
+        auto siluMul = [](float* gate, const float* up, size_t n) {
+            for (size_t i = 0; i < n; ++i) {
+                const float g = gate[i];
+                gate[i] = (g / (1.0f + std::exp(-g))) * up[i];
+            }
+        };
+
+        // CPU reference: shared expert
+        {
+            char gateN[64], upN[64], downN[64];
+            std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_shexp.weight", layer);
+            std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up_shexp.weight", layer);
+            std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down_shexp.weight", layer);
+
+            WeightSpan gs{}, us{}, dsWt{};
+            std::vector<uint8_t> gBuf, uBuf, dBuf;
+            std::string loadErr;
+            bool ok = ResolveWeight(index, gateN, gs, gBuf, loadErr)
+                   && ResolveWeight(index, upN, us, uBuf, loadErr)
+                   && ResolveWeight(index, downN, dsWt, dBuf, loadErr);
+            if (ok) {
+                auto gRef = index.Find(gateN);
+                auto uRef = index.Find(upN);
+                auto dRef = index.Find(downN);
+                if (gRef && uRef && dRef) {
+                    const uint8_t* gp = gs.data ? gs.data : gBuf.data();
+                    const uint8_t* up_ = us.data ? us.data : uBuf.data();
+                    const uint8_t* dp = dsWt.data ? dsWt.data : dBuf.data();
+                    std::vector<float> gate(I, 0.0f), up(I, 0.0f);
+                    if (gemv((int)gRef->ggmlType, gp, normed, gate.data(), I, H) &&
+                        gemv((int)uRef->ggmlType, up_, normed, up.data(), I, H)) {
+                        siluMul(gate.data(), up.data(), I);
+                        gemv((int)dRef->ggmlType, dp, gate.data(), cpuRef.data(), H, I);
+                    }
+                }
+            }
+        }
+
+        // CPU reference: routed experts (weighted)
+        for (uint32_t si = 0; si < route.count; ++si) {
+            int expertId = (int)route.expertIds[si];
+            float weight = route.weights[si];
+            if (expertId < 0) continue;
+
+            char gateN[64], upN[64], downN[64];
+            std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight", layer);
+            std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up_exps.weight", layer);
+            std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down_exps.weight", layer);
+
+            auto gslice = index.FindExpertSlice(gateN, (uint32_t)expertId);
+            auto uslice = index.FindExpertSlice(upN, (uint32_t)expertId);
+            auto dslice = index.FindExpertSlice(downN, (uint32_t)expertId);
+            if (!gslice || !uslice || !dslice) continue;
+
+            std::vector<uint8_t> gateB(gslice->byteSize), upB(uslice->byteSize), downB(dslice->byteSize);
+
+            bool ok = K2ShardIo_Read(index.ShardPath(gslice->shardId).string(),
+                                   gslice->fileOffset + gslice->byteOffset,
+                                   gateB.data(), gateB.size());
+            ok = ok && K2ShardIo_Read(index.ShardPath(uslice->shardId).string(),
+                                   uslice->fileOffset + uslice->byteOffset,
+                                   upB.data(), upB.size());
+            ok = ok && K2ShardIo_Read(index.ShardPath(dslice->shardId).string(),
+                                   dslice->fileOffset + dslice->byteOffset,
+                                   downB.data(), downB.size());
+            if (!ok) continue;
+
+            std::vector<float> gate(I, 0.0f), up(I, 0.0f), expertOut(H, 0.0f);
+            if (gemv((int)gslice->ggmlType, gateB.data(), normed, gate.data(), I, H) &&
+                gemv((int)uslice->ggmlType, upB.data(), normed, up.data(), I, H)) {
+                siluMul(gate.data(), up.data(), I);
+                gemv((int)dslice->ggmlType, downB.data(), gate.data(), expertOut.data(), H, I);
+                for (size_t i = 0; i < H; ++i)
+                    cpuRef[i] += weight * expertOut[i];
+            }
+        }
+
+        // Compare native vs CPU reference
+        double maxDiff = 0.0;
+        size_t maxIdx = 0;
+        size_t nonFinite = 0;
+        for (size_t i = 0; i < H; ++i) {
+            if (!std::isfinite(accum[i]) || !std::isfinite(cpuRef[i])) { ++nonFinite; continue; }
+            double diff = std::abs((double)accum[i] - (double)cpuRef[i]);
+            if (diff > maxDiff) { maxDiff = diff; maxIdx = i; }
+        }
+        std::fprintf(stderr,
+            "[L1_DIAG] layer=1 native_vs_cpu maxDiff=%.9e at idx=%zu nonFinite=%zu\n",
+            maxDiff, maxIdx, nonFinite);
+        std::fflush(stderr);
+    }
     return true;
 }
 

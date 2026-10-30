@@ -1,0 +1,69 @@
+{
+  "schema": "RAWRXD_REAP_BUILD_CERT_001",
+  "timestamp_utc": "2026-10-26",
+  "source_root": "F:\\rawrxd",
+  "branch": "fix/deep2-multimodel-safety-20261025",
+  "source_commit_base": "9fa781fe811d391359f999f121bfdebe8eaf3aa0",
+  "working_tree_dirty": true,
+  "build": {
+    "generator": "Ninja",
+    "configuration": "Release",
+    "toolchain": "MSVC 14.44 x64",
+    "full_configured_graph": "PASS",
+    "executables": {
+      "rawr_reap": {
+        "path": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.exe",
+        "bytes": 874496,
+        "sha256": "BFDF53CB75C2348B1525D4B073026DBB4BA643C907A0E232491A9B15D01B6E14"
+      },
+      "rawr_reap_replay": {
+        "path": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap-replay.exe",
+        "bytes": 1984000,
+        "sha256": "5A9E81AA4E49ABEB1502D1A1FE49F167AB455FA6AEC9F85B955D5E1B8E082C01"
+      },
+      "rawr_cli": {
+        "path": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr.exe",
+        "bytes": 2733568,
+        "sha256": "E7813F58F35A6D862FA492A786EB0010A0E217738B235FF1036297A8B03043A3"
+      },
+      "native_ide": {
+        "path": "F:\\rawrxd\\build_reap\\bin\\RawrXD-Win32IDE-Native.exe",
+        "bytes": 1642496,
+        "sha256": "D5E846212EA46DE5BEB14F0F9C9696CD30EB33E35A440336B1DF2A6CA4090C67"
+      }
+    }
+  },
+  "ctest": {
+    "command": "ctest --test-dir F:\\rawrxd\\build_reap -C Release --output-on-failure",
+    "total": 18,
+    "passed": 17,
+    "skipped": 1,
+    "failed": 0,
+    "result": "PASS_WITH_MODEL_DEPENDENT_SKIP",
+    "skipped_test": "deep2_h11_prefill_parity"
+  },
+  "reap_runtime": {
+    "model": "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+    "target_size": "30GiB",
+    "active_experts": 8,
+    "expert_budget": "20GiB",
+    "quality_floor": 0.7,
+    "selection_manifest": "F:\\rawrxd\\tmp_build\\reap_minimax_selection_current_rebuild_20261026.json",
+    "receipt": "F:\\rawrxd\\tmp_build\\reap_minimax_reap_current_rebuild_20261026.json",
+    "exit_code": 4,
+    "result": "BLOCKED_REFERENCE_PARITY",
+    "rewrite_authorized": false,
+    "output_model_written": false,
+    "reduced_model_reload": false
+  },
+  "certification": {
+    "family_cpu_smoke": "PASS",
+    "reap_build": "PASS",
+    "reap_ctest": "PASS_WITH_MODEL_DEPENDENT_SKIP",
+    "reference_parity": "NOT_CERTIFIED",
+    "quality_floor": "NOT_CERTIFIED",
+    "gguf_rewrite": "BLOCKED",
+    "post_pruning_inference": "NOT_RUN",
+    "reap_end_to_end": "NOT_CERTIFIED"
+  }
+}

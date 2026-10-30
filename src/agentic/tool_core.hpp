@@ -1,7 +1,9 @@
 #pragma once
 // RawrXD native tool host foundation. C++20, standard library + Win32 only.
 #include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -49,7 +51,40 @@ public:
   }
 };
 inline std::string arg(const Request& r,const std::string& k){auto it=r.args.find(k);if(it==r.args.end())throw std::runtime_error("missing "+k);return it->second;}
+inline std::string optional_arg(const Request& r,const std::string& k,const std::string& fallback){auto it=r.args.find(k);return it==r.args.end()?fallback:it->second;}
+inline size_t optional_limit(const Request& r,const std::string& k,size_t fallback,size_t maximum){
+ auto it=r.args.find(k); if(it==r.args.end()||it->second.empty()) return fallback;
+ try { size_t used=0; unsigned long long value=std::stoull(it->second,&used); if(used!=it->second.size()||value==0) return fallback; return static_cast<size_t>(std::min<unsigned long long>(value,maximum)); }
+ catch(...) { return fallback; }
+}
 inline fs::path canonical_root(const fs::path& p){return fs::weakly_canonical(fs::absolute(p));}
+// Tool arguments and JSON payloads are UTF-8, while Windows filesystem APIs
+// are wide-character based.  Never route a model-supplied UTF-8 path through
+// fs::path(std::string) or path::string() on Windows: those conversions use
+// the active multi-byte code page and throw when a repository entry contains
+// a character that CP_ACP cannot represent.  Keep the boundary explicitly
+// UTF-8 in both directions so search/read results remain valid JSON.
+inline fs::path utf8_path(const std::string& value){
+#ifdef _WIN32
+ return fs::u8path(value);
+#else
+ return fs::path(value);
+#endif
+}
+inline std::string path_utf8(const fs::path& value){
+#ifdef _WIN32
+ const auto encoded=value.u8string();
+ return std::string(reinterpret_cast<const char*>(encoded.data()),encoded.size());
+#else
+ return value.u8string();
+#endif
+}
+inline std::string trim_path_argument(std::string value){
+ size_t first=0,last=value.size();
+ while(first<last&&std::isspace(static_cast<unsigned char>(value[first])))++first;
+ while(last>first&&std::isspace(static_cast<unsigned char>(value[last-1])))--last;
+ return value.substr(first,last-first);
+}
 #ifdef _WIN32
 // Atomic same-volume file replacement through ReplaceFileW: preserves the
 // original file's ACLs, attributes and alternate data streams instead of the
@@ -58,13 +93,22 @@ inline fs::path canonical_root(const fs::path& p){return fs::weakly_canonical(fs
 inline bool replace_windows_file(const fs::path& target,const fs::path& replacement);
 #endif
 inline fs::path scoped(const fs::path& root,const std::string& rel){
- fs::path r=canonical_root(root),p=fs::weakly_canonical(r/fs::path(rel));
+ const std::string clean=trim_path_argument(rel);
+ fs::path r=canonical_root(root),p=fs::weakly_canonical(r/utf8_path(clean.empty()?".":clean));
  auto a=r.begin(),b=p.begin();for(;a!=r.end()&&b!=p.end()&&*a==*b;++a,++b){} if(a!=r.end())throw std::runtime_error("path outside workspace");return p;
 }
 inline std::string read_text(const fs::path& p,size_t max_bytes=2*1024*1024){
  if(!fs::is_regular_file(p))throw std::runtime_error("not a file");
  if(fs::file_size(p)>max_bytes)throw std::runtime_error("file exceeds read limit");
  std::ifstream in(p,std::ios::binary);if(!in)throw std::runtime_error("cannot open file");return {std::istreambuf_iterator<char>(in),{}};
+}
+inline std::string read_text_prefix(const fs::path& p,size_t max_bytes){
+ if(!fs::is_regular_file(p))throw std::runtime_error("not a file");
+ std::ifstream in(p,std::ios::binary);if(!in)throw std::runtime_error("cannot open file");
+ std::string out(max_bytes,'\0');in.read(out.data(),static_cast<std::streamsize>(out.size()));
+ out.resize(static_cast<size_t>(in.gcount()));
+ if(fs::file_size(p)>max_bytes) out+="\n...[readFile output truncated by maxBytes]...\n";
+ return out;
 }
 inline void write_atomic(const fs::path& p,const std::string& content){
  if(!fs::exists(p.parent_path()))throw std::runtime_error("parent directory missing");
@@ -79,16 +123,99 @@ inline void write_atomic(const fs::path& p,const std::string& content){
 #endif
  }catch(...){std::error_code ec;fs::remove(tmp,ec);throw;}
 }
+// Cursor-parity aliases: models / prompts that emit Cursor tool names
+// resolve to the same native handlers (fail-closed if unregistered).
+inline const char* canonicalize_tool_name(const std::string& name){
+  if(name=="Read"||name=="read_file") return "readFile";
+  if(name=="Grep"||name=="grep"||name=="search_text") return "textSearch";
+  if(name=="Glob"||name=="glob"||name=="find_files") return "fileSearch";
+  if(name=="StrReplace"||name=="str_replace"||name=="search_replace") return "editFiles";
+  if(name=="Write"||name=="write_file") return "writeFile";
+  if(name=="Delete"||name=="delete_file") return "deleteFile";
+  if(name=="Shell"||name=="run_terminal_cmd"||name=="bash") return "runInTerminal";
+  if(name=="LSDir"||name=="list_dir") return "listDirectory";
+  return nullptr; // keep original
+}
+
 inline void register_workspace_tools(Registry& reg,fs::path root){
  root=canonical_root(root);
- reg.add({"readFile","Read bounded workspace file",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{return {true,read_text(scoped(root,arg(r,"path"))),""};}});
- reg.add({"listDirectory","List workspace directory",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::is_directory(p))throw std::runtime_error("not directory");std::ostringstream out;size_t n=0;for(auto& e:fs::directory_iterator(p)){if(++n>2000)break;out<<(e.is_directory()?"D ":"F ")<<e.path().filename().string()<<'\n';}return {true,out.str(),""};}});
- reg.add({"fileSearch","Find paths by filename substring",Risk::ReadOnly,{"pattern"},[root](const Request& r)->Result{std::ostringstream out;auto pattern=arg(r,"pattern");size_t count=0;std::error_code ec;for(fs::recursive_directory_iterator it(root,fs::directory_options::skip_permission_denied,ec),end;it!=end&&count<500&&!ec;it.increment(ec)){if(it.depth()>24){it.disable_recursion_pending();continue;}if(it->path().filename().string().find(pattern)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<'\n';++count;}}return {true,out.str(),""};}});
- reg.add({"textSearch","Search bounded text files",Risk::ReadOnly,{"needle"},[root](const Request& r)->Result{std::ostringstream out;auto needle=arg(r,"needle");if(needle.empty())throw std::runtime_error("empty needle");size_t matches=0;std::error_code ec;for(fs::recursive_directory_iterator it(root,fs::directory_options::skip_permission_denied,ec),end;it!=end&&matches<250&&!ec;it.increment(ec)){if(it.depth()>24){it.disable_recursion_pending();continue;}if(!it->is_regular_file(ec)||it->file_size(ec)>1024*1024)continue;std::ifstream f(it->path());std::string line;size_t ln=0;while(std::getline(f,line)&&matches<250){++ln;if(line.find(needle)!=std::string::npos){out<<fs::relative(it->path(),root).string()<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}}return {true,out.str(),""};}});
+ reg.add({"readFile","Read one bounded workspace file by path. Optional maxBytes limits the returned evidence (default 262144, hard maximum 524288).",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{
+   const size_t maxBytes=optional_limit(r,"maxBytes",256*1024,512*1024);
+   const fs::path file=scoped(root,arg(r,"path"));
+   const bool bounded=r.args.find("maxBytes")!=r.args.end();
+   return {true,bounded?read_text_prefix(file,maxBytes):read_text(file),""};
+ }});
+ reg.add({"listDirectory","List immediate children only; bounded output. Prefer fileSearch/textSearch for repository audits and never enumerate the workspace root recursively",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{
+   auto p=scoped(root,arg(r,"path")); if(!fs::is_directory(p)) throw std::runtime_error("not directory");
+   const size_t limit=optional_limit(r,"maxEntries",128,256); const size_t maxBytes=48*1024;
+   std::vector<std::string> entries; std::error_code ec;
+   for(auto& e:fs::directory_iterator(p,fs::directory_options::skip_permission_denied,ec)){
+     if(ec) break; entries.push_back(std::string(e.is_directory(ec)?"D ":"F ")+path_utf8(e.path().filename()));
+   }
+   std::sort(entries.begin(),entries.end()); const bool countTruncated=entries.size()>limit;
+   std::ostringstream out; out<<"DIRECTORY="<<arg(r,"path")<<" ENTRIES="<<entries.size()<<" RETURN_LIMIT="<<limit<<" TRUNCATED="<<(countTruncated?"true":"false")<<'\n';
+   size_t returned=0; for(const auto& entry:entries){ if(returned>=limit||out.tellp()>=static_cast<std::streamoff>(maxBytes)) break; out<<entry<<'\n'; ++returned; }
+   if(returned<entries.size()) out<<"...[directory output truncated; use a narrower path or fileSearch]...\n";
+   return {true,out.str(),""};
+ }});
+ reg.add({"fileSearch","Find paths by filename substring; optional path and maxResults scope the search",Risk::ReadOnly,{"pattern"},[root](const Request& r)->Result{
+   std::ostringstream out; auto pattern=arg(r,"pattern"); const auto start=scoped(root,optional_arg(r,"path",".")); const size_t limit=optional_limit(r,"maxResults",100,250); size_t count=0; std::error_code ec;
+   if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
+   for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&count<limit&&!ec;it.increment(ec)){
+     if(it.depth()>24){it.disable_recursion_pending();continue;} if(path_utf8(it->path().filename()).find(pattern)!=std::string::npos){out<<path_utf8(fs::relative(it->path(),root))<<'\n';++count;}
+   }
+   if(count==limit) out<<"...[file search truncated at maxResults]...\n"; return {true,out.str(),""};
+ }});
+ reg.add({"textSearch","Search bounded text files; optional path and maxResults scope the search",Risk::ReadOnly,{"needle"},[root](const Request& r)->Result{
+   std::ostringstream out; auto needle=arg(r,"needle"); if(needle.empty()) throw std::runtime_error("empty needle"); const auto start=scoped(root,optional_arg(r,"path",".")); const size_t limit=optional_limit(r,"maxResults",100,250); size_t matches=0; std::error_code ec;
+   if(!fs::is_directory(start,ec)) throw std::runtime_error("search path is not a directory");
+   for(fs::recursive_directory_iterator it(start,fs::directory_options::skip_permission_denied,ec),end;it!=end&&matches<limit&&!ec;it.increment(ec)){
+     if(it.depth()>24){it.disable_recursion_pending();continue;} if(!it->is_regular_file(ec)||it->file_size(ec)>1024*1024) continue; std::ifstream f(it->path()); std::string line; size_t ln=0;
+     while(std::getline(f,line)&&matches<limit){++ln;if(line.find(needle)!=std::string::npos){out<<path_utf8(fs::relative(it->path(),root))<<':'<<ln<<':'<<line.substr(0,240)<<'\n';++matches;}}
+   }
+   if(matches==limit) out<<"...[text search truncated at maxResults]...\n"; return {true,out.str(),""};
+ }});
  reg.add({"createDirectory","Create directory inside workspace",Risk::Write,{"path"},[root](const Request& r)->Result{fs::create_directories(scoped(root,arg(r,"path")));return {true,"created",""};}});
  reg.add({"createFile","Create a new file without overwriting",Risk::Write,{"path","content"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(fs::exists(p))throw std::runtime_error("file already exists");write_atomic(p,arg(r,"content"));return {true,"created",""};}});
-  reg.add({"editFiles","Replace exact unique text in a file",Risk::Write,{"path","old","new"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));auto text=read_text(p);auto old=arg(r,"old");if(old.empty())throw std::runtime_error("empty match");auto pos=text.find(old);if(pos==std::string::npos||text.find(old,pos+old.size())!=std::string::npos)throw std::runtime_error("match must occur exactly once");text.replace(pos,old.size(),arg(r,"new"));write_atomic(p,text);return {true,"edited",""};}});
- }
+ reg.add({"writeFile","Write/overwrite a workspace file",Risk::Write,{"path","content"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::exists(p.parent_path()))fs::create_directories(p.parent_path());write_atomic(p,arg(r,"content"));return {true,"written",""};}});
+ reg.add({"editFiles","Replace exact unique text in a file",Risk::Write,{"path","old","new"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));auto text=read_text(p);auto old=arg(r,"old");if(old.empty())throw std::runtime_error("empty match");auto pos=text.find(old);if(pos==std::string::npos||text.find(old,pos+old.size())!=std::string::npos)throw std::runtime_error("match must occur exactly once");text.replace(pos,old.size(),arg(r,"new"));write_atomic(p,text);return {true,"edited",""};}});
+ reg.add({"deleteFile","Delete a workspace file",Risk::Write,{"path"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::is_regular_file(p))throw std::runtime_error("not a regular file");std::error_code ec;if(!fs::remove(p,ec)||ec)throw std::runtime_error("delete failed");return {true,"deleted",""};}});
+ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"command"},[root](const Request& r)->Result{
+   auto cmd=arg(r,"command");
+   if(cmd.empty())throw std::runtime_error("empty command");
+   if(cmd.size()>8192)throw std::runtime_error("command too long");
+#ifdef _WIN32
+   std::string full=std::string("cmd.exe /d /c cd /d \"")+path_utf8(root)+"\" && "+cmd;
+   FILE* pipe=_popen(full.c_str(),"r");
+#else
+   std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
+   FILE* pipe=popen(full.c_str(),"r");
+#endif
+   if(!pipe)throw std::runtime_error("failed to start process");
+   std::string out;char buf[4096];size_t cap=2*1024*1024;
+   while(fgets(buf,sizeof(buf),pipe)){out+=buf;if(out.size()>cap){out+="\n...[truncated]\n";break;}}
+#ifdef _WIN32
+   int ec=_pclose(pipe);
+#else
+   int ec=pclose(pipe);
+#endif
+   if(ec!=0)return {false,out,"exit="+std::to_string(ec)};
+   return {true,out,""};
+ }});
+
+ auto alias=[&](const char* alias_name,const char* canonical){
+   Tool t; if(!reg.find(canonical,t)) return;
+   t.name=alias_name;
+   reg.add(std::move(t));
+ };
+ alias("Read","readFile");
+ alias("Grep","textSearch");
+ alias("Glob","fileSearch");
+ alias("StrReplace","editFiles");
+ alias("Write","writeFile");
+ alias("Delete","deleteFile");
+ alias("Shell","runInTerminal");
+}
 
 #ifdef _WIN32
 // Single inline definition of the Windows atomic-replace primitive.

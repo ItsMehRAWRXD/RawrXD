@@ -26,7 +26,7 @@ std::string generateUuid() {
     for (int i = 0; i < 4; ++i) ss << dist(gen);
     ss << "-";
     ss << "4"; // version 4
-    for (int i = 0; i < 3; ++i) ss << dist(gen) & 0x0fff;
+    for (int i = 0; i < 3; ++i) ss << (dist(gen) & 0x0fff);
     ss << "-";
     ss << (dist(gen) & 0x3fff | 0x8000); // variant 1
     for (int i = 0; i < 3; ++i) ss << dist(gen);
@@ -324,7 +324,18 @@ AgenticErrorHandler::ErrorType AgenticErrorHandler::classifyError(const std::str
     std::string lowerMsg = errorMessage;
     std::transform(lowerMsg.begin(), lowerMsg.end(), lowerMsg.begin(), [](unsigned char c){ return std::tolower(c); });
 
-    if (lowerMsg.find("timeout") != std::string::npos) {
+    // GPU-kernel/image incompatibility is deterministic for the selected
+    // provider/device. Treat it as configuration, not a transient execution
+    // failure, so recovery terminates once and can offer a fallback model.
+    if (lowerMsg.find("tensilelibrary") != std::string::npos ||
+        lowerMsg.find("rocblaslt") != std::string::npos ||
+        lowerMsg.find("no kernel image") != std::string::npos ||
+        lowerMsg.find("kernel image is not available") != std::string::npos ||
+        lowerMsg.find("rocm error") != std::string::npos ||
+        lowerMsg.find("hip error") != std::string::npos ||
+        lowerMsg.find("unsupported gpu architecture") != std::string::npos) {
+        return ErrorType::ConfigurationError;
+    } else if (lowerMsg.find("timeout") != std::string::npos) {
         return ErrorType::TimeoutError;
     } else if (lowerMsg.find("validation") != std::string::npos) {
         return ErrorType::ValidationError;

@@ -2,9 +2,34 @@
 // Always-available PowerShell console for Win32IDE
 
 #include "Win32IDE.h"
+#include <windows.h>
 #include <sstream>
 #include <algorithm>
 #include <richedit.h>
+#include <cstdio>
+#include <cstdarg>
+
+// === PS_TRACE: Runtime-local logging for PowerShell execution tracing ===
+static inline void PsTrace(const char* fmt, ...)
+{
+    char buf[1024];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    const char* configuredLogDir = std::getenv("RAWRXD_LOG_DIR");
+    const std::string logPath = (configuredLogDir && *configuredLogDir)
+        ? std::string(configuredLogDir) + "\\ps_trace.log"
+        : std::string("ps_trace.log");
+    FILE* file = nullptr;
+    if (fopen_s(&file, logPath.c_str(), "a") == 0 && file) {
+        fprintf(file, "%lu %s\n", GetCurrentThreadId(), buf);
+        fflush(file);
+        fclose(file);
+    }
+    OutputDebugStringA(buf);
+}
 
 // PowerShell Panel Control IDs
 #define IDC_PS_PANEL_CONTAINER 5000
@@ -47,6 +72,14 @@ void Win32IDE::createPowerShellPanel() {
     
     // Store IDE pointer for callbacks
     SetProp(m_hwndPowerShellPanel, "IDE_PTR", this);
+    // The panel is a child STATIC window, so button notifications terminate at
+    // that window unless it forwards WM_COMMAND.  Install the existing panel
+    // procedure on the actual runtime surface instead of leaving the controls
+    // visually present but inert.
+    WNDPROC oldPanelProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+        m_hwndPowerShellPanel, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(PowerShellPanelProc)));
+    SetProp(m_hwndPowerShellPanel, "OLDPROC", reinterpret_cast<HANDLE>(oldPanelProc));
     
     // Create toolbar
     createPowerShellToolbar();
@@ -144,6 +177,14 @@ void Win32IDE::createPowerShellPanel() {
     appendPowerShellOutput("  - Ctrl+L: Clear console\n", RGB(150, 150, 150));
     appendPowerShellOutput("  - Ctrl+`: Toggle panel\n", RGB(150, 150, 150));
     appendPowerShellOutput("\n" + getPowerShellPrompt(), RGB(0, 255, 0));
+
+    // PowerShell is the initial bottom surface.  Keep that state reflected in
+    // the shared bottom tab strip so users can switch to Output/Errors/Debug/
+    // Find Results without any overlapping child windows.
+    if (m_hwndOutputTabs) {
+        TabCtrl_SetCurSel(m_hwndOutputTabs, 4);
+        m_selectedOutputTab = 4;
+    }
 }
 
 void Win32IDE::createPowerShellToolbar() {
@@ -212,11 +253,28 @@ void Win32IDE::initializePowerShellPanel() {
     
     // Set up callbacks
     m_dedicatedPowerShellTerminal->onOutput = [this](const std::string& output) {
-        appendPowerShellOutput(output, RGB(200, 200, 200));
+        {
+            char dbg[512];
+            snprintf(dbg, sizeof(dbg), "[PS_TRACE] onOutput() callback fired, output_len=%zu, thread=%lu\n", output.length(), (unsigned long)GetCurrentThreadId());
+            OutputDebugStringA(dbg);
+        }
+        const HWND target = m_hwndMain;
+        auto* update = new PowerShellUiUpdate{
+            PowerShellUiUpdate::Kind::Output, output, RGB(200, 200, 200), 0};
+        if (!target || !PostMessageA(target, kRawrxdPowerShellUiUpdate, 0,
+                                     reinterpret_cast<LPARAM>(update))) {
+            delete update;
+        }
     };
     
     m_dedicatedPowerShellTerminal->onError = [this](const std::string& error) {
-        appendPowerShellOutput("[ERROR] " + error, RGB(255, 100, 100));
+        const HWND target = m_hwndMain;
+        auto* update = new PowerShellUiUpdate{
+            PowerShellUiUpdate::Kind::Error, error, RGB(255, 100, 100), 0};
+        if (!target || !PostMessageA(target, kRawrxdPowerShellUiUpdate, 0,
+                                     reinterpret_cast<LPARAM>(update))) {
+            delete update;
+        }
     };
     
     m_dedicatedPowerShellTerminal->onStarted = [this]() {
@@ -226,8 +284,13 @@ void Win32IDE::initializePowerShellPanel() {
     
     m_dedicatedPowerShellTerminal->onFinished = [this](int exitCode) {
         m_powerShellSessionActive = false;
-        appendPowerShellOutput("\n[PowerShell session ended with code: " + std::to_string(exitCode) + "]\n", RGB(255, 255, 0));
-        updatePowerShellStatus();
+        const HWND target = m_hwndMain;
+        auto* update = new PowerShellUiUpdate{
+            PowerShellUiUpdate::Kind::Finished, {}, RGB(255, 255, 0), exitCode};
+        if (!target || !PostMessageA(target, kRawrxdPowerShellUiUpdate, 0,
+                                     reinterpret_cast<LPARAM>(update))) {
+            delete update;
+        }
     };
     
     // Start PowerShell
@@ -242,6 +305,10 @@ void Win32IDE::showPowerShellPanel() {
     if (m_hwndPowerShellPanel) {
         ShowWindow(m_hwndPowerShellPanel, SW_SHOW);
         m_powerShellPanelVisible = true;
+        if (m_hwndOutputTabs) {
+            TabCtrl_SetCurSel(m_hwndOutputTabs, 4);
+            m_selectedOutputTab = 4;
+        }
         
         // Force layout update
         RECT rc;
@@ -254,6 +321,11 @@ void Win32IDE::hidePowerShellPanel() {
     if (m_hwndPowerShellPanel) {
         ShowWindow(m_hwndPowerShellPanel, SW_HIDE);
         m_powerShellPanelVisible = false;
+        if (m_hwndOutputTabs && m_selectedOutputTab == 4) {
+            m_selectedOutputTab = 0;
+            m_activeOutputTab = "Output";
+            TabCtrl_SetCurSel(m_hwndOutputTabs, 0);
+        }
         
         // Force layout update
         RECT rc;
@@ -294,19 +366,22 @@ void Win32IDE::layoutPowerShellPanel() {
 
 void Win32IDE::updatePowerShellPanelLayout(int width, int height) {
     if (!m_hwndPowerShellPanel) return;
+
+    width = std::max(0, width);
+    height = std::max(160, height);
     
     // Layout internal controls
     if (m_hwndPowerShellOutput) {
         SetWindowPos(m_hwndPowerShellOutput, NULL,
             5, 35,
-            width - 10, height - 95,
+            std::max(0, width - 10), std::max(0, height - 95),
             SWP_NOZORDER);
     }
     
     if (m_hwndPowerShellInput) {
         SetWindowPos(m_hwndPowerShellInput, NULL,
             5, height - 55,
-            width - 110, 25,
+            std::max(0, width - 110), 25,
             SWP_NOZORDER);
     }
     
@@ -320,7 +395,7 @@ void Win32IDE::updatePowerShellPanelLayout(int width, int height) {
     if (m_hwndPowerShellStatusBar) {
         SetWindowPos(m_hwndPowerShellStatusBar, NULL,
             5, height - 25,
-            width - 10, 20,
+            std::max(0, width - 10), 20,
             SWP_NOZORDER);
     }
 }
@@ -335,13 +410,20 @@ void Win32IDE::resizePowerShellPanel(int width, int height) {
 // ============================================================================
 
 void Win32IDE::executePowerShellInput() {
-    if (!m_hwndPowerShellInput) return;
+    PsTrace("[PS_TRACE] executePowerShellInput() ENTRY thread=%lu\n", GetCurrentThreadId());
+    if (!m_hwndPowerShellInput) {
+        PsTrace("[PS_TRACE] executePowerShellInput() exit: no input hwnd\n");
+        return;
+    }
     
     char buffer[4096];
     GetWindowTextA(m_hwndPowerShellInput, buffer, sizeof(buffer));
     
     std::string command(buffer);
+    PsTrace("[PS_TRACE] executePowerShellInput() command_len=%zu cmd='%.100s'\n", command.length(), command.c_str());
+    
     if (command.empty()) {
+        PsTrace("[PS_TRACE] executePowerShellInput() exit: empty command\n");
         return;
     }
     
@@ -355,12 +437,26 @@ void Win32IDE::executePowerShellInput() {
     appendPowerShellOutput(getPowerShellPrompt() + command + "\n", RGB(255, 255, 255));
     
     // Execute
+    PsTrace("[PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=%lu\n", GetCurrentThreadId());
     executePowerShellPanelCommand(command);
+    
+    PsTrace("[PS_TRACE] executePowerShellInput() EXIT\n");
 }
 
 void Win32IDE::executePowerShellPanelCommand(const std::string& command) {
+    PsTrace("[PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=%zu thread=%lu\n", command.length(), GetCurrentThreadId());
+    {
+        char dbg[512];
+        snprintf(dbg, sizeof(dbg), "[PS_TRACE] executePowerShellPanelCommand() m_dedicatedPowerShellTerminal=%p m_powerShellSessionActive=%d\n", 
+                 static_cast<void*>(m_dedicatedPowerShellTerminal.get()), m_powerShellSessionActive ? 1 : 0);
+        OutputDebugStringA(dbg);
+        FILE* f = fopen("F:\\rawrxd\\ps_trace.log", "a");
+        if (f) { fprintf(f, "%s", dbg); fclose(f); }
+    }
+    
     if (!m_dedicatedPowerShellTerminal || !m_powerShellSessionActive) {
         appendPowerShellOutput("[ERROR] PowerShell session not active\n", RGB(255, 0, 0));
+        PsTrace("[PS_TRACE] executePowerShellPanelCommand() exit: session not active\n");
         return;
     }
     
@@ -368,10 +464,14 @@ void Win32IDE::executePowerShellPanelCommand(const std::string& command) {
     updatePowerShellStatus();
     
     // Send command to PowerShell
+    PsTrace("[PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=%zu thread=%lu\n", command.length(), GetCurrentThreadId());
     m_dedicatedPowerShellTerminal->writeInput(command + "\r\n");
+    
+    PsTrace("[PS_TRACE] executePowerShellPanelCommand() writeInput() returned\n");
     
     m_powerShellExecuting = false;
     updatePowerShellStatus();
+    PsTrace("[PS_TRACE] executePowerShellPanelCommand() EXIT\n");
 }
 
 void Win32IDE::stopPowerShellExecution() {
@@ -390,7 +490,17 @@ void Win32IDE::clearPowerShellConsole() {
 }
 
 void Win32IDE::appendPowerShellOutput(const std::string& text, COLORREF color) {
-    if (!m_hwndPowerShellOutput) return;
+    {
+        char dbg[512];
+        snprintf(dbg, sizeof(dbg), "[PS_TRACE] appendPowerShellOutput() entry, text_len=%zu, m_hwndPowerShellOutput=%p, thread=%lu\n",
+                 text.length(), static_cast<void*>(m_hwndPowerShellOutput), (unsigned long)GetCurrentThreadId());
+        OutputDebugStringA(dbg);
+    }
+    
+    if (!m_hwndPowerShellOutput) {
+        OutputDebugStringA("[PS_TRACE] appendPowerShellOutput() exit: m_hwndPowerShellOutput is null\n");
+        return;
+    }
     
     // Get current text length
     int len = GetWindowTextLength(m_hwndPowerShellOutput);
@@ -407,6 +517,12 @@ void Win32IDE::appendPowerShellOutput(const std::string& text, COLORREF color) {
     
     // Append text
     SendMessage(m_hwndPowerShellOutput, EM_REPLACESEL, FALSE, (LPARAM)text.c_str());
+    
+    {
+        char dbg[256];
+        snprintf(dbg, sizeof(dbg), "[PS_TRACE] appendPowerShellOutput() exit: EM_REPLACESEL called, output_len_before=%d\n", len);
+        OutputDebugStringA(dbg);
+    }
     
     // Scroll to bottom
     scrollPowerShellOutputToBottom();
@@ -650,7 +766,10 @@ LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wPar
             
             switch (id) {
                 case IDC_PS_BTN_EXECUTE:
-                    if (ide) ide->executePowerShellInput();
+                    {
+                        PsTrace("[PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=%lu\n", GetCurrentThreadId());
+                        if (ide) ide->executePowerShellInput();
+                    }
                     break;
                 case IDC_PS_BTN_CLEAR:
                     if (ide) ide->clearPowerShellConsole();
@@ -672,7 +791,9 @@ LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wPar
         }
     }
     
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    WNDPROC oldProc = reinterpret_cast<WNDPROC>(GetProp(hwnd, "OLDPROC"));
+    return oldProc ? CallWindowProc(oldProc, hwnd, uMsg, wParam, lParam)
+                   : DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -680,6 +801,13 @@ LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wPar
     WNDPROC oldProc = (WNDPROC)GetProp(hwnd, "OLDPROC");
     
     switch (uMsg) {
+        case WM_GETDLGCODE:
+            // EDIT controls normally let the dialog manager consume Enter.
+            // Request the key explicitly so the subclass receives it even
+            // when the panel is hosted below a tab control.
+            return (oldProc ? CallWindowProc(oldProc, hwnd, uMsg, wParam, lParam)
+                            : DefWindowProc(hwnd, uMsg, wParam, lParam)) |
+                   DLGC_WANTALLKEYS;
         case WM_KEYDOWN: {
             switch (wParam) {
                 case VK_RETURN:
@@ -707,6 +835,15 @@ LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wPar
             }
             break;
         }
+        case WM_CHAR:
+            // Some keyboard paths deliver Enter as WM_CHAR after the dialog
+            // manager has translated it.  Treat both forms identically and
+            // consume the newline instead of inserting it into the EDIT.
+            if (wParam == '\r' || wParam == '\n') {
+                if (ide) ide->executePowerShellInput();
+                return 0;
+            }
+            break;
     }
     
     return CallWindowProc(oldProc, hwnd, uMsg, wParam, lParam);

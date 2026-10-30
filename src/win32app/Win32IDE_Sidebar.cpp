@@ -7,6 +7,8 @@
 #include <commdlg.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <algorithm>
+#include <cctype>
 #include <regex>     
 #include <filesystem>
 #include <fstream>   
@@ -37,6 +39,80 @@ namespace fs = std::filesystem;
 // message loop, with the owner disabled so it behaves modally.
 // ---------------------------------------------------------------------------
 namespace {
+
+bool isWorkspaceCandidate(const std::string& path)
+{
+    if (path.empty()) return false;
+
+    std::string normalized = path;
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    if (normalized.find("\\windowsapps\\") != std::string::npos ||
+        normalized.find("/windowsapps/") != std::string::npos) {
+        return false;
+    }
+
+    const DWORD attributes = GetFileAttributesA(path.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES ||
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+        return false;
+    }
+
+    const std::string gitMarker = path + "\\.git";
+    const std::string cmakeMarker = path + "\\CMakeLists.txt";
+    const std::string sourceMarker = path + "\\src";
+    const bool hasGit = GetFileAttributesA(gitMarker.c_str()) != INVALID_FILE_ATTRIBUTES;
+    const bool hasBuildLayout =
+        GetFileAttributesA(cmakeMarker.c_str()) != INVALID_FILE_ATTRIBUTES &&
+        GetFileAttributesA(sourceMarker.c_str()) != INVALID_FILE_ATTRIBUTES;
+    return hasGit || hasBuildLayout;
+}
+
+std::string resolveWorkspaceRoot()
+{
+    // Installations and launchers can provide an explicit checkout without
+    // forcing a developer-specific absolute path into the binary.
+    constexpr const char* kWorkspaceOverrides[] = {
+        "RAWRXD_WORKSPACE",
+        "RAWRXD_WORKSPACE_ROOT",
+        "RAWRXD_PROJECT_ROOT"
+    };
+    for (const char* variable : kWorkspaceOverrides) {
+        char value[MAX_PATH] = {};
+        const DWORD length = GetEnvironmentVariableA(variable, value, MAX_PATH);
+        if (length > 0 && length < MAX_PATH && isWorkspaceCandidate(value)) {
+            return value;
+        }
+    }
+
+    // Resolve from the executable first.  This keeps a launch from a shell,
+    // desktop shortcut, or the Codex host independent of its inherited CWD.
+    char executablePath[32768] = {};
+    const DWORD executableLength = GetModuleFileNameA(
+        nullptr, executablePath, static_cast<DWORD>(sizeof(executablePath)));
+    if (executableLength > 0 && executableLength < sizeof(executablePath)) {
+        std::string candidate(executablePath, executableLength);
+        size_t slash = candidate.find_last_of("\\/");
+        if (slash != std::string::npos) candidate.resize(slash);
+
+        for (int depth = 0; depth < 16 && !candidate.empty(); ++depth) {
+            if (isWorkspaceCandidate(candidate)) return candidate;
+            const size_t parentSlash = candidate.find_last_of("\\/");
+            if (parentSlash == std::string::npos || parentSlash <= 2) break;
+            candidate.resize(parentSlash);
+        }
+    }
+
+    // A valid project CWD is still supported, but arbitrary launch locations
+    // (especially WindowsApps) must never become the active workspace.
+    char currentDirectory[MAX_PATH] = {};
+    const DWORD currentLength = GetCurrentDirectoryA(MAX_PATH, currentDirectory);
+    if (currentLength > 0 && currentLength < MAX_PATH &&
+        isWorkspaceCandidate(currentDirectory)) {
+        return currentDirectory;
+    }
+    return {};
+}
 
 constexpr wchar_t PROMPT_CLASS_NAME[] = L"RawrXDPromptClass";
 
@@ -437,19 +513,21 @@ void Win32IDE::setSidebarView(SidebarView view)
 {
     if (m_currentSidebarView == view) return;
 
-    // Hide all views
-    ShowWindow(m_hwndExplorerTree, SW_HIDE);
-    ShowWindow(m_hwndExplorerToolbar, SW_HIDE);
-    ShowWindow(m_hwndSearchInput, SW_HIDE);
-    ShowWindow(m_hwndSearchResults, SW_HIDE);
-    ShowWindow(m_hwndSearchOptions, SW_HIDE);
-    ShowWindow(m_hwndSCMFileList, SW_HIDE);
-    ShowWindow(m_hwndSCMToolbar, SW_HIDE);
-    ShowWindow(m_hwndSCMMessageBox, SW_HIDE);
-    ShowWindow(m_hwndDebugConfigs, SW_HIDE);
-    ShowWindow(m_hwndDebugToolbar, SW_HIDE);
-    ShowWindow(m_hwndExtensionsList, SW_HIDE);
-    ShowWindow(m_hwndExtensionSearch, SW_HIDE);
+    // Every view also owns static labels and nested controls whose HWNDs are
+    // intentionally not all retained as members.  Hiding only the headline
+    // controls left those children visible, so switching the activity bar
+    // painted Search/Debug words over the Explorer tree.  Enumerate the
+    // complete content subtree before showing the selected view; this makes
+    // the activity-bar transition atomic and prevents stale pixels/controls
+    // from leaking between views.
+    if (m_hwndSidebarContent) {
+        EnumChildWindows(m_hwndSidebarContent,
+            [](HWND child, LPARAM) -> BOOL {
+                ShowWindow(child, SW_HIDE);
+                return TRUE;
+            }, 0);
+        ShowWindow(m_hwndSidebarContent, SW_SHOW);
+    }
 
     m_currentSidebarView = view;
 
@@ -481,6 +559,7 @@ void Win32IDE::setSidebarView(SidebarView view)
     case SidebarView::RunDebug:
         ShowWindow(m_hwndDebugConfigs, SW_SHOW);
         ShowWindow(m_hwndDebugToolbar, SW_SHOW);
+        ShowWindow(m_hwndDebugVariables, SW_SHOW);
         appendToOutput("Run and Debug view activated\n", "Output", OutputSeverity::Info);
         break;
 
@@ -605,12 +684,23 @@ void Win32IDE::createExplorerView(HWND hwndParent)
     }
 
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_USERDATA, (LONG_PTR)this);
-    SetWindowLongPtrA(m_hwndExplorerTree, GWLP_WNDPROC, (LONG_PTR)ExplorerTreeProc);
+    // Preserve the native TreeView procedure.  Replacing it without chaining
+    // back to the original control procedure breaks selection, hit testing,
+    // and arrow expansion even though the window still paints.
+    m_explorerTreeOriginalProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrA(
+        m_hwndExplorerTree, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ExplorerTreeProc)));
 
-    // Set current workspace as root
-    m_explorerRootPath = "C:\\Users\\HiH8e\\OneDrive\\Desktop\\Powershield";
+    // Resolve the workspace independently of the inherited CWD.  A desktop
+    // or host-app launch commonly inherits a WindowsApps directory, which is
+    // not a project and must never become the agent/model workspace.  Keep
+    // both explorer state fields synchronized because model discovery and the
+    // legacy file actions still consume m_currentExplorerPath.
+    m_explorerRootPath = resolveWorkspaceRoot();
+    m_currentExplorerPath = m_explorerRootPath;
 
-    appendToOutput("Explorer view created with file tree at: " + m_explorerRootPath + "\n", "Output", OutputSeverity::Info);
+    appendToOutput("Explorer view created; workspace root: " +
+                   (m_explorerRootPath.empty() ? std::string("(unavailable)") : m_explorerRootPath) + "\n",
+                   "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::refreshFileTree()
@@ -622,76 +712,130 @@ void Win32IDE::refreshFileTree()
     }
 
     TreeView_DeleteAllItems(m_hwndExplorerTree);
+    m_treeItemPaths.clear();
 
-    // Add root folder
-    TVINSERTSTRUCTA tvis = {};
-    tvis.hParent = TVI_ROOT;
-    tvis.hInsertAfter = TVI_LAST;
-    tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
-    
-    // Use static buffer for root text
-    static char rootText[] = "Workspace";
-    tvis.item.pszText = rootText;
-    tvis.item.lParam = 0;
+    struct ExplorerRoot { std::string label; std::string path; };
+    std::vector<ExplorerRoot> roots;
+    auto addRoot = [&roots](const std::string& label, const std::string& path) {
+        if (path.empty() || GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+        for (const auto& existing : roots) {
+            if (_stricmp(existing.path.c_str(), path.c_str()) == 0) return;
+        }
+        roots.push_back({label, path});
+    };
 
-    HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
-    if (!hRoot) {
-        appendToOutput("Failed to create tree root\n", "Output", OutputSeverity::Error);
-        return;
+    if (!m_explorerRootPath.empty()) {
+        addRoot("Workspace (" + m_explorerRootPath + ")", m_explorerRootPath);
     }
 
-    // Enumerate files and folders with error handling
-    try {
-        if (!fs::exists(m_explorerRootPath)) {
-            appendToOutput("Explorer root path does not exist: " + m_explorerRootPath + "\n", 
-                           "Output", OutputSeverity::Warning);
-            return;
-        }
-        
-        appendToOutput("Enumerating directory: " + m_explorerRootPath + "\n", "Output", OutputSeverity::Debug);
-
-        for (const auto& entry : fs::directory_iterator(m_explorerRootPath)) {
-            try {
-                std::string name = entry.path().filename().string();
-                
-                // Allocate on heap to avoid scope issues
-                char* nameBuffer = new char[name.size() + 1];
-                strcpy_s(nameBuffer, name.size() + 1, name.c_str());
-                
-                tvis.hParent = hRoot;
-                tvis.item.pszText = nameBuffer;
-                tvis.item.lParam = entry.is_directory() ? 1 : 0;
-                
-                HTREEITEM hItem = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
-                
-                // Store path mapping
-                if (hItem) {
-                    m_treeItemPaths[hItem] = entry.path().string();
+    // Enumerate all mounted logical drives.  This intentionally does not
+    // filter by DRIVE_FIXED: removable, network, optical and RAM drives are
+    // valid explorer roots too, including roots hidden from normal project
+    // discovery.
+    const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+    if (driveChars > 0) {
+        std::vector<char> driveBuffer(static_cast<size_t>(driveChars) + 1, '\0');
+        if (GetLogicalDriveStringsA(driveChars, driveBuffer.data()) != 0) {
+            for (const char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+                const std::string path(drive);
+                const DWORD type = GetDriveTypeA(path.c_str());
+                const char* typeName = "Drive";
+                switch (type) {
+                    case DRIVE_REMOVABLE: typeName = "Removable"; break;
+                    case DRIVE_FIXED: typeName = "Fixed"; break;
+                    case DRIVE_REMOTE: typeName = "Network"; break;
+                    case DRIVE_CDROM: typeName = "Optical"; break;
+                    case DRIVE_RAMDISK: typeName = "RAM"; break;
+                    default: break;
                 }
-                
-                // Clean up buffer after insertion
-                delete[] nameBuffer;
-            }
-            catch (const std::exception& e) {
-                // Skip problematic entries
-                continue;
+                addRoot(path + " [" + typeName + "]", path);
             }
         }
-        
-        appendToOutput("File tree refreshed successfully\n", "Output", OutputSeverity::Info);
-    }
-    catch (const std::exception& e) {
-        appendToOutput("Error refreshing file tree: " + std::string(e.what()) + "\n", 
-                       "Output", OutputSeverity::Error);
     }
 
-    TreeView_Expand(m_hwndExplorerTree, hRoot, TVE_EXPAND);
+    for (const auto& root : roots) {
+        TVINSERTSTRUCTA tvis = {};
+        tvis.hParent = TVI_ROOT;
+        tvis.hInsertAfter = TVI_LAST;
+        tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+        tvis.item.pszText = const_cast<char*>(root.label.c_str());
+        tvis.item.lParam = 1; // directory/root
+        const HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+        if (!hRoot) continue;
+        m_treeItemPaths[hRoot] = root.path;
+
+        // Lazy expansion keeps the UI responsive on large model volumes.
+        TVINSERTSTRUCTA placeholder = {};
+        placeholder.hParent = hRoot;
+        placeholder.hInsertAfter = TVI_LAST;
+        placeholder.item.mask = TVIF_TEXT | TVIF_PARAM;
+        placeholder.item.pszText = const_cast<char*>("Loading...");
+        placeholder.item.lParam = 0;
+        TreeView_InsertItem(m_hwndExplorerTree, &placeholder);
+    }
+
+    appendToOutput("File tree refreshed with " + std::to_string(roots.size()) +
+                   " mounted drive/workspace roots\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::expandFolder(const std::string& path)
 {
-    // Placeholder - full implementation would recursively load subdirectories
-    appendToOutput("Expanding folder: " + path + "\n", "Output", OutputSeverity::Info);
+    if (!m_hwndExplorerTree || path.empty()) return;
+
+    HTREEITEM parent = TreeView_GetSelection(m_hwndExplorerTree);
+    if (!parent) return;
+
+    // Remove the lazy placeholder once, preserving any already-populated
+    // children when the user toggles the same folder repeatedly.
+    HTREEITEM child = TreeView_GetChild(m_hwndExplorerTree, parent);
+    if (child) {
+        char text[MAX_PATH] = {};
+        TVITEMA item{};
+        item.hItem = child;
+        item.mask = TVIF_TEXT;
+        item.pszText = text;
+        item.cchTextMax = MAX_PATH;
+        if (TreeView_GetItem(m_hwndExplorerTree, &item) && std::strcmp(text, "Loading...") == 0) {
+            TreeView_DeleteItem(m_hwndExplorerTree, child);
+        } else {
+            return;
+        }
+    }
+
+    try {
+        for (const auto& entry : fs::directory_iterator(
+                 path, fs::directory_options::skip_permission_denied)) {
+            try {
+                const std::string name = entry.path().filename().string();
+                TVINSERTSTRUCTA tvis{};
+                tvis.hParent = parent;
+                tvis.hInsertAfter = TVI_LAST;
+                tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+                tvis.item.pszText = const_cast<char*>(name.c_str());
+                tvis.item.lParam = entry.is_directory() ? 1 : 0;
+                const HTREEITEM item = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+                if (!item) continue;
+                m_treeItemPaths[item] = entry.path().string();
+                if (entry.is_directory()) {
+                    TVINSERTSTRUCTA placeholder{};
+                    placeholder.hParent = item;
+                    placeholder.hInsertAfter = TVI_LAST;
+                    placeholder.item.mask = TVIF_TEXT | TVIF_PARAM;
+                    placeholder.item.pszText = const_cast<char*>("Loading...");
+                    placeholder.item.lParam = 0;
+                    TreeView_InsertItem(m_hwndExplorerTree, &placeholder);
+                }
+            } catch (...) {
+                // A single inaccessible or malformed entry must not abort the
+                // remainder of a drive listing.
+            }
+        }
+    } catch (const std::exception& e) {
+        appendToOutput("Explorer access denied or unavailable: " + std::string(e.what()) + "\n",
+                       "Output", OutputSeverity::Warning);
+    }
+
+    appendToOutput("Expanded folder: " + path + "\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::collapseAllFolders()
@@ -887,6 +1031,27 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
     switch (uMsg) {
+    case WM_LBUTTONDOWN: {
+        const LRESULT result = pThis && pThis->m_explorerTreeOriginalProc
+            ? CallWindowProcA(pThis->m_explorerTreeOriginalProc, hwnd, uMsg, wParam, lParam)
+            : DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        if (pThis) {
+            TVHITTESTINFO hit{};
+            hit.pt.x = GET_X_LPARAM(lParam);
+            hit.pt.y = GET_Y_LPARAM(lParam);
+            const HTREEITEM hItem = TreeView_HitTest(hwnd, &hit);
+            if (hItem && (hit.flags & TVHT_ONITEMBUTTON)) {
+                const std::string path = pThis->getTreeItemPath(hItem);
+                if (!path.empty()) {
+                    TreeView_SelectItem(hwnd, hItem);
+                    pThis->expandFolder(path);
+                    TreeView_Expand(hwnd, hItem, TVE_EXPAND);
+                }
+            }
+        }
+        return result;
+    }
+
     case WM_RBUTTONDOWN: {
         if (pThis) {
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -908,12 +1073,32 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                 item.hItem = hItem;
                 
                 if (TreeView_GetItem(hwnd, &item)) {
-                    if (item.lParam == 0) { // File, not folder
-                        std::string filePath = pThis->m_explorerRootPath + "\\" + text;
-                        pThis->m_currentFile = filePath;
-                        // Load file content (simplified)
-                        pThis->appendToOutput("Opening file: " + filePath + "\n", 
-                                              "Output", OutputSeverity::Info);
+                    const std::string filePath = pThis->getTreeItemPath(hItem);
+                    if (!filePath.empty()) {
+                        const DWORD attributes = GetFileAttributesA(filePath.c_str());
+                        if (attributes != INVALID_FILE_ATTRIBUTES &&
+                            (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                            pThis->expandFolder(filePath);
+                            TreeView_Expand(hwnd, hItem, TVE_EXPAND);
+                        } else if (attributes != INVALID_FILE_ATTRIBUTES) {
+                            std::ifstream file(filePath, std::ios::binary);
+                            if (file.is_open()) {
+                                file.seekg(0, std::ios::end);
+                                const std::streamoff fileSize = file.tellg();
+                                file.seekg(0, std::ios::beg);
+                                if (fileSize <= 10 * 1024 * 1024) {
+                                    const std::string content(
+                                        (std::istreambuf_iterator<char>(file)),
+                                        std::istreambuf_iterator<char>());
+                                    pThis->setEditorText(content);
+                                    pThis->m_currentFile = filePath;
+                                    pThis->m_fileModified = false;
+                                    pThis->updateTitleBarText();
+                                    pThis->appendToOutput("Opening file: " + filePath + "\n",
+                                                          "Output", OutputSeverity::Info);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -922,7 +1107,9 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     }
     }
 
-    return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+    return pThis && pThis->m_explorerTreeOriginalProc
+        ? CallWindowProcA(pThis->m_explorerTreeOriginalProc, hwnd, uMsg, wParam, lParam)
+        : DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
 // ============================================================================
@@ -1392,9 +1579,11 @@ void Win32IDE::updateDebugVariables()
     // Placeholder - would query actual debugger variables
     ListView_DeleteAllItems(m_hwndDebugVariables);
 
+    char currentDirectory[MAX_PATH] = {};
+    GetCurrentDirectoryA(MAX_PATH, currentDirectory);
     const struct { const char* name; const char* value; } vars[] = {
         {"$PSVersionTable", "7.4.6"},
-        {"$PWD", "C:\\Users\\HiH8e"},
+        {"$PWD", currentDirectory},
         {"$ErrorCount", "0"}
     };
 
@@ -1503,21 +1692,148 @@ void Win32IDE::showExtensionDetails(const std::string& extensionId)
 
 void Win32IDE::loadInstalledExtensions()
 {
-    if (!m_hwndExtensionsList) return;
+    if (!m_hwndExtensionsList || !IsWindow(m_hwndExtensionsList)) return;
+    // setSidebarView() and updateSidebarContent() can both be reached from a
+    // single activity-bar click. Do not re-enter filesystem enumeration or
+    // mutate the list view while a prior refresh is still active.
+    if (m_extensionsLoadInProgress) return;
+    m_extensionsLoadInProgress = true;
+    struct LoadingReset {
+        bool& flag;
+        ~LoadingReset() { flag = false; }
+    } loadingReset{m_extensionsLoadInProgress};
 
-    ListView_DeleteAllItems(m_hwndExtensionsList);
+    // Extension discovery touches user-controlled filesystem roots and JSON
+    // manifests.  A malformed manifest, transient reparse point, or STL
+    // filesystem exception must never terminate the IDE while the user is
+    // merely opening the Extensions view.
+    try {
+        if (!IsWindow(m_hwndExtensionsList)) return;
+        ListView_DeleteAllItems(m_hwndExtensionsList);
 
-    // Placeholder - load from extensions directory
-    m_extensions = {
-        {"powershell.vscode", "PowerShell", "2024.2.2", "PowerShell language support", "Microsoft", true, true},
-        {"ms-vscode.cpptools", "C/C++", "1.20.5", "C++ IntelliSense", "Microsoft", true, true},
-        {"github.copilot", "GitHub Copilot", "1.150.0", "AI pair programmer", "GitHub", true, true}
+    // Discover the actual installed VS Code/Cursor extensions.  The previous
+    // implementation inserted a hard-coded list, which made GitHub Copilot
+    // appear installed even when it was absent and hid extensions that really
+    // existed on disk.
+    m_extensions.clear();
+    std::vector<fs::path> roots;
+    if (const char* profile = std::getenv("USERPROFILE")) {
+        const fs::path user(profile);
+        roots.push_back(user / ".vscode" / "extensions");
+        roots.push_back(user / ".vscode-insiders" / "extensions");
+        roots.push_back(user / ".cursor" / "extensions");
+    }
+    if (const char* localAppData = std::getenv("LOCALAPPDATA")) {
+        const fs::path local(localAppData);
+        roots.push_back(local / "Programs" / "Microsoft VS Code" / "resources" / "app" / "extensions");
+        roots.push_back(local / "Programs" / "Microsoft VS Code Insiders" / "resources" / "app" / "extensions");
+    }
+
+    // package.json files are untrusted user data. Do not use std::regex here:
+    // the ECMAScript implementation can allocate heavily for a long or
+    // malformed manifest and throw regex_error(error_stack) on the UI thread.
+    // This scanner extracts one JSON string property without regex backtracking.
+    auto jsonString = [](const std::string& text, const char* key) -> std::string {
+        const std::string quotedKey = std::string("\"") + key + "\"";
+        size_t searchFrom = 0;
+        while (searchFrom < text.size()) {
+            const size_t keyStart = text.find(quotedKey, searchFrom);
+            if (keyStart == std::string::npos) return {};
+
+            size_t before = keyStart;
+            while (before > 0 && std::isspace(static_cast<unsigned char>(text[before - 1]))) {
+                --before;
+            }
+            if (before == 0 || (text[before - 1] != '{' && text[before - 1] != ',')) {
+                searchFrom = keyStart + quotedKey.size();
+                continue;
+            }
+
+            size_t cursor = keyStart + quotedKey.size();
+            while (cursor < text.size() && std::isspace(static_cast<unsigned char>(text[cursor]))) {
+                ++cursor;
+            }
+            if (cursor >= text.size() || text[cursor] != ':') {
+                searchFrom = keyStart + quotedKey.size();
+                continue;
+            }
+            ++cursor;
+            while (cursor < text.size() && std::isspace(static_cast<unsigned char>(text[cursor]))) {
+                ++cursor;
+            }
+            if (cursor >= text.size() || text[cursor] != '"') return {};
+            ++cursor;
+
+            std::string decoded;
+            decoded.reserve(64);
+            bool escaped = false;
+            for (; cursor < text.size(); ++cursor) {
+                const char c = text[cursor];
+                if (escaped) {
+                    switch (c) {
+                    case 'n': decoded.push_back('\n'); break;
+                    case 'r': decoded.push_back('\r'); break;
+                    case 't': decoded.push_back('\t'); break;
+                    case 'b': decoded.push_back('\b'); break;
+                    case 'f': decoded.push_back('\f'); break;
+                    default: decoded.push_back(c); break;
+                    }
+                    escaped = false;
+                } else if (c == '\\') {
+                    escaped = true;
+                } else if (c == '"') {
+                    return decoded;
+                } else {
+                    decoded.push_back(c);
+                }
+            }
+            return {};
+        }
+        return {};
     };
+
+    std::unordered_set<std::string> seen;
+    for (const auto& root : roots) {
+        std::error_code ec;
+        if (!fs::is_directory(root, ec)) continue;
+        for (fs::directory_iterator it(root, fs::directory_options::skip_permission_denied, ec);
+             !ec && it != fs::directory_iterator(); it.increment(ec)) {
+            if (ec || !it->is_directory(ec)) continue;
+            const fs::path manifest = it->path() / "package.json";
+            std::ifstream file(manifest, std::ios::binary);
+            if (!file) continue;
+            std::error_code sizeEc;
+            const auto manifestBytes = fs::file_size(manifest, sizeEc);
+            constexpr uintmax_t kMaxExtensionManifestBytes = 4u * 1024u * 1024u;
+            if (sizeEc || manifestBytes > kMaxExtensionManifestBytes) {
+                appendToOutput("Skipped oversized or unreadable extension manifest: " +
+                               manifest.string() + "\n", "Errors", OutputSeverity::Warning);
+                continue;
+            }
+            std::string text((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            if (text.empty()) continue;
+            std::string publisher = jsonString(text, "publisher");
+            std::string name = jsonString(text, "name");
+            std::string displayName = jsonString(text, "displayName");
+            std::string version = jsonString(text, "version");
+            if (name.empty()) name = it->path().filename().string();
+            if (displayName.empty()) displayName = name;
+            const std::string id = publisher.empty() ? name : publisher + "." + name;
+            const std::string key = id + "|" + version;
+            if (!seen.insert(key).second) continue;
+            m_extensions.push_back({id, displayName, version,
+                jsonString(text, "description"), publisher, true, true});
+        }
+    }
+
+    std::sort(m_extensions.begin(), m_extensions.end(),
+        [](const Extension& a, const Extension& b) { return a.name < b.name; });
 
     LVITEMA item = {};
     item.mask = LVIF_TEXT;
 
     for (size_t i = 0; i < m_extensions.size(); i++) {
+        if (!IsWindow(m_hwndExtensionsList)) return;
         item.iItem = (int)i;
         item.iSubItem = 0;
         item.pszText = (LPSTR)m_extensions[i].name.c_str();
@@ -1528,8 +1844,20 @@ void Win32IDE::loadInstalledExtensions()
         ListView_SetItem(m_hwndExtensionsList, &item);
     }
 
-    appendToOutput("Loaded " + std::to_string(m_extensions.size()) + " extensions\n",
-                   "Output", OutputSeverity::Info);
+        appendToOutput("Discovered " + std::to_string(m_extensions.size()) +
+                       " installed extensions from local VS Code/Cursor roots\n",
+                       "Output", OutputSeverity::Info);
+    } catch (const std::exception& ex) {
+        m_extensions.clear();
+        ListView_DeleteAllItems(m_hwndExtensionsList);
+        appendToOutput(std::string("Extensions discovery failed safely: ") +
+                       ex.what() + "\n", "Errors", OutputSeverity::Error);
+    } catch (...) {
+        m_extensions.clear();
+        ListView_DeleteAllItems(m_hwndExtensionsList);
+        appendToOutput("Extensions discovery failed safely: unknown exception\n",
+                       "Errors", OutputSeverity::Error);
+    }
 }
 
 // ============================================================================

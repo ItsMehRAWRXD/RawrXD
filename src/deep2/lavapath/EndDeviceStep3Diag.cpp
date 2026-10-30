@@ -62,7 +62,8 @@ void NoteD2h(int ok, int vk, const char* phase, const float* out, size_t H) {
     if (!ok) {
         if (phase && (std::strcmp(phase, "fence") == 0 ||
                       std::strcmp(phase, "submit") == 0 ||
-                      std::strcmp(phase, "device_lost") == 0))
+                      std::strcmp(phase, "device_lost") == 0 ||
+                      std::strcmp(phase, "code_31") == 0))
             g_ctx.fail_class = "DEVICE/SYNC_FAILURE";
         else
             g_ctx.fail_class = "ENDDEVICE_ABORT_BEFORE_RESULT";

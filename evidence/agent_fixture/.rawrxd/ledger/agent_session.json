@@ -1,0 +1,48 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Inspect README.txt, append one line RAWRXD_AGENT_EDITED, then verify the file.",
+      "role": "user",
+      "timestamp": 1792851162
+    }
+  ],
+  "driver_exit_code": -1,
+  "failure_reasons": [
+    "inference failed: Ollama returned no chat content"
+  ],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "local-30b-backend",
+  "git_revision": "4cdbf7f963cc0f4f3f032aa7d3819ecdfef4957d",
+  "model_identity": "ollama/llama3.2:3b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1792851162,
+  "task_id": "",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\agent_fixture"
+}

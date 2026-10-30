@@ -32,17 +32,23 @@
 #include "agentic/AgentSession.h"
 #include "agentic/WorkspaceToolHost.h"
 #include "agentic/tool_core.hpp"
+#include "agentic/NativeToolProtocol.h"
 #ifdef _WIN32
 #include "agentic/process_win32.hpp"
+#include <windows.h>
 #endif
 
 #include "deep2/Deep2CLIBridge.hpp"
 #include "deep2/RawrModelAlias.hpp"
+#include "deep2/QuantParityRegistry.h"
 #include "reap_cli_contract.hpp"
+#include "reap_pipeline.hpp"
+#include "reap/ReapRuntime.hpp"
 #include "project_wizard/project_spec.hpp"
 #include "project_wizard/project_state_manager.hpp"
 #include "project_wizard/project_wizard.hpp"
 #include "project_wizard/project_workflow.hpp"
+#include "project_wizard/esp_runtime.hpp"
 #include <functional>
 
 #include <iostream>
@@ -57,7 +63,10 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <fstream>
 #include <limits>
+#include <set>
+#include <thread>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -79,16 +88,199 @@ static std::string                         g_workspace;
 static std::string                         g_model;
 static std::string                         g_backend_name = "auto";
 static std::atomic<bool>                   g_streamed_response{false};
+// Per-run limits are owned by the CLI driver so every agent round (including
+// tool continuations) uses the same caller-approved budget.  The native
+// Deep2 bridge consumes max tokens directly; the Ollama/HTTP route receives
+// both values through BackendConfig below.
+static int                              g_run_max_tokens = 4096;
+static int                              g_run_context = 0;
+// The native IDE's approved source-edit workflow can request a narrow tool
+// surface for one task.  The tools remain real registry dispatches; this only
+// prevents a small model from spending its first turn on an unrelated
+// workspace listing when the user supplied a concrete file edit request.
+static bool                                g_source_edit_tool_scope = false;
+// Mutations remain denied unless the caller explicitly opts in for this
+// process.  The CLI flag is the stable automation surface; the environment
+// variable is retained for existing scripts.
+static bool                                g_explicit_mutation_approval = false;
+
+// The CLI and native IDE share the same dependency-free ESP event format.  The
+// normal `rawr run` path used to update only the durable agent ledger, which
+// meant the GUI could show an agent task but had no truthful lifecycle events
+// for inference, tools, or completion.  This adapter is deliberately small:
+// it publishes only facts observed at the real dispatch boundaries below.
+class CliEspSession final {
+public:
+    CliEspSession(bool enabled, std::string path, bool verbose)
+        : enabled_(enabled), verbose_(verbose), bus_(8192, 4096) {
+        if (!enabled_) return;
+
+        std::error_code ec;
+        fs::create_directories(fs::path(path).parent_path(), ec);
+        recorder_ = std::make_unique<rawrxd::esp::Recorder>(
+            bus_, std::move(path),
+            [this](const rawrxd::esp::Event& event) {
+                if (!verbose_ && event.kind == rawrxd::esp::Kind::TokenGenerated)
+                    return;
+                std::fprintf(stderr,
+                    "[ESP] seq=%llu req=%llu kind=%s value=%lld message=%s\n",
+                    static_cast<unsigned long long>(event.sequence),
+                    static_cast<unsigned long long>(event.request_id),
+                    rawrxd::esp::kind_name(event.kind),
+                    static_cast<long long>(event.value), event.message.c_str());
+                std::fflush(stderr);
+            });
+        if (!recorder_->start()) {
+            recorder_.reset();
+            std::fprintf(stderr, "[ESP] ERROR unable to open telemetry log\n");
+            return;
+        }
+        const auto request = static_cast<uint64_t>(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        runtime_ = std::make_unique<rawrxd::esp::RuntimeESP>(bus_, request, 1);
+        publish(rawrxd::esp::Kind::AgentStep, "cli_run_start");
+    }
+
+    ~CliEspSession() {
+        if (enabled_ && runtime_ && !finished_) {
+            runtime_->finish(false);
+        }
+    }
+
+    bool enabled() const noexcept { return enabled_ && runtime_ != nullptr; }
+
+    void model_load(std::string_view model) {
+        if (enabled()) runtime_->model_load(model);
+    }
+    void inference_start() {
+        publish(rawrxd::esp::Kind::AgentStep, "inference_start");
+    }
+    void stage(std::string_view message) {
+        publish(rawrxd::esp::Kind::AgentStep, message);
+    }
+    void phase(std::string_view name) {
+        publish(rawrxd::esp::Kind::AgentStep, std::string("phase=") + std::string(name));
+    }
+    void inference_result(bool ok, int64_t completion_tokens = 0) {
+        if (!enabled()) return;
+        if (ok) {
+            runtime_->decode_start();
+            runtime_->token(0, "completion");
+            (void)completion_tokens; // one completed assistant response is one ESP token event
+        } else {
+            runtime_->model_output_failure();
+        }
+    }
+    void backend_metrics(const InferenceResult& result) {
+        if (!enabled() || !result.native_metrics_valid) return;
+        std::ostringstream message;
+        message << "source=" << (result.metrics_source.empty() ? "backend" : result.metrics_source)
+                << " prompt_eval_count=" << result.prompt_tokens
+                << " eval_count=" << result.completion_tokens
+                << " total_duration_ns=" << result.total_duration_ns
+                << " load_duration_ns=" << result.load_duration_ns
+                << " prompt_eval_duration_ns=" << result.prompt_eval_duration_ns
+                << " eval_duration_ns=" << result.eval_duration_ns
+                << " eval_tps=" << std::setprecision(12) << result.tokens_per_sec;
+        publish(rawrxd::esp::Kind::Heartbeat, message.str());
+    }
+    void tool_start(std::string_view name) {
+        if (enabled()) runtime_->tool_start(name);
+    }
+    void tool_result(std::string_view name, bool ok, int exit_code = 0) {
+        if (!enabled()) return;
+        runtime_->tool_result(std::string(name) + (ok ? " PASS" : " FAIL"),
+                              ok ? exit_code : (exit_code == 0 ? 1 : exit_code));
+    }
+    void file_changed(std::string_view path) {
+        publish(rawrxd::esp::Kind::FileChanged, path);
+    }
+    void build_result(int exit_code) {
+        if (!enabled()) return;
+        runtime_->build_result(exit_code);
+    }
+    void test_result(int exit_code) {
+        if (!enabled()) return;
+        runtime_->test_result(exit_code);
+    }
+    void fail(std::string_view reason) {
+        if (!enabled()) return;
+        publish(rawrxd::esp::Kind::Error, reason, 1);
+        runtime_->finish(false);
+        finished_ = true;
+    }
+    void cancel(std::string_view reason) {
+        if (!enabled()) return;
+        publish(rawrxd::esp::Kind::SnapStop, reason, 130);
+        runtime_->finish(false);
+        finished_ = true;
+    }
+    void finish(bool ok) {
+        if (!enabled() || finished_) return;
+        runtime_->finish(ok);
+        finished_ = true;
+    }
+
+private:
+    void publish(rawrxd::esp::Kind kind, std::string_view message, int64_t value = 0) {
+        if (enabled()) bus_.publish(kind, message, request_id(), 1, value);
+    }
+    uint64_t request_id() const noexcept {
+        return runtime_ ? runtime_->metrics().snapshot().request_id : 0;
+    }
+
+    bool enabled_ = false;
+    bool verbose_ = false;
+    bool finished_ = false;
+    rawrxd::esp::Bus bus_;
+    std::unique_ptr<rawrxd::esp::Recorder> recorder_;
+    std::unique_ptr<rawrxd::esp::RuntimeESP> runtime_;
+};
+
+static bool CliTraceEnabled() noexcept {
+    return std::getenv("RAWRXD_CLI_DISPATCH_TRACE") != nullptr;
+}
+
+static void CliTrace(const char* stage) noexcept {
+    if (CliTraceEnabled()) {
+        std::fprintf(stderr, "[rawr-cli-trace] %s\n", stage ? stage : "(null)");
+        std::fflush(stderr);
+    }
+}
 
 static json BuildToolDefinitions() {
     json definitions = json::array();
     if (!g_tools) return definitions;
     for (const auto& name : g_tools->names()) {
+        if (g_source_edit_tool_scope && name != "readFile" &&
+            name != "editFiles" && name != "writeFile") {
+            continue;
+        }
         rawrxd::tools::Tool tool;
         if (!g_tools->find(name, tool)) continue;
         json properties = json::object();
         for (const auto& required : tool.required) {
             properties[required] = { {"type", "string"} };
+        }
+        // Optional bounds and scope are part of the native tool contract.  In
+        // particular, audit-capable models must be able to narrow directory
+        // and search results instead of flooding their context with a root
+        // listing.  These remain optional so older tool-call payloads stay
+        // compatible.
+        if (tool.name == "listDirectory") {
+            properties["maxEntries"] = {
+                {"type", "integer"}, {"minimum", 1}, {"maximum", 256},
+                {"description", "Maximum immediate children to return"}
+            };
+        } else if (tool.name == "fileSearch" || tool.name == "textSearch") {
+            properties["path"] = {
+                {"type", "string"},
+                {"description", "Workspace-relative directory to search; defaults to ."}
+            };
+            properties["maxResults"] = {
+                {"type", "integer"}, {"minimum", 1}, {"maximum", 250},
+                {"description", "Maximum matches to return"}
+            };
         }
         definitions.push_back({
             {"type", "function"},
@@ -113,6 +305,25 @@ static void OnSignal(int) {
     g_running = false;
     if (g_router) g_router->Cancel();
 }
+
+#ifdef _WIN32
+// The CRT SIGINT handler alone can still allow the console host to terminate
+// the child before the one-shot driver persists its ledger.  Handle the
+// native console event explicitly so cancellation remains observable and the
+// backend receives the same cancel request as the POSIX signal path.
+static BOOL WINAPI OnConsoleControl(DWORD control) noexcept {
+    switch (control) {
+    case CTRL_C_EVENT:
+    case CTRL_BREAK_EVENT:
+    case CTRL_CLOSE_EVENT:
+        g_running.store(false);
+        if (g_router) g_router->Cancel();
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+#endif
 
 // ---------------------------------------------------------------------------
 // Argument parsing
@@ -188,7 +399,8 @@ static bool ParseMemoryBudget(const std::string& text, uint64_t& bytes) {
 // still blocked until MLA-CERT-001, model-specific calibration/selection, and
 // parity-certified rewriting are present in the same runtime.
 static int HandleReapContract(const std::string& model,
-                              const std::map<std::string, std::string>& flags) {
+                              const std::map<std::string, std::string>& flags,
+                              const std::string& promptIn) {
     static const char* const kReapOptions[] = {
         "target-size", "active-experts", "expert-budget", "quality-floor"
     };
@@ -208,19 +420,25 @@ static int HandleReapContract(const std::string& model,
     }
     if (!requested) return -1;
 
-    if (flags.count("size") != 0) {
-        std::cerr << "REAP_SIZE_OPTION_CONFLICT: use --target-size with --reap;"
-                     " --size is not a REAP admission option\n";
-        return 2;
-    }
-
     RawrXD::Reap::CliRequest request;
     request.model = model;
-    request.targetSizeText = flags.count("target-size") ? flags.at("target-size") : "";
+    if (flags.count("target-size") != 0 && flags.count("size") != 0) {
+        std::cerr << "REAP_SIZE_OPTION_CONFLICT: specify only one of --target-size or --size\n";
+        return 2;
+    }
+    // `--size` is a compatibility alias only inside an explicit --reap
+    // request. A plain rawr run --size remains fail-closed below.
+    request.targetSizeText = flags.count("target-size")
+        ? flags.at("target-size")
+        : (flags.count("size") ? flags.at("size") : "");
     request.activeExpertsText = flags.count("active-experts") ? flags.at("active-experts") : "";
     request.expertBudgetText = flags.count("expert-budget") ? flags.at("expert-budget") : "";
     request.qualityFloorText = flags.count("quality-floor") ? flags.at("quality-floor") : "";
     request.workspace = g_workspace;
+    request.selectionManifestPath = flags.count("selection-output") ? flags.at("selection-output") : "";
+    request.outputDirectory = flags.count("output-model") ? flags.at("output-model") : "";
+    request.authorizeRewrite = flags.count("authorize-rewrite") != 0 &&
+                               flags.at("authorize-rewrite") == "true";
 
     const auto validation = RawrXD::Reap::Validate(request);
     if (!validation.ok) {
@@ -238,13 +456,41 @@ static int HandleReapContract(const std::string& model,
         return 2;
     }
 
-    const auto admission = RawrXD::Reap::EvaluateAdmission(request);
-    std::cout << RawrXD::Reap::BlockedReceipt(request, admission);
-    std::cerr << admission.reason
-              << ": --reap is parsed and validated, but transformation remains"
-                 " disabled until MLA-CERT-001, calibration, selection, and"
-                 " parity-certified writer gates pass\n";
-    return admission.transformationEnabled ? 0 : 4;
+    std::string prompt = promptIn;
+    if (prompt.empty() && flags.count("prompt")) prompt = flags.at("prompt");
+    else if (prompt.empty() && flags.count("task")) prompt = flags.at("task");
+    const auto pipeline = RawrXD::Reap::RunPipeline(request, prompt);
+    std::cout << pipeline.receipt;
+    if (pipeline.exitCode != 0) {
+        std::cerr << "REAP_PIPELINE_BLOCKED: transformation stays disabled"
+                     " until inventory, calibration, selection, parity, and"
+                     " writer receipts pass EvaluateAdmission\n";
+    }
+    return pipeline.exitCode;
+}
+
+// Runtime REAP is a live streamer/router injection, not the offline GGUF
+// writer.  A valued --reap is the explicit <parameters>/<experts> form; the
+// legacy bare --reap switch continues to use the guarded writer contract.
+static int HandleRuntimeReap(const std::string& model,
+                             const std::map<std::string, std::string>& flags,
+                             const std::string& promptIn) {
+    auto it = flags.find("reap");
+    if (it == flags.end() || it->second == "true") return -1;
+
+    RawrXD::Reap::RuntimeRequest request;
+    request.model = model;
+    request.target = it->second;
+    request.prompt = promptIn;
+    if (request.prompt.empty()) {
+        if (auto p = flags.find("prompt"); p != flags.end()) request.prompt = p->second;
+        else if (auto t = flags.find("task"); t != flags.end()) request.prompt = t->second;
+    }
+    request.maxTokens = static_cast<uint32_t>((std::max)(1, g_run_max_tokens));
+    if (auto r = flags.find("receipt"); r != flags.end()) request.receiptPath = r->second;
+    const auto result = RawrXD::Reap::RunRuntime(request);
+    std::cout << result.receipt;
+    return result.exitCode;
 }
 
 // ---------------------------------------------------------------------------
@@ -280,23 +526,144 @@ static std::string RunGit(const std::string& args) {
 }
 
 // ---------------------------------------------------------------------------
+// Chat prompt. Qwen instruct models use ChatML. Other Deep2 loads keep the
+// TinyLlama markers this path already used.
+// ---------------------------------------------------------------------------
+static bool TextHasToken(const std::string& text, const char* token) {
+    size_t n = 0;
+    while (token[n]) ++n;
+    if (n == 0 || text.size() < n) return false;
+    for (size_t i = 0; i + n <= text.size(); ++i) {
+        size_t j = 0;
+        for (; j < n; ++j) {
+            char c = text[i + j];
+            if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+            if (c != token[j]) break;
+        }
+        if (j == n) return true;
+    }
+    return false;
+}
+
+static std::string FormatDeep2Prompt(const std::string& modelId,
+                                    const std::vector<ChatMessage>& msgs) {
+    constexpr const char* kNativeToolProtocol =
+        "\nNATIVE RAWRXD TOOL PROTOCOL (use only when the task requires a tool):\n"
+        "Reply with exactly one complete command and no prose.\n"
+        "TOOL read <relative-path>\n"
+        "TOOL write <relative-path> @@<complete-file-content>@@\n"
+        "TOOL build\nTOOL test\n"
+        "A command is dispatched only after its complete terminator is present; "
+        "never emit arbitrary shell commands.\n";
+    if (TextHasToken(modelId, "qwen")) {
+        bool sawSystem = false;
+        for (const auto& m : msgs) if (m.role == "system") sawSystem = true;
+        std::string prompt;
+        if (!sawSystem) {
+            prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
+        }
+        for (const auto& m : msgs) {
+            if (m.role != "system" && m.role != "user" && m.role != "assistant" &&
+                m.role != "tool") continue;
+            prompt += "<|im_start|>";
+            prompt += m.role;
+            prompt += "\n";
+            prompt += m.content;
+            if (m.role == "system") prompt += kNativeToolProtocol;
+            prompt += "<|im_end|>\n";
+        }
+        prompt += "<|im_start|>assistant\n";
+        return prompt;
+    }
+    std::string prompt = "<|system|>\n"
+        "You are a helpful assistant. Follow the user's instructions directly and concisely.\n"
+        "NATIVE RAWRXD TOOL PROTOCOL: use exactly one complete TOOL read/write/build/test "
+        "command when a tool is required; never emit arbitrary shell text.\n"
+        "<|user|>\n";
+    for (size_t i = 0; i < msgs.size(); ++i) {
+        const auto& m = msgs[i];
+        if (m.role == "user") {
+            prompt += m.content;
+            prompt += "\n<|assistant|>\n";
+        } else if (m.role == "assistant") {
+            prompt += m.content;
+            if (i + 1 < msgs.size() && msgs[i + 1].role == "user") prompt += "<|user|>\n";
+        } else if (m.role == "tool") {
+            prompt += "\n<|tool|>\n";
+            prompt += m.content;
+            prompt += "\n<|assistant|>\n";
+        }
+    }
+    return prompt;
+}
+
+static bool EndsWithGguf(const std::string& model) {
+    return model.size() >= 5 && _stricmp(model.c_str() + model.size() - 5, ".gguf") == 0;
+}
+
+static bool ParseBoundedRunOption(const std::map<std::string, std::string>& flags,
+                                  const char* name, int minimum, int maximum,
+                                  int& value, std::string& error) {
+    const auto it = flags.find(name);
+    if (it == flags.end()) return true;
+    try {
+        size_t consumed = 0;
+        const long long parsed = std::stoll(it->second, &consumed, 10);
+        if (consumed != it->second.size() || parsed < minimum || parsed > maximum) {
+            error = std::string("invalid --") + name + " value (expected " +
+                    std::to_string(minimum) + ".." + std::to_string(maximum) + ")";
+            return false;
+        }
+        value = static_cast<int>(parsed);
+        return true;
+    } catch (...) {
+        error = std::string("invalid --") + name + " value: " + it->second;
+        return false;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Backend initialization
 // ---------------------------------------------------------------------------
+static void ApplyRunBackendConfig() {
+    if (!g_router) return;
+
+    // Configure both local backends before the first request.  This keeps
+    // explicit Ollama mode, auto mode, and a later backend switch consistent
+    // instead of applying the UI/CLI values only to whichever backend was
+    // active during initialization.
+    for (const auto kind : {BackendKind::Deep2, BackendKind::Ollama}) {
+        auto* backend = g_router->GetBackendPtr(kind);
+        if (!backend) continue;
+        auto config = backend->GetConfig();
+        config.max_tokens = g_run_max_tokens;
+        if (g_run_context > 0) config.num_ctx = g_run_context;
+        backend->SetConfig(config);
+    }
+
+    std::cerr << "RUN_CONFIG_MAX_TOKENS=" << g_run_max_tokens << "\n";
+    if (g_run_context > 0) {
+        std::cerr << "RUN_CONFIG_CONTEXT=" << g_run_context << "\n";
+    }
+}
+
 static bool InitBackend(BackendMode mode, const std::string& model) {
-    // Direct Deep2Engine (in-process GGUF inference) takes priority — no HTTP router needed.
-    // In Auto mode, try Deep2 when a model path is provided and looks like a GGUF file.
-    bool tryDeep2 = (mode == BackendMode::Deep2) ||
-                    (mode == BackendMode::Auto && !model.empty() &&
-                     (model.rfind(".gguf") == model.size() - 5 ||
-                      model.rfind(".GGUF") == model.size() - 5));
+    CliTrace("InitBackend:enter");
+    // Explicit --backend stays authoritative. Auto tries a local Deep2 resolve
+    // first. A resolved path that fails to load does not fall through to Ollama.
+    Deep2::rawr_run::AliasResolve resolved{};
+    const bool aliasHit = !model.empty() &&
+        Deep2::rawr_run::ResolveModelAlias(model.c_str(), resolved);
+    const bool tryDeep2 = mode == BackendMode::Deep2 ||
+        (mode == BackendMode::Auto && (aliasHit || EndsWithGguf(model)));
     if (tryDeep2) {
+        CliTrace("InitBackend:deep2-selected");
         if (localEngine) {
             deep2_free(localEngine);
             localEngine = nullptr;
         }
         std::string modelPath = g_workspace + "/" + model;
-        Deep2::rawr_run::AliasResolve resolved{};
-        if (Deep2::rawr_run::ResolveModelAlias(model.c_str(), resolved)) {
+        if (aliasHit) {
             modelPath = resolved.path;
             std::fprintf(stderr, "[Deep2Backend] Resolved alias '%s' -> %s (%u shard%s)\n",
                          model.c_str(), modelPath.c_str(), resolved.shards,
@@ -307,37 +674,20 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
         std::fprintf(stderr, "[Deep2Backend] Loading model: %s\n", modelPath.c_str());
         localEngine = deep2_load_model(modelPath.c_str());
         if (!localEngine) {
-            std::cerr << "Failed to load model via Deep2Engine: " << model << "\n";
-            std::cerr << "Use --backend ollama for HTTP-based inference instead.\n";
+            std::cerr << "DEEP2_LOAD_FAILED: " << model << "\n";
+            std::cerr << "Ollama was not called.\n";
             return false;
         }
         std::fprintf(stderr, "[Deep2Backend] Model loaded: hidden=%u vocab=%u layers=%zu\n",
                      deep2_hidden_dim(localEngine),
                      deep2_vocab_size(localEngine),
                      deep2_num_layers(localEngine));
+        const std::string templateId = model + "\n" + modelPath;
+        std::fprintf(stderr, "[Deep2Backend] Chat template: %s\n",
+                     TextHasToken(templateId, "qwen") ? "qwen-chatml" : "tinyllama");
 
-        deep2CompleteFn = [](const std::vector<ChatMessage>& msgs, int maxTokens) {
-            // Apply TinyLlama-compatible chat template so the base model
-            // interprets the user turn as an instruction rather than text
-            // to continue. Without this, TinyLlama generates training-data
-            // style QA content instead of following instructions.
-            std::string prompt = "<|system|>\n"
-                                 "You are a helpful assistant. Follow the user's instructions directly and concisely.\n"
-                                 "<|user|>\n";
-            for (size_t i = 0; i < msgs.size(); ++i) {
-                const auto& m = msgs[i];
-                if (m.role == "user") {
-                    prompt += m.content;
-                    prompt += "\n<|assistant|>\n";
-                } else if (m.role == "assistant") {
-                    prompt += m.content;
-                    if (i + 1 < msgs.size() && msgs[i + 1].role == "user") {
-                        prompt += "<|user|>\n";
-                    }
-                } else if (m.role == "system") {
-                    // System content already emitted above; skip duplicates.
-                }
-            }
+        deep2CompleteFn = [templateId](const std::vector<ChatMessage>& msgs, int maxTokens) {
+            std::string prompt = FormatDeep2Prompt(templateId, msgs);
             std::string text;
             auto emit = [](int32_t, const char* bytes, size_t count, void*) -> bool {
                 if (bytes && count) {
@@ -358,14 +708,34 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
             r.completion_tokens = static_cast<int>(text.size() / 4);
             r.tokens_per_sec = 0.0;
             r.total_duration_ms = 0;
+            const auto nativeCommand = rawrxd::agentic::ParseNativeToolCommand(text);
+            if (nativeCommand.finish) {
+                return InferenceResult::Error(
+                    "NATIVE_TOOL_FINISH_UNVERIFIED: host verification is required before completion");
+            }
+            if (nativeCommand.valid && !nativeCommand.finish) {
+                r.has_tool_calls = true;
+                r.tool_calls.emplace_back(
+                    nativeCommand.tool,
+                    nativeCommand.tool == "writeFile"
+                        ? json{{"path", nativeCommand.path}, {"content", nativeCommand.content}}
+                        : nativeCommand.tool == "readFile"
+                            ? json{{"path", nativeCommand.path}}
+                            : json{{"command", nativeCommand.command}});
+                // Keep the exact model response in the assistant transcript,
+                // but the surrounding agent loop will dispatch the structured
+                // call instead of presenting the command as the final answer.
+            }
             return r;
         };
 
         g_model = model;
+        CliTrace("InitBackend:deep2-ready");
         return true;
     }
 
     if (g_router) {
+        CliTrace("InitBackend:router-reuse");
         g_router->SetMode(mode);
         if (!model.empty()) {
             if (auto* b = g_router->GetBackendPtr(g_router->GetActiveBackendKind())) {
@@ -374,6 +744,7 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
                 b->SetConfig(cfg);
             }
         }
+        ApplyRunBackendConfig();
         return true;
     }
 
@@ -381,15 +752,33 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
     cfg.mode = mode;
     cfg.primary_endpoint = "http://127.0.0.1:11436";
     cfg.fallback_endpoint = "http://127.0.0.1:11434";
+    if (const char* endpoint = std::getenv("RAWRXD_OLLAMA_ENDPOINT");
+        endpoint != nullptr && *endpoint != '\0') {
+        // Keep the CLI sweep and air-gapped deployments on the same explicit
+        // endpoint without changing the default local Ollama route.
+        cfg.fallback_endpoint = endpoint;
+    }
     cfg.primary_model = "deep2-native";
     cfg.fallback_model = model.empty() ? "qwen2.5-coder:32b" : model;
+    if (const char* numGpu = std::getenv("RAWRXD_OLLAMA_NUM_GPU");
+        numGpu != nullptr && *numGpu != '\0') {
+        try {
+            cfg.ollama_num_gpu = std::stoi(numGpu);
+        } catch (...) {
+            std::cerr << "Ignoring invalid RAWRXD_OLLAMA_NUM_GPU value\n";
+        }
+    }
 
     if (mode == BackendMode::Deep2)   cfg.primary_model = model.empty() ? cfg.primary_model : model;
     if (mode == BackendMode::Ollama)  cfg.fallback_model = model.empty() ? cfg.fallback_model : model;
     if (mode == BackendMode::Ollama)  cfg.primary_model = "";
 
     g_router = std::make_unique<BackendRouter>();
-    return g_router->Initialize(cfg);
+    CliTrace("InitBackend:router-initialize");
+    const bool initialized = g_router->Initialize(cfg);
+    CliTrace(initialized ? "InitBackend:router-ready" : "InitBackend:router-failed");
+    if (initialized) ApplyRunBackendConfig();
+    return initialized;
 }
 
 static std::string ActiveModelName() {
@@ -409,12 +798,12 @@ static bool LedgerTestsPassed(const AgentSession& s);
 // ---------------------------------------------------------------------------
 // Approval policy (mutations require explicit env opt-in)
 // ---------------------------------------------------------------------------
-static bool ApproveMutation(const std::string& tool, const json& args) {
+static bool ApproveMutation(const std::string& tool, const json& /*args*/) {
     const char* env = std::getenv("RAWRXD_TOOLS_APPROVE_MUTATIONS");
-    bool env_ok = env && std::string(env) == "YES";
-    if (!env_ok) return false;
+    const bool env_ok = env && std::string(env) == "YES";
+    if (!env_ok && !g_explicit_mutation_approval) return false;
     // External/network tools are never auto-approved, even with the env var.
-    return tool != "runInTerminal" || env_ok;
+    return tool != "runInTerminal" || env_ok || g_explicit_mutation_approval;
 }
 
 // ---------------------------------------------------------------------------
@@ -439,8 +828,9 @@ static void ListTools() {
     for (const auto& n : g_tools->names()) {
         rawrxd::tools::Tool t;
         if (g_tools->find(n, t)) {
-            ToolAuthority a = g_gate ? g_gate->EffectiveAuthority() : ToolAuthority::Denied;
-            const ModePolicy* p = ModeRegistry::Instance().Get(g_gate->GetMode());
+            const bool gate_ready = g_gate != nullptr;
+            const ModePolicy* p = gate_ready
+                ? ModeRegistry::Instance().Get(g_gate->GetMode()) : nullptr;
             ToolAuthority granted = p ? ModeRegistry::Instance().AuthorityFor(g_gate->GetMode(), n)
                                       : ToolAuthority::Denied;
             std::cout << "  " << std::left << std::setw(16) << n
@@ -448,7 +838,8 @@ static void ListTools() {
                       << t.description << "\n";
         }
     }
-    std::cout << "\nAuthority: " << ToolAuthorityName(g_gate->EffectiveAuthority()) << "\n";
+    const ToolAuthority effective = g_gate ? g_gate->EffectiveAuthority() : ToolAuthority::Denied;
+    std::cout << "\nAuthority: " << ToolAuthorityName(effective) << "\n";
 }
 
 static bool DescribeTool(const std::string& name) {
@@ -604,6 +995,7 @@ int CmdProjectWizard(const std::string& model, const std::string& goal,
 }
 
 static int CmdRun(const std::vector<std::string>& args) {
+    CliTrace("CmdRun:enter");
     // args = [model, mode?, --flag ...]
     std::string model;
     std::string mode_str;
@@ -629,13 +1021,34 @@ static int CmdRun(const std::vector<std::string>& args) {
             mode_str = a;
         }
     }
+    g_explicit_mutation_approval = flags.count("approve-mutations") != 0;
+    g_source_edit_tool_scope =
+        flags.count("tool-scope") != 0 && flags.at("tool-scope") == "source-edit";
+    g_run_max_tokens = 4096;
+    g_run_context = 0;
+    std::string runOptionError;
+    if (!ParseBoundedRunOption(flags, "max-tokens", 1, 65536,
+                               g_run_max_tokens, runOptionError) ||
+        !ParseBoundedRunOption(flags, "context", 512, 1048576,
+                               g_run_context, runOptionError)) {
+        std::cerr << "RUN_CONFIG_ERROR=" << runOptionError << "\n";
+        return 2;
+    }
+    std::cerr << "RUN_CONFIG_REQUESTED_MAX_TOKENS=" << g_run_max_tokens << "\n";
+    if (g_run_context > 0) {
+        std::cerr << "RUN_CONFIG_REQUESTED_CONTEXT=" << g_run_context << "\n";
+    }
+    CliTrace("CmdRun:arguments-parsed");
 
-    const int reapContractResult = HandleReapContract(model, flags);
+    const int runtimeReapResult = HandleRuntimeReap(model, flags, mode_str);
+    if (runtimeReapResult >= 0) return runtimeReapResult;
+
+    const int reapContractResult = HandleReapContract(model, flags, mode_str);
     if (reapContractResult >= 0) return reapContractResult;
 
-    // REAP expert pruning/residency is not part of this production binary
-    // yet. Reject the option explicitly instead of silently running an
-    // unmodified model and reporting a misleading success.
+    // A legacy bare --size request has no live runtime target. Reject it
+    // explicitly instead of silently running an unmodified model. The
+    // production live form is --reap <parameters>/<experts>, handled above.
     if (flags.count("size")) {
         uint64_t budget = 0;
         if (!ParseMemoryBudget(flags["size"], budget)) {
@@ -699,12 +1112,12 @@ static int CmdRun(const std::vector<std::string>& args) {
     // building") resume an existing project instead of starting over. The goal
     // may come from the bare positional (mode_str), --task, or --prompt.
     std::string workflow_goal;
-    if (!mode_str.empty()) {
+    // Project-wizard detection is intentionally limited to the bare second
+    // positional form.  A normal `--prompt`/`--task` agent request often
+    // contains words such as "add", "tests", or "build" and must never be
+    // diverted into the project-specification workflow.
+    if (!mode_str.empty() && !flags.count("prompt") && !flags.count("task")) {
         workflow_goal = mode_str;
-    } else if (flags.count("task")) {
-        workflow_goal = flags.at("task");
-    } else if (flags.count("prompt")) {
-        workflow_goal = flags.at("prompt");
     }
     bool is_wizard_goal = false;
     if (!workflow_goal.empty()) {
@@ -769,35 +1182,22 @@ static int CmdRun(const std::vector<std::string>& args) {
         std::cerr << "For Deep2:  confirm the runtime bridge on http://127.0.0.1:11436.\n";
         return 1;
     }
+    CliTrace("CmdRun:backend-ready");
 
     // Build the tool registry and permission gate.
     g_ws = std::make_unique<WorkspaceToolHost>(g_workspace);
     g_tools = std::make_unique<rawrxd::tools::Registry>();
     g_ws->RegisterWorkspaceTools(*g_tools);
+    CliTrace("CmdRun:tools-ready");
 
-#ifdef _WIN32
-    g_tools->add({
-        "runInTerminal",
-        "Execute an explicitly approved command in the workspace",
-        rawrxd::tools::Risk::Execute, {"command"},
-        [root = g_workspace](const rawrxd::tools::Request& r) -> rawrxd::tools::Result {
-            std::string cmd;
-            auto it = r.args.find("command");
-            if (it != r.args.end()) cmd = it->second;
-            if (cmd.size() > 8192) throw std::runtime_error("command too long");
-            std::string full = cmd + " 2>&1";
-            FILE* p = _popen(full.c_str(), "r");
-            if (!p) throw std::runtime_error("CreateProcess failed");
-            std::string out;
-            char buf[4096];
-            while (fgets(buf, sizeof(buf), p)) out += buf;
-            int code = _pclose(p);
-            return {code == 0, out.substr(0, 65536), code ? ("exit=" + std::to_string(code)) : ""};
-        }
-    });
-#endif
+    // WorkspaceToolHost registers the canonical runInTerminal tool together
+    // with the read/write tools. Do not add a second descriptor here: Registry
+    // intentionally rejects duplicate names, and the old duplicate caused an
+    // uncaught exception followed by std::terminate before the first request.
 
+    CliTrace("CmdRun:permission-gate-construct");
     g_gate = std::make_unique<PermissionGate>(mode);
+    CliTrace("CmdRun:permission-gate-ready");
     g_gate->SetPlanDirectory(g_workspace + "/.rawrxd/plans");
 
     // ---- Project Wizard: intercept before the normal agent session ------
@@ -813,13 +1213,29 @@ static int CmdRun(const std::vector<std::string>& args) {
     }
 
     // Driver-owned ledger, initialized before anything executes.
+    CliTrace("CmdRun:ledger-construct");
     g_ledger = std::make_unique<AgentSession>(
         g_workspace + "/.rawrxd/ledger/agent_session.json");
+    CliTrace("CmdRun:ledger-constructed");
     g_ledger->SetWorkspaceRoot(g_workspace);
+    CliTrace("CmdRun:ledger-workspace-set");
     g_ledger->SetModelIdentity(ModelIdentityString());
+    CliTrace("CmdRun:ledger-model-set");
     g_ledger->SetGitState(RunGit("rev-parse HEAD"), RunGit("rev-parse --abbrev-ref HEAD"));
+    CliTrace("CmdRun:ledger-git-set");
     g_ledger->SetMode(mode);
+    CliTrace("CmdRun:ledger-mode-set");
     g_ledger->Flush();   // the ledger exists even if the model never answers
+    CliTrace("CmdRun:ledger-ready");
+
+    const std::string espMode = flags.count("esp") ? flags.at("esp") : "";
+    const bool espEnabled = !espMode.empty() && espMode != "false" && espMode != "0";
+    const bool espVerbose = espMode == "verbose" || espMode == "all";
+    const std::string espPath = flags.count("esp-log") && !flags.at("esp-log").empty()
+        ? flags.at("esp-log")
+        : (g_workspace + "/.rawrxd/ledger/agent_esp.jsonl");
+    auto esp = std::make_unique<CliEspSession>(espEnabled, espPath, espVerbose);
+    esp->model_load(ActiveModelName());
 
     PrintBanner(mode);
 
@@ -835,26 +1251,106 @@ static int CmdRun(const std::vector<std::string>& args) {
         [[maybe_unused]] auto motdTurnGuard = runAuthorization.GuardTurn(runSession, runTurn);
         std::cerr << "MOTD_ACK=1 MOTD_SHA256=" << digest << "\n";
         std::string prompt = flags.count("prompt") ? flags["prompt"] : flags["task"];
+        esp->phase("PREFLIGHT");
         g_ledger->AppendUserMessage(prompt);
         g_ledger->RecordAgentTurn();
 
         std::vector<ChatMessage> messages;
-        for (const auto& m : g_ledger->Conversation()) {
-            ChatMessage cm;
-            cm.role = m.value("role", std::string());
-            cm.content = m.value("content", std::string());
-            messages.push_back(cm);
+        const bool freshSession = flags.count("fresh-session") != 0;
+        if (!freshSession) {
+            for (const auto& m : g_ledger->Conversation()) {
+                ChatMessage cm;
+                cm.role = m.value("role", std::string());
+                cm.content = m.value("content", std::string());
+                messages.push_back(cm);
+            }
+        }
+        std::string audit_guidance;
+        std::string prompt_lower = prompt;
+        std::transform(prompt_lower.begin(), prompt_lower.end(), prompt_lower.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        const bool readOnlyAuditRequested =
+            prompt_lower.find("audit") != std::string::npos ||
+            prompt_lower.find("inspect") != std::string::npos;
+        const bool explicitReadTask =
+            prompt_lower.find("readfile") != std::string::npos ||
+            prompt_lower.find("read file") != std::string::npos;
+        const bool toolDependentAgentTask =
+            mode == AgentMode::Autonomous &&
+            (g_explicit_mutation_approval || g_source_edit_tool_scope || explicitReadTask);
+        const bool readTaskMarkerRequired =
+            prompt.find("RAWRXD_AGENT_READ_PASS") != std::string::npos;
+        if (readOnlyAuditRequested) {
+            audit_guidance =
+                "\nREAD-ONLY REPOSITORY AUDIT PROTOCOL:\n"
+                "Do not call listDirectory on the workspace root. Use fileSearch or "
+                "textSearch with a scoped path and maxResults, then readFile only on "
+                "the concrete files needed for evidence. listDirectory is immediate "
+                "children only and bounded; if output is truncated, narrow the path. "
+                "Inspect source, build configuration, executable provenance, logs, "
+                "agent tools, LSP, terminal, model routing, REAP/Deep2 boundaries, "
+                "and tests through actual tool calls. Report only facts observed from "
+                "tool results, with exact workspace-relative paths. Do not infer that "
+                "a component exists merely because its name was requested. Finish with "
+                "RAWRXD_READONLY_AUDIT_COMPLETE only after the requested evidence was "
+                "actually collected.";
         }
         messages.insert(messages.begin(), ChatMessage{
-            "system", "Workspace execution policy read for this user turn. SHA-256=" + digest +
-                      "\n" + policy, ""});
+            "system", "MOTD_ACK=1. The RawrXD runtime has already read and enforced the "
+                      "workspace execution policy for this turn (SHA-256=" + digest + "). "
+                      "Do not call read_motd or readFile for the policy file; proceed with "
+                      "the user's task using the available tools. Runtime authorization, "
+                      "read-only mode, approvals, and workspace boundaries are enforced "
+                      "outside the model.\n" + audit_guidance, ""});
+        // The one-shot path must send the current request as an actual user
+        // message.  Without this append, --fresh-session produced a prompt
+        // containing only the runtime system policy, so the model could emit
+        // unrelated tool calls or a generic completion while the CLI still
+        // reported a process-level result.  Keep the task text in the model
+        // transcript and let the existing tool/task gates validate the work.
+        messages.push_back(ChatMessage{"user", prompt, ""});
 
         InferenceResult result;
+        auto cancel_run = [&](const char* reason) {
+            const std::string why = reason ? reason : "user_interrupt";
+            std::cerr << "[agent] CANCELLED: " << why << "\n";
+            g_ledger->RecordFailure("cancelled: " + why);
+            g_ledger->SetTermination(TerminationReason::Cancelled, 130);
+            g_ledger->SetVerdict("cancelled");
+            g_ledger->Flush();
+            esp->cancel(why);
+            return 130;
+        };
+        std::jthread cancel_timer;
+        if (flags.count("cancel-after-ms")) {
+            int delay_ms = 0;
+            try { delay_ms = std::stoi(flags.at("cancel-after-ms")); }
+            catch (...) { delay_ms = 0; }
+            if (delay_ms > 0) {
+                cancel_timer = std::jthread([delay_ms](std::stop_token stop) {
+                    const auto deadline = std::chrono::steady_clock::now() +
+                                          std::chrono::milliseconds(delay_ms);
+                    while (!stop.stop_requested() &&
+                           std::chrono::steady_clock::now() < deadline) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    }
+                    if (!stop.stop_requested()) {
+                        g_running.store(false);
+                        if (g_router) g_router->Cancel();
+                    }
+                });
+            }
+        }
+        esp->phase("PLANNING");
+        esp->inference_start();
+        esp->phase("WORKING");
+        CliTrace("CmdRun:inference-start");
         try {
             if (deep2CompleteFn) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
-                result = deep2CompleteFn(messages, 4096);
+                result = deep2CompleteFn(messages, g_run_max_tokens);
             } else if (g_router) {
+                CliTrace("CmdRun:router-chat-sync");
                 result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
                 result = InferenceResult::Error("No inference backend available");
@@ -862,25 +1358,97 @@ static int CmdRun(const std::vector<std::string>& args) {
         } catch (const std::exception& e) {
             std::cerr << "[error] Deep2 exception: " << e.what() << "\n";
             g_ledger->RecordFailure("inference exception: " + std::string(e.what()));
+            esp->fail("inference_exception");
             return 1;
         } catch (...) {
             std::cerr << "[error] Deep2 unknown exception\n";
             g_ledger->RecordFailure("inference unknown exception");
+            esp->fail("inference_exception_unknown");
             return 1;
+        }
+        CliTrace("CmdRun:inference-returned");
+        if (!g_running.load()) return cancel_run("user_interrupt");
+        esp->backend_metrics(result);
+        if (result.has_tool_calls) {
+            esp->stage("tool_calls_received");
         }
 
         // Complete bounded agentic turns: execute returned tool calls, feed
         // their real results back to the model, and stop only on final text.
+        std::string completed_tool_history;
+        // Keep duplicate model requests from turning a bounded agent turn
+        // into an unbounded sequence of filesystem/process operations.
+        std::set<std::string> executed_tool_signatures;
+        size_t mutation_epoch = 0;
+        constexpr size_t kMaxToolCallsPerRound = 32;
+        constexpr size_t kMaxUniqueToolCallsPerTask = 128;
         for (int tool_round = 0; result.success && result.has_tool_calls && tool_round < 8;
              ++tool_round) {
             json assistant_calls = json::array();
-            for (size_t i = 0; i < result.tool_calls.size(); ++i) {
-                const auto& call = result.tool_calls[i];
+            std::string last_tool_output;
+            std::vector<std::pair<std::string, json>> pending_tool_calls;
+            std::set<std::string> round_tool_signatures;
+            size_t duplicate_tool_calls_suppressed = 0;
+            auto tool_target = [](const json& args) {
+                if (!args.is_object()) return std::string();
+                for (const char* key : {"path", "file", "directory", "command", "workspace"}) {
+                    const auto it = args.find(key);
+                    if (it != args.end() && it->is_string() && !it->get<std::string>().empty()) {
+                        return it->get<std::string>();
+                    }
+                }
+                return std::string();
+            };
+            for (const auto& call : result.tool_calls) {
+                const std::string signature = call.first + "\n" + call.second.dump();
+                const std::string execution_key = signature +
+                    "\nmutation_epoch=" + std::to_string(mutation_epoch);
+                if (!round_tool_signatures.insert(signature).second ||
+                    executed_tool_signatures.find(execution_key) != executed_tool_signatures.end()) {
+                    ++duplicate_tool_calls_suppressed;
+                    continue;
+                }
+                if (pending_tool_calls.size() >= kMaxToolCallsPerRound ||
+                    executed_tool_signatures.size() + pending_tool_calls.size() >=
+                        kMaxUniqueToolCallsPerTask) {
+                    result = InferenceResult::Error(
+                        "TOOL_CALL_LIMIT_REACHED: bounded agent tool budget exhausted");
+                    break;
+                }
+                pending_tool_calls.push_back(call);
+            }
+            if (!result.success) break;
+            if (duplicate_tool_calls_suppressed != 0) {
+                esp->stage("duplicate_tool_calls_suppressed count=" +
+                           std::to_string(duplicate_tool_calls_suppressed));
+            }
+            if (pending_tool_calls.empty()) {
+                result = InferenceResult::Error(
+                    "TOOL_LOOP_DETECTED: model repeated completed tool calls");
+                break;
+            }
+            // The assistant tool-call message must precede every tool result
+            // in the chat transcript.  Appending a tool result first creates
+            // an invalid Ollama conversation and commonly yields an empty
+            // continuation even when the tool executed successfully.
+            for (size_t i = 0; i < pending_tool_calls.size(); ++i) {
+                const auto& call = pending_tool_calls[i];
                 const std::string id = "rawr-call-" + std::to_string(tool_round) + "-" + std::to_string(i);
+                const std::string target = tool_target(call.second);
+                esp->tool_start("TOOL_START id=" + id + " name=" + call.first +
+                                " target=" + target);
                 assistant_calls.push_back({
                     {"id", id}, {"type", "function"},
                     {"function", {{"name", call.first}, {"arguments", call.second}}}
                 });
+            }
+            messages.push_back({"assistant", result.response, "", assistant_calls});
+
+            for (size_t i = 0; i < pending_tool_calls.size(); ++i) {
+                const auto& call = pending_tool_calls[i];
+                const std::string id = "rawr-call-" + std::to_string(tool_round) + "-" + std::to_string(i);
+                const std::string target = tool_target(call.second);
+                const auto toolStarted = std::chrono::steady_clock::now();
                 rawrxd::tools::Tool tool;
                 rawrxd::tools::Request request;
                 request.name = call.first;
@@ -892,35 +1460,266 @@ static int CmdRun(const std::vector<std::string>& args) {
                 auto approve = [&](const rawrxd::tools::Tool& t, const rawrxd::tools::Request&) {
                     return ApproveMutation(t.name, approval_args);
                 };
-                if (!g_tools->find(request.name, tool) || !g_gate->AllowsWithApproval(tool, request, approve)) {
-                    result = InferenceResult::Error("tool denied: " + request.name);
+                if (!g_tools->find(request.name, tool)) {
+                    esp->tool_result("TOOL_RESULT id=" + id + " name=" + request.name +
+                                     " target=" + target + " status=FAIL duration_ms=0", false, 1);
+                    result = InferenceResult::Error("unknown tool: " + request.name);
                     break;
                 }
+                if (!g_gate->AllowsWithApproval(tool, request, approve)) {
+                    esp->tool_result("TOOL_RESULT id=" + id + " name=" + request.name +
+                                     " target=" + target + " status=FAIL duration_ms=0", false, 1);
+                    result = InferenceResult::Error(
+                        "tool denied: " + request.name + " (" + g_gate->ExplainDenial(tool) + ")");
+                    break;
+                }
+                executed_tool_signatures.insert(
+                    call.first + "\n" + call.second.dump() +
+                    "\nmutation_epoch=" + std::to_string(mutation_epoch));
                 auto tool_result = g_tools->call(request, approve);
+                const auto toolElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - toolStarted).count();
+                esp->tool_result(
+                    "TOOL_RESULT id=" + id + " name=" + request.name +
+                    " target=" + target + " status=" + (tool_result.ok ? "PASS" : "FAIL") +
+                    " duration_ms=" + std::to_string(toolElapsed),
+                    tool_result.ok, tool_result.ok ? 0 : 1);
                 g_ledger->RecordToolCall(ToolCallRecord{
                     request.name, call.second, tool_result.ok, tool_result.output,
-                    tool_result.error, 0, 0.0, true
+                    tool_result.error, AgentSession::NowUnix(), 0.0, true
                 });
+                if (tool_result.ok &&
+                    (request.name == "editFiles" || request.name == "createFile" ||
+                     request.name == "writeFile")) {
+                    ++mutation_epoch;
+                    const auto path_it = request.args.find("path");
+                    if (path_it != request.args.end() && !path_it->second.empty()) {
+                        g_ledger->RecordFileModified(path_it->second);
+                        esp->file_changed(path_it->second);
+                    }
+                }
+                if (request.name == "runInTerminal") {
+                    const auto command_it = request.args.find("command");
+                    const std::string command = command_it != request.args.end()
+                        ? command_it->second : std::string();
+                    const int process_exit_code = tool_result.ok ? 0 : [&]() {
+                        const std::string marker = "exit=";
+                        const auto pos = tool_result.error.find(marker);
+                        if (pos == std::string::npos) return -1;
+                        try { return std::stoi(tool_result.error.substr(pos + marker.size())); }
+                        catch (...) { return -1; }
+                    }();
+                    const std::string lower_command = [&]() {
+                        std::string lower = command;
+                        std::transform(lower.begin(), lower.end(), lower.begin(),
+                                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                        return lower;
+                    }();
+                    if (lower_command.find(" cl ") != std::string::npos ||
+                        lower_command.rfind("cl ", 0) == 0 ||
+                        lower_command.find("cmake --build") != std::string::npos ||
+                        lower_command.find("msbuild") != std::string::npos) {
+                        BuildEvidence build;
+                        build.tool_ok = true;
+                        build.process_exit_code = process_exit_code;
+                        build.build_target = "agent terminal build";
+                        build.build_configuration = "native toolchain";
+                        build.command = command;
+                        build.compiler_errors = 0;
+                        build.compiler_warnings = 0;
+                        const auto fe = command.find("/Fe:");
+                        if (fe != std::string::npos) {
+                            size_t end = command.find_first_of(" \t\r\n", fe + 4);
+                            const std::string artifact_name = command.substr(
+                                fe + 4, end == std::string::npos ? std::string::npos : end - (fe + 4));
+                            const fs::path artifact = fs::path(g_workspace) / artifact_name;
+                            if (fs::is_regular_file(artifact)) {
+                                build.artifacts_verified = true;
+                                build.artifact_paths.push_back(artifact.string());
+                            }
+                        }
+                        g_ledger->RecordBuild(build);
+                        esp->build_result(process_exit_code);
+                    } else if (lower_command.size() >= 4 &&
+                               (lower_command.find(".exe") != std::string::npos ||
+                                lower_command.find("ctest") != std::string::npos)) {
+                        TestEvidence test;
+                        test.tool_ok = true;
+                        test.process_exit_code = process_exit_code;
+                        test.tests_total = 1;
+                        test.tests_passed = process_exit_code == 0 ? 1 : 0;
+                        test.tests_failed = process_exit_code == 0 ? 0 : 1;
+                        test.command = command;
+                        g_ledger->RecordTest(test);
+                        esp->test_result(process_exit_code);
+                    }
+                }
                 if (!tool_result.ok) {
                     result = InferenceResult::Error("tool failed: " + tool_result.error);
                     break;
                 }
+                last_tool_output = tool_result.output;
+                completed_tool_history += request.name + " args=" + call.second.dump() +
+                    " output=" + tool_result.output + "\n";
                 messages.push_back({"tool", tool_result.output, id, json()});
             }
+            if (!g_running.load()) return cancel_run("user_interrupt");
             if (!result.success) break;
-            messages.push_back({"assistant", result.response, "", assistant_calls});
-            result = g_router ? g_router->ChatSync(messages, BuildToolDefinitions())
-                              : InferenceResult::Error("No inference backend available");
+            if (deep2CompleteFn) {
+                // Preserve the selected in-process Deep2 backend across tool
+                // rounds; do not silently switch to a null HTTP router after
+                // the first tool call.
+                result = deep2CompleteFn(messages, g_run_max_tokens);
+            } else if (g_router) {
+                result = g_router->ChatSync(messages, BuildToolDefinitions());
+            } else {
+                result = InferenceResult::Error("No inference backend available");
+            }
+            esp->backend_metrics(result);
+            if (!g_running.load()) return cancel_run("user_interrupt");
+
+            // Some local instruct models emit an empty assistant message after
+            // a long native tool transcript even though the tool completed.
+            // Do one bounded recovery request with the durable user/system
+            // context and the verified tool result.  This keeps the next
+            // action model-selected without replaying an invalid/overlong
+            // assistant/tool transcript or fabricating a result.
+            const bool empty_continuation =
+                (result.success && result.response.find_first_not_of(" \t\r\n") == std::string::npos &&
+                 !result.has_tool_calls) ||
+                (!result.success && result.error_message == "Ollama returned no chat content");
+            if (empty_continuation && !last_tool_output.empty()) {
+                std::vector<ChatMessage> compact_messages;
+                compact_messages.reserve(messages.size() + 1);
+                for (const auto& message : messages) {
+                    if (message.role == "system" || message.role == "user") {
+                        compact_messages.push_back(message);
+                    }
+                }
+                compact_messages.push_back({
+                    "user",
+                    "The following tool actions have already completed successfully. Do not repeat them:\n" +
+                        completed_tool_history +
+                        "The most recent verified output was:\n" + last_tool_output +
+                        "\nContinue the original task from the next unmet step using the available tools, "
+                        "then report the verified result.",
+                    ""});
+                messages = std::move(compact_messages);
+                if (deep2CompleteFn) {
+                    result = deep2CompleteFn(messages, g_run_max_tokens);
+                } else if (g_router) {
+                    result = g_router->ChatSync(messages, BuildToolDefinitions());
+                } else {
+                    result = InferenceResult::Error("No inference backend available");
+                }
+                esp->backend_metrics(result);
+                if (!g_running.load()) return cancel_run("user_interrupt");
+            }
+        }
+        // A bounded loop that still has pending tool calls is not a completed
+        // task. Never turn a model that kept asking for tools into PASS just
+        // because the process reached the loop limit.
+        if (result.success && result.has_tool_calls) {
+            constexpr const char* kToolRoundLimit =
+                "TOOL_ROUND_LIMIT_REACHED: final response was not produced";
+            std::cerr << "[error] " << kToolRoundLimit << "\n";
+            g_ledger->RecordFailure(kToolRoundLimit);
+            g_ledger->SetTermination(TerminationReason::MalformedModelOutput, 1);
+            g_ledger->SetVerdict("tool round limit reached");
+            g_ledger->Flush();
+            esp->phase("BLOCKED");
+            esp->fail("tool_round_limit_reached");
+            return 1;
+        }
+
+        // An autonomous coding request that was explicitly authorized for
+        // mutations or scoped source editing cannot succeed on a model that
+        // only returned prose.  Process exit 0 and a model response are not
+        // evidence that the requested tool workflow happened.
+        if (result.success && toolDependentAgentTask &&
+            executed_tool_signatures.empty()) {
+            constexpr const char* kToolsUnsupported =
+                "MODEL_TOOLS_UNSUPPORTED: autonomous task produced no tool calls";
+            std::cerr << "[error] " << kToolsUnsupported << "\n";
+            g_ledger->RecordFailure(kToolsUnsupported);
+            g_ledger->SetTermination(TerminationReason::MalformedModelOutput, 1);
+            g_ledger->SetVerdict("model tools unsupported");
+            g_ledger->Flush();
+            esp->phase("BLOCKED");
+            esp->fail("model_tools_unsupported");
+            return 1;
+        }
+
+        // Record the final assistant result once the bounded tool loop has
+        // settled.  A tool-call response is not a completed model answer and
+        // must not be counted as generated output.
+        if (!result.has_tool_calls) {
+            esp->inference_result(result.success,
+                                  static_cast<int64_t>(result.completion_tokens));
         }
         if (!result.success) {
             std::cerr << "[error] " << result.error_message << "\n";
             g_ledger->RecordFailure("inference failed: " + result.error_message);
+            esp->fail("inference_failed");
             return 1;
+        }
+        if (readOnlyAuditRequested) {
+            esp->phase("VERIFYING");
+            // A model response is not an audit certificate. The driver only
+            // accepts a read-only audit after the model emitted the explicit
+            // completion marker and the ledger proves both discovery/search
+            // and concrete file reads occurred. This prevents a generic
+            // narrative from being reported as a repository inspection.
+            const auto ledger = g_ledger->ToJson();
+            bool readObserved = false;
+            bool searchObserved = false;
+            for (const auto& call : ledger.value("tool_calls", json::array())) {
+                if (!call.value("ok", false)) continue;
+                const std::string tool = call.value("tool", std::string());
+                readObserved = readObserved || tool == "readFile" || tool == "Read";
+                searchObserved = searchObserved || tool == "fileSearch" ||
+                                 tool == "textSearch" || tool == "Grep" || tool == "Glob";
+            }
+            const bool completionMarker =
+                result.response.find("RAWRXD_READONLY_AUDIT_COMPLETE") != std::string::npos;
+            if (!completionMarker || !readObserved || !searchObserved) {
+                constexpr const char* kAuditIncomplete =
+                    "READ_ONLY_AUDIT_INCOMPLETE: required evidence was not collected";
+                std::cerr << "[error] " << kAuditIncomplete << "\n";
+                g_ledger->RecordFailure(kAuditIncomplete);
+                g_ledger->SetTermination(TerminationReason::MalformedModelOutput, 1);
+                g_ledger->SetVerdict("read-only audit incomplete");
+                g_ledger->Flush();
+                esp->fail("read_only_audit_incomplete");
+                return 1;
+            }
+        }
+        if (explicitReadTask) {
+            bool readObserved = false;
+            for (const auto& call : g_ledger->ToJson().value("tool_calls", json::array())) {
+                if (!call.value("ok", false)) continue;
+                const std::string tool = call.value("tool", std::string());
+                readObserved = readObserved || tool == "readFile" || tool == "Read";
+            }
+            const bool markerPresent = !readTaskMarkerRequired ||
+                result.response.find("RAWRXD_AGENT_READ_PASS") != std::string::npos;
+            if (!readObserved || !markerPresent) {
+                constexpr const char* kReadTaskIncomplete =
+                    "READ_TASK_INCOMPLETE: requested readFile evidence or completion marker missing";
+                std::cerr << "[error] " << kReadTaskIncomplete << "\n";
+                g_ledger->RecordFailure(kReadTaskIncomplete);
+                g_ledger->SetTermination(TerminationReason::MalformedModelOutput, 1);
+                g_ledger->SetVerdict("read task incomplete");
+                g_ledger->Flush();
+                esp->fail("read_task_incomplete");
+                return 1;
+            }
         }
         if (result.response.find_first_not_of(" \t\r\n") == std::string::npos) {
             constexpr const char* kEmpty = "EMPTY_MODEL_RESPONSE: backend returned no visible answer";
             std::cerr << "[error] " << kEmpty << "\n";
             g_ledger->RecordFailure(kEmpty);
+            esp->fail("empty_model_response");
             return 1;
         }
 
@@ -928,10 +1727,19 @@ static int CmdRun(const std::vector<std::string>& args) {
         if (g_streamed_response) std::cout << "\n" << std::flush;
         else std::cout << result.response << "\n";
 
+        AgentSession::FinalAnswer final_answer;
+        final_answer.valid = true;
+        final_answer.summary = result.response;
+        final_answer.evidence.push_back("agent tool ledger persisted");
+        if (LedgerBuildPassed(*g_ledger)) final_answer.evidence.push_back("native build exit=0 and artifact verified");
+        if (LedgerTestsPassed(*g_ledger)) final_answer.evidence.push_back("executable test exit=0");
+        g_ledger->RecordFinalAnswer(final_answer);
         g_ledger->SetTermination(TerminationReason::ModelCompleted, 0);
         g_ledger->SetVerdict("one-shot task completed");
 
         g_ledger->Flush();
+        esp->phase("COMPLETED");
+        esp->finish(true);
         return 0;
     }
 
@@ -1042,14 +1850,18 @@ static int CmdRun(const std::vector<std::string>& args) {
             messages.push_back(cm);
         }
         messages.insert(messages.begin(), ChatMessage{
-            "system", "Workspace execution policy read for this user turn. SHA-256=" + digest +
-                      "\n" + policy, ""});
+            "system", "MOTD_ACK=1. The RawrXD runtime has already read and enforced the "
+                      "workspace execution policy for this turn (SHA-256=" + digest + "). "
+                      "Do not call read_motd or readFile for the policy file; proceed with "
+                      "the user's task using the available tools. Runtime authorization, "
+                      "read-only mode, approvals, and workspace boundaries are enforced "
+                      "outside the model.", ""});
 
         InferenceResult result;
         try {
             if (deep2CompleteFn) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
-                result = deep2CompleteFn(messages, 4096);
+                result = deep2CompleteFn(messages, g_run_max_tokens);
             } else if (g_router) {
                 result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
@@ -1082,6 +1894,11 @@ static int CmdRun(const std::vector<std::string>& args) {
     }
 
     // ---- Finalize the ledger regardless of how the session ended ----
+    AgentSession::FinalAnswer final_answer;
+    final_answer.valid = true;
+    final_answer.summary = "interactive session ended normally";
+    final_answer.evidence.push_back("agent ledger persisted");
+    g_ledger->RecordFinalAnswer(final_answer);
     g_ledger->SetTermination(TerminationReason::ModelCompleted, 0);
     g_ledger->SetVerdict("session ended normally");
     g_ledger->Flush();
@@ -1346,6 +2163,146 @@ static int CmdModes() {
     return 0;
 }
 
+// Emit the capability manifest from the objects linked into this executable.
+// This is deliberately generated at invocation time: a checked-in manifest can
+// become stale as soon as the CLI or registry changes.  Quantization primitive
+// status comes from the same QuantParityRegistry implementation used by the
+// authoritative parity tool; no hand-maintained primitive table is used here.
+static int CmdCapabilities(const std::vector<std::string>& args) {
+    std::string outPath;
+    bool jsonRequested = false;
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--json") {
+            jsonRequested = true;
+        } else if (args[i] == "--out" && i + 1 < args.size()) {
+            outPath = args[++i];
+        } else {
+            std::cerr << "Unknown capabilities option: " << args[i] << "\n";
+            return 2;
+        }
+    }
+
+    if (!jsonRequested && outPath.empty()) {
+        std::cerr << "Usage: rawr capabilities --json [--out manifest.json]\n";
+        return 2;
+    }
+
+    rawrxd::tools::Registry tools;
+    WorkspaceToolHost workspace(g_workspace);
+    workspace.RegisterWorkspaceTools(tools);
+
+    json manifest = json::object();
+    manifest["schema"] = "rawrxd-capability-manifest/1";
+    manifest["generated_by"] = "rawr capabilities";
+    manifest["workspace"] = g_workspace;
+    const std::string revision = RunGit("rev-parse HEAD");
+    if (revision.empty()) {
+        std::cerr << "CAPABILITIES_GIT_REVISION_UNAVAILABLE\n";
+        return 1;
+    }
+    manifest["source_revision"] = revision;
+
+    json toolRows = json::array();
+    auto names = tools.names();
+    std::sort(names.begin(), names.end());
+    for (const auto& name : names) {
+        rawrxd::tools::Tool tool;
+        if (!tools.find(name, tool)) continue;
+        toolRows.push_back({
+            {"name", name},
+            {"description", tool.description},
+            {"risk", static_cast<int>(tool.risk)},
+            {"status", "registered_and_dispatchable"},
+            {"verification", "live rawr tool registry"}
+        });
+    }
+    manifest["tools"] = toolRows;
+    manifest["tool_count"] = static_cast<int>(toolRows.size());
+
+    json modeRows = json::array();
+    for (const auto mode : ModeRegistry::Instance().AllModes()) {
+        modeRows.push_back({
+            {"name", AgentModeName(mode)},
+            {"description", ModeRegistry::Instance().Describe(mode)}
+        });
+    }
+    manifest["modes"] = modeRows;
+
+    auto& parity = RawrXD::Deep2::QuantParityRegistry::Instance();
+    parity.RegisterBuiltinKernels();
+    const std::string registryText = parity.ToJson();
+    json registry = json::parse(registryText);
+    json primitiveRows = json::array();
+    for (const auto& row : registry.value("primitive_gates", json::array())) {
+        primitiveRows.push_back({
+            {"name", row.value("primitive", std::string())},
+            {"status", row.value("binding_status", std::string("not_required"))},
+            {"available", row.value("available", false)},
+            {"implementation_required", row.value("implementation_required", false)},
+            {"kernel_present", row.value("kernel_present", false)},
+            {"status_source", "RawrXD::Deep2::QuantParityRegistry::ToJson"}
+        });
+    }
+    manifest["primitives"] = primitiveRows;
+    manifest["primitives_provenance"] =
+        "live QuantParityRegistry::ToJson() from the linked CLI process";
+
+    // Only claim a quantization format as verified when the registry has an
+    // evidence-bearing packing/dot/logits record for that format.  A kernel
+    // binding alone is not a parity certificate.
+    json quantRows = json::array();
+    for (const auto& binding : registry.value("bindings", json::array())) {
+        const std::string type = binding.value("type", std::string());
+        const std::string packing = binding.value("packing_parity", std::string());
+        const bool verified = packing == "packing_verified" ||
+                              packing == "dot_verified" ||
+                              packing == "logits_verified";
+        quantRows.push_back({
+            {"format", type},
+            {"verification", verified ? "verified" : "declared_only"},
+            {"ctest_gate", verified ? "quant_parity_cert" : "(none)"},
+            {"evidence", binding.value("evidence", std::string())}
+        });
+    }
+    manifest["quantization_kernels"] = quantRows;
+
+    // These are repository-level parity receipts, and remain separate from
+    // the live Deep2/Kimi/REAP model receipts.  Citing them here does not
+    // promote those model-specific gates; it records the exact artifacts that
+    // the historical native-forward Gate 2 contract requires.
+    manifest["end_to_end_forward_parity"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE4_CERTIFICATION_2026-10-13.md"}
+    };
+    manifest["multi_token_kv_parity"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 6"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE6_KVCACHE_CONTEXT.md"}
+    };
+    manifest["native_forward_zero_fallback"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE4_NATIVE_FORWARD.md"}
+    };
+
+    const std::string body = manifest.dump(2) + "\n";
+    if (!outPath.empty()) {
+        std::ofstream out(outPath, std::ios::binary | std::ios::trunc);
+        if (!out) {
+            std::cerr << "CAPABILITIES_OUTPUT_OPEN_FAILED: " << outPath << "\n";
+            return 1;
+        }
+        out << body;
+        if (!out.good()) {
+            std::cerr << "CAPABILITIES_OUTPUT_WRITE_FAILED: " << outPath << "\n";
+            return 1;
+        }
+    }
+    if (outPath.empty()) std::cout << body;
+    return 0;
+}
+
 static int CmdDoctor() {
     std::cout << "=== RawrXD doctor ===\n";
     std::cout.flush();
@@ -1368,7 +2325,6 @@ static int CmdDoctor() {
     }
 
     // Toolchain.
-    int code = 0;
     std::string where = RunGit("--version");
     std::cout << "git: " << (where.empty() ? "NOT FOUND" : where.substr(0, 60)) << "\n";
     {
@@ -1421,6 +2377,41 @@ static int CmdModels() {
     return 0;
 }
 
+// A short-lived status command must not construct BackendRouter: that router
+// owns background health/recovery workers intended for an interactive session.
+// Use the same bounded direct probes as `doctor` and leave router ownership to
+// `rawr run`.
+static int CmdBackend(const std::vector<std::string>& args) {
+    const std::string mode = args.empty() ? "auto" : args.front();
+    if (mode != "auto" && mode != "deep2" && mode != "ollama") {
+        std::cerr << "Usage: rawr backend [auto|deep2|ollama]\n";
+        return 2;
+    }
+    if (args.size() > 1) {
+        std::cerr << "backend accepts at most one mode\n";
+        return 2;
+    }
+
+    RawrXD::Backend::OllamaClient deep2("http://127.0.0.1:11436");
+    RawrXD::Backend::OllamaClient ollama("http://127.0.0.1:11434");
+    deep2.setTimeoutSeconds(5);
+    ollama.setTimeoutSeconds(5);
+    const bool deep2Ok = deep2.testConnection();
+    const bool ollamaOk = ollama.testConnection();
+    std::cout << "Mode:    " << mode << "\n";
+    std::cout << "Deep2:   " << (deep2Ok ? "available" : "unavailable")
+              << " (http://127.0.0.1:11436)\n";
+    std::cout << "Ollama:  " << (ollamaOk ? "available" : "unavailable")
+              << " (http://127.0.0.1:11434)\n";
+    const bool selectedAvailable =
+        mode == "deep2" ? deep2Ok : mode == "ollama" ? ollamaOk : (deep2Ok || ollamaOk);
+    std::cout << "Active:  " << (mode == "deep2" ? "deep2-native" :
+                                  mode == "ollama" ? "ollama" :
+                                  deep2Ok ? "deep2-native" : "ollama") << "\n";
+    std::cout << "Status:  " << (selectedAvailable ? "ready" : "unavailable") << "\n";
+    return 0;
+}
+
 // ---------------------------------------------------------------------------
 // Ledger readers for self-audit
 // ---------------------------------------------------------------------------
@@ -1462,17 +2453,17 @@ static int CmdSelfAudit() {
     // 1. Native agent driver starts without a fail-fast exception.
     check("native agent driver starts", true);
 
-    // 2. Local model inference completes.
+    // 2. Local inference endpoints are reachable.  Do not construct the
+    // long-lived BackendRouter in this short-lived audit command: its worker
+    // lifecycle belongs to `rawr run` and can outlive a one-shot process.
     ok = [&] {
-        RouterConfig cfg;
-        cfg.mode = BackendMode::Auto;
-        cfg.primary_endpoint = "http://127.0.0.1:11436";
-        cfg.fallback_endpoint = "http://127.0.0.1:11434";
-        auto r = std::make_unique<BackendRouter>();
-        if (!r->Initialize(cfg)) return false;
-        return r->CheckPrimaryHealth() || r->CheckFallbackHealth();
+        RawrXD::Backend::OllamaClient deep2("http://127.0.0.1:11436");
+        RawrXD::Backend::OllamaClient ollama("http://127.0.0.1:11434");
+        deep2.setTimeoutSeconds(5);
+        ollama.setTimeoutSeconds(5);
+        return deep2.testConnection() || ollama.testConnection();
     }();
-    check("local model inference completes", ok);
+    check("local inference endpoint is reachable", ok);
 
     // 3. Workspace root discovered and validated.
     check("workspace root discovered and validated",
@@ -1511,19 +2502,28 @@ static int CmdSelfAudit() {
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-int main(int argc, char** argv) {
+static int RawrXDMain(int argc, char** argv) {
     std::signal(SIGINT, OnSignal);
     std::signal(SIGTERM, OnSignal);
+#ifdef _WIN32
+    SetConsoleCtrlHandler(OnConsoleControl, TRUE);
+#endif
     g_workspace = fs::current_path().string();
 
     if (argc < 2) {
     std::cout << "RawrXD CLI v2\n\n"
               << "Usage:\n"
-              << "  rawr run <model> [mode] [--backend b] [--workspace d]   interactive agent\n"
-              << "  rawr run <model> --reap --target-size <size> --active-experts <n>\n"
+                          << "  rawr run <model> [mode] [--backend b] [--workspace d] [--max-tokens n] [--context n]\n"
+                          << "             [--fresh-session] [--approve-mutations] [--cancel-after-ms n]\n"
+              << "             interactive agent (mutations require explicit opt-in)\n"
+              << "  rawr run <model> --reap --target-size|--size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
-              << "  rawr reap <model> --target-size <size> --active-experts <n>\n"
+              << "  rawr run <model> --reap <parameters>/<experts> [--receipt <json>]\n"
+              << "             non-destructive runtime streamer/router injection\n"
+              << "  rawr reap <model> --target-size|--size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
+              << "             [--selection-output <json> --output-model <dir>\n"
+              << "              --authorize-rewrite --prompt <text>]              candidate-only rewrite\n"
               << "  rawr run <model> \"new project\"                          project wizard\n"
               << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
               << "  rawr modes                                                  list agent modes\n"
@@ -1531,6 +2531,7 @@ int main(int argc, char** argv) {
               << "  rawr models                                                 list models\n"
               << "  rawr backend [auto|deep2|ollama]                            backend status/switch\n"
               << "  rawr doctor                                                 environment health\n"
+              << "  env DEEP2_GPU_DEVICE_RESET=1                              opt-in GPU device-lost reset (default off)\n"
               << "  rawr self-audit                                             run the audit checklist\n"
               << "  rawr build [--config Release] [--target t]                  build project\n"
               << "  rawr test [--filter f]                                      run tests\n";
@@ -1549,9 +2550,36 @@ int main(int argc, char** argv) {
     g_workspace = DiscoverWorkspace(o);
 
     if (cmd == "run") {
-        return CmdRun(args);
+        try {
+            return CmdRun(args);
+        } catch (const std::exception& e) {
+            std::cerr << "RAWRXD_CLI_FATAL: " << e.what() << "\n";
+            if (g_ledger) {
+                g_ledger->RecordFailure(std::string("driver exception: ") + e.what());
+                g_ledger->SetTermination(TerminationReason::DriverException, 1);
+                g_ledger->Flush();
+            }
+            return 1;
+        } catch (...) {
+            std::cerr << "RAWRXD_CLI_FATAL: unknown exception\n";
+            if (g_ledger) {
+                g_ledger->RecordFailure("driver exception: unknown exception");
+                g_ledger->SetTermination(TerminationReason::DriverException, 1);
+                g_ledger->Flush();
+            }
+            return 1;
+        }
     }
     if (cmd == "reap") {
+        if (o.flags.count("help") != 0 || o.flags.count("h") != 0) {
+            std::cout << "Usage: rawr reap <model> --target-size <size> --active-experts <n>\n"
+                      << "             --expert-budget <size> --quality-floor <0..1>\n"
+                      << "             [--selection-output <json> --output-model <dir>\n"
+                      << "              --authorize-rewrite --prompt <text> --workspace <dir>]\n"
+                      << "The source GGUF is never overwritten; rewrite requires all\n"
+                      << "independent REAP evidence gates plus explicit authorization.\n";
+            return 0;
+        }
         if (o.positional.empty()) {
             std::cerr << "REAP_MODEL_REQUIRED: usage: rawr reap <model>"
                          " --target-size <size> --active-experts <n>"
@@ -1559,9 +2587,11 @@ int main(int argc, char** argv) {
             return 2;
         }
         o.flags["reap"] = "true";
-        return HandleReapContract(o.positional.front(), o.flags);
+        const std::string prompt = o.positional.size() > 1 ? o.positional[1] : "";
+        return HandleReapContract(o.positional.front(), o.flags, prompt);
     }
     if (cmd == "modes")     return CmdModes();
+    if (cmd == "capabilities") return CmdCapabilities(args);
     if (cmd == "doctor")    return CmdDoctor();
     if (cmd == "self-audit") return CmdSelfAudit();
 
@@ -1595,24 +2625,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    if (cmd == "backend") {
-        RouterConfig cfg;
-        cfg.mode = BackendMode::Auto;
-        cfg.primary_endpoint = "http://127.0.0.1:11436";
-        cfg.fallback_endpoint = "http://127.0.0.1:11434";
-        g_router = std::make_unique<BackendRouter>();
-        if (!g_router->Initialize(cfg)) { std::cerr << "router init failed\n"; return 1; }
-        std::string mode = args.empty() ? "auto" : args[0];
-        if (mode == "deep2")  g_router->SetMode(BackendMode::Deep2);
-        if (mode == "ollama") g_router->SetMode(BackendMode::Ollama);
-        auto h = g_router->GetPrimaryHealth();
-        auto o2 = g_router->GetFallbackHealth();
-        std::cout << "Mode:    " << mode << "\n";
-        std::cout << "Deep2:   " << (h.available ? "available" : "unavailable") << " (" << h.endpoint << ")\n";
-        std::cout << "Ollama:  " << (o2.available ? "available" : "unavailable") << " (" << o2.endpoint << ")\n";
-        std::cout << "Active:  " << g_router->GetActiveModel() << "\n";
-        return 0;
-    }
+    if (cmd == "backend") return CmdBackend(o.positional);
 
     if (cmd == "models") return CmdModels();
 
@@ -1641,3 +2654,40 @@ int main(int argc, char** argv) {
     std::cerr << "Unknown command: " << cmd << "\n";
     return 2;
 }
+
+#ifdef _WIN32
+int wmain(int argc, wchar_t** wargv) {
+    // Windows' narrow `main`/argv path uses the active ANSI code page. That
+    // corrupts prompts containing em dashes, smart quotes, CJK, or emoji
+    // before nlohmann::json sees them. Keep the process boundary UTF-16 and
+    // convert each argument to UTF-8 explicitly.
+    std::vector<std::string> utf8Args;
+    std::vector<char*> argv8;
+    utf8Args.reserve(static_cast<size_t>(argc));
+    argv8.reserve(static_cast<size_t>(argc));
+    for (int i = 0; i < argc; ++i) {
+        const int bytes = WideCharToMultiByte(
+            CP_UTF8, WC_ERR_INVALID_CHARS, wargv[i], -1, nullptr, 0,
+            nullptr, nullptr);
+        if (bytes <= 0) {
+            std::fprintf(stderr, "RAWRXD_UTF8_ARG_ERROR index=%d\n", i);
+            return 2;
+        }
+        std::string value(static_cast<size_t>(bytes), '\0');
+        if (bytes > 1 && WideCharToMultiByte(
+                CP_UTF8, WC_ERR_INVALID_CHARS, wargv[i], -1,
+                value.data(), bytes, nullptr, nullptr) <= 0) {
+            std::fprintf(stderr, "RAWRXD_UTF8_ARG_ERROR index=%d\n", i);
+            return 2;
+        }
+        if (bytes > 0) value.resize(static_cast<size_t>(bytes - 1));
+        utf8Args.push_back(std::move(value));
+    }
+    for (auto& value : utf8Args) argv8.push_back(value.data());
+    return RawrXDMain(argc, argv8.data());
+}
+#else
+int main(int argc, char** argv) {
+    return RawrXDMain(argc, argv);
+}
+#endif
