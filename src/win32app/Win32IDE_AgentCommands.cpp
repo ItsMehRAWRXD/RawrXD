@@ -7,6 +7,7 @@
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "ModelConnection.h"
 #include "IDELogger.h"
+#include <commctrl.h>
 #include <sstream>
 #include <cstdlib>
 #include <filesystem>
@@ -18,6 +19,28 @@ struct AgentModelDialogState {
     std::vector<std::string> models;
     std::string current;
 };
+
+LRESULT CALLBACK AgentModelComboSubclassProc(
+    HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam,
+    UINT_PTR subclassId, DWORD_PTR refData)
+{
+    (void)refData;
+    if (message == WM_KEYDOWN &&
+        (wParam == VK_ESCAPE || wParam == VK_RETURN)) {
+        const HWND dialog = GetParent(hwnd);
+        if (dialog && IsWindow(dialog)) {
+            const WORD command = (wParam == VK_ESCAPE) ? IDCANCEL : IDOK;
+            SendMessageA(dialog, WM_COMMAND,
+                         MAKEWPARAM(command, BN_CLICKED),
+                         reinterpret_cast<LPARAM>(hwnd));
+            return 0;
+        }
+    }
+    if (message == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, AgentModelComboSubclassProc, subclassId);
+    }
+    return DefSubclassProc(hwnd, message, wParam, lParam);
+}
 
 // The CLI's structured [ESP] records are already rendered by the ESP panel.
 // Keep them in the raw evidence log, but do not append the same records again
@@ -401,6 +424,10 @@ LRESULT CALLBACK Win32IDE::AgentModelDialogProc(HWND hwnd, UINT message,
             kDialogWidth - 105, kDialogHeight - 74, 90, 30, hwnd,
             reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDCANCEL)),
             ide->m_hInstance, nullptr);
+
+        if (combo) {
+            SetWindowSubclass(combo, AgentModelComboSubclassProc, 1, 0);
+        }
 
         for (HWND child : {label, combo, use, cancel}) {
             if (child) SendMessageA(child, WM_SETFONT,
