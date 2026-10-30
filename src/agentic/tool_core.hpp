@@ -102,6 +102,14 @@ inline std::string read_text(const fs::path& p,size_t max_bytes=2*1024*1024){
  if(fs::file_size(p)>max_bytes)throw std::runtime_error("file exceeds read limit");
  std::ifstream in(p,std::ios::binary);if(!in)throw std::runtime_error("cannot open file");return {std::istreambuf_iterator<char>(in),{}};
 }
+inline std::string read_text_prefix(const fs::path& p,size_t max_bytes){
+ if(!fs::is_regular_file(p))throw std::runtime_error("not a file");
+ std::ifstream in(p,std::ios::binary);if(!in)throw std::runtime_error("cannot open file");
+ std::string out(max_bytes,'\0');in.read(out.data(),static_cast<std::streamsize>(out.size()));
+ out.resize(static_cast<size_t>(in.gcount()));
+ if(fs::file_size(p)>max_bytes) out+="\n...[readFile output truncated by maxBytes]...\n";
+ return out;
+}
 inline void write_atomic(const fs::path& p,const std::string& content){
  if(!fs::exists(p.parent_path()))throw std::runtime_error("parent directory missing");
  auto tmp=p;tmp+=".rawrxd_tmp";if(fs::exists(tmp))throw std::runtime_error("temporary path occupied");
@@ -131,7 +139,12 @@ inline const char* canonicalize_tool_name(const std::string& name){
 
 inline void register_workspace_tools(Registry& reg,fs::path root){
  root=canonical_root(root);
- reg.add({"readFile","Read one bounded workspace file by path",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{return {true,read_text(scoped(root,arg(r,"path"))),""};}});
+ reg.add({"readFile","Read one bounded workspace file by path. Optional maxBytes limits the returned evidence (default 262144, hard maximum 524288).",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{
+   const size_t maxBytes=optional_limit(r,"maxBytes",256*1024,512*1024);
+   const fs::path file=scoped(root,arg(r,"path"));
+   const bool bounded=r.args.find("maxBytes")!=r.args.end();
+   return {true,bounded?read_text_prefix(file,maxBytes):read_text(file),""};
+ }});
  reg.add({"listDirectory","List immediate children only; bounded output. Prefer fileSearch/textSearch for repository audits and never enumerate the workspace root recursively",Risk::ReadOnly,{"path"},[root](const Request& r)->Result{
    auto p=scoped(root,arg(r,"path")); if(!fs::is_directory(p)) throw std::runtime_error("not directory");
    const size_t limit=optional_limit(r,"maxEntries",128,256); const size_t maxBytes=48*1024;
