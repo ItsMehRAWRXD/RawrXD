@@ -1,20 +1,28 @@
 SCRIPT_REVIEW OPERATOR_ELEVATED_DUMPFILTER_REPAIR.ps1
-ASOF_UTC=2026-11-01T11:38:00Z
-STATUS=READY_FOR_OPERATOR_AUTH (REGISTRY_MODIFICATION still HELD until explicit go)
+REV=5
+ASOF_UTC=2026-11-01T12:05:00Z
+SHA256=FFB2654DCEB8905361A489D44EA39DFC36A6C9F76A9ED01D5B62A1693C0A30BF
+PATH=rawrxd/evidence/WIN32IDE_CONTINUOUS_LOOP_001/DUMP_CAPTURE_REPAIR_001/OPERATOR_ELEVATED_DUMPFILTER_REPAIR.ps1
+SOURCE_DUMP=REV5_FINAL_SOURCE_DUMP.txt
+STATUS=REV5_DELIVERED — awaiting final operator review / explicit go
+REGISTRY_MODIFICATION=HELD
+RUNTIME=NOT_RUN
 
-UPDATED_BEHAVIOR vs prior clear-all version:
-  1) reg export CrashControl -> DUMP_CAPTURE_REPAIR_001\CrashControl_backup_*.reg
-  2) Remove ONLY dumpfve.sys from DumpFilters; keep any other filter strings
-  3) Fail closed if BitLocker Protection On or EncryptableVolume C: not clear
-  4) Treat "no associated BitLocker volume" / C: ABSENT as OK to proceed
-  5) Never disable BitLocker, delete dumpfve.sys, or force crash
+REV5_CORRECTIONS (per SCRIPT_VERDICT=CONTROL_FLOW_CORRECTION_REQUIRED):
+  1) Invoke-FailPath RETURNS ExitCode and sets $script:pendingExitCode.
+     Does NOT call exit. Write/verify try/catch never terminates via function exit.
+     After the block: if ($null -ne $script:pendingExitCode) { exit ... } at script scope.
+     VERIFY_FAIL uses if/else so success path is not taken after fail handler.
+  2) Save-ReceiptSafe appends ReceiptSaved= to $lines BEFORE Set-Content so the
+     persisted receipt includes that line. Emergency path similarly appends before write.
 
-OPERATOR_EVIDENCE_SATISFIED_FOR_CONSIDERATION:
-  manage-bde C: not BitLocker volume
-  Get-BitLockerVolume C: no associated volume
-  EncryptableVolume enumerate: C: ABSENT; E/D/G/F Protection=0 Conversion=0
+PRIOR_SHA_REV4=8C7AA236BF4D78F22DA95AA96DB33656A77D76256C83E53E3F00B6019EF539A6 (do not run)
+PRIOR_SHA_REV3=DDDE10FD… (superseded)
 
 ROOT_CAUSE=UNCONFIRMED
-FILTER_REMOVAL=CONDITIONAL_DIAGNOSTIC
-Await: explicit operator authorization to run script
+FILTER_REMOVAL=CONDITIONAL_DIAGNOSTIC_EXPERIMENT
+DUMP_CAPTURE=UNVERIFIED
+LIGHT_SOAK=DEFERRED
+AUDIT_002=BLOCKED
 PROMOTE=0
+TIP_CLIMB=HOLD

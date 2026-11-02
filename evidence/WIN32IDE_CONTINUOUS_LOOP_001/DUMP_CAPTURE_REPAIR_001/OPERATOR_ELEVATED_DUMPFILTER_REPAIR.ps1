@@ -1,134 +1,463 @@
 #Requires -RunAsAdministrator
 <#
-  DUMP_CAPTURE_REPAIR_001 — controlled dumpfve DumpFilters removal
-  Preconditions (operator-verified):
-    - C: not a BitLocker volume (manage-bde / Get-BitLockerVolume)
-    - C: absent from Win32_EncryptableVolume enumerate (or unprotected)
-  Procedure:
-    1) Export CrashControl key backup; abort if export file missing
-    2) Remove ONLY dumpfve.sys from DumpFilters; preserve other entries + REG_MULTI_SZ
-    3) Do NOT change CrashDumpEnabled/DumpFile/MinidumpDir; do NOT disable BitLocker;
-       do NOT delete dumpfve.sys; do NOT force a crash
-  Rollback (after backup exists):
-    reg import "<BackupReg path from receipt>"
-  After: reboot; check volmgr 45/46; DUMP_CAPTURE remains UNVERIFIED
+  DUMP_CAPTURE_REPAIR_001 - controlled dumpfve DumpFilters removal (rev5)
+  Removes ONLY dumpfve.sys from DumpFilters after verified backup.
+  Does NOT disable BitLocker, delete dumpfve.sys, force a crash, or change
+  CrashDumpEnabled / DumpFile / MinidumpDir intentionally.
+  DUMP_CAPTURE remains UNVERIFIED after success.
+  Rollback: reg import "<BackupReg>" then state-verify restore.
+  Control flow: fail handlers return ExitCode; script-scope exit only.
 #>
 $ErrorActionPreference = 'Stop'
-$outDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$receipt = Join-Path $outDir 'DUMPFILTER_REPAIR_RECEIPT.txt'
-$backup = Join-Path $outDir ("CrashControl_backup_{0:yyyyMMdd_HHmmss}.reg" -f (Get-Date))
+
+# Persist backup/receipt outside the repo evidence tree (survives tree cleans)
+$safeDir = Join-Path $env:ProgramData 'RawrXD\DUMP_CAPTURE_REPAIR_001'
+New-Item -ItemType Directory -Force -Path $safeDir | Out-Null
+$stamp   = Get-Date -Format 'yyyyMMdd_HHmmss'
+$receipt = Join-Path $safeDir ("DUMPFILTER_REPAIR_RECEIPT_{0}.txt" -f $stamp)
+$backup  = Join-Path $safeDir ("CrashControl_backup_{0}.reg" -f $stamp)
+
 $lines = @()
 function L([string]$s) { $script:lines += $s; Write-Host $s }
+function Save-Receipt {
+  $script:lines | Set-Content -Encoding utf8 $script:receipt
+}
 
 L "ASOF_UTC=$((Get-Date).ToUniversalTime().ToString('o'))"
+L 'REV=5'
 L 'IsAdmin=True'
+L "SafeDir=$safeDir"
+L "Receipt=$receipt"
 
-$clearSignal = $false
+# --- Encryption / BitLocker gates (consistent evidence required) ---
+$mdbNoVolume = $false
+$blNoVolume  = $false
+$blFullyClear = $false
+$cimEnumOk   = $false
+$cimCAbsent  = $false
+$cimCFullyClear = $false
 
-# manage-bde — require clear "not BitLocker volume" language OR fail closed later
 $mdb = manage-bde -status C: 2>&1 | Out-String
 L 'manage-bde_C_OUTPUT_BEGIN'
-$mdb -split "`r?`n" | ForEach-Object { if ($_) { L ("  " + $_) } }
+foreach ($line in ($mdb -split "`r?`n")) { if ($line) { L ("  " + $line) } }
 L 'manage-bde_C_OUTPUT_END'
 if ($mdb -match 'not a valid BitLocker volume|could not be opened by BitLocker') {
-  $clearSignal = $true
+  $mdbNoVolume = $true
   L 'manage-bde_C=NO_VALID_BITLOCKER_VOLUME'
 }
 
 try {
   $bl = Get-BitLockerVolume -MountPoint 'C:' -ErrorAction Stop
-  L "BitLocker_ProtectionStatus=$($bl.ProtectionStatus) VolumeStatus=$($bl.VolumeStatus) Pct=$($bl.EncryptionPercentage)"
+  L "BitLocker_ProtectionStatus=$($bl.ProtectionStatus)"
+  L "BitLocker_VolumeStatus=$($bl.VolumeStatus)"
+  L "BitLocker_EncryptionPercentage=$($bl.EncryptionPercentage)"
   if ([string]$bl.ProtectionStatus -match 'On|Enabled') {
     L 'ACTION=NONE REASON=BitLocker_Protection_On'
-    $lines | Set-Content -Encoding utf8 $receipt
-    exit 2
+    Save-Receipt; exit 2
   }
-  if ([string]$bl.ProtectionStatus -match 'Off|Disabled|Unprotected') {
-    $clearSignal = $true
+  $pct = 0
+  try { $pct = [double]$bl.EncryptionPercentage } catch { $pct = -1 }
+  $volFully = ([string]$bl.VolumeStatus -match 'FullyDecrypted|Fully Decrypted')
+  $protOff  = ([string]$bl.ProtectionStatus -match 'Off|Disabled|Unprotected')
+  if ($protOff -and $pct -eq 0 -and $volFully) {
+    $blFullyClear = $true
+    L 'BitLocker_C=FULLY_CLEAR'
+  } elseif ($protOff -and $pct -eq 0) {
+    L 'ACTION=NONE REASON=BitLocker_VolumeStatus_not_FullyDecrypted_fail_closed'
+    Save-Receipt; exit 3
+  } else {
+    L 'ACTION=NONE REASON=BitLocker_not_fully_decrypted_fail_closed'
+    Save-Receipt; exit 3
   }
 } catch {
   L "Get-BitLockerVolume_C=$($_.Exception.Message)"
   if ($_.Exception.Message -match 'does not have an associated BitLocker volume|not a valid BitLocker') {
-    $clearSignal = $true
+    $blNoVolume = $true
     L 'BitLocker_C=NO_ASSOCIATED_VOLUME'
   } else {
     L 'ACTION=NONE REASON=BitLocker_status_ambiguous_fail_closed'
-    $lines | Set-Content -Encoding utf8 $receipt
-    exit 3
+    Save-Receipt; exit 3
   }
 }
 
-$enc = @(Get-CimInstance Win32_EncryptableVolume -Namespace 'root/CIMV2/Security/MicrosoftVolumeEncryption' -ErrorAction SilentlyContinue)
-$cEnc = @($enc | Where-Object { $_.DriveLetter -eq 'C:' })
-if ($cEnc.Count -gt 0) {
-  $c = $cEnc[0]
-  L "EncryptableVolume_C_Protection=$($c.ProtectionStatus) Conversion=$($c.ConversionStatus)"
-  if ([int]$c.ProtectionStatus -ne 0 -or [int]$c.ConversionStatus -ne 0) {
-    L 'ACTION=NONE REASON=EncryptableVolume_C_not_fully_clear'
-    $lines | Set-Content -Encoding utf8 $receipt
-    exit 2
+try {
+  $enc = @(Get-CimInstance -ClassName Win32_EncryptableVolume `
+    -Namespace 'root/CIMV2/Security/MicrosoftVolumeEncryption' -ErrorAction Stop)
+  $cimEnumOk = $true
+  L ("EncryptableVolume_EnumCount={0}" -f $enc.Count)
+  $cEnc = @($enc | Where-Object { $_.DriveLetter -eq 'C:' })
+  if ($cEnc.Count -eq 0) {
+    $cimCAbsent = $true
+    L 'EncryptableVolume_C=ABSENT'
+  } else {
+    $c = $cEnc[0]
+    L "EncryptableVolume_C_Protection=$($c.ProtectionStatus) Conversion=$($c.ConversionStatus)"
+    if ([int]$c.ProtectionStatus -eq 0 -and [int]$c.ConversionStatus -eq 0) {
+      $cimCFullyClear = $true
+      L 'EncryptableVolume_C=FULLY_CLEAR'
+    } else {
+      L 'ACTION=NONE REASON=EncryptableVolume_C_not_fully_clear'
+      Save-Receipt; exit 2
+    }
   }
-  $clearSignal = $true
-} else {
-  L 'EncryptableVolume_C=ABSENT'
-  $clearSignal = $true
+} catch {
+  L "EncryptableVolume_Enum_ERROR=$($_.Exception.Message)"
+  L 'ACTION=NONE REASON=EncryptableVolume_enumeration_failed_fail_closed'
+  Save-Receipt; exit 3
 }
 
-if (-not $clearSignal) {
-  L 'ACTION=NONE REASON=encryption_status_ambiguous_fail_closed'
-  $lines | Set-Content -Encoding utf8 $receipt
-  exit 3
+$authorized = $false
+if ($mdbNoVolume -and $blNoVolume -and $cimEnumOk -and $cimCAbsent) {
+  $authorized = $true
+  L 'AUTH_PATH=NO_BITLOCKER_VOLUME_CONSISTENT'
+}
+elseif ($blFullyClear -and $cimEnumOk -and ($cimCFullyClear -or $cimCAbsent)) {
+  $authorized = $true
+  L 'AUTH_PATH=BITLOCKER_FULLY_CLEAR_CONSISTENT'
+}
+elseif ($cimCFullyClear -and $blFullyClear) {
+  $authorized = $true
+  L 'AUTH_PATH=BOTH_APIS_FULLY_CLEAR'
 }
 
-# Backup CrashControl BEFORE any write
-& reg.exe export 'HKLM\SYSTEM\CurrentControlSet\Control\CrashControl' $backup /y | Out-Null
+if (-not $authorized) {
+  L 'ACTION=NONE REASON=encryption_evidence_inconsistent_or_insufficient_fail_closed'
+  L "FLAGS mdbNoVolume=$mdbNoVolume blNoVolume=$blNoVolume blFullyClear=$blFullyClear cimEnumOk=$cimEnumOk cimCAbsent=$cimCAbsent cimCFullyClear=$cimCFullyClear"
+  Save-Receipt; exit 3
+}
+
+# --- Backup CrashControl (native reg.exe: check LASTEXITCODE + nonempty file) ---
+& reg.exe export 'HKLM\SYSTEM\CurrentControlSet\Control\CrashControl' $backup /y
+$exportExit = $LASTEXITCODE
+if ($exportExit -ne 0) {
+  L "ACTION=NONE REASON=reg_export_exitcode_$exportExit"
+  Save-Receipt; exit 4
+}
 if (-not (Test-Path -LiteralPath $backup)) {
-  L 'ACTION=NONE REASON=CrashControl_backup_export_failed'
-  $lines | Set-Content -Encoding utf8 $receipt
-  exit 4
+  L 'ACTION=NONE REASON=CrashControl_backup_missing'
+  Save-Receipt; exit 4
+}
+$bakLen = (Get-Item -LiteralPath $backup).Length
+if ($bakLen -lt 64) {
+  L "ACTION=NONE REASON=CrashControl_backup_too_small bytes=$bakLen"
+  Save-Receipt; exit 4
 }
 L "BackupReg=$backup"
+L "BackupBytes=$bakLen"
 L "ROLLBACK=reg import `"$backup`""
 
-$cc = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl'
-$before = @($cc.DumpFilters)
-L "Before_CrashDumpEnabled=$($cc.CrashDumpEnabled)"
-L "Before_DumpFile=$($cc.DumpFile)"
-L "Before_MinidumpDir=$($cc.MinidumpDir)"
-L "Before_DumpFilters=$($before -join ',')"
+$ccPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl'
+$cc = Get-ItemProperty $ccPath
+$beforeFilters = @($cc.DumpFilters | Where-Object { $_ })
+$beforeDumpEnabled = [int]$cc.CrashDumpEnabled
+$beforeDumpFile = [string]$cc.DumpFile
+$beforeMinidump = [string]$cc.MinidumpDir
+L "Before_CrashDumpEnabled=$beforeDumpEnabled"
+L "Before_DumpFile=$beforeDumpFile"
+L "Before_MinidumpDir=$beforeMinidump"
+L "Before_DumpFilters=$($beforeFilters -join ',')"
 
-if ($before -notcontains 'dumpfve.sys') {
+if ($beforeFilters -notcontains 'dumpfve.sys') {
   L 'ACTION=NONE REASON=dumpfve_not_in_DumpFilters'
-  $lines | Set-Content -Encoding utf8 $receipt
-  exit 0
+  Save-Receipt; exit 0
 }
 
-$after = @($before | Where-Object { $_ -and ($_ -ne 'dumpfve.sys') })
-# REG_MULTI_SZ via MultiString; empty @() => empty multi-sz (dumpfve was sole entry)
-New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl' `
-  -Name DumpFilters -PropertyType MultiString -Value $after -Force | Out-Null
-
-$cc2 = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl'
-L "After_CrashDumpEnabled=$($cc2.CrashDumpEnabled)"
-L "After_DumpFile=$($cc2.DumpFile)"
-L "After_MinidumpDir=$($cc2.MinidumpDir)"
-L "After_DumpFilters='$($cc2.DumpFilters -join ',')'"
-
-if ([int]$cc2.CrashDumpEnabled -ne [int]$cc.CrashDumpEnabled) {
-  L 'WARNING=CrashDumpEnabled_changed_unexpected_restoring_backup'
-  & reg.exe import $backup | Out-Null
-  L 'ACTION=RESTORED_BACKUP'
-  $lines | Set-Content -Encoding utf8 $receipt
-  exit 5
+$expectedAfter = [string[]]@($beforeFilters | Where-Object { $_ -ne 'dumpfve.sys' })
+L ("ExpectedAfter_Count={0}" -f $expectedAfter.Count)
+if ($expectedAfter.Count -eq 0) {
+  L 'ExpectedAfter=EMPTY_REG_MULTI_SZ'
 }
 
-L 'ACTION=REMOVED_dumpfve_ONLY'
-L 'NOTE=BitLocker not disabled; dumpfve.sys file not deleted; no crash forced'
-L 'DUMP_CAPTURE=UNVERIFIED'
-L "ROLLBACK=reg import `"$backup`""
-L 'NEXT=Reboot; verify zero volmgr 45/46 since boot; run ROLLBACK if problems'
+function Get-DumpFiltersMeta {
+  $meta = @{ Exists = $false; Kind = 'MISSING'; Values = @() }
+  $rk = $null
+  try {
+    $rk = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\CrashControl', $false)
+    if ($null -eq $rk) { return $meta }
+    $names = @($rk.GetValueNames())
+    if ($names -notcontains 'DumpFilters') { return $meta }
+    $meta.Exists = $true
+    $kindEnum = $rk.GetValueKind('DumpFilters')
+    $meta.Kind = [string]$kindEnum
+    $raw = $rk.GetValue('DumpFilters', $null, 'DoNotExpandEnvironmentNames')
+    if ($null -eq $raw) {
+      $meta.Values = @()
+    } elseif ($raw -is [string[]]) {
+      $meta.Values = @($raw | Where-Object { $_ -ne $null -and $_ -ne '' })
+    } elseif ($raw -is [string]) {
+      if ($raw -ne '') { $meta.Values = @($raw) } else { $meta.Values = @() }
+    } else {
+      $meta.Values = @([string]$raw)
+    }
+  } finally {
+    if ($null -ne $rk) { $rk.Close() }
+  }
+  return $meta
+}
 
-$lines | Set-Content -Encoding utf8 $receipt
+$beforeMeta = Get-DumpFiltersMeta
+L "Before_DumpFilters_Exists=$($beforeMeta.Exists) Kind=$($beforeMeta.Kind)"
+if (-not $beforeMeta.Exists -or $beforeMeta.Kind -ne 'MultiString') {
+  L 'ACTION=NONE REASON=DumpFilters_type_not_REG_MULTI_SZ_fail_closed'
+  Save-Receipt; exit 3
+}
+
+# At-most-once rollback + state verification of restore
+$script:rollbackAttempted = $false
+$script:rollbackSucceeded = $false
+# Script-scope exit code set by fail handlers; exit ONLY after write/verify block
+$script:pendingExitCode = $null
+
+function Test-CrashControlMatchesBefore([ref]$failReason) {
+  $c = Get-ItemProperty $ccPath
+  if ([int]$c.CrashDumpEnabled -ne $beforeDumpEnabled) {
+    $failReason.Value = 'CrashDumpEnabled_not_restored'; return $false
+  }
+  if ([string]$c.DumpFile -ne $beforeDumpFile) {
+    $failReason.Value = 'DumpFile_not_restored'; return $false
+  }
+  if ([string]$c.MinidumpDir -ne $beforeMinidump) {
+    $failReason.Value = 'MinidumpDir_not_restored'; return $false
+  }
+  $meta = Get-DumpFiltersMeta
+  if (-not $meta.Exists) {
+    $failReason.Value = 'DumpFilters_missing_after_rollback'; return $false
+  }
+  if ($meta.Kind -ne 'MultiString') {
+    $failReason.Value = "DumpFilters_type_$($meta.Kind)_after_rollback"
+    return $false
+  }
+  $q = & reg.exe query 'HKLM\SYSTEM\CurrentControlSet\Control\CrashControl' /v DumpFilters 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) {
+    $failReason.Value = 'DumpFilters_reg_query_failed_after_rollback'; return $false
+  }
+  if ($q -notmatch 'REG_MULTI_SZ') {
+    $failReason.Value = 'DumpFilters_not_REG_MULTI_SZ_after_rollback'
+    return $false
+  }
+  $got = @($meta.Values)
+  $exp = @($beforeFilters)
+  if ($got.Count -ne $exp.Count) {
+    $failReason.Value = "DumpFilters_count_got=$($got.Count)_exp=$($exp.Count)"
+    return $false
+  }
+  for ($i = 0; $i -lt $exp.Count; $i++) {
+    if ($got[$i] -ne $exp[$i]) {
+      $failReason.Value = "DumpFilters_mismatch_at_$i"
+      return $false
+    }
+  }
+  return $true
+}
+
+function Invoke-CrashControlRollback {
+  param([string]$ReasonTag)
+  if ($script:rollbackAttempted) {
+    L "ROLLBACK=SKIPPED_ALREADY_ATTEMPTED Reason=$ReasonTag PriorSuccess=$($script:rollbackSucceeded)"
+    return $script:rollbackSucceeded
+  }
+  $script:rollbackAttempted = $true
+  L "ROLLBACK_ATTEMPT Reason=$ReasonTag Backup=$backup"
+  & reg.exe import $backup
+  $rbExit = $LASTEXITCODE
+  L "ROLLBACK_IMPORT_EXITCODE=$rbExit"
+  if ($rbExit -ne 0) {
+    L 'ROLLBACK=FAILED REASON=reg_import_nonzero'
+    $script:rollbackSucceeded = $false
+    return $false
+  }
+  $why = ''
+  if (-not (Test-CrashControlMatchesBefore ([ref]$why))) {
+    L "ROLLBACK=FAILED REASON=state_not_restored_$why"
+    $script:rollbackSucceeded = $false
+    return $false
+  }
+  L 'ROLLBACK=SUCCESS'
+  L 'ROLLBACK_STATE_VERIFIED=1'
+  $script:rollbackSucceeded = $true
+  return $true
+}
+
+function Save-ReceiptSafe {
+  # Persist ReceiptSaved= into the same file (append to log BEFORE write)
+  try {
+    $script:lines += "ReceiptSaved=$receipt"
+    Write-Host "ReceiptSaved=$receipt"
+    Save-Receipt
+    return $true
+  } catch {
+    L "RECEIPT_SAVE_FAIL=$($_.Exception.Message)"
+    try {
+      $emergency = Join-Path $safeDir ("DUMPFILTER_REPAIR_RECEIPT_EMERGENCY_{0}.txt" -f $stamp)
+      $script:lines += "EmergencyReceipt=$emergency"
+      $script:lines | Set-Content -Encoding utf8 $emergency
+      Write-Host "EmergencyReceipt=$emergency"
+    } catch {
+      L "EMERGENCY_RECEIPT_FAIL=$($_.Exception.Message)"
+    }
+    return $false
+  }
+}
+
+# Failure handler RETURNS ExitCode; does NOT call exit (avoids try/catch exit ambiguity)
+function Invoke-FailPath {
+  param(
+    [int]$ExitCode,
+    [string]$ActionLine,
+    [string]$RollbackReason,
+    [bool]$NeedRollback
+  )
+  try { L $ActionLine } catch { }
+  if ($NeedRollback) {
+    try {
+      $rbOk = Invoke-CrashControlRollback -ReasonTag $RollbackReason
+      if ($rbOk) { L 'FAILPATH_ROLLBACK=SUCCESS' }
+      else { L 'FAILPATH_ROLLBACK=FAILED_OR_SKIPPED' }
+    } catch {
+      L "FAILPATH_ROLLBACK_EXCEPTION=$($_.Exception.Message)"
+      L 'FAILPATH_ROLLBACK=FAILED_OR_SKIPPED'
+    }
+  } else {
+    try { L 'FAILPATH_ROLLBACK=NOT_REQUESTED' } catch { }
+  }
+  [void](Save-ReceiptSafe)
+  $script:pendingExitCode = $ExitCode
+  return $ExitCode
+}
+
+function Set-DumpFiltersMultiString {
+  param([string[]]$Values)
+  # Explicit .NET MultiString write - empty [string[]]@() stays REG_MULTI_SZ
+  # (does not delete the value; does not coerce to REG_SZ).
+  $rk = $null
+  try {
+    $rk = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
+      'SYSTEM\CurrentControlSet\Control\CrashControl', $true)
+    if ($null -eq $rk) {
+      throw 'OpenSubKey CrashControl writable returned null'
+    }
+    if ($null -eq $Values) { $Values = [string[]]@() }
+    $rk.SetValue(
+      'DumpFilters',
+      [string[]]$Values,
+      [Microsoft.Win32.RegistryValueKind]::MultiString)
+  } finally {
+    if ($null -ne $rk) { $rk.Close() }
+  }
+}
+
+function Test-PostWrite([ref]$failReason) {
+  $c = Get-ItemProperty $ccPath
+  if ([int]$c.CrashDumpEnabled -ne $beforeDumpEnabled) {
+    $failReason.Value = 'CrashDumpEnabled_changed'; return $false
+  }
+  if ([string]$c.DumpFile -ne $beforeDumpFile) {
+    $failReason.Value = 'DumpFile_changed'; return $false
+  }
+  if ([string]$c.MinidumpDir -ne $beforeMinidump) {
+    $failReason.Value = 'MinidumpDir_changed'; return $false
+  }
+  $meta = Get-DumpFiltersMeta
+  if (-not $meta.Exists) {
+    $failReason.Value = 'DumpFilters_value_missing'; return $false
+  }
+  if ($meta.Kind -ne 'MultiString') {
+    $failReason.Value = "DumpFilters_type_$($meta.Kind)_not_MultiString"
+    return $false
+  }
+  $q = & reg.exe query 'HKLM\SYSTEM\CurrentControlSet\Control\CrashControl' /v DumpFilters 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) {
+    $failReason.Value = 'DumpFilters_reg_query_failed'; return $false
+  }
+  if ($q -notmatch 'REG_MULTI_SZ') {
+    $failReason.Value = 'DumpFilters_reg_query_not_REG_MULTI_SZ'
+    return $false
+  }
+  $got = @($meta.Values)
+  $exp = @($expectedAfter)
+  if ($got.Count -ne $exp.Count) {
+    $failReason.Value = "DumpFilters_count_got=$($got.Count)_exp=$($exp.Count)"
+    return $false
+  }
+  for ($i = 0; $i -lt $exp.Count; $i++) {
+    if ($got[$i] -ne $exp[$i]) {
+      $failReason.Value = "DumpFilters_mismatch_at_$i"
+      return $false
+    }
+  }
+  if ($got -contains 'dumpfve.sys') {
+    $failReason.Value = 'dumpfve_still_present'; return $false
+  }
+  return $true
+}
+
+# --- Write + verify; fail handlers return codes; exit only at script scope below ---
+$writeAttempted = $false
+$registryVerified = $false
+try {
+  L 'WRITE_BEGIN Set-DumpFiltersMultiString'
+  $writeAttempted = $true
+  Set-DumpFiltersMultiString -Values $expectedAfter
+  L 'WRITE_DONE'
+
+  $why = ''
+  $ok = Test-PostWrite ([ref]$why)
+
+  $cc2 = Get-ItemProperty $ccPath
+  $afterMeta = Get-DumpFiltersMeta
+  L "After_CrashDumpEnabled=$($cc2.CrashDumpEnabled)"
+  L "After_DumpFile=$($cc2.DumpFile)"
+  L "After_MinidumpDir=$($cc2.MinidumpDir)"
+  L "After_DumpFilters_Exists=$($afterMeta.Exists) Kind=$($afterMeta.Kind) Count=$($afterMeta.Values.Count)"
+  L "After_DumpFilters='$($afterMeta.Values -join ',')'"
+
+  if (-not $ok) {
+    L "VERIFY_FAIL=$why"
+    [void](Invoke-FailPath -ExitCode 5 `
+      -ActionLine 'ACTION=VERIFY_FAILED' `
+      -RollbackReason 'VERIFY_FAIL' `
+      -NeedRollback $true)
+  } else {
+    $registryVerified = $true
+    L 'ACTION=REMOVED_dumpfve_ONLY'
+    L 'VERIFY=PASS'
+    L 'NOTE=BitLocker not disabled; dumpfve.sys file not deleted; no crash forced'
+    L 'DUMP_CAPTURE=UNVERIFIED'
+    L "ROLLBACK=reg import `"$backup`""
+    L 'NEXT=Reboot; verify zero volmgr 45/46 since boot; run ROLLBACK if problems'
+  }
+}
+catch {
+  L "POST_WRITE_EXCEPTION=$($_.Exception.Message)"
+  if ($registryVerified) {
+    L 'ACTION=REGISTRY_OK_POST_VERIFY_EXCEPTION'
+    [void](Save-ReceiptSafe)
+    $script:pendingExitCode = 7
+  } elseif ($writeAttempted) {
+    [void](Invoke-FailPath -ExitCode 5 `
+      -ActionLine 'ACTION=EXCEPTION_AFTER_WRITE' `
+      -RollbackReason 'POST_WRITE_EXCEPTION' `
+      -NeedRollback $true)
+  } else {
+    [void](Invoke-FailPath -ExitCode 6 `
+      -ActionLine 'ACTION=NONE REASON=exception_before_write' `
+      -RollbackReason 'N/A' `
+      -NeedRollback $false)
+  }
+}
+
+# Explicit script-scope termination after write/verification block
+if ($null -ne $script:pendingExitCode) {
+  exit [int]$script:pendingExitCode
+}
+
+# Success path only: receipt persistence distinct from registry verification
+if (-not (Save-ReceiptSafe)) {
+  L 'ACTION=REGISTRY_OK_RECEIPT_FAILED'
+  Write-Host "Registry VERIFY=PASS but receipt save failed. Backup=$backup"
+  exit 7
+}
 Write-Host "Wrote $receipt"
 Write-Host "Backup $backup"
 Write-Host "Rollback: reg import `"$backup`""
