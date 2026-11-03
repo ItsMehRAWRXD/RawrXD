@@ -45,6 +45,7 @@ bool Win32IDE::routeCommand(int commandId) {
         handleTerminalCommand(commandId); return true;
     case IDM_TOOLS_PROFILE_START: case IDM_TOOLS_PROFILE_STOP:
     case IDM_TOOLS_PROFILE_RESULTS: case IDM_TOOLS_ANALYZE_SCRIPT:
+    case IDM_TOOLS_BUILD_PROJECT: case IDM_TOOLS_TEST_PROJECT:
         handleToolsCommand(commandId); return true;
     case IDM_MODULES_REFRESH: case IDM_MODULES_IMPORT: case IDM_MODULES_EXPORT:
         handleModulesCommand(commandId); return true;
@@ -312,6 +313,22 @@ void Win32IDE::handleToolsCommand(int commandId) {
     case IDM_TOOLS_PROFILE_STOP: stopProfiling(); break;
     case IDM_TOOLS_PROFILE_RESULTS: showProfileResults(); break;
     case IDM_TOOLS_ANALYZE_SCRIPT: analyzeScript(); break;
+    case IDM_TOOLS_BUILD_PROJECT:
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Build");
+        startPowerShell();
+        if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
+            pane->manager->writeInput("cmake --build build_ide --config Release\n");
+        }
+        appendToOutput("Native IDE build started in the active terminal.\n", "Output", OutputSeverity::Info);
+        break;
+    case IDM_TOOLS_TEST_PROJECT:
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Tests");
+        startPowerShell();
+        if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
+            pane->manager->writeInput("ctest --test-dir build_ide --output-on-failure\n");
+        }
+        appendToOutput("Native IDE test run started in the active terminal.\n", "Output", OutputSeverity::Info);
+        break;
     default: break;
     }
 }

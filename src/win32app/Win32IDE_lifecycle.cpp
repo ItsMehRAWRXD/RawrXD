@@ -585,6 +585,11 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         if (hwndCtl == m_hwndEditor) {
             if (codeNotify == EN_CHANGE && !m_suppressEditorDirty) {
                 m_fileModified = true;
+                if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+                    auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+                    buffer.text = getWindowText(m_hwndEditor);
+                    buffer.modified = true;
+                }
                 updateTitleBarText();
                 notifyGhostTextInputChanged(hwndCtl);
             }
@@ -1004,6 +1009,7 @@ void Win32IDE::createDocumentTabs()
 
     // Start with the scratch buffer that already exists in the UI.
     m_openDocuments.clear();
+    m_documentBuffers.clear();
     m_activeDocument = -1;
     addDocumentTab(std::string());
 }
@@ -1037,7 +1043,13 @@ void Win32IDE::addDocumentTab(const std::string& path)
     TabCtrl_InsertItem(m_hwndDocTabs, index, &tie);
 
     m_openDocuments.push_back(path);
+    m_documentBuffers.push_back(DocumentBuffer{path, std::string(), false});
     TabCtrl_SetCurSel(m_hwndDocTabs, index);
+    if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size()) && m_hwndEditor) {
+        auto& current = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+        current.text = getWindowText(m_hwndEditor);
+        current.modified = m_fileModified;
+    }
     m_activeDocument = index;
     updateTitleBarText();
 }
@@ -1075,7 +1087,15 @@ void Win32IDE::switchDocumentTab(int index)
     TabCtrl_SetCurSel(m_hwndDocTabs, index);
 
     const std::string& path = m_openDocuments[static_cast<size_t>(index)];
-    if (!path.empty()) {
+    if (index < static_cast<int>(m_documentBuffers.size()) &&
+        (!m_documentBuffers[static_cast<size_t>(index)].text.empty() ||
+         m_documentBuffers[static_cast<size_t>(index)].modified || path.empty())) {
+        const auto& buffer = m_documentBuffers[static_cast<size_t>(index)];
+        setEditorText(buffer.text);
+        m_currentFile = path;
+        m_fileModified = buffer.modified;
+        updateTitleBarText();
+    } else if (!path.empty()) {
         loadFileIntoEditor(path);
     } else {
         m_currentFile.clear();

@@ -981,11 +981,17 @@ private:
     std::atomic_bool m_inferenceStopRequested{false};
     std::atomic<uint64_t> m_nextInferenceGeneration{0};
     std::atomic<uint64_t> m_activeInferenceGeneration{0};
+    // Live WinHTTP handles for the in-flight Ollama generate call. Stop must
+    // close these so a blocked ReceiveResponse cannot keep ownership forever.
+    std::atomic<void*> m_ollamaHttpSession{nullptr};
+    std::atomic<void*> m_ollamaHttpConnect{nullptr};
+    std::atomic<void*> m_ollamaHttpRequest{nullptr};
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
     std::mutex m_inferenceMutex;
     std::function<void(const std::string&, bool, bool)> m_inferenceCallback;
+    void abortActiveOllamaHttp();
 
     // File Explorer Sidebar - tree view items
     HWND m_hwndFileTree = nullptr;
@@ -1017,7 +1023,13 @@ private:
     // Document tabs (VS Code style). m_openDocuments holds the file path of every
     // open editor buffer; an empty entry is the scratch "Untitled" buffer.
     HWND m_hwndDocTabs = nullptr;
+    struct DocumentBuffer {
+        std::string path;
+        std::string text;
+        bool modified = false;
+    };
     std::vector<std::string> m_openDocuments;
+    std::vector<DocumentBuffer> m_documentBuffers;
     int m_activeDocument = -1;
 
     // Per-pane terminal managers replace the previous single manager

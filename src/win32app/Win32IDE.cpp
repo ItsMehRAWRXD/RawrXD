@@ -751,12 +751,41 @@ std::string reasoningApiLevel(ReasoningMode mode)
     }
 }
 
+struct OllamaHttpCancelSlots {
+    std::atomic_bool* stopRequested = nullptr;
+    std::atomic<void*>* sessionSlot = nullptr;
+    std::atomic<void*>* connectSlot = nullptr;
+    std::atomic<void*>* requestSlot = nullptr;
+};
+
+static void publishOllamaHandle(std::atomic<void*>* slot, HINTERNET handle) {
+    if (!slot) return;
+    slot->store(reinterpret_cast<void*>(handle), std::memory_order_release);
+}
+
+// Close only if this thread still owns the published slot. Stop may have
+// already closed and nulled the slot — a second CloseHandle would be unsafe.
+static bool closeOwnedOllamaHandle(std::atomic<void*>* slot, HINTERNET handle) {
+    if (!handle) return false;
+    if (!slot) {
+        WinHttpCloseHandle(handle);
+        return true;
+    }
+    void* expected = reinterpret_cast<void*>(handle);
+    if (slot->compare_exchange_strong(expected, nullptr, std::memory_order_acq_rel)) {
+        WinHttpCloseHandle(handle);
+        return true;
+    }
+    return false;
+}
+
 std::string generateOllamaModel(const std::string& baseUrl,
                                  const std::string& model,
                                  const std::string& prompt,
                                  int maxTokens,
                                  int contextTokens,
-                                 ReasoningMode reasoningMode = ReasoningMode::Instant)
+                                 ReasoningMode reasoningMode = ReasoningMode::Instant,
+                                 OllamaHttpCancelSlots cancel = {})
 {
     // DEBUG: Log to both OutputDebugStringA and a file
     auto logDebug = [](const char* fmt, ...) {
@@ -867,12 +896,16 @@ std::string generateOllamaModel(const std::string& baseUrl,
     };
     const std::string body = bodyJson.dump();
     const std::wstring wideHost(host.begin(), host.end());
+    if (cancel.stopRequested && cancel.stopRequested->load(std::memory_order_acquire)) {
+        return "[Ollama request cancelled]";
+    }
     HINTERNET session = WinHttpOpen(L"RawrXD Chat/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY,
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!session) { 
         logDebug("[OLLAMA_DEBUG] WinHttpOpen failed (GetLastError=%lu)\n", GetLastError());
         return {}; 
     }
+    publishOllamaHandle(cancel.sessionSlot, session);
     // Large-context local requests can spend well over thirty seconds in
     // model admission, prompt evaluation, and reasoning before Ollama emits
     // its final non-streaming JSON response.  The old 30-second receive
@@ -889,40 +922,64 @@ std::string generateOllamaModel(const std::string& baseUrl,
     HINTERNET connect = WinHttpConnect(session, wideHost.c_str(), port, 0);
     if (!connect) { 
         logDebug("[OLLAMA_DEBUG] WinHttpConnect failed (GetLastError=%lu)\n", GetLastError());
-        WinHttpCloseHandle(session); 
+        closeOwnedOllamaHandle(cancel.sessionSlot, session);
         return {}; 
     }
+    publishOllamaHandle(cancel.connectSlot, connect);
     const DWORD flags = https ? WINHTTP_FLAG_SECURE : 0;
     HINTERNET request = WinHttpOpenRequest(connect, L"POST", L"/api/generate", nullptr,
         WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
     if (!request) { 
         logDebug("[OLLAMA_DEBUG] WinHttpOpenRequest failed (GetLastError=%lu)\n", GetLastError());
-        WinHttpCloseHandle(connect); WinHttpCloseHandle(session); 
+        closeOwnedOllamaHandle(cancel.connectSlot, connect);
+        closeOwnedOllamaHandle(cancel.sessionSlot, session);
         return {}; 
     }
+    publishOllamaHandle(cancel.requestSlot, request);
 
     std::string raw;
     const wchar_t headers[] = L"Content-Type: application/json\r\n";
-    if (WinHttpSendRequest(request, headers, static_cast<DWORD>(-1L),
+    bool cancelled = cancel.stopRequested &&
+        cancel.stopRequested->load(std::memory_order_acquire);
+    if (!cancelled &&
+        WinHttpSendRequest(request, headers, static_cast<DWORD>(-1L),
             const_cast<char*>(body.data()), static_cast<DWORD>(body.size()),
-            static_cast<DWORD>(body.size()), 0) && WinHttpReceiveResponse(request, nullptr)) {
+            static_cast<DWORD>(body.size()), 0) &&
+        WinHttpReceiveResponse(request, nullptr)) {
         DWORD available = 0;
-        while (WinHttpQueryDataAvailable(request, &available) && available) {
+        while (!(cancel.stopRequested &&
+                 cancel.stopRequested->load(std::memory_order_acquire)) &&
+               WinHttpQueryDataAvailable(request, &available) && available) {
             std::string chunk(available, '\0');
             DWORD read = 0;
             if (!WinHttpReadData(request, chunk.data(), available, &read) || !read) break;
             raw.append(chunk.data(), read);
         }
+        if (cancel.stopRequested &&
+            cancel.stopRequested->load(std::memory_order_acquire)) {
+            cancelled = true;
+        }
     } else {
         const DWORD errorCode = GetLastError();
-        logDebug("[OLLAMA_DEBUG] WinHttpSendRequest/ReceiveResponse failed (GetLastError=%lu)\n",
-                 errorCode);
-        return std::string("[Ollama request failed before a response was received. "
-                           "WinHTTP error=") + std::to_string(errorCode) + "]";
+        if (cancel.stopRequested &&
+            cancel.stopRequested->load(std::memory_order_acquire)) {
+            cancelled = true;
+        } else {
+            logDebug("[OLLAMA_DEBUG] WinHttpSendRequest/ReceiveResponse failed (GetLastError=%lu)\n",
+                     errorCode);
+            closeOwnedOllamaHandle(cancel.requestSlot, request);
+            closeOwnedOllamaHandle(cancel.connectSlot, connect);
+            closeOwnedOllamaHandle(cancel.sessionSlot, session);
+            return std::string("[Ollama request failed before a response was received. "
+                               "WinHTTP error=") + std::to_string(errorCode) + "]";
+        }
     }
-    WinHttpCloseHandle(request);
-    WinHttpCloseHandle(connect);
-    WinHttpCloseHandle(session);
+    closeOwnedOllamaHandle(cancel.requestSlot, request);
+    closeOwnedOllamaHandle(cancel.connectSlot, connect);
+    closeOwnedOllamaHandle(cancel.sessionSlot, session);
+    if (cancelled) {
+        return "[Ollama request cancelled]";
+    }
     
     logDebug("[OLLAMA_DEBUG] Raw response length: %zu\n", raw.length());
     if (!raw.empty() && raw.length() < 500) {
@@ -3379,7 +3436,9 @@ bool Win32IDE::saveFile()
     appendToOutput("Saving file: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
     try {
         std::string content = getWindowText(m_hwndEditor);
-        std::ofstream file(m_currentFile);
+        // Preserve editor bytes exactly; text-mode streams can translate
+        // newlines on Windows and make save/reopen integrity lossy.
+        std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
         if (file) {
             file << content;
             m_fileModified = false;
@@ -6725,9 +6784,15 @@ void Win32IDE::generateResponseAsync(
                                      webBrowsingEnabled, requestGeneration]() {
         auto finishIfCurrent = [this, callback, requestGeneration](
             const std::string& result, bool success) {
-            if (m_inferenceStopRequested.load() ||
-                m_activeInferenceGeneration.load() != requestGeneration) {
-                m_inferenceRunning = false;
+            const uint64_t active =
+                m_activeInferenceGeneration.load(std::memory_order_acquire);
+            // A newer Request B owns the slot — never clear its busy flag.
+            if (active != 0 && active != requestGeneration) {
+                return;
+            }
+            if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                active == 0) {
+                // stopInference already released ownership for Request B.
                 return;
             }
             m_inferenceRunning = false;
@@ -6787,9 +6852,20 @@ void Win32IDE::generateResponseAsync(
                     finishIfCurrent("The generated Ollama route is missing its local HTTP runtime mapping.", false);
                     return;
                 }
+                OllamaHttpCancelSlots cancelSlots{
+                    &m_inferenceStopRequested,
+                    &m_ollamaHttpSession,
+                    &m_ollamaHttpConnect,
+                    &m_ollamaHttpRequest};
                 const std::string response = generateOllamaModel(
                     m_ollamaBaseUrl, selectedModel.identifier, routedPrompt,
-                    requestMaxTokens, requestContextTokens, reasoningMode);
+                    requestMaxTokens, requestContextTokens, reasoningMode,
+                    cancelSlots);
+                if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                    response == "[Ollama request cancelled]") {
+                    finishIfCurrent("", false);
+                    return;
+                }
                 finishIfCurrent(response.empty()
                     ? "The selected Ollama model did not respond. Check that Ollama is running locally."
                     : response, !response.empty());
@@ -6846,10 +6922,28 @@ void Win32IDE::generateResponseAsync(
     });
 }
 
+void Win32IDE::abortActiveOllamaHttp()
+{
+    auto closeSlot = [](std::atomic<void*>& slot) {
+        void* handle = slot.exchange(nullptr, std::memory_order_acq_rel);
+        if (handle) {
+            WinHttpCloseHandle(reinterpret_cast<HINTERNET>(handle));
+        }
+    };
+    // Close request first so a blocked ReceiveResponse/ReadData unblocks.
+    closeSlot(m_ollamaHttpRequest);
+    closeSlot(m_ollamaHttpConnect);
+    closeSlot(m_ollamaHttpSession);
+}
+
 void Win32IDE::stopInference()
 {
-    m_inferenceStopRequested = true;
-    m_activeInferenceGeneration = 0;
+    m_inferenceStopRequested.store(true, std::memory_order_release);
+    m_activeInferenceGeneration.store(0, std::memory_order_release);
+    abortActiveOllamaHttp();
+    // Release admission immediately so Request B is not rejected while the
+    // old worker drains a cancelled WinHTTP call.
+    m_inferenceRunning.store(false, std::memory_order_release);
 }
 
 void Win32IDE::setInferenceConfig(const InferenceConfig& config)
