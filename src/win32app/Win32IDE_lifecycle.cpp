@@ -221,10 +221,23 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 }
             } else if (nmhdr->idFrom == IDC_FILE_EXPLORER &&
                        nmhdr->code == TVN_DELETEITEMA) {
-                // addTreeItem owns a heap-allocated path for every tree row.
+                // addTreeItem owns a heap-allocated buffer holding both the
+                // full path and the display text for every tree row.
                 // TreeView_DeleteAllItems does not free item lParam values;
                 // release them at the native delete notification so repeated
                 // drive refreshes cannot leak or retain stale paths.
+                auto* treeChange = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                delete[] reinterpret_cast<char*>(treeChange->itemOld.lParam);
+            } else if (nmhdr->idFrom == IDC_FILE_TREE &&
+                       nmhdr->code == TVN_DELETEITEMA) {
+                // m_hwndFileTree items store heap-allocated char* buffers
+                // for both path and display text; free them on item delete.
+                auto* treeChange = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                delete[] reinterpret_cast<char*>(treeChange->itemOld.lParam);
+            } else if (nmhdr->idFrom == IDC_DEBUGGER_VARIABLES &&
+                       nmhdr->code == TVN_DELETEITEMA) {
+                // Debugger variable items store heap-allocated char* buffers
+                // for display text; free them on item delete.
                 auto* treeChange = reinterpret_cast<NMTREEVIEWA*>(lParam);
                 delete[] reinterpret_cast<char*>(treeChange->itemOld.lParam);
             } else if (nmhdr->idFrom == IDC_FILE_EXPLORER &&
@@ -464,11 +477,12 @@ void Win32IDE::onCreate(HWND hwnd)
     initializeNativeGhostText();
     // Session restoration can materialize a saved/dirty buffer directly from
     // DocumentBuffer rather than through loadFileIntoEditor().  Arm the
-    // external-change monitor after that materialization so cold launches
-    // receive the same protection as an explicit File > Open.
-    if (!m_currentFile.empty()) {
-        armFileSafetyMonitor();
-    }
+    // external-change monitor on every cold launch so any modified buffer --
+    // including new/untitled files with no on-disk path -- receives periodic
+    // debounced autosave snapshots.  Without this, an abrupt process kill
+    // loses unsaved content because saveIdeSession() previously only ran on
+    // WM_CLOSE (T10 crash-recovery gate).
+    armFileSafetyMonitor();
 
     RECT client{};
     if (GetClientRect(hwnd, &client)) {
@@ -1102,14 +1116,19 @@ void Win32IDE::addDocumentTab(const std::string& path)
     const std::string label = path.empty() ? std::string("Untitled")
                                            : extractLeafName(path);
 
+    // Create the buffer first so its label storage persists for the tab
+    // control's pszText pointer.  TabCtrl_InsertItem does not copy the
+    // string text; it retains the pointer, so a local std::string would
+    // dangle as soon as this function returns (T08 root cause).
+    m_documentBuffers.push_back(DocumentBuffer{path, label, std::string(), false});
+
     TCITEMA tie{};
     tie.mask = TCIF_TEXT;
-    tie.pszText = const_cast<char*>(label.c_str());
+    tie.pszText = const_cast<char*>(m_documentBuffers.back().label.c_str());
     const int index = static_cast<int>(m_openDocuments.size());
     TabCtrl_InsertItem(m_hwndDocTabs, index, &tie);
 
     m_openDocuments.push_back(path);
-    m_documentBuffers.push_back(DocumentBuffer{path, std::string(), false});
     TabCtrl_SetCurSel(m_hwndDocTabs, index);
     if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size()) && m_hwndEditor) {
         auto& current = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
@@ -1197,11 +1216,16 @@ void Win32IDE::updateDocumentTabs()
     if (!m_hwndDocTabs) return;
     TabCtrl_DeleteAllItems(m_hwndDocTabs);
     for (size_t i = 0; i < m_openDocuments.size(); ++i) {
-        const std::string label = m_openDocuments[i].empty()
-            ? std::string("Untitled") : extractLeafName(m_openDocuments[i]);
+        // Ensure the label is stored on the persistent buffer so the tab
+        // control's pszText pointer remains valid (T08 fix).
+        auto& buffer = m_documentBuffers[static_cast<size_t>(i)];
+        if (buffer.label.empty()) {
+            buffer.label = m_openDocuments[i].empty()
+                ? std::string("Untitled") : extractLeafName(m_openDocuments[i]);
+        }
         TCITEMA tie{};
         tie.mask = TCIF_TEXT;
-        tie.pszText = const_cast<char*>(label.c_str());
+        tie.pszText = const_cast<char*>(buffer.label.c_str());
         TabCtrl_InsertItem(m_hwndDocTabs, static_cast<int>(i), &tie);
     }
     if (m_activeDocument >= 0 &&

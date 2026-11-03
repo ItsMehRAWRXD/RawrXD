@@ -1120,7 +1120,6 @@ std::string generateOllamaModel(const std::string& baseUrl,
 #define IDC_DEBUGGER_TABS 1314
 #define IDC_DEBUGGER_BREAKPOINTS 1315
 #define IDC_DEBUGGER_WATCH 1316
-#define IDC_DEBUGGER_VARIABLES 1317
 #define IDC_DEBUGGER_STACK_TRACE 1318
 #define IDC_DEBUGGER_MEMORY 1319
 #define IDC_DEBUGGER_TOOLBAR 1320
@@ -3030,7 +3029,7 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     cf.cbSize = sizeof(cf);
     cf.dwMask = CFM_FACE | CFM_SIZE;
     cf.yHeight = 180; // 9 points
-    strcpy(cf.szFaceName, "Consolas");
+    strcpy_s(cf.szFaceName, "Consolas");
     SendMessage(hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
 
     int paneId = m_nextTerminalId++;
@@ -3334,6 +3333,21 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
         std::string content((std::istreambuf_iterator<char>(file)),
                              std::istreambuf_iterator<char>());
 
+        // T07: reject binary/NUL-bearing files before they enter the editor
+        // path. A text editor must not silently load a binary file into a
+        // RichEdit buffer; doing so corrupts undo state, tab bookkeeping and
+        // save/reopen integrity. Detect NUL bytes (the reliable binary marker
+        // that survives UTF-8 validation) and refuse the load with a dialog.
+        if (content.find('\0') != std::string::npos) {
+            appendToOutput("File > Open rejected: binary file (NUL bytes present): " + path + "\n",
+                           "Errors", OutputSeverity::Error);
+            MessageBoxA(m_hwndMain,
+                        ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
+                         path).c_str(),
+                        "Binary file rejected", MB_OK | MB_ICONSTOP);
+            return false;
+        }
+
         const int existing = findDocumentTab(path);
         if (existing >= 0 && existing != m_activeDocument) {
             if (m_activeDocument >= 0 &&
@@ -3380,7 +3394,7 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
         armFileSafetyMonitor();
         updateTitleBarText();
         const std::string digest = sha256Hex(content);
-        SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)"File opened");
         updateMenuEnableStates();
         syncEditorToGpuSurface();
         appendToOutput("File opened successfully (" + std::to_string(content.size()) +
@@ -3925,7 +3939,7 @@ void Win32IDE::insertSnippet(const std::string& snippetName)
                 }
             }
             
-            SendMessage(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)content.c_str());
+            SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)content.c_str());
             break;
         }
     }
@@ -3947,7 +3961,7 @@ void Win32IDE::showGetHelp(const std::string& cmdlet)
         TEXTRANGEA tr;
         tr.chrg = range;
         tr.lpstrText = buffer;
-        SendMessage(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+        SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
         command = std::string(buffer);
     } else {
         command = "Get-Command";  // Default help
@@ -4180,7 +4194,7 @@ void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::
     SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
     
     SETTEXTEX st{}; st.flags = ST_SELECTION; st.codepage = CP_ACP;
-    SendMessage(hwnd, EM_SETTEXTEX, (WPARAM)&st, (LPARAM)text.c_str());
+    SendMessageA(hwnd, EM_SETTEXTEX, (WPARAM)&st, (LPARAM)text.c_str());
 }
 
 void Win32IDE::copyWithFormatting()
@@ -4191,7 +4205,7 @@ void Win32IDE::copyWithFormatting()
     if (range.cpMax <= range.cpMin) return;
     LONG len = range.cpMax - range.cpMin;
     std::vector<char> buffer(len + 1); TEXTRANGEA tr; tr.chrg = range; tr.lpstrText = buffer.data();
-    SendMessage(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+    SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
     std::string text(buffer.data());
     m_clipboardHistory.insert(m_clipboardHistory.begin(), text);
     if (m_clipboardHistory.size() > MAX_CLIPBOARD_HISTORY) m_clipboardHistory.resize(MAX_CLIPBOARD_HISTORY);
@@ -4215,7 +4229,7 @@ void Win32IDE::pasteWithoutFormatting()
         if (hData) {
             const char* data = (const char*)GlobalLock(hData);
             if (data) {
-                SendMessage(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)data);
+                SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)data);
                 GlobalUnlock(hData);
             }
         }
@@ -5371,8 +5385,10 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
                 for (const char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
                     const std::string drivePath(drive);
                     const std::string displayName = drivePath;
-                    tvis.item.pszText = const_cast<char*>(displayName.c_str());
-                    tvis.item.lParam = (LPARAM) new std::string(drivePath);
+                    char* driveText = new char[displayName.length() + 1];
+                    memcpy(driveText, displayName.c_str(), displayName.length() + 1);
+                    tvis.item.pszText = driveText;
+                    tvis.item.lParam = reinterpret_cast<LPARAM>(driveText);
 
                     HTREEITEM driveItem = (HTREEITEM)SendMessageA(
                         m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
@@ -5424,8 +5440,10 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
 
             if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
                 // It's a folder
-                tvis.item.pszText = findData.cFileName;
-                tvis.item.lParam = (LPARAM) new std::string(fullPath);
+                char* folderText = new char[strlen(findData.cFileName) + 1];
+                strcpy_s(folderText, strlen(findData.cFileName) + 1, findData.cFileName);
+                tvis.item.pszText = folderText;
+                tvis.item.lParam = reinterpret_cast<LPARAM>(folderText);
 
                 HTREEITEM folderItem = (HTREEITEM)SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
                 m_treeItemPaths[folderItem] = fullPath;
@@ -5441,8 +5459,10 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
                 // The explorer is a file browser, not a model-only picker.
                 // Keep every file visible; model-specific actions are still
                 // selected by isModelFile() on activation/context menus.
-                tvis.item.pszText = findData.cFileName;
-                tvis.item.lParam = (LPARAM) new std::string(fullPath);
+                char* fileText = new char[strlen(findData.cFileName) + 1];
+                strcpy_s(fileText, strlen(findData.cFileName) + 1, findData.cFileName);
+                tvis.item.pszText = fileText;
+                tvis.item.lParam = reinterpret_cast<LPARAM>(fileText);
 
                 HTREEITEM fileItem = (HTREEITEM)SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
                 m_treeItemPaths[fileItem] = fullPath;
@@ -5869,13 +5889,20 @@ HTREEITEM Win32IDE::addTreeItem(HTREEITEM hParent, const std::string& text, cons
     tvins.hParent = hParent;
     tvins.hInsertAfter = TVI_LAST;
     tvins.item.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-    
-    // Allocate memory for the full path (will be freed when item is deleted)
-    char* pathData = new char[fullPath.length() + 1];
-    strcpy_s(pathData, fullPath.length() + 1, fullPath.c_str());
-    
-    tvins.item.pszText = const_cast<char*>(text.c_str());
-    tvins.item.lParam = reinterpret_cast<LPARAM>(pathData);
+
+    // Allocate one heap buffer holding both the full path and the display
+    // text.  The TreeView control retains pszText for the item's lifetime,
+    // so storing a pointer to a caller-local std::string would dangle once
+    // addTreeItem returns (same class of defect as T08 tab labels).  The
+    // combined buffer is freed in the TVN_DELETEITEMA handler.
+    const size_t pathLen = fullPath.length();
+    const size_t textLen = text.length();
+    char* combinedData = new char[pathLen + 1 + textLen + 1];
+    memcpy(combinedData, fullPath.c_str(), pathLen + 1);
+    memcpy(combinedData + pathLen + 1, text.c_str(), textLen + 1);
+
+    tvins.item.pszText = combinedData + pathLen + 1;
+    tvins.item.lParam = reinterpret_cast<LPARAM>(combinedData);
     
     // Set appropriate icon
     if (isDirectory) {
@@ -7585,12 +7612,15 @@ void Win32IDE::updateChatSessionTabs()
         TabCtrl_DeleteAllItems(m_hwndChatSessionTabs);
         for (size_t i = 0; i < m_chatSessions.size(); ++i) {
             auto& session = m_chatSessions[i];
-            std::string label = session.title.empty()
+            // Compute and persist the tab label on the session object so the
+            // tab control's pszText pointer remains valid across loop
+            // iterations (local std::string would dangle immediately).
+            session.label = session.title.empty()
                 ? ("Chat " + std::to_string(i + 1)) : session.title;
-            if (session.running) label += " *";
+            if (session.running) session.label += " *";
             TCITEMA item{};
             item.mask = TCIF_TEXT;
-            item.pszText = const_cast<char*>(label.c_str());
+            item.pszText = const_cast<char*>(session.label.c_str());
             TabCtrl_InsertItem(m_hwndChatSessionTabs, static_cast<int>(i), &item);
         }
         if (m_activeChatSession >= 0 &&

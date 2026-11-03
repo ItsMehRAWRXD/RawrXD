@@ -14,6 +14,7 @@
 #include <bcrypt.h>
 #include <limits>
 #include <string_view>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #pragma comment(lib, "bcrypt.lib")
 
@@ -25,6 +26,24 @@ namespace {
 
 constexpr UINT_PTR kFileSafetyTimerId = 0x52584653; // "RXFS"
 constexpr UINT kFileSafetyIntervalMs = 1500;
+
+static std::string getRecentFilesPath() {
+    PWSTR path = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
+        std::filesystem::path dir(path);
+        CoTaskMemFree(path);
+        dir /= "RawrXD";
+        dir /= "recent_files.ini";
+        std::error_code ec;
+        std::filesystem::create_directories(dir.parent_path(), ec);
+        return dir.string();
+    }
+    char localAppData[MAX_PATH] = {};
+    if (GetEnvironmentVariableA("LOCALAPPDATA", localAppData, MAX_PATH)) {
+        return std::string(localAppData) + "\\RawrXD\\recent_files.ini";
+    }
+    return "C:\\RawrXD\\recent_files.ini";
+}
 
 bool queryFileSafetyFingerprint(const std::string& path, bool& exists,
                                 ULONGLONG& size, FILETIME& lastWriteTime,
@@ -301,6 +320,22 @@ void Win32IDE::openFileDialog() {
             std::string content;
             std::string readError;
             if (readBinaryFile(szFile, content, readError)) {
+                // T07: reject binary/NUL-bearing files before they enter the
+                // editor. A text editor must not silently load a binary file
+                // into a RichEdit buffer; doing so corrupts undo state, tab
+                // bookkeeping and save/reopen integrity. Detect NUL bytes
+                // (the reliable binary marker that survives UTF-8 validation)
+                // and refuse the load with a dialog.
+                if (content.find('\0') != std::string::npos) {
+                    appendToOutput("File > Open rejected: binary file (NUL bytes present): " + std::string(szFile) + "\n",
+                                   "Errors", OutputSeverity::Error);
+                    MessageBoxA(m_hwndMain,
+                                ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
+                                 std::string(szFile)).c_str(),
+                                "Binary file rejected", MB_OK | MB_ICONSTOP);
+                    return;
+                }
+
                 // Check file size to prevent loading huge TEXT files into editor
                 const size_t fileSize = content.size();
                 
@@ -319,6 +354,12 @@ void Win32IDE::openFileDialog() {
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
                 updateTitleBarText();
+
+                // T08: register the opened file as a document tab so the tab
+                // control reflects the open document.  Without this, File >
+                // Open loads content into the editor but the tab count stays
+                // at 1.
+                addDocumentTab(szFile);
                 
                 // Update recent files
                 updateRecentFiles(szFile);
@@ -357,7 +398,21 @@ void Win32IDE::openRecentFile(int index) {
         std::string content;
         std::string readError;
         if (readBinaryFile(filePath, content, readError)) {
-            if (!setEditorTextUtf8FromFile(content)) return;
+                // T07: reject binary/NUL-bearing files before they enter the editor.
+                if (content.find('\0') != std::string::npos) {
+                    appendToOutput("Recent file rejected: binary file (NUL bytes present): " + filePath + "\n",
+                                   "Errors", OutputSeverity::Error);
+                    MessageBoxA(m_hwndMain,
+                                ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
+                                 filePath).c_str(),
+                                "Binary file rejected", MB_OK | MB_ICONSTOP);
+                    // Remove from recent files so it cannot be re-selected.
+                    m_recentFiles.erase(m_recentFiles.begin() + index);
+                    saveRecentFiles();
+                    return;
+                }
+
+                if (!setEditorTextUtf8FromFile(content)) return;
             
             m_currentFile = filePath;
             m_fileModified = false;
@@ -390,6 +445,7 @@ std::string Win32IDE::getFileDialogPath(bool isSave) {
     
     if (!m_currentFile.empty()) {
         strncpy(szFile, m_currentFile.c_str(), MAX_PATH - 1);
+        szFile[MAX_PATH - 1] = '\0';
     }
     
     ofn.lStructSize = sizeof(ofn);
@@ -422,8 +478,21 @@ std::string Win32IDE::getFileDialogPath(bool isSave) {
 }
 
 void Win32IDE::saveAll() {
-    if (!m_currentFile.empty() && m_fileModified) {
+    bool anySaved = false;
+    // Save every modified document buffer, not just the active one.
+    for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
+        if (m_documentBuffers[i].modified && !m_openDocuments[i].empty()) {
+            switchDocumentTab(static_cast<int>(i));
+            saveFile();
+            anySaved = true;
+        }
+    }
+    // Ensure the current file is saved if modified.
+    if (m_fileModified && !m_currentFile.empty()) {
         saveFile();
+        anySaved = true;
+    }
+    if (anySaved) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"All files saved");
     }
 }
@@ -432,18 +501,24 @@ void Win32IDE::closeFile() {
     if (m_fileModified && !promptSaveChanges()) {
         return;
     }
-    
+
+    // Remove the document tab for the file being closed so the tab control
+    // and the document buffer list stay in sync with the editor state.
+    if (m_activeDocument >= 0) {
+        removeDocumentTab(m_activeDocument);
+    }
+
     // Clear editor
     setEditorText("");
-    
+
     // Reset state
     m_currentFile.clear();
     m_fileModified = false;
     updateTitleBarText();
-    
+
     // Update window title
     SetWindowTextA(m_hwndMain, "RawrXD IDE - New File");
-    
+
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File closed");
 }
 
@@ -486,7 +561,7 @@ void Win32IDE::updateRecentFiles(const std::string& filePath) {
 void Win32IDE::loadRecentFiles() {
     m_recentFiles.clear();
     
-    std::ifstream file("recent_files.ini");
+    std::ifstream file(getRecentFilesPath());
     if (file) {
         std::string line;
         while (std::getline(file, line) && m_recentFiles.size() < MAX_RECENT_FILES) {
@@ -499,7 +574,7 @@ void Win32IDE::loadRecentFiles() {
 }
 
 void Win32IDE::saveRecentFiles() {
-    std::ofstream file("recent_files.ini");
+    std::ofstream file(getRecentFilesPath());
     if (file) {
         for (const auto& path : m_recentFiles) {
             file << path << "\n";
@@ -767,28 +842,35 @@ void Win32IDE::loadIdeSession() {
         m_openDocuments.clear();
         m_documentBuffers.clear();
         if (m_hwndDocTabs) TabCtrl_DeleteAllItems(m_hwndDocTabs);
+        // Reserve space to prevent vector reallocation from invalidating the
+        // TabCtrl pszText pointers retained by inserted tab items.  The label
+        // storage must remain stable for the lifetime of each tab.
+        const size_t docCount = root["documents"].size();
+        m_openDocuments.reserve(docCount);
+        m_documentBuffers.reserve(docCount);
         for (const auto& doc : root["documents"]) {
             DocumentBuffer buffer;
             buffer.path = doc.value("path", std::string{});
             buffer.modified = doc.value("modified", false);
             buffer.text = doc.value("text", std::string{});
             if (!buffer.modified && !buffer.path.empty()) {
-                std::string readError;
                 if (!readBinaryFile(buffer.path, buffer.text, readError)) {
                     LOG_ERROR("Failed to restore session file " + buffer.path + ": " + readError);
                 }
             }
-            const std::string label = buffer.path.empty()
+            buffer.label = buffer.path.empty()
                 ? std::string("Untitled") : extractLeafName(buffer.path);
+            // Push buffer first so label storage is stable before
+            // TabCtrl_InsertItem retains the pszText pointer.
+            m_openDocuments.push_back(buffer.path);
+            m_documentBuffers.push_back(std::move(buffer));
             if (m_hwndDocTabs) {
                 TCITEMA tie{};
                 tie.mask = TCIF_TEXT;
-                tie.pszText = const_cast<char*>(label.c_str());
+                tie.pszText = const_cast<char*>(m_documentBuffers.back().label.c_str());
                 TabCtrl_InsertItem(m_hwndDocTabs,
-                    static_cast<int>(m_openDocuments.size()), &tie);
+                    static_cast<int>(m_openDocuments.size()) - 1, &tie);
             }
-            m_openDocuments.push_back(buffer.path);
-            m_documentBuffers.push_back(std::move(buffer));
         }
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());

@@ -6,7 +6,20 @@
 #include <richedit.h>
 #include <sstream>   
 #include <iomanip>   
+#include <string>
+#include <vector>
 #include "QtLogCompat.h"
+
+// Heap-allocated strings retained by ListView/Tab controls (LVIF_TEXT / TCIF_TEXT
+// do not copy text; they retain the pointer).  Cleared when the owning items
+// are deleted or replaced.
+static std::vector<char*> g_panelStringHeap;
+static std::vector<char*> g_problemStringHeap;
+
+// ProblemStringHeap bundles file+msg heap allocations for a problems ListView
+// item so they can be freed together when the item is deleted/replaced.
+struct ProblemStringHeap { char* file; char* msg; };
+static std::vector<ProblemStringHeap*> g_problemHeapObjects;
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
 #ifndef GET_X_LPARAM
@@ -712,8 +725,16 @@ void Win32IDE::updatePanelContent()
         problemsTabText = oss.str();
     }
     
+    // Free previous panel tab text (TabCtrl_SetItem retains pszText).
+    for (auto* ptr : g_panelStringHeap) delete[] ptr;
+    g_panelStringHeap.clear();
+    
+    char* tabTextHeap = new char[problemsTabText.length() + 1];
+    strcpy_s(tabTextHeap, problemsTabText.length() + 1, problemsTabText.c_str());
+    g_panelStringHeap.push_back(tabTextHeap);
+    
     TCITEMA tie = { TCIF_TEXT };
-    tie.pszText = const_cast<char*>(problemsTabText.c_str());
+    tie.pszText = tabTextHeap;
     TabCtrl_SetItem(m_hwndPanelTabs, 2, &tie);
 }
 
@@ -733,27 +754,40 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
     
     // Add to list view
     LVITEMA lvi = { 0 };
-    lvi.mask = LVIF_TEXT;
+    lvi.mask = LVIF_TEXT | LVIF_PARAM;
     lvi.iItem = static_cast<int>(m_problems.size() - 1);
     
     const char* severityStr = (severity == 0) ? "Error" : (severity == 1) ? "Warning" : "Info";
     lvi.pszText = const_cast<char*>(severityStr);
+    lvi.lParam = reinterpret_cast<LPARAM>(new ProblemStringHeap{});
+    auto* problemHeap = reinterpret_cast<ProblemStringHeap*>(lvi.lParam);
+    problemHeap->file = new char[file.length() + 1];
+    strcpy_s(problemHeap->file, file.length() + 1, file.c_str());
+    problemHeap->msg = new char[msg.length() + 1];
+    strcpy_s(problemHeap->msg, msg.length() + 1, msg.c_str());
+    g_problemHeapObjects.push_back(problemHeap);
     ListView_InsertItem(m_hwndProblemsListView, &lvi);
     
     // Set item text using direct SendMessage calls with ANSI structures
     LVITEMA lviSet = { 0 };
     lviSet.iSubItem = 1;
-    lviSet.pszText = const_cast<char*>(msg.c_str());
+    lviSet.pszText = problemHeap->msg;
+    lviSet.lParam = reinterpret_cast<LPARAM>(problemHeap);
     SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     lviSet.iSubItem = 2;
-    lviSet.pszText = const_cast<char*>(file.c_str());
+    lviSet.pszText = problemHeap->file;
+    lviSet.lParam = reinterpret_cast<LPARAM>(problemHeap);
     SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     char lineStrBuf[32];
     _snprintf_s(lineStrBuf, sizeof(lineStrBuf), _TRUNCATE, "%d", line);
+    char* lineHeap = new char[strlen(lineStrBuf) + 1];
+    strcpy_s(lineHeap, strlen(lineStrBuf) + 1, lineStrBuf);
+    g_problemStringHeap.push_back(lineHeap);
     lviSet.iSubItem = 3;
-    lviSet.pszText = lineStrBuf;
+    lviSet.pszText = lineHeap;
+    lviSet.lParam = reinterpret_cast<LPARAM>(lineHeap);
     SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     // Update panel content
@@ -763,6 +797,17 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
 
 void Win32IDE::clearProblems()
 {
+    // Free heap-allocated problem strings before deleting items.
+    for (auto* heapObj : g_problemHeapObjects) {
+        delete[] heapObj->file;
+        delete[] heapObj->msg;
+        delete heapObj;
+    }
+    g_problemHeapObjects.clear();
+    for (auto* ptr : g_problemStringHeap) {
+        delete[] ptr;
+    }
+    g_problemStringHeap.clear();
     m_problems.clear();
     m_errorCount = 0;
     m_warningCount = 0;

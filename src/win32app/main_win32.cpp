@@ -130,11 +130,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LOG_INFO("Main window created successfully");
     ide.showWindow();
     // `--open <path>` is the supported document-opening API for automation,
-    // diagnostics, and supervisors. It uses the real editor/document state;
-    // it does not inject text or bypass the normal ownership path.
+    // diagnostics, and supervisors. Multiple `--open <path>` arguments may be
+    // supplied to open several documents at once.
     if (__argc >= 3 && std::string(__argv[1]) == "--open") {
-        if (!ide.openDocumentPath(__argv[2])) {
-            LOG_ERROR("--open failed for path: " + std::string(__argv[2]));
+        bool anyOpened = false;
+        for (int i = 2; i < __argc; ++i) {
+            if (!ide.openDocumentPath(__argv[i])) {
+                LOG_ERROR("--open failed for path: " + std::string(__argv[i]));
+            } else {
+                anyOpened = true;
+            }
+        }
+        if (!anyOpened) {
             SendMessageA(ide.getMainWindow(), WM_CLOSE, 0, 0);
         }
     }

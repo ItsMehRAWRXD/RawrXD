@@ -170,6 +170,7 @@ struct ChatSessionCheckpoint {
 struct ChatSessionState {
     int id = 0;
     std::string title;
+    std::string label;
     ChatModelEntry model;
     std::vector<std::pair<std::string, std::string>> history;
     std::string responseBuffer;
@@ -1046,6 +1047,7 @@ private:
     HWND m_hwndDocTabs = nullptr;
     struct DocumentBuffer {
         std::string path;
+        std::string label;
         std::string text;
         bool modified = false;
     };

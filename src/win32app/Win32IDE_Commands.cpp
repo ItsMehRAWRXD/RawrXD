@@ -700,7 +700,7 @@ void Win32IDE::showCommandPalette()
     );
     
     // Set placeholder text appearance
-    SendMessageA(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)L"> Type a command...");
+    SendMessageW(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)L"> Type a command...");
     
     // Create command list
     m_hwndCommandPaletteList = CreateWindowExA(
