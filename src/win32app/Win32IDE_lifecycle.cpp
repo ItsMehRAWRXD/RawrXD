@@ -19,6 +19,7 @@
 namespace {
 constexpr const char* kWindowClass = "RawrXD_IDE_Window";
 constexpr const char* kWindowTitle = "RawrXD IDE";
+constexpr UINT_PTR kFileSafetyTimerId = 0x52584653; // "RXFS"
 
 Win32IDE* g_ideInstance = nullptr;
 
@@ -255,6 +256,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 }
                 return 0;
             }
+            if (ide && wParam == kFileSafetyTimerId) {
+                ide->pollFileSafety();
+                return 0;
+            }
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
         }
         case WM_APP + 100: {
@@ -447,7 +452,22 @@ void Win32IDE::onCreate(HWND hwnd)
         SetWindowSubclass(m_hwndSecondarySidebar, forwardPaneNotifications, 3, 0);
     }
     initializeEditorSurface();
+    // Session loading happens while the document-tab container is created,
+    // before the RichEdit editor exists.  Materialize the selected buffer
+    // after the editor HWND is ready so cold launches restore unsaved text
+    // instead of leaving the control blank.
+    if (m_activeDocument >= 0 &&
+        m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+        switchDocumentTab(m_activeDocument);
+    }
     initializeNativeGhostText();
+    // Session restoration can materialize a saved/dirty buffer directly from
+    // DocumentBuffer rather than through loadFileIntoEditor().  Arm the
+    // external-change monitor after that materialization so cold launches
+    // receive the same protection as an explicit File > Open.
+    if (!m_currentFile.empty()) {
+        armFileSafetyMonitor();
+    }
 
     RECT client{};
     if (GetClientRect(hwnd, &client)) {

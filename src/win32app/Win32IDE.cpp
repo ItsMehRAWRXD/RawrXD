@@ -3351,6 +3351,12 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
             m_openDocuments[static_cast<size_t>(m_activeDocument)] = path;
         }
         setCurrentDirectoryFromFile(m_currentFile);
+        captureFileSafetyBaseline();
+        // Command-line and session restores can establish the active file
+        // after the initial session loader ran.  Arm the monitor here as
+        // well so every successfully opened document receives external
+        // change protection on the real main window.
+        armFileSafetyMonitor();
         updateTitleBarText();
         const std::string digest = sha256Hex(content);
         SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
@@ -3428,11 +3434,17 @@ bool Win32IDE::saveFile()
 
     appendToOutput("Saving file: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
     try {
-        std::string content = getWindowTextUtf8(m_hwndEditor);
-        if (content.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+        // RichEdit owns the editor buffer.  GetWindowTextW is not a reliable
+        // serialization API for a RichEdit control: on some Unicode paths it
+        // returns a display/ANSI-converted projection and silently replaces
+        // non-ACP characters with '?'.  EM_GETTEXTEX asks the control for its
+        // actual text and performs the UTF-8 conversion internally.
+        std::string content = getEditorTextUtf8ForFile();
+        if (content.empty() && GetWindowTextLengthW(m_hwndEditor) > 0) {
             // Do not turn an invalid/legacy byte sequence into an empty file
-            // merely because UTF-8 readback rejected it.
-            content = getWindowText(m_hwndEditor);
+            // merely because UTF-8 readback rejected it.  The fallback is
+            // intentionally last; valid Unicode always uses EM_GETTEXTEX.
+            content = getWindowTextUtf8(m_hwndEditor);
         }
         // Preserve editor bytes exactly; text-mode streams can translate
         // newlines on Windows and make save/reopen integrity lossy.
@@ -3467,6 +3479,11 @@ bool Win32IDE::saveFile()
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File saved");
             updateDocumentTabs();
             updateMenuEnableStates();
+            // A successful in-process save establishes the new disk
+            // fingerprint.  Without this re-baseline the safety timer treats
+            // our own write as an external edit on its next tick.
+            captureFileSafetyBaseline();
+            armFileSafetyMonitor();
             appendToOutput("File saved successfully (" + std::to_string(content.size()) +
                            " bytes, sha256=" + expected.substr(0, 16) + "...)\n",
                            "Output", OutputSeverity::Info);

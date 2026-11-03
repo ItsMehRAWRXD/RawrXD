@@ -98,6 +98,20 @@ bool isValidUtf8(std::string_view text) {
     return true;
 }
 
+bool utf8ToWideForEditor(std::string_view text, std::wstring& wide) {
+    wide.clear();
+    if (text.empty()) return true;
+    if (text.size() > static_cast<size_t>(INT_MAX)) return false;
+    const int sourceLength = static_cast<int>(text.size());
+    const int wideLength = MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), sourceLength, nullptr, 0);
+    if (wideLength <= 0) return false;
+    wide.resize(static_cast<size_t>(wideLength));
+    return MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), sourceLength,
+        wide.data(), wideLength) == wideLength;
+}
+
 bool readBinaryFile(const std::string& path, std::string& bytes, std::string& error) {
     std::ifstream file(path, std::ios::binary);
     if (!file) {
@@ -168,10 +182,29 @@ bool Win32IDE::setEditorTextUtf8FromFile(const std::string& text) {
 
     SETTEXTEX setText{};
     setText.flags = ST_DEFAULT;
-    setText.codepage = isValidUtf8(text) ? CP_UTF8 : CP_ACP;
-    const LRESULT result = SendMessageA(
-        m_hwndEditor, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText),
-        reinterpret_cast<LPARAM>(text.c_str()));
+    LRESULT result = 0;
+    if (isValidUtf8(text)) {
+        // The primary editor is a Unicode RichEdit.  Passing UTF-8 bytes to
+        // the ANSI EM_SETTEXTEX entry point lets RichEdit perform an ACP
+        // conversion and turns CJK/emoji into '?'.  Convert explicitly and
+        // use the Unicode code page so load/save is byte-stable for UTF-8
+        // files.
+        std::wstring wide;
+        if (!utf8ToWideForEditor(text, wide)) {
+            m_suppressEditorDirty = wasSuppressed;
+            LOG_ERROR("UTF-8 editor load conversion failed");
+            return false;
+        }
+        setText.codepage = 1200; // UTF-16LE for RichEdit EM_SETTEXTEX
+        result = SendMessageW(
+            m_hwndEditor, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText),
+            reinterpret_cast<LPARAM>(wide.c_str()));
+    } else {
+        setText.codepage = CP_ACP;
+        result = SendMessageA(
+            m_hwndEditor, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText),
+            reinterpret_cast<LPARAM>(text.c_str()));
+    }
 
     m_suppressEditorDirty = wasSuppressed;
     if (!text.empty() && result == 0) {
@@ -482,16 +515,28 @@ void Win32IDE::clearRecentFiles() {
 }
 
 void Win32IDE::armFileSafetyMonitor() {
-    if (!m_hwndMain || !IsWindow(m_hwndMain)) return;
-    if (!m_fileSafetyTimerArmed) {
-        m_fileSafetyTimerArmed = SetTimer(
-            m_hwndMain, kFileSafetyTimerId, kFileSafetyIntervalMs,
-            &Win32IDE::fileSafetyTimerProc) != 0;
-        if (m_fileSafetyTimerArmed) {
-            LOG_INFO("[FILE_SAFETY] external-change monitor armed");
-        } else {
-            LOG_ERROR("[FILE_SAFETY] failed to arm external-change monitor");
-        }
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
+        LOG_WARNING("[FILE_SAFETY] arm skipped: main window is not valid");
+        return;
+    }
+    // Re-arm on every document/session transition.  The first call can occur
+    // while the document-tab controls are still being created during WM_CREATE;
+    // resetting the owner-window timer after the editor is materialized makes
+    // the monitor independent of that startup ordering.
+    if (m_fileSafetyTimerArmed) {
+        KillTimer(m_hwndMain, kFileSafetyTimerId);
+    }
+    // Route the timer through the IDE's normal main-window message loop.  A
+    // callback timer can run through a different user32 delivery path and is
+    // difficult to correlate with the UI lifecycle that owns the decision.
+    m_fileSafetyTimerArmed = SetTimer(
+        m_hwndMain, kFileSafetyTimerId, kFileSafetyIntervalMs,
+        nullptr) != 0;
+    if (m_fileSafetyTimerArmed) {
+        LOG_INFO("[FILE_SAFETY] external-change monitor armed for " +
+                 (m_currentFile.empty() ? std::string("<untitled>") : m_currentFile));
+    } else {
+        LOG_ERROR("[FILE_SAFETY] failed to arm external-change monitor");
     }
     captureFileSafetyBaseline();
 }
@@ -518,12 +563,6 @@ void Win32IDE::captureFileSafetyBaseline() {
         m_currentFile, m_fileSafetyBaseline.exists, m_fileSafetyBaseline.size,
         m_fileSafetyBaseline.lastWriteTime, m_fileSafetyBaseline.attributes);
     m_fileSafetyBaselineValid = true;
-}
-
-void CALLBACK Win32IDE::fileSafetyTimerProc(HWND hwnd, UINT, UINT_PTR timerId, DWORD) {
-    if (timerId != kFileSafetyTimerId || !hwnd) return;
-    auto* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
-    if (ide) ide->pollFileSafety();
 }
 
 void Win32IDE::pollFileSafety() {
@@ -692,7 +731,6 @@ static std::string ideSessionPath() {
 }
 
 void Win32IDE::saveIdeSession() {
-    armFileSafetyMonitor();
     persistActiveDocumentBuffer();
     nlohmann::json root;
     root["active"] = m_activeDocument;
@@ -715,7 +753,6 @@ void Win32IDE::saveIdeSession() {
 }
 
 void Win32IDE::loadIdeSession() {
-    armFileSafetyMonitor();
     std::string serialized;
     std::string readError;
     const std::string sessionPath = ideSessionPath();

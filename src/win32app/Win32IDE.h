@@ -455,15 +455,13 @@ private:
     void saveIdeSession();
     void loadIdeSession();
     void persistActiveDocumentBuffer();
-    // File safety runs on the main window's timer callback. It detects an
+    // File safety runs on the main window's WM_TIMER dispatch. It detects an
     // on-disk change without replacing dirty editor content and periodically
     // snapshots unsaved buffers so a crash can recover them on the next start.
     void armFileSafetyMonitor();
     void disarmFileSafetyMonitor();
     void pollFileSafety();
     void captureFileSafetyBaseline();
-    static void CALLBACK fileSafetyTimerProc(HWND hwnd, UINT message,
-                                             UINT_PTR timerId, DWORD tickCount);
     // File-operations boundary: RichEdit is created as RichEdit20A, so file
     // bytes must cross it explicitly as UTF-8 instead of through the process
     // ANSI code page.  These helpers are implemented in Win32IDE_FileOps.cpp.
