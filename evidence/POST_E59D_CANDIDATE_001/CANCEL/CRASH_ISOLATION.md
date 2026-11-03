@@ -17,7 +17,7 @@ TOKEN64_REOPEN=0
 
 | # | Item | Result | Notes |
 |---|------|--------|-------|
-| 1 | First-chance exception + native call stack | **NOT_PROVEN** | No cdb/windbg on host. Product unhandled path only (`last_crash.txt`). CONTEXT RVA parse unreliable (Rip nonsense). |
+| 1 | First-chance exception + native call stack | **PARTIAL** | Offline minidump exception CONTEXT + RSP module scan on 073409/070906 (`CANCEL_NATIVE_STACK_RESIDUAL_001`). No cdb unwind / PDB. |
 | 2 | Faulting module / thread / callback | **PARTIAL** | Module+RVA+TID proven. Exact UI callback (LISTBOX/TabCtrl/Send handler) **NOT_PROVEN**. |
 | 3 | Correlate with Request A dispatch | **PASS** | RUNLOG: `REQUEST_A_SUBMITTED` → ~2.7s `CRASH_ARM` / `unhandled exception; minidump written`. Stop/B never reached. |
 | 4 | Product vs harness-induced | **NOT_PROVEN** | See §Classification. |
@@ -98,3 +98,18 @@ CERTIFIED=0
 4. If only harness multi-notify proven → fix harness ClickChild; retest Cancel on **same** 3B720981.
 
 `NOT_RUN != PASS`. Do not invent PRODUCT_DEFECT or authorize rebuild from signature match alone.
+
+## Post-hang classify (GITHUB 70fe7cdaf7)
+
+```
+CRASH_CLASSIFICATION=MIXED
+HARNESS_SOLE=REFUTED
+SINGLE_BM_CLICK_CANCEL=CRASH_SAME_SIGNATURE
+DUMP=logs\rawrxd-20261103-073409.dmp
+PRODUCT_DEFECT=NOT_PROVEN
+REBUILD=HELD
+PROMOTE=0
+```
+
+Authority: `CANCEL\HARNESS_VS_PRODUCT.md`. Hang seal: `CANCEL\SETEDIT_CLICK_HANG.md`.
+Stack residual: `CANCEL\CANCEL_NATIVE_STACK_RESIDUAL_001.md` · `NATIVE_STACK=PARTIAL` · `SAME_PATH=YES` · `PRODUCT_DEFECT=NOT_PROVEN` · `REBUILD=HELD`.

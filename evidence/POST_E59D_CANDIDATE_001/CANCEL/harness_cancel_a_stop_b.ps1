@@ -1,6 +1,6 @@
 #Requires -Version 5.1
-# POST_E59D_CANDIDATE_001 CANCEL A→Stop→B
-# CERT_EXE SHA 3B720981… only. PROMOTE=0 REBUILD=HELD. No GhostText reopen.
+# POST_E59D_CANDIDATE_001 CANCEL Aâ†’Stopâ†’B
+# CERT_EXE SHA 3B720981â€¦ only. PROMOTE=0 REBUILD=HELD. No GhostText reopen.
 $ErrorActionPreference = 'Continue'
 $OutDir = 'F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\CANCEL'
 $Logs = Join-Path $OutDir 'logs'
@@ -47,11 +47,9 @@ public class CancelPostE59d {
   public const int GWL_ID = -12;
   public const int BN_CLICKED = 0;
   public const int SW_RESTORE = 9;
+  // Single BM_CLICK only (BM_CLICK synthesizes BN_CLICKED). Triple path sealed in TRIPLE.ps1.
   public static void ClickChild(IntPtr parent, IntPtr btn, int id) {
     if (btn != IntPtr.Zero) SendMessageW(btn, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
-    IntPtr wp = (IntPtr)((BN_CLICKED << 16) | (id & 0xFFFF));
-    SendMessageW(parent, WM_COMMAND, wp, btn);
-    PostMessageW(parent, WM_COMMAND, wp, btn);
   }
   public static int SetEdit(IntPtr edit, string text) {
     IntPtr p = Marshal.StringToHGlobalUni(text);
@@ -132,8 +130,9 @@ public class CancelPostE59d {
 '@
 Add-Type -TypeDefinition $cs -ErrorAction SilentlyContinue | Out-Null
 
-WLog 'START POST_E59D CANCEL A→Stop→B'
-WLog 'PROMOTE=0 REBUILD=HELD GHOSTTEXT_REOPEN=0'
+WLog 'START POST_E59D CANCEL Aâ†’Stopâ†’B'
+WLog 'CLICK_MODE=SINGLE_BM_CLICK (no sync WM_COMMAND / PostMessage amplifier)'
+WLog 'PROMOTE=0 REBUILD=HELD GHOSTTEXT_REOPEN=0 GITHUB_COMMIT=70fe7cdaf7'
 
 $reqA = 'NOT_RUN'; $stopOk = 'NOT_RUN'; $reqB = 'NOT_RUN'; $lateA = 'NOT_RUN'
 $disposition = 'NOT_RUN'
@@ -144,7 +143,7 @@ $markerB = 'PONG_B_POST_E59D'
 
 function Write-Receipt([string]$why) {
 @"
-# POST_E59D_CANDIDATE_001 CANCEL A→Stop→B RECEIPT
+# POST_E59D_CANDIDATE_001 CANCEL Aâ†’Stopâ†’B RECEIPT
 
 ASOF_UTC=$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))
 CERT_EXE=$CandExe
@@ -344,7 +343,7 @@ try {
   elseif ($bOk -eq 1) { $reqB = 'PASS' }
   else { $reqB = 'FAIL' }
 
-  # Late A: after B rendered, wait briefly; if markerA newly appears without being part of B path → FAIL
+  # Late A: after B rendered, wait briefly; if markerA newly appears without being part of B path â†’ FAIL
   Start-Sleep -Seconds 3
   $outLate = [CancelPostE59d]::Text($outputEdit)
   $outLate | Set-Content (Join-Path $Logs 'output_late_check.txt')
@@ -352,10 +351,10 @@ try {
   $hasALate = ($outLate -match [regex]::Escape($markerA))
   $hasB = ($outLate -match [regex]::Escape($markerB))
   if ($hasB -and (-not $hasALate -or $hadABeforeB)) {
-    # B present; A marker absent OR was already there before B (partial stream before stop) — treat absent growth as rejected
+    # B present; A marker absent OR was already there before B (partial stream before stop) â€” treat absent growth as rejected
     if (-not $hasALate) { $lateA = 'PASS' }
     elseif ($hadABeforeB -and $hasB) {
-      # A leaked before stop; still require B won — late A not newly applied after B
+      # A leaked before stop; still require B won â€” late A not newly applied after B
       $lateA = 'PASS'
       WLog 'LATE_A=PASS (A partial before B; B rendered; no post-B A-only apply proven)'
     } else { $lateA = 'FAIL' }

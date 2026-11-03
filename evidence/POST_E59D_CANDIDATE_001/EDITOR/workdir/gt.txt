@@ -1,0 +1,3 @@
+GHOSTTEXT_SRC_MARKER_UNIQUE
+def greet():
+    

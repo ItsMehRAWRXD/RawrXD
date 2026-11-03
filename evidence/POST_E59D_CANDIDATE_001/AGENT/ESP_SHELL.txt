@@ -1,0 +1,11 @@
+﻿{"ts_ns":1793718318595671700,"seq":1,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793718318595677600,"seq":2,"request":50990547888900,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793718318598427400,"seq":3,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793718318601420200,"seq":4,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793718318601420700,"seq":5,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793718318601420900,"seq":6,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793718320045162700,"seq":7,"request":50990547888900,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=1247 eval_count=85 total_duration_ns=1439268900 load_duration_ns=12821200 prompt_eval_duration_ns=325445000 eval_duration_ns=1060866000 eval_tps=80.1232200862"}
+{"ts_ns":1793718320045166600,"seq":8,"request":50990547888900,"agent":1,"kind":"agent_step","value":0,"message":"tool_calls_received"}
+{"ts_ns":1793718320045178900,"seq":9,"request":50990547888900,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-0-0 name=Write target=F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\AGENT\\workdir\\t15_shell_T15SC_5330011a.txt"}
+{"ts_ns":1793718320048857700,"seq":10,"request":50990547888900,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-0-0 name=Write target=F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\AGENT\\workdir\\t15_shell_T15SC_5330011a.txt status=PASS duration_ms=3 PASS"}
+
