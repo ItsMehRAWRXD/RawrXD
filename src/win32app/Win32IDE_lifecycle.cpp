@@ -197,7 +197,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             if (nmhdr->idFrom == IDC_DOC_TABS && nmhdr->code == TCN_SELCHANGE) {
                 ide->switchDocumentTab(TabCtrl_GetCurSel(nmhdr->hwndFrom));
             } else if (nmhdr->idFrom == IDC_CHAT_SESSIONS && nmhdr->code == TCN_SELCHANGE) {
-                ide->switchChatSession(TabCtrl_GetCurSel(nmhdr->hwndFrom));
+                // Ignore selection churn from TabCtrl_DeleteAllItems/InsertItem
+                // inside updateChatSessionTabs (nested switchChatSession AVs
+                // comctl32 — BATCH1 Request A crash).
+                if (!ide->m_updatingChatSessionTabs) {
+                    ide->switchChatSession(TabCtrl_GetCurSel(nmhdr->hwndFrom));
+                }
             } else if (nmhdr->idFrom == IDC_OUTPUT_TABS && nmhdr->code == TCN_SELCHANGE) {
                 const int selected = TabCtrl_GetCurSel(nmhdr->hwndFrom);
                 if (selected == 4) {
@@ -244,7 +249,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
         }
         case WM_TIMER: {
             if (ide && wParam == IDT_AGENT_THOUGHT) {
-                ide->m_agentStepTimeline.refreshThoughtElapsed();
+                try {
+                    ide->m_agentStepTimeline.refreshThoughtElapsed();
+                } catch (...) {
+                }
                 return 0;
             }
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
@@ -588,6 +596,9 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         // tab state are committed.  User edits continue through the normal
         // notification path below.
         if (hwndCtl == m_hwndEditor) {
+            logInfo("[EDITOR_CHANGE] code=" + std::to_string(codeNotify) +
+                    " suppressed=" + std::to_string(m_suppressEditorDirty ? 1 : 0) +
+                    " active=" + std::to_string(m_activeDocument));
             if (codeNotify == EN_CHANGE && !m_suppressEditorDirty) {
                 m_fileModified = true;
                 if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
@@ -930,22 +941,22 @@ void Win32IDE::initializeEditorSurface()
         return;
     }
     m_suppressEditorDirty = true;
-    m_hwndEditor = CreateWindowExA(
-        WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+    m_hwndEditor = CreateWindowExW(
+        WS_EX_CLIENTEDGE, RICHEDIT_CLASSW, L"",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
             ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN,
         0, 0, 400, 300, m_hwndMain, reinterpret_cast<HMENU>(IDC_EDITOR), m_hInstance, nullptr);
     if (m_hwndEditor) {
-        SendMessageA(m_hwndEditor, EM_EXLIMITTEXT, 0, 64 * 1024 * 1024);
-        SendMessageA(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE);
-        SendMessageA(m_hwndEditor, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
-        CHARFORMAT2A initialFormat{};
+        SendMessageW(m_hwndEditor, EM_EXLIMITTEXT, 0, 64 * 1024 * 1024);
+        SendMessageW(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE);
+        SendMessageW(m_hwndEditor, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+        CHARFORMAT2W initialFormat{};
         initialFormat.cbSize = sizeof(initialFormat);
         initialFormat.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
         initialFormat.crTextColor = RGB(220, 220, 220);
         initialFormat.yHeight = 200;
-        strncpy_s(initialFormat.szFaceName, LF_FACESIZE, "Consolas", _TRUNCATE);
-        SendMessageA(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL,
+        wcsncpy_s(initialFormat.szFaceName, LF_FACESIZE, L"Consolas", _TRUNCATE);
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL,
                      reinterpret_cast<LPARAM>(&initialFormat));
         applyTheme();
     }

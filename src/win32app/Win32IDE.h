@@ -1298,6 +1298,10 @@ private:
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
         std::make_shared<std::atomic_bool>(false);
     std::atomic_bool m_modelDiscoveryRunning{false};
+    // Blocks COMCTL model-combo rebuilds for the whole chat Send→Stop/complete
+    // window. Discovery WM_APP+106 can otherwise race invalidateNativeGhostText
+    // + CB_RESETCONTENT into Request A and APPCRASH in comctl32 (0xC000041D).
+    std::atomic_bool m_blockModelDiscoveryUi{false};
     // Model discovery results are delivered on the UI thread.  Keep the
     // newest result staged while either model combo's popup is open so that
     // CB_RESETCONTENT cannot tear down an active native dropdown.
@@ -1308,6 +1312,9 @@ private:
     std::vector<ChatSessionState> m_closedChatSessions;
     int m_activeChatSession = -1;
     int m_nextChatSessionId = 1;
+    // Suppress TCN_SELCHANGE→switchChatSession while TabCtrl_DeleteAllItems /
+    // InsertItem run; nested rebuilds AV in comctl32 during Request A.
+    bool m_updatingChatSessionTabs = false;
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
     // Panel (Bottom) - Terminal, Output, Problems, Debug Console

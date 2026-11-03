@@ -897,6 +897,7 @@ std::string generateOllamaModel(const std::string& baseUrl,
                       {"num_ctx", effectiveContextTokens}}}
     };
     const std::string body = bodyJson.dump();
+    logDebug("[OLLAMA_DEBUG] body_bytes=%zu\n", body.size());
     const std::wstring wideHost(host.begin(), host.end());
     if (cancel.stopRequested && cancel.stopRequested->load(std::memory_order_acquire)) {
         return "[Ollama request cancelled]";
@@ -907,26 +908,22 @@ std::string generateOllamaModel(const std::string& baseUrl,
         logDebug("[OLLAMA_DEBUG] WinHttpOpen failed (GetLastError=%lu)\n", GetLastError());
         return {}; 
     }
+    logDebug("[OLLAMA_DEBUG] WinHttpOpen ok\n");
     publishOllamaHandle(cancel.sessionSlot, session);
-    // Large-context local requests can spend well over thirty seconds in
-    // model admission, prompt evaluation, and reasoning before Ollama emits
-    // its final non-streaming JSON response.  The old 30-second receive
-    // timeout converted a healthy, still-running request into an empty
-    // string, after which the UI reported the misleading "model did not
-    // respond" message.  Keep connection setup bounded, but allow a bounded
-    // ten-minute local inference window for 64K/1M audit requests.
     constexpr DWORD kOllamaConnectTimeoutMs = 5000;
     constexpr DWORD kOllamaSendTimeoutMs = 5000;
     constexpr DWORD kOllamaReceiveTimeoutMs = 600000;
     constexpr DWORD kOllamaReadTimeoutMs = 600000;
     WinHttpSetTimeouts(session, kOllamaConnectTimeoutMs, kOllamaSendTimeoutMs,
                        kOllamaReceiveTimeoutMs, kOllamaReadTimeoutMs);
+    logDebug("[OLLAMA_DEBUG] timeouts set; connecting\n");
     HINTERNET connect = WinHttpConnect(session, wideHost.c_str(), port, 0);
     if (!connect) { 
         logDebug("[OLLAMA_DEBUG] WinHttpConnect failed (GetLastError=%lu)\n", GetLastError());
         closeOwnedOllamaHandle(cancel.sessionSlot, session);
         return {}; 
     }
+    logDebug("[OLLAMA_DEBUG] WinHttpConnect ok\n");
     publishOllamaHandle(cancel.connectSlot, connect);
     const DWORD flags = https ? WINHTTP_FLAG_SECURE : 0;
     HINTERNET request = WinHttpOpenRequest(connect, L"POST", L"/api/generate", nullptr,
@@ -937,6 +934,7 @@ std::string generateOllamaModel(const std::string& baseUrl,
         closeOwnedOllamaHandle(cancel.sessionSlot, session);
         return {}; 
     }
+    logDebug("[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending\n");
     publishOllamaHandle(cancel.requestSlot, request);
 
     std::string raw;
@@ -948,6 +946,7 @@ std::string generateOllamaModel(const std::string& baseUrl,
             const_cast<char*>(body.data()), static_cast<DWORD>(body.size()),
             static_cast<DWORD>(body.size()), 0) &&
         WinHttpReceiveResponse(request, nullptr)) {
+    logDebug("[OLLAMA_DEBUG] ReceiveResponse ok\n");
         DWORD available = 0;
         while (!(cancel.stopRequested &&
                  cancel.stopRequested->load(std::memory_order_acquire)) &&
@@ -2960,10 +2959,10 @@ void Win32IDE::updateTitleBarText()
 void Win32IDE::setEditorText(const std::string& text)
 {
     if (!m_hwndEditor) return;
-    const bool wasSuppressed = m_suppressEditorDirty;
-    m_suppressEditorDirty = true;
-    SetWindowTextA(m_hwndEditor, text.c_str());
-    m_suppressEditorDirty = wasSuppressed;
+    // The primary editor is a Unicode RichEdit.  Keep all file/programmatic
+    // loads on the same UTF-8 boundary used by FileOps so ANSI conversion
+    // cannot turn CJK or supplementary characters into mojibake.
+    setEditorTextUtf8FromFile(text);
 }
 
 void Win32IDE::createEditor(HWND hwnd)
@@ -6776,14 +6775,18 @@ void Win32IDE::generateResponseAsync(
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
-    if (m_inferenceRunning) {
-        // Busy state is reported by the UI status bar.  Never turn a
-        // scheduling race into assistant text that looks like model output.
-        m_pendingInferenceModel = {};
-        if (callback) callback("", true, false);
-        return;
-    }
+    // HandleCopilotSend may already have claimed m_inferenceRunning to close
+    // a BN_CLICKED race.  A live worker is generation != 0; stopInference and
+    // finishIfCurrent clear generation when releasing. Join drained threads
+    // even when the pre-claim set running=true for THIS admission.
     if (m_inferenceThread.joinable()) {
+        if (m_activeInferenceGeneration.load(std::memory_order_acquire) != 0) {
+            // Busy state is reported by the UI status bar.  Never turn a
+            // scheduling race into assistant text that looks like model output.
+            m_pendingInferenceModel = {};
+            if (callback) callback("", true, false);
+            return;
+        }
         m_inferenceThread.join();
     }
     // GhostText resolves its own route immediately before entering this
@@ -6826,6 +6829,9 @@ void Win32IDE::generateResponseAsync(
                 // stopInference already released ownership for Request B.
                 return;
             }
+            // Clear generation with the busy flag so the next admission can
+            // join this drained worker instead of treating it as live.
+            m_activeInferenceGeneration.store(0, std::memory_order_release);
             m_inferenceRunning = false;
             if (callback) callback(result, true, success);
         };
@@ -7532,6 +7538,7 @@ ChatSessionState* Win32IDE::activeChatSession()
 void Win32IDE::updateChatSessionTabs()
 {
     if (m_hwndChatSessionTabs) {
+        m_updatingChatSessionTabs = true;
         TabCtrl_DeleteAllItems(m_hwndChatSessionTabs);
         for (size_t i = 0; i < m_chatSessions.size(); ++i) {
             auto& session = m_chatSessions[i];
@@ -7547,6 +7554,7 @@ void Win32IDE::updateChatSessionTabs()
             m_activeChatSession < static_cast<int>(m_chatSessions.size())) {
             TabCtrl_SetCurSel(m_hwndChatSessionTabs, m_activeChatSession);
         }
+        m_updatingChatSessionTabs = false;
     }
     if (m_hwndCloseChatBtn) {
         EnableWindow(m_hwndCloseChatBtn, m_chatSessions.empty() ? FALSE : TRUE);
@@ -7863,6 +7871,7 @@ void Win32IDE::populateModelSelector() {
 
 void Win32IDE::flushDeferredModelDiscoveryIfIdle() {
     if (m_inferenceRunning.load(std::memory_order_acquire)) return;
+    if (m_blockModelDiscoveryUi.load(std::memory_order_acquire)) return;
     if (!m_modelDiscoveryUpdateDeferred || !m_deferredModelDiscovery) return;
     if (m_hwndModelSelector &&
         SendMessageA(m_hwndModelSelector, CB_GETDROPPEDSTATE, 0, 0) != FALSE) {
@@ -7888,20 +7897,15 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
         return;
     }
 
-    // Publishing a new catalog can replace or remove the route backing an
-    // in-flight GhostText request. Fence that request before rebuilding the
-    // selector rows.
-    invalidateNativeGhostText();
-
     const auto comboDropped = [](HWND combo) {
         return combo && SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0) != FALSE;
     };
-    // Defer CB_RESETCONTENT while a chat generate owns the UI thread cadence.
-    // Phase-2 GGUF merge landing mid-Send/timer nested inside COMCTL32 has
-    // produced APPCRASH (comctl32 / 0xC000041D) and aborted Request A before
-    // Stop→Request B recovery can be exercised.
+    // Defer before any GhostText/COMCTL teardown. invalidateNativeGhostText
+    // must not run while chat generate + thought-timer share the UI cadence —
+    // that ordering produced APPCRASH (comctl32 / 0xC000041D) on Request A.
     const bool inferenceBusy =
-        m_inferenceRunning.load(std::memory_order_acquire);
+        m_inferenceRunning.load(std::memory_order_acquire) ||
+        m_blockModelDiscoveryUi.load(std::memory_order_acquire);
     if (inferenceBusy || comboDropped(m_hwndModelSelector) ||
         comboDropped(m_hwndGhostModelSelector)) {
         // This callback already runs on the UI thread.  Staging the newest
@@ -7932,6 +7936,10 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
             : "[ModelSelector] discovery update deferred while dropdown is open");
         return;
     }
+
+    // Publishing a new catalog can replace or remove the route backing an
+    // in-flight GhostText request. Fence only when we are about to rebuild.
+    invalidateNativeGhostText();
 
     ChatModelEntry previous = m_selectedChatModel;
     if (!owned->mergeOnly) {
@@ -8056,57 +8064,77 @@ void Win32IDE::HandleCopilotSend() {
         return;
     }
 
+    // Fence discovery COMCTL rebuilds for the entire Send lifetime BEFORE any
+    // other UI work. Dump evidence: fault RIP in comctl32.dll (RVA 0xBD02),
+    // exit 0xC000041D, ~650ms after REQUEST_A_SUBMITTED — matching a queued
+    // WM_APP+106 catalog publish (invalidateNativeGhostText + CB_RESETCONTENT)
+    // racing the Send path.
+    m_blockModelDiscoveryUi.store(true, std::memory_order_release);
+    if (m_modelDiscoveryCancel) {
+        m_modelDiscoveryCancel->store(true, std::memory_order_release);
+    }
+
+    // REQUEST_A crash boundary (BATCH1_CANCEL_RECOVERY_001):
+    // Typing into the chat input arms NativeGhostTextController's debounce
+    // WM_TIMER on the subclassed EDIT. If that timer fires while this Send
+    // path is still on the UI stack, requestCompletion re-enters provider
+    // admission from a window proc → STATUS_FATAL_USER_CALLBACK_EXCEPTION
+    // (exit 0xC000041D) wrapping an AV (0xC0000005). Dismiss/kill the chat
+    // GhostText timer before any further nested UI or generateResponseAsync.
+    for (auto& controller : m_ghostTextInputs) {
+        if (controller && controller->attachedTo(m_hwndCopilotChatInput)) {
+            controller->dismiss();
+        }
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_inferenceMutex);
         if (m_inferenceRunning) {
+            m_blockModelDiscoveryUi.store(false, std::memory_order_release);
             const std::string status = "Inference is already running; press Stop before sending another message.";
             if (m_hwndStatusBar) SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
                 reinterpret_cast<LPARAM>(status.c_str()));
             return;
         }
+        // Claim the slot before any nested UI work so a second BN_CLICKED
+        // (or discovery flush) cannot race past the busy check.
+        m_inferenceRunning.store(true, std::memory_order_release);
     }
     
-    // Get selected model
-    onModelSelectionChanged();
+    // Do not touch the model ComboBox on the Send stack (comctl32 crash
+    // boundary). Trust the already-selected route from the harness/UI.
     if (m_selectedChatModel.identifier.empty()) {
+        onModelSelectionChanged();
+    }
+    if (m_selectedChatModel.identifier.empty()) {
+        m_inferenceRunning.store(false, std::memory_order_release);
+        m_blockModelDiscoveryUi.store(false, std::memory_order_release);
         const std::string message = "Select a model route after local discovery finishes.";
         SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
             reinterpret_cast<LPARAM>(message.c_str()));
         return;
     }
 
-    checkpointActiveChat("before sending user message");
-
+    // Minimal Request A arm path (crash isolation): no checkpoint/tab rebuild,
+    // no transcript SetWindowText, no status-bar COMCTL, no input clear EN_CHANGE.
+    // Keep session bookkeeping in memory only; arm Stop; start worker.
     const int sessionId = activeChatSession() ? activeChatSession()->id : 0;
     if (auto* session = activeChatSession()) {
         session->model = m_selectedChatModel;
         session->history.push_back({"user", userMessage});
         session->responseBuffer.clear();
         session->running = true;
+        session->stepRows.clear();
         m_chatHistory = session->history;
     } else {
         m_chatHistory.push_back({"user", userMessage});
     }
-    updateSecondarySidebarContent();
-    if (auto* session = activeChatSession()) session->stepRows.clear();
-    m_agentStepTimeline.clear();
-    m_agentStepTimeline.beginThought();
-    armAgentThoughtTimer();
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
-    
-    if (m_hwndStatusBar) {
-        const std::string status = "Ollama: warming up model; waiting for response";
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
-            reinterpret_cast<LPARAM>(status.c_str()));
-    }
 
     // ChatWindow is a text-chat surface.  Agent/tool execution is entered only
     // through the explicit Agent/agent-loop commands; never infer that mode
     // from words in a user's prompt (for example, "edit" in a test marker).
 
-    // Clear only after the non-ASCII-safe agent route has consumed the text.
-    SetWindowTextW(m_hwndCopilotChatInput, L"");
-    
     // Marshal all response handling to the UI thread. The worker owns only the
     // inference operation and an owned message payload.  A synchronous
     // Ollama receive may finish after Stop; do not let that late completion
@@ -8198,6 +8226,7 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     if (active && m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
     if (active) m_chatHistory = session->history;
     updateChatSessionTabs();
+    m_blockModelDiscoveryUi.store(false, std::memory_order_release);
     flushDeferredModelDiscoveryIfIdle();
 }
 
@@ -8222,6 +8251,7 @@ void Win32IDE::HandleCopilotStop()
             reinterpret_cast<LPARAM>(status.c_str()));
     }
     updateChatSessionTabs();
+    m_blockModelDiscoveryUi.store(false, std::memory_order_release);
     flushDeferredModelDiscoveryIfIdle();
 }
 
@@ -8248,12 +8278,9 @@ void Win32IDE::appendCopilotChatUtf8(const std::string& text)
     SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
                  reinterpret_cast<LPARAM>(wide.c_str()));
     SendMessageW(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
-    appendToOutput(std::string("[CHAT_RUNTIME] append input_bytes=") +
-                   std::to_string(text.size()) +
-                   " wide_chars=" + std::to_string(wide.size()) +
-                   " stored_chars=" +
-                   std::to_string(GetWindowTextLengthW(m_hwndCopilotChatOutput)) + "\n",
-                   "Debug", OutputSeverity::Info);
+    // Do not mirror into the Output/Debug RichEdit here: beginThought's
+    // onRow calls this while nested inside LISTBOX SendMessage, and the
+    // RichEdit path has faulted COMCTL32 (0xC000041D) during Request A.
 }
 
 void Win32IDE::HandleCopilotClear() {

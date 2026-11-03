@@ -2,7 +2,7 @@
 #include <cstdio>
 
 void AgentStepTimeline::appendRow(const char* text, bool mirror) {
-    if (!hwndList || !text) return;
+    if (!hwndList || !IsWindow(hwndList) || !text) return;
     lastLine = text;
     SendMessageA(hwndList, LB_ADDSTRING, 0, (LPARAM)text);
     const LRESULT n = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
@@ -11,7 +11,7 @@ void AgentStepTimeline::appendRow(const char* text, bool mirror) {
 }
 
 void AgentStepTimeline::replaceLastRow(const char* text) {
-    if (!hwndList || !text) return;
+    if (!hwndList || !IsWindow(hwndList) || !text) return;
     const LRESULT n = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
     if (n <= 0) return;
     SendMessageA(hwndList, LB_DELETESTRING, (WPARAM)(n - 1), 0);
@@ -22,9 +22,12 @@ void AgentStepTimeline::replaceLastRow(const char* text) {
 
 void AgentStepTimeline::create(HWND parent, HINSTANCE inst, HFONT font, int x, int y, int w, int h) {
     if (!parent || hwndList) return;
+    // No LBS_NOTIFY: LB_ADDSTRING/DELETESTRING must not emit LBN_* into the
+    // subclassed sidebar → main WM_COMMAND path (nested StatusBar/TabCtrl
+    // work under ListBox SendMessage faults comctl32 on Request A).
     hwndList = CreateWindowExA(
         WS_EX_CLIENTEDGE, "LISTBOX", nullptr,
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY,
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
         x, y, w, h, parent, (HMENU)(INT_PTR)IDC_AGENT_STEP_STRIP, inst, nullptr);
     if (hwndList && font) SendMessage(hwndList, WM_SETFONT, (WPARAM)font, TRUE);
     appendRow("[ready] thought / tool chips / explored / powershell", false);
@@ -48,13 +51,16 @@ void AgentStepTimeline::beginThought() {
 }
 
 void AgentStepTimeline::refreshThoughtElapsed() {
-    if (!hwndList || !thoughtOpen) return;
-    const ULONGLONG dt = GetTickCount64() - thoughtStartMs;
-    char buf[96];
-    std::snprintf(buf, sizeof(buf), "[thought] %llu.%03llus ...",
-                  (unsigned long long)(dt / 1000ull),
-                  (unsigned long long)(dt % 1000ull));
-    replaceLastRow(buf);
+    if (!hwndList || !thoughtOpen || !IsWindow(hwndList)) return;
+    try {
+        const ULONGLONG dt = GetTickCount64() - thoughtStartMs;
+        char buf[96];
+        std::snprintf(buf, sizeof(buf), "[thought] %llu.%03llus ...",
+                      (unsigned long long)(dt / 1000ull),
+                      (unsigned long long)(dt % 1000ull));
+        replaceLastRow(buf);
+    } catch (...) {
+    }
 }
 
 void AgentStepTimeline::closeThoughtIfOpen() {
