@@ -23,6 +23,41 @@
 
 namespace {
 
+constexpr UINT_PTR kFileSafetyTimerId = 0x52584653; // "RXFS"
+constexpr UINT kFileSafetyIntervalMs = 1500;
+
+bool queryFileSafetyFingerprint(const std::string& path, bool& exists,
+                                ULONGLONG& size, FILETIME& lastWriteTime,
+                                DWORD& attributes) {
+    exists = false;
+    size = 0;
+    lastWriteTime = {};
+    attributes = INVALID_FILE_ATTRIBUTES;
+    if (path.empty()) return false;
+
+    WIN32_FILE_ATTRIBUTE_DATA data{};
+    if (!GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &data)) {
+        return false;
+    }
+
+    exists = true;
+    attributes = data.dwFileAttributes;
+    lastWriteTime = data.ftLastWriteTime;
+    size = (static_cast<ULONGLONG>(data.nFileSizeHigh) << 32) |
+           static_cast<ULONGLONG>(data.nFileSizeLow);
+    return true;
+}
+
+bool sameFileSafetyFingerprint(bool leftExists, ULONGLONG leftSize,
+                               const FILETIME& leftTime, DWORD leftAttributes,
+                               bool rightExists, ULONGLONG rightSize,
+                               const FILETIME& rightTime, DWORD rightAttributes) {
+    return leftExists == rightExists && leftSize == rightSize &&
+           leftAttributes == rightAttributes &&
+           leftTime.dwLowDateTime == rightTime.dwLowDateTime &&
+           leftTime.dwHighDateTime == rightTime.dwHighDateTime;
+}
+
 bool isValidUtf8(std::string_view text) {
     const auto* bytes = reinterpret_cast<const unsigned char*>(text.data());
     size_t i = 0;
@@ -96,8 +131,7 @@ bool readBinaryFile(const std::string& path, std::string& bytes, std::string& er
 
 bool writeBinaryFileAtomically(const std::string& path, const std::string& bytes,
                                std::string& error) {
-    const std::string tempPath = path + ".rawrxd-tmp-" +
-        std::to_string(static_cast<unsigned long>(GetCurrentProcessId()));
+    const std::string tempPath = path + ".rawrxd-tmp";
     {
         std::ofstream file(tempPath, std::ios::binary | std::ios::trunc);
         if (!file) {
@@ -447,6 +481,149 @@ void Win32IDE::clearRecentFiles() {
     MessageBoxA(m_hwndMain, "Recent files list cleared", "Recent Files", MB_OK | MB_ICONINFORMATION);
 }
 
+void Win32IDE::armFileSafetyMonitor() {
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) return;
+    if (!m_fileSafetyTimerArmed) {
+        m_fileSafetyTimerArmed = SetTimer(
+            m_hwndMain, kFileSafetyTimerId, kFileSafetyIntervalMs,
+            &Win32IDE::fileSafetyTimerProc) != 0;
+        if (m_fileSafetyTimerArmed) {
+            LOG_INFO("[FILE_SAFETY] external-change monitor armed");
+        } else {
+            LOG_ERROR("[FILE_SAFETY] failed to arm external-change monitor");
+        }
+    }
+    captureFileSafetyBaseline();
+}
+
+void Win32IDE::disarmFileSafetyMonitor() {
+    if (m_hwndMain && IsWindow(m_hwndMain) && m_fileSafetyTimerArmed) {
+        KillTimer(m_hwndMain, kFileSafetyTimerId);
+    }
+    m_fileSafetyTimerArmed = false;
+    m_fileSafetyBaselinePath.clear();
+    m_fileSafetyBaselineValid = false;
+    m_fileSafetyPromptActive = false;
+}
+
+void Win32IDE::captureFileSafetyBaseline() {
+    if (m_currentFile.empty()) {
+        m_fileSafetyBaseline = {};
+        m_fileSafetyBaselinePath.clear();
+        m_fileSafetyBaselineValid = false;
+        return;
+    }
+    m_fileSafetyBaselinePath = m_currentFile;
+    m_fileSafetyBaseline.exists = queryFileSafetyFingerprint(
+        m_currentFile, m_fileSafetyBaseline.exists, m_fileSafetyBaseline.size,
+        m_fileSafetyBaseline.lastWriteTime, m_fileSafetyBaseline.attributes);
+    m_fileSafetyBaselineValid = true;
+}
+
+void CALLBACK Win32IDE::fileSafetyTimerProc(HWND hwnd, UINT, UINT_PTR timerId, DWORD) {
+    if (timerId != kFileSafetyTimerId || !hwnd) return;
+    auto* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+    if (ide) ide->pollFileSafety();
+}
+
+void Win32IDE::pollFileSafety() {
+    if (m_fileSafetyAutosaveInProgress) return;
+
+    // The timer also provides crash recovery: modified buffers are journaled
+    // through the existing atomic session writer while the process is alive.
+    bool hasUnsavedBuffer = m_fileModified;
+    for (const auto& buffer : m_documentBuffers) {
+        if (buffer.modified) {
+            hasUnsavedBuffer = true;
+            break;
+        }
+    }
+    if (hasUnsavedBuffer) {
+        m_fileSafetyAutosaveInProgress = true;
+        saveIdeSession();
+        m_fileSafetyAutosaveInProgress = false;
+        LOG_INFO("[FILE_SAFETY] unsaved buffers checkpointed for recovery");
+    }
+
+    if (m_currentFile.empty() || !m_fileSafetyBaselineValid || m_fileSafetyPromptActive) {
+        return;
+    }
+    if (m_fileSafetyBaselinePath != m_currentFile) {
+        // File open/tab switching lives outside this file-operations unit.
+        // Re-baseline on the next main-thread tick instead of comparing the
+        // newly active document with the previous document's fingerprint.
+        captureFileSafetyBaseline();
+        return;
+    }
+
+    FileSafetyFingerprint current{};
+    current.exists = queryFileSafetyFingerprint(
+        m_currentFile, current.exists, current.size, current.lastWriteTime,
+        current.attributes);
+    if (sameFileSafetyFingerprint(
+            current.exists, current.size, current.lastWriteTime, current.attributes,
+            m_fileSafetyBaseline.exists, m_fileSafetyBaseline.size,
+            m_fileSafetyBaseline.lastWriteTime, m_fileSafetyBaseline.attributes)) {
+        return;
+    }
+
+    // A save performed by this process changes the on-disk fingerprint too.
+    // Compare bytes before warning so ordinary Save does not produce a false
+    // external-change prompt.
+    std::string diskBytes;
+    std::string readError;
+    const bool diskReadable = current.exists &&
+        readBinaryFile(m_currentFile, diskBytes, readError);
+    const std::string editorBytes = getEditorTextUtf8ForFile();
+    if (diskReadable && diskBytes == editorBytes) {
+        m_fileSafetyBaseline = current;
+        m_fileSafetyBaselineValid = true;
+        return;
+    }
+
+    m_fileSafetyBaseline = current;
+    m_fileSafetyBaselineValid = true;
+    m_fileSafetyPromptActive = true;
+    LOG_WARNING("[FILE_SAFETY] external change detected: " + m_currentFile);
+
+    if (m_fileModified) {
+        MessageBoxA(m_hwndMain,
+            "The file changed outside RawrXD while this buffer has unsaved edits.\n\n"
+            "Your in-memory edits were preserved in the recovery snapshot.\n"
+            "Save As or compare the file before overwriting the external change.",
+            "External File Change", MB_OK | MB_ICONWARNING);
+        m_fileSafetyPromptActive = false;
+        return;
+    }
+
+    const int choice = MessageBoxA(
+        m_hwndMain,
+        "This file changed outside RawrXD. Reload it now?\n\n"
+        "Choose No to keep the current view.",
+        "External File Change", MB_YESNO | MB_ICONWARNING);
+    if (choice == IDYES && diskReadable) {
+        if (setEditorTextUtf8FromFile(diskBytes)) {
+            m_fileModified = false;
+            if (m_activeDocument >= 0 &&
+                m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+                auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+                buffer.path = m_currentFile;
+                buffer.text = diskBytes;
+                buffer.modified = false;
+            }
+            updateTitleBarText();
+            updateDocumentTabs();
+            updateMenuEnableStates();
+            LOG_INFO("[FILE_SAFETY] external change reloaded: " + m_currentFile);
+        } else {
+            LOG_ERROR("[FILE_SAFETY] external change reload failed: " + m_currentFile);
+        }
+    } else {
+        LOG_INFO("[FILE_SAFETY] external change kept out of editor: " + m_currentFile);
+    }
+    m_fileSafetyPromptActive = false;
+}
+
 std::string Win32IDE::sha256Hex(const std::string& bytes) {
     BCRYPT_ALG_HANDLE alg = nullptr;
     BCRYPT_HASH_HANDLE hash = nullptr;
@@ -515,6 +692,7 @@ static std::string ideSessionPath() {
 }
 
 void Win32IDE::saveIdeSession() {
+    armFileSafetyMonitor();
     persistActiveDocumentBuffer();
     nlohmann::json root;
     root["active"] = m_activeDocument;
@@ -537,10 +715,17 @@ void Win32IDE::saveIdeSession() {
 }
 
 void Win32IDE::loadIdeSession() {
-    std::ifstream in(ideSessionPath(), std::ios::binary);
-    if (!in) return;
+    armFileSafetyMonitor();
+    std::string serialized;
+    std::string readError;
+    const std::string sessionPath = ideSessionPath();
+    if (!readBinaryFile(sessionPath, serialized, readError)) {
+        const std::string tempPath = sessionPath + ".rawrxd-tmp";
+        if (!readBinaryFile(tempPath, serialized, readError)) return;
+        LOG_WARNING("[FILE_SAFETY] recovering IDE session from atomic temp snapshot");
+    }
     try {
-        nlohmann::json root = nlohmann::json::parse(in);
+        nlohmann::json root = nlohmann::json::parse(serialized);
         if (!root.contains("documents") || !root["documents"].is_array()) return;
         m_openDocuments.clear();
         m_documentBuffers.clear();
@@ -579,7 +764,9 @@ void Win32IDE::loadIdeSession() {
         if (active < 0 || active >= static_cast<int>(m_openDocuments.size())) active = 0;
         switchDocumentTab(active);
     } catch (...) {
-        // Corrupt session must not block IDE launch.
+        // A corrupt canonical snapshot must not block IDE launch. The atomic
+        // writer leaves a recoverable temp snapshot for the next start.
+        LOG_ERROR("[FILE_SAFETY] IDE session snapshot was invalid");
     }
 }
 

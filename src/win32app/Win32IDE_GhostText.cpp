@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <climits>
 #include <cstdlib>
 #include <memory>
 #include <thread>
@@ -12,6 +13,55 @@
 namespace {
 constexpr UINT_PTR kGhostTimer = 0x5247;
 constexpr UINT kGhostResult = WM_APP + 73;
+
+bool utf8ToWide(const std::string& input, std::wstring& output) {
+    output.clear();
+    if (input.empty()) return true;
+    if (input.size() > static_cast<size_t>(INT_MAX)) return false;
+    const int sourceLength = static_cast<int>(input.size());
+    const int length = MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, input.data(), sourceLength,
+        nullptr, 0);
+    if (length <= 0) return false;
+    output.resize(static_cast<size_t>(length));
+    return MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, input.data(), sourceLength,
+        output.data(), length) == length;
+}
+
+bool wideToUtf8(const std::wstring& input, std::string& output) {
+    output.clear();
+    if (input.empty()) return true;
+    if (input.size() > static_cast<size_t>(INT_MAX)) return false;
+    const int sourceLength = static_cast<int>(input.size());
+    const int length = WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, input.data(), sourceLength,
+        nullptr, 0, nullptr, nullptr);
+    if (length <= 0) return false;
+    output.resize(static_cast<size_t>(length));
+    return WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, input.data(), sourceLength,
+        output.data(), length, nullptr, nullptr) == length;
+}
+
+bool readEditorTextUtf8(HWND editor, std::string& output) {
+    output.clear();
+    if (!editor) return false;
+    const int length = GetWindowTextLengthW(editor);
+    if (length < 0) return false;
+    std::wstring wide(static_cast<size_t>(length) + 1, L'\0');
+    if (length > 0 && GetWindowTextW(editor, wide.data(), length + 1) <= 0) {
+        return false;
+    }
+    wide.resize(static_cast<size_t>(length));
+    return wideToUtf8(wide, output);
+}
+
+void traceUtf8ConversionFailure(const NativeGhostTextController::Trace& trace,
+                                const char* operation) {
+    if (trace) trace(std::string("GHOSTTEXT_UTF8_ERROR operation=") + operation);
+}
+
 struct Result {
     NativeGhostTextController* owner;
     std::shared_ptr<void> requestIdentity;
@@ -78,11 +128,11 @@ void NativeGhostTextController::detach() {
 }
 
 std::string NativeGhostTextController::editorText() const {
-    if (!m_editor) return {};
-    const int length = GetWindowTextLengthA(m_editor);
-    std::string text(static_cast<size_t>(std::max(0, length)) + 1, '\0');
-    if (length) GetWindowTextA(m_editor, text.data(), length + 1);
-    text.resize(static_cast<size_t>(length));
+    std::string text;
+    if (!readEditorTextUtf8(m_editor, text)) {
+        traceUtf8ConversionFailure(m_trace, "editor_read");
+        return {};
+    }
     return text;
 }
 
@@ -145,7 +195,13 @@ void NativeGhostTextController::showCompletion(const std::string& completion, ui
                 " response_bytes=" + std::to_string(completion.size()));
     }
     if (m_hint) {
-        SetWindowTextA(m_hint, ("  " + completion).c_str());
+        std::wstring wideCompletion;
+        if (!utf8ToWide("  " + completion, wideCompletion)) {
+            traceUtf8ConversionFailure(m_trace, "hint_write");
+            m_completion.clear();
+            return;
+        }
+        SetWindowTextW(m_hint, wideCompletion.c_str());
         positionHint();
         ShowWindow(m_hint, SW_SHOWNA);
     }
@@ -207,13 +263,27 @@ void NativeGhostTextController::dismiss() {
 
 bool NativeGhostTextController::accept() {
     if (m_completion.empty() || !m_editor) return false;
+    // A completion is valid only for the exact editor snapshot that caused
+    // it. This also protects against programmatic edits that do not emit the
+    // normal change notification before Tab is pressed.
+    if (editorText() != m_snapshot) {
+        dismiss();
+        return false;
+    }
+    std::wstring wideCompletion;
+    if (!utf8ToWide(m_completion, wideCompletion)) {
+        traceUtf8ConversionFailure(m_trace, "accept");
+        dismiss();
+        return false;
+    }
     if (m_trace) {
         m_trace("GHOSTTEXT_ACCEPTED request_id=" + std::to_string(m_requestId) +
                 " suggestion_bytes=" + std::to_string(m_completion.size()));
     }
     // Replace the current selection at the caret.  Appending at EOF made
     // accepted suggestions modify the wrong location in multi-line editors.
-    SendMessageA(m_editor, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(m_completion.c_str()));
+    SendMessageW(m_editor, EM_REPLACESEL, TRUE,
+                 reinterpret_cast<LPARAM>(wideCompletion.c_str()));
     dismiss();
     return true;
 }
@@ -222,7 +292,12 @@ bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARA
     if (message != kGhostResult || !lParam ||
         reinterpret_cast<Result*>(lParam)->owner != this) return false;
     std::unique_ptr<Result> result(reinterpret_cast<Result*>(lParam));
-    m_requestPending = false;
+    const bool requestCurrent = result->requestId == m_requestId;
+    const bool pendingCurrent = requestCurrent && m_requestPending;
+    // A late completion from request A must not clear the pending state of a
+    // newer request B. Otherwise Escape can no longer invalidate B and the
+    // controller falsely appears idle while B is still in flight.
+    if (requestCurrent) m_requestPending = false;
     const bool identityCurrent = result->requestIdentity &&
         result->requestIdentity == m_requestIdentity;
     const bool generationCurrent = result->generation == m_generation;
@@ -233,6 +308,8 @@ bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARA
                 " success=" + (result->success ? "1" : "0") +
                 " response_bytes=" + std::to_string(result->text.size()) +
                 " generated_tokens=N/A" +
+                " request_current=" + (requestCurrent ? "1" : "0") +
+                " pending_current=" + (pendingCurrent ? "1" : "0") +
                 " generation_current=" + (generationCurrent ? "1" : "0") +
                 " identity_current=" + (identityCurrent ? "1" : "0") +
                 " snapshot_current=" + (snapshotCurrent ? "1" : "0"));
@@ -241,10 +318,12 @@ bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARA
         m_trace("GHOSTTEXT_RENDER_DECISION request_id=" +
                 std::to_string(result->requestId) +
                 " eligible=" +
-                ((result->success && identityCurrent && generationCurrent &&
-                  snapshotCurrent && !result->text.empty()) ? "1" : "0"));
+                 ((result->success && pendingCurrent && identityCurrent &&
+                   generationCurrent && snapshotCurrent && !result->text.empty())
+                      ? "1" : "0"));
     }
-    if (result->success && identityCurrent && generationCurrent && snapshotCurrent) {
+    if (result->success && pendingCurrent && identityCurrent &&
+        generationCurrent && snapshotCurrent && !result->text.empty()) {
         showCompletion(result->text, result->generation);
     }
     return true;
