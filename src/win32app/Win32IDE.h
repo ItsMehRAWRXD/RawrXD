@@ -701,6 +701,8 @@ private:
     void switchDocumentTab(int index);
     void updateDocumentTabs();
     int findDocumentTab(const std::string& path) const;
+    void loadEditorSession();
+    void saveEditorSession() const;
 
     // Enhanced clipboard
     void copyWithFormatting();

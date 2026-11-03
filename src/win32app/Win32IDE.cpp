@@ -8440,6 +8440,7 @@ int Win32IDE::effectiveMaxTokensForPrompt(const std::string& prompt) const {
 }
 
 Win32IDE::~Win32IDE() {
+    saveEditorSession();
     if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
     if (m_modelDiscoveryThread.joinable()) m_modelDiscoveryThread.join();
     m_inferenceStopRequested = true;

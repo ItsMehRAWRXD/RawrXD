@@ -7,6 +7,7 @@
  * translation unit so the rest of the IDE sources remain untouched.
  */
 #include "Win32IDE.h"
+#include <fstream>
 #include "IDELogger.h"
 #include "Win32IDE_CommandIDs.h"
 
@@ -1012,6 +1013,41 @@ void Win32IDE::createDocumentTabs()
     m_documentBuffers.clear();
     m_activeDocument = -1;
     addDocumentTab(std::string());
+    loadEditorSession();
+}
+
+void Win32IDE::loadEditorSession()
+{
+    std::ifstream file("ide_session.ini", std::ios::binary);
+    if (!file) return;
+    std::string line;
+    int active = 0;
+    std::vector<std::string> paths;
+    while (std::getline(file, line)) {
+        if (line.rfind("active=", 0) == 0) {
+            active = std::max(0, atoi(line.substr(7).c_str()));
+        } else if (line.rfind("file=", 0) == 0 && line.size() > 5) {
+            paths.push_back(line.substr(5));
+        }
+    }
+    for (const auto& path : paths) {
+        if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
+            addDocumentTab(path);
+        }
+    }
+    if (active >= 0 && active < static_cast<int>(m_openDocuments.size())) {
+        switchDocumentTab(active);
+    }
+}
+
+void Win32IDE::saveEditorSession() const
+{
+    std::ofstream file("ide_session.ini", std::ios::binary | std::ios::trunc);
+    if (!file) return;
+    file << "active=" << std::max(0, m_activeDocument) << "\n";
+    for (const auto& path : m_openDocuments) {
+        if (!path.empty()) file << "file=" << path << "\n";
+    }
 }
 
 int Win32IDE::findDocumentTab(const std::string& path) const
