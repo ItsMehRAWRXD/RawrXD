@@ -8,8 +8,107 @@
 #include <functional>
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <vector>
 
 #include "Win32IDE_CommandIDs.h"
+
+namespace {
+
+bool isDirectoryPath(const std::string& path)
+{
+    if (path.empty()) return false;
+    const DWORD attributes = GetFileAttributesA(path.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES &&
+           (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+bool pathExists(const std::string& path)
+{
+    return !path.empty() && GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
+}
+
+std::string parentDirectory(std::string path)
+{
+    while (path.size() > 3 && (path.back() == '\\' || path.back() == '/')) {
+        path.pop_back();
+    }
+    const size_t slash = path.find_last_of("\\/");
+    if (slash == std::string::npos) return {};
+    if (slash == 2 && path.size() >= 3 && path[1] == ':') return path.substr(0, 3);
+    return path.substr(0, slash);
+}
+
+std::string workspaceRootFromSeeds(const std::vector<std::string>& seeds)
+{
+    for (std::string seed : seeds) {
+        if (seed.empty()) continue;
+        if (!isDirectoryPath(seed)) seed = parentDirectory(seed);
+        for (int depth = 0; !seed.empty() && depth < 12; ++depth) {
+            if (pathExists(seed + "\\.git") || pathExists(seed + "\\CMakeLists.txt")) {
+                return seed;
+            }
+            const std::string parent = parentDirectory(seed);
+            if (parent.empty() || parent == seed) break;
+            seed = parent;
+        }
+    }
+    return {};
+}
+
+std::string configuredBuildDirectory(const std::string& workspaceRoot)
+{
+    if (const char* configured = std::getenv("RAWRXD_BUILD_DIR")) {
+        std::string value(configured);
+        if (!value.empty() && !isDirectoryPath(value) && !workspaceRoot.empty() &&
+            value.find(':') == std::string::npos && value[0] != '\\' && value[0] != '/') {
+            value = workspaceRoot + "\\" + value;
+        }
+        if (isDirectoryPath(value) &&
+            (pathExists(value + "\\CMakeCache.txt") || pathExists(value + "\\build.ninja"))) {
+            return value;
+        }
+    }
+
+    // Prefer the active repair/IDE build over unrelated model-route output.
+    static constexpr const char* names[] = {
+        "build_repair_candidate", "build_ide", "build_cmake", "build_modelroute"
+    };
+    for (const char* name : names) {
+        const std::string candidate = workspaceRoot.empty()
+            ? std::string(name) : workspaceRoot + "\\" + name;
+        if (isDirectoryPath(candidate) &&
+            (pathExists(candidate + "\\CMakeCache.txt") ||
+             pathExists(candidate + "\\build.ninja"))) {
+            return candidate;
+        }
+    }
+    return {};
+}
+
+std::string powerShellLiteral(const std::string& value)
+{
+    std::string escaped;
+    escaped.reserve(value.size() + 8);
+    for (char ch : value) {
+        escaped.push_back(ch);
+        if (ch == '\'') escaped.push_back('\'');
+    }
+    return "'" + escaped + "'";
+}
+
+std::string currentDirectoryPath()
+{
+    std::vector<char> buffer(MAX_PATH, '\0');
+    for (;;) {
+        const DWORD length = GetCurrentDirectoryA(static_cast<DWORD>(buffer.size()), buffer.data());
+        if (length == 0) return {};
+        if (length < buffer.size()) return std::string(buffer.data(), length);
+        buffer.resize(static_cast<size_t>(length) + 1, '\0');
+    }
+}
+
+} // namespace
 
 // The menu IDs are sparse and mix File/Edit/View commands in the 2000 range.
 // Range routing misclassified them and claimed unknown commands were handled.
@@ -316,38 +415,82 @@ void Win32IDE::handleToolsCommand(int commandId) {
     case IDM_TOOLS_BUILD_PROJECT: {
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Build");
         startPowerShell();
-        const char* buildDir =
-            (GetFileAttributesA("F:\\rawrxd\\build_modelroute") != INVALID_FILE_ATTRIBUTES)
-                ? "F:\\rawrxd\\build_modelroute"
-                : ((GetFileAttributesA("build_modelroute") != INVALID_FILE_ATTRIBUTES)
-                       ? "build_modelroute"
-                       : ((GetFileAttributesA("build_ide") != INVALID_FILE_ATTRIBUTES)
-                              ? "build_ide" : "."));
-        if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
-            std::string cmd = std::string("cmake --build \"") + buildDir +
-                "\" --target RawrXD-Win32IDE-Native --config Release\r\n";
-            pane->manager->writeInput(cmd);
+        std::vector<std::string> roots;
+        roots.push_back(m_currentFile);
+        roots.push_back(m_currentExplorerPath);
+        roots.push_back(m_explorerRootPath);
+        roots.push_back(m_gitRepoPath);
+        roots.push_back(currentDirectoryPath());
+        const std::string workspaceRoot = workspaceRootFromSeeds(roots);
+        const std::string buildDir = configuredBuildDirectory(workspaceRoot);
+        auto* pane = getActiveTerminalPane();
+        if (buildDir.empty()) {
+            appendToOutput("Native IDE build not started: no configured CMake build directory was found. Set RAWRXD_BUILD_DIR or configure build_ide.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
         }
-        appendToOutput(std::string("Native IDE build started (dir=") + buildDir + ").\n",
+        if (!pane || !pane->manager || !pane->manager->isRunning()) {
+            appendToOutput("Native IDE build not started: PowerShell terminal is unavailable.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        const std::string rootLiteral = powerShellLiteral(workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot);
+        const std::string buildLiteral = powerShellLiteral(buildDir);
+        const std::string cmd =
+            "$ErrorActionPreference='Continue'; "
+            "Set-Location -LiteralPath " + rootLiteral + "; "
+            "Write-Output '[RAWRXD_BUILD_START]'; "
+            "$vcvars=@('C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat',"
+            "'C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat'); "
+            "$vcvars=$vcvars | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1; "
+            "if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { "
+            "cmd.exe /d /s /c ('call \"' + $vcvars + '\" && cmake --build \"' + " + buildLiteral +
+            " + '\" --target RawrXD-Win32IDE-Native --config Release'); $rc=$LASTEXITCODE }; "
+            "Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); "
+            "if($rc -ne 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }\r\n";
+        pane->manager->writeInput(cmd);
+        appendToOutput("Native IDE build started (workspace=" +
+                           (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot) +
+                           ", dir=" + buildDir + ").\n",
                        "Output", OutputSeverity::Info);
         break;
     }
     case IDM_TOOLS_TEST_PROJECT: {
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Tests");
         startPowerShell();
-        const char* testDir =
-            (GetFileAttributesA("F:\\rawrxd\\build_modelroute") != INVALID_FILE_ATTRIBUTES)
-                ? "F:\\rawrxd\\build_modelroute"
-                : ((GetFileAttributesA("build_modelroute") != INVALID_FILE_ATTRIBUTES)
-                       ? "build_modelroute"
-                       : ((GetFileAttributesA("build_ide") != INVALID_FILE_ATTRIBUTES)
-                              ? "build_ide" : "."));
-        if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
-            std::string cmd = std::string("ctest --test-dir \"") + testDir +
-                "\" --output-on-failure\r\n";
-            pane->manager->writeInput(cmd);
+        std::vector<std::string> roots;
+        roots.push_back(m_currentFile);
+        roots.push_back(m_currentExplorerPath);
+        roots.push_back(m_explorerRootPath);
+        roots.push_back(m_gitRepoPath);
+        roots.push_back(currentDirectoryPath());
+        const std::string workspaceRoot = workspaceRootFromSeeds(roots);
+        const std::string testDir = configuredBuildDirectory(workspaceRoot);
+        auto* pane = getActiveTerminalPane();
+        if (testDir.empty()) {
+            appendToOutput("Native IDE tests not started: no configured CMake build directory was found. Set RAWRXD_BUILD_DIR or configure build_ide.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
         }
-        appendToOutput(std::string("Native IDE test run started (dir=") + testDir + ").\n",
+        if (!pane || !pane->manager || !pane->manager->isRunning()) {
+            appendToOutput("Native IDE tests not started: PowerShell terminal is unavailable.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        const std::string rootLiteral = powerShellLiteral(workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot);
+        const std::string testLiteral = powerShellLiteral(testDir);
+        const std::string cmd =
+            "$ErrorActionPreference='Continue'; "
+            "Set-Location -LiteralPath " + rootLiteral + "; "
+            "Write-Output '[RAWRXD_TEST_START]'; "
+            "ctest --test-dir " + testLiteral +
+            " -C Release --output-on-failure; "
+            "$rc=$LASTEXITCODE; Write-Output ('[RAWRXD_TEST_RESULT] EXIT=' + $rc); "
+            "if($rc -ne 0){ Write-Error ('Native IDE tests failed with exit code ' + $rc) }\r\n";
+        pane->manager->writeInput(cmd);
+        appendToOutput("Native IDE test run started (workspace=" +
+                           (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot) +
+                           ", dir=" + testDir + ").\n",
                        "Output", OutputSeverity::Info);
         break;
     }

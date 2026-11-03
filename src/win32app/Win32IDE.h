@@ -455,6 +455,11 @@ private:
     void saveIdeSession();
     void loadIdeSession();
     void persistActiveDocumentBuffer();
+    // File-operations boundary: RichEdit is created as RichEdit20A, so file
+    // bytes must cross it explicitly as UTF-8 instead of through the process
+    // ANSI code page.  These helpers are implemented in Win32IDE_FileOps.cpp.
+    bool setEditorTextUtf8FromFile(const std::string& text);
+    std::string getEditorTextUtf8ForFile() const;
     static std::string sha256Hex(const std::string& bytes);
     std::string getFileDialogPath(bool isSave = false);
     
@@ -1540,6 +1545,7 @@ private:
     void onGhostTextSelectionChanged();
     void onGhostTextCloudConsentChanged();
     void onModelDiscoveryComplete(ModelDiscoveryPayload* discovered);
+    void flushDeferredModelDiscoveryIfIdle();
     void onMaxTokensChanged(int newValue);
     void onContextPresetChanged();
     void onReasoningModeChanged();

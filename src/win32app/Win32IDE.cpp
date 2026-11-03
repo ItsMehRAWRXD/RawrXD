@@ -3282,6 +3282,17 @@ void Win32IDE::newFile()
     setEditorText("");
     m_currentFile.clear();
     m_fileModified = false;
+    if (m_activeDocument >= 0 &&
+        m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+        auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+        buffer.path.clear();
+        buffer.text.clear();
+        buffer.modified = false;
+        if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+            m_openDocuments[static_cast<size_t>(m_activeDocument)].clear();
+        }
+        updateDocumentTabs();
+    }
     updateTitleBarText();
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"New file");
     updateMenuEnableStates();
@@ -3302,6 +3313,30 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
 
         std::string content((std::istreambuf_iterator<char>(file)),
                              std::istreambuf_iterator<char>());
+
+        const int existing = findDocumentTab(path);
+        if (existing >= 0 && existing != m_activeDocument) {
+            if (m_activeDocument >= 0 &&
+                m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+                auto& current = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+                current.path = m_currentFile;
+                current.text = getWindowTextUtf8(m_hwndEditor);
+                if (current.text.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+                    current.text = getWindowText(m_hwndEditor);
+                }
+                current.modified = m_fileModified;
+                if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+                    m_openDocuments[static_cast<size_t>(m_activeDocument)] = m_currentFile;
+                }
+            }
+            m_activeDocument = existing;
+            TabCtrl_SetCurSel(m_hwndDocTabs, existing);
+        } else if (existing < 0) {
+            // Register the new tab before changing the active editor state so
+            // the outgoing tab is snapshotted before this file is loaded.
+            addDocumentTab(path);
+        }
+
         setEditorText(content);
         m_currentFile = path;
         m_fileModified = false;
@@ -3335,7 +3370,8 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
 
 void Win32IDE::openFile()
 {
-    appendToOutput("File > Open clicked\n", "Output", OutputSeverity::Info);    if (m_fileModified) {
+    appendToOutput("File > Open clicked\n", "Output", OutputSeverity::Info);
+    if (m_fileModified) {
         int result = MessageBoxA(m_hwndMain, "File has been modified. Save changes?", "Save", MB_YESNOCANCEL);
         if (result == IDCANCEL) {
             appendToOutput("File > Open cancelled by user\n", "Output", OutputSeverity::Info);
@@ -3364,27 +3400,11 @@ void Win32IDE::openFile()
 
     if (GetOpenFileNameA(&ofn)) {
         appendToOutput("Opening file: " + std::string(szFile) + "\n", "Output", OutputSeverity::Info);
-        try {
-            std::ifstream file(szFile);
-            if (file) {
-                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                setEditorText(content);
-                m_currentFile = szFile;
-                m_fileModified = false;
-                setCurrentDirectoryFromFile(m_currentFile);
-                addDocumentTab(m_currentFile);
-                updateTitleBarText();
-                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
-                updateMenuEnableStates();
-                syncEditorToGpuSurface();
-                appendToOutput("File opened successfully (" + std::to_string(content.size()) + " bytes)\n", "Output", OutputSeverity::Info);
-            } else {
-                appendToOutput("Failed to open file: " + std::string(szFile) + "\n", "Errors", OutputSeverity::Error);
-                MessageBoxA(m_hwndMain, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
-            }
-        } catch (const std::exception& e) {
-            appendToOutput("Exception opening file: " + std::string(e.what()) + "\n", "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain, e.what(), "Error", MB_OK | MB_ICONERROR);
+        if (loadFileIntoEditor(szFile)) {
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
+        } else {
+            appendToOutput("Failed to open file: " + std::string(szFile) + "\n", "Errors", OutputSeverity::Error);
+            MessageBoxA(m_hwndMain, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
         }
     } else {
         appendToOutput("File > Open cancelled by user (no file selected)\n", "Output", OutputSeverity::Info);
@@ -3395,31 +3415,9 @@ bool Win32IDE::openDocumentPath(const std::string& path)
 {
     if (path.empty()) return false;
     if (m_fileModified && !promptSaveChanges()) return false;
-    try {
-        std::ifstream file(path, std::ios::binary);
-        if (!file) return false;
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-        setEditorText(content);
-        m_currentFile = path;
-        m_fileModified = false;
-        setCurrentDirectoryFromFile(m_currentFile);
-        addDocumentTab(m_currentFile);
-        updateTitleBarText();
-        updateRecentFiles(path);
-        if (m_hwndStatusBar) {
-            SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0,
-                         reinterpret_cast<LPARAM>("File opened successfully"));
-        }
-        updateMenuEnableStates();
-        syncEditorToGpuSurface();
-        appendToOutput("File opened successfully (" +
-            std::to_string(content.size()) + " bytes)\\n",
-            "Output", OutputSeverity::Info);
-        return true;
-    } catch (...) {
-        return false;
-    }
+    if (!loadFileIntoEditor(path)) return false;
+    updateRecentFiles(path);
+    return true;
 }
 
 bool Win32IDE::saveFile()
@@ -3431,7 +3429,12 @@ bool Win32IDE::saveFile()
 
     appendToOutput("Saving file: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
     try {
-        std::string content = getWindowText(m_hwndEditor);
+        std::string content = getWindowTextUtf8(m_hwndEditor);
+        if (content.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+            // Do not turn an invalid/legacy byte sequence into an empty file
+            // merely because UTF-8 readback rejected it.
+            content = getWindowText(m_hwndEditor);
+        }
         // Preserve editor bytes exactly; text-mode streams can translate
         // newlines on Windows and make save/reopen integrity lossy.
         std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
@@ -3457,9 +3460,14 @@ bool Win32IDE::saveFile()
                 buffer.path = m_currentFile;
                 buffer.text = content;
                 buffer.modified = false;
+                if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+                    m_openDocuments[static_cast<size_t>(m_activeDocument)] = m_currentFile;
+                }
             }
             updateTitleBarText();
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File saved");
+            updateDocumentTabs();
+            updateMenuEnableStates();
             appendToOutput("File saved successfully (" + std::to_string(content.size()) +
                            " bytes, sha256=" + expected.substr(0, 16) + "...)\n",
                            "Output", OutputSeverity::Info);
@@ -3476,6 +3484,11 @@ bool Win32IDE::saveFile()
 
 bool Win32IDE::saveFileAs()
 {
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
+        appendToOutput("File > Save As rejected: main window is unavailable\n",
+                       "Errors", OutputSeverity::Error);
+        return false;
+    }
     appendToOutput("File > Save As clicked\n", "Output", OutputSeverity::Info);
     OPENFILENAMEA ofn;
     char szFile[260] = {0};
@@ -3490,14 +3503,22 @@ bool Win32IDE::saveFileAs()
     ofn.lpstrFileTitle = nullptr;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
-    ofn.Flags = OFN_OVERWRITEPROMPT;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
     if (GetSaveFileNameA(&ofn)) {
+        const std::string previousFile = m_currentFile;
         m_currentFile = szFile;
         appendToOutput("Save As: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
         setCurrentDirectoryFromFile(m_currentFile);
         updateTitleBarText();
-        return saveFile();
+        if (saveFile()) return true;
+
+        // Do not leave the document pointed at a path that was never written.
+        m_currentFile = previousFile;
+        if (!m_currentFile.empty()) setCurrentDirectoryFromFile(m_currentFile);
+        updateTitleBarText();
+        updateMenuEnableStates();
+        return false;
     }
     appendToOutput("File > Save As cancelled by user\n", "Output", OutputSeverity::Info);
     return false;
@@ -3792,8 +3813,13 @@ void Win32IDE::updateMenuEnableStates() {
     EnableMenuItem(m_hMenu, IDM_GIT_PANEL, repo ? MF_BYCOMMAND|MF_ENABLED : MF_BYCOMMAND|MF_GRAYED);
 
     // File save related
-    EnableMenuItem(m_hMenu, IDM_FILE_SAVE, (!m_currentFile.empty() && m_fileModified) ? MF_BYCOMMAND|MF_ENABLED : MF_BYCOMMAND|MF_GRAYED);
-    EnableMenuItem(m_hMenu, IDM_FILE_SAVEAS, (!m_currentFile.empty()) ? MF_BYCOMMAND|MF_ENABLED : MF_BYCOMMAND|MF_GRAYED);
+    const bool editorAvailable = m_hwndEditor && IsWindow(m_hwndEditor);
+    EnableMenuItem(m_hMenu, IDM_FILE_SAVE,
+        (editorAvailable && m_fileModified) ? MF_BYCOMMAND|MF_ENABLED : MF_BYCOMMAND|MF_GRAYED);
+    // Save delegates to Save As for untitled buffers; it must remain
+    // available before a path has been assigned.
+    EnableMenuItem(m_hMenu, IDM_FILE_SAVEAS,
+        editorAvailable ? MF_BYCOMMAND|MF_ENABLED : MF_BYCOMMAND|MF_GRAYED);
 
     // Streaming loader menu state
     CheckMenuItem(m_hMenu, IDM_VIEW_USE_STREAMING_LOADER, MF_BYCOMMAND | (m_useStreamingLoader ? MF_CHECKED : MF_UNCHECKED));
@@ -5957,12 +5983,8 @@ void Win32IDE::onFileExplorerDoubleClick()
                         return;
                     }
                     
-                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    setEditorText(content);
-                    m_currentFile = filePath;
-                    m_fileModified = false;
-                    updateTitleBarText();
                     file.close();
+                    loadFileIntoEditor(filePath);
                 }
             }
             catch (const std::exception& e) {
@@ -6068,16 +6090,7 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
             }
             break;
         case 2003: // Open with Editor
-            {
-                std::ifstream file(filePath);
-                if (file.is_open()) {
-                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    setEditorText(content);
-                    m_currentFile = filePath;
-                    m_fileModified = false;
-                    updateTitleBarText();
-                }
-            }
+            loadFileIntoEditor(filePath);
             break;
         case 2004: // Copy Path
             if (OpenClipboard(m_hwndMain)) {
@@ -7848,6 +7861,22 @@ void Win32IDE::populateModelSelector() {
 
 }
 
+void Win32IDE::flushDeferredModelDiscoveryIfIdle() {
+    if (m_inferenceRunning.load(std::memory_order_acquire)) return;
+    if (!m_modelDiscoveryUpdateDeferred || !m_deferredModelDiscovery) return;
+    if (m_hwndModelSelector &&
+        SendMessageA(m_hwndModelSelector, CB_GETDROPPEDSTATE, 0, 0) != FALSE) {
+        return;
+    }
+    if (m_hwndGhostModelSelector &&
+        SendMessageA(m_hwndGhostModelSelector, CB_GETDROPPEDSTATE, 0, 0) != FALSE) {
+        return;
+    }
+    auto deferred = std::move(m_deferredModelDiscovery);
+    m_modelDiscoveryUpdateDeferred = false;
+    onModelDiscoveryComplete(deferred.release());
+}
+
 void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     std::unique_ptr<ModelDiscoveryPayload> owned(discovered);
     if (!owned || !m_hwndModelSelector) return;
@@ -7867,12 +7896,19 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     const auto comboDropped = [](HWND combo) {
         return combo && SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0) != FALSE;
     };
-    if (comboDropped(m_hwndModelSelector) || comboDropped(m_hwndGhostModelSelector)) {
+    // Defer CB_RESETCONTENT while a chat generate owns the UI thread cadence.
+    // Phase-2 GGUF merge landing mid-Send/timer nested inside COMCTL32 has
+    // produced APPCRASH (comctl32 / 0xC000041D) and aborted Request A before
+    // Stop→Request B recovery can be exercised.
+    const bool inferenceBusy =
+        m_inferenceRunning.load(std::memory_order_acquire);
+    if (inferenceBusy || comboDropped(m_hwndModelSelector) ||
+        comboDropped(m_hwndGhostModelSelector)) {
         // This callback already runs on the UI thread.  Staging the newest
-        // result here is sufficient; the close-up notification will flush it
-        // after the common-controls popup has finished closing.  The worker
-        // publishes two phases, so coalesce a merge-only scoped result with
-        // the already-staged fast Ollama result instead of dropping it.
+        // result here is sufficient; Stop/complete/close-up will flush it
+        // after common-controls work has finished.  The worker publishes two
+        // phases, so coalesce a merge-only scoped result with the already-
+        // staged fast Ollama result instead of dropping it.
         if (!m_deferredModelDiscovery || !owned->mergeOnly) {
             m_deferredModelDiscovery = std::move(owned);
         } else {
@@ -7891,7 +7927,9 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
             m_deferredModelDiscovery->mergeOnly = false;
         }
         m_modelDiscoveryUpdateDeferred = true;
-        logInfo("[ModelSelector] discovery update deferred while dropdown is open");
+        logInfo(inferenceBusy
+            ? "[ModelSelector] discovery update deferred while inference running"
+            : "[ModelSelector] discovery update deferred while dropdown is open");
         return;
     }
 
@@ -8160,6 +8198,7 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     if (active && m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
     if (active) m_chatHistory = session->history;
     updateChatSessionTabs();
+    flushDeferredModelDiscoveryIfIdle();
 }
 
 void Win32IDE::HandleCopilotStop()
@@ -8183,6 +8222,7 @@ void Win32IDE::HandleCopilotStop()
             reinterpret_cast<LPARAM>(status.c_str()));
     }
     updateChatSessionTabs();
+    flushDeferredModelDiscoveryIfIdle();
 }
 
 void Win32IDE::armAgentThoughtTimer()

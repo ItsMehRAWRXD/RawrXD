@@ -8,15 +8,166 @@
 #include <vector>
 #include <commdlg.h>
 #include <commctrl.h>
+#include <richedit.h>
 #include <shlobj.h>
 #include <algorithm>
 #include <bcrypt.h>
+#include <limits>
+#include <string_view>
 #include <nlohmann/json.hpp>
 #pragma comment(lib, "bcrypt.lib")
 
 // ============================================================================
 // FILE OPERATIONS (9 Features)
 // ============================================================================
+
+namespace {
+
+bool isValidUtf8(std::string_view text) {
+    const auto* bytes = reinterpret_cast<const unsigned char*>(text.data());
+    size_t i = 0;
+    while (i < text.size()) {
+        const unsigned char lead = bytes[i++];
+        if (lead <= 0x7f) continue;
+
+        size_t continuationCount = 0;
+        uint32_t codePoint = 0;
+        uint32_t minimum = 0;
+        if ((lead & 0xe0) == 0xc0) {
+            continuationCount = 1;
+            codePoint = lead & 0x1f;
+            minimum = 0x80;
+        } else if ((lead & 0xf0) == 0xe0) {
+            continuationCount = 2;
+            codePoint = lead & 0x0f;
+            minimum = 0x800;
+        } else if ((lead & 0xf8) == 0xf0) {
+            continuationCount = 3;
+            codePoint = lead & 0x07;
+            minimum = 0x10000;
+        } else {
+            return false;
+        }
+
+        if (continuationCount > text.size() - i) return false;
+        for (size_t n = 0; n < continuationCount; ++n) {
+            const unsigned char continuation = bytes[i++];
+            if ((continuation & 0xc0) != 0x80) return false;
+            codePoint = (codePoint << 6) | (continuation & 0x3f);
+        }
+        if (codePoint < minimum || codePoint > 0x10ffff ||
+            (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool readBinaryFile(const std::string& path, std::string& bytes, std::string& error) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        error = "open failed";
+        return false;
+    }
+    file.seekg(0, std::ios::end);
+    const std::streampos end = file.tellg();
+    if (end < 0) {
+        error = "size query failed";
+        return false;
+    }
+    if (static_cast<unsigned long long>(end) >
+        static_cast<unsigned long long>(std::numeric_limits<size_t>::max())) {
+        error = "file is too large for this process";
+        return false;
+    }
+    const size_t size = static_cast<size_t>(end);
+    file.seekg(0, std::ios::beg);
+    bytes.assign(size, '\0');
+    if (size != 0) {
+        file.read(bytes.data(), static_cast<std::streamsize>(size));
+        if (!file || static_cast<size_t>(file.gcount()) != size) {
+            error = "read failed or file changed during read";
+            bytes.clear();
+            return false;
+        }
+    }
+    return true;
+}
+
+bool writeBinaryFileAtomically(const std::string& path, const std::string& bytes,
+                               std::string& error) {
+    const std::string tempPath = path + ".rawrxd-tmp-" +
+        std::to_string(static_cast<unsigned long>(GetCurrentProcessId()));
+    {
+        std::ofstream file(tempPath, std::ios::binary | std::ios::trunc);
+        if (!file) {
+            error = "temporary file open failed";
+            return false;
+        }
+        if (!bytes.empty()) {
+            file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+        }
+        file.flush();
+        if (!file) {
+            error = "temporary file write failed";
+            file.close();
+            DeleteFileA(tempPath.c_str());
+            return false;
+        }
+    }
+    if (!MoveFileExA(tempPath.c_str(), path.c_str(),
+                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        error = "atomic replacement failed (Win32=" +
+                std::to_string(static_cast<unsigned long>(GetLastError())) + ")";
+        DeleteFileA(tempPath.c_str());
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
+bool Win32IDE::setEditorTextUtf8FromFile(const std::string& text) {
+    if (!m_hwndEditor) return false;
+    const bool wasSuppressed = m_suppressEditorDirty;
+    m_suppressEditorDirty = true;
+
+    SETTEXTEX setText{};
+    setText.flags = ST_DEFAULT;
+    setText.codepage = isValidUtf8(text) ? CP_UTF8 : CP_ACP;
+    const LRESULT result = SendMessageA(
+        m_hwndEditor, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText),
+        reinterpret_cast<LPARAM>(text.c_str()));
+
+    m_suppressEditorDirty = wasSuppressed;
+    if (!text.empty() && result == 0) {
+        LOG_ERROR("UTF-8 editor load failed");
+        return false;
+    }
+    return true;
+}
+
+std::string Win32IDE::getEditorTextUtf8ForFile() const {
+    if (!m_hwndEditor) return {};
+    GETTEXTLENGTHEX lengthInfo{};
+    lengthInfo.flags = GTL_USECRLF | GTL_NUMBYTES;
+    lengthInfo.codepage = CP_UTF8;
+    const LRESULT byteCount = SendMessageA(
+        m_hwndEditor, EM_GETTEXTLENGTHEX, reinterpret_cast<WPARAM>(&lengthInfo), 0);
+    if (byteCount <= 0) return {};
+
+    GETTEXTEX getText{};
+    getText.cb = static_cast<DWORD>(byteCount + 1);
+    getText.flags = GT_USECRLF;
+    getText.codepage = CP_UTF8;
+    std::string result(static_cast<size_t>(byteCount) + 1, '\0');
+    const LRESULT copied = SendMessageA(
+        m_hwndEditor, EM_GETTEXTEX, reinterpret_cast<WPARAM>(&getText),
+        reinterpret_cast<LPARAM>(result.data()));
+    if (copied <= 0) return {};
+    result.resize(static_cast<size_t>(copied));
+    return result;
+}
 
 void Win32IDE::openFileDialog() {
     LOG_INFO("openFileDialog() called");
@@ -80,21 +231,22 @@ void Win32IDE::openFileDialog() {
         
         // Load text file with size check (10MB limit for editor display only)
         try {
-            std::ifstream file(szFile, std::ios::binary);
-            if (file) {
+            std::string content;
+            std::string readError;
+            if (readBinaryFile(szFile, content, readError)) {
                 // Check file size to prevent loading huge TEXT files into editor
-                file.seekg(0, std::ios::end);
-                size_t fileSize = file.tellg();
-                file.seekg(0, std::ios::beg);
+                const size_t fileSize = content.size();
                 
                 if (fileSize > 10 * 1024 * 1024) { // 10MB limit for TEXT files in editor
                     MessageBoxA(m_hwndMain, "Text file too large to open in editor (>10MB).\nGGUF models use the streaming loader automatically.", "File Too Large", MB_OK | MB_ICONWARNING);
                     return;
                 }
                 
-                std::string content((std::istreambuf_iterator<char>(file)), 
-                                  std::istreambuf_iterator<char>());
-                setEditorText(content);
+                if (!setEditorTextUtf8FromFile(content)) {
+                    MessageBoxA(m_hwndMain, "Failed to load file text", "Error",
+                                MB_OK | MB_ICONERROR);
+                    return;
+                }
                 
                 m_currentFile = szFile;
                 m_fileModified = false;
@@ -111,9 +263,9 @@ void Win32IDE::openFileDialog() {
                 // Update status bar
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened successfully");
                 
-                file.close();
             } else {
-                MessageBoxA(m_hwndMain, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
+                MessageBoxA(m_hwndMain, ("Failed to open file: " + readError).c_str(),
+                            "Error", MB_OK | MB_ICONERROR);
             }
         }
         catch (const std::exception& e) {
@@ -132,12 +284,13 @@ void Win32IDE::openRecentFile(int index) {
             return;
         }
         
-        // Load the file
-        std::ifstream file(filePath, std::ios::binary);
-        if (file) {
-            std::string content((std::istreambuf_iterator<char>(file)), 
-                              std::istreambuf_iterator<char>());
-            setEditorText(content);
+        // Load the file as exact bytes, then cross the RichEdit boundary as
+        // UTF-8 rather than allowing the process ANSI code page to reinterpret
+        // CJK, emoji, or accented characters.
+        std::string content;
+        std::string readError;
+        if (readBinaryFile(filePath, content, readError)) {
+            if (!setEditorTextUtf8FromFile(content)) return;
             
             m_currentFile = filePath;
             m_fileModified = false;
@@ -152,10 +305,9 @@ void Win32IDE::openRecentFile(int index) {
             SetWindowTextA(m_hwndMain, title.c_str());
             
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Recent file opened");
-            file.close();
         } else {
             MessageBoxA(m_hwndMain, 
-                       ("File not found: " + filePath).c_str(), 
+                       ("File not found: " + filePath + " (" + readError + ")").c_str(),
                        "Error", MB_OK | MB_ICONERROR);
             
             // Remove from recent files
@@ -301,26 +453,31 @@ std::string Win32IDE::sha256Hex(const std::string& bytes) {
     DWORD objectLen = 0;
     DWORD dataLen = 0;
     DWORD hashLen = 0;
-    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0) return {};
+    if (bytes.size() > std::numeric_limits<ULONG>::max()) return {};
+    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) != 0) return {};
     if (BCryptGetProperty(alg, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&objectLen),
-                          sizeof(objectLen), &dataLen, 0) < 0) {
+                          sizeof(objectLen), &dataLen, 0) != 0) {
         BCryptCloseAlgorithmProvider(alg, 0);
         return {};
     }
     if (BCryptGetProperty(alg, BCRYPT_HASH_LENGTH, reinterpret_cast<PUCHAR>(&hashLen),
-                          sizeof(hashLen), &dataLen, 0) < 0) {
+                          sizeof(hashLen), &dataLen, 0) != 0) {
         BCryptCloseAlgorithmProvider(alg, 0);
         return {};
     }
     std::vector<UCHAR> object(objectLen);
     std::vector<UCHAR> digest(hashLen);
-    if (BCryptCreateHash(alg, &hash, object.data(), objectLen, nullptr, 0, 0) < 0) {
+    if (BCryptCreateHash(alg, &hash, object.data(), objectLen, nullptr, 0, 0) != 0) {
         BCryptCloseAlgorithmProvider(alg, 0);
         return {};
     }
-    BCryptHashData(hash, reinterpret_cast<PUCHAR>(const_cast<char*>(bytes.data())),
-                   static_cast<ULONG>(bytes.size()), 0);
-    BCryptFinishHash(hash, digest.data(), hashLen, 0);
+    if (BCryptHashData(hash, reinterpret_cast<PUCHAR>(const_cast<char*>(bytes.data())),
+                       static_cast<ULONG>(bytes.size()), 0) != 0 ||
+        BCryptFinishHash(hash, digest.data(), hashLen, 0) != 0) {
+        BCryptDestroyHash(hash);
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return {};
+    }
     BCryptDestroyHash(hash);
     BCryptCloseAlgorithmProvider(alg, 0);
     static const char* hex = "0123456789abcdef";
@@ -340,7 +497,7 @@ void Win32IDE::persistActiveDocumentBuffer() {
     }
     auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
     buffer.path = m_currentFile;
-    buffer.text = getWindowText(m_hwndEditor);
+    buffer.text = getEditorTextUtf8ForFile();
     buffer.modified = m_fileModified;
     if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
         m_openDocuments[static_cast<size_t>(m_activeDocument)] = m_currentFile;
@@ -372,8 +529,11 @@ void Win32IDE::saveIdeSession() {
         });
     }
     root["documents"] = docs;
-    std::ofstream out(ideSessionPath(), std::ios::binary | std::ios::trunc);
-    if (out) out << root.dump();
+    const std::string serialized = root.dump();
+    std::string error;
+    if (!writeBinaryFileAtomically(ideSessionPath(), serialized, error)) {
+        LOG_ERROR("Failed to persist IDE session: " + error);
+    }
 }
 
 void Win32IDE::loadIdeSession() {
@@ -391,10 +551,9 @@ void Win32IDE::loadIdeSession() {
             buffer.modified = doc.value("modified", false);
             buffer.text = doc.value("text", std::string{});
             if (!buffer.modified && !buffer.path.empty()) {
-                std::ifstream file(buffer.path, std::ios::binary);
-                if (file) {
-                    buffer.text.assign((std::istreambuf_iterator<char>(file)),
-                                     std::istreambuf_iterator<char>());
+                std::string readError;
+                if (!readBinaryFile(buffer.path, buffer.text, readError)) {
+                    LOG_ERROR("Failed to restore session file " + buffer.path + ": " + readError);
                 }
             }
             const std::string label = buffer.path.empty()

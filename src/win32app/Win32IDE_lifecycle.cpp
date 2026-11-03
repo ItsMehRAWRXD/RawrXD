@@ -592,7 +592,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 m_fileModified = true;
                 if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
                     auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
-                    buffer.text = getWindowText(m_hwndEditor);
+                    buffer.text = getWindowTextUtf8(m_hwndEditor);
+                    if (buffer.text.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+                        buffer.text = getWindowText(m_hwndEditor);
+                    }
                     buffer.modified = true;
                 }
                 updateTitleBarText();
@@ -1069,7 +1072,10 @@ void Win32IDE::addDocumentTab(const std::string& path)
     TabCtrl_SetCurSel(m_hwndDocTabs, index);
     if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size()) && m_hwndEditor) {
         auto& current = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
-        current.text = getWindowText(m_hwndEditor);
+        current.text = getWindowTextUtf8(m_hwndEditor);
+        if (current.text.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+            current.text = getWindowText(m_hwndEditor);
+        }
         current.modified = m_fileModified;
     }
     m_activeDocument = index;
@@ -1109,7 +1115,20 @@ void Win32IDE::switchDocumentTab(int index)
         return;
     }
     if (index != m_activeDocument) {
-        persistActiveDocumentBuffer();
+        if (m_activeDocument >= 0 &&
+            m_activeDocument < static_cast<int>(m_documentBuffers.size()) &&
+            m_hwndEditor) {
+            auto& current = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+            current.path = m_currentFile;
+            current.text = getWindowTextUtf8(m_hwndEditor);
+            if (current.text.empty() && GetWindowTextLengthA(m_hwndEditor) > 0) {
+                current.text = getWindowText(m_hwndEditor);
+            }
+            current.modified = m_fileModified;
+            if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+                m_openDocuments[static_cast<size_t>(m_activeDocument)] = m_currentFile;
+            }
+        }
     }
     m_activeDocument = index;
     TabCtrl_SetCurSel(m_hwndDocTabs, index);
@@ -1129,6 +1148,7 @@ void Win32IDE::switchDocumentTab(int index)
         m_currentFile.clear();
         newFile();
     }
+    updateMenuEnableStates();
 }
 
 void Win32IDE::updateDocumentTabs()
