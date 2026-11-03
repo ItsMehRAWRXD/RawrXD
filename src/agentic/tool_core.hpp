@@ -28,6 +28,34 @@ enum class Risk { ReadOnly, Write, Execute, Network, External };
 struct Request { std::string name; std::map<std::string,std::string> args; };
 struct Result { bool ok=false; std::string output; std::string error; };
 struct Tool { std::string name, description; Risk risk; std::vector<std::string> required; std::function<Result(const Request&)> invoke; };
+
+// T05 crash-recovery: track child process handles spawned by runInTerminal
+// so cancellation can terminate them instead of orphaning them.
+#ifdef _WIN32
+inline std::vector<HANDLE> g_tool_child_processes;
+inline std::mutex g_tool_child_processes_mutex;
+
+inline void TerminateAllToolChildProcesses() noexcept {
+    std::lock_guard<std::mutex> lock(g_tool_child_processes_mutex);
+    for (auto h : g_tool_child_processes) {
+        TerminateProcess(h, 1);
+        CloseHandle(h);
+    }
+    g_tool_child_processes.clear();
+}
+
+inline void TrackToolChildProcess(HANDLE hProcess) noexcept {
+    std::lock_guard<std::mutex> lock(g_tool_child_processes_mutex);
+    g_tool_child_processes.push_back(hProcess);
+}
+
+inline void UntrackToolChildProcess(HANDLE hProcess) noexcept {
+    std::lock_guard<std::mutex> lock(g_tool_child_processes_mutex);
+    g_tool_child_processes.erase(
+        std::remove(g_tool_child_processes.begin(), g_tool_child_processes.end(), hProcess),
+        g_tool_child_processes.end());
+}
+#endif
 using Approval=std::function<bool(const Tool&,const Request&)>;
 class Registry {
   std::map<std::string,Tool> tools_; mutable std::mutex mutex_;
@@ -180,27 +208,62 @@ inline void register_workspace_tools(Registry& reg,fs::path root){
  reg.add({"writeFile","Write/overwrite a workspace file",Risk::Write,{"path","content"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::exists(p.parent_path()))fs::create_directories(p.parent_path());write_atomic(p,arg(r,"content"));return {true,"written",""};}});
  reg.add({"editFiles","Replace exact unique text in a file",Risk::Write,{"path","old","new"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));auto text=read_text(p);auto old=arg(r,"old");if(old.empty())throw std::runtime_error("empty match");auto pos=text.find(old);if(pos==std::string::npos||text.find(old,pos+old.size())!=std::string::npos)throw std::runtime_error("match must occur exactly once");text.replace(pos,old.size(),arg(r,"new"));write_atomic(p,text);return {true,"edited",""};}});
  reg.add({"deleteFile","Delete a workspace file",Risk::Write,{"path"},[root](const Request& r)->Result{auto p=scoped(root,arg(r,"path"));if(!fs::is_regular_file(p))throw std::runtime_error("not a regular file");std::error_code ec;if(!fs::remove(p,ec)||ec)throw std::runtime_error("delete failed");return {true,"deleted",""};}});
- reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"command"},[root](const Request& r)->Result{
+reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"command"},[root](const Request& r)->Result{
    auto cmd=arg(r,"command");
    if(cmd.empty())throw std::runtime_error("empty command");
    if(cmd.size()>8192)throw std::runtime_error("command too long");
 #ifdef _WIN32
-   std::string full=std::string("cmd.exe /d /c cd /d \"")+path_utf8(root)+"\" && "+cmd;
-   FILE* pipe=_popen(full.c_str(),"r");
+    std::string full=std::string("cmd.exe /d /c cd /d \"")+path_utf8(root)+"\" && "+cmd;
+    // T05 crash-recovery: use CreateProcess instead of _popen so the child
+    // cmd.exe process can be terminated on cancellation instead of orphaned.
+    SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
+    HANDLE hReadPipe = nullptr, hWritePipe = nullptr;
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) throw std::runtime_error("failed to create pipe");
+
+    STARTUPINFOA si = { sizeof(si) };
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = hWritePipe;
+    si.hStdError = hWritePipe;
+
+    PROCESS_INFORMATION pi = {};
+    if (!CreateProcessA(nullptr, const_cast<char*>(full.c_str()), nullptr, nullptr, TRUE,
+                        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+        CloseHandle(hReadPipe);
+        CloseHandle(hWritePipe);
+        throw std::runtime_error("failed to start process");
+    }
+    CloseHandle(hWritePipe);
+
+    TrackToolChildProcess(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    std::string out; char buf[4096]; size_t cap=2*1024*1024; DWORD read = 0;
+    while (ReadFile(hReadPipe, buf, sizeof(buf) - 1, &read, nullptr) && read > 0) {
+        buf[read] = '\0';
+        out += buf;
+        if (out.size() > cap) { out += "\n...[truncated]\n"; break; }
+    }
+    CloseHandle(hReadPipe);
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD ec = 0;
+    GetExitCodeProcess(pi.hProcess, &ec);
+    CloseHandle(pi.hProcess);
+
+    UntrackToolChildProcess(pi.hProcess);
+
+    if (ec != 0) return {false, out, "exit=" + std::to_string(ec)};
+    return {true, out, ""};
 #else
-   std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
-   FILE* pipe=popen(full.c_str(),"r");
+    std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
+    FILE* pipe=popen(full.c_str(),"r");
+    if(!pipe)throw std::runtime_error("failed to start process");
+    std::string out;char buf[4096];size_t cap=2*1024*1024;
+    while(fgets(buf,sizeof(buf),pipe)){out+=buf;if(out.size()>cap){out+="\n...[truncated]\n";break;}}
+    int ec=pclose(pipe);
+    if(ec!=0)return {false,out,"exit="+std::to_string(ec)};
+    return {true,out,""};
 #endif
-   if(!pipe)throw std::runtime_error("failed to start process");
-   std::string out;char buf[4096];size_t cap=2*1024*1024;
-   while(fgets(buf,sizeof(buf),pipe)){out+=buf;if(out.size()>cap){out+="\n...[truncated]\n";break;}}
-#ifdef _WIN32
-   int ec=_pclose(pipe);
-#else
-   int ec=pclose(pipe);
-#endif
-   if(ec!=0)return {false,out,"exit="+std::to_string(ec)};
-   return {true,out,""};
  }});
 
  auto alias=[&](const char* alias_name,const char* canonical){

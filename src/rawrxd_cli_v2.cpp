@@ -94,6 +94,35 @@ static std::atomic<bool>                   g_streamed_response{false};
 // both values through BackendConfig below.
 static int                              g_run_max_tokens = 4096;
 static int                              g_run_context = 0;
+// T05 crash-recovery: track child process handles so cancellation can
+// terminate them instead of orphaning them.  _popen() closes the process
+// handle internally, so ReplaceFileW-style atomic ops are not enough --
+// we need CreateProcess() with explicit handle tracking.
+#ifdef _WIN32
+static std::vector<HANDLE>                g_cli_child_processes;
+static std::mutex                       g_cli_child_processes_mutex;
+
+static void TerminateCLIChildProcesses() noexcept {
+    std::lock_guard<std::mutex> lock(g_cli_child_processes_mutex);
+    for (auto h : g_cli_child_processes) {
+        TerminateProcess(h, 1);
+        CloseHandle(h);
+    }
+    g_cli_child_processes.clear();
+}
+
+static void TrackChildProcess(HANDLE hProcess) noexcept {
+    std::lock_guard<std::mutex> lock(g_cli_child_processes_mutex);
+    g_cli_child_processes.push_back(hProcess);
+}
+
+static void UntrackChildProcess(HANDLE hProcess) noexcept {
+    std::lock_guard<std::mutex> lock(g_cli_child_processes_mutex);
+    g_cli_child_processes.erase(
+        std::remove(g_cli_child_processes.begin(), g_cli_child_processes.end(), hProcess),
+        g_cli_child_processes.end());
+}
+#endif
 // The native IDE's approved source-edit workflow can request a narrow tool
 // surface for one task.  The tools remain real registry dispatches; this only
 // prevents a small model from spending its first turn on an unrelated
@@ -304,6 +333,10 @@ static json BuildToolDefinitions() {
 static void OnSignal(int) {
     g_running = false;
     if (g_router) g_router->Cancel();
+#ifdef _WIN32
+    TerminateCLIChildProcesses();
+    rawrxd::tools::TerminateAllToolChildProcesses();
+#endif
 }
 
 #ifdef _WIN32
@@ -318,6 +351,10 @@ static BOOL WINAPI OnConsoleControl(DWORD control) noexcept {
     case CTRL_CLOSE_EVENT:
         g_running.store(false);
         if (g_router) g_router->Cancel();
+#ifdef _WIN32
+        TerminateCLIChildProcesses();
+        rawrxd::tools::TerminateAllToolChildProcesses();
+#endif
         return TRUE;
     default:
         return FALSE;
@@ -512,9 +549,50 @@ static std::string DiscoverWorkspace(const Options& o) {
 static std::string RunGit(const std::string& args) {
 #ifdef _WIN32
     std::string cmd = "git -C \"" + g_workspace + "\" " + args + " 2>nul";
+
+    // T05 crash-recovery: use CreateProcess instead of _popen so the child
+    // git process can be terminated on cancellation instead of orphaned.
+    SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
+    HANDLE hReadPipe = nullptr, hWritePipe = nullptr;
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) return "";
+
+    STARTUPINFOA si = { sizeof(si) };
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = hWritePipe;
+    si.hStdError = hWritePipe;
+
+    PROCESS_INFORMATION pi = {};
+    if (!CreateProcessA(nullptr, const_cast<char*>(cmd.c_str()), nullptr, nullptr, TRUE,
+                        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+        CloseHandle(hReadPipe);
+        CloseHandle(hWritePipe);
+        return "";
+    }
+    CloseHandle(hWritePipe);
+
+    TrackChildProcess(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    std::string out;
+    char buf[512];
+    DWORD read = 0;
+    while (ReadFile(hReadPipe, buf, sizeof(buf) - 1, &read, nullptr) && read > 0) {
+        buf[read] = '\0';
+        out += buf;
+    }
+    CloseHandle(hReadPipe);
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD ec = 0;
+    GetExitCodeProcess(pi.hProcess, &ec);
+    CloseHandle(pi.hProcess);
+
+    UntrackChildProcess(pi.hProcess);
+
+    while (!out.empty() && (out.back() == '\n' || out.back() == '\r')) out.pop_back();
+    return out;
 #else
     std::string cmd = "git -C '" + g_workspace + "' " + args + " 2>/dev/null";
-#endif
     FILE* p = _popen(cmd.c_str(), "r");
     if (!p) return "";
     std::string out;
@@ -523,6 +601,7 @@ static std::string RunGit(const std::string& args) {
     _pclose(p);
     while (!out.empty() && (out.back() == '\n' || out.back() == '\r')) out.pop_back();
     return out;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -1337,6 +1416,10 @@ static int CmdRun(const std::vector<std::string>& args) {
                     if (!stop.stop_requested()) {
                         g_running.store(false);
                         if (g_router) g_router->Cancel();
+#ifdef _WIN32
+                        TerminateCLIChildProcesses();
+                        rawrxd::tools::TerminateAllToolChildProcesses();
+#endif
                     }
                 });
             }

@@ -3734,7 +3734,7 @@ void Win32IDE::appendText(HWND hwnd, const std::string& text)
     SETTEXTEX st;
     st.flags = ST_DEFAULT;
     st.codepage = CP_ACP;
-    SendMessage(hwnd, EM_SETTEXTEX, (WPARAM)&st, (LPARAM)text.c_str());
+    SendMessageA(hwnd, EM_SETTEXTEX, (WPARAM)&st, (LPARAM)text.c_str());
 
     if (hwnd == m_hwndEditor) {
         syncEditorToGpuSurface();
