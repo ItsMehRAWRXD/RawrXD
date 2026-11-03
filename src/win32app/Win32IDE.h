@@ -345,6 +345,7 @@ public:
     void requestNativeGhostText(const std::string& prompt,
                                 std::function<void(const std::string&, bool, bool)> callback);
     void appendNativeDebugOutput(const std::string& text, bool error = false);
+    bool openDocumentPath(const std::string& path);
 
     // Agentic Framework
     std::unique_ptr<AgenticBridge> m_agenticBridge;
@@ -978,6 +979,8 @@ private:
     InferenceConfig m_inferenceConfig;
     std::atomic_bool m_inferenceRunning{false};
     std::atomic_bool m_inferenceStopRequested{false};
+    std::atomic<uint64_t> m_nextInferenceGeneration{0};
+    std::atomic<uint64_t> m_activeInferenceGeneration{0};
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;

@@ -1146,7 +1146,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     m_dedicatedPowerShellTerminal(nullptr)
     , m_hwndCommandPalette(nullptr), m_hwndCommandPaletteInput(nullptr), m_hwndCommandPaletteList(nullptr), m_commandPaletteVisible(false)
     , m_hwndModelSelector(nullptr), m_hwndMaxTokensSlider(nullptr), m_hwndMaxTokensLabel(nullptr)
-    , m_currentMaxTokens(512)
+    , m_currentMaxTokens(4096)
 {
     // Initialize Native Fallback Engine
     try {
@@ -3335,6 +3335,37 @@ void Win32IDE::openFile()
         }
     } else {
         appendToOutput("File > Open cancelled by user (no file selected)\n", "Output", OutputSeverity::Info);
+    }
+}
+
+bool Win32IDE::openDocumentPath(const std::string& path)
+{
+    if (path.empty()) return false;
+    if (m_fileModified && !promptSaveChanges()) return false;
+    try {
+        std::ifstream file(path, std::ios::binary);
+        if (!file) return false;
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+        setEditorText(content);
+        m_currentFile = path;
+        m_fileModified = false;
+        setCurrentDirectoryFromFile(m_currentFile);
+        addDocumentTab(m_currentFile);
+        updateTitleBarText();
+        updateRecentFiles(path);
+        if (m_hwndStatusBar) {
+            SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0,
+                         reinterpret_cast<LPARAM>("File opened successfully"));
+        }
+        updateMenuEnableStates();
+        syncEditorToGpuSurface();
+        appendToOutput("File opened successfully (" +
+            std::to_string(content.size()) + " bytes)\\n",
+            "Output", OutputSeverity::Info);
+        return true;
+    } catch (...) {
+        return false;
     }
 }
 
@@ -6479,7 +6510,11 @@ bool Win32IDE::initializeInference()
     }
 
     // Set up inference config from model metadata
-    m_inferenceConfig.maxTokens = 512;
+    // Keep the runtime request budget aligned with the value exposed by the
+    // ChatWindow selector.  The previous hard-coded 512-token fallback made
+    // long responses terminate at `done_reason=length` even though the UI
+    // advertised a 4096-token budget.
+    m_inferenceConfig.maxTokens = std::max(32, m_currentMaxTokens);
     m_inferenceConfig.temperature = 0.7f;
     m_inferenceConfig.topP = 0.9f;
     m_inferenceConfig.topK = 40;
@@ -6487,7 +6522,8 @@ bool Win32IDE::initializeInference()
     
     // Use model context length if available
     if (m_currentModelMetadata.context_length > 0) {
-        m_inferenceConfig.maxTokens = std::min(512, (int)m_currentModelMetadata.context_length / 4);
+        m_inferenceConfig.maxTokens = std::min(m_inferenceConfig.maxTokens,
+            (int)m_currentModelMetadata.context_length / 4);
     }
     
     appendToOutput(" Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
@@ -6507,6 +6543,7 @@ void Win32IDE::shutdownInference()
     
     m_inferenceRunning = false;
     m_inferenceStopRequested = false;
+    m_activeInferenceGeneration = 0;
     m_currentInferencePrompt.clear();
     m_currentInferenceResponse.clear();
     
@@ -6672,9 +6709,12 @@ void Win32IDE::generateResponseAsync(
     const int requestContextTokens = m_currentContextTokens;
     const ReasoningMode reasoningMode = m_reasoningMode;
     const bool webBrowsingEnabled = m_webBrowsingEnabled;
+    const uint64_t requestGeneration =
+        m_nextInferenceGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
+    m_activeInferenceGeneration = requestGeneration;
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
     
@@ -6682,15 +6722,21 @@ void Win32IDE::generateResponseAsync(
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel,
                                      requestMaxTokens, requestContextTokens, reasoningMode,
-                                     webBrowsingEnabled]() {
-        auto finish = [this, callback](const std::string& result, bool success) {
+                                     webBrowsingEnabled, requestGeneration]() {
+        auto finishIfCurrent = [this, callback, requestGeneration](
+            const std::string& result, bool success) {
+            if (m_inferenceStopRequested.load() ||
+                m_activeInferenceGeneration.load() != requestGeneration) {
+                m_inferenceRunning = false;
+                return;
+            }
             m_inferenceRunning = false;
             if (callback) callback(result, true, success);
         };
 
         try {
             if (selectedModel.identifier.empty()) {
-                finish("Select a model route first.", false);
+                finishIfCurrent("Select a model route first.", false);
                 return;
             }
 
@@ -6699,7 +6745,7 @@ void Win32IDE::generateResponseAsync(
                 selectedModel.source == ChatModelEntry::Source::Ollama) {
                 const std::string webContext = fetchWebSearchContext(prompt);
                 if (webContext.empty()) {
-                    finish("Web browsing was enabled, but the native WinHTTP search request returned no results.", false);
+                    finishIfCurrent("Web browsing was enabled, but the native WinHTTP search request returned no results.", false);
                     return;
                 }
                 routedPrompt =
@@ -6715,11 +6761,11 @@ void Win32IDE::generateResponseAsync(
                 const char* apiKey = route && route->authEnv[0]
                     ? std::getenv(route->authEnv) : nullptr;
                 if (!apiKey || !*apiKey) {
-                    finish("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.", false);
+                    finishIfCurrent("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.", false);
                     return;
                 }
                 if (!route || std::strcmp(route->runtime, "cloud-api") != 0) {
-                    finish("The generated Kilo route is missing its cloud-api runtime mapping.", false);
+                    finishIfCurrent("The generated Kilo route is missing its cloud-api runtime mapping.", false);
                     return;
                 }
                 ModelConfig config{};
@@ -6729,7 +6775,7 @@ void Win32IDE::generateResponseAsync(
                 config.parameters["max_tokens"] = std::to_string(requestMaxTokens);
                 CloudApiClient client;
                 const std::string response = client.generate(routedPrompt, config);
-                finish(response.empty()
+                finishIfCurrent(response.empty()
                     ? "Kilo did not return a response. Check the Kilo credential and network connection."
                     : response, !response.empty());
                 return;
@@ -6738,13 +6784,13 @@ void Win32IDE::generateResponseAsync(
                 const auto* route = RawrXD::ChatRouteMenu::find(
                     RawrXD::ChatRouteMenu::RouteKind::Ollama);
                 if (!route || std::strcmp(route->runtime, "ollama-http") != 0) {
-                    finish("The generated Ollama route is missing its local HTTP runtime mapping.", false);
+                    finishIfCurrent("The generated Ollama route is missing its local HTTP runtime mapping.", false);
                     return;
                 }
                 const std::string response = generateOllamaModel(
                     m_ollamaBaseUrl, selectedModel.identifier, routedPrompt,
                     requestMaxTokens, requestContextTokens, reasoningMode);
-                finish(response.empty()
+                finishIfCurrent(response.empty()
                     ? "The selected Ollama model did not respond. Check that Ollama is running locally."
                     : response, !response.empty());
                 return;
@@ -6753,15 +6799,15 @@ void Win32IDE::generateResponseAsync(
                 const auto* route = RawrXD::ChatRouteMenu::find(
                     RawrXD::ChatRouteMenu::RouteKind::LocalFile);
                 if (!route || std::strcmp(route->runtime, "native-agent") != 0) {
-                    finish("The generated local model route is missing its native-agent runtime mapping.", false);
+                    finishIfCurrent("The generated local model route is missing its native-agent runtime mapping.", false);
                     return;
                 }
                 if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
-                    finish("The native agent bridge is not initialized.", false);
+                    finishIfCurrent("The native agent bridge is not initialized.", false);
                     return;
                 }
                 if (!hasGgufModelTensors(selectedModel.identifier)) {
-                    finish("The selected GGUF is not an inference model (it may contain vocabulary metadata only): " +
+                    finishIfCurrent("The selected GGUF is not an inference model (it may contain vocabulary metadata only): " +
                         selectedModel.identifier, false);
                     return;
                 }
@@ -6769,7 +6815,7 @@ void Win32IDE::generateResponseAsync(
                     const AgentResponse load = m_agenticBridge->ExecuteAgentCommand(
                         "/load " + selectedModel.identifier);
                     if (load.type == AgentResponseType::AGENT_ERROR) {
-                        finish(load.content.empty()
+                        finishIfCurrent(load.content.empty()
                             ? "The selected local model could not be loaded."
                             : load.content, false);
                         return;
@@ -6782,20 +6828,20 @@ void Win32IDE::generateResponseAsync(
                     });
                 const AgentResponse generated = m_agenticBridge->ExecuteAgentCommand(prompt);
                 if (generated.type == AgentResponseType::AGENT_ERROR) {
-                    finish(generated.content.empty()
+                    finishIfCurrent(generated.content.empty()
                         ? "The selected local model failed to generate a completion."
                         : generated.content, false);
                 } else {
-                    finish("", true);
+                    finishIfCurrent("", true);
                 }
                 return;
             }
             }
-            finish("The selected chat route is unsupported.", false);
+            finishIfCurrent("The selected chat route is unsupported.", false);
         } catch (const std::exception& error) {
-            finish(std::string("Chat route failed: ") + error.what(), false);
+            finishIfCurrent(std::string("Chat route failed: ") + error.what(), false);
         } catch (...) {
-            finish("Chat route failed with an unknown error.", false);
+            finishIfCurrent("Chat route failed with an unknown error.", false);
         }
     });
 }
@@ -6803,6 +6849,7 @@ void Win32IDE::generateResponseAsync(
 void Win32IDE::stopInference()
 {
     m_inferenceStopRequested = true;
+    m_activeInferenceGeneration = 0;
 }
 
 void Win32IDE::setInferenceConfig(const InferenceConfig& config)
@@ -7286,6 +7333,12 @@ void Win32IDE::createChatPanel() {
     
     if (m_hwndCopilotChatOutput) {
         SendMessage(m_hwndCopilotChatOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+        // The stock multiline EDIT default is implementation-dependent and
+        // can truncate long model answers well below the product's intended
+        // response size.  Set an explicit, bounded UTF-16 character limit so
+        // long chat output is not silently clipped by the control.
+        SendMessageW(m_hwndCopilotChatOutput, EM_SETLIMITTEXT,
+                     static_cast<WPARAM>(1024u * 1024u), 0);
         SetWindowTextW(m_hwndCopilotChatOutput,
             L"Welcome to RawrXD AI Chat!\r\n\r\nSelect a model and type a message to begin.");
     }
@@ -7891,49 +7944,29 @@ void Win32IDE::HandleCopilotSend() {
     armAgentThoughtTimer();
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
     
-    // Make long local requests observable instead of leaving the user with a
-    // silent UI while model admission, prompt evaluation, or reasoning runs.
-    // The Ollama route is direct chat; it does not invoke RawrXD's native tool
-    // bridge.  Agent/tool progress is reported by the Agent menu/loop route.
-    const std::string promptLower = [&userMessage]() {
-        std::string value = userMessage;
-        std::transform(value.begin(), value.end(), value.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        return value;
-    }();
-    const bool looksLikeAudit = promptLower.find("audit") != std::string::npos ||
-        promptLower.find("inspect") != std::string::npos ||
-        promptLower.find("read-only") != std::string::npos;
-    const bool looksLikeMutation = promptLower.find("edit") != std::string::npos ||
-        promptLower.find("modify") != std::string::npos ||
-        promptLower.find("change") != std::string::npos ||
-        promptLower.find("fix") != std::string::npos ||
-        promptLower.find("source") != std::string::npos ||
-        promptLower.find("autonomous") != std::string::npos;
     if (m_hwndStatusBar) {
-        const std::string status = looksLikeAudit
-            ? "Rawr CLI agent: warming up; read-only audit and tool stream starting"
-            : "Ollama: warming up model; waiting for response";
+        const std::string status = "Ollama: warming up model; waiting for response";
         SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
             reinterpret_cast<LPARAM>(status.c_str()));
     }
 
-    // Audit/inspect requests from the chat surface must use the same real
-    // agent path as the CLI smoke test.  Direct Ollama chat is intentionally
-    // tool-free; routing this class of request through the native bridge lets
-    // the user see the CLI's actual read-only tool stream in the chat panel.
-    if ((looksLikeAudit || looksLikeMutation) &&
-        m_selectedChatModel.source == ChatModelEntry::Source::Ollama) {
-        onAgenticLoopRunTask();
-        return;
-    }
+    // ChatWindow is a text-chat surface.  Agent/tool execution is entered only
+    // through the explicit Agent/agent-loop commands; never infer that mode
+    // from words in a user's prompt (for example, "edit" in a test marker).
 
     // Clear only after the non-ASCII-safe agent route has consumed the text.
     SetWindowTextW(m_hwndCopilotChatInput, L"");
     
     // Marshal all response handling to the UI thread. The worker owns only the
-    // inference operation and an owned message payload.
+    // inference operation and an owned message payload.  A synchronous
+    // Ollama receive may finish after Stop; do not let that late completion
+    // resurrect cancelled output or overwrite the stopped status.
     auto onResponse = [this, sessionId](const std::string& response, bool complete, bool) {
+        LOG_DEBUG(std::string("[CHAT_RUNTIME] callback session=") + std::to_string(sessionId) +
+                  " complete=" + (complete ? "1" : "0") +
+                  " response_bytes=" + std::to_string(response.size()) +
+                  " stop=" + (m_inferenceStopRequested.load() ? "1" : "0"));
+        if (m_inferenceStopRequested.load()) return;
         auto* update = new CopilotChatUiUpdate{sessionId, response, complete};
         const HWND target = m_hwndMain;
         if (!target || !PostMessageA(target, kRawrxdCopilotUiUpdate, 0,
@@ -7951,6 +7984,10 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
                                      const std::string& response,
                                      bool complete)
 {
+    appendNativeDebugOutput(std::string("[CHAT_RUNTIME] ui_update session=") +
+                            std::to_string(sessionId) +
+                            " complete=" + (complete ? "1" : "0") +
+                            " response_bytes=" + std::to_string(response.size()));
     ChatSessionState* session = nullptr;
     for (auto& candidate : m_chatSessions) {
         if (candidate.id == sessionId) { session = &candidate; break; }
@@ -7971,6 +8008,9 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
         if (active && m_hwndCopilotChatOutput && !response.empty()) {
             appendCopilotChatUtf8(response);
         }
+        appendNativeDebugOutput(std::string("[CHAT_RUNTIME] partial_buffer_bytes=") +
+                                std::to_string(session->responseBuffer.size()) +
+                                " active=" + (active ? "1" : "0"));
         return;
     }
 
@@ -7991,6 +8031,9 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     if (!session->responseBuffer.empty()) {
         session->history.push_back({"assistant", session->responseBuffer});
     }
+    appendNativeDebugOutput(std::string("[CHAT_RUNTIME] complete_buffer_bytes=") +
+                            std::to_string(session->responseBuffer.size()) +
+                            " active=" + (active ? "1" : "0"));
     if (m_hwndStatusBar) {
         const bool explicitFailure = session->responseBuffer.rfind("[Ollama ", 0) == 0 ||
             session->responseBuffer.rfind("Chat route failed", 0) == 0;
@@ -8053,6 +8096,12 @@ void Win32IDE::appendCopilotChatUtf8(const std::string& text)
     SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
                  reinterpret_cast<LPARAM>(wide.c_str()));
     SendMessageW(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
+    appendToOutput(std::string("[CHAT_RUNTIME] append input_bytes=") +
+                   std::to_string(text.size()) +
+                   " wide_chars=" + std::to_string(wide.size()) +
+                   " stored_chars=" +
+                   std::to_string(GetWindowTextLengthW(m_hwndCopilotChatOutput)) + "\n",
+                   "Debug", OutputSeverity::Info);
 }
 
 void Win32IDE::HandleCopilotClear() {
