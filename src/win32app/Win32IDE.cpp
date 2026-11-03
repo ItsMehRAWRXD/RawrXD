@@ -33,6 +33,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <iterator>
+#include <limits>
 #include <utility>
 #include <deque>
 #include <unordered_set>
@@ -430,7 +431,13 @@ std::vector<ChatModelEntry> discoverOllamaModels(
             WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
             WINHTTP_NO_PROXY_BYPASS, 0);
         if (session) {
-            WinHttpSetTimeouts(session, 300, 500, 750, 750);
+            // Model discovery is a startup prerequisite for selecting the
+            // Ollama route.  The old sub-second receive/read limits raced a
+            // healthy local server while it was warming its catalog, leaving
+            // only the filesystem GGUF rows in the selector even though
+            // /api/tags was available.  Keep discovery bounded, but give the
+            // local HTTP endpoint enough time to return its real catalog.
+            WinHttpSetTimeouts(session, 5000, 5000, 5000, 5000);
             HINTERNET connect = WinHttpConnect(session, L"127.0.0.1", 11434, 0);
             if (connect) {
                 HINTERNET request = WinHttpOpenRequest(connect, L"GET", L"/api/tags",
@@ -787,7 +794,8 @@ std::string generateOllamaModel(const std::string& baseUrl,
                                  int maxTokens,
                                  int contextTokens,
                                  ReasoningMode reasoningMode = ReasoningMode::Instant,
-                                 OllamaHttpCancelSlots cancel = {})
+                                 OllamaHttpCancelSlots cancel = {},
+                                 uint64_t requestGeneration = 0)
 {
     // DEBUG: Log to both OutputDebugStringA and a file
     auto logDebug = [](const char* fmt, ...) {
@@ -811,7 +819,15 @@ std::string generateOllamaModel(const std::string& baseUrl,
     };
     
     const int effectiveContextTokens = (std::max)(8192, (std::min)(contextTokens, 1048576));
-    logDebug("[OLLAMA_DEBUG] generateOllamaModel: model='%s' prompt_len=%zu maxTokens=%d contextTokens=%d mode=%s\n",
+    uint64_t promptFingerprint = 1469598103934665603ull;
+    for (unsigned char byte : prompt) {
+        promptFingerprint ^= byte;
+        promptFingerprint *= 1099511628211ull;
+    }
+    logDebug("[OLLAMA_DEBUG] generateOllamaModel: pid=%lu request_generation=%llu prompt_fnv1a=%016llX model='%s' prompt_len=%zu maxTokens=%d contextTokens=%d mode=%s\n",
+             static_cast<unsigned long>(GetCurrentProcessId()),
+             static_cast<unsigned long long>(requestGeneration),
+             static_cast<unsigned long long>(promptFingerprint),
              model.c_str(), prompt.length(), maxTokens, effectiveContextTokens,
              reasoningModeLabel(reasoningMode));
     
@@ -843,7 +859,9 @@ std::string generateOllamaModel(const std::string& baseUrl,
         logDebug("[OLLAMA_DEBUG] Model does not advertise completion: %s\n", model.c_str());
         return "[Ollama model does not support text completion: " + model + "]";
     }
-    logDebug("[OLLAMA_RUNTIME] MODEL=%s MODEL_LOAD=PASS REQUESTED_CONTEXT=%d EFFECTIVE_CONTEXT=%d MAX_OUTPUT_TOKENS=%d\n",
+    logDebug("[OLLAMA_RUNTIME] PID=%lu REQUEST_GENERATION=%llu MODEL=%s MODEL_LOAD=PASS REQUESTED_CONTEXT=%d EFFECTIVE_CONTEXT=%d MAX_OUTPUT_TOKENS=%d\n",
+             static_cast<unsigned long>(GetCurrentProcessId()),
+             static_cast<unsigned long long>(requestGeneration),
              model.c_str(), contextTokens, effectiveContextTokens, maxTokens);
 
     const int safeMaxTokens = (std::max)(1, maxTokens);
@@ -999,7 +1017,10 @@ std::string generateOllamaModel(const std::string& baseUrl,
         const int generatedTokens = response.value("eval_count", -1);
         const int promptTokens = response.value("prompt_eval_count", -1);
         const std::string doneReason = response.value("done_reason", std::string{});
-        logDebug("[OLLAMA_RUNTIME] MODEL=%s PROMPT_ACCEPTED=PASS EFFECTIVE_CONTEXT=%d MAX_OUTPUT_TOKENS=%d GENERATED_TOKENS=%d PROMPT_TOKENS=%d DONE_REASON=%s\n",
+        logDebug("[OLLAMA_RUNTIME] PID=%lu REQUEST_GENERATION=%llu PROMPT_FNV1A=%016llX MODEL=%s PROMPT_ACCEPTED=PASS EFFECTIVE_CONTEXT=%d MAX_OUTPUT_TOKENS=%d GENERATED_TOKENS=%d PROMPT_TOKENS=%d DONE_REASON=%s\n",
+                 static_cast<unsigned long>(GetCurrentProcessId()),
+                 static_cast<unsigned long long>(requestGeneration),
+                 static_cast<unsigned long long>(promptFingerprint),
                  model.c_str(), effectiveContextTokens, maxTokens, generatedTokens,
                  promptTokens, doneReason.c_str());
         if (!answer.empty()) {
@@ -6788,9 +6809,11 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 
 void Win32IDE::generateResponseAsync(
     const std::string& prompt,
-    std::function<void(const std::string&, bool, bool)> callback)
+    std::function<void(const std::string&, bool, bool)> callback,
+    uint64_t* assignedGeneration)
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
+    if (assignedGeneration) *assignedGeneration = 0;
 
     // HandleCopilotSend may already have claimed m_inferenceRunning to close
     // a BN_CLICKED race.  A live worker is generation != 0; stopInference and
@@ -6821,6 +6844,7 @@ void Win32IDE::generateResponseAsync(
     const bool webBrowsingEnabled = m_webBrowsingEnabled;
     const uint64_t requestGeneration =
         m_nextInferenceGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (assignedGeneration) *assignedGeneration = requestGeneration;
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
@@ -6849,6 +6873,8 @@ void Win32IDE::generateResponseAsync(
             // Clear generation with the busy flag so the next admission can
             // join this drained worker instead of treating it as live.
             m_activeInferenceGeneration.store(0, std::memory_order_release);
+            m_lastCompletedInferenceGeneration.store(requestGeneration,
+                                                      std::memory_order_release);
             m_inferenceRunning = false;
             if (callback) callback(result, true, success);
         };
@@ -6914,7 +6940,7 @@ void Win32IDE::generateResponseAsync(
                 const std::string response = generateOllamaModel(
                     m_ollamaBaseUrl, selectedModel.identifier, routedPrompt,
                     requestMaxTokens, requestContextTokens, reasoningMode,
-                    cancelSlots);
+                    cancelSlots, requestGeneration);
                 if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
                     response == "[Ollama request cancelled]") {
                     finishIfCurrent("", false);
@@ -8156,13 +8182,20 @@ void Win32IDE::HandleCopilotSend() {
     // inference operation and an owned message payload.  A synchronous
     // Ollama receive may finish after Stop; do not let that late completion
     // resurrect cancelled output or overwrite the stopped status.
-    auto onResponse = [this, sessionId](const std::string& response, bool complete, bool) {
+    // Keep the worker's assigned generation alive until every queued UI
+    // update has been consumed.  This lets the UI reject a late Request A
+    // update after Stop or after Request B has claimed the session.
+    auto generationHolder = std::make_shared<uint64_t>(0);
+    auto onResponse = [this, sessionId, generationHolder](
+        const std::string& response, bool complete, bool) {
+        const uint64_t generation = *generationHolder;
         LOG_DEBUG(std::string("[CHAT_RUNTIME] callback session=") + std::to_string(sessionId) +
+                  " generation=" + std::to_string(generation) +
                   " complete=" + (complete ? "1" : "0") +
                   " response_bytes=" + std::to_string(response.size()) +
                   " stop=" + (m_inferenceStopRequested.load() ? "1" : "0"));
         if (m_inferenceStopRequested.load()) return;
-        auto* update = new CopilotChatUiUpdate{sessionId, response, complete};
+        auto* update = new CopilotChatUiUpdate{sessionId, generation, response, complete};
         const HWND target = m_hwndMain;
         if (!target || !PostMessageA(target, kRawrxdCopilotUiUpdate, 0,
                                      reinterpret_cast<LPARAM>(update))) {
@@ -8171,16 +8204,36 @@ void Win32IDE::HandleCopilotSend() {
     };
     
     // Generate response
-    generateResponseAsync(userMessage, onResponse);
+    generateResponseAsync(userMessage, onResponse, generationHolder.get());
 
 }
 
 void Win32IDE::handleCopilotUiUpdate(int sessionId,
+                                     uint64_t generation,
                                      const std::string& response,
                                      bool complete)
 {
+    const uint64_t activeGeneration =
+        m_activeInferenceGeneration.load(std::memory_order_acquire);
+    const uint64_t lastCompletedGeneration =
+        m_lastCompletedInferenceGeneration.load(std::memory_order_acquire);
+    const bool generationCurrent = generation == 0 ||
+        (activeGeneration != 0
+            ? generation == activeGeneration
+            : generation == lastCompletedGeneration);
+    if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+        !generationCurrent) {
+        appendNativeDebugOutput(std::string("[CHAT_RUNTIME] stale_ui_update session=") +
+                                std::to_string(sessionId) +
+                                " generation=" + std::to_string(generation) +
+                                " active=" + std::to_string(activeGeneration) +
+                                " last_completed=" +
+                                std::to_string(lastCompletedGeneration));
+        return;
+    }
     appendNativeDebugOutput(std::string("[CHAT_RUNTIME] ui_update session=") +
                             std::to_string(sessionId) +
+                            " generation=" + std::to_string(generation) +
                             " complete=" + (complete ? "1" : "0") +
                             " response_bytes=" + std::to_string(response.size()));
     ChatSessionState* session = nullptr;
@@ -8247,6 +8300,13 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     flushDeferredModelDiscoveryIfIdle();
 }
 
+void Win32IDE::handleCopilotUiUpdate(int sessionId,
+                                     const std::string& response,
+                                     bool complete)
+{
+    handleCopilotUiUpdate(sessionId, 0, response, complete);
+}
+
 void Win32IDE::HandleCopilotStop()
 {
     stopInference();
@@ -8290,11 +8350,46 @@ void Win32IDE::appendCopilotChatUtf8(const std::string& text)
         LOG_ERROR("Rejected invalid UTF-8 chat output");
         return;
     }
-    const int length = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-    SendMessageW(m_hwndCopilotChatOutput, EM_SETSEL, length, length);
-    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                 reinterpret_cast<LPARAM>(wide.c_str()));
-    SendMessageW(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
+    // The transcript is a read-only stock EDIT.  EM_REPLACESEL is user-edit
+    // oriented and is silently rejected by some native EDIT configurations
+    // when ES_READONLY is present, which leaves the status bar reporting a
+    // response while the visible transcript remains unchanged.  Read the
+    // current Unicode contents, append the converted response, and replace
+    // the control value atomically through the documented wide API instead.
+    const int currentLength = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+    if (currentLength < 0 || static_cast<size_t>(currentLength) >
+        (std::numeric_limits<size_t>::max() - wide.size())) {
+        LOG_ERROR("Chat transcript length could not be read safely");
+        return;
+    }
+    std::wstring updated;
+    // Reserve space for the terminating NUL required by GetWindowTextW.
+    // Passing a buffer sized only to the character count is an out-of-bounds
+    // write on the native EDIT control's readback path and can discard the
+    // response before SetWindowTextW receives it.
+    updated.resize(static_cast<size_t>(currentLength) + 1u);
+    if (currentLength > 0) {
+        const int copied = GetWindowTextW(m_hwndCopilotChatOutput,
+                                          updated.data(), currentLength + 1);
+        if (copied < 0 || copied > currentLength) {
+            LOG_ERROR("Chat transcript readback failed");
+            return;
+        }
+        updated.resize(static_cast<size_t>(copied));
+    } else {
+        updated.clear();
+    }
+    updated += wide;
+    if (!SetWindowTextW(m_hwndCopilotChatOutput, updated.c_str())) {
+        LOG_ERROR("Chat transcript update failed");
+        return;
+    }
+    SendMessageW(m_hwndCopilotChatOutput, EM_SETSEL,
+                 static_cast<WPARAM>(updated.size()),
+                 static_cast<LPARAM>(updated.size()));
+    SendMessageW(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+    LOG_INFO("[CHAT_RUNTIME] transcript_rendered_utf16_chars=" +
+             std::to_string(updated.size()));
     // Do not mirror into the Output/Debug RichEdit here: beginThought's
     // onRow calls this while nested inside LISTBOX SendMessage, and the
     // RichEdit path has faulted COMCTL32 (0xC000041D) during Request A.

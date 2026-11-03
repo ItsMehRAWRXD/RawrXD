@@ -159,8 +159,8 @@ void NativeGhostTextController::requestCompletion() {
     const HWND host = m_host;
     NativeGhostTextController* owner = this;
     const std::string prompt = (m_promptPrefix.empty()
-        ? "Complete the following code. Return only the completion text, no markdown:\n"
-        : m_promptPrefix + "\n") + m_snapshot;
+        ? "Complete the following code. Return only the text to append at the current caret. Do not repeat the existing document prefix and do not use markdown:\n"
+        : m_promptPrefix + " Return only the text to append at the current caret; do not repeat the existing document prefix and do not use markdown:\n") + m_snapshot;
     auto accumulated = std::make_shared<std::string>();
     m_requestPending = true;
     m_requestId = requestId;
@@ -189,14 +189,30 @@ void NativeGhostTextController::requestCompletion() {
 
 void NativeGhostTextController::showCompletion(const std::string& completion, uint64_t generation) {
     if (generation != m_generation || editorText() != m_snapshot || completion.empty()) return;
+    // Some local models echo the complete prompt/document before emitting
+    // their continuation.  GhostText must own only the suffix: accepting an
+    // echoed document would duplicate the user's existing buffer.  Normalize
+    // an exact UTF-8 snapshot prefix before rendering or accepting.
     m_completion = completion;
+    if (!m_snapshot.empty() &&
+        m_completion.rfind(m_snapshot, 0) == 0) {
+        const size_t echoedBytes = m_snapshot.size();
+        m_completion.erase(0, echoedBytes);
+        if (m_trace) {
+            m_trace("GHOSTTEXT_NORMALIZED echoed_prefix_bytes=" +
+                    std::to_string(echoedBytes) +
+                    " suggestion_bytes=" +
+                    std::to_string(m_completion.size()));
+        }
+    }
+    if (m_completion.empty()) return;
     if (m_trace) {
         m_trace("GHOSTTEXT_RENDERED request_id=" + std::to_string(m_requestId) +
                 " response_bytes=" + std::to_string(completion.size()));
     }
     if (m_hint) {
         std::wstring wideCompletion;
-        if (!utf8ToWide("  " + completion, wideCompletion)) {
+        if (!utf8ToWide("  " + m_completion, wideCompletion)) {
             traceUtf8ConversionFailure(m_trace, "hint_write");
             m_completion.clear();
             return;

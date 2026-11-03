@@ -322,6 +322,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             auto* update = reinterpret_cast<CopilotChatUiUpdate*>(lParam);
             if (ide && update) {
                 ide->handleCopilotUiUpdate(update->sessionId,
+                                           update->generation,
                                            update->response,
                                            update->complete);
             }
@@ -831,10 +832,19 @@ void Win32IDE::onSize(int width, int height)
         MoveWindow(m_hwndSecondarySidebar, width - rightWidth, contentTop, rightWidth, workHeight, TRUE);
         ShowWindow(m_hwndSecondarySidebar, rightWidth > 0 ? SW_SHOW : SW_HIDE);
         constexpr int chatContentTop = 240;
-        constexpr int stepStripHeight = 88;
+        // The right sidebar can be shorter than the full chat form when the
+        // output dock is open or the main window is not maximized.  In that
+        // compact geometry the old fixed timeline (88px) consumed the entire
+        // transcript budget, leaving EDIT 1203 at height zero.  Preserve the
+        // full timeline when space exists, but collapse it in compact mode so
+        // the real ChatWindow transcript always has usable client area.
+        const bool compactChat = workHeight < 500;
+        const int stepStripHeight = compactChat ? 0 : 88;
         const int transcriptTop = chatContentTop + stepStripHeight + 5;
         const int buttonY = std::max(transcriptTop + 5, workHeight - 35);
-        const int inputHeight = std::min(80, std::max(45, buttonY - transcriptTop - 5));
+        const int inputHeight = compactChat
+            ? 45
+            : std::min(80, std::max(45, buttonY - transcriptTop - 5));
         const int inputY = std::max(transcriptTop, buttonY - inputHeight - 5);
         const int outputHeight = std::max(0, inputY - transcriptTop);
         const int tabWidth = std::max(80, rightWidth - 226);

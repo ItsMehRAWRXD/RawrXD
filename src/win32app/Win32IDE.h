@@ -185,6 +185,7 @@ struct ChatSessionState {
 // Win32 controls or chat-session containers directly.
 struct CopilotChatUiUpdate {
     int sessionId = 0;
+    uint64_t generation = 0;
     std::string response;
     bool complete = false;
 };
@@ -491,7 +492,8 @@ private:
     bool isModelLoaded() const;
     std::string generateResponse(const std::string& prompt);
     void generateResponseAsync(const std::string& prompt,
-                               std::function<void(const std::string&, bool, bool)> callback);
+                               std::function<void(const std::string&, bool, bool)> callback,
+                               uint64_t* assignedGeneration = nullptr);
     void stopInference();
     void setInferenceConfig(const InferenceConfig& config);
     InferenceConfig getInferenceConfig() const;
@@ -999,6 +1001,7 @@ private:
     std::atomic_bool m_inferenceStopRequested{false};
     std::atomic<uint64_t> m_nextInferenceGeneration{0};
     std::atomic<uint64_t> m_activeInferenceGeneration{0};
+    std::atomic<uint64_t> m_lastCompletedInferenceGeneration{0};
     // Live WinHTTP handles for the in-flight Ollama generate call. Stop must
     // close these so a blocked ReceiveResponse cannot keep ownership forever.
     std::atomic<void*> m_ollamaHttpSession{nullptr};
@@ -1564,6 +1567,11 @@ private:
     void HandleCopilotSend();
     void HandleCopilotStop();
     void HandleCopilotClear();
+    void handleCopilotUiUpdate(int sessionId, uint64_t generation,
+                               const std::string& response, bool complete);
+    // Legacy agent-loop messages do not own the Ollama generation fence.
+    // They remain supported, while ChatWindow callbacks use the overload
+    // above with a nonzero generation.
     void handleCopilotUiUpdate(int sessionId, const std::string& response,
                                bool complete);
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
