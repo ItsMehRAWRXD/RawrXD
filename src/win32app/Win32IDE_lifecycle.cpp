@@ -103,7 +103,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             PostQuitMessage(0);
             return 0;
         case WM_CLOSE:
-            if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) DestroyWindow(hwnd);
+            if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) {
+                ide->saveIdeSession();
+                DestroyWindow(hwnd);
+            }
             return 0;
         case WM_SYSCOMMAND:
             // Keep the title-bar close action deterministic even when a child
@@ -112,6 +115,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             // prevents the native X from becoming inert after launch.
             if ((wParam & 0xFFF0u) == SC_CLOSE) {
                 if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) {
+                    ide->saveIdeSession();
                     DestroyWindow(hwnd);
                 }
                 return 0;
@@ -592,6 +596,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                     buffer.modified = true;
                 }
                 updateTitleBarText();
+                // Menu state is not refreshed by the RichEdit notification
+                // itself.  Refresh it here so Save becomes immediately
+                // available after keyboard input or paste.
+                updateMenuEnableStates();
                 notifyGhostTextInputChanged(hwndCtl);
             }
             return;
@@ -1008,46 +1016,24 @@ void Win32IDE::createDocumentTabs()
         m_hInstance, nullptr);
     if (!m_hwndDocTabs) return;
 
-    // Start with the scratch buffer that already exists in the UI.
+    // Restore prior session (paths + dirty buffers) when present.
     m_openDocuments.clear();
     m_documentBuffers.clear();
     m_activeDocument = -1;
-    addDocumentTab(std::string());
     loadEditorSession();
+    if (m_openDocuments.empty()) {
+        addDocumentTab(std::string());
+    }
 }
 
 void Win32IDE::loadEditorSession()
 {
-    std::ifstream file("ide_session.ini", std::ios::binary);
-    if (!file) return;
-    std::string line;
-    int active = 0;
-    std::vector<std::string> paths;
-    while (std::getline(file, line)) {
-        if (line.rfind("active=", 0) == 0) {
-            active = std::max(0, atoi(line.substr(7).c_str()));
-        } else if (line.rfind("file=", 0) == 0 && line.size() > 5) {
-            paths.push_back(line.substr(5));
-        }
-    }
-    for (const auto& path : paths) {
-        if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
-            addDocumentTab(path);
-        }
-    }
-    if (active >= 0 && active < static_cast<int>(m_openDocuments.size())) {
-        switchDocumentTab(active);
-    }
+    loadIdeSession();
 }
 
-void Win32IDE::saveEditorSession() const
+void Win32IDE::saveEditorSession()
 {
-    std::ofstream file("ide_session.ini", std::ios::binary | std::ios::trunc);
-    if (!file) return;
-    file << "active=" << std::max(0, m_activeDocument) << "\n";
-    for (const auto& path : m_openDocuments) {
-        if (!path.empty()) file << "file=" << path << "\n";
-    }
+    saveIdeSession();
 }
 
 int Win32IDE::findDocumentTab(const std::string& path) const
@@ -1099,6 +1085,9 @@ void Win32IDE::removeDocumentTab(int index)
 
     TabCtrl_DeleteItem(m_hwndDocTabs, index);
     m_openDocuments.erase(m_openDocuments.begin() + index);
+    if (index < static_cast<int>(m_documentBuffers.size())) {
+        m_documentBuffers.erase(m_documentBuffers.begin() + index);
+    }
 
     if (m_openDocuments.empty()) {
         // Keep the editor usable: an untitled buffer always remains.
@@ -1118,6 +1107,9 @@ void Win32IDE::switchDocumentTab(int index)
     if (!m_hwndDocTabs || index < 0 ||
         index >= static_cast<int>(m_openDocuments.size())) {
         return;
+    }
+    if (index != m_activeDocument) {
+        persistActiveDocumentBuffer();
     }
     m_activeDocument = index;
     TabCtrl_SetCurSel(m_hwndDocTabs, index);

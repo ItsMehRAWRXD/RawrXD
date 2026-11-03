@@ -5,9 +5,14 @@
 #include "IDELogger.h"
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include <commdlg.h>
 #include <commctrl.h>
+#include <shlobj.h>
 #include <algorithm>
+#include <bcrypt.h>
+#include <nlohmann/json.hpp>
+#pragma comment(lib, "bcrypt.lib")
 
 // ============================================================================
 // FILE OPERATIONS (9 Features)
@@ -288,6 +293,135 @@ void Win32IDE::clearRecentFiles() {
     m_recentFiles.clear();
     saveRecentFiles();
     MessageBoxA(m_hwndMain, "Recent files list cleared", "Recent Files", MB_OK | MB_ICONINFORMATION);
+}
+
+std::string Win32IDE::sha256Hex(const std::string& bytes) {
+    BCRYPT_ALG_HANDLE alg = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    DWORD objectLen = 0;
+    DWORD dataLen = 0;
+    DWORD hashLen = 0;
+    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0) return {};
+    if (BCryptGetProperty(alg, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&objectLen),
+                          sizeof(objectLen), &dataLen, 0) < 0) {
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return {};
+    }
+    if (BCryptGetProperty(alg, BCRYPT_HASH_LENGTH, reinterpret_cast<PUCHAR>(&hashLen),
+                          sizeof(hashLen), &dataLen, 0) < 0) {
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return {};
+    }
+    std::vector<UCHAR> object(objectLen);
+    std::vector<UCHAR> digest(hashLen);
+    if (BCryptCreateHash(alg, &hash, object.data(), objectLen, nullptr, 0, 0) < 0) {
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return {};
+    }
+    BCryptHashData(hash, reinterpret_cast<PUCHAR>(const_cast<char*>(bytes.data())),
+                   static_cast<ULONG>(bytes.size()), 0);
+    BCryptFinishHash(hash, digest.data(), hashLen, 0);
+    BCryptDestroyHash(hash);
+    BCryptCloseAlgorithmProvider(alg, 0);
+    static const char* hex = "0123456789abcdef";
+    std::string out;
+    out.resize(digest.size() * 2);
+    for (size_t i = 0; i < digest.size(); ++i) {
+        out[i * 2] = hex[digest[i] >> 4];
+        out[i * 2 + 1] = hex[digest[i] & 0x0f];
+    }
+    return out;
+}
+
+void Win32IDE::persistActiveDocumentBuffer() {
+    if (m_activeDocument < 0 ||
+        m_activeDocument >= static_cast<int>(m_documentBuffers.size()) || !m_hwndEditor) {
+        return;
+    }
+    auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+    buffer.path = m_currentFile;
+    buffer.text = getWindowText(m_hwndEditor);
+    buffer.modified = m_fileModified;
+    if (m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+        m_openDocuments[static_cast<size_t>(m_activeDocument)] = m_currentFile;
+    }
+}
+
+static std::string ideSessionPath() {
+    char base[MAX_PATH] = {};
+    if (FAILED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, base))) {
+        return "ide_session.json";
+    }
+    const std::string dir = std::string(base) + "\\RawrXD";
+    CreateDirectoryA(dir.c_str(), nullptr);
+    return dir + "\\ide_session.json";
+}
+
+void Win32IDE::saveIdeSession() {
+    persistActiveDocumentBuffer();
+    nlohmann::json root;
+    root["active"] = m_activeDocument;
+    root["chat_mode"] = m_chatMode ? 1 : 0;
+    nlohmann::json docs = nlohmann::json::array();
+    for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
+        const auto& buffer = m_documentBuffers[i];
+        docs.push_back({
+            {"path", buffer.path},
+            {"text", buffer.modified ? buffer.text : std::string{}},
+            {"modified", buffer.modified}
+        });
+    }
+    root["documents"] = docs;
+    std::ofstream out(ideSessionPath(), std::ios::binary | std::ios::trunc);
+    if (out) out << root.dump();
+}
+
+void Win32IDE::loadIdeSession() {
+    std::ifstream in(ideSessionPath(), std::ios::binary);
+    if (!in) return;
+    try {
+        nlohmann::json root = nlohmann::json::parse(in);
+        if (!root.contains("documents") || !root["documents"].is_array()) return;
+        m_openDocuments.clear();
+        m_documentBuffers.clear();
+        if (m_hwndDocTabs) TabCtrl_DeleteAllItems(m_hwndDocTabs);
+        for (const auto& doc : root["documents"]) {
+            DocumentBuffer buffer;
+            buffer.path = doc.value("path", std::string{});
+            buffer.modified = doc.value("modified", false);
+            buffer.text = doc.value("text", std::string{});
+            if (!buffer.modified && !buffer.path.empty()) {
+                std::ifstream file(buffer.path, std::ios::binary);
+                if (file) {
+                    buffer.text.assign((std::istreambuf_iterator<char>(file)),
+                                     std::istreambuf_iterator<char>());
+                }
+            }
+            const std::string label = buffer.path.empty()
+                ? std::string("Untitled") : extractLeafName(buffer.path);
+            if (m_hwndDocTabs) {
+                TCITEMA tie{};
+                tie.mask = TCIF_TEXT;
+                tie.pszText = const_cast<char*>(label.c_str());
+                TabCtrl_InsertItem(m_hwndDocTabs,
+                    static_cast<int>(m_openDocuments.size()), &tie);
+            }
+            m_openDocuments.push_back(buffer.path);
+            m_documentBuffers.push_back(std::move(buffer));
+        }
+        if (m_openDocuments.empty()) {
+            addDocumentTab(std::string());
+            return;
+        }
+        if (root.contains("chat_mode")) {
+            m_chatMode = root["chat_mode"].get<int>() != 0;
+        }
+        int active = root.value("active", 0);
+        if (active < 0 || active >= static_cast<int>(m_openDocuments.size())) active = 0;
+        switchDocumentTab(active);
+    } catch (...) {
+        // Corrupt session must not block IDE launch.
+    }
 }
 
 // Note: openFile() is defined in Win32IDE_clean.cpp and just calls openFileDialog()

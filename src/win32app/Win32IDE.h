@@ -452,6 +452,10 @@ private:
     void loadRecentFiles();
     void saveRecentFiles();
     void clearRecentFiles();
+    void saveIdeSession();
+    void loadIdeSession();
+    void persistActiveDocumentBuffer();
+    static std::string sha256Hex(const std::string& bytes);
     std::string getFileDialogPath(bool isSave = false);
     
     // GGUF Model operations
@@ -702,7 +706,7 @@ private:
     void updateDocumentTabs();
     int findDocumentTab(const std::string& path) const;
     void loadEditorSession();
-    void saveEditorSession() const;
+    void saveEditorSession();
 
     // Enhanced clipboard
     void copyWithFormatting();

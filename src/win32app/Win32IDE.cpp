@@ -38,8 +38,10 @@
 #include <unordered_set>
 #include <cctype>
 #include <winhttp.h>
+#include <bcrypt.h>
 
 #pragma comment(lib, "winhttp.lib")
+#pragma comment(lib, "bcrypt.lib")
 
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "comctl32.lib")
@@ -2739,6 +2741,9 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuA(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_RESULTS, "Profile &Results...");
     AppendMenuA(hToolsMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hToolsMenu, MF_STRING, IDM_TOOLS_ANALYZE_SCRIPT, "&Analyze Script");
+    AppendMenuA(hToolsMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hToolsMenu, MF_STRING, IDM_TOOLS_BUILD_PROJECT, "&Build Project");
+    AppendMenuA(hToolsMenu, MF_STRING, IDM_TOOLS_TEST_PROJECT, "&Test Project");
     AppendMenuA(m_hMenu, MF_POPUP, (UINT_PTR)hToolsMenu, "&Tools");
     
     // Modules menu
@@ -2963,33 +2968,11 @@ void Win32IDE::setEditorText(const std::string& text)
 
 void Win32IDE::createEditor(HWND hwnd)
 {
-
-    m_hwndEditor = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
-                                  WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN,
-                                  0, 0, 0, 0, hwnd, (HMENU)IDC_EDITOR, m_hInstance, nullptr);
-    if (!m_hwndEditor) {
-
-        return;
-    }
-
-    // Set default font and colors
-    CHARFORMAT2A cf;
-    memset(&cf, 0, sizeof(cf));
-    cf.cbSize = sizeof(cf);
-    cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
-    cf.yHeight = 200; // 10 points
-    cf.crTextColor = RGB(220, 220, 220); // Light gray text
-    strcpy(cf.szFaceName, "Consolas");
-    SendMessage(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
-    
-    // Set background color to dark
-    SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
-
-    // Enable editing
-    SendMessage(m_hwndEditor, EM_SETREADONLY, FALSE, 0);
-
+    // The canonical editor construction and notification wiring live in
+    // initializeEditorSurface().  Keeping a second RichEdit creation here
+    // overwrote m_hwndEditor during startup and detached EN_CHANGE/Save state
+    // from the visible control.
     initializeEditorSurface();
-
 }
 
 void Win32IDE::createTerminal(HWND hwnd)
@@ -3311,7 +3294,7 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
     if (path.empty() || !m_hwndEditor) return false;
 
     try {
-        std::ifstream file(path);
+        std::ifstream file(path, std::ios::binary);
         if (!file) {
             appendToOutput("Failed to open file: " + path + "\n", "Errors", OutputSeverity::Error);
             return false;
@@ -3322,12 +3305,25 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
         setEditorText(content);
         m_currentFile = path;
         m_fileModified = false;
+        if (m_activeDocument >= 0 &&
+            m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+            auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+            buffer.path = path;
+            buffer.text = content;
+            buffer.modified = false;
+        }
+        if (m_activeDocument >= 0 &&
+            m_activeDocument < static_cast<int>(m_openDocuments.size())) {
+            m_openDocuments[static_cast<size_t>(m_activeDocument)] = path;
+        }
         setCurrentDirectoryFromFile(m_currentFile);
         updateTitleBarText();
+        const std::string digest = sha256Hex(content);
         SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
         updateMenuEnableStates();
         syncEditorToGpuSurface();
-        appendToOutput("File opened successfully (" + std::to_string(content.size()) + " bytes)\n",
+        appendToOutput("File opened successfully (" + std::to_string(content.size()) +
+                       " bytes, sha256=" + digest.substr(0, 16) + "...)\n",
                        "Output", OutputSeverity::Info);
         return true;
     } catch (const std::exception& e) {
@@ -3440,11 +3436,33 @@ bool Win32IDE::saveFile()
         // newlines on Windows and make save/reopen integrity lossy.
         std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
         if (file) {
-            file << content;
+            file.write(content.data(), static_cast<std::streamsize>(content.size()));
+            file.close();
+            std::ifstream verify(m_currentFile, std::ios::binary);
+            std::string roundTrip((std::istreambuf_iterator<char>(verify)),
+                                  std::istreambuf_iterator<char>());
+            const std::string expected = sha256Hex(content);
+            const std::string actual = sha256Hex(roundTrip);
+            if (expected.empty() || expected != actual) {
+                appendToOutput("Save integrity FAIL: sha256 mismatch for " + m_currentFile + "\n",
+                               "Errors", OutputSeverity::Error);
+                MessageBoxA(m_hwndMain, "Save integrity check failed (SHA-256 mismatch)",
+                            "Error", MB_OK | MB_ICONERROR);
+                return false;
+            }
             m_fileModified = false;
+            if (m_activeDocument >= 0 &&
+                m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+                auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
+                buffer.path = m_currentFile;
+                buffer.text = content;
+                buffer.modified = false;
+            }
             updateTitleBarText();
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File saved");
-            appendToOutput("File saved successfully (" + std::to_string(content.size()) + " bytes)\n", "Output", OutputSeverity::Info);
+            appendToOutput("File saved successfully (" + std::to_string(content.size()) +
+                           " bytes, sha256=" + expected.substr(0, 16) + "...)\n",
+                           "Output", OutputSeverity::Info);
             return true;
         }
         appendToOutput("Failed to open file for writing: " + m_currentFile + "\n", "Errors", OutputSeverity::Error);

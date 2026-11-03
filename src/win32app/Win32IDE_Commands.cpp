@@ -313,22 +313,44 @@ void Win32IDE::handleToolsCommand(int commandId) {
     case IDM_TOOLS_PROFILE_STOP: stopProfiling(); break;
     case IDM_TOOLS_PROFILE_RESULTS: showProfileResults(); break;
     case IDM_TOOLS_ANALYZE_SCRIPT: analyzeScript(); break;
-    case IDM_TOOLS_BUILD_PROJECT:
+    case IDM_TOOLS_BUILD_PROJECT: {
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Build");
         startPowerShell();
+        const char* buildDir =
+            (GetFileAttributesA("F:\\rawrxd\\build_modelroute") != INVALID_FILE_ATTRIBUTES)
+                ? "F:\\rawrxd\\build_modelroute"
+                : ((GetFileAttributesA("build_modelroute") != INVALID_FILE_ATTRIBUTES)
+                       ? "build_modelroute"
+                       : ((GetFileAttributesA("build_ide") != INVALID_FILE_ATTRIBUTES)
+                              ? "build_ide" : "."));
         if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
-            pane->manager->writeInput("cmake --build build_ide --config Release\n");
+            std::string cmd = std::string("cmake --build \"") + buildDir +
+                "\" --target RawrXD-Win32IDE-Native --config Release\r\n";
+            pane->manager->writeInput(cmd);
         }
-        appendToOutput("Native IDE build started in the active terminal.\n", "Output", OutputSeverity::Info);
+        appendToOutput(std::string("Native IDE build started (dir=") + buildDir + ").\n",
+                       "Output", OutputSeverity::Info);
         break;
-    case IDM_TOOLS_TEST_PROJECT:
+    }
+    case IDM_TOOLS_TEST_PROJECT: {
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Tests");
         startPowerShell();
+        const char* testDir =
+            (GetFileAttributesA("F:\\rawrxd\\build_modelroute") != INVALID_FILE_ATTRIBUTES)
+                ? "F:\\rawrxd\\build_modelroute"
+                : ((GetFileAttributesA("build_modelroute") != INVALID_FILE_ATTRIBUTES)
+                       ? "build_modelroute"
+                       : ((GetFileAttributesA("build_ide") != INVALID_FILE_ATTRIBUTES)
+                              ? "build_ide" : "."));
         if (auto* pane = getActiveTerminalPane(); pane && pane->manager) {
-            pane->manager->writeInput("ctest --test-dir build_ide --output-on-failure\n");
+            std::string cmd = std::string("ctest --test-dir \"") + testDir +
+                "\" --output-on-failure\r\n";
+            pane->manager->writeInput(cmd);
         }
-        appendToOutput("Native IDE test run started in the active terminal.\n", "Output", OutputSeverity::Info);
+        appendToOutput(std::string("Native IDE test run started (dir=") + testDir + ").\n",
+                       "Output", OutputSeverity::Info);
         break;
+    }
     default: break;
     }
 }
