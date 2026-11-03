@@ -1,0 +1,8 @@
+deep2_gpu_code31_pnp_probe 2 0.0168593
+deep2_qwen4exp_operator_contract 2 0.0097821
+deep2_h11_prefill_parity 0 0
+workspace_path_policy_smoke 1 0.0260202
+native_tool_protocol_smoke 1 0.0212328
+cursor_parity_registry_smoke 1 0.0531613
+deep2_gdn_reference_contract 1 0.0216397
+---

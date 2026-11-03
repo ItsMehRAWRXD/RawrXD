@@ -398,9 +398,16 @@ int main(int argc, char* argv[]) {
     receipt.execution_status = internal_pass ? "PASS" : "PASS_WITH_INTERNAL_DIAGNOSTIC";
     if (reference.empty()) {
         receipt.certification_status = "BLOCKED_NO_INDEPENDENT_REFERENCE";
-        std::printf("VERDICT=PASS_INTERNAL_ONLY\n");
-        return finish(2, "EXECUTION_PASS_NOT_CERTIFIED",
-                      "GPU/CPU comparison passed, but no independent reference logits were supplied");
+        if (internal_pass) {
+            std::printf("VERDICT=PASS_INTERNAL_ONLY\n");
+            return finish(2, "EXECUTION_PASS_NOT_CERTIFIED",
+                          "GPU/CPU comparison passed, but no independent reference logits were supplied");
+        }
+        std::printf("VERDICT=INTERNAL_DIAGNOSTIC_FAIL\n");
+        return finish(2, "EXECUTION_PASS_WITH_INTERNAL_DIAGNOSTIC",
+                      "GPU execution completed with finite logits and no CPU fallback, "
+                      "but GPU/CPU internal diagnostic parity failed at one or more positions; "
+                      "no independent reference logits were supplied");
     }
     receipt.certification_status = "FULL_MODEL_CERTIFIED";
     std::printf("VERDICT=PASS_FULL_MODEL\n");

@@ -1,0 +1,20 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    code
+Root:    F:\rawrxd
+
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[StreamEngine] Shutdown
+The command `echo RAWR_RUN_OK` has been executed successfully. The output is:
+
+```
+RAWR_RUN_OK
+```
+
+The execution is complete, and the terminal output confirms the success. Final status:
+
+```
+RAWR_AGENT_E2E_OK
+```

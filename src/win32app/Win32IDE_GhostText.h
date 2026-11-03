@@ -10,12 +10,13 @@ class NativeGhostTextController {
 public:
     using Request = std::function<void(const std::string&,
         std::function<void(const std::string&, bool, bool)>)>;
+    using Trace = std::function<void(const std::string&)>;
 
     NativeGhostTextController() = default;
     ~NativeGhostTextController();
 
     bool attach(HWND host, HWND editor, Request request,
-                std::string promptPrefix = {});
+                std::string promptPrefix = {}, Trace trace = {});
     void detach();
     void onEditorChanged();
     // Start a completion explicitly from the editor (Ctrl+Space).  Normal
@@ -42,12 +43,14 @@ private:
     HWND m_hint = nullptr;
     WNDPROC m_originalProc = nullptr;
     Request m_request;
+    Trace m_trace;
     std::string m_promptPrefix;
     std::string m_completion;
     std::string m_snapshot;
     uint64_t m_generation = 0;
     UINT_PTR m_timer = 0;
     bool m_requestPending = false;
+    uint64_t m_requestId = 0;
     // A per-attachment identity fences callbacks that outlive a controller
     // detach/rebind. Stale completions are discarded without dereferencing
     // the old object.

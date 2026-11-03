@@ -1,0 +1,1080 @@
+﻿{
+    "asof_utc":  "2026-11-02T12:23:10.5206202Z",
+    "options":  {
+                    "RAWRXD_BUILD_WIN32IDE_QT":  "OFF (default)",
+                    "RAWRXD_BUILD_WIN32IDE":  "ON (default)"
+                },
+    "targets":  [
+                    {
+                        "name":  "deep2_gpu_code31_reset_smoke",
+                        "line":  7,
+                        "snippet":  "add_executable(deep2_gpu_code31_reset_smoke",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_gpu_code31_pnp_probe",
+                        "line":  21,
+                        "snippet":  "add_executable(deep2_gpu_code31_pnp_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_rom_roundtrip",
+                        "line":  37,
+                        "snippet":  "add_executable(deep2_rom_roundtrip tools/deep2_rom_roundtrip.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_rom_pack",
+                        "line":  42,
+                        "snippet":  "add_executable(deep2_rom_pack",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_shard_probe",
+                        "line":  51,
+                        "snippet":  "add_executable(deep2_shard_probe tools/deep2_shard_probe.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "rawrxd_msvc_runner",
+                        "line":  56,
+                        "snippet":  "add_executable(rawrxd_msvc_runner tools/rawrxd_msvc_runner.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_astro_index",
+                        "line":  60,
+                        "snippet":  "add_executable(rawrxd_astro_index tools/rawrxd_astro_index.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "ggml_interface",
+                        "line":  595,
+                        "snippet":  "add_library(ggml_interface INTERFACE)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "nlohmann_json",
+                        "line":  739,
+                        "snippet":  "add_library(nlohmann_json INTERFACE)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "nlohmann_json::nlohmann_json",
+                        "line":  743,
+                        "snippet":  "add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-QtShell",
+                        "line":  813,
+                        "snippet":  "add_executable(RawrXD-QtShell",
+                        "role":  "OTHER",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "self_test_gate",
+                        "line":  997,
+                        "snippet":  "add_library(self_test_gate STATIC",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "quant_utils",
+                        "line":  1006,
+                        "snippet":  "add_library(quant_utils STATIC src/qtapp/quant_utils.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "cpu_inference_engine",
+                        "line":  1011,
+                        "snippet":  "add_library(cpu_inference_engine STATIC",
+                        "role":  "OTHER",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "production_feature_test",
+                        "line":  1140,
+                        "snippet":  "add_executable(production_feature_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "simple_gpu_test",
+                        "line":  1186,
+                        "snippet":  "add_executable(simple_gpu_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "gpu_inference_benchmark",
+                        "line":  1229,
+                        "snippet":  "add_executable(gpu_inference_benchmark",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "minimal_qt_test",
+                        "line":  1271,
+                        "snippet":  "add_executable(minimal_qt_test",
+                        "role":  "OTHER",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "gguf_hotpatch_tester",
+                        "line":  1293,
+                        "snippet":  "add_executable(gguf_hotpatch_tester",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "test_chat_streaming",
+                        "line":  1335,
+                        "snippet":  "add_executable(test_chat_streaming",
+                        "role":  "IDE_RELATED",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "RawrXD-Agent",
+                        "line":  1379,
+                        "snippet":  "add_executable(RawrXD-Agent",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-Compiler",
+                        "line":  1426,
+                        "snippet":  "add_executable(RawrXD-Compiler",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_compiler_qt",
+                        "line":  1460,
+                        "snippet":  "add_library(rawrxd_compiler_qt STATIC",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-Win32IDE",
+                        "line":  1507,
+                        "snippet":  "add_executable(RawrXD-Win32IDE",
+                        "role":  "IDE_RELATED",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "gguf_universal_probe",
+                        "line":  1673,
+                        "snippet":  "add_executable(gguf_universal_probe tools/gguf_universal_probe.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_token_profiler",
+                        "line":  1714,
+                        "snippet":  "add_executable(deep2_token_profiler",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_parity_trace",
+                        "line":  1761,
+                        "snippet":  "add_executable(deep2_parity_trace",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_bench_tps",
+                        "line":  1839,
+                        "snippet":  "add_executable(deep2_bench_tps",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_gpu_certify",
+                        "line":  1903,
+                        "snippet":  "add_executable(deep2_gpu_certify",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_dualgpu_forward",
+                        "line":  1972,
+                        "snippet":  "add_executable(deep2_dualgpu_forward",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_reverse_engineer",
+                        "line":  2028,
+                        "snippet":  "add_executable(deep2_reverse_engineer tools/deep2_reverse_engineer.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_gdn_parity_harness",
+                        "line":  2045,
+                        "snippet":  "add_executable(deep2_gdn_parity_harness",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_qwen4exp_operator_harness",
+                        "line":  2175,
+                        "snippet":  "add_executable(deep2_qwen4exp_operator_harness",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_dynamic_interceptor",
+                        "line":  2200,
+                        "snippet":  "add_executable(deep2_dynamic_interceptor tools/deep2_dynamic_interceptor.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_qwen4exp_pipeline_probe",
+                        "line":  2219,
+                        "snippet":  "add_executable(deep2_qwen4exp_pipeline_probe tools/deep2_qwen4exp_pipeline_probe.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_qwen4exp_gdn_probe",
+                        "line":  2242,
+                        "snippet":  "add_executable(deep2_qwen4exp_gdn_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_qwen4exp_operator_probe",
+                        "line":  2270,
+                        "snippet":  "add_executable(deep2_qwen4exp_operator_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_generic_vulkan_quant_probe",
+                        "line":  2306,
+                        "snippet":  "add_executable(deep2_generic_vulkan_quant_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_enterprise_manifest",
+                        "line":  2337,
+                        "snippet":  "add_executable(deep2_enterprise_manifest tools/deep2_enterprise_manifest.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_d1_prefill_parity",
+                        "line":  2356,
+                        "snippet":  "add_executable(deep2_d1_prefill_parity",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_spec_bench",
+                        "line":  2419,
+                        "snippet":  "add_executable(deep2_spec_bench",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "rawrxd_hexmag_repeat",
+                        "line":  2487,
+                        "snippet":  "add_library(rawrxd_hexmag_repeat OBJECT",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "hexmag_repeat_tuner_cert",
+                        "line":  2508,
+                        "snippet":  "add_executable(hexmag_repeat_tuner_cert",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "hexmag_ide_e2e_cert",
+                        "line":  2526,
+                        "snippet":  "add_executable(hexmag_ide_e2e_cert",
+                        "role":  "IDE_RELATED",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "hexmag_runtime_controller_cert",
+                        "line":  2555,
+                        "snippet":  "add_executable(hexmag_runtime_controller_cert",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_context_scaling",
+                        "line":  2588,
+                        "snippet":  "add_executable(deep2_context_scaling",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_gguf_lifecycle",
+                        "line":  2650,
+                        "snippet":  "add_executable(deep2_gguf_lifecycle",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "gpu_quant_dot_verify",
+                        "line":  2715,
+                        "snippet":  "add_executable(gpu_quant_dot_verify",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "gpu_quant_dot_realweights",
+                        "line":  2751,
+                        "snippet":  "add_executable(gpu_quant_dot_realweights",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "deep2_fused_lmhead_verify",
+                        "line":  2786,
+                        "snippet":  "add_executable(deep2_fused_lmhead_verify",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "q6k_row_differential_test",
+                        "line":  2834,
+                        "snippet":  "add_executable(q6k_row_differential_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "mamba2_ref_probe",
+                        "line":  2867,
+                        "snippet":  "add_executable(mamba2_ref_probe tools/mamba2_ref_probe.cpp)",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_agentic_loop",
+                        "line":  2890,
+                        "snippet":  "add_executable(deep2_agentic_loop",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "agentic_loop_timeout_helper",
+                        "line":  2976,
+                        "snippet":  "add_executable(agentic_loop_timeout_helper",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "agentic_loop_bridge_recovery_smoke",
+                        "line":  2983,
+                        "snippet":  "add_executable(agentic_loop_bridge_recovery_smoke",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_agentic_repair",
+                        "line":  3019,
+                        "snippet":  "add_executable(deep2_agentic_repair",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_exec_trace",
+                        "line":  3081,
+                        "snippet":  "add_executable(deep2_exec_trace",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_prefill_parity",
+                        "line":  3138,
+                        "snippet":  "add_executable(deep2_prefill_parity",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "rawrxd_gpu_compute",
+                        "line":  3209,
+                        "snippet":  "add_library(rawrxd_gpu_compute STATIC",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "deep2_vulkan_gdn_dispatch_probe",
+                        "line":  3259,
+                        "snippet":  "add_executable(deep2_vulkan_gdn_dispatch_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_engine_lib",
+                        "line":  3537,
+                        "snippet":  "add_library(deep2_engine_lib STATIC",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "rawrxd_deep2_engine",
+                        "line":  3592,
+                        "snippet":  "add_executable(rawrxd_deep2_engine",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_q5_0_parity",
+                        "line":  3611,
+                        "snippet":  "add_executable(deep2_q5_0_parity",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_cpu_state_probe",
+                        "line":  3633,
+                        "snippet":  "add_executable(deep2_cpu_state_probe",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_h11_prefill_parity",
+                        "line":  3667,
+                        "snippet":  "add_executable(deep2_h11_prefill_parity",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_gpu_decode_roofline",
+                        "line":  3701,
+                        "snippet":  "add_executable(deep2_gpu_decode_roofline",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "deep2_uneven_tp_gemv",
+                        "line":  3738,
+                        "snippet":  "add_executable(deep2_uneven_tp_gemv",
+                        "role":  "INFERENCE",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "RawrXD-Win32IDE-Native",
+                        "line":  3834,
+                        "snippet":  "add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "test_terminal",
+                        "line":  3955,
+                        "snippet":  "add_executable(test_terminal",
+                        "role":  "OTHER",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "RawrXD-Chat",
+                        "line":  3967,
+                        "snippet":  "add_executable(RawrXD-Chat",
+                        "role":  "IDE_RELATED",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "RawrXD-ModelLoader",
+                        "line":  4014,
+                        "snippet":  "add_executable(RawrXD-ModelLoader",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-CLI",
+                        "line":  4030,
+                        "snippet":  "add_executable(RawrXD-CLI",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "model_loader_bench",
+                        "line":  4089,
+                        "snippet":  "add_executable(model_loader_bench",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_stress",
+                        "line":  4103,
+                        "snippet":  "add_executable(rawrxd_stress",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_test_baseline",
+                        "line":  4120,
+                        "snippet":  "# add_executable(rawrxd_test_baseline",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "rawrxd_test_pid",
+                        "line":  4128,
+                        "snippet":  "# add_executable(rawrxd_test_pid",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "RawrXD-IDE",
+                        "line":  4139,
+                        "snippet":  "add_executable(RawrXD-IDE WIN32",
+                        "role":  "IDE_RELATED",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "RawrXD-SimpleIDE",
+                        "line":  4159,
+                        "snippet":  "add_executable(RawrXD-SimpleIDE",
+                        "role":  "IDE_RELATED",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "RawrXD-Chromatic",
+                        "line":  4210,
+                        "snippet":  "add_executable(RawrXD-Chromatic WIN32",
+                        "role":  "OTHER",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "brutal_compression_lib",
+                        "line":  4601,
+                        "snippet":  "add_library(brutal_compression_lib STATIC kernels/deflate_brutal_masm.asm)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-AgenticIDE",
+                        "line":  4604,
+                        "snippet":  "add_executable(RawrXD-AgenticIDE ${AGENTICIDE_SOURCES})",
+                        "role":  "IDE_RELATED",
+                        "status":  "LEGACY"
+                    },
+                    {
+                        "name":  "stub_test",
+                        "line":  4714,
+                        "snippet":  "add_executable(stub_test WIN32 src/stub_main.cpp)",
+                        "role":  "OTHER",
+                        "status":  "ORPHAN"
+                    },
+                    {
+                        "name":  "test_ide_main",
+                        "line":  4726,
+                        "snippet":  "add_executable(test_ide_main WIN32 src/test_ide_main.cpp src/agentic_ide.cpp)",
+                        "role":  "IDE_RELATED",
+                        "status":  "ORPHAN"
+                    },
+                    {
+                        "name":  "test_qmainwindow",
+                        "line":  4759,
+                        "snippet":  "add_executable(test_qmainwindow WIN32 src/test_qmainwindow.cpp)",
+                        "role":  "OTHER",
+                        "status":  "ORPHAN"
+                    },
+                    {
+                        "name":  "test_header",
+                        "line":  4789,
+                        "snippet":  "add_executable(test_header src/agentic_ide_test.cpp)",
+                        "role":  "OTHER",
+                        "status":  "ORPHAN"
+                    },
+                    {
+                        "name":  "RawrXD-TestRunner",
+                        "line":  4799,
+                        "snippet":  "add_executable(RawrXD-TestRunner",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_q8_0_end2end",
+                        "line":  4842,
+                        "snippet":  "add_executable(bench_q8_0_end2end",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_flash_attn",
+                        "line":  4857,
+                        "snippet":  "add_executable(bench_flash_attn",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_flash_all_quant",
+                        "line":  4871,
+                        "snippet":  "add_executable(bench_flash_all_quant",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_flash_asm_puppeteer",
+                        "line":  4898,
+                        "snippet":  "add_executable(bench_flash_asm_puppeteer",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_deflate_godmode",
+                        "line":  4920,
+                        "snippet":  "# add_executable(bench_deflate_godmode tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_deflate_brutal",
+                        "line":  4927,
+                        "snippet":  "add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_deflate_neon",
+                        "line":  4938,
+                        "snippet":  "add_executable(bench_deflate_neon tests/bench_deflate_neon.cpp kernels/deflate_neon.S)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_deflate_brutal_arm64",
+                        "line":  4944,
+                        "snippet":  "add_executable(bench_deflate_brutal_arm64",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "bench_deflate_50mb",
+                        "line":  4954,
+                        "snippet":  "add_executable(bench_deflate_50mb tests/bench_deflate_50mb.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "quant_engine_test",
+                        "line":  4963,
+                        "snippet":  "add_executable(quant_engine_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "quant_scalar_smoke",
+                        "line":  4974,
+                        "snippet":  "add_executable(quant_scalar_smoke tests/quant_scalar_smoke.cpp)",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "quant_correctness_tests",
+                        "line":  4990,
+                        "snippet":  "add_executable(quant_correctness_tests tests/quant_correctness_tests.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "test_agent_coordinator",
+                        "line":  5003,
+                        "snippet":  "add_executable(test_agent_coordinator tests/test_agent_coordinator.cpp)",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "test_agent_coordinator_integration",
+                        "line":  5024,
+                        "snippet":  "add_executable(test_agent_coordinator_integration",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "test_kv_cache",
+                        "line":  5056,
+                        "snippet":  "add_executable(test_kv_cache",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "test_gguf_loader",
+                        "line":  5074,
+                        "snippet":  "add_executable(test_gguf_loader",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "test_gguf_loader_simple",
+                        "line":  5098,
+                        "snippet":  "add_executable(test_gguf_loader_simple",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "agentic-resilience-tests",
+                        "line":  5175,
+                        "snippet":  "add_executable(agentic-resilience-tests",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "voice_processor_test",
+                        "line":  5234,
+                        "snippet":  "add_executable(voice_processor_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "sandboxed_terminal_test",
+                        "line":  5255,
+                        "snippet":  "add_executable(sandboxed_terminal_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "semantic_diff_analyzer_test",
+                        "line":  5276,
+                        "snippet":  "add_executable(semantic_diff_analyzer_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "model_registry_test",
+                        "line":  5297,
+                        "snippet":  "add_executable(model_registry_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "zero_retention_manager_test",
+                        "line":  5318,
+                        "snippet":  "add_executable(zero_retention_manager_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "ai_merge_resolver_test",
+                        "line":  5339,
+                        "snippet":  "add_executable(ai_merge_resolver_test",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "rawrxd_agentic_backend",
+                        "line":  5371,
+                        "snippet":  "add_library(rawrxd_agentic_backend STATIC",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "workspace_path_policy_smoke",
+                        "line":  5407,
+                        "snippet":  "add_executable(workspace_path_policy_smoke",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "native_tool_protocol_smoke",
+                        "line":  5428,
+                        "snippet":  "add_executable(native_tool_protocol_smoke",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "cursor_parity_registry_smoke",
+                        "line":  5456,
+                        "snippet":  "add_executable(cursor_parity_registry_smoke",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "q8k_parity_tool",
+                        "line":  5484,
+                        "snippet":  "add_executable(q8k_parity_tool src/deep2/q8k_parity_tool.cpp",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "q8k_edge_tests",
+                        "line":  5486,
+                        "snippet":  "add_executable(q8k_edge_tests src/deep2/q8k_parity_edge_tests.cpp",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "quant_parity_cert",
+                        "line":  5502,
+                        "snippet":  "add_executable(quant_parity_cert src/deep2/quant_parity_cert.cpp",
+                        "role":  "OTHER",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "kquant_dot_parity",
+                        "line":  5520,
+                        "snippet":  "add_executable(kquant_dot_parity src/deep2/test_kquant_dot_parity.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "RawrXD-CLI-V2",
+                        "line":  5561,
+                        "snippet":  "add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-cli-contract-test",
+                        "line":  5614,
+                        "snippet":  "add_executable(rawr-reap-cli-contract-test",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-expert-layout-test",
+                        "line":  5629,
+                        "snippet":  "add_executable(rawr-reap-expert-layout-test tests/reap_expert_layout_test.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-runtime-plan-test",
+                        "line":  5641,
+                        "snippet":  "add_executable(rawr-reap-runtime-plan-test",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-tensor-residency-budget-test",
+                        "line":  5655,
+                        "snippet":  "add_executable(rawr-tensor-residency-budget-test",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "rawr-reap",
+                        "line":  5672,
+                        "snippet":  "add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp",
+                        "role":  "OTHER",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "hexmag-reap-live",
+                        "line":  5685,
+                        "snippet":  "add_executable(hexmag-reap-live",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "hexmag-reap-live-test",
+                        "line":  5699,
+                        "snippet":  "add_executable(hexmag-reap-live-test",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-moe-transform-test",
+                        "line":  5715,
+                        "snippet":  "add_executable(reap-moe-transform-test",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-corpus",
+                        "line":  5728,
+                        "snippet":  "add_executable(rawr-reap-corpus src/reap_corpus_cli.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "deep2_mla_lifecycle_test",
+                        "line":  5739,
+                        "snippet":  "add_executable(deep2_mla_lifecycle_test",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "rawr-reap-writer",
+                        "line":  5753,
+                        "snippet":  "add_executable(rawr-reap-writer src/reap_writer_cli.cpp src/deep2/ReapWriter.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-mask",
+                        "line":  5765,
+                        "snippet":  "add_executable(rawr-reap-mask src/reap_mask_cli.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawr-reap-replay",
+                        "line":  5770,
+                        "snippet":  "add_executable(rawr-reap-replay src/reap_replay_cli.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-floor-audit",
+                        "line":  5780,
+                        "snippet":  "add_executable(reap-floor-audit src/reap/reap_floor.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-publish-admission",
+                        "line":  5795,
+                        "snippet":  "add_executable(reap-publish-admission src/reap/reap_publish_admission.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-reference-receipt",
+                        "line":  5810,
+                        "snippet":  "add_executable(reap-reference-receipt src/reap/reap_reference_receipt.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-ref-extract",
+                        "line":  5825,
+                        "snippet":  "add_executable(reap-ref-extract src/reap/reap_ref_extract.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-tensor-enum",
+                        "line":  5838,
+                        "snippet":  "add_executable(reap-tensor-enum src/reap/reap_tensor_enum.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-cert-parity",
+                        "line":  5853,
+                        "snippet":  "add_executable(reap-cert-parity src/reap/reap_cert_parity.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "reap-tok-inspect",
+                        "line":  5869,
+                        "snippet":  "add_executable(reap-tok-inspect src/reap/reap_tok_inspect.cpp)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "cpu_engine_e2e",
+                        "line":  5884,
+                        "snippet":  "add_executable(cpu_engine_e2e",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_security",
+                        "line":  5964,
+                        "snippet":  "add_library(rawrxd_security STATIC ${RAWRXD_SECURITY_SOURCES} ${RAWRXD_SECURITY_HEADERS})",
+                        "role":  "OTHER",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "RawrXD::security",
+                        "line":  5965,
+                        "snippet":  "add_library(RawrXD::security ALIAS rawrxd_security)",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_hardening_tests",
+                        "line":  6007,
+                        "snippet":  "add_executable(rawrxd_hardening_tests ${RAWRXD_HARDENING_TEST_SOURCES})",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_loader_hardening_tests",
+                        "line":  6035,
+                        "snippet":  "add_executable(rawrxd_loader_hardening_tests",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "test_deep2_inference",
+                        "line":  6076,
+                        "snippet":  "add_executable(test_deep2_inference test_deep2_inference.cpp)",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "deep2_weight_streamer_test",
+                        "line":  6100,
+                        "snippet":  "add_executable(deep2_weight_streamer_test",
+                        "role":  "INFERENCE",
+                        "status":  "TEST"
+                    },
+                    {
+                        "name":  "sovereign_emit_formats",
+                        "line":  6178,
+                        "snippet":  "add_library(sovereign_emit_formats STATIC",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "sovereign_lab_blob_io",
+                        "line":  6188,
+                        "snippet":  "add_library(sovereign_lab_blob_io STATIC",
+                        "role":  "IDE_RELATED",
+                        "status":  "ACTIVE"
+                    },
+                    {
+                        "name":  "rawrxd_link",
+                        "line":  6198,
+                        "snippet":  "add_executable(rawrxd_link",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "rawrxd_check",
+                        "line":  6214,
+                        "snippet":  "add_executable(rawrxd_check",
+                        "role":  "OTHER",
+                        "status":  "OTHER"
+                    },
+                    {
+                        "name":  "test_sovereign_compose_lab",
+                        "line":  6226,
+                        "snippet":  "add_executable(test_sovereign_compose_lab",
+                        "role":  "IDE_RELATED",
+                        "status":  "TEST"
+                    }
+                ],
+    "ide_headers":  {
+                        "src/win32app/Win32IDE.cpp":  "IN_HEAD",
+                        "src/win32app/Win32IDE_SovereignCLI.h":  "ABSENT_AT_AUTHORITY_COMMIT",
+                        "src/ide/win32_ide.h":  "ABSENT_AT_AUTHORITY_COMMIT",
+                        "src/win32app/Win32IDE.h":  "IN_HEAD_ACTIVE_CONTRACT"
+                    },
+    "notes":  [
+                  "GitHub code-search hits for win32_ide.h / SovereignCLI may be default-branch only — not defects on a5ae60ef.",
+                  "RawrXD-Win32IDE CMake target is behind RAWRXD_BUILD_WIN32IDE_QT; native Qt-free IDE path must be identified separately.",
+                  "No builds executed this phase."
+              ],
+    "native_ide_target":  "RawrXD-Win32IDE-Native",
+    "qt_ide_target":  "RawrXD-Win32IDE (LEGACY; RAWRXD_BUILD_WIN32IDE_QT=OFF; Copilot sources ABSENT)",
+    "authority_commit":  "a5ae60efecac790598e2e46d9e499eb8ac7287af"
+}

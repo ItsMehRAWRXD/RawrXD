@@ -1,0 +1,44 @@
+[
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_bench_tps.exe",
+    "size": 34006016,
+    "sha256": "E3AE9C8343599E41945A5503D9A8EC1F4ADB1D4F5E040FE0224A916544A9E2B8",
+    "last_write": "2026-11-02T04:17:47.6346555-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_gpu_certify.exe",
+    "size": 33971712,
+    "sha256": "22FCA0D35D123CB85078802C6B91D490783E5C3AA214384E330902DB85F24E5D",
+    "last_write": "2026-11-02T04:17:22.4669942-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_prefill_parity.exe",
+    "size": 33997312,
+    "sha256": "DF6F54493D866A9F0FCAF520937E298E9E681A6BB6CDC2516075968AC6AFBD60",
+    "last_write": "2026-11-02T04:22:48.4852865-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_spec_bench.exe",
+    "size": 34025984,
+    "sha256": "3A44C03F04BA5259575405B06B50D6202FE3238748DECAB276B2968392428D6D",
+    "last_write": "2026-11-02T04:19:35.9111926-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_gguf_lifecycle.exe",
+    "size": 33979904,
+    "sha256": "1223730C1764E82C2D8AAFF0A532D12120D4B8C9AD4A3865B16A479F6FB0995E",
+    "last_write": "2026-11-02T04:18:20.7671010-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_context_scaling.exe",
+    "size": 33991680,
+    "sha256": "F62BC796699E5808A9FCDFE0EC63E9397C54429291F3FEB2E89FAE22E466A83F",
+    "last_write": "2026-11-02T04:20:54.2142528-05:00"
+  },
+  {
+    "path": "F:\\rawrxd\\build_reap\\bin\\deep2_agentic_repair.exe",
+    "size": 34030080,
+    "sha256": "3F608507350D0FAE82B85BDF6AD30E471DD093D877D1A64F37972E40D7701BA3",
+    "last_write": "2026-11-02T04:21:01.8071764-05:00"
+  }
+]

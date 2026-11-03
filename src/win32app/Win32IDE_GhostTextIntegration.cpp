@@ -1,5 +1,6 @@
 #include "Win32IDE.h"
 #include <richedit.h>
+#include "../backend/ollama_client.h"
 
 void Win32IDE::initializeNativeGhostText() {
     if (!m_hwndMain || !m_hwndEditor) return;
@@ -76,7 +77,13 @@ void Win32IDE::initializeNativeGhostText() {
     if (!m_ghostText) m_ghostText = std::make_unique<NativeGhostTextController>();
     const bool attached = m_ghostText->attach(
         m_hwndMain, m_hwndEditor, request,
-        "Complete the following code. Return only the completion text, no markdown:");
+        "Complete the following code. Return only the completion text, no markdown:",
+        [this](const std::string& event) {
+            // Controller traces are emitted only from the UI message/timer
+            // path; keeping this sink on the UI thread avoids racing the
+            // native output controls while preserving raw lifecycle evidence.
+            appendNativeDebugOutput("[GhostText] " + event + "\n");
+        });
     appendNativeDebugOutput(std::string("[GhostText] native controller ") +
                             (attached ? "READY\n" : "FAILED\n"), !attached);
 
@@ -113,7 +120,10 @@ void Win32IDE::initializeNativeGhostText() {
     for (const auto& surface : surfaces) {
         if (!surface.hwnd || surface.hwnd == m_hwndEditor) continue;
         auto controller = std::make_unique<NativeGhostTextController>();
-        if (controller->attach(m_hwndMain, surface.hwnd, request, surface.prompt)) {
+        if (controller->attach(m_hwndMain, surface.hwnd, request, surface.prompt,
+                               [this](const std::string& event) {
+                                   appendNativeDebugOutput("[GhostText] " + event + "\n");
+                               })) {
             m_ghostTextInputs.push_back(std::move(controller));
         }
     }
@@ -174,6 +184,40 @@ void Win32IDE::requestNativeGhostText(
     const std::string& prompt,
     std::function<void(const std::string&, bool, bool)> callback)
 {
+    // GhostText requests are independently fenced by the controller. Allow a
+    // newer request to run while an older one is still in flight; the older
+    // response is discarded by generation/identity checks on the UI thread.
+    const ChatModelEntry ghostRoute =
+        std::exchange(m_pendingInferenceModel, ChatModelEntry{});
+    if (ghostRoute.source == ChatModelEntry::Source::Ollama &&
+        !ghostRoute.identifier.empty()) {
+        const std::string baseUrl = m_ollamaBaseUrl;
+        const int maxTokens = effectiveMaxTokensForPrompt(prompt);
+        const int contextTokens = m_currentContextTokens;
+        const ReasoningMode reasoningMode = m_reasoningMode;
+        std::thread([baseUrl, model = ghostRoute.identifier, prompt,
+                     maxTokens, contextTokens, reasoningMode,
+                     callback = std::move(callback)]() mutable {
+            try {
+                (void)reasoningMode;
+                RawrXD::Backend::OllamaGenerateRequest request;
+                request.model = model;
+                request.prompt = prompt;
+                request.stream = false;
+                request.options["num_predict"] = std::to_string(maxTokens);
+                request.options["num_ctx"] = std::to_string(contextTokens);
+                RawrXD::Backend::OllamaClient client(baseUrl);
+                client.setTimeoutSeconds(120);
+                const RawrXD::Backend::OllamaResponse result = client.generateSync(request);
+                const std::string response = result.response.empty()
+                    ? result.message : result.response;
+                if (callback) callback(response, true, !response.empty());
+            } catch (...) {
+                if (callback) callback("", true, false);
+            }
+        }).detach();
+        return;
+    }
     generateResponseAsync(prompt, std::move(callback));
 }
 

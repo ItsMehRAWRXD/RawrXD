@@ -529,8 +529,9 @@ public:
     // leaking into a newly bound model.
     void ResetGdnState(uint64_t stateKey);
 
-    // GDN dispatch: Qwen3.5/Qwen4Exp gated delta-net device kernel. Stubbed
-    // to CPU fallback until a matching Vulkan stateful kernel is wired.
+    // GDN dispatch: Qwen3.5/Qwen4Exp gated delta-net device kernel. The
+    // recurrent state is retained by stateKey across token dispatches and is
+    // discarded by ResetGdnState at executor/model-session boundaries.
     bool DispatchGdn(const float* mixed, size_t mixedSize,
                      const float* beta, size_t betaSize,
                      const float* alpha, size_t alphaSize,
@@ -541,6 +542,18 @@ public:
                      uint32_t keyHeads, uint32_t valueHeads, uint32_t headDim,
                      float epsilon, float scale, bool gateSigmoid,
                      uint64_t stateKey, std::vector<float>& output);
+
+    struct GdnPush {
+        uint32_t tokens = 1;
+        uint32_t keyHeads = 0;
+        uint32_t valueHeads = 0;
+        uint32_t headDim = 0;
+        float epsilon = 0.0f;
+        float scale = 1.0f;
+        uint32_t gateSigmoid = 0;
+        uint32_t reserved = 0;
+    };
+    static_assert(sizeof(GdnPush) == 32, "GDN push constants must match GLSL");
 
     // ========== Download ticket ==========
     struct DownloadTicket {
@@ -1490,9 +1503,12 @@ private:
     VkPipelineLayout opsPipelineLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout qPipelineLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout qNvfp4PipelineLayout_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout gdnSetLayout_ = VK_NULL_HANDLE;
+    VkPipelineLayout gdnPipelineLayout_ = VK_NULL_HANDLE;
     VkPipeline opsPipeline_ = VK_NULL_HANDLE;
     VkPipeline qPipeline_ = VK_NULL_HANDLE;
     VkPipeline qNvfp4Pipeline_ = VK_NULL_HANDLE;
+    VkPipeline gdnPipeline_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;
@@ -1609,6 +1625,11 @@ private:
     uint32_t mlaCacheLayers_ = 0;
     uint32_t mlaCacheCapacity_ = 0;
     uint32_t mlaCacheMaxSeq_ = 0;
+
+    // Stateful Qwen GDN device buffers. Entries are keyed by the executor
+    // owner/block identity supplied by RuntimeGraphExecutor. A state buffer
+    // is never reused across a geometry change or an explicit reset.
+    std::unordered_map<uint64_t, DeviceBuf> gdnStates_;
 
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;

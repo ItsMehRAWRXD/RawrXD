@@ -1,0 +1,18 @@
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 333 MB
+   layers_0: 80 tensors, 823 MB
+   layers_1: 80 tensors, 796 MB
+   layers_2: 80 tensors, 783 MB
+   layers_3: 80 tensors, 809 MB
+   layers_4: 40 tensors, 431 MB
+   output_head: 38 tensors, 810 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+   Tensors: 399
+   Zones: 7
+   Memory (header+index): ~0 MB
+📥 Loading zone: layers_4 (431.754 MB)...
+✅ Zone loaded: layers_4 (431.754 MB)
+GENERATE_OK emitted=1 memory=4831838208

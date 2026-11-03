@@ -78,6 +78,9 @@
 #ifndef IDC_COPILOT_CONTEXT_SELECTOR
 #define IDC_COPILOT_CONTEXT_SELECTOR 1220
 #endif
+#ifndef IDC_AGENT_STEP_STRIP
+#define IDC_AGENT_STEP_STRIP 1225
+#endif
 
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
@@ -108,6 +111,7 @@
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "agent_esp.hpp"
 #include "Win32IDE_GhostText.h"
+#include "Win32IDE_AgentStepTimeline.h"
 
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
@@ -173,6 +177,8 @@ struct ChatSessionState {
     ReasoningMode reasoningMode = ReasoningMode::Instant;
     bool webBrowsingEnabled = false;
     std::vector<ChatSessionCheckpoint> checkpoints;
+    // Per-session agent step strip (thought / tool / powershell chips).
+    std::vector<std::string> stepRows;
 };
 
 // Inference workers post owned updates to the UI thread instead of touching
@@ -184,6 +190,9 @@ struct CopilotChatUiUpdate {
 };
 
 inline constexpr UINT kRawrxdCopilotUiUpdate = WM_APP + 107;
+
+// Legacy AgenticBridge completion (isolated from AgenticLoop WM_APP+105).
+inline constexpr UINT kRawrxdLegacyAgentComplete = WM_APP + 109;
 
 // Dedicated PowerShell terminal callbacks originate on reader/monitor threads.
 // Own the payload and marshal it through the main window before touching any
@@ -748,6 +757,8 @@ private:
     // Explicit UTF-8 boundary for text that crosses into JSON/agent APIs.
     std::string getWindowTextUtf8(HWND hwnd);
     void appendCopilotChatUtf8(const std::string& text);
+    void armAgentThoughtTimer();
+    void disarmAgentThoughtTimer();
     void setWindowText(HWND hwnd, const std::string& text);
     void appendText(HWND hwnd, const std::string& text);
     void syncEditorToGpuSurface();
@@ -1216,6 +1227,7 @@ private:
     HWND m_hwndSecondarySidebarHeader = nullptr;
     HWND m_hwndCopilotChatInput = nullptr;
     HWND m_hwndCopilotChatOutput = nullptr;
+    AgentStepTimeline m_agentStepTimeline;
     HWND m_hwndCopilotSendBtn = nullptr;
     HWND m_hwndCopilotStopBtn = nullptr;
     HWND m_hwndCopilotClearBtn = nullptr;
@@ -1577,6 +1589,7 @@ private:
     LRESULT handleAgenticLoopProgress(WPARAM wParam, LPARAM lParam);
     LRESULT handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam);
     LRESULT handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam);
+    LRESULT handleLegacyAgentComplete(WPARAM wParam, LPARAM lParam);
 
 private:
     // Agent ESP Telemetry

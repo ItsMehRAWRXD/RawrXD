@@ -462,6 +462,7 @@ void Win32IDE::executePowerShellPanelCommand(const std::string& command) {
     
     m_powerShellExecuting = true;
     updatePowerShellStatus();
+    m_agentStepTimeline.addChip("powershell", command);
     
     // Send command to PowerShell
     PsTrace("[PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=%zu thread=%lu\n", command.length(), GetCurrentThreadId());
@@ -479,6 +480,7 @@ void Win32IDE::stopPowerShellExecution() {
         // Send Ctrl+C
         m_dedicatedPowerShellTerminal->writeInput("\x03");
         appendPowerShellOutput("\n[Execution stopped]\n", RGB(255, 255, 0));
+        m_agentStepTimeline.addChip("stopped", "powershell stopped");
     }
 }
 

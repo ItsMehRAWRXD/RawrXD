@@ -1,0 +1,677 @@
+﻿[
+    {
+        "HWND":  "0x730E0E",
+        "Class":  "ToolbarWindow32",
+        "Title":  "",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  1584,
+        "H":  28
+    },
+    {
+        "HWND":  "0x77D07B8",
+        "Class":  "Static",
+        "Title":  "Untitled  •  bin",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  420,
+        "H":  22
+    },
+    {
+        "HWND":  "0x4A0E8C",
+        "Class":  "Button",
+        "Title":  "GH",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  22
+    },
+    {
+        "HWND":  "0x13E80D44",
+        "Class":  "Button",
+        "Title":  "MS",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  22
+    },
+    {
+        "HWND":  "0x5A10AF8",
+        "Class":  "Button",
+        "Title":  "Gear",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  48,
+        "H":  22
+    },
+    {
+        "HWND":  "0x144005BC",
+        "Class":  "Button",
+        "Title":  "-",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  32,
+        "H":  22
+    },
+    {
+        "HWND":  "0x46C07D0",
+        "Class":  "Button",
+        "Title":  "[]",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  32,
+        "H":  22
+    },
+    {
+        "HWND":  "0x87E0AE4",
+        "Class":  "Button",
+        "Title":  "X",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  32,
+        "H":  22
+    },
+    {
+        "HWND":  "0x14260998",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  48,
+        "H":  885
+    },
+    {
+        "HWND":  "0x112601D8",
+        "Class":  "Button",
+        "Title":  "Files",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x75708EC",
+        "Class":  "Button",
+        "Title":  "Search",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x390EFE",
+        "Class":  "Button",
+        "Title":  "Source",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x310442",
+        "Class":  "Button",
+        "Title":  "Debug",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0xEB90986",
+        "Class":  "Button",
+        "Title":  "Exts",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x7E0EF0",
+        "Class":  "Button",
+        "Title":  "Recov",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x2E0EEA",
+        "Class":  "Button",
+        "Title":  "Chat",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  40,
+        "H":  44
+    },
+    {
+        "HWND":  "0x620E70",
+        "Class":  "Edit",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  1584,
+        "H":  176
+    },
+    {
+        "HWND":  "0x6030ACE",
+        "Class":  "Static",
+        "Title":  "RawrXD.IDE.Sidebar",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  250,
+        "H":  885
+    },
+    {
+        "HWND":  "0x390EEE",
+        "Class":  "Static",
+        "Title":  "File Explorer",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  248,
+        "H":  28
+    },
+    {
+        "HWND":  "0x6C50A44",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  248,
+        "H":  855
+    },
+    {
+        "HWND":  "0x195B0A4E",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  248,
+        "H":  30
+    },
+    {
+        "HWND":  "0x15FD0A5C",
+        "Class":  "Button",
+        "Title":  "New File",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  75,
+        "H":  24
+    },
+    {
+        "HWND":  "0x5A80A8E",
+        "Class":  "Button",
+        "Title":  "New Folder",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  85,
+        "H":  24
+    },
+    {
+        "HWND":  "0x2A80D00",
+        "Class":  "Button",
+        "Title":  "Refresh",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  65,
+        "H":  24
+    },
+    {
+        "HWND":  "0xBA40BC2",
+        "Class":  "Button",
+        "Title":  "Collapse",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  70,
+        "H":  24
+    },
+    {
+        "HWND":  "0x43C09BA",
+        "Class":  "SysTreeView32",
+        "Title":  "RawrXD.IDE.FileExplorer",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  248,
+        "H":  825
+    },
+    {
+        "HWND":  "0xF3E0732",
+        "Class":  "Edit",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  25
+    },
+    {
+        "HWND":  "0x170E80",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  80
+    },
+    {
+        "HWND":  "0x230E88",
+        "Class":  "Button",
+        "Title":  "Regex",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  70,
+        "H":  20
+    },
+    {
+        "HWND":  "0x5E0EF8",
+        "Class":  "Button",
+        "Title":  "Case",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  70,
+        "H":  20
+    },
+    {
+        "HWND":  "0xA470930",
+        "Class":  "Button",
+        "Title":  "Whole",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  70,
+        "H":  20
+    },
+    {
+        "HWND":  "0xFD60ADC",
+        "Class":  "Static",
+        "Title":  "Include:",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  20
+    },
+    {
+        "HWND":  "0xFC60A72",
+        "Class":  "Edit",
+        "Title":  "*.ps1,*.cpp",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  160,
+        "H":  20
+    },
+    {
+        "HWND":  "0x7E10E02",
+        "Class":  "Static",
+        "Title":  "Exclude:",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  20
+    },
+    {
+        "HWND":  "0x102809DC",
+        "Class":  "Edit",
+        "Title":  "node_modules,bin",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  160,
+        "H":  20
+    },
+    {
+        "HWND":  "0x22630088",
+        "Class":  "ListBox",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  468
+    },
+    {
+        "HWND":  "0x58A0C0A",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  250,
+        "H":  35
+    },
+    {
+        "HWND":  "0x1F0F02",
+        "Class":  "Button",
+        "Title":  "Stage",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0x11410B1E",
+        "Class":  "Button",
+        "Title":  "Unstage",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0xF7D089A",
+        "Class":  "Button",
+        "Title":  "Commit",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0x16AE0978",
+        "Class":  "Button",
+        "Title":  "Sync",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0x15610910",
+        "Class":  "Static",
+        "Title":  "Message:",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  60,
+        "H":  20
+    },
+    {
+        "HWND":  "0x72B0A32",
+        "Class":  "Edit",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  60
+    },
+    {
+        "HWND":  "0x5070E2C",
+        "Class":  "SysListView32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  490
+    },
+    {
+        "HWND":  "0x15B00984",
+        "Class":  "SysHeader32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  236,
+        "H":  24
+    },
+    {
+        "HWND":  "0xB8D0A76",
+        "Class":  "Static",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  250,
+        "H":  35
+    },
+    {
+        "HWND":  "0xAEB0AB8",
+        "Class":  "Button",
+        "Title":  "Start",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0x13B6082C",
+        "Class":  "Button",
+        "Title":  "Stop",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  25
+    },
+    {
+        "HWND":  "0x1DAB0966",
+        "Class":  "ComboBox",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  24
+    },
+    {
+        "HWND":  "0x22320CA4",
+        "Class":  "Static",
+        "Title":  "Variables:",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  100,
+        "H":  20
+    },
+    {
+        "HWND":  "0x9EB0C06",
+        "Class":  "SysListView32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  450
+    },
+    {
+        "HWND":  "0xE0E0A56",
+        "Class":  "SysHeader32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  236,
+        "H":  24
+    },
+    {
+        "HWND":  "0x10F60460",
+        "Class":  "Edit",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  25
+    },
+    {
+        "HWND":  "0xBC0F1E",
+        "Class":  "Button",
+        "Title":  "Install VSIX...",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  75,
+        "H":  24
+    },
+    {
+        "HWND":  "0x1660F2E",
+        "Class":  "Button",
+        "Title":  "Install",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  50,
+        "H":  24
+    },
+    {
+        "HWND":  "0x10B0EDA",
+        "Class":  "Button",
+        "Title":  "Uninstall",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  55,
+        "H":  24
+    },
+    {
+        "HWND":  "0x67A086C",
+        "Class":  "Button",
+        "Title":  "Details",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  50,
+        "H":  24
+    },
+    {
+        "HWND":  "0xCF70014",
+        "Class":  "SysListView32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  240,
+        "H":  527
+    },
+    {
+        "HWND":  "0xBE2096E",
+        "Class":  "SysHeader32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  236,
+        "H":  24
+    },
+    {
+        "HWND":  "0x21360A22",
+        "Class":  "Static",
+        "Title":  "DISK RECOVERY",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  250,
+        "H":  20
+    },
+    {
+        "HWND":  "0x157E0C18",
+        "Class":  "ListBox",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  234,
+        "H":  100
+    },
+    {
+        "HWND":  "0x6E9087C",
+        "Class":  "Button",
+        "Title":  "Scan",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  60,
+        "H":  26
+    },
+    {
+        "HWND":  "0x57A01EA",
+        "Class":  "Button",
+        "Title":  "Probe",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  60,
+        "H":  26
+    },
+    {
+        "HWND":  "0x10AD08AC",
+        "Class":  "Button",
+        "Title":  "Start",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  55,
+        "H":  26
+    },
+    {
+        "HWND":  "0x12E0F2A",
+        "Class":  "Button",
+        "Title":  "Pause",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  55,
+        "H":  26
+    },
+    {
+        "HWND":  "0x94F0330",
+        "Class":  "Button",
+        "Title":  "Abort",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  55,
+        "H":  26
+    },
+    {
+        "HWND":  "0x800440",
+        "Class":  "Button",
+        "Title":  "Key Extract",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  85,
+        "H":  26
+    },
+    {
+        "HWND":  "0x5540D50",
+        "Class":  "Button",
+        "Title":  "Bad Map",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  75,
+        "H":  26
+    },
+    {
+        "HWND":  "0xB10EF6",
+        "Class":  "Static",
+        "Title":  "Output:",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  50,
+        "H":  18
+    },
+    {
+        "HWND":  "0x53B0936",
+        "Class":  "Edit",
+        "Title":  "C:\\Users\\Garrett\\AppData\\Roaming\\RawrXD\\recovery_output",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  140,
+        "H":  22
+    },
+    {
+        "HWND":  "0x530F1C",
+        "Class":  "Button",
+        "Title":  "...",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  30,
+        "H":  22
+    },
+    {
+        "HWND":  "0xBEA01F0",
+        "Class":  "Static",
+        "Title":  "Status: Idle",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  250,
+        "H":  18
+    },
+    {
+        "HWND":  "0x61E0DB2",
+        "Class":  "msctls_progress32",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  234,
+        "H":  16
+    },
+    {
+        "HWND":  "0x3B000E4",
+        "Class":  "Edit",
+        "Title":  "",
+        "Visible":  false,
+        "RectOk":  true,
+        "W":  234,
+        "H":  180
+    },
+    {
+        "HWND":  "0xEBA08A2",
+        "Class":  "SysTabControl32",
+        "Title":  "",
+        "Visible":  true,
+        "RectOk":  true,
+        "W":  800,
+        "H":  30
+    }
+]

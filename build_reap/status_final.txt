@@ -1,0 +1,5 @@
+ M src/reap_cli.cpp
+ M src/reap_cli_contract.cpp
+ M src/reap_cli_contract.hpp
+ M tests/reap_cli_contract_test.cpp
+?? evidence/reap_model_inventory_matrix_20261026.json

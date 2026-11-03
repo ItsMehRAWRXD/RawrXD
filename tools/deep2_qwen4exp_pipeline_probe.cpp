@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     VkDescriptorSetLayout ple_desc = VK_NULL_HANDLE, hc_desc = VK_NULL_HANDLE, gdn_desc = VK_NULL_HANDLE;
     const bool ple_ok = MakePipeline(dev, ple_code, 5, 16, ple_pipe, ple_layout, ple_desc);
     const bool hc_ok = MakePipeline(dev, hc_code, 6, 20, hc_pipe, hc_layout, hc_desc);
-    const bool gdn_ok = MakePipeline(dev, gdn_code, 7, 16, gdn_pipe, gdn_layout, gdn_desc);
+    const bool gdn_ok = MakePipeline(dev, gdn_code, 9, 32, gdn_pipe, gdn_layout, gdn_desc);
     std::cout << "DEVICE=" << props.deviceName << " QUEUE_FAMILY=" << qfamily << "\n"
               << "PLE_PIPELINE=" << (ple_ok ? "PASS" : "FAIL")
               << " HC_PIPELINE=" << (hc_ok ? "PASS" : "FAIL")

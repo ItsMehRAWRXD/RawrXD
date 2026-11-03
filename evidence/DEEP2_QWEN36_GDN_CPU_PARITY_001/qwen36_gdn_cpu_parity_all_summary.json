@@ -1,0 +1,12 @@
+{
+  "blocks": 30,
+  "steps": 90,
+  "passed": true,
+  "max_output_abs": 1.0517727282888245E-05,
+  "max_state_abs": 8.953079930762442E-07,
+  "max_output_mean": 1.2007835469534388E-08,
+  "max_state_mean": 2.3384980973597424E-10,
+  "max_output_rms": 1.9235358082255405E-07,
+  "max_state_rms": 3.6047168043328595E-09,
+  "failed_steps": 0
+}

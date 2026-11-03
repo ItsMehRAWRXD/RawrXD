@@ -1,0 +1,1015 @@
+[0/2] Re-checking globbed directories...
+[1/312] Building ASM_MASM object CMakeFiles\rawrxd_hexmag_repeat.dir\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+ Assembling: F:\rawrxd\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm
+[2/312] Building ASM_MASM object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\asm\RawrXD_HexMag_Swarm.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+ Assembling: F:\rawrxd\~dev\rawrxd\src\asm\RawrXD_HexMag_Swarm.asm
+[3/312] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[4/312] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[5/312] Completed 'vulkan-shaders-gen'
+[6/312] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/tests/hexmag_ide_e2e_cert.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(24): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(23): warning C4100: 'prompt': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(30): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(30): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(30): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(30): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(30): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(31): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): error C2679: binary '=': no operator found which takes a right-hand operand of type 'initializer list' (or there is no acceptable conversion)
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1544): note: could be 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)': cannot convert argument 2 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '2': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1523): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)': cannot convert argument 2 from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Reason: cannot convert from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '2': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: while trying to match the argument list '(initializer list)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(798): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)': cannot convert argument 2 from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Reason: cannot convert from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: Element '2': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: while trying to match the argument list '(initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(29): note: while trying to match the argument list '(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>, initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(52): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(52): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(52): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(52): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(52): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): error C2679: binary '=': no operator found which takes a right-hand operand of type 'initializer list' (or there is no acceptable conversion)
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1544): note: could be 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)': cannot convert argument 2 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1523): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)': cannot convert argument 2 from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: Reason: cannot convert from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: while trying to match the argument list '(initializer list)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(798): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)': cannot convert argument 2 from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: Reason: cannot convert from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: while trying to match the argument list '(initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(51): note: while trying to match the argument list '(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>, initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): error C2665: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::push_back': no overloaded function could convert all the argument types
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(936): note: could be 'void std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::push_back(_Ty &&)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'void std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::push_back(_Ty &&)': cannot convert argument 1 from 'initializer list' to '_Ty &&'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair': no overloaded function could convert all the argument types
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(278): note: could be 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&)': cannot convert argument 1 from 'const char [1]' to 'std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'const char [1]' to 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(277): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &)': cannot convert argument 1 from 'const char [1]' to 'const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'const char [1]' to 'const std::pair<std::string,RawrXD::HexMag::ClientAskResult>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(477): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(_Tuple1 &,_Tuple2 &,std::integer_sequence<size_t,_Indices1...>,std::integer_sequence<size_t,_Indices2...>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(330): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::piecewise_construct_t,std::tuple<_Types1...>,std::tuple<_Types2...>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(300): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<_Other1,_Other2> &&) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(292): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<_Other1,_Other2> &) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(271): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(_Other1 &&,_Other2 &&) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(260): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const _Ty1 &,const _Ty2 &) noexcept(<expr>)'
+        with
+        [
+            _Ty1=std::string,
+            _Ty2=RawrXD::HexMag::ClientAskResult
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(253): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(void) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: while trying to match the argument list '(const char [1])'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(932): note: or       'void std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::push_back(const _Ty &)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'void std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::push_back(const _Ty &)': cannot convert argument 1 from 'initializer list' to 'const _Ty &'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'initializer list' to 'const _Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair': no overloaded function could convert all the argument types
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(278): note: could be 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&)': cannot convert argument 1 from 'const char [1]' to 'std::pair<std::string,RawrXD::HexMag::ClientAskResult> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'const char [1]' to 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(277): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: 'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &)': cannot convert argument 1 from 'const char [1]' to 'const std::pair<std::string,RawrXD::HexMag::ClientAskResult> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: Reason: cannot convert from 'const char [1]' to 'const std::pair<std::string,RawrXD::HexMag::ClientAskResult>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(477): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(_Tuple1 &,_Tuple2 &,std::integer_sequence<size_t,_Indices1...>,std::integer_sequence<size_t,_Indices2...>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(330): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::piecewise_construct_t,std::tuple<_Types1...>,std::tuple<_Types2...>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(300): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(std::pair<_Other1,_Other2> &&) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(292): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const std::pair<_Other1,_Other2> &) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(271): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(_Other1 &&,_Other2 &&) noexcept(<expr>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(260): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(const _Ty1 &,const _Ty2 &) noexcept(<expr>)'
+        with
+        [
+            _Ty1=std::string,
+            _Ty2=RawrXD::HexMag::ClientAskResult
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility(253): note: or       'std::pair<std::string,RawrXD::HexMag::ClientAskResult>::pair(void) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: while trying to match the argument list '(const char [1])'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(70): note: while trying to match the argument list '(initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(84): error C2065: 'FinalizePolicy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(84): error C2146: syntax error: missing ';' before identifier 'policy'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(84): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(85): error C2065: 'Candidate': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(85): error C2146: syntax error: missing ';' before identifier 'c'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(85): error C2065: 'c': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(86): error C2065: 'c': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(87): error C2065: 'c': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(87): error C2653: 'CandidateKind': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(87): error C2065: 'CodeChange': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(88): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(88): error C2065: 'c': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(89): error C3536: 'dec': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(93): error C2065: 'Candidate': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(93): error C2146: syntax error: missing ';' before identifier 'empty'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(93): error C2065: 'empty': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(94): error C2065: 'empty': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(95): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(95): error C2065: 'empty': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(96): error C3536: 'dec2': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): error C2679: binary '=': no operator found which takes a right-hand operand of type 'initializer list' (or there is no acceptable conversion)
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1544): note: could be 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)': cannot convert argument 2 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1523): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)': cannot convert argument 2 from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Reason: cannot convert from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: while trying to match the argument list '(initializer list)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(798): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)': cannot convert argument 2 from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Reason: cannot convert from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: while trying to match the argument list '(initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(119): note: while trying to match the argument list '(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>, initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(131): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): error C2679: binary '=': no operator found which takes a right-hand operand of type 'initializer list' (or there is no acceptable conversion)
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1544): note: could be 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::initializer_list<_Ty>)': cannot convert argument 2 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1523): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &)': cannot convert argument 2 from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: Reason: cannot convert from 'initializer list' to 'const std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: while trying to match the argument list '(initializer list)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(798): note: or       'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::operator =(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&) noexcept(<expr>)': cannot convert argument 2 from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>> &&'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: Reason: cannot convert from 'initializer list' to 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: 'std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>::vector(std::initializer_list<_Ty>,const _Alloc &)': cannot convert argument 1 from 'initializer list' to 'std::initializer_list<_Ty>'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>,
+            _Alloc=std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>
+        ]
+        and
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: Element '1': no conversion from 'initializer list' to '_Ty'
+        with
+        [
+            _Ty=std::pair<std::string,RawrXD::HexMag::ClientAskResult>
+        ]
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: while trying to match the argument list '(initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(130): note: while trying to match the argument list '(std::vector<std::pair<std::string,RawrXD::HexMag::ClientAskResult>,std::allocator<std::pair<std::string,RawrXD::HexMag::ClientAskResult>>>, initializer list)'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp(139): error C2039: 'finalGranted': is not a member of 'RawrXD::HexMag::ControllerResult'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_runtime_controller.hpp(129): note: see declaration of 'RawrXD::HexMag::ControllerResult'
+[7/312] Building CXX object CMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_runtime_controller_cert.dir/~dev/rawrxd/tests/hexmag_runtime_controller_cert.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp.obj /FdCMakeFiles\hexmag_runtime_controller_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(24): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(23): warning C4100: 'prompt': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(29): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(29): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(29): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(29): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(29): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(30): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(57): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(76): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(76): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(76): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(76): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(76): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(94): error C2065: 'FinalizePolicy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(94): error C2146: syntax error: missing ';' before identifier 'policy'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(94): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(97): error C2065: 'Candidate': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(97): error C2146: syntax error: missing ';' before identifier 'c1'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(97): error C2065: 'c1': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(98): error C2065: 'c1': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(99): error C2065: 'c1': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(99): error C2653: 'CandidateKind': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(99): error C2065: 'CodeChange': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(100): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(100): error C2065: 'c1': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(101): error C3536: 'd1': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(104): error C2065: 'Candidate': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(104): error C2146: syntax error: missing ';' before identifier 'c2'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(104): error C2065: 'c2': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(105): error C2065: 'c2': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(106): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(106): error C2065: 'c2': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(107): error C3536: 'd2': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(110): error C2065: 'Candidate': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(110): error C2146: syntax error: missing ';' before identifier 'c3'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(110): error C2065: 'c3': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(111): error C2065: 'c3': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(112): error C2065: 'c3': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(112): error C2653: 'CandidateKind': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(112): error C2065: 'Explanation': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(113): error C2065: 'policy': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(113): error C2065: 'c3': undeclared identifier
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(114): error C3536: 'd3': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(122): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(122): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(122): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(122): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(177): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): note: Invalid aggregate initialization
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): note: 'event': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): note: 'action': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): note: 'path': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(191): note: 'content': designator does not name a direct non-static data member of type 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp(218): error C2065: 'testFinalizePolicyAuthority': undeclared identifier
+[8/312] Building CXX object CMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_runtime_controller_cert.dir/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj /FdCMakeFiles\hexmag_runtime_controller_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(24): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(23): warning C4100: 'prompt': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(79): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(93): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(94): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(92): error C2737: 'pathMarkedUnavailable': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(96): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(95): error C2737: 'unavailableDiag': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(101): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(108): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(123): error C2039: 'needInput': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(124): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(127): error C2065: 'HX_EVT_NEED_INPUT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2672: 'std::any_of': no matching overloaded function found
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1364): note: could be 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): note: 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept': expects 4 arguments - 2 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1348): note: or       'bool std::any_of(const _InIt,const _InIt,_Pr)'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): note: 'bool std::any_of(const _InIt,const _InIt,_Pr)': expects 3 arguments - 2 provided
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(122): error C2737: 'sawNeedInput': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(135): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(148): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(149): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(149): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(150): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(151): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(151): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(152): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(153): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(160): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(161): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(161): error C2530: 'e': references must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(162): error C3536: 'e': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(162): error C2065: 'HX_EVT_COUNT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(167): error C2065: 'HX_EVT_GOAL_REQUESTED': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(170): error C2065: 'HX_EVT_ANSWER_CANDIDATE': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(170): error C2065: 'HX_EVT_ANSWER': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(174): error C2065: 'HX_EVT_ANSWER_FINAL': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(177): error C2065: 'HX_EVT_NEED_INPUT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(180): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(191): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(195): error C2065: 'HX_EVT_ANSWER_CANDIDATE': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(196): error C2065: 'HX_EVT_ANSWER': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(197): error C2065: 'HX_EVT_ANSWER_FINAL': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2672: 'std::any_of': no matching overloaded function found
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1364): note: could be 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): note: 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept': expects 4 arguments - 2 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1348): note: or       'bool std::any_of(const _InIt,const _InIt,_Pr)'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): note: 'bool std::any_of(const _InIt,const _InIt,_Pr)': expects 3 arguments - 2 provided
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(190): error C2737: 'hasCandidate': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(203): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(204): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(205): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(211): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(212): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(213): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(214): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(215): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(210): error C2737: 'badCandidate': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(260): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(261): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(315): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(316): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(317): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C2146: syntax error: missing ';' before identifier 'id'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C3861: 'clientIdentity': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(347): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(348): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(349): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(347): error C2737: 'backendReady': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(356): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(357): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(358): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(374): error C2039: 'runtime_error': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(225): note: see declaration of 'std'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(374): error C3861: 'runtime_error': identifier not found
+[9/312] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(24): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(23): warning C4100: 'prompt': unreferenced parameter
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(79): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(93): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(94): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(92): error C2737: 'pathMarkedUnavailable': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(96): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(95): error C2737: 'unavailableDiag': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(101): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(108): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(123): error C2039: 'needInput': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(124): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(127): error C2065: 'HX_EVT_NEED_INPUT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): error C2672: 'std::any_of': no matching overloaded function found
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1364): note: could be 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): note: 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept': expects 4 arguments - 2 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1348): note: or       'bool std::any_of(const _InIt,const _InIt,_Pr)'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(125): note: 'bool std::any_of(const _InIt,const _InIt,_Pr)': expects 3 arguments - 2 provided
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(122): error C2737: 'sawNeedInput': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(135): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(148): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(149): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(149): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(150): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(151): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(151): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(152): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(153): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(160): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(161): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(161): error C2530: 'e': references must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(162): error C3536: 'e': cannot be used before it is initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(162): error C2065: 'HX_EVT_COUNT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(167): error C2065: 'HX_EVT_GOAL_REQUESTED': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(170): error C2065: 'HX_EVT_ANSWER_CANDIDATE': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(170): error C2065: 'HX_EVT_ANSWER': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(174): error C2065: 'HX_EVT_ANSWER_FINAL': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(177): error C2065: 'HX_EVT_NEED_INPUT': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(180): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(191): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(195): error C2065: 'HX_EVT_ANSWER_CANDIDATE': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(196): error C2065: 'HX_EVT_ANSWER': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(197): error C2065: 'HX_EVT_ANSWER_FINAL': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): error C2672: 'std::any_of': no matching overloaded function found
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1364): note: could be 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): note: 'bool std::any_of(_ExPo &&,_FwdIt,_FwdIt,_Pr) noexcept': expects 4 arguments - 2 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(1348): note: or       'bool std::any_of(const _InIt,const _InIt,_Pr)'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(193): note: 'bool std::any_of(const _InIt,const _InIt,_Pr)': expects 3 arguments - 2 provided
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(190): error C2737: 'hasCandidate': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(203): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(204): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(205): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(211): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(212): error C2039: 'trace': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(213): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(214): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(215): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(210): error C2737: 'badCandidate': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(260): error C2039: 'selectedCandidate': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(261): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(315): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(316): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(317): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C2146: syntax error: missing ';' before identifier 'id'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(346): error C3861: 'clientIdentity': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(347): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(348): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(349): error C2065: 'id': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(347): error C2737: 'backendReady': const object must be initialized
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(356): error C2039: 'finalAuthority': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(357): error C2039: 'clientSuccess': is not a member of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(11): note: see declaration of 'RawrXD::HexMag::ClientAskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(358): error C2039: 'claimState': is not a member of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\agent/hexmag_client.hpp(12): note: see declaration of 'RawrXD::HexMag::ClientAskResult::AskResult'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(374): error C2039: 'runtime_error': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm(225): note: see declaration of 'std'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp(374): error C3861: 'runtime_error': identifier not found
+[10/312] Building CXX object CMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_runtime_controller_cert.dir/~dev/rawrxd/src/core/hexmag_control_plane.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj /FdCMakeFiles\hexmag_runtime_controller_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2065: 'MissingInput': undeclared identifier
+[11/312] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_control_plane.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C3646: 'finClass': unknown override specifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2059: syntax error: '='
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(25): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(34): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(36): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(38): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(40): error C2065: 'Contradicted': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(42): error C2065: 'Unknown': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(44): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(47): error C3861: 'isAllowedFinalClaim': identifier not found
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(50): error C2065: 'MissingInput': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2039: 'finClass': is not a member of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(23): note: see declaration of 'RawrXD::HexMag::FinalizeDecision'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp(317): error C2065: 'MissingInput': undeclared identifier
+[12/312] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_oracle_binder.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(353): error C2065: 'ClaimFinalizeClass': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(353): error C2146: syntax error: missing ';' before identifier 'fin'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(353): error C2065: 'fin': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(353): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(353): error C2065: 'Unverified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(355): error C2065: 'fin': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(355): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(355): error C2065: 'Verified': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(357): error C2065: 'fin': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(357): error C2653: 'ClaimFinalizeClass': is not a class or namespace name
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(357): error C2065: 'Proven': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(360): error C2065: 'fin': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(360): error C3861: 'isAllowedFinalClaim': identifier not found
+[13/312] Building CXX object CMakeFiles\deep2_token_profiler.dir\tools\deep2_token_profiler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja: build stopped: subcommand failed.

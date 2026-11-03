@@ -1,0 +1,5 @@
+ src/reap_cli.cpp                 |  15 +-
+ src/reap_cli_contract.cpp        | 290 +++++++++++++++++++++++++++++++++++++--
+ src/reap_cli_contract.hpp        |  28 ++++
+ tests/reap_cli_contract_test.cpp |  41 +++++-
+ 4 files changed, 357 insertions(+), 17 deletions(-)

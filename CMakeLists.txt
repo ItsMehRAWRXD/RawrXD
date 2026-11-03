@@ -1523,6 +1523,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
                 src/win32app/Win32IDE_AgenticBridge.h
                 src/win32app/Win32IDE_AgenticBridge.cpp
                 src/win32app/Win32IDE_AgentCommands.cpp
+                src/win32app/Win32IDE_AgentStepTimeline.cpp
+                src/win32app/Win32IDE_lifecycle.cpp
                 src/win32app/Win32IDE_Autonomy.h
                 src/win32app/Win32IDE_Autonomy.cpp
                 src/gguf_loader.cpp
@@ -1780,7 +1782,13 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND EXISTS "${CMAKE
         # hand-rolled tools/build_deep2_parity_trace.bat compiles, so the
         # CMake target and the bat now share ONE definition of the build.
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -1841,6 +1849,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/vulkan_compute.cpp
@@ -1901,6 +1910,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND EXISTS "${CMAKE_
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
         # The executor's stateful GDN path uses the Deep2 VulkanCompute
         # implementation (separate from the legacy quant-dot wrapper below).
         # Keep both translation units: quant_dot_dispatch.cpp intentionally
@@ -1910,6 +1921,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND EXISTS "${CMAKE_
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -2350,11 +2362,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -2410,12 +2425,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/deep2_speculative.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -2576,11 +2594,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -2635,11 +2656,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -3001,11 +3025,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -3117,11 +3144,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -3180,6 +3210,14 @@ endif()
 if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        # QuantKernelRegistry's real fallback/registration owners live in the
+        # shared Deep2 asm_stubs translation unit.  Keep this dependency on
+        # the production compute library so class-level consumers do not
+        # require executable-specific symbol injection.
+        src/deep2/asm_stubs.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -3214,6 +3252,38 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
     )
     message(STATUS "rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree")
+
+    # Real class-level GDN dispatch probe. The independent shader probe proves
+    # the SPIR-V contract; this target exercises the production
+    # VulkanCompute::DispatchGdn state map, uploads, submission, download, and
+    # ResetGdnState lifecycle without loading a full Qwen3.6 model.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_vulkan_gdn_dispatch_probe.cpp")
+        add_executable(deep2_vulkan_gdn_dispatch_probe
+            tools/deep2_vulkan_gdn_dispatch_probe.cpp
+            src/deep2/op_gdn.cpp)
+        target_include_directories(deep2_vulkan_gdn_dispatch_probe PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}
+            ${_rawrxd_vk_sdk_inc})
+        target_link_libraries(deep2_vulkan_gdn_dispatch_probe PRIVATE rawrxd_gpu_compute)
+        if(TARGET Vulkan::Vulkan)
+            target_link_libraries(deep2_vulkan_gdn_dispatch_probe PRIVATE Vulkan::Vulkan)
+        endif()
+        if(MSVC)
+            target_compile_options(deep2_vulkan_gdn_dispatch_probe PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(deep2_vulkan_gdn_dispatch_probe PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        endif()
+        target_compile_definitions(deep2_vulkan_gdn_dispatch_probe PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS
+            DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders")
+        set_target_properties(deep2_vulkan_gdn_dispatch_probe PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+        add_test(NAME deep2_vulkan_gdn_dispatch COMMAND deep2_vulkan_gdn_dispatch_probe)
+        message(STATUS "deep2_vulkan_gdn_dispatch_probe enabled (class-level stateful GDN dispatch)")
+    endif()
 
     # ------------------------------------------------------------------------
     # Deep2Engine: the engine that drives the GPU compute environment.
@@ -3471,6 +3541,11 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntimePlan.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntime.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
+            # Shared lifecycle-managed Deep2 service used by AgentOrchestrator
+            # and IDE/agent bridges.  Keep the implementation in the same
+            # library as its public header so static-link extraction cannot
+            # silently leave the agent path without a real service body.
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2InferenceService.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/tool_call_parser.cpp
             # Deep2Log.cpp defines Logf_() EXACTLY ONCE and is shared by
@@ -3724,11 +3799,15 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Debugger.cpp
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_AgentStepTimeline.cpp
         src/win32app/Win32IDE_Autonomy.cpp
         src/win32app/Win32IDE_Deep2Bridge.cpp
         src/win32app/Win32IDE_AgenticLoopBridge.cpp
         src/win32app/Win32IDE_GhostText.cpp
         src/win32app/Win32IDE_GhostTextIntegration.cpp
+        # Dedicated GhostText Ollama requests must use the shared WinHTTP
+        # client while remaining independent of the chat inference lane.
+        src/backend/ollama_client.cpp
         src/cloud_api_client.cpp
         # Lifecycle methods declared in Win32IDE.h but defined in their own
         # translation unit (createWindow/showWindow/runMessageLoop/onSize/

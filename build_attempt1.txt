@@ -1,0 +1,160 @@
+[0/2] Re-checking globbed directories...
+[1/198] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/198] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[3/198] Completed 'vulkan-shaders-gen'
+[4/198] Linking CXX static library rawrxd_agentic_backend.lib
+[5/198] Building CXX object CMakeFiles\quant_parity_cert.dir\src\deep2\QuantParityRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/198] Building CXX object CMakeFiles\q8k_edge_tests.dir\src\deep2\q8k_parity_edge_tests.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[7/198] Building CXX object CMakeFiles\q8k_parity_tool.dir\src\deep2\q8k_parity_tool.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/198] Building CXX object CMakeFiles\q8k_parity_tool.dir\src\deep2\Q8KParity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/198] Building CXX object CMakeFiles\q8k_edge_tests.dir\src\deep2\Q8KParity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/198] Building CXX object CMakeFiles\quant_parity_cert.dir\src\deep2\quant_parity_cert.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[11/198] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_fused_lmhead_verify.dir/tests/deep2_fused_lmhead_verify.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(121): error C2039: 'computeLogitsBatch': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(132): error C2039: 'verifySpeculativeGreedyWindow': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2039: 'speculativeCounters': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2530: 'counters': references must be initialized
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(210): error C3536: 'counters': cannot be used before it is initialized
+[12/198] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(145): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(149): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(181): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(187): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(194): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(197): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(199): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(515): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[13/198] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(883): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(1406): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(1517): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[14/198] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/198] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[16/198] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(669): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(1051): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1058): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1065): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1076): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1084): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1092): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1129): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1742): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1765): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1770): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1867): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1986): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2208): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2216): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2219): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2259): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2344): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2425): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2703): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2897): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2905): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2939): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2991): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2998): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3001): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3182): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3254): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3255): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[17/198] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeStreamGate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\K2NativeStreamGate.cpp(402): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+[18/198] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj
+FAILED: [code=3221225477] CMakeFiles/deep2_fused_lmhead_verify.dir/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2039: 'ISampler': is not a member of 'rawrxd::sampling'
+F:\rawrxd\src\deep2/Sampler.hpp(12): note: see declaration of 'rawrxd::sampling'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2065: 'ISampler': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2923: 'std::unique_ptr': 'ISampler' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): note: see declaration of 'ISampler'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2976: 'std::unique_ptr': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2955: 'std::unique_ptr': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2039: 'ISampler': is not a member of 'rawrxd::sampling'
+F:\rawrxd\src\deep2/Sampler.hpp(12): note: see declaration of 'rawrxd::sampling'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2065: 'ISampler': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2923: 'std::unique_ptr': 'ISampler' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): note: see declaration of 'ISampler'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2976: 'std::unique_ptr': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2955: 'std::unique_ptr': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(57): error C2513: 'const bool': no variable declared before '='
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(59): error C2059: syntax error: ')'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(71): error C2513: 'const bool': no variable declared before '='
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(73): error C2059: syntax error: ')'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(97): warning C4456: declaration of 'guard' hides previous local declaration
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(50): note: see declaration of 'guard'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(103): warning C4456: declaration of 'guard' hides previous local declaration
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(50): note: see declaration of 'guard'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(35): fatal error C1907: unable to recover from previous error(s); stopping compilation
+INTERNAL COMPILER ERROR in 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe'
+    Please choose the Technical Support command on the Visual C++
+    Help menu, or open the Technical Support help file for more information
+ninja: build stopped: subcommand failed.
+Access violation
+CMake Error: Generator: build tool execution failed, command was: C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/ninja.exe -j 8

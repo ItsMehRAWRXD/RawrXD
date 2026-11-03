@@ -88,6 +88,20 @@ void Win32IDE::initializeAgenticBridge() {
                 std::string formatted = " " + title + "\n" + content + "\n\n";
                 appendCopilotChatUtf8(formatted);
             }
+            std::string lower = title + " " + content;
+            for (char& c : lower) {
+                if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+            }
+            if (lower.find("powershell") != std::string::npos || lower.find("pwsh") != std::string::npos) {
+                m_agentStepTimeline.addChip("powershell", title.empty() ? content : title);
+            } else if (lower.find("tool") != std::string::npos) {
+                m_agentStepTimeline.addTool(title.empty() ? "tool" : title, content, 0, true);
+            } else if (lower.find("explor") != std::string::npos || lower.find("read") != std::string::npos ||
+                       lower.find("glob") != std::string::npos || lower.find("grep") != std::string::npos) {
+                m_agentStepTimeline.addExplored(title.empty() ? content : title);
+            } else {
+                m_agentStepTimeline.addChip("step", title.empty() ? content : title);
+            }
         });
         
         // Initialize with default framework path
@@ -151,13 +165,21 @@ void Win32IDE::onAgentStartLoop() {
     
     // Start agent loop in background thread
     appendToOutput(" Starting Agent Loop: " + promptStr + "\n", "Output", OutputSeverity::Info);
+    m_agentStepTimeline.clear();
+    m_agentStepTimeline.addChip("agent", promptStr);
+    m_agentStepTimeline.beginThought();
+    if (m_hwndMain) SetTimer(m_hwndMain, IDT_AGENT_THOUGHT, 250, nullptr);
+    if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
     
     std::thread([this, promptStr]() {
-        if (m_agenticBridge->StartAgentLoop(promptStr, 10)) {
+        const bool ok = m_agenticBridge->StartAgentLoop(promptStr, 10);
+        if (ok) {
             LOG_INFO("Agent loop completed successfully");
         } else {
             LOG_ERROR("Agent loop failed");
         }
+        PostMessageA(m_hwndMain, kRawrxdLegacyAgentComplete, ok ? 1 : 0,
+                     (LPARAM)new std::string(ok ? "legacy agent loop finished" : "legacy agent loop failed"));
     }).detach();
 }
 
@@ -186,6 +208,9 @@ void Win32IDE::onAgentExecuteCommand() {
         
         std::string command(input);
         appendToOutput(" Executing Agent Command: " + command + "\n", "Output", OutputSeverity::Info);
+        m_agentStepTimeline.addChip("agent", command);
+        m_agentStepTimeline.beginThought();
+        if (m_hwndMain) SetTimer(m_hwndMain, IDT_AGENT_THOUGHT, 250, nullptr);
         
         // Execute in background
         std::thread([this, command]() {
@@ -198,9 +223,14 @@ void Win32IDE::onAgentExecuteCommand() {
             if (!response.toolName.empty()) {
                 output += "Tool: " + response.toolName + "\n";
                 output += "Args: " + response.toolArgs + "\n";
+                PostMessageA(m_hwndMain, WM_APP + 104, 0,
+                    (LPARAM)new AgenticLoopBridge::ToolResult{
+                        true, response.content, 0, response.toolName, response.toolArgs});
             }
             
             appendToOutput(output, "Output", OutputSeverity::Info);
+            PostMessageA(m_hwndMain, kRawrxdLegacyAgentComplete, 1,
+                         (LPARAM)new std::string(response.content.empty() ? "command finished" : response.content));
         }).detach();
         
         // Clear input
@@ -694,15 +724,27 @@ void Win32IDE::onAgentViewStatus() {
 // Stop agent loop
 void Win32IDE::onAgentStop() {
     LOG_INFO("onAgentStop called");
-    
-    if (!m_agenticBridge) {
-        return;
+
+    bool stoppedSomething = false;
+    if (m_agenticLoopBridge && m_agenticLoopBridge->IsRunning()) {
+        m_agenticLoopBridge->Cancel();
+        m_agenticChatSessionId = 0;
+        stoppedSomething = true;
+        appendToOutput(" Agentic task cancelled\n", "Output", OutputSeverity::Warning);
     }
     
-    if (m_agenticBridge->IsAgentLoopRunning()) {
+    if (m_agenticBridge && m_agenticBridge->IsAgentLoopRunning()) {
         m_agenticBridge->StopAgentLoop();
+        stoppedSomething = true;
         appendToOutput(" Agent loop stopped\n", "Output", OutputSeverity::Warning);
-        MessageBoxA(m_hwndMain, "Agent loop stopped", "Agent", MB_OK | MB_ICONINFORMATION);
+    }
+
+    if (stoppedSomething) {
+        if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+        m_agentStepTimeline.closeThoughtIfOpen();
+        m_agentStepTimeline.addChip("stopped", "agent stopped");
+        if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
+        MessageBoxA(m_hwndMain, "Agent stopped", "Agent", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(m_hwndMain, "No agent loop is currently running", "Agent", MB_OK | MB_ICONINFORMATION);
     }
@@ -1179,6 +1221,13 @@ void Win32IDE::onAgenticLoopRunTask() {
         if (auto* session = activeChatSession()) {
             m_agenticChatSessionId = session->id;
         }
+
+        // Chip first, then open thought so the timer stays live until tools/progress.
+        m_agentStepTimeline.clear();
+        m_agentStepTimeline.addChip("agent", task);
+        m_agentStepTimeline.beginThought();
+        if (m_hwndMain) SetTimer(m_hwndMain, IDT_AGENT_THOUGHT, 250, nullptr);
+        if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
         
         // Also check if there's an open file to use as target
         if (!m_currentFile.empty()) {
@@ -1207,6 +1256,10 @@ void Win32IDE::onAgenticLoopRunTask() {
         );
         if (!started) {
             m_agenticChatSessionId = 0;
+            if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+            m_agentStepTimeline.closeThoughtIfOpen();
+            m_agentStepTimeline.addChip("fail", "agent task could not be started");
+            if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
             appendToOutput("Agent task could not be started.\n", "Errors", OutputSeverity::Error);
         }
     } else {
@@ -1224,10 +1277,22 @@ void Win32IDE::onAgenticLoopCancel() {
     
     if (m_agenticLoopBridge->IsRunning()) {
         m_agenticLoopBridge->Cancel();
+        m_agenticChatSessionId = 0;
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.closeThoughtIfOpen();
+        m_agentStepTimeline.addChip("stopped", "agentic cancelled");
+        if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
         appendToOutput(" Agentic task cancelled\n", "Output", OutputSeverity::Warning);
-        MessageBoxA(m_hwndMain, "Agentic task cancelled", "Agentic Loop", MB_OK | MB_ICONINFORMATION);
+        if (m_hwndStatusBar) {
+            const char* status = "Agentic task cancelled";
+            SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, reinterpret_cast<LPARAM>(status));
+        }
     } else {
-        MessageBoxA(m_hwndMain, "No task is currently running", "Agentic Loop", MB_OK | MB_ICONINFORMATION);
+        appendToOutput(" No agentic task is currently running\n", "Output", OutputSeverity::Info);
+        if (m_hwndStatusBar) {
+            const char* status = "No agentic task is currently running";
+            SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, reinterpret_cast<LPARAM>(status));
+        }
     }
 }
 
@@ -1256,6 +1321,22 @@ LRESULT Win32IDE::handleAgenticLoopProgress(WPARAM wParam, LPARAM lParam) {
         const std::string visible = FilterStructuredEspLines(*msg);
         if (!visible.empty()) {
             appendToOutput(visible, "Output", OutputSeverity::Info);
+            std::string lower = visible;
+            for (char& c : lower) {
+                if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+            }
+            if (lower.find("powershell") != std::string::npos ||
+                lower.find("pwsh") != std::string::npos) {
+                m_agentStepTimeline.addChip("powershell", visible);
+            } else if (lower.find("explor") != std::string::npos ||
+                       lower.find("glob") != std::string::npos ||
+                       lower.find("grep") != std::string::npos ||
+                       lower.find("read_file") != std::string::npos ||
+                       lower.find("list_dir") != std::string::npos) {
+                m_agentStepTimeline.addExplored(visible);
+            } else {
+                m_agentStepTimeline.addChip("step", visible);
+            }
         }
         if (m_agenticChatSessionId != 0 && !visible.empty()) {
             handleCopilotUiUpdate(m_agenticChatSessionId,
@@ -1279,6 +1360,8 @@ LRESULT Win32IDE::handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam) {
         output += "\n";
         
         appendToOutput(output, "Output", result->success ? OutputSeverity::Info : OutputSeverity::Error);
+        m_agentStepTimeline.addTool(result->toolName, result->target,
+                                    result->exitCode, result->success);
         if (m_agenticChatSessionId != 0) {
             handleCopilotUiUpdate(m_agenticChatSessionId,
                                   "\r\n[tool] " + output, false);
@@ -1304,12 +1387,34 @@ LRESULT Win32IDE::handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam) {
         output += *summary + "\n";
         
         appendToOutput(output, "Output", success ? OutputSeverity::Info : OutputSeverity::Error);
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.closeThoughtIfOpen();
+        m_agentStepTimeline.addChip(success ? "done" : "fail", *summary);
+        if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
         if (m_agenticChatSessionId != 0) {
             const int sessionId = m_agenticChatSessionId;
             handleCopilotUiUpdate(sessionId, *summary + "\r\n", true);
             m_agenticChatSessionId = 0;
         }
         
+        delete summary;
+    }
+    return 0;
+}
+
+// Legacy AgenticBridge completion (WM_APP + 109) — timeline only; no agentic session clear.
+LRESULT Win32IDE::handleLegacyAgentComplete(WPARAM wParam, LPARAM lParam) {
+    const bool success = (wParam != 0);
+    if (lParam) {
+        std::string* summary = reinterpret_cast<std::string*>(lParam);
+        appendToOutput(
+            std::string("\n=== LEGACY AGENT ") + (success ? "COMPLETED" : "FAILED") + " ===\n" +
+            *summary + "\n",
+            "Output", success ? OutputSeverity::Info : OutputSeverity::Error);
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.closeThoughtIfOpen();
+        m_agentStepTimeline.addChip(success ? "done" : "fail", *summary);
+        if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
         delete summary;
     }
     return 0;

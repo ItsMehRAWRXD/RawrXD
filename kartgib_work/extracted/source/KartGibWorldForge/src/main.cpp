@@ -1,0 +1,6 @@
+#include "worldforge.hpp"
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+int main(int argc,char**argv){try{kg::Settings s;std::filesystem::path output="worldforge_output";for(int i=1;i<argc;i++){std::string a=argv[i];auto val=[&](){if(++i>=argc)throw std::invalid_argument("missing value for "+a);return std::string(argv[i]);};if(a=="--seed")s.seed=std::stoull(val());else if(a=="--biome")s.biome=kg::parseBiome(val());else if(a=="--out")output=val();else if(a=="--resolution")s.terrainResolution=std::stoi(val());else if(a=="--samples")s.trackSamples=std::stoi(val());else if(a=="--props")s.propCount=std::stoi(val());else if(a=="--help"){std::cout<<"kartgib-worldforge [--seed N] [--biome tropical|gothic|voxel|floating] [--out DIR] [--resolution N] [--samples N] [--props N]\n";return 0;}else throw std::invalid_argument("unknown argument: "+a);}auto w=kg::generate(s);std::filesystem::create_directories(output);kg::exportObj(w,output/"world.obj");kg::exportHeightmap(w,output/"heightmap.pgm");kg::exportManifest(w,output/"world.json");std::cout<<"WORLD_FORGE_PASS biome="<<kg::biomeName(s.biome)<<" seed="<<s.seed<<" track="<<w.track.size()<<" props="<<w.instances.size()<<"\n";return 0;}catch(const std::exception&e){std::cerr<<"WORLD_FORGE_FAIL: "<<e.what()<<'\n';return 1;}}

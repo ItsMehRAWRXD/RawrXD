@@ -12198,7 +12198,9 @@ void Deep2Engine::enableVulkan(bool enable)
                                 (std::getenv("DEEP2_HYBRID") && std::getenv("DEEP2_HYBRID")[0] == '1');
         const bool wantMulti = snap.plan.openCount >= 1 &&
                                (snap.plan.mode == ExecMode::MultiGpuShard || snap.plan.mode == ExecMode::Hybrid ||
+                                snap.plan.mode == ExecMode::DualSovereign ||
                                 snap.plan.policy == GpuPolicy::Multi || snap.plan.policy == GpuPolicy::Hybrid ||
+                                snap.plan.policy == GpuPolicy::DualLane ||
                                 snap.plan.policy == GpuPolicy::UserList || wantHybrid);
 
         // DualStick stores non-owning VulkanCompute pointers. Clear those

@@ -1,0 +1,58 @@
+﻿{
+    "schema":  "RAWRXD_PE_STRUCTURAL_VALIDATE_001",
+    "path":  "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\out\\10_bss_zero_O2.exe",
+    "sha256":  "18780d74c407381b96b06509d334b193b21771b0fbacfd5f926884701551953a",
+    "pass":  true,
+    "issues":  [
+
+               ],
+    "machine":  "0x8664",
+    "sections":  5,
+    "entry_rva":  "0x5000",
+    "size_of_headers":  "0x400",
+    "size_of_image":  "0x6000",
+    "import_rva":  "0x4000",
+    "import_size":  "0x28",
+    "section_table":  [
+                          {
+                              "name":  ".bss",
+                              "rva":  4096,
+                              "vsize":  4,
+                              "rawoff":  1024,
+                              "rawsz":  512,
+                              "ch":  "0xc0000080"
+                          },
+                          {
+                              "name":  ".text$mn",
+                              "rva":  8192,
+                              "vsize":  31,
+                              "rawoff":  1536,
+                              "rawsz":  512,
+                              "ch":  "0x60001020"
+                          },
+                          {
+                              "name":  ".chks64",
+                              "rva":  12288,
+                              "vsize":  40,
+                              "rawoff":  2048,
+                              "rawsz":  512,
+                              "ch":  "0xa00"
+                          },
+                          {
+                              "name":  ".idata",
+                              "rva":  16384,
+                              "vsize":  99,
+                              "rawoff":  2560,
+                              "rawsz":  512,
+                              "ch":  "0xc0000040"
+                          },
+                          {
+                              "name":  ".stub",
+                              "rva":  20480,
+                              "vsize":  18,
+                              "rawoff":  3072,
+                              "rawsz":  512,
+                              "ch":  "0x60000020"
+                          }
+                      ]
+}

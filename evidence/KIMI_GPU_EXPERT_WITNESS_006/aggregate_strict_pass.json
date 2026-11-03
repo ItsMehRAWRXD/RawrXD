@@ -1,0 +1,135 @@
+{
+  "certified": false,
+  "counts": {
+    "error": 0,
+    "fail": 0,
+    "pass": 3
+  },
+  "entries": [
+    {
+      "expert_ids": [
+        0,
+        53,
+        103,
+        158,
+        216,
+        227,
+        232,
+        318
+      ],
+      "layer": 1,
+      "metrics": {
+        "elements": 7168,
+        "max_abs": 0.00019650708999999992,
+        "mean_abs": 4.261386885366039e-05,
+        "rms_abs": 5.34669992432931e-05,
+        "within_threshold": true,
+        "worst_index": 4774
+      },
+      "routing_weights": [
+        0.320001,
+        0.361316,
+        0.348622,
+        0.361753,
+        0.340821,
+        0.366748,
+        0.379366,
+        0.348372
+      ],
+      "sha256": {
+        "cpu": "d662081f336f230e8608d7e384ef2fa366bb6880fd3436272eff59d53066ae53",
+        "gpu": "23486ad1ded19e881fc58a817ea8b3cd433708037c96a147c5dc122c635a2dd4",
+        "manifest": "3b29a75808fb0a121455ce33d2eca2a4085cf62246a6829a071e2bbc09e23de4"
+      },
+      "status": "PASS_DIAGNOSTIC",
+      "stick": 0
+    },
+    {
+      "expert_ids": [
+        12,
+        84,
+        94,
+        138,
+        172,
+        327,
+        354,
+        369
+      ],
+      "layer": 13,
+      "metrics": {
+        "elements": 7168,
+        "max_abs": 6.329999999860059e-08,
+        "mean_abs": 1.2629675262281421e-08,
+        "rms_abs": 1.5911487048822644e-08,
+        "within_threshold": true,
+        "worst_index": 320
+      },
+      "routing_weights": [
+        0.329865,
+        0.370117,
+        0.369013,
+        0.348183,
+        0.340423,
+        0.361311,
+        0.351841,
+        0.356247
+      ],
+      "sha256": {
+        "cpu": "44eda703b705400f354bbcd09573718b17dd0fb2ae6b82f724c563d0e186dfc7",
+        "gpu": "3a06185105a8977cd0faa80ad426a3b73c094811896512b49cfc97f250cafc7b",
+        "manifest": "007ab5d00aa6f584f9b5b9de55c422359ba4625149831dee531df8ca89258c6d"
+      },
+      "status": "PASS_DIAGNOSTIC",
+      "stick": 0
+    },
+    {
+      "expert_ids": [
+        7,
+        28,
+        84,
+        177,
+        245,
+        253,
+        268,
+        284
+      ],
+      "layer": 16,
+      "metrics": {
+        "elements": 7168,
+        "max_abs": 7.450000000241985e-08,
+        "mean_abs": 1.6904520354742048e-08,
+        "rms_abs": 2.124169265251924e-08,
+        "within_threshold": true,
+        "worst_index": 941
+      },
+      "routing_weights": [
+        0.351319,
+        0.360013,
+        0.344842,
+        0.36726,
+        0.343487,
+        0.366173,
+        0.3542,
+        0.339706
+      ],
+      "sha256": {
+        "cpu": "8c716d7c6d5e2a86a45536758a26c27a6f5d6e976580ff3dead1a830ddfc85c2",
+        "gpu": "cc514684c61421ce94e9c109cb6b7ea07969c5d3642ae96a09bb15112e17153c",
+        "manifest": "ca6f8e7719414a0180f517fd606b8c584ab002bdb2ab284dd9ef1055d27d7479"
+      },
+      "status": "PASS_DIAGNOSTIC",
+      "stick": 0
+    }
+  ],
+  "gpu_expert_witness": "ABSENT",
+  "note": "All requested pairs must pass; no per-expert GPU proof",
+  "promote": 0,
+  "required_scopes": 3,
+  "schema": "DEEP2_KIMI_AGGREGATE_BATCH_001/v1",
+  "scope": "COMPLETED_AGGREGATE_DIAGNOSTIC_ONLY",
+  "status": "PASS_DIAGNOSTIC",
+  "thresholds": {
+    "max_abs": 0.001,
+    "max_rms": 0.0001
+  }
+}

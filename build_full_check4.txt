@@ -1,0 +1,973 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:405 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:414 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: 
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  04b0aa6181-dirty
+-- rawr_run: MSVC security hardening enabled
+-- rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.357
+-- Vulkan header: C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_gpu_certify enabled (full-model GPU/CPU logits certification)
+-- deep2_reverse_engineer enabled (native Qwen4Exp contract audit)
+-- deep2_gdn_parity_harness enabled (reference-only GDN contract)
+-- deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)
+-- deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)
+-- deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)
+-- deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)
+-- deep2_enterprise_manifest enabled (source-to-parity closure receipt)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- HexMag cert targets EXCLUDED: required sources not found
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_exec_trace enabled (RAWRXD_EXEC_TRUTH authoritative trace)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+CMake Warning at CMakeLists.txt:3499 (message):
+  RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the
+  IDE will start without hardening
+
+
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference enabled (headless Deep2 inference harness)
+-- Configuring done (4.2s)
+-- Generating done (0.3s)
+-- Build files have been written to: F:/rawrxd/build_msvc
+[0/4] Re-checking globbed directories...
+[1/299] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/299] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[3/299] Completed 'vulkan-shaders-gen'
+[4/299] Building CXX object CMakeFiles\deep2_q5_0_parity.dir\src\deep2\asm_stubs.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed
+[5/299] Building CXX object CMakeFiles\deep2_cpu_state_probe.dir\tests\deep2_cpu_state_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/299] Building CXX object CMakeFiles\deep2_q5_0_parity.dir\tests\deep2_q5_0_parity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[7/299] Building CXX object CMakeFiles\gpu_quant_dot_verify.dir\tools\gpu_quant_dot_verify.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/299] Building CXX object CMakeFiles\deep2_token_profiler.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[9/299] Building CXX object CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(211): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[10/299] Building CXX object CMakeFiles\deep2_q5_0_parity.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(211): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[11/299] Building CXX object CMakeFiles\deep2_token_profiler.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/299] Building CXX object CMakeFiles\deep2_token_profiler.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[13/299] Building CXX object CMakeFiles\deep2_token_profiler.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[14/299] Building CXX object CMakeFiles\gpu_quant_dot_verify.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(669): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(1051): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1058): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1065): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1076): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1084): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1092): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1129): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1742): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1765): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1770): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1867): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1986): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2208): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2216): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2219): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2259): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2344): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2425): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2703): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2897): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2905): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2939): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2991): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2998): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3001): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3182): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3254): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3255): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[15/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(94): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(93): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(92): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(91): warning C4100: 'gate': unreferenced parameter
+[16/299] Building CXX object CMakeFiles\deep2_token_profiler.dir\src\utils\input_sanitizer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[17/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[18/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[19/299] Building CXX object CMakeFiles\deep2_parity_trace.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(211): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[20/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\asm_stubs.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed
+[21/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\tools\deep2_gpu_certify.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[22/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[23/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[24/299] Building CXX object CMakeFiles\deep2_parity_trace.dir\src\deep2\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(566): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(755): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(758): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2123): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2331): warning C4456: declaration of 'lane' hides previous local declaration
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2312): note: see declaration of 'lane'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2402): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2717): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(3517): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6440): warning C4100: 'epoch': unreferenced parameter
+[25/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[26/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[27/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[28/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[29/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[30/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2331): warning C4456: declaration of 'lane' hides previous local declaration
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2312): note: see declaration of 'lane'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6440): warning C4100: 'epoch': unreferenced parameter
+[31/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[32/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[33/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[34/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[35/299] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\utils\input_sanitizer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[36/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\tools\deep2_d1_prefill_parity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[37/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[38/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[39/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[40/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[41/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[42/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[43/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[44/299] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[45/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[46/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[47/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\tools\deep2_spec_bench.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_spec_bench.cpp(484): warning C4456: declaration of 'err' hides previous local declaration
+F:\rawrxd\tools\deep2_spec_bench.cpp(448): note: see declaration of 'err'
+[48/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[49/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[50/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[51/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[52/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[53/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\deep2_speculative.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[54/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[55/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[56/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[57/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[58/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[59/299] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\utils\input_sanitizer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[60/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[61/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[62/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\tools\deep2_context_scaling.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[63/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[64/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[65/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[66/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[67/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[68/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[69/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[70/299] Building CXX object CMakeFiles\deep2_context_scaling.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[71/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[72/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[73/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\tools\deep2_gguf_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[74/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[75/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[76/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[77/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\Deep2Log.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[78/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[79/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[80/299] Building CXX object CMakeFiles\gpu_quant_dot_realweights.dir\tools\gpu_quant_dot_realweights.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[81/299] Building CXX object CMakeFiles\deep2_gguf_lifecycle.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[82/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\KVCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[83/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_fused_lmhead_verify.dir/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\deep2\../sampling/advanced_sampler.hpp(3): fatal error C1083: Cannot open include file: 'deep2/Sampler.hpp': No such file or directory
+[84/299] Building CXX object CMakeFiles\gpu_quant_dot_realweights.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(669): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(1051): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1058): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1065): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1076): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1084): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1092): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1129): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1742): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1765): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1770): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1867): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1986): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2208): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2216): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2219): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2259): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2344): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2425): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2703): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2897): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2905): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2939): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2991): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2998): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3001): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3182): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3254): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3255): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[85/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[86/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\deep2_speculative.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[87/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_fused_lmhead_verify.dir/tests/deep2_fused_lmhead_verify.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(121): error C2039: 'computeLogitsBatch': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(132): error C2039: 'verifySpeculativeGreedyWindow': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2039: 'speculativeCounters': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2530: 'counters': references must be initialized
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(210): error C3536: 'counters': cannot be used before it is initialized
+[88/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[89/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2331): warning C4456: declaration of 'lane' hides previous local declaration
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2312): note: see declaration of 'lane'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6440): warning C4100: 'epoch': unreferenced parameter
+[90/299] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\deep2\Deep2Engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\../telemetry/DoubleBufferedHistogram.hpp(130): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\Deep2Telemetry.hpp(60): note: see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(101): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\Deep2Engine.cpp(921): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(922): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1813): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1816): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1072): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1820): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1854): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1817): warning C4189: 'kvHeads': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2351): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3357): warning C4456: declaration of 'attnLayers' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2911): note: see declaration of 'attnLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3440): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3453): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3910): warning C4458: declaration of 'weightSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1004): note: see declaration of 'Deep2::Deep2Engine::weightSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4038): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4051): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4087): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4119): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4534): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4535): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4839): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1072): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4839): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4839): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5145): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5144): warning C4189: 'diff': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5451): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5798): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6729): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6729): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6777): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6777): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6847): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6954): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6954): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7047): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6726): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6774): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6905): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6951): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7675): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7686): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8073): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8092): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8093): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8094): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8095): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1072): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8124): warning C4456: declaration of 'headDim' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8095): note: see declaration of 'headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8125): warning C4456: declaration of 'numHeads' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8093): note: see declaration of 'numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8892): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1079): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8188): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8186): warning C4189: 'attnOutSize': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8233): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8240): warning C4189: 'K_t': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8288): warning C4189: 'V_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8287): warning C4189: 'K_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8286): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8366): warning C4189: 'q': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9130): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9195): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9283): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9359): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1072): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9646): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9833): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9844): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9870): warning C4189: 'rowBytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9893): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9920): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10014): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1010): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10058): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1010): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10913): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1072): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10914): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10915): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1079): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11189): warning C4100: 'outDim': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(12026): warning C4100: 'seqLen': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(669): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(714): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(838): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(869): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1108): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1196): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1260): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1326): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1393): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1452): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1499): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5060): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5083): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6040): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6045): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11439): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed
+ninja: build stopped: subcommand failed.

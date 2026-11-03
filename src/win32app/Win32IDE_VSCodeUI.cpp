@@ -304,12 +304,26 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE,
         0, 0, m_secondarySidebarWidth, 28,
         m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SECONDARY_SIDEBAR_HEADER)), m_hInstance, nullptr);
+
+    // Keep parity with createChatPanel: step strip above transcript.
+    HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    m_agentStepTimeline.onRow = [this](const std::string& line) {
+        if (line.empty()) return;
+        if (auto* session = activeChatSession()) {
+            session->stepRows.push_back(line);
+        }
+        if (m_hwndCopilotChatOutput) {
+            appendCopilotChatUtf8("\r\n" + line + "\r\n");
+        }
+    };
+    m_agentStepTimeline.create(m_hwndSecondarySidebar, m_hInstance, hFont,
+                               5, 32, m_secondarySidebarWidth - 10, 88);
     
     // Chat output area (read-only rich edit for formatted messages)
     m_hwndCopilotChatOutput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-        5, 32, m_secondarySidebarWidth - 10, 450,
+        5, 125, m_secondarySidebarWidth - 10, 357,
         m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_COPILOT_CHAT_OUTPUT)), m_hInstance, nullptr);
     
     // Chat input area
@@ -429,6 +443,9 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
 void Win32IDE::clearCopilotChat()
 {
     m_chatHistory.clear();
+    disarmAgentThoughtTimer();
+    m_agentStepTimeline.clear();
+    if (auto* session = activeChatSession()) session->stepRows.clear();
     SetWindowTextA(m_hwndCopilotChatOutput, 
         "GitHub Copilot Chat\r\n"
         "==================\r\n\r\n"
@@ -1104,6 +1121,55 @@ void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
             std::to_string(evicted.request_id) + ":" +
             std::to_string(evicted.sequence));
         m_espEvents.erase(m_espEvents.begin());
+    }
+
+    switch (event.kind) {
+    case rawrxd::esp::Kind::PrefillStart:
+        m_agentStepTimeline.beginThought();
+        armAgentThoughtTimer();
+        break;
+    case rawrxd::esp::Kind::PrefillEnd:
+    case rawrxd::esp::Kind::TokenGenerated:
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.closeThoughtIfOpen();
+        break;
+    case rawrxd::esp::Kind::ToolStart: {
+        const std::string& m = event.message;
+        std::string lower = m;
+        for (char& c : lower) {
+            if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+        }
+        if (lower.find("powershell") != std::string::npos || lower.find("pwsh") != std::string::npos) {
+            m_agentStepTimeline.addChip("powershell", m);
+        } else if (lower.find("explor") != std::string::npos || lower.find("glob") != std::string::npos ||
+                   lower.find("grep") != std::string::npos || lower.find("read") != std::string::npos) {
+            m_agentStepTimeline.addExplored(m);
+        } else {
+            m_agentStepTimeline.addChip("tool", m);
+        }
+        break;
+    }
+    case rawrxd::esp::Kind::ToolResult:
+        m_agentStepTimeline.addTool("tool", event.message,
+                                    static_cast<int>(event.value), event.value == 0);
+        break;
+    case rawrxd::esp::Kind::AgentStep:
+        m_agentStepTimeline.addChip("step", event.message);
+        break;
+    case rawrxd::esp::Kind::FileChanged:
+        m_agentStepTimeline.addExplored(event.message);
+        break;
+    case rawrxd::esp::Kind::Finished:
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.closeThoughtIfOpen();
+        m_agentStepTimeline.addChip("done", event.message.empty() ? "finished" : event.message);
+        break;
+    case rawrxd::esp::Kind::Error:
+        disarmAgentThoughtTimer();
+        m_agentStepTimeline.addChip("fail", event.message);
+        break;
+    default:
+        break;
     }
 
     if (!m_hwndESPList) return;

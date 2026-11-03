@@ -65,6 +65,9 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_AGENT_VIEW_TOOLS: onAgentViewTools(); return true;
     case IDM_AGENT_VIEW_STATUS: onAgentViewStatus(); return true;
     case IDM_AGENT_STOP: onAgentStop(); return true;
+    case IDM_AGENTIC_LOOP_RUN: onAgenticLoopRunTask(); return true;
+    case IDM_AGENTIC_LOOP_CANCEL: onAgenticLoopCancel(); return true;
+    case IDM_AGENTIC_LOOP_STATUS: onAgenticLoopStatus(); return true;
     case IDM_AUTONOMY_TOGGLE: onAutonomyToggle(); return true;
     case IDM_AUTONOMY_START: onAutonomyStart(); return true;
     case IDM_AUTONOMY_STOP: onAutonomyStop(); return true;

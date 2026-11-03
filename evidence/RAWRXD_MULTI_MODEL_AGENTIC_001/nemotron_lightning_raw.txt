@@ -1,0 +1,31 @@
+[ESP] seq=1 req=55830005227500 kind=agent_step value=0 message=cli_run_start
+
+RawrXD Local Agent
+Model:   nemotron-3.5-lightning:30b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+[ESP] seq=2 req=55830005227500 kind=model_load value=0 message=nemotron-3.5-lightning:30b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=55830005227500 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=55830005227500 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=55830005227500 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=55830005227500 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=55830005227500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=725 eval_count=48 total_duration_ns=30710017000 load_duration_ns=30061950200 prompt_eval_duration_ns=359737000 eval_duration_ns=281985000 eval_tps=170.22182031
+[ESP] seq=8 req=55830005227500 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=55830005227500 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp
+[ESP] seq=10 req=55830005227500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=55830005227500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=818 eval_count=71 total_duration_ns=519702600 load_duration_ns=11326000 prompt_eval_duration_ns=102396000 eval_duration_ns=398691000 eval_tps=178.082775884
+[ESP] seq=12 req=55830005227500 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp
+[ESP] seq=13 req=55830005227500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp status=PASS duration_ms=9 PASS
+[ESP] seq=14 req=55830005227500 kind=file_changed value=0 message=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp
+[ESP] seq=15 req=55830005227500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=907 eval_count=48 total_duration_ns=423334000 load_duration_ns=10040600 prompt_eval_duration_ns=136423000 eval_duration_ns=269486000 eval_tps=178.116859503
+[ESP] seq=16 req=55830005227500 kind=tool_start value=0 message=TOOL_START id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp
+[ESP] seq=17 req=55830005227500 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=18 req=55830005227500 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1000 eval_count=39 total_duration_ns=355227400 load_duration_ns=7344400 prompt_eval_duration_ns=104738000 eval_duration_ns=234381000 eval_tps=166.395740269
+[ESP] seq=20 req=55830005227500 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=21 req=55830005227500 kind=heartbeat value=0 message={"request":55830005227500,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":205.508,"prefill_tps":0.000,"task_tps":0.031,"ttft_ms":32038.932,"prefill_ms":0.000,"decode_ms":4.866,"task_ms":32043.798,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":3,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=22 req=55830005227500 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown
+Done. The file `evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_lightning.cpp` now contains `return 0;`.

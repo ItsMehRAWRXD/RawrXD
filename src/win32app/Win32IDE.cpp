@@ -2718,6 +2718,10 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, "View &Tools");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, "View &Status");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_STOP, "&Stop Agent");
+    AppendMenuA(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENTIC_LOOP_RUN, "Run Agentic &Task");
+    AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENTIC_LOOP_CANCEL, "&Cancel Agentic Task");
+    AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENTIC_LOOP_STATUS, "Agentic Loop S&tatus");
     AppendMenuA(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, "&Agent");
 
     // Autonomy menu (new high-level autonomous orchestration)
@@ -7259,12 +7263,25 @@ void Win32IDE::createChatPanel() {
         SendMessageA(m_hwndWebBrowseToggle, WM_SETFONT, (WPARAM)hFont, TRUE);
         SendMessage(m_hwndWebBrowseToggle, BM_SETCHECK, BST_UNCHECKED, 0);
     }
+
+    // Agent step strip (thought timers + tool chips) sits above chat transcript.
+    // Mirror each live row into the EDIT transcript so steps are E2E-visible.
+    m_agentStepTimeline.onRow = [this](const std::string& line) {
+        if (line.empty()) return;
+        if (auto* session = activeChatSession()) {
+            session->stepRows.push_back(line);
+        }
+        if (m_hwndCopilotChatOutput) {
+            appendCopilotChatUtf8("\r\n" + line + "\r\n");
+        }
+    };
+    m_agentStepTimeline.create(m_hwndSecondarySidebar, m_hInstance, hFont, 5, 240, 290, 88);
     
     // Chat Output Textbox
     m_hwndCopilotChatOutput = CreateWindowExW(
         WS_EX_CLIENTEDGE, L"EDIT", L"",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL,
-        5, 245, 290, 190,
+        5, 333, 290, 102,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
     
     if (m_hwndCopilotChatOutput) {
@@ -7501,6 +7518,8 @@ void Win32IDE::rollbackActiveChat()
     updateReasoningControls();
     updateSecondarySidebarContent();
     updateChatSessionTabs();
+    if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+    m_agentStepTimeline.clear();
     if (m_hwndStatusBar) {
         const std::string status = checkpoint.reason.empty()
             ? "Chat rolled back to the previous checkpoint."
@@ -7520,6 +7539,7 @@ void Win32IDE::switchChatSession(int index)
         previous->model = m_selectedChatModel;
         previous->reasoningMode = m_reasoningMode;
         previous->webBrowsingEnabled = m_webBrowsingEnabled;
+        previous->stepRows = m_agentStepTimeline.snapshotRows();
     }
 
     m_activeChatSession = index;
@@ -7558,6 +7578,8 @@ void Win32IDE::switchChatSession(int index)
 
     updateChatSessionTabs();
     updateSecondarySidebarContent();
+    disarmAgentThoughtTimer();
+    m_agentStepTimeline.restoreRows(session.stepRows);
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, session.running ? TRUE : FALSE);
 }
 
@@ -7863,6 +7885,11 @@ void Win32IDE::HandleCopilotSend() {
         m_chatHistory.push_back({"user", userMessage});
     }
     updateSecondarySidebarContent();
+    if (auto* session = activeChatSession()) session->stepRows.clear();
+    m_agentStepTimeline.clear();
+    m_agentStepTimeline.beginThought();
+    armAgentThoughtTimer();
+    if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
     
     // Make long local requests observable instead of leaving the user with a
     // silent UI while model admission, prompt evaluation, or reasoning runs.
@@ -7933,8 +7960,12 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     const int sessionIndex = static_cast<int>(session - m_chatSessions.data());
     const bool active = m_activeChatSession == sessionIndex;
     if (!complete) {
-        if (session->responseBuffer.empty() && active && m_hwndCopilotChatOutput) {
-            appendCopilotChatUtf8("\r\nAI: ");
+        if (session->responseBuffer.empty()) {
+            if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+            m_agentStepTimeline.closeThoughtIfOpen();
+            if (active && m_hwndCopilotChatOutput) {
+                appendCopilotChatUtf8("\r\nAI: ");
+            }
         }
         session->responseBuffer += response;
         if (active && m_hwndCopilotChatOutput && !response.empty()) {
@@ -7943,6 +7974,8 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
         return;
     }
 
+    if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+    m_agentStepTimeline.closeThoughtIfOpen();
     if (!response.empty()) {
         const bool firstResponse = session->responseBuffer.empty();
         session->responseBuffer += response;
@@ -7977,6 +8010,13 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
 void Win32IDE::HandleCopilotStop()
 {
     stopInference();
+    if (m_agenticLoopBridge && m_agenticLoopBridge->IsRunning()) {
+        m_agenticLoopBridge->Cancel();
+    }
+    m_agenticChatSessionId = 0;
+    if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
+    m_agentStepTimeline.closeThoughtIfOpen();
+    m_agentStepTimeline.addChip("stopped", "generation cancelled");
     if (auto* session = activeChatSession()) {
         session->running = false;
         session->responseBuffer.clear();
@@ -7988,6 +8028,16 @@ void Win32IDE::HandleCopilotStop()
             reinterpret_cast<LPARAM>(status.c_str()));
     }
     updateChatSessionTabs();
+}
+
+void Win32IDE::armAgentThoughtTimer()
+{
+    if (m_hwndMain) SetTimer(m_hwndMain, IDT_AGENT_THOUGHT, 250, nullptr);
+}
+
+void Win32IDE::disarmAgentThoughtTimer()
+{
+    if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
 }
 
 void Win32IDE::appendCopilotChatUtf8(const std::string& text)
@@ -8012,10 +8062,13 @@ void Win32IDE::HandleCopilotClear() {
 
     SetWindowTextW(m_hwndCopilotChatOutput, L"Welcome to RawrXD AI Chat!\r\n\r\nSelect a model and type a message to begin.\r\n");
     SetWindowTextW(m_hwndCopilotChatInput, L"");
+    disarmAgentThoughtTimer();
+    m_agentStepTimeline.clear();
     m_chatHistory.clear();
     if (auto* session = activeChatSession()) {
         session->history.clear();
         session->responseBuffer.clear();
+        session->stepRows.clear();
         session->running = false;
     }
 

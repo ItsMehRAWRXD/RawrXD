@@ -1,0 +1,3 @@
+state=committed
+target=calc.cpp
+backup=F:\rawrxd\tmp_build\agentic_ollama_qwen3_20261027_032425\.rawrxd\agent_transactions\txn_271054217542900\before.bin

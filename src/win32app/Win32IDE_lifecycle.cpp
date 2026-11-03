@@ -237,6 +237,13 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_TIMER: {
+            if (ide && wParam == IDT_AGENT_THOUGHT) {
+                ide->m_agentStepTimeline.refreshThoughtElapsed();
+                return 0;
+            }
+            return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        }
         case WM_APP + 100: {
             // Agent ESP event from recorder thread
             if (ide) {
@@ -273,6 +280,14 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         }
+        case kRawrxdLegacyAgentComplete: {
+            // Legacy AgenticBridge complete (must not clear agenticChatSessionId)
+            if (ide) {
+                return ide->handleLegacyAgentComplete(wParam, lParam);
+            }
+            if (lParam) delete reinterpret_cast<std::string*>(lParam);
+            return 0;
+        }
         case WM_APP + 106: {
             if (ide) {
                 ide->onModelDiscoveryComplete(
@@ -307,6 +322,8 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->appendPowerShellOutput(
                         "\n[PowerShell session ended with code: " +
                         std::to_string(update->exitCode) + "]\n", update->color);
+                    ide->m_agentStepTimeline.addTool(
+                        "powershell", "session", update->exitCode, update->exitCode == 0);
                     ide->updatePowerShellStatus();
                 }
             }
@@ -765,11 +782,13 @@ void Win32IDE::onSize(int width, int height)
     if (m_hwndSecondarySidebar) {
         MoveWindow(m_hwndSecondarySidebar, width - rightWidth, contentTop, rightWidth, workHeight, TRUE);
         ShowWindow(m_hwndSecondarySidebar, rightWidth > 0 ? SW_SHOW : SW_HIDE);
-        constexpr int chatContentTop = 245;
-        const int buttonY = std::max(chatContentTop + 5, workHeight - 35);
-        const int inputHeight = std::min(80, std::max(45, buttonY - chatContentTop - 5));
-        const int inputY = std::max(chatContentTop, buttonY - inputHeight - 5);
-        const int outputHeight = std::max(0, inputY - chatContentTop);
+        constexpr int chatContentTop = 240;
+        constexpr int stepStripHeight = 88;
+        const int transcriptTop = chatContentTop + stepStripHeight + 5;
+        const int buttonY = std::max(transcriptTop + 5, workHeight - 35);
+        const int inputHeight = std::min(80, std::max(45, buttonY - transcriptTop - 5));
+        const int inputY = std::max(transcriptTop, buttonY - inputHeight - 5);
+        const int outputHeight = std::max(0, inputY - transcriptTop);
         const int tabWidth = std::max(80, rightWidth - 226);
         if (m_hwndChatSessionTabs) MoveWindow(m_hwndChatSessionTabs, 5, 3, tabWidth, 27, TRUE);
         const int actionsX = 5 + tabWidth + 4;
@@ -809,7 +828,8 @@ void Win32IDE::onSize(int width, int height)
             SendMessageA(m_hwndReasoningSelector, CB_SETDROPPEDWIDTH, 260, 0);
         }
         if (m_hwndWebBrowseToggle) MoveWindow(m_hwndWebBrowseToggle, 5, 217, std::max(0, rightWidth - 10), 18, TRUE);
-        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, chatContentTop, std::max(0, rightWidth - 10), outputHeight, TRUE);
+        m_agentStepTimeline.layout(5, chatContentTop, std::max(0, rightWidth - 10), stepStripHeight);
+        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, transcriptTop, std::max(0, rightWidth - 10), outputHeight, TRUE);
         if (m_hwndCopilotChatInput) MoveWindow(m_hwndCopilotChatInput, 5, inputY, std::max(0, rightWidth - 10), inputHeight, TRUE);
         const int buttonWidth = std::max(0, (rightWidth - 20) / 3);
         if (m_hwndCopilotSendBtn) MoveWindow(m_hwndCopilotSendBtn, 5, buttonY, buttonWidth, 30, TRUE);

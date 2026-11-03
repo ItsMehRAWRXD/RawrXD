@@ -1,0 +1,3 @@
+state=committed
+target=fixture.cpp
+backup=F:\rawrxd\evidence\agentic_ollama_fixture\.rawrxd\agent_transactions\txn_272064601614200\before.bin

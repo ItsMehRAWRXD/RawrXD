@@ -1,0 +1,2 @@
+cursor_parity_registry_smoke 1 0.1021
+---

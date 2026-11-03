@@ -1,0 +1,15 @@
+{"ts_ns":1793209978746246500,"seq":1,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793209978746249100,"seq":2,"request":72643810584800,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793209978747059300,"seq":3,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793209978749072700,"seq":4,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793209978749074900,"seq":5,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793209978749075200,"seq":6,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793209979317744800,"seq":7,"request":72643810584800,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=1115 eval_count=38 total_duration_ns=549601100 load_duration_ns=18723900 prompt_eval_duration_ns=44758000 eval_duration_ns=469612000 eval_tps=80.9178641091"}
+{"ts_ns":1793209979317749700,"seq":8,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"tool_calls_received"}
+{"ts_ns":1793209979317757000,"seq":9,"request":72643810584800,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp"}
+{"ts_ns":1793209979318020300,"seq":10,"request":72643810584800,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp status=PASS duration_ms=0 PASS"}
+{"ts_ns":1793209980058099700,"seq":11,"request":72643810584800,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=1171 eval_count=49 total_duration_ns=690693900 load_duration_ns=17065500 prompt_eval_duration_ns=35278000 eval_duration_ns=592580000 eval_tps=82.6892571467"}
+{"ts_ns":1793209980058107300,"seq":12,"request":72643810584800,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793209980067616100,"seq":13,"request":72643810584800,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793209980067642700,"seq":14,"request":72643810584800,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":72643810584800,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":105.129,\"prefill_tps\":0.000,\"task_tps\":0.757,\"ttft_ms\":1311.858,\"prefill_ms\":0.000,\"decode_ms\":9.512,\"task_ms\":1321.370,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":1,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793209980067643300,"seq":15,"request":72643810584800,"agent":1,"kind":"finished","value":0,"message":"PASS"}

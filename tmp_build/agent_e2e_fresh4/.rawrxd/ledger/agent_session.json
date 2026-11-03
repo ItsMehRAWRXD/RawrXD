@@ -1,0 +1,103 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 4,
+    "tool_calls_succeeded": 3
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Read calc.cpp. Change only its main return value from 1 to 0. Then use the native MSVC toolchain to compile calc.cpp to calc.exe, run calc.exe, and verify the exit code is 0. Do not modify any other file.",
+      "role": "user",
+      "timestamp": 1793016003
+    }
+  ],
+  "driver_exit_code": -1,
+  "failure_reasons": [
+    "inference failed: tool failed: not a file"
+  ],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "fix/deep2-multimodel-safety-20261025",
+  "git_revision": "a7b14a9f8c61c239c3834b1028274a1060170b92",
+  "model_identity": "ollama/llama3.2:3b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1793016003,
+  "task_id": "",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [
+    {
+      "approved": true,
+      "args": {
+        "path": "calc.cpp"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "#include <cstdio>\n\nint main() {\n    std::printf(\"AGENT_E2E_FAIL\\n\");\n    return 1;\n}\n",
+      "timestamp": 0,
+      "tool": "readFile"
+    },
+    {
+      "approved": true,
+      "args": {
+        "new": "0",
+        "old": "1",
+        "path": "calc.cpp"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "edited",
+      "timestamp": 0,
+      "tool": "editFiles"
+    },
+    {
+      "approved": true,
+      "args": {
+        "command": "calc.exe"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "",
+      "timestamp": 0,
+      "tool": "runInTerminal"
+    },
+    {
+      "approved": true,
+      "args": {
+        "path": "calc.exe"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "not a file",
+      "ok": false,
+      "output": "",
+      "timestamp": 0,
+      "tool": "readFile"
+    }
+  ],
+  "workspace_root": "F:\\rawrxd\\tmp_build\\agent_e2e_fresh4"
+}

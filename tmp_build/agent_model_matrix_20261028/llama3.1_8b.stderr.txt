@@ -1,0 +1,23 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=48
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=48
+RUN_CONFIG_CONTEXT=4096
+[ESP] seq=1 req=1991514091100 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=1991514091100 kind=model_load value=0 message=llama3.1:8b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=1991514091100 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=1991514091100 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=1991514091100 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=1991514091100 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=1991514091100 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1134 eval_count=30 total_duration_ns=6401925300 load_duration_ns=5812543600 prompt_eval_duration_ns=290862000 eval_duration_ns=293588000 eval_tps=102.184012971
+[ESP] seq=8 req=1991514091100 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=1991514091100 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp
+[ESP] seq=10 req=1991514091100 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=1991514091100 kind=heartbeat value=0 message=source=ollama prompt_eval_count=252 eval_count=36 total_duration_ns=439472500 load_duration_ns=7177000 prompt_eval_duration_ns=36615000 eval_duration_ns=349362000 eval_tps=103.044979133
+[ESP] seq=12 req=1991514091100 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp
+[ESP] seq=13 req=1991514091100 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-1-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=14 req=1991514091100 kind=heartbeat value=0 message=source=ollama prompt_eval_count=298 eval_count=7 total_duration_ns=89098800 load_duration_ns=8216800 prompt_eval_duration_ns=17757000 eval_duration_ns=61358000 eval_tps=114.084552952
+[ESP] seq=16 req=1991514091100 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=17 req=1991514091100 kind=heartbeat value=0 message={"request":1991514091100,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":217.316,"prefill_tps":0.000,"task_tps":0.144,"ttft_ms":6943.643,"prefill_ms":0.000,"decode_ms":4.602,"task_ms":6948.244,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":2,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=18 req=1991514091100 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown

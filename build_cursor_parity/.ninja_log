@@ -1,0 +1,5 @@
+# ninja log v7
+37	93	8147767079315815	F:/rawrxd/build_cursor_parity/CMakeFiles/cmake.verify_globs	1d4e36246824ea78
+95	4307	8147767079897140	CMakeFiles/cursor_parity_registry_smoke.dir/tests/agentic/cursor_parity_registry_smoke.cpp.obj	e9382069f02f6512
+113	4309	8147767080078229	CMakeFiles/cursor_parity_registry_smoke.dir/src/agentic/AgentMode.cpp.obj	41909981d7023cbf
+4309	5912	8147767122030375	bin-msvc/cursor_parity_registry_smoke.exe	17a80f51e6e4d74a

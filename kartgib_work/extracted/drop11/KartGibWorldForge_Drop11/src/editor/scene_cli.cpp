@@ -1,0 +1,3 @@
+#include "editor/scene.hpp"
+#include <iostream>
+int main(int argc,char** argv){using namespace worldforge::editor;Scene scene;auto root=scene.create("Sunshine World");auto track=scene.create("Race Track",root);auto kart=scene.create("Kart Spawn",root);scene.translate(kart,{5,0,12});scene.select(kart);const char* out=argc>1?argv[1]:"worldforge-scene.wfs";if(!scene.save(out)){std::cerr<<"save failed\n";return 1;}Scene check;if(!check.load(out)||check.nodes().size()!=3||check.selection()!=kart){std::cerr<<"load failed\n";return 2;}std::cout<<"SCENE_EDITOR_PASS nodes="<<check.nodes().size()<<" track="<<track<<" selected="<<kart<<" file="<<out<<"\n";}

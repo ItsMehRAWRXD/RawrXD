@@ -560,9 +560,8 @@ size_t DequantPrefix(const TensorRec& t, std::vector<float>& out, size_t want) {
         return n;
     }
     const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
-    if (!tr || !tr->to_float) return 0;
+    if (!tr || !tr->to_float || tr->blck_size <= 0 || tr->type_size <= 0) return 0;
     const size_t blk = (size_t)tr->blck_size;
-    const size_t row_bytes = (size_t)t.dims.empty() ? 0 : (size_t)t.dims[0];
     const size_t ein = (size_t)t.dims[0];
     const size_t blocks_per_row = (ein + blk - 1) / blk;
     const size_t total_blocks = (size_t)t.bytes / (size_t)tr->type_size;
@@ -570,10 +569,22 @@ size_t DequantPrefix(const TensorRec& t, std::vector<float>& out, size_t want) {
     const size_t n = std::min(want, blocks_per_row * std::max<size_t>(rows, 1) * blk);
 
     out.assign(n, 0.0f);
-    const size_t chunk = 1u << 22;
-    for (size_t off = 0; off < n; off += chunk) {
-        const int cnt = (int)std::min(chunk, n - off);
-        tr->to_float(t.data + off / blk * (size_t)tr->type_size, out.data() + off, cnt);
+    // GGML K-quant dequantizers assert that the requested element count is a
+    // whole block (Q4_K/Q6_K require 256).  Prefix callers legitimately ask
+    // for short vectors such as a 32-element diagnostic or head norm. Decode
+    // complete blocks into a bounded scratch buffer and copy only the requested
+    // prefix, never passing a partial count into the GGML callback.
+    std::vector<float> block(blk, 0.0f);
+    const size_t fullBlocks = n / blk;
+    for (size_t b = 0; b < fullBlocks; ++b) {
+        tr->to_float(t.data + b * (size_t)tr->type_size,
+                    out.data() + b * blk, static_cast<int64_t>(blk));
+    }
+    const size_t tail = n % blk;
+    if (tail > 0) {
+        tr->to_float(t.data + fullBlocks * (size_t)tr->type_size,
+                    block.data(), static_cast<int64_t>(blk));
+        std::copy_n(block.data(), tail, out.data() + fullBlocks * blk);
     }
     return n;
 }
@@ -4472,18 +4483,19 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 // independent implementation, so this is the last stage in the
                 // block-0 span that can still differ.
                 if (std::getenv("ATTN_TRACE") && in.bName.find("attn_output") != std::string::npos) {
-                    // What row 0 of the weight actually dequantised TO, compared
-                    // against ggml's own dequantize_row_q4_0. The reference value
-                    // for blk.0.attn_output.weight row 0 is
-                    //   0.007111 -0.014224 -0.010668 0 0.010668 0.003556
-                    // NOTE: to_float must be asked for a MULTIPLE of blck_size
-                    // (32 for Q4_0); asking for 8 writes nothing at all, which
-                    // looks like a zero-filled weight and is a probe artefact.
+                    // What row 0 of the weight actually dequantised TO.  GGML's
+                    // Q4_K dequantizer requires a complete 256-element block;
+                    // asking it for a short prefix trips its internal assertion
+                    // and used to make an otherwise valid trace abort the
+                    // process.  Decode one complete block, then print only the
+                    // first values needed by the witness.
                     const TensorRec& wt = tensors_[(size_t)in.b];
-                    std::vector<float> rw0(32, 0.0f);
+                    const size_t traceBlock = std::max<size_t>(
+                        1u, static_cast<size_t>(ggml_blck_size(wt.ggml_type)));
+                    std::vector<float> rw0(traceBlock, 0.0f);
                     const ggml_type_traits* trw = ggml_get_type_traits(wt.ggml_type);
                     if (trw && trw->to_float)
-                        trw->to_float(wt.data, rw0.data(), 32);
+                        trw->to_float(wt.data, rw0.data(), static_cast<int64_t>(traceBlock));
                     std::fprintf(stderr,
                                  "[attnproj-weight0] blk=%d name=%s dims=[%zu,%zu] "
                                  "bytes=%zu data=%p row0: ",
@@ -4811,6 +4823,14 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::LmHead: {
                 std::vector<float> y;
                 std::string e;
+                if (const char* dumpPath = std::getenv("DEEP2_DUMP_FINAL_HIDDEN")) {
+                    if (!hidden_.empty()) {
+                        if (std::FILE* df = std::fopen(dumpPath, "wb")) {
+                            std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), df);
+                            std::fclose(df);
+                        }
+                    }
+                }
                 if (std::getenv("RR_TRACE_TOKEN")) {
                     std::fprintf(stderr, "  [lmhead] entering LmHead with slots=%zu hidden=%zu\n",
                                  program_.size(), hidden_.size());
@@ -5063,12 +5083,49 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
         return false;
     }
     ::Deep2::Qwen4Exp::GDNDescriptor descriptor;
+    // Qwen3.6/Qwen4Exp GDN state geometry is model metadata, not a probe
+    // default.  The previous path populated only the projection geometry and
+    // left these admission fields at zero, causing every valid qwen35moe
+    // model to fail before the recurrence was even evaluated.
+    descriptor.channels = static_cast<uint32_t>(z.size());
+    descriptor.state_size = static_cast<uint32_t>(spec_.gdn_state_size);
+    descriptor.groups = static_cast<uint32_t>(spec_.gdn_group_count);
     descriptor.key_heads = keyHeads;
     descriptor.value_heads = valueHeads;
     descriptor.head_dim = headDim;
     descriptor.tokens = 1;
+    // The Qwen GDN contract scales normalized queries by 1/sqrt(D).  The
+    // Vulkan shader consumes this field directly, so do not leave the
+    // generic descriptor default (1.0) on the production path.
+    descriptor.scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    descriptor.stride = descriptor.channels;
     descriptor.qkv_stride = static_cast<uint32_t>(qkv.size());
     descriptor.gate_stride = static_cast<uint32_t>(z.size());
+    // Diagnostic-only admission witness.  Do not infer missing geometry here:
+    // Qwen3.6/Qwen4Exp GDN must be rejected until the model's metadata and
+    // tensor shapes provide every required dimension.
+    if (std::getenv("DEEP2_GDN_DIAG")) {
+        auto tensorName = [&](int32_t slot) -> const char* {
+            if (slot < 0 || static_cast<size_t>(slot) >= tensors_.size()) return "<missing>";
+            return tensors_[static_cast<size_t>(slot)].name.c_str();
+        };
+        std::fprintf(stderr,
+                     "GDN_ADMISSION_DIAG block=%d qkv_tensor=%s gate_tensor=%s "
+                     "A=%s alpha=%s beta=%s conv=%s dt=%s norm=%s out=%s "
+                     "qkv_width=%zu gate_width=%zu key_heads=%u value_heads=%u head_dim=%u "
+                     "channels=%u state_size=%u groups=%u tokens=%u stride=%u "
+                     "spec_inner=%llu spec_state=%llu spec_groups=%llu\n",
+                     in.block, tensorName(in.b), tensorName(in.c), tensorName(aSlot),
+                     tensorName(alphaSlot), tensorName(betaSlot), tensorName(convSlot),
+                     tensorName(dtSlot), tensorName(normSlot), tensorName(outSlot),
+                     qkvWidth, z.size(), keyHeads, valueHeads, headDim,
+                     descriptor.channels, descriptor.state_size, descriptor.groups,
+                     descriptor.tokens, descriptor.stride,
+                     static_cast<unsigned long long>(spec_.gdn_inner_size),
+                     static_cast<unsigned long long>(spec_.gdn_state_size),
+                     static_cast<unsigned long long>(spec_.gdn_group_count));
+        std::fflush(stderr);
+    }
     std::string failure;
     if (!::Deep2::Qwen4Exp::ValidateGDNDescriptor(descriptor, failure)) { err = "GDN: " + failure; return false; }
 
@@ -5081,7 +5138,58 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     }
     if (ssm_state_.size() <= static_cast<size_t>(in.block)) ssm_state_.resize(static_cast<size_t>(in.block) + 1);
     auto& state = ssm_state_[static_cast<size_t>(in.block)];
-    if (state.empty()) state.assign(static_cast<size_t>(::Deep2::Qwen4Exp::GDNStateElements(descriptor)), 0.0f);
+    const size_t qwenStateElements = ::Deep2::Qwen4Exp::GDNQwenStateElements(descriptor);
+    if (qwenStateElements == 0) {
+        err = "GDN: Qwen recurrent state geometry overflow";
+        return false;
+    }
+    if (state.size() != qwenStateElements) state.assign(qwenStateElements, 0.0f);
+    // Optional parity witness. This exports the real post-convolution
+    // operands and recurrent state for one selected GDN block. The files are
+    // consumed by an independent Python recurrence, never by production code.
+    // The directory must already exist; no path is created from model data.
+    const char* gdnDumpDir = std::getenv("DEEP2_GDN_DUMP_DIR");
+    int gdnDumpBlock = 0;
+    if (const char* e = std::getenv("DEEP2_GDN_DUMP_BLOCK")) gdnDumpBlock = std::atoi(e);
+    static std::unordered_map<int, size_t> gdnDumpSteps;
+    const bool gdnDump = gdnDumpDir && *gdnDumpDir &&
+                         (gdnDumpBlock < 0 || in.block == gdnDumpBlock);
+    const size_t gdnDumpStep = gdnDump ? gdnDumpSteps[in.block]++ : 0;
+    auto dumpGdnVector = [&](const char* tag, const std::vector<float>& values) {
+        if (!gdnDump) return;
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/gdn_b%d_t%03zu_%s.f32",
+                      gdnDumpDir, (int)in.block, gdnDumpStep, tag);
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(values.data(), sizeof(float), values.size(), f);
+            std::fclose(f);
+        }
+    };
+    if (gdnDump) {
+        std::fprintf(stderr, "GDN_PARITY_DUMP block=%d step=%zu dir=%s\n",
+                     (int)in.block, gdnDumpStep, gdnDumpDir);
+        std::fflush(stderr);
+    }
+    dumpGdnVector("mixed", mixed);
+    dumpGdnVector("beta_logits", beta);
+    dumpGdnVector("alpha_logits", alpha);
+    dumpGdnVector("a_log", aLog);
+    dumpGdnVector("dt_bias", dtBias);
+    dumpGdnVector("norm", norm);
+    dumpGdnVector("gate", z);
+    dumpGdnVector("state_before", state);
+    if (std::getenv("DEEP2_GDN_DIAG")) {
+        std::fprintf(stderr,
+                     "GDN_OPERAND_DIAG block=%d mixed=%zu beta=%zu alpha=%zu gate=%zu "
+                     "a_log=%zu dt_bias=%zu norm=%zu state=%zu expected_channels=%u "
+                     "expected_state=%zu generic_state=%zu\n",
+                     in.block, mixed.size(), beta.size(), alpha.size(), z.size(),
+                     aLog.size(), dtBias.size(), norm.size(), state.size(),
+                     descriptor.channels,
+                      qwenStateElements,
+                      ::Deep2::Qwen4Exp::GDNStateElements(descriptor));
+        std::fflush(stderr);
+    }
     bool gpuExecuted = false;
     if (!force_cpu_) {
         const uint64_t stateKey = GdnStateKey(this, in.block);
@@ -5110,8 +5218,8 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
             if (std::getenv("DEEP2_GDN_GPU_CHECK")) {
                 std::vector<float> referenceState = state;
                 std::vector<float> referenceOutput;
-                if (!::Deep2::Qwen4Exp::GDNReferenceStep(
-                        descriptor, mixed, beta, alpha, z, aLog,
+                if (!::Deep2::Qwen4Exp::GDNQwenReferenceStep(
+                        descriptor, mixed, beta, alpha, aLog, dtBias, norm, z,
                         referenceState, referenceOutput, failure)) {
                     err = "GDN: GPU differential reference failed: " + failure;
                     return false;
@@ -5149,14 +5257,18 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
         }
     }
     if (!gpuExecuted) {
-        if (!::Deep2::Qwen4Exp::GDNReferenceStep(
-                descriptor, mixed, beta, alpha, z, aLog,
+        if (!::Deep2::Qwen4Exp::GDNQwenReferenceStep(
+                descriptor, mixed, beta, alpha, aLog, dtBias, norm, z,
                 state, y, failure)) {
             err = "GDN: " + failure;
             return false;
         }
         ++cpu_calls_;
         stats_.fallback_reason = "GDN reference recurrence; Vulkan stateful dispatch unavailable";
+    }
+    if (gdnDump) {
+        dumpGdnVector("state_after", state);
+        dumpGdnVector("output", y);
     }
     std::vector<float> projected;
     if (!OpLinear(outSlot, y, projected, err)) return false;

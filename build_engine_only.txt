@@ -1,0 +1,12 @@
+[0/2] Re-checking globbed directories...
+[1/5] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/5] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[3/5] Completed 'vulkan-shaders-gen'
+[4/5] Linking CXX executable bin\rawrxd_deep2_engine.exe
+FAILED: [code=4294967295] bin/rawrxd_deep2_engine.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawrxd_deep2_engine.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawrxd_deep2_engine.dir\src\deep2\engine_main.cpp.obj  /out:bin\rawrxd_deep2_engine.exe /implib:rawrxd_deep2_engine.lib /pdb:bin\rawrxd_deep2_engine.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  deep2_engine_lib.lib  rawrxd_gpu_compute.lib  3rdparty\ggml\src\ggml.lib  3rdparty\ggml\src\ggml-cpu.lib  3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.lib  3rdparty\ggml\src\ggml-base.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawrxd_deep2_engine.dir\src\deep2\engine_main.cpp.obj /out:bin\rawrxd_deep2_engine.exe /implib:rawrxd_deep2_engine.lib /pdb:bin\rawrxd_deep2_engine.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont deep2_engine_lib.lib rawrxd_gpu_compute.lib 3rdparty\ggml\src\ggml.lib 3rdparty\ggml\src\ggml-cpu.lib 3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.lib 3rdparty\ggml\src\ggml-base.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1104) with the following output:
+LINK : fatal error LNK1104: cannot open file 'bin\rawrxd_deep2_engine.exe'
+ninja: build stopped: subcommand failed.
