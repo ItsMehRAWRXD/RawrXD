@@ -497,6 +497,8 @@ void Win32IDE::onDestroy()
     m_deferredModelDiscovery.reset();
     m_modelDiscoveryUpdateDeferred = false;
     m_hwndMain = nullptr;
+    // Free Sidebar heap-allocated control strings on window destruction.
+    cleanupSidebarStrings();
 }
 
 void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)

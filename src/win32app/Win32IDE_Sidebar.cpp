@@ -23,6 +23,10 @@
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 #endif
 
+// Heap-allocated strings retained by TreeView controls (TVIF_TEXT does not
+// copy text; it retains the pointer).  Freed on TVN_DELETE notification.
+static std::vector<char*> g_sidebarStringHeap;
+
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "shlwapi.lib")
 
@@ -758,7 +762,10 @@ void Win32IDE::refreshFileTree()
         tvis.hParent = TVI_ROOT;
         tvis.hInsertAfter = TVI_LAST;
         tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
-        tvis.item.pszText = const_cast<char*>(root.label.c_str());
+        char* rootLabelHeap = new char[root.label.length() + 1];
+        strcpy_s(rootLabelHeap, root.label.length() + 1, root.label.c_str());
+        tvis.item.pszText = rootLabelHeap;
+        g_sidebarStringHeap.push_back(rootLabelHeap);
         tvis.item.lParam = 1; // directory/root
         const HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
         if (!hRoot) continue;
@@ -811,7 +818,10 @@ void Win32IDE::expandFolder(const std::string& path)
                 tvis.hParent = parent;
                 tvis.hInsertAfter = TVI_LAST;
                 tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
-                tvis.item.pszText = const_cast<char*>(name.c_str());
+                char* nameHeap = new char[name.length() + 1];
+                strcpy_s(nameHeap, name.length() + 1, name.c_str());
+                tvis.item.pszText = nameHeap;
+                g_sidebarStringHeap.push_back(nameHeap);
                 tvis.item.lParam = entry.is_directory() ? 1 : 0;
                 const HTREEITEM item = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
                 if (!item) continue;
@@ -1368,24 +1378,38 @@ void Win32IDE::refreshSourceControlView()
 {
     if (!m_hwndSCMFileList) return;
 
+    // Free heap-allocated strings from previous cycle.
+    for (auto* ptr : g_sidebarStringHeap) {
+        delete[] ptr;
+    }
+    g_sidebarStringHeap.clear();
+
     ListView_DeleteAllItems(m_hwndSCMFileList);
 
     // Get changed files from Git
     std::vector<GitFile> files = getGitChangedFiles();
 
     LVITEMA item = {};
-    item.mask = LVIF_TEXT;
+    item.mask = LVIF_TEXT | LVIF_PARAM;
 
     for (size_t i = 0; i < files.size(); i++) {
         item.iItem = (int)i;
         item.iSubItem = 0;
         
         char status[3] = { files[i].status, 0, 0 };
-        item.pszText = status;
+        char* statusHeap = new char[3];
+        strcpy_s(statusHeap, 3, status);
+        item.pszText = statusHeap;
+        g_sidebarStringHeap.push_back(statusHeap);
+        item.lParam = reinterpret_cast<LPARAM>(statusHeap);
         ListView_InsertItem(m_hwndSCMFileList, &item);
 
         item.iSubItem = 1;
-        item.pszText = (LPSTR)files[i].path.c_str();
+        char* pathHeap = new char[files[i].path.length() + 1];
+        strcpy_s(pathHeap, files[i].path.length() + 1, files[i].path.c_str());
+        item.pszText = pathHeap;
+        g_sidebarStringHeap.push_back(pathHeap);
+        item.lParam = reinterpret_cast<LPARAM>(pathHeap);
         ListView_SetItem(m_hwndSCMFileList, &item);
     }
 
@@ -1836,11 +1860,20 @@ void Win32IDE::loadInstalledExtensions()
         if (!IsWindow(m_hwndExtensionsList)) return;
         item.iItem = (int)i;
         item.iSubItem = 0;
-        item.pszText = (LPSTR)m_extensions[i].name.c_str();
+        
+        char* extNameHeap = new char[m_extensions[i].name.length() + 1];
+        strcpy_s(extNameHeap, m_extensions[i].name.length() + 1, m_extensions[i].name.c_str());
+        item.pszText = extNameHeap;
+        g_sidebarStringHeap.push_back(extNameHeap);
+        item.lParam = reinterpret_cast<LPARAM>(extNameHeap);
         ListView_InsertItem(m_hwndExtensionsList, &item);
 
         item.iSubItem = 1;
-        item.pszText = (LPSTR)m_extensions[i].version.c_str();
+        char* extVersionHeap = new char[m_extensions[i].version.length() + 1];
+        strcpy_s(extVersionHeap, m_extensions[i].version.length() + 1, m_extensions[i].version.c_str());
+        item.pszText = extVersionHeap;
+        g_sidebarStringHeap.push_back(extVersionHeap);
+        item.lParam = reinterpret_cast<LPARAM>(extVersionHeap);
         ListView_SetItem(m_hwndExtensionsList, &item);
     }
 
@@ -1898,7 +1931,10 @@ void Win32IDE::updateOutlineView()
     for (size_t i = 0; i < m_outlineItems.size(); ++i) {
         const auto& item = m_outlineItems[i];
         std::string text = item.type + " " + item.name + " (line " + std::to_string(item.line) + ")";
-        tvis.item.pszText = (LPSTR)text.c_str();
+        char* outlineTextHeap = new char[text.length() + 1];
+        strcpy_s(outlineTextHeap, text.length() + 1, text.c_str());
+        tvis.item.pszText = outlineTextHeap;
+        g_sidebarStringHeap.push_back(outlineTextHeap);
         tvis.item.lParam = (LPARAM)i;
         TreeView_InsertItem(m_hwndOutlineTree, &tvis);
     }
@@ -2043,17 +2079,30 @@ void Win32IDE::updateTimelineView()
         
         lvi.iItem = (int)i;
         lvi.iSubItem = 0;
-        lvi.pszText = (LPSTR)entry.date.c_str();
+        
+        char* dateHeap = new char[entry.date.length() + 1];
+        strcpy_s(dateHeap, entry.date.length() + 1, entry.date.c_str());
+        lvi.pszText = dateHeap;
+        g_sidebarStringHeap.push_back(dateHeap);
+        lvi.lParam = reinterpret_cast<LPARAM>(dateHeap);
         ListView_InsertItem(m_hwndTimelineList, &lvi);
         
         // Use SendMessage directly for setting item text
         LVITEMA lviSet = { 0 };
         lviSet.iSubItem = 1;
-        lviSet.pszText = (LPSTR)entry.author.c_str();
+        char* authorHeap = new char[entry.author.length() + 1];
+        strcpy_s(authorHeap, entry.author.length() + 1, entry.author.c_str());
+        lviSet.pszText = authorHeap;
+        g_sidebarStringHeap.push_back(authorHeap);
+        lviSet.lParam = reinterpret_cast<LPARAM>(authorHeap);
         SendMessage(m_hwndTimelineList, LVM_SETITEMTEXTA, (int)i, (LPARAM)&lviSet);
         
         lviSet.iSubItem = 2;
-        lviSet.pszText = (LPSTR)entry.message.c_str();
+        char* messageHeap = new char[entry.message.length() + 1];
+        strcpy_s(messageHeap, entry.message.length() + 1, entry.message.c_str());
+        lviSet.pszText = messageHeap;
+        g_sidebarStringHeap.push_back(messageHeap);
+        lviSet.lParam = reinterpret_cast<LPARAM>(messageHeap);
         SendMessage(m_hwndTimelineList, LVM_SETITEMTEXTA, (int)i, (LPARAM)&lviSet);
     }
 }
@@ -2127,4 +2176,15 @@ void Win32IDE::goToTimelineEntry(int index)
     } else {
         appendToOutput("Selected local entry: " + entry.message + "\n", "Output", OutputSeverity::Info);
     }
+}
+
+void Win32IDE::cleanupSidebarStrings()
+{
+    // Free all heap-allocated strings retained by Sidebar controls.
+    // TreeView/ListView controls retain pszText/lParam pointers and do not
+    // free them automatically on item or window destruction.
+    for (auto* ptr : g_sidebarStringHeap) {
+        delete[] ptr;
+    }
+    g_sidebarStringHeap.clear();
 }

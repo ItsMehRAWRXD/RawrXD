@@ -416,6 +416,11 @@ private:
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void onCreate(HWND hwnd);
     void onDestroy();
+    // Frees heap-allocated strings retained by Sidebar TreeView/ListView
+    // controls (TVIF_TEXT/LVIF_TEXT do not copy text; they retain pointers).
+    // Called on window destruction to prevent leaks when the Sidebar heap
+    // is not drained by refreshSourceControlView().
+    void cleanupSidebarStrings();
     void onSize(int width, int height);
     void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
     void onTerminalOutput(int paneId, const std::string& output);
