@@ -25,6 +25,13 @@ public static class RawrXD_NativeFocus {
     EnumChildWindows(root,(h,p)=>{var b=new StringBuilder(128);GetClassName(h,b,b.Capacity);if(b.ToString().StartsWith("RichEdit20",StringComparison.OrdinalIgnoreCase)){found=h;return false;}return true;},IntPtr.Zero);
     return found;
   }
+  [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
+  public static void TypeUnicode(string text) {
+    foreach(char c in text) {
+      keybd_event(0,(byte)(c & 0xff),4,UIntPtr.Zero);
+      keybd_event(0,(byte)(c & 0xff),6,UIntPtr.Zero);
+    }
+  }
 }
 '@
   }
@@ -41,8 +48,7 @@ public static class RawrXD_NativeFocus {
   if($hwnd -eq [IntPtr]::Zero){throw 'NATIVE_RICHEDIT_NOT_FOUND'}
   [RawrXD_NativeFocus]::SetForegroundWindow($p.MainWindowHandle)|Out-Null
   [RawrXD_NativeFocus]::SetFocus($hwnd)|Out-Null
-  Add-Type -AssemblyName System.Windows.Forms
-  [System.Windows.Forms.SendKeys]::SendWait($Marker)
+  [RawrXD_NativeFocus]::TypeUnicode($Marker)
   Start-Sleep -Seconds 3
   $sessionPath=Join-Path $env:LOCALAPPDATA 'RawrXD\ide_session.json'
   if(-not (Test-Path $sessionPath)){throw "AUTOSAVE_NOT_FOUND: $sessionPath"}
