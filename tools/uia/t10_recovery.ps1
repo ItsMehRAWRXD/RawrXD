@@ -20,6 +20,13 @@ public static class RawrXD_NativeFocus {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr h, StringBuilder b, int n);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")] public static extern int SendMessageText(IntPtr h,uint m,IntPtr w,StringBuilder l);
+  public static string Text(IntPtr h) {
+    const uint LEN=0x000E, GET=0x000D;
+    int n=SendMessage(h,LEN,IntPtr.Zero,IntPtr.Zero); if(n<=0)return "";
+    var b=new StringBuilder(n+1); SendMessageText(h,GET,(IntPtr)b.Capacity,b); return b.ToString();
+  }
   public static IntPtr FindRichEdit(IntPtr root) {
     IntPtr found=IntPtr.Zero;
     EnumChildWindows(root,(h,p)=>{var b=new StringBuilder(128);GetClassName(h,b,b.Capacity);if(b.ToString().StartsWith("RichEdit20",StringComparison.OrdinalIgnoreCase)){found=h;return false;}return true;},IntPtr.Zero);
@@ -49,6 +56,8 @@ public static class RawrXD_NativeFocus {
   [RawrXD_NativeFocus]::SetForegroundWindow($p.MainWindowHandle)|Out-Null
   [RawrXD_NativeFocus]::SetFocus($hwnd)|Out-Null
   [RawrXD_NativeFocus]::TypeUnicode($Marker)
+  $editorText=[RawrXD_NativeFocus]::Text($hwnd)
+  if($editorText -notlike "*$Marker*"){throw 'EDITOR_MARKER_NOT_OBSERVED'}
   Start-Sleep -Seconds 3
   $sessionPath=Join-Path $env:LOCALAPPDATA 'RawrXD\ide_session.json'
   if(-not (Test-Path $sessionPath)){throw "AUTOSAVE_NOT_FOUND: $sessionPath"}
@@ -64,10 +73,11 @@ public static class RawrXD_NativeFocus {
   Start-Sleep -Seconds 4
   $root=Get-RawrRoot $s2
   $all=$root.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
-  $found=$false
-  for($i=0;$i -lt $all.Count;$i++){try{$e=$all.Item($i);if($e.Current.ProcessId -eq $s2.Pid -and $e.Current.Name -like "*$Marker*"){$found=$true;break}}catch{}}
+  $recovered=[RawrXD_NativeFocus]::FindRichEdit((Get-Process -Id $s2.Pid).MainWindowHandle)
+  $recoveredText=if($recovered -ne [IntPtr]::Zero){[RawrXD_NativeFocus]::Text($recovered)}else{''}
+  $found=$recoveredText -like "*$Marker*"
   $result=if($found){'PASS'}else{'FAIL'}
-  $final=[ordered]@{Gate='T10';Result=$result;CandidateSHA256=$s2.SHA256;PIDBefore=$s.Pid;PIDAfter=$s2.Pid;Marker=$Marker;RecoveredMarkerObserved=$found;TimestampUtc=[DateTime]::UtcNow.ToString('o')}
+  $final=[ordered]@{Gate='T10';Result=$result;CandidateSHA256=$s2.SHA256;PIDBefore=$s.Pid;PIDAfter=$s2.Pid;Marker=$Marker;EditorMarkerObserved=$true;RecoveredEditorMarkerObserved=$found;TimestampUtc=[DateTime]::UtcNow.ToString('o')}
   $final|ConvertTo-Json|Set-Content (Join-Path $EvidenceDir 'T10.receipt.json') -Encoding UTF8
   $final|ConvertTo-Json
 } catch {
