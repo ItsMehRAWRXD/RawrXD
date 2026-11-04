@@ -110,3 +110,27 @@ Source inspection found simulated debugger behavior in
 `src/win32app/Win32IDE_Debugger.cpp`, including expression evaluation that
 returns the literal placeholder `<value>`. Those gates remain open and are
 not promoted by UI state alone.
+
+## Host diagnostics
+
+The current CLI candidate's real `doctor` command completed with exit code 0:
+Ollama was available, 44 models were reported, Git and CMake were found, the
+workspace was writable, and 478 GB of free disk was reported. Deep2 was not
+running during this probe.
+
+The real `self-audit` command completed with exit code 1: 4 checks passed and
+7 checks failed. The failed checks were bounded source-edit execution,
+compiler/build exit, relevant automated tests, source-diff capture, commit or
+safe staging, ledger persistence, and normal zero exit. This is diagnostic
+evidence, not a certification pass; the dirty multi-worktree state must be
+resolved by a controlled candidate workflow before those checks can close.
+
+```ini
+DOCTOR_EXIT=0
+OLLAMA=AVAILABLE
+OLLAMA_MODELS=44
+DEEP2=NOT_RUNNING
+SELF_AUDIT_PASS=4
+SELF_AUDIT_FAIL=7
+SELF_AUDIT_EXIT=1
+```
