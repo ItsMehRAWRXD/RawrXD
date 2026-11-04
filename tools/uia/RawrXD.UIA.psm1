@@ -15,8 +15,16 @@ public static class RawrXD_UiaInput {
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out RECT r);
  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
  [DllImport("user32.dll")] public static extern void mouse_event(uint f,uint x,uint y,uint d,UIntPtr e);
+ [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr p,EnumProc cb,IntPtr l);
+ public delegate bool EnumProc(IntPtr h,IntPtr l);
+ [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr h);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr h,System.Text.StringBuilder b,int n);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowTextLength(IntPtr h);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr h,System.Text.StringBuilder b,int n);
  public static void Paste(string t){System.Windows.Forms.Clipboard.SetText(t);keybd_event(0x11,0,0,UIntPtr.Zero);keybd_event(0x56,0,0,UIntPtr.Zero);keybd_event(0x56,0,2,UIntPtr.Zero);keybd_event(0x11,0,2,UIntPtr.Zero);}
  public static void Click(IntPtr h){RECT r;if(!GetWindowRect(h,out r))throw new InvalidOperationException("GetWindowRect failed");SetCursorPos((r.l+r.r)/2,(r.t+r.b)/2);mouse_event(2,0,0,0,UIntPtr.Zero);mouse_event(4,0,0,0,UIntPtr.Zero);}
+ public static IntPtr FindChildById(IntPtr root,int id){IntPtr found=IntPtr.Zero;EnumChildWindows(root,(h,l)=>{if(GetDlgCtrlID(h)==id){found=h;return false;}return true;},IntPtr.Zero);return found;}
+ public static string Text(IntPtr h){int n=GetWindowTextLength(h);if(n<=0)return '';var b=new System.Text.StringBuilder(n+1);GetWindowText(h,b,b.Capacity);return b.ToString();}
 }
 '@}
 
@@ -58,10 +66,11 @@ function Set-RawrControlText { param([Parameter(Mandatory)]$Session,[Parameter(M
     if($Element.Current.ProcessId -ne $Session.Pid){throw 'Cross-process control rejected'};$p=$null
     if($Element.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$p)){if($p.Current.IsReadOnly){throw 'Control is read-only'};$p.SetValue($Text);return}
     $p=Get-Process -Id $Session.Pid -ErrorAction Stop;$h=[IntPtr]$Element.Current.NativeWindowHandle
+    if($h -eq [IntPtr]::Zero -and $Element.Current.AutomationId){$h=[RawrXD_UiaInput]::FindChildById($p.MainWindowHandle,[int]$Element.Current.AutomationId)}
     if($h -eq [IntPtr]::Zero){throw 'No writable ValuePattern or native HWND'}
     if($p.Path -ne $Session.Exe){throw 'PID executable mismatch'}
     [RawrXD_UiaInput]::SetForegroundWindow($p.MainWindowHandle)|Out-Null;[RawrXD_UiaInput]::Click($h);[RawrXD_UiaInput]::SetFocus($h)|Out-Null
-    [RawrXD_UiaInput]::Paste($Text)
+    [RawrXD_UiaInput]::Paste($Text);Start-Sleep -Milliseconds 150
 }
 function Invoke-RawrControl { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
     if($Element.Current.ProcessId -ne $Session.Pid -or -not $Element.Current.IsEnabled){throw 'Control identity/enabled check failed'};$p=$null
