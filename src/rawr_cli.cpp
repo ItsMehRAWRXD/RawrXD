@@ -2304,7 +2304,25 @@ int main(int argc, char** argv) {
                 outJson(d);
                 return EXIT_OK;
             }
-            out("usage: rawr tools list | describe <tool>");
+            if (rest[0] == "run") {
+                if (rest.size() < 2) { out("usage: rawr tools run <tool> [key=value ...] [--mode NAME]"); return EXIT_FAIL; }
+                std::string toolName = rest[1];
+                json jargs = json::object();
+                std::string modeName = "code";
+                for (size_t i = 2; i < rest.size(); ++i) {
+                    if (rest[i] == "--mode" && i + 1 < rest.size()) {
+                        modeName = rest[++i];
+                    } else {
+                        auto eq = rest[i].find('=');
+                        if (eq != std::string::npos) {
+                            jargs[rest[i].substr(0, eq)] = rest[i].substr(eq + 1);
+                        }
+                    }
+                }
+                std::vector<std::string> toolArgs = { toolName, jargs.dump(), "--mode", modeName };
+                return cmdTool(toolArgs);
+            }
+            out("usage: rawr tools list | describe <tool> | run <tool> [key=value ...] [--mode NAME]");
             return EXIT_FAIL;
         }
         if (cmd == "git")                    return cmdGit(rest);
