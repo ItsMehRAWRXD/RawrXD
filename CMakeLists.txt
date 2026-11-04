@@ -3786,7 +3786,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
     add_custom_target(rawrxd_chat_route_menu DEPENDS "${_chat_route_generated_header}")
 
     set(RAWRXD_NATIVE_IDE_SOURCES
+        src/win32app/Win32IDE_MenuHandlers.cpp
         src/win32app/main_win32.cpp
+        src/win32app/Win32IDE.rc
         src/win32app/Win32IDE.cpp
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
