@@ -88,7 +88,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     // while ALSO streaming to the GUI.  Use shared_ptr so the callback remains
     // valid even if the native agent retains it and invokes it after this
     // function returns (prevents dangling reference to local fullOutput).
-    m_nativeAgent->SetOutputCallback([fullOutput](const std::string& chunk) {
+    m_nativeAgent->SetOutputCallback([this, fullOutput](const std::string& chunk) {
         *fullOutput += chunk;
         if (m_outputCallback) {
             m_outputCallback("stream", chunk);
@@ -126,8 +126,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     }
     else if (prompt.find("/bugreport ") == 0) {
          std::string path = prompt.substr(11);
-         m_nativeAgent->BugReport(path); 
-         response.content = fullOutput;
+          m_nativeAgent->BugReport(path); 
+          response.content = *fullOutput;
     }
     // Explicit /edit logic
     else if (prompt.find("/edit ") == 0) {
@@ -137,8 +137,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
          if (spacePos != std::string::npos) {
              std::string path = rest.substr(0, spacePos);
              std::string inst = rest.substr(spacePos + 1);
-             m_nativeAgent->Edit(path, inst);
-             response.content = fullOutput;
+              m_nativeAgent->Edit(path, inst);
+              response.content = *fullOutput;
          } else {
              response.content = "Usage: /edit <file> <instructions>";
          }
@@ -146,32 +146,32 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     // Explicit /plan logic
     else if (prompt.find("/plan ") == 0) {
          std::string task = prompt.substr(6);
-         m_nativeAgent->Plan(task);
-         response.content = fullOutput;
+          m_nativeAgent->Plan(task);
+          response.content = *fullOutput;
     }
     // Explicit /suggest logic
     else if (prompt.find("/suggest ") == 0) {
          std::string path = prompt.substr(9);
-         m_nativeAgent->Suggest(path);
-         response.content = fullOutput;
+          m_nativeAgent->Suggest(path);
+          response.content = *fullOutput;
     }
     // Explicit /patch logic (HotPatching)
     else if (prompt.find("/patch ") == 0) {
          std::string path = prompt.substr(7);
-         m_nativeAgent->HotPatch(path);
-         response.content = fullOutput;
+          m_nativeAgent->HotPatch(path);
+          response.content = *fullOutput;
     }
     // General Query
-    else {
-         m_nativeAgent->Ask(prompt);
-         response.content = fullOutput;
-         if (fullOutput.find("<thinking>") != std::string::npos) {
-             response.type = AgentResponseType::THINKING;
-         }
-    }
+     else {
+          m_nativeAgent->Ask(prompt);
+          response.content = *fullOutput;
+          if (fullOutput->find("<thinking>") != std::string::npos) {
+              response.type = AgentResponseType::THINKING;
+          }
+     }
 
-    response.rawOutput = fullOutput;
-    return response;
+     response.rawOutput = *fullOutput;
+     return response;
 }
 
 // Deprecated Stubs — replaced with real implementations
