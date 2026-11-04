@@ -13,8 +13,12 @@ try {
   for($i=0;$i -lt 120;$i++){Start-Sleep -Milliseconds 500;$stop=Find-RawrControl $s -AutomationId '1210';if($stop.Current.IsEnabled){$active=$true;break}}
   if(-not $active){$out=[ordered]@{Gate='T05';Result='NOT_VERIFIED';CandidateSHA256=$s.SHA256;PID=$s.Pid;Model=$modelName;PromptReadback=$true;SendEnabled=$sendState;SendHwnd=('0x{0:X}' -f $sendHwnd.ToInt64());StopHwnd=('0x{0:X}' -f $stopHwnd.ToInt64());StopInitialEnabled=$preStop;StopEverEnabled=$false;Failure='STOP_NEVER_ENABLED';TimestampUtc=[DateTime]::UtcNow.ToString('o')};$out|ConvertTo-Json|Set-Content (Join-Path $EvidenceDir 'T05.receipt.json') -Encoding UTF8;throw 'STOP_NEVER_ENABLED'}
   Invoke-RawrControl $s $stop; Start-Sleep -Seconds 2
-  Set-RawrControlText $s $input "$b. Reply exactly with this marker and nothing else: $b";Invoke-RawrControl $s $send
-  $seen=$false
-  for($i=0;$i -lt 180;$i++){Start-Sleep -Milliseconds 500;try{$text=Get-RawrControlText $s $transcript}catch{$text=''};if($text -like "*$b*"){$seen=$true;break}}
-  $result=if($seen){'PASS'}else{'FAIL'};$out=[ordered]@{Gate='T05';Result=$result;CandidateSHA256=$s.SHA256;PID=$s.Pid;RequestA=$a;RequestB=$b;StopObserved=$active;BMarkerObserved=$seen;TimestampUtc=[DateTime]::UtcNow.ToString('o')};$out|ConvertTo-Json|Set-Content (Join-Path $EvidenceDir 'T05.receipt.json') -Encoding UTF8;$out|ConvertTo-Json
+  $bPrompt="$b. Reply exactly with this marker and nothing else: $b";Set-RawrControlText $s $input $bPrompt
+  $bReadback=Get-RawrControlText $s $input
+  if($bReadback -ne $bPrompt){throw "REQUEST_B_INPUT_READBACK_FAILED actual=[$bReadback]"}
+  Invoke-RawrControl $s $send
+  $seen=$false;$response='';$beforeB=''
+  try{$beforeB=Get-RawrControlText $s $transcript}catch{}
+  for($i=0;$i -lt 180;$i++){Start-Sleep -Milliseconds 500;try{$text=Get-RawrControlText $s $transcript}catch{$text=''};$response=$text.Substring([Math]::Min($beforeB.Length,$text.Length));if($response -match "(?m)^AI:\s*$([regex]::Escape($b))\s*$"){$seen=$true;break}}
+  $result=if($seen){'PASS'}else{'FAIL'};$out=[ordered]@{Gate='T05';Result=$result;CandidateSHA256=$s.SHA256;PID=$s.Pid;RequestA=$a;RequestB=$b;RequestBInputExact=($bReadback -eq $bPrompt);StopObserved=$active;BMarkerObserved=$seen;AiResponseOnly=$seen;TranscriptDelta=$response;TimestampUtc=[DateTime]::UtcNow.ToString('o')};$out|ConvertTo-Json -Depth 6|Set-Content (Join-Path $EvidenceDir 'T05.receipt.json') -Encoding UTF8;$out|ConvertTo-Json -Depth 6
 }catch{$out=[ordered]@{Gate='T05';Result='NOT_VERIFIED';CandidateSHA256=$s.SHA256;PID=$s.Pid;Error=$_.Exception.Message;TimestampUtc=[DateTime]::UtcNow.ToString('o')};$out|ConvertTo-Json|Set-Content (Join-Path $EvidenceDir 'T05.receipt.json') -Encoding UTF8;throw}

@@ -54,6 +54,16 @@
 
 namespace {
 
+void WriteChatRuntimeEvidence(const std::string& line)
+{
+    const char* configured = std::getenv("RAWRXD_LOG_DIR");
+    const std::string path = (configured && *configured)
+        ? std::string(configured) + "\\chat_runtime.log"
+        : std::string("chat_runtime.log");
+    std::ofstream out(path, std::ios::app);
+    if (out) out << line << std::endl;
+}
+
 std::wstring Utf8ToWideText(const std::string& text)
 {
     if (text.empty()) return {};
@@ -6998,6 +7008,13 @@ void Win32IDE::generateResponseAsync(
     const uint64_t requestGeneration =
         m_nextInferenceGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
     if (assignedGeneration) *assignedGeneration = requestGeneration;
+    LOG_INFO(std::string("[CHAT_RUNTIME] request_started request_id=") +
+             std::to_string(requestGeneration) +
+             " session=" + std::to_string(activeChatSession() ? activeChatSession()->id : 0) +
+             " model=" + selectedModel.identifier);
+    WriteChatRuntimeEvidence(std::string("request_started request_id=") +
+                             std::to_string(requestGeneration) +
+                             " model=" + selectedModel.identifier);
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
@@ -8357,11 +8374,17 @@ void Win32IDE::HandleCopilotSend() {
     auto onResponse = [this, sessionId, generationHolder](
         const std::string& response, bool complete, bool) {
         const uint64_t generation = *generationHolder;
-        LOG_DEBUG(std::string("[CHAT_RUNTIME] callback session=") + std::to_string(sessionId) +
+        LOG_DEBUG(std::string("[CHAT_RUNTIME] callback request_id=") + std::to_string(generation) +
+                  " session=" + std::to_string(sessionId) +
                   " generation=" + std::to_string(generation) +
                   " complete=" + (complete ? "1" : "0") +
                   " response_bytes=" + std::to_string(response.size()) +
                   " stop=" + (m_inferenceStopRequested.load() ? "1" : "0"));
+        WriteChatRuntimeEvidence(std::string("callback request_id=") +
+                                 std::to_string(generation) +
+                                 " complete=" + (complete ? "1" : "0") +
+                                 " response_bytes=" + std::to_string(response.size()) +
+                                 " stop=" + (m_inferenceStopRequested.load() ? "1" : "0"));
         if (m_inferenceStopRequested.load()) return;
         auto* update = new CopilotChatUiUpdate{sessionId, generation, response, complete};
         const HWND target = m_hwndMain;
@@ -8391,7 +8414,13 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
             : generation == lastCompletedGeneration);
     if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
         !generationCurrent) {
-        appendNativeDebugOutput(std::string("[CHAT_RUNTIME] stale_ui_update session=") +
+        WriteChatRuntimeEvidence(std::string("stale_ui_update request_id=") +
+                                 std::to_string(generation) +
+                                 " rendered=0 active=" +
+                                 std::to_string(activeGeneration));
+        appendNativeDebugOutput(std::string("[CHAT_RUNTIME] stale_ui_update request_id=") +
+                                std::to_string(generation) +
+                                " session=" +
                                 std::to_string(sessionId) +
                                 " generation=" + std::to_string(generation) +
                                 " active=" + std::to_string(activeGeneration) +
@@ -8399,11 +8428,17 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
                                 std::to_string(lastCompletedGeneration));
         return;
     }
-    appendNativeDebugOutput(std::string("[CHAT_RUNTIME] ui_update session=") +
+    appendNativeDebugOutput(std::string("[CHAT_RUNTIME] ui_update request_id=") +
+                            std::to_string(generation) +
+                            " session=" +
                             std::to_string(sessionId) +
                             " generation=" + std::to_string(generation) +
                             " complete=" + (complete ? "1" : "0") +
                             " response_bytes=" + std::to_string(response.size()));
+    WriteChatRuntimeEvidence(std::string("ui_update request_id=") +
+                             std::to_string(generation) +
+                             " rendered=1 complete=" + (complete ? "1" : "0") +
+                             " response_bytes=" + std::to_string(response.size()));
     ChatSessionState* session = nullptr;
     for (auto& candidate : m_chatSessions) {
         if (candidate.id == sessionId) { session = &candidate; break; }
@@ -8477,7 +8512,22 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
 
 void Win32IDE::HandleCopilotStop()
 {
+    const uint64_t cancelledRequest =
+        m_activeInferenceGeneration.load(std::memory_order_acquire);
+    LOG_INFO(std::string("[CHAT_RUNTIME] cancel_requested request_id=") +
+             std::to_string(cancelledRequest) +
+             " active_before=" + std::to_string(cancelledRequest != 0 ? 1 : 0));
+    WriteChatRuntimeEvidence(std::string("cancel_requested request_id=") +
+                             std::to_string(cancelledRequest));
     stopInference();
+    LOG_INFO(std::string("[CHAT_RUNTIME] cancel_acknowledged request_id=") +
+             std::to_string(cancelledRequest) +
+             " active_after=" +
+             std::to_string(m_activeInferenceGeneration.load(std::memory_order_acquire) != 0 ? 1 : 0));
+    WriteChatRuntimeEvidence(std::string("cancel_acknowledged request_id=") +
+                             std::to_string(cancelledRequest) +
+                             " active_after=" +
+                             std::to_string(m_activeInferenceGeneration.load(std::memory_order_acquire) != 0 ? 1 : 0));
     if (m_agenticLoopBridge && m_agenticLoopBridge->IsRunning()) {
         m_agenticLoopBridge->Cancel();
     }
