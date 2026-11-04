@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -131,9 +132,16 @@ public:
     // ---- Configuration ----
     void setTimeoutSeconds(int seconds) { m_timeout_seconds = seconds; }
 
+    // Interrupt the active WinHTTP request, if one is in flight.  This is
+    // intentionally transport-level cancellation: a callback flag alone
+    // cannot unblock a synchronous WinHttpReadData call.
+    void cancelActiveRequest() noexcept;
+
 private:
     std::string m_base_url;
     int         m_timeout_seconds;
+    mutable std::mutex m_active_request_mutex;
+    void* m_active_request = nullptr;
 
     // JSON builders
     std::string createGenerateRequestJson(const OllamaGenerateRequest& req);

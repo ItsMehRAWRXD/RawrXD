@@ -81,16 +81,23 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
         }
     }
 
-    // Start health check thread
-    m_health_running.store(true);
-    m_health_thread = std::thread([this]() {
-        while (m_health_running.load()) {
-            m_deep2->CheckHealth();
-            m_ollama->CheckHealth();
-            std::unique_lock<std::mutex> lock(m_health_cv_mtx);
-            m_health_cv.wait_for(lock, std::chrono::seconds(m_config.health_check_interval_s));
-        }
-    });
+    // The CLI one-shot path can disable periodic polling by setting the
+    // interval to zero.  Avoid creating a background thread whose synchronous
+    // health request can outlive a completed command and delay process exit.
+    if (m_config.health_check_interval_s > 0) {
+        m_health_running.store(true);
+        m_health_thread = std::thread([this]() {
+            while (m_health_running.load()) {
+                m_deep2->CheckHealth();
+                m_ollama->CheckHealth();
+                std::unique_lock<std::mutex> lock(m_health_cv_mtx);
+                m_health_cv.wait_for(lock,
+                                     std::chrono::seconds(m_config.health_check_interval_s));
+            }
+        });
+    } else {
+        m_health_running.store(false);
+    }
 
     m_initialized.store(true);
     CliTrace("Initialize:ready");
@@ -99,6 +106,10 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
 
 void BackendRouter::Shutdown() {
     CliTrace("Shutdown:enter");
+    // Cancel transport operations before joining the health thread. The
+    // health worker uses synchronous WinHTTP calls and otherwise a blocked
+    // /health request can keep process shutdown alive until its timeout.
+    Cancel();
     m_health_running.store(false);
     m_health_cv.notify_all();
     if (m_health_thread.joinable()) {

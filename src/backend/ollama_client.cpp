@@ -38,6 +38,22 @@ OllamaClient::OllamaClient(const std::string& base_url)
 }
 
 OllamaClient::~OllamaClient() {
+    cancelActiveRequest();
+}
+
+void OllamaClient::cancelActiveRequest() noexcept {
+#ifdef _WIN32
+    HINTERNET request = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_active_request_mutex);
+        request = reinterpret_cast<HINTERNET>(m_active_request);
+        m_active_request = nullptr;
+    }
+    // Closing the active WinHTTP request is the supported way to unblock a
+    // synchronous receive.  The request owner below will not close it again
+    // after ownership has been cleared here.
+    if (request) WinHttpCloseHandle(request);
+#endif
 }
 
 void OllamaClient::setBaseUrl(const std::string& url) {
@@ -389,6 +405,22 @@ std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
         WinHttpCloseHandle(hSession);
         return "";
     }
+
+    {
+        std::lock_guard<std::mutex> lock(m_active_request_mutex);
+        m_active_request = reinterpret_cast<void*>(hRequest);
+    }
+    auto releaseRequest = [&] {
+        bool owned = false;
+        {
+            std::lock_guard<std::mutex> lock(m_active_request_mutex);
+            if (m_active_request == reinterpret_cast<void*>(hRequest)) {
+                m_active_request = nullptr;
+                owned = true;
+            }
+        }
+        if (owned) WinHttpCloseHandle(hRequest);
+    };
     
     BOOL bResults = WinHttpSendRequest(hRequest,
                                        WINHTTP_NO_ADDITIONAL_HEADERS, 0,
@@ -418,7 +450,7 @@ std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
         }
     }
     
-    WinHttpCloseHandle(hRequest);
+    releaseRequest();
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     
@@ -455,6 +487,22 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
         WinHttpCloseHandle(hSession);
         return "";
     }
+
+    {
+        std::lock_guard<std::mutex> lock(m_active_request_mutex);
+        m_active_request = reinterpret_cast<void*>(hRequest);
+    }
+    auto releaseRequest = [&] {
+        bool owned = false;
+        {
+            std::lock_guard<std::mutex> lock(m_active_request_mutex);
+            if (m_active_request == reinterpret_cast<void*>(hRequest)) {
+                m_active_request = nullptr;
+                owned = true;
+            }
+        }
+        if (owned) WinHttpCloseHandle(hRequest);
+    };
     
     std::wstring headers = L"Content-Type: application/json\r\n";
     
@@ -488,7 +536,7 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
     }
     
     TraceOllamaExchange(endpoint.c_str(), json_body, response);
-    WinHttpCloseHandle(hRequest);
+    releaseRequest();
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     

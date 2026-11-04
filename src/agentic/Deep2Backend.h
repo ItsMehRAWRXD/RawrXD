@@ -21,6 +21,7 @@
 #include <mutex>
 #include <deque>
 #include <string>
+#include <unordered_set>
 
 namespace RawrXD {
 namespace Agent {
@@ -89,6 +90,11 @@ private:
     bool                  m_lastHealthOk{false};
     std::deque<std::string> m_recentErrors;
 
+    // WinHTTP calls are synchronous. Keep every in-flight request visible so
+    // cancellation and shutdown can close the handle and unblock a receive.
+    mutable std::mutex m_active_request_mutex;
+    std::unordered_set<void*> m_active_requests;
+
     // ---- HTTP helpers (WinHTTP) ----
     std::string makeGetRequest(const std::string& endpoint);
     std::string makePostRequest(const std::string& endpoint, const std::string& json_body);
@@ -104,6 +110,9 @@ private:
     bool     ShouldEmitError(const std::string& msg);
     void     RecordSuccess(double tps, uint64_t ptok, uint64_t ctok);
     void     RecordFailure(const std::string& error);
+    void     registerActiveRequest(void* request);
+    bool     releaseActiveRequest(void* request) noexcept;
+    void     cancelActiveRequests() noexcept;
 };
 
 } // namespace Agent

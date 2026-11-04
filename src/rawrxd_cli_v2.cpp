@@ -39,6 +39,7 @@
 #endif
 
 #include "deep2/Deep2CLIBridge.hpp"
+#include "deep2/deep2_sha256.hpp"
 #include "deep2/RawrModelAlias.hpp"
 #include "deep2/QuantParityRegistry.h"
 #include "reap_cli_contract.hpp"
@@ -88,12 +89,51 @@ static std::string                         g_workspace;
 static std::string                         g_model;
 static std::string                         g_backend_name = "auto";
 static std::atomic<bool>                   g_streamed_response{false};
+
+static std::string CurrentExecutablePath() {
+#ifdef _WIN32
+    std::vector<char> buffer(512);
+    for (;;) {
+        const DWORD n = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+        if (n == 0) return {};
+        if (n + 1 < buffer.size()) return std::string(buffer.data(), n);
+        buffer.resize(buffer.size() * 2);
+    }
+#else
+    return {};
+#endif
+}
+
+static std::string CurrentExecutableSha256() {
+    const std::string path = CurrentExecutablePath();
+    if (path.empty()) return {};
+    std::array<uint8_t, 32> digest{};
+    return deep2::sha256_file(path, digest) ? deep2::hex32(digest) : std::string();
+}
+
+static uint64_t CurrentProcessIdValue() {
+#ifdef _WIN32
+    return static_cast<uint64_t>(GetCurrentProcessId());
+#else
+    return 0;
+#endif
+}
+
+static void PersistDirectToolReceipt(const fs::path& workspaceRoot, const json& receipt) {
+    std::error_code ec;
+    const fs::path ledgerDir = workspaceRoot / ".rawrxd" / "ledger";
+    fs::create_directories(ledgerDir, ec);
+    if (ec) return;
+    std::ofstream out(ledgerDir / "tool_receipts.jsonl", std::ios::binary | std::ios::app);
+    if (out) out << receipt.dump() << '\n';
+}
 // Per-run limits are owned by the CLI driver so every agent round (including
 // tool continuations) uses the same caller-approved budget.  The native
 // Deep2 bridge consumes max tokens directly; the Ollama/HTTP route receives
 // both values through BackendConfig below.
 static int                              g_run_max_tokens = 4096;
 static int                              g_run_context = 0;
+static int                              g_cancel_after_ms = 0;
 // T05 crash-recovery: track child process handles so cancellation can
 // terminate them instead of orphaning them.  _popen() closes the process
 // handle internally, so ReplaceFileW-style atomic ops are not enough --
@@ -717,6 +757,13 @@ static void ApplyRunBackendConfig() {
         auto config = backend->GetConfig();
         config.max_tokens = g_run_max_tokens;
         if (g_run_context > 0) config.num_ctx = g_run_context;
+        if (g_cancel_after_ms > 0) {
+            // A synchronous HTTP receive must have a bounded transport
+            // timeout for deterministic CLI cancellation.  The timer still
+            // signals the backend immediately; this bound prevents a
+            // provider that ignores handle-close from holding the process.
+            config.timeout_ms = std::max(1000, g_cancel_after_ms + 500);
+        }
         backend->SetConfig(config);
     }
 
@@ -839,6 +886,10 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
     }
     cfg.primary_model = "deep2-native";
     cfg.fallback_model = model.empty() ? "qwen2.5-coder:32b" : model;
+    // One-shot CLI commands do not need a background health poller.  Keeping
+    // the synchronous poll thread out of this process makes normal completion
+    // and cancellation deterministic without changing the IDE's router mode.
+    cfg.health_check_interval_s = 0;
     if (const char* numGpu = std::getenv("RAWRXD_OLLAMA_NUM_GPU");
         numGpu != nullptr && *numGpu != '\0') {
         try {
@@ -951,18 +1002,82 @@ static bool DescribeTool(const std::string& name) {
 }
 
 // ---------------------------------------------------------------------------
-// Direct CLI tool invocation: rawr tools run <name> [key=value ...]
+// Direct CLI tool invocation: rawr tools run <name> [key=value ...] [--mode NAME] [--json]
 // ---------------------------------------------------------------------------
 static int RunToolCli(const std::vector<std::string>& rest) {
     if (rest.size() < 2) {
-        std::cerr << "Usage: rawr tools run <toolName> [key=value ...]\n";
+        std::cerr << "Usage: rawr tools run <toolName> [key=value ...] [--mode NAME] [--json]\n";
         return 2;
     }
 
     rawrxd::tools::Request req;
     req.name = rest[1];
+
+    // Resolve mode: --mode NAME wins, else Code.
+    AgentMode requestedMode = AgentMode::Code;
+    bool jsonOutput = false;
+    bool modeSeen = false;
+    bool jsonSeen = false;
+    auto isGlobalOption = [](const std::string& value, const char* longName) {
+        const std::string name(longName);
+        return value == name || value.rfind(name + "=", 0) == 0;
+    };
     for (size_t i = 2; i < rest.size(); ++i) {
         const std::string& kv = rest[i];
+        if (kv == "--json" || kv == "--json=true") {
+            if (jsonSeen) {
+                std::cerr << "Duplicate --json flag\n";
+                return 2;
+            }
+            jsonSeen = true;
+            jsonOutput = true;
+            continue;
+        }
+        if (kv == "--json=false") {
+            if (jsonSeen) {
+                std::cerr << "Duplicate --json flag\n";
+                return 2;
+            }
+            jsonSeen = true;
+            jsonOutput = false;
+            continue;
+        }
+        if (kv == "--mode" && i + 1 < rest.size()) {
+            if (modeSeen) {
+                std::cerr << "Duplicate --mode flag\n";
+                return 2;
+            }
+            AgentMode parsedMode = AgentMode::Code;
+            if (!AgentModeParse(rest[++i], parsedMode)) {
+                std::cerr << "Unknown mode: " << rest[i] << "\n";
+                return 2;
+            }
+            modeSeen = true;
+            requestedMode = parsedMode;
+            continue;
+        }
+        if (kv.rfind("--mode=", 0) == 0) {
+            if (modeSeen) {
+                std::cerr << "Duplicate --mode flag\n";
+                return 2;
+            }
+            AgentMode parsedMode = AgentMode::Code;
+            const std::string value = kv.substr(7);
+            if (!AgentModeParse(value, parsedMode)) {
+                std::cerr << "Unknown mode: " << value << "\n";
+                return 2;
+            }
+            modeSeen = true;
+            requestedMode = parsedMode;
+            continue;
+        }
+        // ParseOptions has already applied these global options to
+        // g_workspace.  They may still be present in the subcommand tail;
+        // consume them here instead of misclassifying them as tool arguments.
+        if (isGlobalOption(kv, "--workspace") || isGlobalOption(kv, "--root")) {
+            if (kv.find('=') == std::string::npos && i + 1 < rest.size()) ++i;
+            continue;
+        }
         auto eq = kv.find('=');
         if (eq == std::string::npos) {
             std::cerr << "Expected key=value, got: " << kv << "\n";
@@ -971,12 +1086,50 @@ static int RunToolCli(const std::vector<std::string>& rest) {
         req.args[kv.substr(0, eq)] = kv.substr(eq + 1);
     }
 
-    // A direct CLI tool invocation is its own user turn. Read the active
-    // workspace MOTD before allowing this command to reach the registry.
+    // ParseOptions has already selected the workspace; keep one normalized
+    // root for authorization, receipts, and tool boundary checks.
     const fs::path workspaceRoot = g_workspace.empty() ? fs::current_path() : fs::path(g_workspace);
-    rawrxd::agentic::MotdAuthorization motdAuthorization(workspaceRoot);
     const std::string motdSession = "rawr-tools-" +
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const auto startedAt = std::chrono::steady_clock::now();
+    auto argsJson = [&] {
+        json args;
+        for (const auto& [key, value] : req.args) args[key] = value;
+        return args;
+    };
+    auto emitJson = [&](bool ok, int exitCode, const std::string& output,
+                        const std::string& error, const std::string& motdDigest = std::string()) {
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startedAt).count();
+        json receipt = {
+            {"request_id", motdSession},
+            {"pid", CurrentProcessIdValue()},
+            {"binary_path", CurrentExecutablePath()},
+            {"binary_sha256", CurrentExecutableSha256()},
+            {"tool", req.name},
+            {"args", argsJson()},
+            {"mode", AgentModeName(requestedMode)},
+            {"workspace", workspaceRoot.string()},
+            {"ok", ok},
+            {"exit_code", exitCode},
+            {"output", output},
+            {"error", error},
+            {"duration_ms", elapsed}
+        };
+        if (!motdDigest.empty()) receipt["motd_sha256"] = motdDigest;
+        PersistDirectToolReceipt(workspaceRoot, receipt);
+        if (jsonOutput) std::cout << receipt.dump() << "\n";
+    };
+
+    // Apply the requested mode to the permission gate before tool dispatch,
+    // so authority checks use the intended execution policy.
+    if (g_gate) {
+        g_gate->SetMode(requestedMode);
+    }
+
+    // A direct CLI tool invocation is its own user turn. Read the active
+    // workspace MOTD before allowing this command to reach the registry.
+    rawrxd::agentic::MotdAuthorization motdAuthorization(workspaceRoot);
     constexpr uint64_t motdTurn = 1;
     if (!motdAuthorization.BeginTurn(motdSession, motdTurn)) {
         std::cerr << "DENIED: MOTD_TURN_START_FAILED\n";
@@ -987,9 +1140,12 @@ static int RunToolCli(const std::vector<std::string>& rest) {
     if (req.name == "read_motd") {
         std::string contents, digest, error;
         if (!motdAuthorization.ReadMotd(motdSession, motdTurn, contents, digest, error)) {
+            emitJson(false, 3, "", error);
             std::cerr << "DENIED: " << error << "\n";
             return 3;
         }
+        emitJson(true, 0, contents, "", digest);
+        if (jsonOutput) return 0;
         std::cout << "MOTD_ACK=1\nMOTD_SHA256=" << digest << "\n" << contents << "\n";
         return 0;
     }
@@ -997,18 +1153,21 @@ static int RunToolCli(const std::vector<std::string>& rest) {
     std::string motdContents, motdDigest, motdError;
     if (!motdAuthorization.ReadMotd(motdSession, motdTurn,
                                     motdContents, motdDigest, motdError)) {
+        emitJson(false, 3, "", motdError);
         std::cerr << "DENIED: " << motdError << "\n";
         return 3;
     }
     std::string authorizationError;
     if (!motdAuthorization.AuthorizeTool(req.name, motdSession, motdTurn,
                                           authorizationError)) {
+        emitJson(false, 3, "", authorizationError, motdDigest);
         std::cerr << "DENIED: " << authorizationError << "\n";
         return 3;
     }
-    std::cout << "MOTD_ACK=1 MOTD_SHA256=" << motdDigest << "\n";
+    if (!jsonOutput) std::cout << "MOTD_ACK=1 MOTD_SHA256=" << motdDigest << "\n";
 
     if (!g_tools || !g_gate) {
+        emitJson(false, 1, "", "Tool executor not initialized.", motdDigest);
         std::cerr << "Tool executor not initialized.\n";
         return 1;
     }
@@ -1021,17 +1180,20 @@ static int RunToolCli(const std::vector<std::string>& rest) {
 
     rawrxd::tools::Tool tool;
     if (!g_tools->find(req.name, tool)) {
+        emitJson(false, 1, "", "Unknown tool: " + req.name, motdDigest);
         std::cerr << "Unknown tool: " << req.name << "\n";
         return 1;
     }
 
     if (!g_gate->AllowsWithApproval(tool, req, approve)) {
+        emitJson(false, 3, "", g_gate->ExplainDenial(tool), motdDigest);
         std::cerr << "DENIED: " << g_gate->ExplainDenial(tool) << "\n";
         return 3;
     }
 
     auto res = g_tools->call(req, approve);
-    if (!res.output.empty()) std::cout << res.output << "\n";
+    emitJson(res.ok, res.ok ? 0 : 1, res.output, res.error, motdDigest);
+    if (!jsonOutput && !res.output.empty()) std::cout << res.output << "\n";
     if (!res.ok) {
         std::cerr << "ERROR: " << res.error << "\n";
         return 1;
@@ -1105,6 +1267,7 @@ static int CmdRun(const std::vector<std::string>& args) {
         flags.count("tool-scope") != 0 && flags.at("tool-scope") == "source-edit";
     g_run_max_tokens = 4096;
     g_run_context = 0;
+    g_cancel_after_ms = 0;
     std::string runOptionError;
     if (!ParseBoundedRunOption(flags, "max-tokens", 1, 65536,
                                g_run_max_tokens, runOptionError) ||
@@ -1112,6 +1275,13 @@ static int CmdRun(const std::vector<std::string>& args) {
                                g_run_context, runOptionError)) {
         std::cerr << "RUN_CONFIG_ERROR=" << runOptionError << "\n";
         return 2;
+    }
+    if (flags.count("cancel-after-ms")) {
+        if (!ParseBoundedRunOption(flags, "cancel-after-ms", 1, 3600000,
+                                   g_cancel_after_ms, runOptionError)) {
+            std::cerr << "RUN_CONFIG_ERROR=" << runOptionError << "\n";
+            return 2;
+        }
     }
     std::cerr << "RUN_CONFIG_REQUESTED_MAX_TOKENS=" << g_run_max_tokens << "\n";
     if (g_run_context > 0) {

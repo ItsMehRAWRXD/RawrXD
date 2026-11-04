@@ -285,6 +285,11 @@ InferenceResult OllamaBackend::ChatSync(
         return InferenceResult::Error(e.what());
     }
 
+    if (m_cancelRequested.load()) {
+        RecordFailure("Ollama chatSync cancelled");
+        return InferenceResult::Error("Ollama request cancelled");
+    }
+
     auto t1 = std::chrono::steady_clock::now();
     double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
@@ -633,8 +638,9 @@ bool OllamaBackend::FIMStream(
 
 void OllamaBackend::Cancel() {
     m_cancelRequested.store(true);
-    // Note: Ollama HTTP doesn't support per-request cancellation.
-    // The cancel flag prevents new tokens from being delivered to callbacks.
+    if (m_client) m_client->cancelActiveRequest();
+    // The cancel flag prevents any response that races with transport
+    // teardown from being delivered to callbacks.
     m_streaming.store(false);
 }
 
