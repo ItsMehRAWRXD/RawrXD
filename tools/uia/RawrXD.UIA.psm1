@@ -31,6 +31,7 @@ public static class RawrXD_UiaInput {
  [DllImport("user32.dll")] public static extern int SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll",CharSet=CharSet.Unicode,EntryPoint="SendMessageW")] public static extern IntPtr SendMessageText(IntPtr h,uint m,IntPtr w,System.Text.StringBuilder l);
  public static void Paste(string t){System.Windows.Forms.Clipboard.SetText(t);keybd_event(0x11,0,0,UIntPtr.Zero);keybd_event(0x56,0,0,UIntPtr.Zero);keybd_event(0x56,0,2,UIntPtr.Zero);keybd_event(0x11,0,2,UIntPtr.Zero);}
+ public static void Clear(){keybd_event(0x11,0,0,UIntPtr.Zero);keybd_event(0x41,0,0,UIntPtr.Zero);keybd_event(0x41,0,2,UIntPtr.Zero);keybd_event(0x11,0,2,UIntPtr.Zero);keybd_event(0x2E,0,0,UIntPtr.Zero);keybd_event(0x2E,0,2,UIntPtr.Zero);}
  public static void Click(IntPtr h){RECT r;if(!GetWindowRect(h,out r))throw new InvalidOperationException("GetWindowRect failed");SetCursorPos((r.l+r.r)/2,(r.t+r.b)/2);mouse_event(2,0,0,0,UIntPtr.Zero);mouse_event(4,0,0,0,UIntPtr.Zero);}
  public static void Focus(IntPtr main,IntPtr edit){uint c=GetCurrentThreadId(),f=GetWindowThreadProcessId(GetForegroundWindow(),IntPtr.Zero),t=GetWindowThreadProcessId(main,IntPtr.Zero);if(f!=0&&f!=c)AttachThreadInput(c,f,true);if(t!=0&&t!=c)AttachThreadInput(c,t,true);SetForegroundWindow(main);SetFocus(edit);if(t!=0&&t!=c)AttachThreadInput(c,t,false);if(f!=0&&f!=c)AttachThreadInput(c,f,false);}
  public static IntPtr FindChildById(IntPtr root,int id){IntPtr found=IntPtr.Zero;EnumChildWindows(root,(h,l)=>{if(GetDlgCtrlID(h)==id){found=h;return false;}return true;},IntPtr.Zero);return found;}
@@ -83,7 +84,7 @@ function Set-RawrControlText { param([Parameter(Mandatory)]$Session,[Parameter(M
     if($h -eq [IntPtr]::Zero){throw 'No writable ValuePattern or native HWND'}
     if($p.Path -ne $Session.Exe){throw 'PID executable mismatch'}
     [RawrXD_UiaInput]::Click($h);[RawrXD_UiaInput]::Focus($p.MainWindowHandle,$h)
-    [RawrXD_UiaInput]::Paste($Text);Start-Sleep -Milliseconds 150
+    [RawrXD_UiaInput]::Clear();Start-Sleep -Milliseconds 75;[RawrXD_UiaInput]::Paste($Text);Start-Sleep -Milliseconds 150
 }
 function Get-RawrNativeDiagnostics { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
     $p=Get-Process -Id $Session.Pid -ErrorAction Stop;$h=[IntPtr]$Element.Current.NativeWindowHandle;if($h -eq [IntPtr]::Zero -and $Element.Current.AutomationId){$h=[RawrXD_UiaInput]::FindChildById($p.MainWindowHandle,[int]$Element.Current.AutomationId)}
