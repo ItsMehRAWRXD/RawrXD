@@ -1021,6 +1021,7 @@ static int RunToolCli(const std::vector<std::string>& rest) {
     bool jsonOutput = false;
     bool modeSeen = false;
     bool jsonSeen = false;
+    bool approveMutations = false;
     auto isGlobalOption = [](const std::string& value, const char* longName) {
         const std::string name(longName);
         return value == name || value.rfind(name + "=", 0) == 0;
@@ -1074,9 +1075,15 @@ static int RunToolCli(const std::vector<std::string>& rest) {
             requestedMode = parsedMode;
             continue;
         }
-        // ParseOptions has already applied these global options to
-        // g_workspace.  They may still be present in the subcommand tail;
-        // consume them here instead of misclassifying them as tool arguments.
+        if (kv == "--approve-mutations" || kv == "--approve-mutations=true") {
+            approveMutations = true;
+            continue;
+        }
+        if (kv.rfind("--approve-mutations=", 0) == 0) {
+            const std::string value = kv.substr(21);
+            approveMutations = (value == "1" || value == "true" || value == "yes");
+            continue;
+        }
         if (isGlobalOption(kv, "--workspace") || isGlobalOption(kv, "--root")) {
             if (kv.find('=') == std::string::npos && i + 1 < rest.size()) ++i;
             continue;
@@ -1088,6 +1095,8 @@ static int RunToolCli(const std::vector<std::string>& rest) {
         }
         req.args[kv.substr(0, eq)] = kv.substr(eq + 1);
     }
+
+    if (approveMutations) g_explicit_mutation_approval = true;
 
     // ParseOptions has already selected the workspace; keep one normalized
     // root for authorization, receipts, and tool boundary checks.
