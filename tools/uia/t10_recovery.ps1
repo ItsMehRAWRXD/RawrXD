@@ -26,6 +26,12 @@ public static class RawrXD_NativeFocus {
   [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
   [StructLayout(LayoutKind.Sequential)] public struct RECT { public int l; public int t; public int r; public int b; }
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out RECT r);
+  [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr h,out RECT r);
+  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
+  [StructLayout(LayoutKind.Sequential)] public struct GUITHREADINFO { public int cbSize; public uint flags; public IntPtr active; public IntPtr focus; public IntPtr capture; public IntPtr menu; public IntPtr move; public IntPtr caret; public RECT caretRect; }
+  [DllImport("user32.dll")] public static extern bool GetGUIThreadInfo(uint id,ref GUITHREADINFO info);
   [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
   [DllImport("user32.dll")] public static extern void mouse_event(uint flags,uint dx,uint dy,uint data,UIntPtr extra);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
@@ -47,6 +53,9 @@ public static class RawrXD_NativeFocus {
       keybd_event(0,(byte)(c & 0xff),6,UIntPtr.Zero);
     }
   }
+  public static void Paste() {
+    keybd_event(0x11,0,0,UIntPtr.Zero); keybd_event(0x56,0,0,UIntPtr.Zero); keybd_event(0x56,0,2,UIntPtr.Zero); keybd_event(0x11,0,2,UIntPtr.Zero);
+  }
   public static void Focus(IntPtr main, IntPtr edit) {
     uint current=GetCurrentThreadId(); uint foreground=GetWindowThreadProcessId(GetForegroundWindow(),IntPtr.Zero); uint target=GetWindowThreadProcessId(main,IntPtr.Zero);
     if(foreground!=0 && foreground!=current) AttachThreadInput(current,foreground,true);
@@ -58,6 +67,10 @@ public static class RawrXD_NativeFocus {
   public static void ClickAndFocus(IntPtr main, IntPtr edit) {
     RECT r; if(!GetWindowRect(edit,out r)) throw new InvalidOperationException("GetWindowRect failed");
     int x=(r.l+r.r)/2, y=(r.t+r.b)/2; SetCursorPos(x,y); mouse_event(2,0,0,0,UIntPtr.Zero); mouse_event(4,0,0,0,UIntPtr.Zero); Focus(main,edit);
+  }
+  public static string FocusReport(IntPtr main, IntPtr edit) {
+    RECT r; GetClientRect(edit,out r); uint tid=GetWindowThreadProcessId(main,IntPtr.Zero); var gi=new GUITHREADINFO{cbSize=Marshal.SizeOf(typeof(GUITHREADINFO))}; GetGUIThreadInfo(tid,ref gi);
+    return String.Format("main=0x{0:X};editor=0x{1:X};focus=0x{2:X};active=0x{3:X};editorId={4};visible={5};enabled={6};client={7}x{8}",main.ToInt64(),edit.ToInt64(),gi.focus.ToInt64(),gi.active.ToInt64(),GetDlgCtrlID(edit),IsWindowVisible(edit),IsWindowEnabled(edit),r.r-r.l,r.b-r.t);
   }
 }
 '@
@@ -74,10 +87,14 @@ public static class RawrXD_NativeFocus {
   }
   if($hwnd -eq [IntPtr]::Zero){throw 'NATIVE_RICHEDIT_NOT_FOUND'}
   [RawrXD_NativeFocus]::ClickAndFocus($p.MainWindowHandle,$hwnd)
-  [RawrXD_NativeFocus]::TypeUnicode($Marker)
+  $focusBefore=[RawrXD_NativeFocus]::FocusReport($p.MainWindowHandle,$hwnd)
+  Add-Type -AssemblyName System.Windows.Forms
+  [System.Windows.Forms.Clipboard]::SetText($Marker)
+  [RawrXD_NativeFocus]::Paste()
+  $focusAfter=[RawrXD_NativeFocus]::FocusReport($p.MainWindowHandle,$hwnd)
   $editorText=''
   try { $editorText=Get-RawrControlText $s $editor } catch { $editorText=[RawrXD_NativeFocus]::Text($hwnd) }
-  if($editorText -notlike "*$Marker*"){throw 'EDITOR_MARKER_NOT_OBSERVED'}
+  if($editorText -notlike "*$Marker*"){throw "EDITOR_MARKER_NOT_OBSERVED;FOCUS_BEFORE=$focusBefore;FOCUS_AFTER=$focusAfter"}
   Start-Sleep -Seconds 3
   $sessionPath=Join-Path $env:LOCALAPPDATA 'RawrXD\ide_session.json'
   if(-not (Test-Path $sessionPath)){throw "AUTOSAVE_NOT_FOUND: $sessionPath"}
