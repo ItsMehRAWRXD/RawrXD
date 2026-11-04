@@ -1273,6 +1273,9 @@ static int CmdRun(const std::vector<std::string>& args) {
         else if (mode_str.empty()) {
             mode_str = a;
         }
+        else if (flags.count("prompt") == 0 && flags.count("task") == 0) {
+            flags["prompt"] = a;
+        }
     }
     g_explicit_mutation_approval = flags.count("approve-mutations") != 0;
     g_source_edit_tool_scope =
@@ -1396,6 +1399,17 @@ static int CmdRun(const std::vector<std::string>& args) {
         AgentMode requestedMode{};
         if (!AgentModeParse(mode_str, requestedMode)) {
             flags["prompt"] = mode_str;
+            mode_str.clear();
+        }
+    }
+
+    // If mode_str is set but flags["prompt"] was already captured from a
+    // trailing positional argument, clear mode_str if it is not a valid
+    // mode so the agent defaults to Code instead of failing on an
+    // unrecognized mode name.
+    if (!is_wizard_goal && !mode_str.empty() && flags.count("prompt")) {
+        AgentMode requestedMode{};
+        if (!AgentModeParse(mode_str, requestedMode)) {
             mode_str.clear();
         }
     }
