@@ -79,8 +79,10 @@ $cli = Get-Content $cliJson -Raw | ConvertFrom-Json
 Say "C2 rawr capabilities           PASS (exit 0, tools=$($cli.tool_count), revision=$($cli.source_revision))"
 
 # ---- C3: revision freshness (staleness rejection) ------------------------------
-$head = (git -C $RepoRoot rev-parse HEAD 2>$null)
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($head)) { Fail "git rev-parse HEAD failed" }
+$headOutput = @(& git.exe -C $RepoRoot rev-parse HEAD 2>&1)
+if ($LASTEXITCODE -ne 0 -or $headOutput.Count -eq 0) { Fail "git rev-parse HEAD failed" }
+$head = [string]$headOutput[0].Trim()
+if ([string]::IsNullOrWhiteSpace($head)) { Fail "git rev-parse HEAD returned an empty revision" }
 if ($cli.source_revision -notmatch '^[0-9a-f]{40}$') {
     Fail "manifest revision is not a real commit: '$($cli.source_revision)' (git-unavailable manifests are stale by definition)"
 }

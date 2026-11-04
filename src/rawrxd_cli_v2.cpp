@@ -588,7 +588,10 @@ static std::string DiscoverWorkspace(const Options& o) {
 // ---------------------------------------------------------------------------
 static std::string RunGit(const std::string& args) {
 #ifdef _WIN32
-    std::string cmd = "git -C \"" + g_workspace + "\" " + args + " 2>nul";
+    // stdout and stderr are already captured through the inherited pipe below.
+    // Do not append shell redirection here: CreateProcess receives the command
+    // line directly, so `2>nul` is passed to Git as a literal revision token.
+    std::string cmd = "git -C \"" + g_workspace + "\" " + args;
 
     // T05 crash-recovery: use CreateProcess instead of _popen so the child
     // git process can be terminated on cancellation instead of orphaned.
