@@ -64,6 +64,24 @@
 #define IDM_HELP_PSDOCS 4003
 #define IDM_HELP_SEARCH 4004
 #define IDM_HELP_SHORTCUTS 4005
+
+// Build commands (4100-4199 range already used by agent - using 5000-5099 for build)
+#define IDM_BUILD_COMPILE 5001
+#define IDM_BUILD_RUN 5002
+#define IDM_BUILD_CLEAN 5003
+#define IDM_BUILD_REBUILD 5004
+
+// Tool analysis commands
+#define IDM_TOOLS_ANALYZE 5051
+
+// Additional tool commands
+#define IDM_TOOLS_DEBUG_START 5060
+#define IDM_TOOLS_DEBUG_STOP 5061
+
+// CLI integration commands
+#define IDM_CLI_OPEN_TERMINAL 5070
+#define IDM_CLI_RUN_COMMAND 5071
+#define IDM_CLI_VIEW_OUTPUT 5072
 #define IDM_AGENT_START_LOOP 4100
 #define IDM_AGENT_EXECUTE_CMD 4101
 #define IDM_AGENT_CONFIGURE_MODEL 4102

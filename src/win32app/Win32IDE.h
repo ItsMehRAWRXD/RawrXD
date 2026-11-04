@@ -116,6 +116,9 @@
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
 
+// Global IDE instance pointer for menu handler routing
+extern Win32IDE* g_ideInstance;
+
 struct ChatModelEntry {
     enum class Source {
         LocalFile,

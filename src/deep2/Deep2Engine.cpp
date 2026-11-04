@@ -9974,7 +9974,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // only checked the reduced residual-width result, which could hide
     // corruption already present in the attention vector. Use the actual
     // Q-head width for standard GQA and keep the same fail-closed budget.
-    const size_t preOCount = numHeads * headDim;
+    // NOTE: output has hiddenDim elements after computeAttention (LinearW writes
+    // hiddenDim values), not numHeads * headDim. Using numHeads * headDim here
+    // causes a buffer overread when numHeads * headDim > hiddenDim (e.g. Nemotron-H:
+    // 40*128=5120 > 3136), reading garbage memory with exploded values.
+    const size_t preOCount = hiddenDim;
     Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
 
     // Output projection: [hiddenDim] -> [hiddenDim]
