@@ -60,7 +60,7 @@ function Set-RawrControlText { param([Parameter(Mandatory)]$Session,[Parameter(M
     $p=Get-Process -Id $Session.Pid -ErrorAction Stop;$h=[IntPtr]$Element.Current.NativeWindowHandle
     if($h -eq [IntPtr]::Zero){throw 'No writable ValuePattern or native HWND'}
     if($p.Path -ne $Session.Exe){throw 'PID executable mismatch'}
-    [RawrXD_UiaInput]::SetForegroundWindow($p.MainWindowHandle)|Out-Null;[RawrXD_UiaInput]::SetFocus($h)|Out-Null
+    [RawrXD_UiaInput]::SetForegroundWindow($p.MainWindowHandle)|Out-Null;[RawrXD_UiaInput]::Click($h);[RawrXD_UiaInput]::SetFocus($h)|Out-Null
     [RawrXD_UiaInput]::Paste($Text)
 }
 function Invoke-RawrControl { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
