@@ -34,12 +34,22 @@ CTEST_EXIT=0
 The rebuilt candidate is:
 
 ```ini
-CANDIDATE_SIZE=6109184
-CANDIDATE_SHA256=5D4C2FBBC45F0A122823CBAF32A531B7A055A5DC6E7F9E2AF4C36F2135E031BD
+CANDIDATE_SIZE=6109696
+CANDIDATE_SHA256=AF870AFBC45140C1D49F633D0C7454C17B97E9338043F85EE17E26D416C480ED
 POST_BUILD_HASH_RECHECK=PASS
-SOURCE_COMMIT=f6d1e0bad178e4b2c3eb1e166c6b6efa4e3b53a0
-T080_RUNTIME_FILE_LINE_COLUMN=NOT_YET_PHYSICALLY_VERIFIED
+SOURCE_COMMIT=PENDING_CURRENT_STDERR_REPAIR
+T080_REAL_COMPILER_ERROR=OBSERVED
+T080_STDERR_DIAGNOSTIC=OBSERVED_IN_NATIVE_TERMINAL
+T080_PROBLEMS_ROW_AND_NAVIGATION=NOT_VERIFIED
 ```
+
+The first runtime attempt showed why the initial implementation was
+insufficient: compiler output arrived through `onTerminalError()`. The
+candidate was repaired to parse stderr as well as stdout and rebuilt. The
+second physical run displayed the real `bad.cpp(1): error C2065` diagnostic in
+the native terminal, but the Problems panel did not expose a selectable row
+in the captured accessibility state. T080 therefore remains open pending
+verification of Problems-list insertion and exact editor navigation.
 
 The source/build and CTest results do not by themselves close T080. A native
 IDE run must still produce a real compiler diagnostic and prove selection opens

@@ -3739,6 +3739,24 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
     if (!pane || !pane->hwnd) return;
     appendText(pane->hwnd, error);
     appendToOutput(error, "Errors", OutputSeverity::Error);
+
+    // Compiler diagnostics are normally written to stderr.  Feed the same
+    // strict parser used for stdout so real build failures become navigable
+    // Problems entries regardless of the toolchain's stream choice.
+    std::istringstream lines(error);
+    std::string line;
+    while (std::getline(lines, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        std::string file;
+        std::string message;
+        int lineNumber = 0;
+        int column = 0;
+        int severity = 0;
+        if (parseCompilerDiagnostic(line, file, lineNumber, column,
+                                    message, severity)) {
+            addProblem(file, lineNumber, column, message, severity);
+        }
+    }
 }
 
 std::string Win32IDE::getWindowText(HWND hwnd)
