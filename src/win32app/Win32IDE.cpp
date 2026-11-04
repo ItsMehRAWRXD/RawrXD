@@ -70,6 +70,41 @@ std::wstring Utf8ToWideText(const std::string& text)
     return wide;
 }
 
+// Parse one compiler diagnostic emitted by the native terminal.  Keep this
+// deliberately strict: only lines with a file, line, column, and explicit
+// error/warning severity become navigable Problems entries.  This prevents
+// ordinary build chatter from creating synthetic diagnostics.
+bool parseCompilerDiagnostic(const std::string& line,
+                             std::string& file,
+                             int& lineNumber,
+                             int& column,
+                             std::string& message,
+                             int& severity)
+{
+    static const std::regex msvc(
+        R"(^(.+?)\((\d+),(\d+)\):\s*(error|warning)\b\s*(.*)$)",
+        std::regex::icase);
+    static const std::regex gcc(
+        R"(^(.+?):(\d+):(\d+):\s*(error|warning)\b:\s*(.*)$)",
+        std::regex::icase);
+
+    std::smatch match;
+    if (std::regex_match(line, match, msvc) || std::regex_match(line, match, gcc)) {
+        try {
+            file = match[1].str();
+            lineNumber = std::stoi(match[2].str());
+            column = std::stoi(match[3].str());
+        } catch (...) {
+            return false;
+        }
+        if (file.empty() || lineNumber < 1 || column < 1) return false;
+        severity = (::_stricmp(match[4].str().c_str(), "warning") == 0) ? 1 : 0;
+        message = match[5].str();
+        return !message.empty();
+    }
+    return false;
+}
+
 void showReasoningPopup(HWND hwnd)
 {
     RECT anchor{};
@@ -3678,6 +3713,24 @@ void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
     if (!pane || !pane->hwnd) return;
     appendText(pane->hwnd, output);
     appendToOutput(output, "Debug", OutputSeverity::Info);
+
+    // Feed real compiler output into the existing Problems model.  The
+    // terminal remains the source of truth; no diagnostic is manufactured
+    // unless a complete compiler location is present in the received text.
+    std::istringstream lines(output);
+    std::string line;
+    while (std::getline(lines, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        std::string file;
+        std::string message;
+        int lineNumber = 0;
+        int column = 0;
+        int severity = 0;
+        if (parseCompilerDiagnostic(line, file, lineNumber, column,
+                                    message, severity)) {
+            addProblem(file, lineNumber, column, message, severity);
+        }
+    }
 }
 
 void Win32IDE::onTerminalError(int paneId, const std::string& error)
