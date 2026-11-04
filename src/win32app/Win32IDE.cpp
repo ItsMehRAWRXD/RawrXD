@@ -71,9 +71,11 @@ std::wstring Utf8ToWideText(const std::string& text)
 }
 
 // Parse one compiler diagnostic emitted by the native terminal.  Keep this
-// deliberately strict: only lines with a file, line, column, and explicit
-// error/warning severity become navigable Problems entries.  This prevents
-// ordinary build chatter from creating synthetic diagnostics.
+// deliberately strict: only lines with a file, line, and explicit
+// error/warning severity become navigable Problems entries.  MSVC emits both
+// file(line): and file(line,column): forms, so an omitted column is normalized
+// to column 1 for navigation.  This prevents ordinary build chatter from
+// creating synthetic diagnostics without rejecting valid compiler output.
 bool parseCompilerDiagnostic(const std::string& line,
                              std::string& file,
                              int& lineNumber,
@@ -82,7 +84,7 @@ bool parseCompilerDiagnostic(const std::string& line,
                              int& severity)
 {
     static const std::regex msvc(
-        R"(^(.+?)\((\d+),(\d+)\):\s*(error|warning)\b\s*(.*)$)",
+        R"(^(.+?)\((\d+)(?:,(\d+))?\):\s*(error|warning)\b\s*(.*)$)",
         std::regex::icase);
     static const std::regex gcc(
         R"(^(.+?):(\d+):(\d+):\s*(error|warning)\b:\s*(.*)$)",
@@ -93,13 +95,14 @@ bool parseCompilerDiagnostic(const std::string& line,
         try {
             file = match[1].str();
             lineNumber = std::stoi(match[2].str());
-            column = std::stoi(match[3].str());
+            column = match[3].matched ? std::stoi(match[3].str()) : 1;
         } catch (...) {
             return false;
         }
         if (file.empty() || lineNumber < 1 || column < 1) return false;
-        severity = (::_stricmp(match[4].str().c_str(), "warning") == 0) ? 1 : 0;
-        message = match[5].str();
+        const size_t severityIndex = match.size() == 6 ? 4 : 4;
+        severity = (::_stricmp(match[severityIndex].str().c_str(), "warning") == 0) ? 1 : 0;
+        message = match[severityIndex + 1].str();
         return !message.empty();
     }
     return false;

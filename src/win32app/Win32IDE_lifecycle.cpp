@@ -23,6 +23,8 @@ namespace {
 constexpr const char* kWindowClass = "RawrXD_IDE_Window";
 constexpr const char* kWindowTitle = "RawrXD IDE";
 constexpr UINT_PTR kFileSafetyTimerId = 0x52584653; // "RXFS"
+constexpr int kPanelTabsId = 1301;
+constexpr int kPanelProblemsListId = 1312;
 
 Win32IDE* g_ideInstance = nullptr;
 
@@ -221,6 +223,18 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                             ide->m_outputPanelVisible && output.first == ide->m_activeOutputTab
                                 ? SW_SHOW : SW_HIDE);
                     }
+                }
+            } else if (nmhdr->idFrom == kPanelTabsId &&
+                       nmhdr->code == TCN_SELCHANGE) {
+                const int selected = TabCtrl_GetCurSel(nmhdr->hwndFrom);
+                if (selected >= 0 && selected <= 3) {
+                    ide->switchPanelTab(static_cast<Win32IDE::PanelTab>(selected));
+                }
+            } else if (nmhdr->idFrom == kPanelProblemsListId &&
+                       nmhdr->code == NM_DBLCLK) {
+                const auto* activation = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
+                if (activation && activation->iItem >= 0) {
+                    ide->goToProblem(activation->iItem);
                 }
             } else if (nmhdr->idFrom == IDC_FILE_EXPLORER &&
                        nmhdr->code == TVN_DELETEITEMA) {
@@ -459,6 +473,10 @@ void Win32IDE::onCreate(HWND hwnd)
     if (m_hwndSidebarContent) SetWindowSubclass(m_hwndSidebarContent, forwardPaneNotifications, 4, 0);
     createStatusBar(hwnd);
     createOutputTabs();
+    // The VS Code-style panel owns the Problems list populated by compiler
+    // diagnostics.  Create it on the canonical startup path so parsed
+    // diagnostics have a real runtime destination and navigation surface.
+    createPanel(hwnd);
     createChatPanel();
     // The dedicated PowerShell panel owns the real input, Execute/Stop/Clear
     // controls and its persistent shell session.  It must be created on the
@@ -933,6 +951,20 @@ void Win32IDE::onSize(int width, int height)
         MoveWindow(output.second, 0, bottomTop + 24, width, std::max(0, bottomHeight - 24), TRUE);
         ShowWindow(output.second,
             showOutput && output.first == m_activeOutputTab ? SW_SHOW : SW_HIDE);
+    }
+    const bool showProblemsPanel = !powerShellVisible && !terminalVisible &&
+        m_outputPanelVisible && m_selectedOutputTab == 1 && m_hwndPanelContainer;
+    if (m_hwndPanelContainer) {
+        SetWindowPos(m_hwndPanelContainer, nullptr, 0, bottomTop + 24,
+                     std::max(0, width), std::max(0, bottomHeight - 24),
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+        ShowWindow(m_hwndPanelContainer, showProblemsPanel ? SW_SHOW : SW_HIDE);
+        if (showProblemsPanel) {
+            MoveWindow(m_hwndPanelTabs, 0, 0, std::max(0, width - 200), 24, TRUE);
+            MoveWindow(m_hwndPanelToolbar, std::max(0, width - 200), 0, 200, 24, TRUE);
+            MoveWindow(m_hwndProblemsListView, 0, 26, std::max(0, width),
+                       std::max(0, bottomHeight - 50), TRUE);
+        }
     }
     if (powerShellVisible) {
         // PowerShell owns the body below the shared strip. Output, Errors,

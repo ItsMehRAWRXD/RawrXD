@@ -13,11 +13,18 @@ repair build. It was not overwritten.
 
 ## Implementation
 
-`Win32IDE::onTerminalOutput()` now parses only complete MSVC or GCC-style
-diagnostic lines containing file, line, column, severity, and message. Parsed
-records are sent to the existing `addProblem()` model, so the existing Problems
-selection path can open the file and navigate to the reported line and column.
-Ordinary terminal output is not converted into synthetic diagnostics.
+`Win32IDE::onTerminalOutput()` and `onTerminalError()` parse complete MSVC or
+GCC-style diagnostic lines containing file, line, severity, and message.
+MSVC's valid `file(line):` form is accepted with column 1; the optional
+`file(line,column):` form is preserved. Parsed records are sent to the
+existing `addProblem()` model, so the Problems selection path can open the
+file and navigate to the reported line and column. Ordinary terminal output
+is not converted into synthetic diagnostics.
+
+The production startup path now creates the existing VS Code-style panel
+(`TERMINAL`, `OUTPUT`, `PROBLEMS`, `DEBUG CONSOLE`) and lays it out when the
+Errors surface is selected. This fixes the prior source-level gap where the
+Problems controls existed but were never instantiated by the running IDE.
 
 ## Build and regression evidence
 
@@ -34,22 +41,23 @@ CTEST_EXIT=0
 The rebuilt candidate is:
 
 ```ini
-CANDIDATE_SIZE=6109696
-CANDIDATE_SHA256=AF870AFBC45140C1D49F633D0C7454C17B97E9338043F85EE17E26D416C480ED
+CANDIDATE_SIZE=6110720
+CANDIDATE_SHA256=6A8634D4980D070AC1469856F91F89F1485AE158D0BC95E679096B9F9480C98C
 POST_BUILD_HASH_RECHECK=PASS
-SOURCE_COMMIT=PENDING_CURRENT_STDERR_REPAIR
+SOURCE_COMMIT=PENDING_PANEL_AND_Msvc_OPTIONAL_COLUMN_REPAIR
 T080_REAL_COMPILER_ERROR=OBSERVED
 T080_STDERR_DIAGNOSTIC=OBSERVED_IN_NATIVE_TERMINAL
-T080_PROBLEMS_ROW_AND_NAVIGATION=NOT_VERIFIED
+T080_PROBLEMS_PANEL_INSTANTIATED=OBSERVED
+T080_PROBLEMS_ROW_AND_NAVIGATION=NOT_VERIFIED_ON_FINAL_HASH
 ```
 
 The first runtime attempt showed why the initial implementation was
 insufficient: compiler output arrived through `onTerminalError()`. The
-candidate was repaired to parse stderr as well as stdout and rebuilt. The
-second physical run displayed the real `bad.cpp(1): error C2065` diagnostic in
-the native terminal, but the Problems panel did not expose a selectable row
-in the captured accessibility state. T080 therefore remains open pending
-verification of Problems-list insertion and exact editor navigation.
+candidate was repaired to parse stderr as well as stdout and rebuilt. A real
+native-terminal run displayed `bad.cpp(1): error C2065`; the pre-panel
+candidate did not expose a selectable Problems row. The panel-instantiation
+and optional-column repairs are now built into the final hash above, but the
+complete final-hash row/navigation rerun remains pending.
 
 The source/build and CTest results do not by themselves close T080. A native
 IDE run must still produce a real compiler diagnostic and prove selection opens
