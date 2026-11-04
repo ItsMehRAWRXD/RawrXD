@@ -10,6 +10,10 @@ using System; using System.Runtime.InteropServices;
 public static class RawrXD_UiaInput {
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
  [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+ [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+ [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h,IntPtr p);
+ [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a,uint b,bool on);
+ [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
  [DllImport("user32.dll")] public static extern void keybd_event(byte v,byte s,uint f,UIntPtr e);
  [StructLayout(LayoutKind.Sequential)] public struct RECT{public int l;public int t;public int r;public int b;}
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out RECT r);
@@ -18,13 +22,21 @@ public static class RawrXD_UiaInput {
  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr p,EnumProc cb,IntPtr l);
  public delegate bool EnumProc(IntPtr h,IntPtr l);
  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr h);
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+ [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr h,System.Text.StringBuilder b,int n);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowTextLength(IntPtr h);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr h,System.Text.StringBuilder b,int n);
+ [DllImport("user32.dll")] public static extern IntPtr GetWindowLongPtr(IntPtr h,int i);
+ [DllImport("user32.dll")] public static extern int SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  public static void Paste(string t){System.Windows.Forms.Clipboard.SetText(t);keybd_event(0x11,0,0,UIntPtr.Zero);keybd_event(0x56,0,0,UIntPtr.Zero);keybd_event(0x56,0,2,UIntPtr.Zero);keybd_event(0x11,0,2,UIntPtr.Zero);}
  public static void Click(IntPtr h){RECT r;if(!GetWindowRect(h,out r))throw new InvalidOperationException("GetWindowRect failed");SetCursorPos((r.l+r.r)/2,(r.t+r.b)/2);mouse_event(2,0,0,0,UIntPtr.Zero);mouse_event(4,0,0,0,UIntPtr.Zero);}
+ public static void Focus(IntPtr main,IntPtr edit){uint c=GetCurrentThreadId(),f=GetWindowThreadProcessId(GetForegroundWindow(),IntPtr.Zero),t=GetWindowThreadProcessId(main,IntPtr.Zero);if(f!=0&&f!=c)AttachThreadInput(c,f,true);if(t!=0&&t!=c)AttachThreadInput(c,t,true);SetForegroundWindow(main);SetFocus(edit);if(t!=0&&t!=c)AttachThreadInput(c,t,false);if(f!=0&&f!=c)AttachThreadInput(c,f,false);}
  public static IntPtr FindChildById(IntPtr root,int id){IntPtr found=IntPtr.Zero;EnumChildWindows(root,(h,l)=>{if(GetDlgCtrlID(h)==id){found=h;return false;}return true;},IntPtr.Zero);return found;}
- public static string Text(IntPtr h){int n=GetWindowTextLength(h);if(n<=0)return '';var b=new System.Text.StringBuilder(n+1);GetWindowText(h,b,b.Capacity);return b.ToString();}
+ public static string Text(IntPtr h){int n=GetWindowTextLength(h);if(n<=0)return "";var b=new System.Text.StringBuilder(n+1);GetWindowText(h,b,b.Capacity);return b.ToString();}
+ public static string Class(IntPtr h){var b=new System.Text.StringBuilder(128);GetClassName(h,b,b.Capacity);return b.ToString();}
+ public static int ReadOnly(IntPtr h){return SendMessage(h,0x00CE,IntPtr.Zero,IntPtr.Zero);}
+ public static long Style(IntPtr h){return GetWindowLongPtr(h,-16).ToInt64();}
 }
 '@}
 
@@ -69,8 +81,14 @@ function Set-RawrControlText { param([Parameter(Mandatory)]$Session,[Parameter(M
     if($h -eq [IntPtr]::Zero -and $Element.Current.AutomationId){$h=[RawrXD_UiaInput]::FindChildById($p.MainWindowHandle,[int]$Element.Current.AutomationId)}
     if($h -eq [IntPtr]::Zero){throw 'No writable ValuePattern or native HWND'}
     if($p.Path -ne $Session.Exe){throw 'PID executable mismatch'}
-    [RawrXD_UiaInput]::SetForegroundWindow($p.MainWindowHandle)|Out-Null;[RawrXD_UiaInput]::Click($h);[RawrXD_UiaInput]::SetFocus($h)|Out-Null
+    [RawrXD_UiaInput]::Click($h);[RawrXD_UiaInput]::Focus($p.MainWindowHandle,$h)
     [RawrXD_UiaInput]::Paste($Text);Start-Sleep -Milliseconds 150
+}
+function Get-RawrNativeDiagnostics { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
+    $p=Get-Process -Id $Session.Pid -ErrorAction Stop;$h=[IntPtr]$Element.Current.NativeWindowHandle;if($h -eq [IntPtr]::Zero -and $Element.Current.AutomationId){$h=[RawrXD_UiaInput]::FindChildById($p.MainWindowHandle,[int]$Element.Current.AutomationId)}
+    if($h -eq [IntPtr]::Zero){throw 'chat input native HWND unavailable'}
+    $u='';try{$u=Get-RawrControlText $Session $Element}catch{}
+    [pscustomobject]@{Hwnd=('0x{0:X}' -f $h.ToInt64());ControlId=[RawrXD_UiaInput]::GetDlgCtrlID($h);Class=[RawrXD_UiaInput]::Class($h);Style=('0x{0:X}' -f [RawrXD_UiaInput]::Style($h));ReadOnly=[RawrXD_UiaInput]::ReadOnly($h);Visible=[RawrXD_UiaInput]::IsWindowVisible($h);Enabled=[RawrXD_UiaInput]::IsWindowEnabled($h);NativeText=[RawrXD_UiaInput]::Text($h);UIAText=$u}
 }
 function Invoke-RawrControl { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
     if($Element.Current.ProcessId -ne $Session.Pid -or -not $Element.Current.IsEnabled){throw 'Control identity/enabled check failed'};$p=$null
