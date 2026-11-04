@@ -3099,10 +3099,22 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     pane.bounds = {0, 0, 0, 0};
 
     pane.manager->onOutput = [this, paneId](const std::string& output) {
-        onTerminalOutput(paneId, output);
+        auto* update = new TerminalUiUpdate{
+            TerminalUiUpdate::Kind::Output, paneId, output};
+        if (!m_hwndMain || !PostMessageA(
+                m_hwndMain, kRawrxdTerminalUiUpdate, 0,
+                reinterpret_cast<LPARAM>(update))) {
+            delete update;
+        }
     };
     pane.manager->onError = [this, paneId](const std::string& error) {
-        onTerminalError(paneId, error);
+        auto* update = new TerminalUiUpdate{
+            TerminalUiUpdate::Kind::Error, paneId, error};
+        if (!m_hwndMain || !PostMessageA(
+                m_hwndMain, kRawrxdTerminalUiUpdate, 0,
+                reinterpret_cast<LPARAM>(update))) {
+            delete update;
+        }
     };
 
     m_terminalPanes.push_back(std::move(pane));

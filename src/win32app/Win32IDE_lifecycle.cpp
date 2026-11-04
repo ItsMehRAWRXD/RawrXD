@@ -379,6 +379,18 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             delete update;
             return 0;
         }
+        case kRawrxdTerminalUiUpdate: {
+            auto* update = reinterpret_cast<TerminalUiUpdate*>(lParam);
+            if (ide && update) {
+                if (update->kind == TerminalUiUpdate::Kind::Output) {
+                    ide->onTerminalOutput(update->paneId, update->text);
+                } else {
+                    ide->onTerminalError(update->paneId, update->text);
+                }
+            }
+            delete update;
+            return 0;
+        }
         default:
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }
@@ -1027,7 +1039,8 @@ void Win32IDE::initializeEditorSurface()
     m_hwndEditor = CreateWindowExW(
         WS_EX_CLIENTEDGE, RICHEDIT_CLASSW, L"",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
-            ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN,
+            WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL |
+            ES_WANTRETURN,
         0, 0, 400, 300, m_hwndMain, reinterpret_cast<HMENU>(IDC_EDITOR), m_hInstance, nullptr);
     if (m_hwndEditor) {
         SendMessageW(m_hwndEditor, EM_EXLIMITTEXT, 0, 64 * 1024 * 1024);
@@ -1248,6 +1261,9 @@ void Win32IDE::switchDocumentTab(int index)
         newFile();
     }
     updateMenuEnableStates();
+    if (m_hwndEditor && IsWindowVisible(m_hwndEditor)) {
+        SetFocus(m_hwndEditor);
+    }
 }
 
 void Win32IDE::updateDocumentTabs()

@@ -212,6 +212,18 @@ struct PowerShellUiUpdate {
 
 inline constexpr UINT kRawrxdPowerShellUiUpdate = WM_APP + 108;
 
+// Legacy terminal pane callbacks originate on Win32TerminalManager reader
+// threads.  Own their payload and marshal it through the main window before
+// touching the terminal or Problems controls.
+struct TerminalUiUpdate {
+    enum class Kind { Output, Error };
+    Kind kind = Kind::Output;
+    int paneId = -1;
+    std::string text;
+};
+
+inline constexpr UINT kRawrxdTerminalUiUpdate = WM_APP + 110;
+
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
 #define LOG_FUNCTION() LOG_DEBUG(std::string("ENTER ") + __FUNCTION__)
