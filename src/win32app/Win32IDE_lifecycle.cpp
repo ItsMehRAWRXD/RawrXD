@@ -26,8 +26,6 @@ constexpr UINT_PTR kFileSafetyTimerId = 0x52584653; // "RXFS"
 constexpr int kPanelTabsId = 1301;
 constexpr int kPanelProblemsListId = 1312;
 
-Win32IDE* g_ideInstance = nullptr;
-
 void configureModelSelectorCombo(HWND combo, int minimumVisibleRows)
 {
     if (!combo) return;
@@ -37,6 +35,8 @@ void configureModelSelectorCombo(HWND combo, int minimumVisibleRows)
 }
 
 }  // namespace
+
+Win32IDE* g_ideInstance = nullptr;
 
 LRESULT CALLBACK Win32IDE::ModelSelectorSubclassProc(HWND hwnd, UINT uMsg,
                                                        WPARAM wParam, LPARAM lParam,
