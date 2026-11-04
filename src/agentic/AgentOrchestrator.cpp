@@ -339,9 +339,14 @@ bool AgentOrchestrator::think(const std::string& goal,
 
 std::string AgentOrchestrator::act(const std::string& toolName, const json& args) {
     rawrxd::tools::Request req;
+    // Models use both the Cursor-style editFiles spelling and the legacy
+    // orchestrator spelling edit_files. Normalize at the dispatch boundary so
+    // parser/schema variation cannot silently turn a valid edit into a no-op.
     req.name = toolName;
+    if (req.name == "editFiles") req.name = "edit_files";
     for (auto it = args.begin(); it != args.end(); ++it) {
-        req.args[it.key()] = it.value().get<std::string>();
+        req.args[it.key()] = it.value().is_string() ?
+            it.value().get<std::string>() : it.value().dump();
     }
 
     auto approval = [](const rawrxd::tools::Tool& tool,
