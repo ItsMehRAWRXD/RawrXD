@@ -28,9 +28,16 @@ public static class RawrXD_NativeFocus {
 }
 '@
   }
+  $editor=Find-RawrControl $s -ClassName 'RichEdit20W'
   $p=Get-Process -Id $s.Pid -ErrorAction Stop
   if($p.Path -ne $s.Exe){throw 'PID_EXECUTABLE_MISMATCH'}
-  $hwnd=[RawrXD_NativeFocus]::FindRichEdit($p.MainWindowHandle)
+  $hwnd=[IntPtr]$editor.Current.NativeWindowHandle
+  if($hwnd -eq [IntPtr]::Zero){
+    for($attempt=0;$attempt -lt 20 -and $hwnd -eq [IntPtr]::Zero;$attempt++){
+      $hwnd=[RawrXD_NativeFocus]::FindRichEdit($p.MainWindowHandle)
+      if($hwnd -eq [IntPtr]::Zero){Start-Sleep -Milliseconds 250}
+    }
+  }
   if($hwnd -eq [IntPtr]::Zero){throw 'NATIVE_RICHEDIT_NOT_FOUND'}
   [RawrXD_NativeFocus]::SetForegroundWindow($p.MainWindowHandle)|Out-Null
   [RawrXD_NativeFocus]::SetFocus($hwnd)|Out-Null
