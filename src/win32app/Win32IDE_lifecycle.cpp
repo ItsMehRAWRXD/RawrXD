@@ -16,6 +16,9 @@
 #include <algorithm>
 #include <string>
 
+// Cleanup for VSCodeUI heap-allocated control strings (defined in VSCodeUI.cpp).
+void cleanupVSCodeUIStrings();
+
 namespace {
 constexpr const char* kWindowClass = "RawrXD_IDE_Window";
 constexpr const char* kWindowTitle = "RawrXD IDE";
@@ -499,6 +502,8 @@ void Win32IDE::onDestroy()
     m_hwndMain = nullptr;
     // Free Sidebar heap-allocated control strings on window destruction.
     cleanupSidebarStrings();
+    // Free VSCodeUI panel heap-allocated control strings on window destruction.
+    cleanupVSCodeUIStrings();
 }
 
 void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)

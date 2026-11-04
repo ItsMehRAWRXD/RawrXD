@@ -816,6 +816,15 @@ void Win32IDE::clearProblems()
     updateEnhancedStatusBar();
 }
 
+void cleanupVSCodeUIStrings()
+{
+    // Free VSCodeUI panel heap-allocated control strings on window destruction.
+    for (auto* ptr : g_panelStringHeap) delete[] ptr;
+    g_panelStringHeap.clear();
+    for (auto* ptr : g_problemStringHeap) delete[] ptr;
+    g_problemStringHeap.clear();
+}
+
 void Win32IDE::goToProblem(int index)
 {
     if (index < 0 || index >= static_cast<int>(m_problems.size())) return;
@@ -1228,7 +1237,10 @@ void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
     // Sequence number
     char seqBuf[32];
     std::snprintf(seqBuf, sizeof(seqBuf), "%llu", (unsigned long long)event.sequence);
-    lvi.pszText = seqBuf;
+    char* seqHeap = new char[strlen(seqBuf) + 1];
+    strcpy_s(seqHeap, strlen(seqBuf) + 1, seqBuf);
+    g_panelStringHeap.push_back(seqHeap);
+    lvi.pszText = seqHeap;
     ListView_InsertItem(m_hwndESPList, &lvi);
 
     // Timestamp (relative to start or just HH:MM:SS.mmm)

@@ -1614,14 +1614,35 @@ void Win32IDE::updateDebugVariables()
     LVITEMA item = {};
     item.mask = LVIF_TEXT;
 
+    // Allocate heap buffers for variable values so ListView's retained
+    // pszText pointer remains valid (LVIF_TEXT does not copy text).
+    char* pname0 = new char[strlen(vars[0].name) + 1];
+    strcpy_s(pname0, strlen(vars[0].name) + 1, vars[0].name);
+    g_sidebarStringHeap.push_back(pname0);
+    char* pval0 = new char[strlen(vars[0].value) + 1];
+    strcpy_s(pval0, strlen(vars[0].value) + 1, vars[0].value);
+    g_sidebarStringHeap.push_back(pval0);
+    char* pname1 = new char[strlen(vars[1].name) + 1];
+    strcpy_s(pname1, strlen(vars[1].name) + 1, vars[1].name);
+    g_sidebarStringHeap.push_back(pname1);
+    char* pval1 = new char[strlen(currentDirectory) + 1];
+    strcpy_s(pval1, strlen(currentDirectory) + 1, currentDirectory);
+    g_sidebarStringHeap.push_back(pval1);
+    char* pname2 = new char[strlen(vars[2].name) + 1];
+    strcpy_s(pname2, strlen(vars[2].name) + 1, vars[2].name);
+    g_sidebarStringHeap.push_back(pname2);
+    char* pval2 = new char[strlen(vars[2].value) + 1];
+    strcpy_s(pval2, strlen(vars[2].value) + 1, vars[2].value);
+    g_sidebarStringHeap.push_back(pval2);
+
     for (int i = 0; i < 3; i++) {
         item.iItem = i;
         item.iSubItem = 0;
-        item.pszText = (LPSTR)vars[i].name;
+        item.pszText = i == 0 ? pname0 : (i == 1 ? pname1 : pname2);
         ListView_InsertItem(m_hwndDebugVariables, &item);
 
         item.iSubItem = 1;
-        item.pszText = (LPSTR)vars[i].value;
+        item.pszText = i == 0 ? pval0 : (i == 1 ? pval1 : pval2);
         ListView_SetItem(m_hwndDebugVariables, &item);
     }
 }
