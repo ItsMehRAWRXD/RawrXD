@@ -4,6 +4,21 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
+if(-not ('RawrXD_UiaInput' -as [type])){Add-Type -ReferencedAssemblies System.Windows.Forms @'
+using System; using System.Runtime.InteropServices;
+public static class RawrXD_UiaInput {
+ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+ [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+ [DllImport("user32.dll")] public static extern void keybd_event(byte v,byte s,uint f,UIntPtr e);
+ [StructLayout(LayoutKind.Sequential)] public struct RECT{public int l;public int t;public int r;public int b;}
+ [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out RECT r);
+ [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
+ [DllImport("user32.dll")] public static extern void mouse_event(uint f,uint x,uint y,uint d,UIntPtr e);
+ public static void Paste(string t){System.Windows.Forms.Clipboard.SetText(t);keybd_event(0x11,0,0,UIntPtr.Zero);keybd_event(0x56,0,0,UIntPtr.Zero);keybd_event(0x56,0,2,UIntPtr.Zero);keybd_event(0x11,0,2,UIntPtr.Zero);}
+ public static void Click(IntPtr h){RECT r;if(!GetWindowRect(h,out r))throw new InvalidOperationException("GetWindowRect failed");SetCursorPos((r.l+r.r)/2,(r.t+r.b)/2);mouse_event(2,0,0,0,UIntPtr.Zero);mouse_event(4,0,0,0,UIntPtr.Zero);}
+}
+'@}
 
 function Get-RawrHash { param([Parameter(Mandatory)][string]$Path)
     (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToUpperInvariant()
@@ -42,11 +57,15 @@ function Get-RawrControlTree { param([Parameter(Mandatory)]$Session,[int]$Max=50
 function Set-RawrControlText { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element,[Parameter(Mandatory)][string]$Text)
     if($Element.Current.ProcessId -ne $Session.Pid){throw 'Cross-process control rejected'};$p=$null
     if($Element.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$p)){if($p.Current.IsReadOnly){throw 'Control is read-only'};$p.SetValue($Text);return}
-    throw 'No writable ValuePattern; native RichEdit needs a reviewed input adapter'
+    $p=Get-Process -Id $Session.Pid -ErrorAction Stop;$h=[IntPtr]$Element.Current.NativeWindowHandle
+    if($h -eq [IntPtr]::Zero){throw 'No writable ValuePattern or native HWND'}
+    if($p.Path -ne $Session.Exe){throw 'PID executable mismatch'}
+    [RawrXD_UiaInput]::SetForegroundWindow($p.MainWindowHandle)|Out-Null;[RawrXD_UiaInput]::SetFocus($h)|Out-Null
+    [RawrXD_UiaInput]::Paste($Text)
 }
 function Invoke-RawrControl { param([Parameter(Mandatory)]$Session,[Parameter(Mandatory)]$Element)
     if($Element.Current.ProcessId -ne $Session.Pid -or -not $Element.Current.IsEnabled){throw 'Control identity/enabled check failed'};$p=$null
-    if($Element.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern,[ref]$p)){$p.Invoke();return};if($Element.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern,[ref]$p)){$p.Select();return};throw 'No supported invoke pattern'
+    if($Element.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern,[ref]$p)){$p.Invoke();return};if($Element.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern,[ref]$p)){$p.Select();return};$h=[IntPtr]$Element.Current.NativeWindowHandle;if($h -eq [IntPtr]::Zero){throw 'No supported invoke pattern or native HWND'};[RawrXD_UiaInput]::Click($h)
 }
 function Save-RawrScreenshot { param([Parameter(Mandatory)]$Session,[string]$Name='screen')
     $r=Get-RawrRoot $Session;$b=$r.Current.BoundingRectangle;$bmp=New-Object System.Drawing.Bitmap([int]$b.Width,[int]$b.Height);try{$g=[System.Drawing.Graphics]::FromImage($bmp);try{$g.CopyFromScreen([int]$b.X,[int]$b.Y,0,0,$bmp.Size)}finally{$g.Dispose()};$path=Join-Path $Session.EvidenceDir (($Name -replace '[^A-Za-z0-9_-]','_')+'.png');$bmp.Save($path,[System.Drawing.Imaging.ImageFormat]::Png);[pscustomobject]@{Path=$path;SHA256=(Get-RawrHash $path)}}finally{$bmp.Dispose()}
