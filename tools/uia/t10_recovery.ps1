@@ -20,6 +20,14 @@ public static class RawrXD_NativeFocus {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr h, StringBuilder b, int n);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, IntPtr p);
+  [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a,uint b,bool attach);
+  [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int l; public int t; public int r; public int b; }
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out RECT r);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint flags,uint dx,uint dy,uint data,UIntPtr extra);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
   [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")] public static extern int SendMessageText(IntPtr h,uint m,IntPtr w,StringBuilder l);
   public static string Text(IntPtr h) {
@@ -39,10 +47,22 @@ public static class RawrXD_NativeFocus {
       keybd_event(0,(byte)(c & 0xff),6,UIntPtr.Zero);
     }
   }
+  public static void Focus(IntPtr main, IntPtr edit) {
+    uint current=GetCurrentThreadId(); uint foreground=GetWindowThreadProcessId(GetForegroundWindow(),IntPtr.Zero); uint target=GetWindowThreadProcessId(main,IntPtr.Zero);
+    if(foreground!=0 && foreground!=current) AttachThreadInput(current,foreground,true);
+    if(target!=0 && target!=current) AttachThreadInput(current,target,true);
+    SetForegroundWindow(main); SetFocus(edit);
+    if(target!=0 && target!=current) AttachThreadInput(current,target,false);
+    if(foreground!=0 && foreground!=current) AttachThreadInput(current,foreground,false);
+  }
+  public static void ClickAndFocus(IntPtr main, IntPtr edit) {
+    RECT r; if(!GetWindowRect(edit,out r)) throw new InvalidOperationException("GetWindowRect failed");
+    int x=(r.l+r.r)/2, y=(r.t+r.b)/2; SetCursorPos(x,y); mouse_event(2,0,0,0,UIntPtr.Zero); mouse_event(4,0,0,0,UIntPtr.Zero); Focus(main,edit);
+  }
 }
 '@
   }
-  $editor=Find-RawrControl $s -ClassName 'RichEdit20W'
+  $editor=Find-RawrControl $s -AutomationId '1001' -ClassName 'RichEdit20W'
   $p=Get-Process -Id $s.Pid -ErrorAction Stop
   if($p.Path -ne $s.Exe){throw 'PID_EXECUTABLE_MISMATCH'}
   $hwnd=[IntPtr]$editor.Current.NativeWindowHandle
@@ -53,10 +73,10 @@ public static class RawrXD_NativeFocus {
     }
   }
   if($hwnd -eq [IntPtr]::Zero){throw 'NATIVE_RICHEDIT_NOT_FOUND'}
-  [RawrXD_NativeFocus]::SetForegroundWindow($p.MainWindowHandle)|Out-Null
-  [RawrXD_NativeFocus]::SetFocus($hwnd)|Out-Null
+  [RawrXD_NativeFocus]::ClickAndFocus($p.MainWindowHandle,$hwnd)
   [RawrXD_NativeFocus]::TypeUnicode($Marker)
-  $editorText=[RawrXD_NativeFocus]::Text($hwnd)
+  $editorText=''
+  try { $editorText=Get-RawrControlText $s $editor } catch { $editorText=[RawrXD_NativeFocus]::Text($hwnd) }
   if($editorText -notlike "*$Marker*"){throw 'EDITOR_MARKER_NOT_OBSERVED'}
   Start-Sleep -Seconds 3
   $sessionPath=Join-Path $env:LOCALAPPDATA 'RawrXD\ide_session.json'
@@ -73,8 +93,10 @@ public static class RawrXD_NativeFocus {
   Start-Sleep -Seconds 4
   $root=Get-RawrRoot $s2
   $all=$root.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
-  $recovered=[RawrXD_NativeFocus]::FindRichEdit((Get-Process -Id $s2.Pid).MainWindowHandle)
-  $recoveredText=if($recovered -ne [IntPtr]::Zero){[RawrXD_NativeFocus]::Text($recovered)}else{''}
+  $recoveredElement=Find-RawrControl $s2 -AutomationId '1001' -ClassName 'RichEdit20W'
+  $recovered=[IntPtr]$recoveredElement.Current.NativeWindowHandle
+  $recoveredText=''
+  try { $recoveredText=Get-RawrControlText $s2 $recoveredElement } catch { if($recovered -ne [IntPtr]::Zero){$recoveredText=[RawrXD_NativeFocus]::Text($recovered)} }
   $found=$recoveredText -like "*$Marker*"
   $result=if($found){'PASS'}else{'FAIL'}
   $final=[ordered]@{Gate='T10';Result=$result;CandidateSHA256=$s2.SHA256;PIDBefore=$s.Pid;PIDAfter=$s2.Pid;Marker=$Marker;EditorMarkerObserved=$true;RecoveredEditorMarkerObserved=$found;TimestampUtc=[DateTime]::UtcNow.ToString('o')}
