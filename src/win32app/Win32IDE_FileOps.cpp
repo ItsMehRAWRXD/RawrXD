@@ -346,18 +346,9 @@ void Win32IDE::openFileDialog() {
             std::string readError;
             if (readBinaryFile(filePath, content, readError)) {
                 // T07: reject binary/NUL-bearing files before they enter the
-                // editor. A text editor must not silently load a binary file
-                // into a RichEdit buffer; doing so corrupts undo state, tab
-                // bookkeeping and save/reopen integrity. Detect NUL bytes
-                // (the reliable binary marker that survives UTF-8 validation)
-                // and refuse the load with a dialog.
-                if (content.find('\0') != std::string::npos) {
-                    appendToOutput("File > Open rejected: binary file (NUL bytes present): " + filePath + "\n",
-                                   "Errors", OutputSeverity::Error);
-                    MessageBoxA(m_hwndMain,
-                                ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
-                                 filePath).c_str(),
-                                "Binary file rejected", MB_OK | MB_ICONSTOP);
+                // editor. Delegates to the shared Win32IDE::rejectBinaryFile()
+                // helper to avoid duplicating the NUL-byte check.
+                if (rejectBinaryFile(filePath, content)) {
                     return;
                 }
                 
@@ -679,7 +670,10 @@ void Win32IDE::loadRecentFiles() {
     if (file) {
         std::string line;
         while (std::getline(file, line) && m_recentFiles.size() < MAX_RECENT_FILES) {
-            if (!line.empty()) {
+            // Recent-file state is advisory.  Do not rehydrate dead entries
+            // into the menu; this also prevents a stale path from becoming
+            // the active document during session restoration.
+            if (!line.empty() && GetFileAttributesA(line.c_str()) != INVALID_FILE_ATTRIBUTES) {
                 m_recentFiles.push_back(line);
             }
         }
@@ -1054,28 +1048,27 @@ void Win32IDE::loadIdeSession() {
         m_openDocuments.reserve(docCount);
         m_documentBuffers.reserve(docCount);
         for (const auto& doc : root["documents"]) {
-            DocumentBuffer buffer;
-            buffer.path = doc.value("path", std::string{});
-            buffer.modified = doc.value("modified", false);
-            buffer.text = doc.value("text", std::string{});
-            if (!buffer.modified && !buffer.path.empty()) {
-                if (!readBinaryFile(buffer.path, buffer.text, readError)) {
-                    LOG_ERROR("Failed to restore session file " + buffer.path + ": " + readError);
+            const std::string path = doc.value("path", std::string{});
+            // Register via addDocumentTab() for consistent tab/buffer setup
+            // (duplicate checking, label storage, active tab tracking).
+            addDocumentTab(path);
+        }
+        // Restore session-specific text and modified state for each buffer.
+        // Done after all addDocumentTab() calls so the intermediate
+        // editor-text-save side effect doesn't overwrite session data.
+        size_t docIdx = 0;
+        for (const auto& doc : root["documents"]) {
+            if (docIdx < m_documentBuffers.size()) {
+                DocumentBuffer& buffer = m_documentBuffers[docIdx];
+                buffer.text = doc.value("text", std::string{});
+                buffer.modified = doc.value("modified", false);
+                if (!buffer.modified && !buffer.path.empty()) {
+                    if (!readBinaryFile(buffer.path, buffer.text, readError)) {
+                        LOG_ERROR("Failed to restore session file " + buffer.path + ": " + readError);
+                    }
                 }
             }
-            buffer.label = buffer.path.empty()
-                ? std::string("Untitled") : extractLeafName(buffer.path);
-            // Push buffer first so label storage is stable before
-            // TabCtrl_InsertItem retains the pszText pointer.
-            m_openDocuments.push_back(buffer.path);
-            m_documentBuffers.push_back(std::move(buffer));
-            if (m_hwndDocTabs) {
-                TCITEMA tie{};
-                tie.mask = TCIF_TEXT;
-                tie.pszText = const_cast<char*>(m_documentBuffers.back().label.c_str());
-                TabCtrl_InsertItem(m_hwndDocTabs,
-                    static_cast<int>(m_openDocuments.size()) - 1, &tie);
-            }
+            ++docIdx;
         }
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());

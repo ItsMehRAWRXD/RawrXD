@@ -479,6 +479,13 @@ private:
     std::string getEditorTextUtf8ForFile() const;
     static std::string sha256Hex(const std::string& bytes);
     std::string getFileDialogPath(bool isSave = false);
+
+    // T07 shared helper: detect binary/NUL-bearing content and show the
+    // rejection dialog. Returns true if the content is binary and the load
+    // should be aborted. Deduplicates the NUL-byte check previously inline in
+    // both Win32IDE_FileOps.cpp (open dialog) and Win32IDE.cpp
+    // (loadFileIntoEditor).
+    bool rejectBinaryFile(const std::string& path, const std::string& content);
     
     // GGUF Model operations
     bool loadGGUFModel(const std::string& filepath);

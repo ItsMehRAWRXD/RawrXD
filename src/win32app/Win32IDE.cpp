@@ -3357,6 +3357,24 @@ void Win32IDE::newFile()
     appendToOutput("New file created successfully\n", "Output", OutputSeverity::Info);
 }
 
+// T07 shared helper: detect binary/NUL-bearing content and show the rejection
+// dialog. Returns true if the content is binary and the load should be aborted.
+// Deduplicates the NUL-byte check previously inline in both
+// Win32IDE_FileOps.cpp (open dialog) and Win32IDE.cpp (loadFileIntoEditor).
+bool Win32IDE::rejectBinaryFile(const std::string& path, const std::string& content)
+{
+    if (content.find('\0') != std::string::npos) {
+        appendToOutput("File > Open rejected: binary file (NUL bytes present): " + path + "\n",
+                       "Errors", OutputSeverity::Error);
+        MessageBoxA(m_hwndMain,
+                    ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
+                     path).c_str(),
+                    "Binary file rejected", MB_OK | MB_ICONSTOP);
+        return true;
+    }
+    return false;
+}
+
 bool Win32IDE::loadFileIntoEditor(const std::string& path)
 {
     if (path.empty() || !m_hwndEditor) return false;
@@ -3376,13 +3394,7 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
         // RichEdit buffer; doing so corrupts undo state, tab bookkeeping and
         // save/reopen integrity. Detect NUL bytes (the reliable binary marker
         // that survives UTF-8 validation) and refuse the load with a dialog.
-        if (content.find('\0') != std::string::npos) {
-            appendToOutput("File > Open rejected: binary file (NUL bytes present): " + path + "\n",
-                           "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain,
-                        ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
-                         path).c_str(),
-                        "Binary file rejected", MB_OK | MB_ICONSTOP);
+        if (rejectBinaryFile(path, content)) {
             return false;
         }
 

@@ -440,9 +440,13 @@ void Win32IDE::handleToolsCommand(int commandId) {
             "$ErrorActionPreference='Continue'; "
             "Set-Location -LiteralPath " + rootLiteral + "; "
             "Write-Output '[RAWRXD_BUILD_START]'; "
-            "$vcvars=@('C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat',"
-            "'C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat'); "
-            "$vcvars=$vcvars | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1; "
+            "$vswhere=\"${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe\"; "
+            "$vcvars=$null; "
+            "if(Test-Path -LiteralPath $vswhere){ "
+            "$installPath=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null; "
+            "if($installPath){ $vcvars=Join-Path $installPath \"VC\\Auxiliary\\Build\\vcvars64.bat\" } }; "
+            "if(-not $vcvars){ $vcvars=@('C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat',"
+            "'C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1 }; "
             "if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { "
             "cmd.exe /d /s /c ('call \"' + $vcvars + '\" && cmake --build \"' + " + buildLiteral +
             " + '\" --target RawrXD-Win32IDE-Native --config Release'); $rc=$LASTEXITCODE }; "
@@ -699,8 +703,9 @@ void Win32IDE::showCommandPalette()
         m_hwndCommandPalette, nullptr, m_hInstance, nullptr
     );
     
-    // Set placeholder text appearance
-    SendMessageW(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)L"> Type a command...");
+    // Set placeholder text appearance (ANSI edit control created via
+    // CreateWindowExA, so use SendMessageA with a narrow string).
+    SendMessageA(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)"> Type a command...");
     
     // Create command list
     m_hwndCommandPaletteList = CreateWindowExA(
