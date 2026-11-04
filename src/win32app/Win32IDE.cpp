@@ -6698,7 +6698,8 @@ void Win32IDE::showCommitDialog()
         10, 10, 120, 20, hwndDlg, nullptr, m_hInstance, nullptr);
     
     m_hwndCommitDialog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
-        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL,
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL |
+            ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL,
         10, 35, 470, 100, hwndDlg, nullptr, m_hInstance, nullptr);
     
     HWND hwndCommitBtn = CreateWindowExA(0, "BUTTON", "Commit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
