@@ -7619,7 +7619,19 @@ void Win32IDE::createChatPanel() {
     // session controls, and the restore action without clipping them.
     m_secondarySidebarWidth = 360;
 
-    createChatSession("Chat 1");
+    // Document-tab creation restores the session snapshot before this panel
+    // is constructed.  Reuse those sessions when present; appending a fresh
+    // default here would duplicate Chat 1 on every cold launch.
+    if (m_chatSessions.empty()) {
+        createChatSession("Chat 1");
+    } else {
+        if (m_activeChatSession < 0 ||
+            m_activeChatSession >= static_cast<int>(m_chatSessions.size())) {
+            m_activeChatSession = 0;
+        }
+        updateChatSessionTabs();
+        switchChatSession(m_activeChatSession);
+    }
 
 }
 

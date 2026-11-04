@@ -921,6 +921,35 @@ static std::string ideSessionPath() {
 
 void Win32IDE::saveIdeSession() {
     persistActiveDocumentBuffer();
+
+    // Chat sessions are process-owned state just like document buffers.  Keep
+    // the outgoing session synchronized before serializing so a cold launch
+    // restores the same transcript/model route instead of only restoring the
+    // editor tabs.  A running request is never persisted as running: worker
+    // threads and cancellation tokens cannot safely cross a process boundary.
+    if (auto* session = activeChatSession()) {
+        session->history = m_chatHistory;
+        session->model = m_selectedChatModel;
+        session->reasoningMode = m_reasoningMode;
+        session->webBrowsingEnabled = m_webBrowsingEnabled;
+        session->stepRows = m_agentStepTimeline.snapshotRows();
+    }
+
+    const auto modelToJson = [](const ChatModelEntry& model) {
+        return nlohmann::json{
+            {"source", static_cast<int>(model.source)},
+            {"breadcrumb", model.breadcrumb},
+            {"identifier", model.identifier}
+        };
+    };
+    const auto historyToJson = [](const auto& history) {
+        nlohmann::json result = nlohmann::json::array();
+        for (const auto& message : history) {
+            result.push_back({{"role", message.first}, {"content", message.second}});
+        }
+        return result;
+    };
+
     nlohmann::json root;
     root["active"] = m_activeDocument;
     root["chat_mode"] = m_chatMode ? 1 : 0;
@@ -934,6 +963,43 @@ void Win32IDE::saveIdeSession() {
         });
     }
     root["documents"] = docs;
+
+    nlohmann::json chat = nlohmann::json::object();
+    chat["active"] = m_activeChatSession;
+    chat["next_id"] = m_nextChatSessionId;
+    chat["sessions"] = nlohmann::json::array();
+    for (const auto& session : m_chatSessions) {
+        nlohmann::json serialized{
+            {"id", session.id},
+            {"title", session.title},
+            {"model", modelToJson(session.model)},
+            {"history", historyToJson(session.history)},
+            {"response_buffer", session.responseBuffer},
+            {"reasoning_mode", static_cast<int>(session.reasoningMode)},
+            {"web_browsing_enabled", session.webBrowsingEnabled},
+            {"step_rows", session.stepRows}
+        };
+        // Checkpoints are intentionally retained because rollback is a user
+        // visible part of the chat-session contract.  Their running state is
+        // not present in the checkpoint type and is therefore safe to restore.
+        serialized["checkpoints"] = nlohmann::json::array();
+        for (const auto& checkpoint : session.checkpoints) {
+            serialized["checkpoints"].push_back({
+                {"reason", checkpoint.reason},
+                {"model", modelToJson(checkpoint.model)},
+                {"reasoning_mode", static_cast<int>(checkpoint.reasoningMode)},
+                {"allow_cloud_ghost_text", checkpoint.allowCloudGhostText},
+                {"web_browsing_enabled", checkpoint.webBrowsingEnabled},
+                {"max_tokens", checkpoint.maxTokens},
+                {"context_tokens", checkpoint.contextTokens},
+                {"history", historyToJson(checkpoint.history)},
+                {"response_buffer", checkpoint.responseBuffer}
+            });
+        }
+        chat["sessions"].push_back(std::move(serialized));
+    }
+    root["chat"] = std::move(chat);
+
     const std::string serialized = root.dump();
     std::string error;
     if (!writeBinaryFileAtomically(ideSessionPath(), serialized, error)) {
@@ -952,6 +1018,31 @@ void Win32IDE::loadIdeSession() {
     }
     try {
         nlohmann::json root = nlohmann::json::parse(serialized);
+
+        const auto modelFromJson = [](const nlohmann::json& value) {
+            ChatModelEntry model;
+            if (!value.is_object()) return model;
+            const int source = value.value("source", static_cast<int>(ChatModelEntry::Source::LocalFile));
+            if (source >= static_cast<int>(ChatModelEntry::Source::LocalFile) &&
+                source <= static_cast<int>(ChatModelEntry::Source::KiloFree)) {
+                model.source = static_cast<ChatModelEntry::Source>(source);
+            }
+            model.breadcrumb = value.value("breadcrumb", std::string{});
+            model.identifier = value.value("identifier", std::string{});
+            return model;
+        };
+        const auto historyFromJson = [](const nlohmann::json& value) {
+            std::vector<std::pair<std::string, std::string>> history;
+            if (!value.is_array()) return history;
+            for (const auto& message : value) {
+                if (!message.is_object()) continue;
+                history.emplace_back(
+                    message.value("role", std::string{}),
+                    message.value("content", std::string{}));
+            }
+            return history;
+        };
+
         if (!root.contains("documents") || !root["documents"].is_array()) return;
         m_openDocuments.clear();
         m_documentBuffers.clear();
@@ -993,6 +1084,82 @@ void Win32IDE::loadIdeSession() {
         if (root.contains("chat_mode")) {
             m_chatMode = root["chat_mode"].get<int>() != 0;
         }
+
+        // Restore chat sessions independently of document restoration.  The
+        // chat panel is created before the editor session loader, so the tab
+        // control and its selectors are available here.  Older snapshots do
+        // not contain "chat" and continue to use the default Chat 1 session.
+        if (root.contains("chat") && root["chat"].is_object()) {
+            const auto& chat = root["chat"];
+            if (chat.contains("sessions") && chat["sessions"].is_array() &&
+                !chat["sessions"].empty()) {
+                std::vector<ChatSessionState> restored;
+                restored.reserve(chat["sessions"].size());
+                for (const auto& value : chat["sessions"]) {
+                    if (!value.is_object()) continue;
+                    ChatSessionState session;
+                    session.id = value.value("id", m_nextChatSessionId++);
+                    session.title = value.value("title", std::string{});
+                    session.model = modelFromJson(value.value("model", nlohmann::json::object()));
+                    session.history = historyFromJson(value.value("history", nlohmann::json::array()));
+                    session.responseBuffer = value.value("response_buffer", std::string{});
+                    const int reasoning = value.value("reasoning_mode", static_cast<int>(ReasoningMode::Instant));
+                    if (reasoning >= static_cast<int>(ReasoningMode::Instant) &&
+                        reasoning <= static_cast<int>(ReasoningMode::Max)) {
+                        session.reasoningMode = static_cast<ReasoningMode>(reasoning);
+                    }
+                    session.webBrowsingEnabled = value.value("web_browsing_enabled", false);
+                    if (value.contains("step_rows") && value["step_rows"].is_array()) {
+                        session.stepRows = value["step_rows"].get<std::vector<std::string>>();
+                    }
+                    if (value.contains("checkpoints") && value["checkpoints"].is_array()) {
+                        for (const auto& checkpointValue : value["checkpoints"]) {
+                            if (!checkpointValue.is_object()) continue;
+                            ChatSessionCheckpoint checkpoint;
+                            checkpoint.reason = checkpointValue.value("reason", std::string{});
+                            checkpoint.model = modelFromJson(
+                                checkpointValue.value("model", nlohmann::json::object()));
+                            const int checkpointReasoning = checkpointValue.value(
+                                "reasoning_mode", static_cast<int>(ReasoningMode::Instant));
+                            if (checkpointReasoning >= static_cast<int>(ReasoningMode::Instant) &&
+                                checkpointReasoning <= static_cast<int>(ReasoningMode::Max)) {
+                                checkpoint.reasoningMode = static_cast<ReasoningMode>(checkpointReasoning);
+                            }
+                            checkpoint.allowCloudGhostText = checkpointValue.value(
+                                "allow_cloud_ghost_text", false);
+                            checkpoint.webBrowsingEnabled = checkpointValue.value(
+                                "web_browsing_enabled", false);
+                            checkpoint.maxTokens = checkpointValue.value("max_tokens", 4096);
+                            checkpoint.contextTokens = checkpointValue.value("context_tokens", 65536);
+                            checkpoint.history = historyFromJson(
+                                checkpointValue.value("history", nlohmann::json::array()));
+                            checkpoint.responseBuffer = checkpointValue.value(
+                                "response_buffer", std::string{});
+                            session.checkpoints.push_back(std::move(checkpoint));
+                        }
+                    }
+                    // A persisted process cannot have a live worker.  Restore
+                    // the transcript but force the new process to idle.
+                    session.running = false;
+                    restored.push_back(std::move(session));
+                }
+                if (!restored.empty()) {
+                    m_chatSessions = std::move(restored);
+                    m_closedChatSessions.clear();
+                    int maxId = 0;
+                    for (const auto& session : m_chatSessions) maxId = std::max(maxId, session.id);
+                    m_nextChatSessionId = std::max(
+                        chat.value("next_id", maxId + 1), maxId + 1);
+                    int activeChat = chat.value("active", 0);
+                    if (activeChat < 0 || activeChat >= static_cast<int>(m_chatSessions.size())) {
+                        activeChat = 0;
+                    }
+                    updateChatSessionTabs();
+                    switchChatSession(activeChat);
+                }
+            }
+        }
+
         int active = root.value("active", 0);
         if (active < 0 || active >= static_cast<int>(m_openDocuments.size())) active = 0;
         switchDocumentTab(active);
