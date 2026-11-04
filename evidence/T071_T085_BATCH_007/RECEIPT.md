@@ -134,3 +134,29 @@ SELF_AUDIT_PASS=4
 SELF_AUDIT_FAIL=7
 SELF_AUDIT_EXIT=1
 ```
+
+### T075 — ChatWindow cancellation and same-session recovery
+
+The unchanged native IDE candidate was exercised through its real ChatWindow.
+Request A was submitted with a deliberately long prompt; the Stop control was
+enabled during active generation. Stop was activated and the UI displayed
+`[stopped] generation cancelled`. Request B was then submitted in the same
+process and the native ChatWindow rendered the exact marker
+`T075_CANCEL_B_20261104`. No Request-A answer appeared after cancellation.
+
+```ini
+REQUEST_A_SUBMITTED=1
+STOP_ENABLED_DURING_INFERENCE=1
+CANCEL_UI_ACK=1
+REQUEST_B_SUBMITTED=1
+REQUEST_B_EXACT_MARKER=PASS
+LATE_REQUEST_A_RENDERED=0_OBSERVED
+SAME_PROCESS=1
+IDE_BINARY_SIZE=6106624
+IDE_BINARY_SHA256=884D8FBC81C9960E2DB8EC9D88F7E7C29CDECA596F5960D9C5D5FEB7296704AE
+T075=PASS_BEHAVIORAL
+```
+
+This is a physical UI receipt. It does not claim a low-level backend
+termination trace; that remains an additional diagnostic requirement if the
+certification policy demands transport-level cancellation proof.
