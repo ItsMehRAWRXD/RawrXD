@@ -8,7 +8,7 @@ BEGIN
         MENUITEM "&Open...\tCtrl+O",        IDM_FILE_OPEN
         MENUITEM "&Save\tCtrl+S",           IDM_FILE_SAVE
         MENUITEM "Save &As...\tCtrl+Shift+S", IDM_FILE_SAVEAS
-        SEPARATOR
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                 IDM_FILE_EXIT
     END
     POPUP "&Build"
@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "&Compile",              IDM_BUILD_COMPILE
         MENUITEM "&Execute",              IDM_BUILD_RUN
         MENUITEM "&Clean",                IDM_BUILD_CLEAN
-        SEPARATOR
+        MENUITEM SEPARATOR
         MENUITEM "&Analyze PE",           IDM_TOOLS_ANALYZE
     END
     POPUP "&Tools"
