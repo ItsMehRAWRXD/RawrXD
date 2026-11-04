@@ -3423,27 +3423,41 @@ void Win32IDE::openFile()
         }
     }
 
-    OPENFILENAMEA ofn;
-    char szFile[260] = {0};
-
+    OPENFILENAMEW ofn = {};
+    wchar_t szFile[260] = {0};
+    
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
+    ofn.nMaxFile = sizeof(szFile) / sizeof(wchar_t);
+    ofn.lpstrFilter = L"All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = nullptr;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-    if (GetOpenFileNameA(&ofn)) {
-        appendToOutput("Opening file: " + std::string(szFile) + "\n", "Output", OutputSeverity::Info);
-        if (loadFileIntoEditor(szFile)) {
+    
+    if (GetOpenFileNameW(&ofn)) {
+        // Helper to convert wide string to UTF-8
+        auto wideToUtf8 = [](const std::wstring& wstr) -> std::string {
+            if (wstr.empty()) return "";
+            int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                           static_cast<int>(wstr.size()),
+                                           nullptr, 0, nullptr, nullptr);
+            if (size <= 0) return "";
+            std::string result(size, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                static_cast<int>(wstr.size()),
+                                &result[0], size, nullptr, nullptr);
+            return result;
+        };
+        std::string filePath = wideToUtf8(szFile);
+        appendToOutput("Opening file: " + filePath + "\n", "Output", OutputSeverity::Info);
+        if (loadFileIntoEditor(filePath)) {
             SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)"File opened");
         } else {
-            appendToOutput("Failed to open file: " + std::string(szFile) + "\n", "Errors", OutputSeverity::Error);
+            appendToOutput("Failed to open file: " + filePath + "\n", "Errors", OutputSeverity::Error);
             MessageBoxA(m_hwndMain, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
         }
     } else {
@@ -4625,19 +4639,32 @@ void Win32IDE::unloadModule(const std::string& moduleName)
 void Win32IDE::importModule()
 {
     // Show file dialog to select module
-    OPENFILENAMEA ofn = {};
-    char szFile[MAX_PATH] = "";
+    OPENFILENAMEW ofn = {};
+    wchar_t szFile[MAX_PATH] = {0};
     
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
-    ofn.lpstrFilter = "PowerShell Modules (*.psm1;*.psd1)\0*.psm1;*.psd1\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = L"PowerShell Modules (*.psm1;*.psd1)\0*.psm1;*.psd1\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-    ofn.lpstrTitle = "Import Module";
+    ofn.lpstrTitle = L"Import Module";
     
-    if (GetOpenFileNameA(&ofn)) {
-        std::string modulePath = szFile;
+    if (GetOpenFileNameW(&ofn)) {
+        // Helper to convert wide string to UTF-8
+        auto wideToUtf8 = [](const std::wstring& wstr) -> std::string {
+            if (wstr.empty()) return "";
+            int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                           static_cast<int>(wstr.size()),
+                                           nullptr, 0, nullptr, nullptr);
+            if (size <= 0) return "";
+            std::string result(size, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                static_cast<int>(wstr.size()),
+                                &result[0], size, nullptr, nullptr);
+            return result;
+        };
+        std::string modulePath = wideToUtf8(szFile);
         std::string command = "Import-Module '" + modulePath + "'\n";
         
         TerminalPane* pane = getActiveTerminalPane();

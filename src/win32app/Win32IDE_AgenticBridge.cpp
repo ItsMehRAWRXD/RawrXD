@@ -82,12 +82,14 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
         return response;
     }
 
-    std::string fullOutput;
+    auto fullOutput = std::make_shared<std::string>();
     
     // Temporary override of callback to capture full output for the return struct
-    // while ALSO streaming to the GUI
-    m_nativeAgent->SetOutputCallback([&](const std::string& chunk) {
-        fullOutput += chunk;
+    // while ALSO streaming to the GUI.  Use shared_ptr so the callback remains
+    // valid even if the native agent retains it and invokes it after this
+    // function returns (prevents dangling reference to local fullOutput).
+    m_nativeAgent->SetOutputCallback([fullOutput](const std::string& chunk) {
+        *fullOutput += chunk;
         if (m_outputCallback) {
             m_outputCallback("stream", chunk);
         }

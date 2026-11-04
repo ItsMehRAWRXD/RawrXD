@@ -107,7 +107,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             PostQuitMessage(0);
             return 0;
         case WM_CLOSE:
-            if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) {
+            if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
                 ide->saveIdeSession();
                 DestroyWindow(hwnd);
             }
@@ -118,7 +118,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             // normally translates this to WM_CLOSE, but the explicit path
             // prevents the native X from becoming inert after launch.
             if ((wParam & 0xFFF0u) == SC_CLOSE) {
-                if (ide && (!ide->m_fileModified || ide->promptSaveChanges())) {
+                if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
                     ide->saveIdeSession();
                     DestroyWindow(hwnd);
                 }

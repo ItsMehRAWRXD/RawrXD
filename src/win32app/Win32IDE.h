@@ -728,6 +728,10 @@ private:
     void loadEditorSession();
     void saveEditorSession();
 
+    // Multi-document dirty-state protection
+    bool hasUnsavedBuffers() const;
+    bool promptSaveAllChanges();
+
     // Enhanced clipboard
     void copyWithFormatting();
     void pasteWithoutFormatting();

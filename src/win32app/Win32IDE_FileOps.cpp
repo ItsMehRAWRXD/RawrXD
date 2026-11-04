@@ -257,27 +257,52 @@ std::string Win32IDE::getEditorTextUtf8ForFile() const {
 
 void Win32IDE::openFileDialog() {
     LOG_INFO("openFileDialog() called");
-    OPENFILENAMEA ofn = {};
-    char szFile[MAX_PATH] = {0};
+    OPENFILENAMEW ofn = {};
+    wchar_t szFile[MAX_PATH] = {0};
     
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
-                      "All Files (*.*)\0*.*\0"
-                      "PowerShell Scripts (*.ps1)\0*.ps1\0"
-                      "C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
-                      "GGUF Models (*.gguf)\0*.gguf\0";
+    ofn.lpstrFilter = L"Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
+                      L"All Files (*.*)\0*.*\0"
+                      L"PowerShell Scripts (*.ps1)\0*.ps1\0"
+                      L"C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
+                      L"GGUF Models (*.gguf)\0*.gguf\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
+    std::wstring initialDir;
+    if (!m_currentDirectory.empty()) {
+        int idLen = MultiByteToWideChar(CP_UTF8, 0, m_currentDirectory.c_str(),
+                                        static_cast<int>(m_currentDirectory.size()),
+                                        nullptr, 0);
+        if (idLen > 0) {
+            initialDir.resize(idLen);
+            MultiByteToWideChar(CP_UTF8, 0, m_currentDirectory.c_str(),
+                                static_cast<int>(m_currentDirectory.size()),
+                                &initialDir[0], idLen);
+        }
+    }
+    ofn.lpstrInitialDir = initialDir.empty() ? NULL : initialDir.c_str();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
     
     LOG_DEBUG("Opening file dialog");
-    if (GetOpenFileNameA(&ofn)) {
-        std::string filePath = szFile;
+    if (GetOpenFileNameW(&ofn)) {
+        // Helper to convert wide string to UTF-8
+        auto wideToUtf8 = [](const std::wstring& wstr) -> std::string {
+            if (wstr.empty()) return "";
+            int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                           static_cast<int>(wstr.size()),
+                                           nullptr, 0, nullptr, nullptr);
+            if (size <= 0) return "";
+            std::string result(size, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                static_cast<int>(wstr.size()),
+                                &result[0], size, nullptr, nullptr);
+            return result;
+        };
+        std::string filePath = wideToUtf8(szFile);
         LOG_INFO("File selected: " + filePath);
         
         // Check if it's a GGUF model file FIRST - DON'T load as text, bypass size limits!
@@ -319,7 +344,7 @@ void Win32IDE::openFileDialog() {
         try {
             std::string content;
             std::string readError;
-            if (readBinaryFile(szFile, content, readError)) {
+            if (readBinaryFile(filePath, content, readError)) {
                 // T07: reject binary/NUL-bearing files before they enter the
                 // editor. A text editor must not silently load a binary file
                 // into a RichEdit buffer; doing so corrupts undo state, tab
@@ -327,15 +352,15 @@ void Win32IDE::openFileDialog() {
                 // (the reliable binary marker that survives UTF-8 validation)
                 // and refuse the load with a dialog.
                 if (content.find('\0') != std::string::npos) {
-                    appendToOutput("File > Open rejected: binary file (NUL bytes present): " + std::string(szFile) + "\n",
+                    appendToOutput("File > Open rejected: binary file (NUL bytes present): " + filePath + "\n",
                                    "Errors", OutputSeverity::Error);
                     MessageBoxA(m_hwndMain,
                                 ("RawrXD IDE refuses to open binary files into the editor.\n\n" +
-                                 std::string(szFile)).c_str(),
+                                 filePath).c_str(),
                                 "Binary file rejected", MB_OK | MB_ICONSTOP);
                     return;
                 }
-
+                
                 // Check file size to prevent loading huge TEXT files into editor
                 const size_t fileSize = content.size();
                 
@@ -350,19 +375,19 @@ void Win32IDE::openFileDialog() {
                     return;
                 }
                 
-                m_currentFile = szFile;
+                m_currentFile = filePath;
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
                 updateTitleBarText();
-
+                
                 // T08: register the opened file as a document tab so the tab
                 // control reflects the open document.  Without this, File >
                 // Open loads content into the editor but the tab count stays
                 // at 1.
-                addDocumentTab(szFile);
+                addDocumentTab(filePath);
                 
                 // Update recent files
-                updateRecentFiles(szFile);
+                updateRecentFiles(filePath);
                 
                 // Update window title
                 std::string title = "RawrXD IDE - " + m_currentFile;
@@ -440,41 +465,130 @@ void Win32IDE::openRecentFile(int index) {
 }
 
 std::string Win32IDE::getFileDialogPath(bool isSave) {
-    OPENFILENAMEA ofn = {};
-    char szFile[MAX_PATH] = {0};
+    // Helper to convert wide string to UTF-8
+    auto wideToUtf8 = [](const std::wstring& wstr) -> std::string {
+        if (wstr.empty()) return "";
+        int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                                       static_cast<int>(wstr.size()),
+                                       nullptr, 0, nullptr, nullptr);
+        if (size <= 0) return "";
+        std::string result(size, '\0');
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(),
+                            static_cast<int>(wstr.size()),
+                            &result[0], size, nullptr, nullptr);
+        return result;
+    };
+
+    OPENFILENAMEW ofn = {};
+    wchar_t szFile[MAX_PATH] = {0};
     
     if (!m_currentFile.empty()) {
-        strncpy(szFile, m_currentFile.c_str(), MAX_PATH - 1);
-        szFile[MAX_PATH - 1] = '\0';
+        int wlen = MultiByteToWideChar(CP_UTF8, 0, m_currentFile.c_str(),
+                                       static_cast<int>(m_currentFile.size()),
+                                       szFile, MAX_PATH - 1);
+        szFile[wlen] = L'\0';
     }
     
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "All Files (*.*)\0*.*\0"
-                      "PowerShell Scripts (*.ps1)\0*.ps1\0"
-                      "C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
-                      "Text Files (*.txt)\0*.txt\0";
+    ofn.lpstrFilter = L"All Files (*.*)\0*.*\0"
+                      L"PowerShell Scripts (*.ps1)\0*.ps1\0"
+                      L"C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
+                      L"Text Files (*.txt)\0*.txt\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
-    ofn.lpstrDefExt = m_defaultFileExtension.c_str();
+    // Initial directory as wide string
+    std::wstring initialDir;
+    if (!m_currentDirectory.empty()) {
+        int idLen = MultiByteToWideChar(CP_UTF8, 0, m_currentDirectory.c_str(),
+                                        static_cast<int>(m_currentDirectory.size()),
+                                        nullptr, 0);
+        if (idLen > 0) {
+            initialDir.resize(idLen);
+            MultiByteToWideChar(CP_UTF8, 0, m_currentDirectory.c_str(),
+                                static_cast<int>(m_currentDirectory.size()),
+                                &initialDir[0], idLen);
+        }
+    }
+    ofn.lpstrInitialDir = initialDir.empty() ? NULL : initialDir.c_str();
+    std::wstring defExt;
+    if (!m_defaultFileExtension.empty()) {
+        int deLen = MultiByteToWideChar(CP_UTF8, 0, m_defaultFileExtension.c_str(),
+                                        static_cast<int>(m_defaultFileExtension.size()),
+                                        nullptr, 0);
+        if (deLen > 0) {
+            defExt.resize(deLen);
+            MultiByteToWideChar(CP_UTF8, 0, m_defaultFileExtension.c_str(),
+                                static_cast<int>(m_defaultFileExtension.size()),
+                                &defExt[0], deLen);
+        }
+    }
+    ofn.lpstrDefExt = defExt.empty() ? NULL : defExt.c_str();
     
     if (isSave) {
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_ENABLESIZING;
-        if (GetSaveFileNameA(&ofn)) {
-            return std::string(szFile);
+        if (GetSaveFileNameW(&ofn)) {
+            return wideToUtf8(szFile);
         }
     } else {
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
-        if (GetOpenFileNameA(&ofn)) {
-            return std::string(szFile);
+        if (GetOpenFileNameW(&ofn)) {
+            return wideToUtf8(szFile);
         }
     }
-    
     return "";
+}
+
+bool Win32IDE::hasUnsavedBuffers() const {
+    for (const auto& buf : m_documentBuffers) {
+        if (buf.modified) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Win32IDE::promptSaveAllChanges() {
+    // Collect indices of all modified buffers
+    std::vector<int> modifiedIndices;
+    for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
+        if (m_documentBuffers[i].modified) {
+            modifiedIndices.push_back(static_cast<int>(i));
+        }
+    }
+
+    if (modifiedIndices.empty()) {
+        return true; // Nothing to save
+    }
+
+    // Build a summary message listing all modified files
+    std::string message = "The following documents have unsaved changes:\n\n";
+    for (int idx : modifiedIndices) {
+        message += "- " + m_documentBuffers[idx].label + "\n";
+    }
+    message += "\nDo you want to save all changes?\n\n"
+               "YES = Save all\n"
+               "NO = Discard all\n"
+               "CANCEL = Abort close";
+
+    int result = MessageBoxA(m_hwndMain,
+                             message.c_str(),
+                             "Unsaved Changes",
+                             MB_YESNOCANCEL | MB_ICONWARNING);
+
+    if (result == IDCANCEL) {
+        return false;
+    }
+
+    if (result == IDYES) {
+        saveAll();
+        return true;
+    }
+
+    return true; // IDNO - discard all changes
 }
 
 void Win32IDE::saveAll() {
@@ -498,7 +612,7 @@ void Win32IDE::saveAll() {
 }
 
 void Win32IDE::closeFile() {
-    if (m_fileModified && !promptSaveChanges()) {
+    if (hasUnsavedBuffers() && !promptSaveAllChanges()) {
         return;
     }
 
