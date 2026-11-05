@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Build and run production bridge headless acceptance (40 cases)
+      - name: Build and run production bridge, registry, integration and CLI acceptance
         shell: bash
         run: |
           set -euo pipefail
@@ -68,3 +68,12 @@ jobs:
           $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:js_bridge_test.exe tools\\test_js_extension_bridge.cpp && js_bridge_test.exe"
           cmd /d /s /c $command
           if ($LASTEXITCODE -ne 0) { throw "JS_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:central_registry_test.exe tools\\test_command_registry_headless.cpp && central_registry_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "CENTRAL_REGISTRY_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_integration_test.exe tools\\test_extension_central_integration.cpp && extension_integration_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "EXTENSION_INTEGRATION_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /TC /W4 /WX /Fe:cli_numeric_test.exe tools\\test_cli_numeric_policy.c && cli_numeric_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "CLI_NUMERIC_TEST_FAILED_$LASTEXITCODE" }
