@@ -49,6 +49,20 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("m_initialized = false;", body)
         self.assertNotIn("m_initialized = true;", body)
 
+    def test_shutdown_clears_ready_state(self):
+        body = body_of(self.source, "shutdown")
+        self.assertIn("m_initialized = false;", body)
+
+    def test_failed_script_execution_clears_output(self):
+        body = body_of(self.source, "executeScript")
+        self.assertIn("if (outResult && maxResultLen)", body)
+        self.assertIn("outResult[0] = '\\0';", body)
+
+    def test_failed_vsix_verification_is_not_valid_or_signed(self):
+        body = body_of(self.source, "verifyVSIX")
+        for statement in ("r.isValid = false;", "r.isSigned = false;", "r.signatureVerified = false;"):
+            self.assertIn(statement, body)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
