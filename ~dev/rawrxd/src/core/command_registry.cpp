@@ -103,9 +103,14 @@ bool CommandRegistry::ExecuteCommand(const std::string& commandId, CommandContex
         context.errorMessage = "Command handler threw an unknown exception";
         return false;
     }
-    // Do not overwrite an explicit handler failure.
+    // Do not overwrite an explicit handler failure. A handler may also
+    // report failure by leaving handled=false; the registry must not
+    // manufacture success in that case.
     if (!context.errorMessage.empty()) return false;
-    context.handled = true;
+    if (!context.handled) {
+        context.errorMessage = "Command handler did not report completion: " + commandId;
+        return false;
+    }
     return true;
 }
 
