@@ -151,8 +151,8 @@ int main() {
     reject("file.read {\"path\":\"a.cpp\"}\nDONE"); // 07
     reject("file.read {\"path\":\"a.cpp\"}\n<|im_end|>"); // 08
     reject("file.read {\"path\":\"a.cpp\"}   extra"); // 09
-    reject("file.read {\"path\":\"a.cpp\"}\n\n"); // 10
-    reject("file.read {\"path\":\"a.cpp\"} \n"); // 11
+    check("file.read {\"path\":\"a.cpp\"}\n\n"); // 10 whitespace tolerated
+    check("file.read {\"path\":\"a.cpp\"} \n"); // 11 whitespace tolerated
     reject("file.read {\"path\":\"a.cpp\"}#comment"); // 12
     reject("file.read {\"path\":\"a.cpp\"} [complete]"); // 13
     check("file.read {\"path\":\"a.cpp\"}"); // 14
