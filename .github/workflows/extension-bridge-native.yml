@@ -1,0 +1,31 @@
+name: Extension Bridge Native Headless Acceptance
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - 'tools/test_extension_host_bridge.cpp'
+      - '.github/workflows/extension-bridge-native.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - 'tools/test_extension_host_bridge.cpp'
+      - '.github/workflows/extension-bridge-native.yml'
+permissions:
+  contents: read
+jobs:
+  bridge-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production bridge with MSVC
+        shell: pwsh
+        run: |
+          & 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat' > $null
+          $vs = & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -latest -products '*' -property installationPath
+          if (-not $vs) { throw "MSVC_NOT_FOUND" }
+          $bat = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_bridge_test.exe tools\test_extension_host_bridge.cpp && extension_bridge_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "EXTENSION_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
