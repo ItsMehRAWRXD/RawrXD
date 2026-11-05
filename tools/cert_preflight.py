@@ -62,9 +62,13 @@ def validate(root, manifest):
             continue
         if receipt.get("gate") != name or receipt.get("result") != "PASS":
             errors.append(name + ": receipt gate/result mismatch")
-        if not isinstance(receipt.get("candidate_sha256"), str) or receipt["candidate_sha256"].lower() != candidate.lower() if isinstance(candidate, str) else True:
+        if (not isinstance(candidate, str) or
+                not isinstance(receipt.get("candidate_sha256"), str) or
+                receipt["candidate_sha256"].lower() != candidate.lower()):
             errors.append(name + ": candidate SHA mismatch")
-        if not isinstance(receipt.get("source_commit"), str) or receipt["source_commit"].lower() != head.lower() if isinstance(head, str) else True:
+        if (not isinstance(head, str) or
+                not isinstance(receipt.get("source_commit"), str) or
+                receipt["source_commit"].lower() != head.lower()):
             errors.append(name + ": source commit mismatch")
         stamp = receipt.get("timestamp_utc")
         if not isinstance(stamp, str) or not re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", stamp):
