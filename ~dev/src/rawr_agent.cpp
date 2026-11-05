@@ -168,7 +168,7 @@ ModelReply parseReply(const std::string& raw) {
                 // argument payload, without trailing text or extra lines.
                 const bool validJson = jsonPart.size() >= 2 &&
                     jsonPart.front() == '{' && jsonPart.back() == '}' &&
-                    cleaned.find('\\n') == std::string::npos;
+                    cleaned.find('\n') == std::string::npos;
                 if (isKnownTool(candidate)) {
                     if (!validJson) {
                         r.kind = ModelReply::Kind::ProtocolError;
