@@ -375,6 +375,8 @@ void CommandRegistry::RegisterBuiltInCommands() {
             auto* tasks = Application::Instance().GetTaskRunner();
             if (tasks) {
                 tasks->RunBuildTask();
+            } else {
+                ctx.errorMessage = "Build task runner is unavailable";
             }
         }
     });
