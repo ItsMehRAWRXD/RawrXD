@@ -692,7 +692,12 @@ bool Win32IDE::promptSaveChanges() {
         return saveFile();
     }
     
-    return true; // IDNO - discard changes
+    // Unexpected MessageBox return values (including 0 on API failure)
+    // must not be interpreted as permission to discard edits.
+    if (rawrxd::ide::isExplicitDiscard(result)) return true;
+    appendToOutput("Unsaved Changes dialog failed; keeping current file open\n",
+                   "Errors", OutputSeverity::Error);
+    return false;
 }
 
 void Win32IDE::updateRecentFiles(const std::string& filePath) {
