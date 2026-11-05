@@ -124,6 +124,23 @@ int main() {
     finalReply("Task complete."); // 14
     finalReply("Plain response with literal `backticks`."); // 15
 
+    // Batch 11: reject tool-call framing contamination (15 cases).
+    reject("preface<tool>file.read</tool><args>{}</args>"); // 01
+    reject("<tool>file.read</tool><args>{}</args>suffix"); // 02
+    reject("<tool>file.read</tool>noise<args>{}</args>"); // 03
+    reject(" \n<tool>file.read</tool><args>{}</args>suffix"); // 04
+    reject("<tool>file.read</tool><args>{}</args><|im_end|>"); // 05
+    reject("<tool>file.read</tool><args>{}</args><tool>"); // 06
+    reject("<tool>file.read</tool><args>{}</args>DONE"); // 07
+    reject("<tool>file.read</tool> extra <args>{}</args>"); // 08
+    reject("assistant:\n<tool>file.read</tool><args>{}</args>"); // 09
+    reject("<tool>file.read</tool><args>{}</args>\nTask complete."); // 10
+    reject("<tool>file.read</tool>\nprose\n<args>{}</args>"); // 11
+    reject("<tool>file.read</tool><args>{}</args>\n<args>"); // 12
+    reject("<tool>file.read</tool><args>{}</args>\n</tool>"); // 13
+    reject("<tool>file.read</tool><args>{}</args>\n<tool>other"); // 14
+    check(" \n<tool>file.read</tool>\n<args>{}</args>\n "); // 15
+
     std::printf("CASES=%d\n", cases);
     std::printf("PARSE_FAILURES=%d\n", parseFailures);
     std::printf("CANONICALIZATION_FAILURES=%d\n", canonFailures);
