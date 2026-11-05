@@ -46,8 +46,15 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
             failures.append(f"{gate}: status is not PASS")
         if receipt.get("candidate_sha256", "").lower() != expected_sha.lower():
             failures.append(f"{gate}: candidate hash mismatch")
-        if not isinstance(receipt.get("evidence_path"), str) or not receipt["evidence_path"].strip():
+        evidence = receipt.get("evidence_path")
+        if not isinstance(evidence, str) or not evidence.strip():
             failures.append(f"{gate}: missing evidence path")
+        else:
+            evidence_file = Path(evidence)
+            if not evidence_file.is_absolute():
+                evidence_file = receipt_dir / evidence_file
+            if not evidence_file.is_file() or evidence_file.stat().st_size == 0:
+                failures.append(f"{gate}: evidence file absent or empty")
     return failures
 
 
