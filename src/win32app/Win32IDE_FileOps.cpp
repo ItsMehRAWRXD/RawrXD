@@ -665,16 +665,18 @@ void Win32IDE::closeFile() {
         removeDocumentTab(m_activeDocument);
     }
 
-    // Clear editor
-    setEditorText("");
-
-    // Reset state
-    m_currentFile.clear();
-    m_fileModified = false;
-    updateTitleBarText();
-
-    // Update window title
-    SetWindowTextA(m_hwndMain, "RawrXD IDE - New File");
+    // Removing a tab may activate another document. Never clear that
+    // surviving editor: doing so could overwrite its in-memory contents.
+    if (m_documentBuffers.empty()) {
+        setEditorText("");
+        m_currentFile.clear();
+        m_fileModified = false;
+        updateTitleBarText();
+        SetWindowTextA(m_hwndMain, "RawrXD IDE - New File");
+    } else {
+        // The tab manager owns selection, editor contents, and title.
+        updateTitleBarText();
+    }
 
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File closed");
 }
