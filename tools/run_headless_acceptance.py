@@ -24,6 +24,7 @@ CASES = [
     ("cli_numeric", "tools/test_cli_numeric_policy.c", "c", 25),
 ]
 SOURCES = [
+    "tools/run_headless_acceptance.py",
     "~dev/rawrxd/src/core/extension_host_production.cpp",
     "~dev/rawrxd/src/core/js_extension_host_production.cpp",
     "~dev/rawrxd/src/core/command_registry.cpp",
@@ -59,6 +60,7 @@ def main():
         return 2
     receipt = {"schema": 1, "platform": sys.platform, "started_unix": time.time(),
                "git": run(["git", "rev-parse", "HEAD"], 10),
+               "git_status": run(["git", "status", "--porcelain"], 10),
                "compilers": {"cxx": cxx, "cc": cc}, "sources": {}, "cases": []}
     for name in SOURCES + [x[1] for x in CASES]:
         path = ROOT / name
