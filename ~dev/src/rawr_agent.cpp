@@ -365,8 +365,8 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
                 : "Continue. Call exactly one tool, or give your final answer.";
         const std::string prompt = buildPrompt(systemPrompt, userRequest,
                                                 history, stepInstruction);
-        // A result counts as seen only when a subsequent generation receives it.
-        if (!history.empty()) result.sawToolResult = true;
+        // A result counts as seen only after the subsequent generation
+        // produces a nonempty reply; constructing a prompt is insufficient.
 
         // Generation with stop-on-<|im_end|>.
         std::string replyText;
@@ -406,6 +406,7 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             result.reachedFinal = false;
             return result;
         }
+        if (!history.empty()) result.sawToolResult = true;
         const ModelReply reply = parseReply(trim(replyText));
 
         if (reply.kind == ModelReply::Kind::Final) {
