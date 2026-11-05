@@ -453,10 +453,16 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
         // distinguish a failed tool from a successful empty response.
         tr << "[TOOL EXIT_CODE=" << toolResult.exit_code
            << " STATUS=" << (toolResult.ok() ? "SUCCESS" : "FAILURE") << "]\n";
-        const std::string& toolOutput = toolResult.ok()
-            ? toolResult.stdout_text : toolResult.stderr_text;
-        if (toolOutput.empty()) tr << "(tool returned no output)";
-        else tr << toolOutput;
+        // Preserve both streams. A failing tool may have important stdout,
+        // while a successful tool may emit warnings on stderr.
+        if (toolResult.stdout_text.empty() && toolResult.stderr_text.empty()) {
+            tr << "(tool returned no output)";
+        } else {
+            if (!toolResult.stdout_text.empty())
+                tr << "[STDOUT]\\n" << toolResult.stdout_text << "\\n";
+            if (!toolResult.stderr_text.empty())
+                tr << "[STDERR]\\n" << toolResult.stderr_text << "\\n";
+        }
         history.push_back({reply.tool, reply.args, excerpt(tr.str(), 4096)});
         // Do not mark reinjection complete until the next generation starts.
 
