@@ -69,6 +69,14 @@ jobs:
               if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
             }
           }
+      - name: Upload native IDE executable for independent acceptance
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ide-executable-UNVERIFIED-GUI
+          path: build-native-smoke/**/RawrXD-Win32IDE-Native.exe
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload native build evidence (not GUI certification)
         if: always()
         uses: actions/upload-artifact@v4
