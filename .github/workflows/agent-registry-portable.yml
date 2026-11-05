@@ -13,6 +13,8 @@ on:
       - 'tools/test_close_confirmation_model.cpp'
       - 'tools/test_extension_entry_policy.cpp'
       - 'tools/test_extension_manifest_policy.cpp'
+      - 'tools/test_extension_signature_policy.cpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
       - '~dev/rawrxd/src/core/js_extension_host.cpp'
@@ -40,6 +42,8 @@ on:
       - 'tools/test_close_confirmation_model.cpp'
       - 'tools/test_extension_entry_policy.cpp'
       - 'tools/test_extension_manifest_policy.cpp'
+      - 'tools/test_extension_signature_policy.cpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
       - '~dev/rawrxd/src/core/js_extension_host.cpp'
@@ -109,6 +113,10 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_close_confirmation_model.cpp -o /tmp/rawrxd_close_confirmation
           /tmp/rawrxd_close_confirmation
+      - name: Compile and run VSIX signature acceptance policy (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined tools/test_extension_signature_policy.cpp -o /tmp/rawrxd_extension_signature_policy
+          /tmp/rawrxd_extension_signature_policy
       - name: Compile and run extension manifest identity policy (15 cases)
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined tools/test_extension_manifest_policy.cpp -o /tmp/rawrxd_extension_manifest_policy
