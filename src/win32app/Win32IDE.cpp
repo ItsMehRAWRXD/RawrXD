@@ -3628,7 +3628,7 @@ bool Win32IDE::saveFileAs()
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = static_cast<DWORD>(std::size(szFile));
+    ofn.nMaxFile = 32768;
     ofn.lpstrFilter = L"All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
