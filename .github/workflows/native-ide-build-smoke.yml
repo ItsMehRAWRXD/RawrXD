@@ -45,6 +45,29 @@ jobs:
           "SIZE=$($exe.Length)" | Out-File -Encoding ascii -Append native-build-receipt.txt
           "CERTIFIED=0" | Out-File -Encoding ascii -Append native-build-receipt.txt
           Get-Content native-build-receipt.txt
+      - name: Native process launch smoke (no model, no GUI certification)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path build-native-smoke -Filter RawrXD-Win32IDE-Native.exe -Recurse -File | Select-Object -First 1
+          if (-not $exe) { throw "NATIVE_IDE_BINARY_NOT_FOUND" }
+          $p = $null
+          try {
+            $p = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru -ErrorAction Stop
+            Start-Sleep -Seconds 4
+            $p.Refresh()
+            if ($p.HasExited) {
+              "NATIVE_LAUNCH=FAIL_EARLY_EXIT" | Out-File -Encoding ascii -Append native-build-receipt.txt
+              "EXIT_CODE=$($p.ExitCode)" | Out-File -Encoding ascii -Append native-build-receipt.txt
+              throw "NATIVE_IDE_EARLY_EXIT_$($p.ExitCode)"
+            }
+            "NATIVE_LAUNCH=PASS_PROCESS_ALIVE_4S" | Out-File -Encoding ascii -Append native-build-receipt.txt
+            "GUI_INTERACTION=NOT_TESTED" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          } finally {
+            if ($p) {
+              $p.Refresh()
+              if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+            }
+          }
       - name: Upload native build evidence (not GUI certification)
         if: always()
         uses: actions/upload-artifact@v4
