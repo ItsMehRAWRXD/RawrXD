@@ -269,26 +269,26 @@ static int cmd_generate(int argc, char** argv) {
     for (int i = 3; i < argc; i++) {
         const char* opt = argv[i];
         if (strcmp(opt, "-p") == 0 || strcmp(opt, "--prompt") == 0) {
-            if (++i >= argc) { fprintf(stderr, "Missing prompt value\\n"); return 2; }
+            if (++i >= argc) { fprintf(stderr, "Missing prompt value\n"); return 2; }
             prompt = argv[i];
         } else if (strcmp(opt, "-t") == 0 || strcmp(opt, "--temperature") == 0) {
             if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.0, 2.0, &temperature)) {
-                fprintf(stderr, "Invalid temperature (expected 0..2)\\n"); return 2;
+                fprintf(stderr, "Invalid temperature (expected 0..2)\n"); return 2;
             }
         } else if (strcmp(opt, "-n") == 0 || strcmp(opt, "--tokens") == 0) {
             if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 65536, &max_tokens)) {
-                fprintf(stderr, "Invalid token count (expected 1..65536)\\n"); return 2;
+                fprintf(stderr, "Invalid token count (expected 1..65536)\n"); return 2;
             }
         } else if (strcmp(opt, "--top-p") == 0) {
             if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.000001, 1.0, &top_p)) {
-                fprintf(stderr, "Invalid top-p (expected >0 and <=1)\\n"); return 2;
+                fprintf(stderr, "Invalid top-p (expected >0 and <=1)\n"); return 2;
             }
         } else if (strcmp(opt, "--top-k") == 0) {
             if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 4096, &top_k)) {
-                fprintf(stderr, "Invalid top-k (expected 1..4096)\\n"); return 2;
+                fprintf(stderr, "Invalid top-k (expected 1..4096)\n"); return 2;
             }
         } else {
-            fprintf(stderr, "Unknown generate option: %s\\n", opt);
+            fprintf(stderr, "Unknown generate option: %s\n", opt);
             return 2;
         }
     }
