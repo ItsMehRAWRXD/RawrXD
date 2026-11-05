@@ -33,6 +33,6 @@ int main() {
     check("reinitialize", host.Initialize());
     host.Shutdown();
     check("final_shutdown", !host.IsInitialized());
-    std::cout << "EXTENSION_BRIDGE=" << passed << "/15\\n";
+    std::cout << "EXTENSION_BRIDGE=" << passed << "/15\n";
     return passed == 15 ? 0 : 1;
 }
