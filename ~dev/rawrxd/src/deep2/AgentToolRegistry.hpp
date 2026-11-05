@@ -230,7 +230,19 @@ public:
 
         for (const auto& root : search_roots) {
             if (root.empty()) continue;
-            if (auto p = validate(root / configured)) return *p;
+            std::error_code ec;
+            const auto canonical_root = std::filesystem::weakly_canonical(root, ec);
+            if (ec || canonical_root.empty()) continue;
+            if (auto p = validate(canonical_root / configured)) {
+                // A relative executable must remain under its authorized
+                // search root after symlink and '..' resolution.
+                auto r = canonical_root.begin(), q = p->begin();
+                while (r != canonical_root.end() && q != p->end() && *r == *q) {
+                    ++r;
+                    ++q;
+                }
+                if (r == canonical_root.end() && *p != canonical_root) return *p;
+            }
         }
 
         throw std::runtime_error("unable to resolve tool executable: " + configured.string());
