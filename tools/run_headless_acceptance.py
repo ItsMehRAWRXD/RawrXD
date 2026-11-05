@@ -17,7 +17,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = [
-    ("extension_bridge", "tools/test_extension_host_bridge.cpp", "c++", 25),
+    ("extension_bridge", "tools/test_extension_host_bridge.cpp", "c++", 37),
     ("js_bridge", "tools/test_js_extension_bridge.cpp", "c++", 15),
     ("central_registry", "tools/test_command_registry_headless.cpp", "c++", 69),
     ("extension_integration", "tools/test_extension_central_integration.cpp", "c++", 15),
