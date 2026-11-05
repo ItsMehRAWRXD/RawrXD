@@ -525,6 +525,12 @@ ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
     for (const auto& c : ledger->candidates())
         if (c.id == id) { match = c; break; }
     if (!match) { r.exit_code = 66; r.stderr_text = "candidate not found"; return r; }
+    const int freshness = ledger->candidateFileFreshness(id);
+    if (freshness != 0 || !ledger->candidateMatchesEpoch(id)) {
+        r.exit_code = 75;
+        r.stderr_text = "candidate source stale or missing; rescan required";
+        return r;
+    }
 
     std::ostringstream out;
     out << "[" << match->id << "] " << candidateTypeName(match->type)
