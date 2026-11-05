@@ -198,13 +198,11 @@ ToolResult toolCodeSearch(const ToolRequest& req, AuditLedger* ledger) {
         std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
         if (!f) continue;
         std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && hits < maxHits) {
-            f.getline(buf, sizeof(buf));
+        uint64_t no = 0;
+        while (hits < maxHits && std::getline(f, line)) {
             ++no;
-            if (std::strstr(buf, needle.c_str()) != nullptr) {
-                out += rel + ":" + std::to_string(no) + ": " + buf + "\n";
+            if (line.find(needle) != std::string::npos) {
+                out += rel + ":" + std::to_string(no) + ": " + line + "\n";
                 ++hits;
             }
         }
