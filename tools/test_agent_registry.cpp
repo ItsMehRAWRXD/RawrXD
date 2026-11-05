@@ -39,5 +39,33 @@ int main() {
     registry.registerTool({"replacement", {"workspace_ls"}, "reuse"}, ok);
     assert(registry.contains("workspace_ls"));
     assert(registry.authoritySnapshot().rejected_tool_count == 1);
+    // Additional boundary and accounting checks.
+    assert(!registry.contains("unknown"));
+    assert(!registry.describe("unknown").has_value());
+    assert(registry.list().size() == 1);
+    assert(registry.contains("replacement"));
+    assert(registry.describe("replacement")->id == "replacement");
+    assert(registry.invoke(ToolRequest{.tool_id="replacement"}, {}).ok());
+    assert(registry.authoritySnapshot().dispatch_count == 4);
+    assert(registry.authoritySnapshot().failed_dispatch_count == 2);
+    assert(registry.authoritySnapshot().rejected_tool_count == 1);
+    rejected = false;
+    try { registry.registerTool({"replacement", {}, "duplicate ID"}, ok); }
+    catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
+    rejected = false;
+    try { registry.registerTool({"", {}, "empty ID"}, ok); }
+    catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
+    rejected = false;
+    try { registry.registerTool({"invalid", {}, "empty handler"}, {}); }
+    catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
+    assert(!registry.unregisterTool("unknown"));
+    assert(registry.unregisterTool("replacement"));
+    assert(registry.list().empty());
+    registry.resetAuthorityMetrics();
+    assert(registry.authoritySnapshot().dispatch_count == 0);
+    assert(registry.authoritySnapshot().failed_dispatch_count == 0);
     return 0;
 }
