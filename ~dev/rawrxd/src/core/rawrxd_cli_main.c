@@ -297,7 +297,7 @@ static int cmd_generate(int argc, char** argv) {
     // Never return a successful inference receipt for canned text.
     (void)path; (void)prompt; (void)temperature;
     (void)max_tokens; (void)top_p; (void)top_k;
-    fprintf(stderr, "UNAVAILABLE: generate requires a wired inference backend; no tokens generated\\n");
+    fprintf(stderr, "UNAVAILABLE: generate requires a wired inference backend; no tokens generated\n");
     return 3;
 }
 
@@ -307,12 +307,12 @@ static int cmd_generate(int argc, char** argv) {
 
 static int cmd_chat(int argc, char** argv) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: chat <model.gguf> [options]\\n");
+        fprintf(stderr, "Usage: chat <model.gguf> [options]\n");
         return 1;
     }
     (void)argv;
     // The former chat path returned rotating canned responses as if inferred.
-    fprintf(stderr, "UNAVAILABLE: chat requires a wired inference backend; no response generated\\n");
+    fprintf(stderr, "UNAVAILABLE: chat requires a wired inference backend; no response generated\n");
     return 3;
 }
 
@@ -322,12 +322,12 @@ static int cmd_chat(int argc, char** argv) {
 
 static int cmd_benchmark(int argc, char** argv) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: benchmark <model.gguf>\\n");
+        fprintf(stderr, "Usage: benchmark <model.gguf>\n");
         return 1;
     }
     (void)argv;
     // Sleeping for a fixed interval is not an inference throughput benchmark.
-    fprintf(stderr, "UNAVAILABLE: benchmark requires real inference timing; no TPS measured\\n");
+    fprintf(stderr, "UNAVAILABLE: benchmark requires real inference timing; no TPS measured\n");
     return 3;
 }
 
