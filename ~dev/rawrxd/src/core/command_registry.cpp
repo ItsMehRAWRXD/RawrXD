@@ -144,17 +144,23 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
     
     std::vector<CommandPaletteItem> results;
     std::string lowerQuery = query;
-    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+    const auto lowerAscii = [](unsigned char c) -> char {
+        return (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a')
+                                      : static_cast<char>(c);
+    };
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), lowerAscii);
     
     for (const auto& [id, cmd] : commands_) {
-        if (!cmd.visible || !cmd.enabled) continue;
+        if (!cmd.visible || !cmd.enabled || !CheckConditions(cmd.when)) continue;
         
         // Check if command matches query
         std::string lowerTitle = cmd.title;
-        std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
+        std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), lowerAscii);
         std::string lowerCategory = cmd.category;
-        std::transform(lowerCategory.begin(), lowerCategory.end(), lowerCategory.begin(), ::tolower);
+        std::transform(lowerCategory.begin(), lowerCategory.end(), lowerCategory.begin(), lowerAscii);
         
+        std::string lowerId = id;
+        std::transform(lowerId.begin(), lowerId.end(), lowerId.begin(), lowerAscii);
         int score = 0;
         
         // Exact match
@@ -174,7 +180,7 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
             score = 40;
         }
         // ID match
-        else if (id.find(lowerQuery) != std::string::npos) {
+        else if (lowerId.find(lowerQuery) != std::string::npos) {
             score = 20;
         }
         
@@ -193,7 +199,7 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
     // Sort by score descending
     std::sort(results.begin(), results.end(),
         [](const CommandPaletteItem& a, const CommandPaletteItem& b) {
-            return a.score > b.score;
+            return a.score != b.score ? a.score > b.score : a.id < b.id;
         });
     
     return results;
