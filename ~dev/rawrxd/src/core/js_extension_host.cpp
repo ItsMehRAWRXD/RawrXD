@@ -28,6 +28,7 @@
 // ============================================================================
 
 #include "js_extension_host.hpp"
+#include "extension_entry_policy.hpp"
 #include "../modules/vscode_extension_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -2149,6 +2150,13 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         std::snprintf(err, sizeof(err),
                       "Entry point not found: %s", mainPath.c_str());
         return PatchResult::error(err);
+    }
+
+    // An extension manifest must not execute code outside its installation.
+    // This also rejects traversal through symlinks and absolute main paths.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::path(extRoot), std::filesystem::path(mainPath))) {
+        return PatchResult::error("Extension main entry escapes installation root");
     }
 
     // ---- Create Extension State ----
