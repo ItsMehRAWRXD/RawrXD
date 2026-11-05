@@ -40,7 +40,8 @@ jobs:
           $exe = Get-ChildItem -Path build-native-smoke -Filter RawrXD-Win32IDE-Native.exe -Recurse -File | Select-Object -First 1
           if (-not $exe) { throw "NATIVE_IDE_BINARY_NOT_FOUND" }
           $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $exe.FullName).Hash
-          "NATIVE_BUILD=PASS" | Out-File -Encoding ascii native-build-receipt.txt
+          "SOURCE_SHA=$env:GITHUB_SHA" | Out-File -Encoding ascii native-build-receipt.txt
+          "NATIVE_BUILD=PASS" | Out-File -Encoding ascii -Append native-build-receipt.txt
           "SHA256=$hash" | Out-File -Encoding ascii -Append native-build-receipt.txt
           "SIZE=$($exe.Length)" | Out-File -Encoding ascii -Append native-build-receipt.txt
           "CERTIFIED=0" | Out-File -Encoding ascii -Append native-build-receipt.txt
