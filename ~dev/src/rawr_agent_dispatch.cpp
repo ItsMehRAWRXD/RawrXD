@@ -189,7 +189,7 @@ ToolResult toolCodeSearch(const ToolRequest& req, AuditLedger* ledger) {
 
     const std::string needle = jsonField(req.stdin_text, "query");
     if (needle.empty()) { r.exit_code = 64; r.stderr_text = "missing query"; return r; }
-    uint32_t maxHits = jsonFieldU32(req.stdin_text, "max_hits", 50);
+    uint32_t maxHits = std::min<uint32_t>(jsonFieldU32(req.stdin_text, "max_hits", 50), 200);
 
     std::string out;
     uint32_t hits = 0;
@@ -221,7 +221,7 @@ ToolResult toolSymbolFind(const ToolRequest& req, AuditLedger* ledger,
 
     const std::string sym = jsonField(req.stdin_text, "symbol");
     if (sym.empty()) { r.exit_code = 64; r.stderr_text = "missing symbol"; return r; }
-    uint32_t maxHits = jsonFieldU32(req.stdin_text, "max_hits", 50);
+    uint32_t maxHits = std::min<uint32_t>(jsonFieldU32(req.stdin_text, "max_hits", 50), 200);
 
     auto isIdent = [&](const std::string& s) {
         for (char c : s)
