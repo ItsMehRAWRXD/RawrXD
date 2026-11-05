@@ -52,12 +52,12 @@ bool CommandRegistry::UnregisterCommand(const std::string& commandId) {
         return false;
     }
     
-    // Remove keybinding
-    if (!it->second.keybinding.empty()) {
-        const auto bindingIt = keybindings_.find(it->second.keybinding);
-        if (bindingIt != keybindings_.end() && bindingIt->second == commandId) {
-            keybindings_.erase(bindingIt);
-        }
+    // Remove every binding targeting the command, including aliases installed
+    // through RegisterKeybinding; otherwise unloaded extensions leave dangling
+    // shortcuts that can be inherited by a newly registered command ID.
+    for (auto binding = keybindings_.begin(); binding != keybindings_.end();) {
+        if (binding->second == commandId) binding = keybindings_.erase(binding);
+        else ++binding;
     }
     
     commands_.erase(it);
@@ -442,11 +442,9 @@ void CommandRegistry::UnregisterExtensionCommands(const std::string& extensionId
     for (const auto& cmdId : it->second) {
         const auto commandIt = commands_.find(cmdId);
         if (commandIt == commands_.end()) continue;
-        if (!commandIt->second.keybinding.empty()) {
-            const auto bindingIt = keybindings_.find(commandIt->second.keybinding);
-            if (bindingIt != keybindings_.end() && bindingIt->second == cmdId) {
-                keybindings_.erase(bindingIt);
-            }
+        for (auto binding = keybindings_.begin(); binding != keybindings_.end();) {
+            if (binding->second == cmdId) binding = keybindings_.erase(binding);
+            else ++binding;
         }
         commands_.erase(commandIt);
     }
