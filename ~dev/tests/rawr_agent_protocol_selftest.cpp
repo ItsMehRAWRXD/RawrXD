@@ -141,6 +141,23 @@ int main() {
     reject("<tool>file.read</tool><args>{}</args>\n<tool>other"); // 14
     check(" \n<tool>file.read</tool>\n<args>{}</args>\n "); // 15
 
+    // Batch 12: malformed bare tool-call boundary matrix (15 cases).
+    reject("file.read {\"path\":\"a.cpp\"} trailing"); // 01
+    reject("file.read {\"path\":\"a.cpp\"}\nextra"); // 02
+    reject("file.read {\"path\":\"a.cpp\"}\nfile.read {}"); // 03
+    reject("file.read {\"path\":\"a.cpp\"} {}"); // 04
+    reject("file.read {\"path\":\"a.cpp\"} <tool>"); // 05
+    reject("file.read {\"path\":\"a.cpp\"} prose"); // 06
+    reject("file.read {\"path\":\"a.cpp\"}\nDONE"); // 07
+    reject("file.read {\"path\":\"a.cpp\"}\n<|im_end|>"); // 08
+    reject("file.read {\"path\":\"a.cpp\"}   extra"); // 09
+    reject("file.read {\"path\":\"a.cpp\"}\n\n"); // 10
+    reject("file.read {\"path\":\"a.cpp\"} \n"); // 11
+    reject("file.read {\"path\":\"a.cpp\"}#comment"); // 12
+    reject("file.read {\"path\":\"a.cpp\"} [complete]"); // 13
+    check("file.read {\"path\":\"a.cpp\"}"); // 14
+    check("audit.coverage {}"); // 15
+
     std::printf("CASES=%d\n", cases);
     std::printf("PARSE_FAILURES=%d\n", parseFailures);
     std::printf("CANONICALIZATION_FAILURES=%d\n", canonFailures);
