@@ -20,11 +20,19 @@ permissions:
 jobs:
   fail-closed-bridge:
     name: Native bridge contract (NOT real JS runtime)
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Set up MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Verify native C++ bridge fail-closed behavior
+        shell: bash
         run: |
-          python3 '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
-          python3 -O '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+          python '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+          python -O '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
