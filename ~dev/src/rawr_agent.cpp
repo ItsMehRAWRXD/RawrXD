@@ -105,14 +105,31 @@ ModelReply parseReply(const std::string& raw) {
     const std::string cleaned = stripFences(raw);
     const std::string tool = between(cleaned, "<tool>", "</tool>");
     if (!tool.empty()) {
+        // Never execute a partially formed or multi-call response. A single
+        // model turn is permitted to request exactly one complete tool call.
+        const size_t toolEnd = cleaned.find("</tool>");
+        const size_t argsOpen = cleaned.find("<args>", toolEnd);
+        const size_t argsEnd = argsOpen == std::string::npos
+            ? std::string::npos : cleaned.find("</args>", argsOpen);
+        if (trim(tool).empty() || argsOpen == std::string::npos ||
+            argsEnd == std::string::npos ||
+            cleaned.find("<tool>", toolEnd + 7) != std::string::npos ||
+            cleaned.find("<args>", argsOpen + 6) != std::string::npos) {
+            r.kind = ModelReply::Kind::ProtocolError;
+            r.text = raw;
+            return r;
+        }
         r.kind = ModelReply::Kind::ToolCall;
         r.tool = trim(tool);
-        r.args = between(cleaned, "<args>", "</args>");
+        r.args = trim(cleaned.substr(argsOpen + 6, argsEnd - (argsOpen + 6)));
         if (r.args.empty()) r.args = "{}";
         return r;
     }
-    // A bare <args> block with no tool is a protocol error.
-    if (cleaned.find("<args>") != std::string::npos) {
+    // A malformed tag block is a protocol error, not a final answer.
+    if (cleaned.find("<tool>") != std::string::npos ||
+        cleaned.find("</tool>") != std::string::npos ||
+        cleaned.find("</args>") != std::string::npos ||
+        cleaned.find("<args>") != std::string::npos) {
         r.kind = ModelReply::Kind::ProtocolError;
         r.text = raw;
         return r;
