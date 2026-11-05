@@ -83,7 +83,8 @@ public:
         for (const auto& alias : descriptor.aliases) {
             auto a = canonicalId(alias);
             if (a.empty() || a == descriptor.id) continue;
-            if (entries_.contains(a) || aliases_.contains(a))
+            if (entries_.contains(a) || aliases_.contains(a) ||
+                std::find(canonical_aliases.begin(), canonical_aliases.end(), a) != canonical_aliases.end())
                 throw std::invalid_argument("duplicate tool alias: " + a);
             canonical_aliases.push_back(std::move(a));
         }
