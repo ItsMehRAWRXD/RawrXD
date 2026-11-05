@@ -103,6 +103,18 @@ int main() {
     test("53_legacy_pointer_survives_unload",retained && retained->id=="fixture.legacy.snapshot");
     test("54_legacy_missing",r.GetCommand("fixture.legacy.snapshot")==nullptr);
     test("55_legacy_missing_does_not_invalidate",retained && retained->id=="fixture.legacy.snapshot");
-    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/55\n";
-    return pass==55?0:1;
+    auto alias=cmd("fixture.alias",[](CommandContext&){});
+    test("56_alias_register",r.RegisterCommand(alias));
+    r.RegisterKeybinding("Ctrl+Alt+Alias","fixture.alias");
+    test("57_alias_resolves",r.GetCommandForKeybinding("Ctrl+Alt+Alias")=="fixture.alias");
+    test("58_alias_unregister",r.UnregisterCommand("fixture.alias"));
+    test("59_alias_removed",r.GetCommandForKeybinding("Ctrl+Alt+Alias").empty());
+    auto extAlias=cmd("fixture.ext.alias",[](CommandContext&){});
+    test("60_extension_alias_register",r.RegisterExtensionCommand("fixture.alias.owner",extAlias));
+    r.RegisterKeybinding("Ctrl+Alt+ExtensionAlias","fixture.ext.alias");
+    test("61_extension_alias_resolves",r.GetCommandForKeybinding("Ctrl+Alt+ExtensionAlias")=="fixture.ext.alias");
+    r.UnregisterExtensionCommands("fixture.alias.owner");
+    test("62_extension_alias_removed",r.GetCommandForKeybinding("Ctrl+Alt+ExtensionAlias").empty());
+    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/62\n";
+    return pass==62?0:1;
 }
