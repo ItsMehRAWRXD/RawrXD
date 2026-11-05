@@ -8,6 +8,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import hashlib
 
 GATES = (
     "E2E_01_SOURCE_BUILD",
@@ -49,12 +50,30 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
         evidence = receipt.get("evidence_path")
         if not isinstance(evidence, str) or not evidence.strip():
             failures.append(f"{gate}: missing evidence path")
-        else:
-            evidence_file = Path(evidence)
-            if not evidence_file.is_absolute():
-                evidence_file = receipt_dir / evidence_file
-            if not evidence_file.is_file() or evidence_file.stat().st_size == 0:
-                failures.append(f"{gate}: evidence file absent or empty")
+            continue
+        # Receipts may only reference files within the evidence directory.
+        # Never follow an absolute path, traversal, or a symlink escape.
+        relative = Path(evidence)
+        if relative.is_absolute() or ".." in relative.parts:
+            failures.append(f"{gate}: unsafe evidence path")
+            continue
+        root = receipt_dir.resolve()
+        evidence_file = (root / relative).resolve()
+        if not evidence_file.is_relative_to(root):
+            failures.append(f"{gate}: evidence escapes receipt directory")
+            continue
+        if not evidence_file.is_file() or evidence_file.stat().st_size == 0:
+            failures.append(f"{gate}: evidence file absent or empty")
+            continue
+        expected_digest = receipt.get("evidence_sha256")
+        if not isinstance(expected_digest, str) or len(expected_digest) != 64 or any(
+            c not in "0123456789abcdefABCDEF" for c in expected_digest
+        ):
+            failures.append(f"{gate}: missing/invalid evidence SHA-256")
+            continue
+        actual_digest = hashlib.sha256(evidence_file.read_bytes()).hexdigest()
+        if actual_digest != expected_digest.lower():
+            failures.append(f"{gate}: evidence digest mismatch")
     return failures
 
 
