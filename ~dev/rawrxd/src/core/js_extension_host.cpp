@@ -2751,9 +2751,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         return result;
     }
 
-    LARGE_INTEGER fileSize;
-    GetFileSizeEx(hFile, &fileSize);
+    LARGE_INTEGER fileSize{};
+    const BOOL sizeRead = GetFileSizeEx(hFile, &fileSize);
     CloseHandle(hFile);
+    if (!sizeRead) {
+        std::strncpy(result.errorDetail, "Cannot read VSIX file size",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     if (fileSize.QuadPart < 100) {
         std::strncpy(result.errorDetail, "VSIX file too small (corrupt?)",
