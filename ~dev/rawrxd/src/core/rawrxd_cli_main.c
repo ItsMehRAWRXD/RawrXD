@@ -6,6 +6,7 @@
 
 #include "rawrxd_inference.h"
 #include "rawrxd_model_stream.h"
+#include "cli_numeric_policy.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -264,21 +265,34 @@ static int cmd_generate(int argc, char** argv) {
     f32 top_p = 0.9f;
     u32 top_k = 40;
     
-    // Parse options
+    // Reject malformed or out-of-range values before opening the model.
     for (int i = 3; i < argc; i++) {
-        if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--prompt") == 0) && i + 1 < argc) {
-            prompt = argv[++i];
-        } else if ((strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--temperature") == 0) && i + 1 < argc) {
-            temperature = (f32)atof(argv[++i]);
-        } else if ((strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--tokens") == 0) && i + 1 < argc) {
-            max_tokens = (u32)atoi(argv[++i]);
-        } else if (strcmp(argv[i], "--top-p") == 0 && i + 1 < argc) {
-            top_p = (f32)atof(argv[++i]);
-        } else if (strcmp(argv[i], "--top-k") == 0 && i + 1 < argc) {
-            top_k = (u32)atoi(argv[++i]);
+        const char* opt = argv[i];
+        if (strcmp(opt, "-p") == 0 || strcmp(opt, "--prompt") == 0) {
+            if (++i >= argc) { fprintf(stderr, "Missing prompt value\\n"); return 2; }
+            prompt = argv[i];
+        } else if (strcmp(opt, "-t") == 0 || strcmp(opt, "--temperature") == 0) {
+            if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.0, 2.0, &temperature)) {
+                fprintf(stderr, "Invalid temperature (expected 0..2)\\n"); return 2;
+            }
+        } else if (strcmp(opt, "-n") == 0 || strcmp(opt, "--tokens") == 0) {
+            if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 65536, &max_tokens)) {
+                fprintf(stderr, "Invalid token count (expected 1..65536)\\n"); return 2;
+            }
+        } else if (strcmp(opt, "--top-p") == 0) {
+            if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.000001, 1.0, &top_p)) {
+                fprintf(stderr, "Invalid top-p (expected >0 and <=1)\\n"); return 2;
+            }
+        } else if (strcmp(opt, "--top-k") == 0) {
+            if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 4096, &top_k)) {
+                fprintf(stderr, "Invalid top-k (expected 1..4096)\\n"); return 2;
+            }
+        } else {
+            fprintf(stderr, "Unknown generate option: %s\\n", opt);
+            return 2;
         }
     }
-    
+
     printf("Loading model: %s\n", path);
     
     // Open and stream model
