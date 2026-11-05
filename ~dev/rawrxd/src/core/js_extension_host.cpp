@@ -2850,8 +2850,18 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // Paths are interpolated into single-quoted PowerShell literals below.
     // Reject quote injection and truncated commands until this fallback is
     // replaced by an archive library with argument-free extraction.
-    if (std::strchr(zipPath, 39) || std::strchr(destDir, 39)) {
-        return PatchResult::error("VSIX extraction path contains unsupported quote");
+    const auto unsafeCommandPath = [](const char* path) {
+        for (const unsigned char* p =
+                 reinterpret_cast<const unsigned char*>(path); *p; ++p) {
+            // The outer -Command string uses double quotes, while its
+            // PowerShell literals use single quotes. Reject both, as well
+            // as control characters that could alter command parsing.
+            if (*p == 39 || *p == 34 || *p < 32 || *p == 127) return true;
+        }
+        return false;
+    };
+    if (unsafeCommandPath(zipPath) || unsafeCommandPath(destDir)) {
+        return PatchResult::error("VSIX extraction path contains unsafe command characters");
     }
     if (std::strlen(zipPath) + std::strlen(destDir) + 128 >= 2048) {
         return PatchResult::error("VSIX extraction command exceeds safe length");
