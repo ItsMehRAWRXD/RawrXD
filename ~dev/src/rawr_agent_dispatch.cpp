@@ -456,8 +456,14 @@ ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
     if (ledger->enumeratedFiles().empty()) {
         r.exit_code = 1; r.stderr_text = "sources not enumerated"; return r;
     }
-    ledger->runSourceScan();
+    const bool scanOk = ledger->runSourceScan();
     const AuditCounters c = ledger->counters();
+    if (!scanOk || !c.sourceScanComplete ||
+        c.filesScanned != c.filesEnumerated) {
+        r.exit_code = 1;
+        r.stderr_text = "source scan incomplete or failed";
+        return r;
+    }
     std::ostringstream out;
     out << "RAWR_STUB_SCAN_001_RECEIPT\n"
         << "FILES_ENUMERATED=" << c.filesEnumerated << "\n"
