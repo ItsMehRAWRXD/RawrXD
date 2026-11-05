@@ -49,7 +49,12 @@ int main() {
     std::thread b([&]{for(int i=0;i<100;++i)r.ExecuteCommand("fixture.parallel");});
     a.join();b.join();
     test("25_parallel_execution",concurrent==200);
+    test("26_direct_unregister_extension",r.UnregisterCommand("fixture.ext"));
+    test("27_reuse_id_by_new_owner",r.RegisterExtensionCommand("fixture.other",ext));
     r.UnregisterExtensionCommands("fixture.publisher");
-    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/25\n";
-    return pass==25?0:1;
+    test("28_old_owner_does_not_delete_new_owner",r.HasCommand("fixture.ext"));
+    r.UnregisterExtensionCommands("fixture.other");
+    test("29_new_owner_unloads",!r.HasCommand("fixture.ext"));
+    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/29\n";
+    return pass==29?0:1;
 }
