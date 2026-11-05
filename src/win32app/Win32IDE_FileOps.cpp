@@ -534,6 +534,8 @@ std::string Win32IDE::getFileDialogPath(bool isSave) {
 }
 
 bool Win32IDE::hasUnsavedBuffers() const {
+    // The active editor can be dirty before it is registered as a tab.
+    if (m_fileModified) return true;
     for (const auto& buf : m_documentBuffers) {
         if (buf.modified) {
             return true;
@@ -551,7 +553,7 @@ bool Win32IDE::promptSaveAllChanges() {
         }
     }
 
-    if (modifiedIndices.empty()) {
+    if (modifiedIndices.empty() && !m_fileModified) {
         return true; // Nothing to save
     }
 
