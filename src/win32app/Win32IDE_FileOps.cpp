@@ -600,12 +600,16 @@ void Win32IDE::saveAll() {
     // Keep the active tab until last so the user's current editor remains
     // the final save target rather than being lost during tab switches.
     const int originallyActive = m_activeDocument;
+    bool saveFailed = false;
     for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
         if (static_cast<int>(i) == originallyActive ||
             !m_documentBuffers[i].modified) continue;
         if (i >= m_openDocuments.size()) continue;
         switchDocumentTab(static_cast<int>(i));
-        if (!saveFile()) break; // Save As cancelled or disk write failed
+        if (!saveFile()) {
+            saveFailed = true;
+            break; // Save As cancelled or disk write failed
+        }
         anySaved = true;
     }
     if (originallyActive >= 0 &&
@@ -613,9 +617,9 @@ void Win32IDE::saveAll() {
         switchDocumentTab(originallyActive);
     }
     // The active editor may not have a registered document tab.
-    if (m_fileModified || (m_activeDocument >= 0 &&
+    if (!saveFailed && (m_fileModified || (m_activeDocument >= 0 &&
         static_cast<size_t>(m_activeDocument) < m_documentBuffers.size() &&
-        m_documentBuffers[static_cast<size_t>(m_activeDocument)].modified)) {
+        m_documentBuffers[static_cast<size_t>(m_activeDocument)].modified))) {
         if (saveFile()) anySaved = true;
     }
     if (anySaved && !hasUnsavedBuffers() && !m_fileModified) {
