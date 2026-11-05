@@ -6,6 +6,7 @@ cancellation by disconnect, deterministic output, and explicit failure responses
 Does NOT certify actual model inference, GPU execution, or Win32 UI behavior.
 """
 import argparse
+import math
 import json
 import threading
 import time
@@ -49,7 +50,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(400, {"error": {"message": "messages must be an array"}})
             if body.get("model", MODEL) != MODEL:
                 return self.send_json(404, {"error": {"message": "unknown model"}})
-            if body.get("stream", False) not in (True, False):
+            if type(body.get("stream", False)) is not bool:
                 return self.send_json(400, {"error": {"message": "stream must be boolean"}})
             if body.get("stream") is True:
                 self.send_response(200)
@@ -74,7 +75,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, {"id": "fixture-1", "object": "chat.completion",
                 "model": MODEL, "choices": [{"index": 0, "message":
                 {"role": "assistant", "content": "".join(TOKENS)}, "finish_reason": "stop"}]})
-        except (ValueError, json.JSONDecodeError, TypeError):
+        except (ValueError, TypeError):
             self.send_json(400, {"error": {"message": "invalid JSON"}})
         except (BrokenPipeError, ConnectionResetError):
             pass  # Client cancellation is expected, not a server failure.
