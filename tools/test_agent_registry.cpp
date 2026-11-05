@@ -2,6 +2,9 @@
 // g++ -std=c++20 -pthread -I~dev/rawrxd/src tools/test_agent_registry.cpp -o /tmp/agent_registry_test
 #include "deep2/AgentToolRegistry.hpp"
 #include <cassert>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -100,6 +103,34 @@ int main() {
         assert(g.authoritySnapshot().failed_dispatch_count == 2); // R13
         assert(g.unregisterTool("alpha_beta_alias"));              // R14
         assert(!g.contains("alpha.beta") && g.list().empty());      // R15
+    }
+    // Relative executable resolution must not escape authorized search roots.
+    {
+        namespace fs = std::filesystem;
+        const auto unique = std::chrono::steady_clock::now().time_since_epoch().count();
+        const fs::path base = fs::temp_directory_path() /
+                              ("rawrxd_registry_exec_" + std::to_string(unique));
+        const fs::path root = base / "allowed";
+        fs::create_directories(root);
+        { std::ofstream f(root / "inside.exe"); f << "fixture"; }
+        { std::ofstream f(base / "outside.exe"); f << "fixture"; }
+        assert(AgentToolRegistry::resolveExecutable("inside.exe", {root}) ==
+               fs::weakly_canonical(root / "inside.exe"));
+        bool blocked = false;
+        try { (void)AgentToolRegistry::resolveExecutable("../outside.exe", {root}); }
+        catch (const std::runtime_error&) { blocked = true; }
+        assert(blocked);
+        std::error_code ec;
+        fs::create_symlink(base / "outside.exe", root / "link.exe", ec);
+        if (!ec) {
+            blocked = false;
+            try { (void)AgentToolRegistry::resolveExecutable("link.exe", {root}); }
+            catch (const std::runtime_error&) { blocked = true; }
+            assert(blocked);
+        }
+        assert(AgentToolRegistry::resolveExecutable(base / "outside.exe", {root}) ==
+               fs::weakly_canonical(base / "outside.exe"));
+        fs::remove_all(base);
     }
     return 0;
 }
