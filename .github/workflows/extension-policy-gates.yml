@@ -16,19 +16,26 @@ on:
       - '.github/workflows/extension-policy-gates.yml'
   workflow_dispatch:
 jobs:
-  policy:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+  linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile extension policy gates
-        shell: bash
+      - name: Compile with GCC
         run: |
           mkdir -p build/policy
-          c++ -std=c++17 -Wall -Wextra -pedantic -I~dev/rawrxd/src/core tests/extension_policy_gates.cpp -o build/policy/extension_policy_gates
-      - name: Execute extension policy gates
-        shell: bash
+          g++ -std=c++17 -Wall -Wextra -pedantic -I~dev/rawrxd/src/core tests/extension_policy_gates.cpp -o build/policy/extension_policy_gates
+      - name: Run policy gates
         run: ./build/policy/extension_policy_gates
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile with MSVC
+        shell: cmd
+        run: |
+          if not exist build\policy mkdir build\policy
+          cl /nologo /std:c++17 /EHsc /W4 /I"~dev/rawrxd/src/core" tests\extension_policy_gates.cpp /Fe:build\policy\extension_policy_gates.exe
+      - name: Run policy gates
+        shell: cmd
+        run: build\policy\extension_policy_gates.exe
