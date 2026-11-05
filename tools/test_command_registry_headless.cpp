@@ -94,6 +94,15 @@ int main() {
     test("46_snapshot_missing",!r.TryGetCommand("fixture.not.registered",snapshot));
     test("47_snapshot_survives_unload",r.UnregisterCommand("fixture.binding.owner") && snapshot.id=="fixture.binding.owner");
     test("48_snapshot_copy_handler",static_cast<bool>(snapshot.handler));
-    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/48\n";
-    return pass==48?0:1;
+    auto legacy=cmd("fixture.legacy.snapshot",[](CommandContext&){});
+    test("49_legacy_register",r.RegisterCommand(legacy));
+    const Command* retained=r.GetCommand("fixture.legacy.snapshot");
+    test("50_legacy_pointer_nonnull",retained!=nullptr);
+    test("51_legacy_id_matches",retained && retained->id=="fixture.legacy.snapshot");
+    test("52_legacy_unload",r.UnregisterCommand("fixture.legacy.snapshot"));
+    test("53_legacy_pointer_survives_unload",retained && retained->id=="fixture.legacy.snapshot");
+    test("54_legacy_missing",r.GetCommand("fixture.legacy.snapshot")==nullptr);
+    test("55_legacy_missing_does_not_invalidate",retained && retained->id=="fixture.legacy.snapshot");
+    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/55\n";
+    return pass==55?0:1;
 }
