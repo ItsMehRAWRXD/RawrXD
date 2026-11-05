@@ -8,7 +8,7 @@ int main() {
     auto& host = RawrXD::Extensions::ExtensionHost::GetInstance();
     int passed = 0;
     const auto check = [&](const char* label, bool ok) {
-        std::cout << label << "=" << (ok ? "PASS" : "FAIL") << "\\n";
+        std::cout << label << "=" << (ok ? "PASS" : "FAIL") << "\n";
         if (ok) ++passed;
     };
     host.Shutdown();
