@@ -3622,24 +3622,29 @@ bool Win32IDE::saveFileAs()
         return false;
     }
     appendToOutput("File > Save As clicked\n", "Output", OutputSeverity::Info);
-    OPENFILENAMEA ofn;
-    char szFile[260] = {0};
+    OPENFILENAMEW ofn{};
+    wchar_t szFile[32768] = {};
 
-    ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
+    ofn.nMaxFile = static_cast<DWORD>(std::size(szFile));
+    ofn.lpstrFilter = L"All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
     ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = nullptr;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = nullptr;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
-    if (GetSaveFileNameA(&ofn)) {
+    if (GetSaveFileNameW(&ofn)) {
+        const int utf8Length = WideCharToMultiByte(
+            CP_UTF8, WC_ERR_INVALID_CHARS, szFile, -1,
+            nullptr, 0, nullptr, nullptr);
+        if (utf8Length <= 1) return false;
+        std::string selected(static_cast<size_t>(utf8Length), '\0');
+        if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, szFile, -1,
+                                selected.data(), utf8Length, nullptr, nullptr) != utf8Length)
+            return false;
+        selected.pop_back(); // Remove UTF-8 terminating NUL.
         const std::string previousFile = m_currentFile;
-        m_currentFile = szFile;
+        m_currentFile = std::move(selected);
         appendToOutput("Save As: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
         setCurrentDirectoryFromFile(m_currentFile);
         updateTitleBarText();
