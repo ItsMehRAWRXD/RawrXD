@@ -60,6 +60,28 @@ class MockContractTests(unittest.TestCase):
             {"model": "not-installed", "messages": []})
         self.assertEqual(status, 404)
 
+    def test_stream_flag_rejects_integer(self):
+        status, _, _ = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [], "stream": 1})
+        self.assertEqual(status, 400)
+
+    def test_missing_messages(self):
+        status, _, _ = self.request("POST", "/v1/chat/completions", {"model": MODEL})
+        self.assertEqual(status, 400)
+
+    def test_healthz_alias(self):
+        status, _, data = self.request("GET", "/healthz")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["status"], "ok")
+
+    def test_repeated_requests_do_not_leak_state(self):
+        for _ in range(10):
+            status, _, data = self.request("POST", "/v1/chat/completions",
+                {"model": MODEL, "messages": []})
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(data)["choices"][0]["message"]["content"],
+                             "fixture response complete")
+
     def test_unknown_endpoint(self):
         status, _, _ = self.request("GET", "/not-real")
         self.assertEqual(status, 404)
