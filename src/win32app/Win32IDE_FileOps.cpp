@@ -595,7 +595,13 @@ bool Win32IDE::promptSaveAllChanges() {
         return true;
     }
 
-    return true; // IDNO - discard all changes
+    // Only an explicit NO authorizes discarding unsaved changes.
+    // MessageBox can return 0 on API failure; fail closed rather than
+    // interpreting any unexpected result as permission to discard.
+    if (result == IDNO) return true;
+    appendToOutput("Unsaved Changes dialog returned an unexpected result; close aborted\n",
+                   "Errors", OutputSeverity::Error);
+    return false;
 }
 
 void Win32IDE::saveAll() {
