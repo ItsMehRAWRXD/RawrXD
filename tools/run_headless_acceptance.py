@@ -83,7 +83,7 @@ def main():
                 output = entry["execute"].get("stdout", "")
                 marker = {
                     "extension_bridge": "EXTENSION_BRIDGE",
-                    "js_bridge": "JS_EXTENSION_BRIDGE",
+                    "js_bridge": "JS_BRIDGE_FAIL_CLOSED",
                     "central_registry": "CENTRAL_REGISTRY",
                     "extension_integration": "EXTENSION_CENTRAL_INTEGRATION",
                     "cli_numeric": "CLI_NUMERIC_POLICY",
