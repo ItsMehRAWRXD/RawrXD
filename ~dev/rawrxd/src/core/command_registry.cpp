@@ -85,6 +85,11 @@ bool CommandRegistry::ExecuteCommand(const std::string& commandId, const std::ve
 }
 
 bool CommandRegistry::ExecuteCommand(const std::string& commandId, CommandContext& context) {
+    // Each dispatch owns its result. A prior error/handled flag must not leak
+    // into a later call when a CommandContext is reused.
+    context.commandId = commandId;
+    context.handled = false;
+    context.errorMessage.clear();
     CommandHandler handler;
     {
         std::lock_guard<std::mutex> lock(mutex_);
