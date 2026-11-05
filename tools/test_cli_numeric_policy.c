@@ -23,6 +23,11 @@ int main(void) {
     TEST("18_top_k_over",!rawrxd_parse_u32_range("4097",1,4096,&u));
     TEST("19_null_output",!rawrxd_parse_u32_range("1",1,2,NULL));
     TEST("20_null_input",!rawrxd_parse_f32_range(NULL,0,2,&f));
-    printf("CLI_NUMERIC_POLICY=%d/20\n",passed);
-    return passed==20?0:1;
+    TEST("21_float_overflow",!rawrxd_parse_f32_range("1e40",0,1e100,&f));
+    TEST("22_float_underflow",!rawrxd_parse_f32_range("1e-100",0,1,&f));
+    TEST("23_rounding_above_max",!rawrxd_parse_f32_range("1.00000001",0,1,&f));
+    TEST("24_reject_leading_space",!rawrxd_parse_f32_range(" 0.5",0,1,&f));
+    TEST("25_reject_integer_space",!rawrxd_parse_u32_range(" 2",1,10,&u));
+    printf("CLI_NUMERIC_POLICY=%d/25\n",passed);
+    return passed==25?0:1;
 }
