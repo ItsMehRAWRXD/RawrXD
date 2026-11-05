@@ -56,6 +56,14 @@ bool CommandRegistry::UnregisterCommand(const std::string& commandId) {
     }
     
     commands_.erase(it);
+    // A direct unregister must also detach extension ownership so that
+    // unloading an extension cannot later remove a reused command ID.
+    for (auto owner = extensionCommands_.begin(); owner != extensionCommands_.end();) {
+        auto& ids = owner->second;
+        ids.erase(std::remove(ids.begin(), ids.end(), commandId), ids.end());
+        if (ids.empty()) owner = extensionCommands_.erase(owner);
+        else ++owner;
+    }
     return true;
 }
 
