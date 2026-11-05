@@ -11,6 +11,8 @@
 #include <cctype>
 #include <cstdio>
 #include <string>
+#include <thread>
+#include <atomic>
 #include <vector>
 
 #include "rawr_agent.hpp"
@@ -158,6 +160,26 @@ int main() {
     check("file.read {\"path\":\"a.cpp\"}"); // 14
     check("audit.coverage {}"); // 15
 
+    // Batch 13: 15 isolated catalogs must not leak across concurrent threads.
+    std::atomic<int> threadFailures{0};
+    std::vector<std::thread> workers;
+    for (int i = 0; i < 15; ++i) {
+        workers.emplace_back([i, &threadFailures] {
+            const std::string mine = "private_tool_" + std::to_string(i);
+            setKnownToolNames({mine});
+            const auto own = parseModelReplyForTest(mine + " {}");
+            const auto foreign = parseModelReplyForTest(
+                "private_tool_" + std::to_string((i + 1) % 15) + " {}");
+            if (!own.isTool || foreign.isTool) ++threadFailures;
+        });
+    }
+    for (auto& worker : workers) worker.join();
+    cases += 15;
+    if (threadFailures != 0) {
+        std::printf("FAIL(thread-isolation): %d\n", int(threadFailures.load()));
+        failures += threadFailures.load();
+        parseFailures += threadFailures.load();
+    }
     std::printf("CASES=%d\n", cases);
     std::printf("PARSE_FAILURES=%d\n", parseFailures);
     std::printf("CANONICALIZATION_FAILURES=%d\n", canonFailures);
