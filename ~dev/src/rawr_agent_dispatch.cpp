@@ -148,13 +148,18 @@ ToolResult toolFileRead(const ToolRequest& req, AuditLedger* ledger) {
     if (!f) { r.exit_code = 66; r.stderr_text = "cannot open " + rel; return r; }
 
     const uint32_t start = jsonFieldU32(req.stdin_text, "start", 1);
-    const uint32_t end   = jsonFieldU32(req.stdin_text, "end", start + 199);
-    const uint32_t maxLines = 400;
+    const uint64_t end = jsonFieldU32(req.stdin_text, "end",
+                                     start > UINT32_MAX - 199 ? UINT32_MAX : start + 199);
+    constexpr uint64_t maxLines = 400;
+    if (start == 0 || end < start) {
+        r.exit_code = 64; r.stderr_text = "invalid line range"; return r;
+    }
+    const uint64_t limit = std::min(end, static_cast<uint64_t>(start) + maxLines - 1);
 
     std::string out;
     std::string line;
-    uint32_t no = 0;
-    while (no < end && no < start + maxLines && std::getline(f, line)) {
+    uint64_t no = 0;
+    while (no < limit && std::getline(f, line)) {
         ++no;
         if (no < start) continue;
         out += std::to_string(no);
