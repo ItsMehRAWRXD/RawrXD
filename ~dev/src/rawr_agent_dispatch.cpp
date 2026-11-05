@@ -237,25 +237,28 @@ ToolResult toolSymbolFind(const ToolRequest& req, AuditLedger* ledger,
         std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
         if (!f) continue;
         std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && hits < maxHits) {
-            f.getline(buf, sizeof(buf));
+        uint64_t no = 0;
+        while (hits < maxHits && std::getline(f, line)) {
             ++no;
-            char* p = std::strstr(buf, sym.c_str());
-            if (!p) continue;
-            // word-boundary check
-            const bool lo = p == buf ||
-                             !isalnum(static_cast<unsigned char>(p[-1]));
-            const char after = p[sym.size()];
-            const bool hi = after == '\0' ||
-                            !isalnum(static_cast<unsigned char>(after));
-            if (!lo || !hi) continue;
-            if (referencesOnly && std::strstr(buf, "::") != nullptr &&
-                p > buf && p[-1] == ':') {
-                // still a reference for our purposes
+            // Check every occurrence; the first substring may be embedded in
+            // another identifier while a later occurrence is a valid symbol.
+            size_t pos = 0;
+            bool matched = false;
+            while ((pos = line.find(sym, pos)) != std::string::npos) {
+                const auto ident = [](unsigned char c) {
+                    return std::isalnum(c) || c == '_';
+                };
+                const bool lo = pos == 0 ||
+                    !ident(static_cast<unsigned char>(line[pos - 1]));
+                const size_t after = pos + sym.size();
+                const bool hi = after == line.size() ||
+                    !ident(static_cast<unsigned char>(line[after]));
+                if (lo && hi) { matched = true; break; }
+                pos += sym.size();
             }
-            out += rel + ":" + std::to_string(no) + ": " + buf + "\n";
+            if (!matched) continue;
+            (void)referencesOnly;
+            out += rel + ":" + std::to_string(no) + ": " + line + "\n";
             ++hits;
         }
     }
