@@ -33,6 +33,9 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
     failures = []
     for gate in GATES:
         path = receipt_dir / f"{gate}.json"
+        if path.is_symlink():
+            failures.append(f"{gate}: receipt must not be a symlink")
+            continue
         try:
             receipt = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError) as exc:
@@ -45,7 +48,8 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
             failures.append(f"{gate}: gate identity mismatch")
         if receipt.get("status") != "PASS":
             failures.append(f"{gate}: status is not PASS")
-        if receipt.get("candidate_sha256", "").lower() != expected_sha.lower():
+        candidate_hash = receipt.get("candidate_sha256")
+        if not isinstance(candidate_hash, str) or candidate_hash.lower() != expected_sha.lower():
             failures.append(f"{gate}: candidate hash mismatch")
         evidence = receipt.get("evidence_path")
         if not isinstance(evidence, str) or not evidence.strip():
@@ -62,8 +66,12 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
         if not evidence_file.is_relative_to(root):
             failures.append(f"{gate}: evidence escapes receipt directory")
             continue
-        if not evidence_file.is_file() or evidence_file.stat().st_size == 0:
-            failures.append(f"{gate}: evidence file absent or empty")
+        try:
+            if not evidence_file.is_file() or evidence_file.stat().st_size == 0:
+                failures.append(f"{gate}: evidence file absent or empty")
+                continue
+        except OSError as exc:
+            failures.append(f"{gate}: evidence inaccessible ({exc})")
             continue
         expected_digest = receipt.get("evidence_sha256")
         if not isinstance(expected_digest, str) or len(expected_digest) != 64 or any(
@@ -71,7 +79,15 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
         ):
             failures.append(f"{gate}: missing/invalid evidence SHA-256")
             continue
-        actual_digest = hashlib.sha256(evidence_file.read_bytes()).hexdigest()
+        try:
+            digest = hashlib.sha256()
+            with evidence_file.open("rb") as source:
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            actual_digest = digest.hexdigest()
+        except OSError as exc:
+            failures.append(f"{gate}: evidence unreadable ({exc})")
+            continue
         if actual_digest != expected_digest.lower():
             failures.append(f"{gate}: evidence digest mismatch")
     return failures
