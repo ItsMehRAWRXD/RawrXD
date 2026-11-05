@@ -67,5 +67,39 @@ int main() {
     registry.resetAuthorityMetrics();
     assert(registry.authoritySnapshot().dispatch_count == 0);
     assert(registry.authoritySnapshot().failed_dispatch_count == 0);
+    // Fifteen independent cases for registry authorization boundaries.
+    {
+        AgentToolRegistry g;
+        int called = 0;
+        const auto pass = [&](const ToolRequest& req, ToolContext&) {
+            ++called;
+            assert(req.tool_id == "alpha-beta");
+            return ToolResult{};
+        };
+        g.registerTool({"Alpha.Beta", {"alpha_beta_alias"}, "test"}, pass);
+        assert(g.contains("alpha-beta"));                           // R01
+        assert(g.contains("ALPHA.BETA"));                           // R02
+        assert(g.contains("alpha_beta_alias"));                     // R03
+        assert(g.describe("alpha.beta")->id == "alpha-beta");       // R04
+        assert(g.invoke(ToolRequest{.tool_id="alpha.beta"}, {}).ok()); // R05
+        assert(called == 1);                                       // R06
+        bool duplicate = false;
+        try { g.registerTool({"alpha_beta", {}, "duplicate"}, pass); }
+        catch (const std::invalid_argument&) { duplicate = true; }
+        assert(duplicate);                                         // R07
+        duplicate = false;
+        try { g.registerTool({"different", {"alpha_beta_alias"}, "duplicate"}, pass); }
+        catch (const std::invalid_argument&) { duplicate = true; }
+        assert(duplicate);                                         // R08
+        assert(g.list().size() == 1);                              // R09
+        assert(g.invoke(ToolRequest{.tool_id="absent"}, {}).exit_code == 127); // R10
+        ToolContext stop;
+        stop.cancelled = [] { return true; };
+        assert(g.invoke(ToolRequest{.tool_id="alpha.beta"}, stop).exit_code == 130); // R11
+        assert(called == 1);                                       // R12
+        assert(g.authoritySnapshot().failed_dispatch_count == 2); // R13
+        assert(g.unregisterTool("alpha_beta_alias"));              // R14
+        assert(!g.contains("alpha.beta") && g.list().empty());      // R15
+    }
     return 0;
 }
