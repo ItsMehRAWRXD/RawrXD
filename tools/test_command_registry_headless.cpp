@@ -118,13 +118,13 @@ int main() {
     CommandContext reuse;
     reuse.errorMessage="stale error";
     reuse.handled=true;
-    test("63_context_reuse_success",r.ExecuteCommand("fixture.one",reuse));
+    test("63_context_reuse_success",r.ExecuteCommand("fixture.parallel",reuse));
     test("64_context_reuse_clears_error",reuse.errorMessage.empty());
-    test("65_context_reuse_sets_id",reuse.commandId=="fixture.one");
+    test("65_context_reuse_sets_id",reuse.commandId=="fixture.parallel");
     test("66_context_reuse_handled",reuse.handled);
     test("67_context_failure_sets_error",!r.ExecuteCommand("fixture.not.registered",reuse)&&!reuse.errorMessage.empty());
     test("68_context_failure_clears_handled",!reuse.handled);
-    test("69_context_recover_after_failure",r.ExecuteCommand("fixture.one",reuse)&&reuse.errorMessage.empty()&&reuse.handled);
+    test("69_context_recover_after_failure",r.ExecuteCommand("fixture.parallel",reuse)&&reuse.errorMessage.empty()&&reuse.handled);
     std::cout<<"CENTRAL_REGISTRY="<<pass<<"/69\n";
     return pass==69?0:1;
 }
