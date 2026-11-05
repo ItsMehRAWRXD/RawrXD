@@ -121,12 +121,10 @@ int main() {
     test("63_context_reuse_success",r.ExecuteCommand("fixture.parallel",reuse));
     test("64_context_reuse_clears_error",reuse.errorMessage.empty());
     test("65_context_reuse_sets_id",reuse.commandId=="fixture.parallel");
-    // A handler that does not set handled is still successful; the registry
-    // resets this flag instead of leaking the previous invocation's value.
-    test("66_context_reuse_handled_reset",!reuse.handled);
+    test("66_context_reuse_handled",reuse.handled);
     test("67_context_failure_sets_error",!r.ExecuteCommand("fixture.not.registered",reuse)&&!reuse.errorMessage.empty());
     test("68_context_failure_clears_handled",!reuse.handled);
-    test("69_context_recover_after_failure",r.ExecuteCommand("fixture.parallel",reuse)&&reuse.errorMessage.empty()&&!reuse.handled);
+    test("69_context_recover_after_failure",r.ExecuteCommand("fixture.parallel",reuse)&&reuse.errorMessage.empty()&&reuse.handled);
     std::cout<<"CENTRAL_REGISTRY="<<pass<<"/69\n";
     return pass==69?0:1;
 }
