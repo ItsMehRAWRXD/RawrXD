@@ -87,6 +87,7 @@ public:
     void RegisterBuiltInCommands();
     
     // Extension commands
+    bool RegisterExtensionCommand(const std::string& extensionId, const Command& command);
     void RegisterExtensionCommands(const std::string& extensionId);
     void UnregisterExtensionCommands(const std::string& extensionId);
     
