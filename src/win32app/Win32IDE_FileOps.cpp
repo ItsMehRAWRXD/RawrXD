@@ -607,8 +607,11 @@ void Win32IDE::saveAll() {
         saveFile();
         anySaved = true;
     }
-    if (anySaved) {
+    if (anySaved && !hasUnsavedBuffers() && !m_fileModified) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"All files saved");
+    } else if (hasUnsavedBuffers() || m_fileModified) {
+        SendMessage(m_hwndStatusBar, SB_SETTEXT, 0,
+                    (LPARAM)"Some files remain unsaved");
     }
 }
 
