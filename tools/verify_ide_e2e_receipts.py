@@ -37,7 +37,15 @@ def verify(receipt_dir: Path, expected_sha: str) -> list[str]:
             failures.append(f"{gate}: receipt must not be a symlink")
             continue
         try:
-            receipt = json.loads(path.read_text(encoding="utf-8"))
+            def reject_duplicate_keys(pairs):
+                obj = {}
+                for key, value in pairs:
+                    if key in obj:
+                        raise ValueError(f"duplicate receipt field: {key}")
+                    obj[key] = value
+                return obj
+            receipt = json.loads(path.read_text(encoding="utf-8"),
+                                 object_pairs_hook=reject_duplicate_keys)
         except (OSError, ValueError) as exc:
             failures.append(f"{gate}: missing/invalid receipt ({exc})")
             continue
