@@ -29,6 +29,7 @@
 
 #include "js_extension_host.hpp"
 #include "extension_entry_policy.hpp"
+#include "extension_manifest_policy.hpp"
 #include "../modules/vscode_extension_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -2131,7 +2132,9 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::string mainEntry = jsonGetString(pkgJson, "main");
     std::string displayName = jsonGetString(pkgJson, "displayName");
 
-    if (name.empty()) return PatchResult::error("Extension has no name");
+    if (!rawrxd::extensions::validManifestIdentity(publisher, name, version)) {
+        return PatchResult::error("Invalid extension publisher, name, or version");
+    }
     if (mainEntry.empty()) mainEntry = "./extension.js";
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
