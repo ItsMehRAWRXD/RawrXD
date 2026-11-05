@@ -327,6 +327,8 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
                 : "Continue. Call exactly one tool, or give your final answer.";
         const std::string prompt = buildPrompt(systemPrompt, userRequest,
                                                 history, stepInstruction);
+        // A result counts as seen only when a subsequent generation receives it.
+        if (!history.empty()) result.sawToolResult = true;
 
         // Generation with stop-on-<|im_end|>.
         std::string replyText;
@@ -409,8 +411,7 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             tr << "(tool returned no output)";
         }
         history.push_back({reply.tool, reply.args, excerpt(tr.str(), 4096)});
-        // The next generation runs with this real tool result in context.
-        result.sawToolResult = true;
+        // Do not mark reinjection complete until the next generation starts.
 
         std::fprintf(stderr, "[RAWR_AGENT] step=%u tool=%s exit=%d len=%zu\n",
                      step, reply.tool.c_str(), toolResult.exit_code,
