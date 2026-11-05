@@ -277,102 +277,29 @@ void CommandRegistry::ClearContext(const std::string& key) {
 
 #ifndef RAWRXD_COMMAND_REGISTRY_HEADLESS
 void CommandRegistry::RegisterBuiltInCommands() {
-    // File commands
+    // The document manager is not wired to this registry yet. Do not create
+    // temporary files or show fake "Opened"/"Saved" success dialogs.
+    // Keep commands discoverable, but fail closed until native editor handlers
+    // are installed and covered by physical save/reopen acceptance.
     RegisterCommand({
-        Commands::FileNew,
-        "New File",
-        "File",
-        "Ctrl+N",
-        "",
-        true, true,
+        Commands::FileNew, "New File", "File", "Ctrl+N", "", true, true,
         [](CommandContext& ctx) {
-            // Create new untitled file
-            auto& app = Application::Instance();
-            // Generate unique filename
-            static int untitledCount = 1;
-            std::string filename = "Untitled-" + std::to_string(untitledCount++) + ".txt";
-            
-            // Create empty file in temp directory
-            char tempPath[MAX_PATH];
-            GetTempPathA(MAX_PATH, tempPath);
-            std::string fullPath = std::string(tempPath) + "\\" + filename;
-            
-            std::ofstream file(fullPath);
-            if (file.is_open()) {
-                file.close();
-                // Notify application to open the new file
-                // In full implementation, would integrate with document manager
-                MessageBoxA(nullptr, ("Created new file: " + fullPath).c_str(), "RawrXD", MB_OK);
-            } else {
-                MessageBoxA(nullptr, "Failed to create new file", "RawrXD", MB_OK | MB_ICONERROR);
-            }
+            ctx.errorMessage = "Not implemented: New File document integration";
         }
     });
-    
     RegisterCommand({
-        Commands::FileOpen,
-        "Open File",
-        "File",
-        "Ctrl+O",
-        "",
-        true, true,
+        Commands::FileOpen, "Open File", "File", "Ctrl+O", "", true, true,
         [](CommandContext& ctx) {
-            // Open file dialog
-            char filename[MAX_PATH] = {0};
-            OPENFILENAMEA ofn = {0};
-            ofn.lStructSize = sizeof(ofn);
-            ofn.hwndOwner = nullptr;
-            ofn.lpstrFilter = "All Files\0*.*\0Text Files\0*.txt\0C++ Files\0*.cpp;*.h;*.hpp\0";
-            ofn.lpstrFile = filename;
-            ofn.nMaxFile = MAX_PATH;
-            ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-            
-            if (GetOpenFileNameA(&ofn)) {
-                // File selected, open it
-                // In full implementation, would integrate with document manager
-                MessageBoxA(nullptr, ("Opening file: " + std::string(filename)).c_str(), "RawrXD", MB_OK);
-                
-                // Store in context for potential use
-                ctx.Set("lastOpenedFile", filename);
-            }
+            ctx.errorMessage = "Not implemented: Open File document integration";
         }
     });
-    
     RegisterCommand({
-        Commands::FileSave,
-        "Save",
-        "File",
-        "Ctrl+S",
-        "",
-        true, true,
+        Commands::FileSave, "Save", "File", "Ctrl+S", "", true, true,
         [](CommandContext& ctx) {
-            // Save current file
-            // In full implementation, would get current document and save
-            std::string currentFile = ctx.Get("currentFile");
-            if (currentFile.empty()) {
-                // No current file, use Save As
-                char filename[MAX_PATH] = {0};
-                OPENFILENAMEA ofn = {0};
-                ofn.lStructSize = sizeof(ofn);
-                ofn.hwndOwner = nullptr;
-                ofn.lpstrFilter = "All Files\0*.*\0";
-                ofn.lpstrFile = filename;
-                ofn.nMaxFile = MAX_PATH;
-                ofn.Flags = OFN_OVERWRITEPROMPT;
-                
-                if (GetSaveFileNameA(&ofn)) {
-                    currentFile = filename;
-                    ctx.Set("currentFile", currentFile);
-                } else {
-                    return; // User cancelled
-                }
-            }
-            
-            // In full implementation, would get content from editor and save
-            MessageBoxA(nullptr, ("Saved file: " + currentFile).c_str(), "RawrXD", MB_OK);
+            ctx.errorMessage = "Not implemented: Save editor buffer integration";
         }
     });
-    
+
     // Edit commands
     RegisterCommand({
         Commands::EditUndo,
