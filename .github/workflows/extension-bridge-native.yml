@@ -22,7 +22,6 @@ jobs:
       - name: Compile production bridge with MSVC
         shell: pwsh
         run: |
-          & 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat' > $null
           $vs = & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -latest -products '*' -property installationPath
           if (-not $vs) { throw "MSVC_NOT_FOUND" }
           $bat = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
