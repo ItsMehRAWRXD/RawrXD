@@ -77,7 +77,9 @@ std::string stripFences(std::string s) {
 
 // Known tool names (filled at registration time by setKnownToolNames).
 std::vector<std::string>& knownTools() {
-    static std::vector<std::string> names;
+    // Each agent session owns its tool catalog on its invoking thread.
+    // A process-global mutable catalog races across concurrent sessions.
+    static thread_local std::vector<std::string> names;
     return names;
 }
 
