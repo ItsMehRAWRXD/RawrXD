@@ -1,6 +1,7 @@
 // Standalone smoke coverage for full-line search and symbol token boundaries.
 // Does not link the native IDE; validates the core scanning algorithm.
 #include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
