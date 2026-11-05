@@ -6,6 +6,7 @@
 #include <sstream>
 #include <ctype.h>
 #include <fstream>
+#include <exception>
 
 #pragma comment(lib, "comdlg32.lib")
 
@@ -19,8 +20,9 @@ CommandRegistry& CommandRegistry::Instance() {
 bool CommandRegistry::RegisterCommand(const Command& command) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    if (commands_.find(command.id) != commands_.end()) {
-        return false; // Already registered
+    if (command.id.empty() || !command.handler ||
+        commands_.find(command.id) != commands_.end()) {
+        return false; // Invalid or already registered
     }
     
     commands_[command.id] = command;
@@ -43,7 +45,10 @@ bool CommandRegistry::UnregisterCommand(const std::string& commandId) {
     
     // Remove keybinding
     if (!it->second.keybinding.empty()) {
-        keybindings_.erase(it->second.keybinding);
+        const auto bindingIt = keybindings_.find(it->second.keybinding);
+        if (bindingIt != keybindings_.end() && bindingIt->second == commandId) {
+            keybindings_.erase(bindingIt);
+        }
     }
     
     commands_.erase(it);
