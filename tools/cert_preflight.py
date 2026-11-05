@@ -43,14 +43,18 @@ def validate(root, manifest):
         if path.is_absolute() or ".." in path.parts:
             errors.append(name + ": unsafe receipt path")
             continue
-        target = (root / path).resolve()
+        try:
+            target = (root / path).resolve()
+        except (OSError, RuntimeError):
+            errors.append(name + ": unresolvable receipt path")
+            continue
         if not target.is_relative_to(root.resolve()) or not target.is_file():
             errors.append(name + ": receipt absent or outside evidence root")
             continue
         try:
             raw = target.read_bytes()
             receipt = json.loads(raw)
-        except (OSError, ValueError, UnicodeError):
+        except (OSError, ValueError, UnicodeError, RecursionError):
             errors.append(name + ": invalid receipt JSON")
             continue
         if not isinstance(receipt, dict):
@@ -58,9 +62,9 @@ def validate(root, manifest):
             continue
         if receipt.get("gate") != name or receipt.get("result") != "PASS":
             errors.append(name + ": receipt gate/result mismatch")
-        if receipt.get("candidate_sha256", "").lower() != str(candidate).lower():
+        if not isinstance(receipt.get("candidate_sha256"), str) or receipt["candidate_sha256"].lower() != candidate.lower() if isinstance(candidate, str) else True:
             errors.append(name + ": candidate SHA mismatch")
-        if receipt.get("source_commit", "").lower() != str(head).lower():
+        if not isinstance(receipt.get("source_commit"), str) or receipt["source_commit"].lower() != head.lower() if isinstance(head, str) else True:
             errors.append(name + ": source commit mismatch")
         stamp = receipt.get("timestamp_utc")
         if not isinstance(stamp, str) or not re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", stamp):
