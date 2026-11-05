@@ -6,7 +6,6 @@ cancellation by disconnect, deterministic output, and explicit failure responses
 Does NOT certify actual model inference, GPU execution, or Win32 UI behavior.
 """
 import argparse
-import math
 import json
 import threading
 import time
