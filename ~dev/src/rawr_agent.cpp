@@ -130,7 +130,14 @@ ModelReply parseReply(const std::string& raw) {
         r.kind = ModelReply::Kind::ToolCall;
         r.tool = trim(tool);
         r.args = trim(cleaned.substr(argsOpen + 6, argsEnd - (argsOpen + 6)));
+        // A tool request must carry an object payload, not arbitrary prose.
+        // The dispatcher is not a full JSON parser; reject non-object framing.
         if (r.args.empty()) r.args = "{}";
+        if (r.args.front() != '{' || r.args.back() != '}') {
+            r.kind = ModelReply::Kind::ProtocolError;
+            r.text = raw;
+            return r;
+        }
         return r;
     }
     // A malformed tag block is a protocol error, not a final answer.
