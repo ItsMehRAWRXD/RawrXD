@@ -412,12 +412,14 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
         }
 
         std::ostringstream tr;
-        tr << (toolResult.ok() ? toolResult.stdout_text : toolResult.stderr_text);
-        // Anti-fabrication tripwire: an EMPTY tool result must be presented
-        // as empty to the model — silence invites invented content.
-        if (tr.str().empty()) {
-            tr << "(tool returned no output)";
-        }
+        // Preserve the real exit status in model context: stderr alone cannot
+        // distinguish a failed tool from a successful empty response.
+        tr << "[TOOL EXIT_CODE=" << toolResult.exit_code
+           << " STATUS=" << (toolResult.ok() ? "SUCCESS" : "FAILURE") << "]\n";
+        const std::string& toolOutput = toolResult.ok()
+            ? toolResult.stdout_text : toolResult.stderr_text;
+        if (toolOutput.empty()) tr << "(tool returned no output)";
+        else tr << toolOutput;
         history.push_back({reply.tool, reply.args, excerpt(tr.str(), 4096)});
         // Do not mark reinjection complete until the next generation starts.
 
