@@ -29,7 +29,7 @@ def main():
             command = [compiler, "-std=c++17", "-shared", str(SOURCE), "-o", str(libpath)]
         else:
             command = [compiler, "-std=c++17", "-shared", "-fPIC", str(SOURCE), "-o", str(libpath)]
-        subprocess.run(command, check=True, capture_output=True, text=True)
+        subprocess.run(command, check=True, capture_output=True, text=True, cwd=tmp)
         lib = ctypes.CDLL(str(libpath))
         for name in ("RawrXD_JSExt_Initialize", "RawrXD_JSExt_IsInitialized"):
             getattr(lib, name).restype = ctypes.c_bool
