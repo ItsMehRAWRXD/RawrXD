@@ -586,7 +586,8 @@ bool Win32IDE::promptSaveAllChanges() {
         saveAll();
         // Never close the IDE after a failed save or a cancelled Save As.
         // A successful save must clear each modified buffer's dirty flag.
-        if (hasUnsavedBuffers() || m_fileModified) {
+        const bool allSaved = !hasUnsavedBuffers() && !m_fileModified;
+        if (!rawrxd::ide::mayCloseDirtyDocument(result, allSaved)) {
             MessageBoxA(m_hwndMain,
                         "One or more documents could not be saved. "
                         "The close operation was cancelled to protect your changes.",
