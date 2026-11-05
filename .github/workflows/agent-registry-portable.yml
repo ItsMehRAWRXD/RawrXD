@@ -5,6 +5,8 @@ on:
     paths:
       - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
       - 'tools/test_agent_registry.cpp'
+      - '~dev/src/rawr_agent.cpp'
+      - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
       - '~dev/tests/rawr_agent_protocol_selftest.cpp'
       - '.github/workflows/agent-registry-portable.yml'
@@ -12,6 +14,8 @@ on:
     paths:
       - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
       - 'tools/test_agent_registry.cpp'
+      - '~dev/src/rawr_agent.cpp'
+      - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
       - '~dev/tests/rawr_agent_protocol_selftest.cpp'
       - '.github/workflows/agent-registry-portable.yml'
