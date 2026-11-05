@@ -241,12 +241,13 @@ ToolResult toolSymbolFind(const ToolRequest& req, AuditLedger* ledger,
     if (sym.empty()) { r.exit_code = 64; r.stderr_text = "missing symbol"; return r; }
     uint32_t maxHits = std::min<uint32_t>(jsonFieldU32(req.stdin_text, "max_hits", 50), 200);
 
-    auto isIdent = [&](const std::string& s) {
-        for (char c : s)
-            if (!isalnum(static_cast<unsigned char>(c)) && c != '_') return false;
-        return !s.empty();
-    };
-    (void)isIdent;
+    if (!std::all_of(sym.begin(), sym.end(), [](unsigned char c) {
+            return std::isalnum(c) || c == '_';
+        })) {
+        r.exit_code = 64;
+        r.stderr_text = "invalid symbol identifier";
+        return r;
+    }
 
     std::string out;
     uint32_t hits = 0;
