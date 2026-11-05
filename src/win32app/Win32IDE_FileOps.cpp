@@ -634,9 +634,9 @@ void Win32IDE::saveAll() {
         m_documentBuffers[static_cast<size_t>(m_activeDocument)].modified))) {
         if (saveFile()) anySaved = true;
     }
-    if (anySaved && !hasUnsavedBuffers() && !m_fileModified) {
+    if (!saveFailed && anySaved && !hasUnsavedBuffers() && !m_fileModified) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"All files saved");
-    } else if (hasUnsavedBuffers() || m_fileModified) {
+    } else if (saveFailed || hasUnsavedBuffers() || m_fileModified) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0,
                     (LPARAM)"Some files remain unsaved");
     }
