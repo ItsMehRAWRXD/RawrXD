@@ -19,41 +19,32 @@ public:
         return instance;
     }
 
+    // This bridge has no JavaScript engine or module loader.
+    // The full QuickJS host is implemented separately in js_extension_host.cpp.
+    // Do not claim runtime initialization, script execution, or installation.
     bool Initialize() {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (initialized_) {
-            return true;
-        }
-        
-        initialized_ = true;
-        return true;
+        return false;
     }
-    
+
     void Shutdown() {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (!initialized_) {
-            return;
-        }
-        
         initialized_ = false;
     }
-    
+
     bool IsInitialized() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return initialized_;
     }
-    
+
     bool ExecuteScript(const char* script) {
-        if (!initialized_ || !script) {
-            return false;
-        }
-        return true;
+        (void)script;
+        return false;
     }
-    
+
     bool LoadExtension(const char* path) {
-        if (!initialized_ || !path) {
-            return false;
-        }
-        return true;
+        (void)path;
+        return false;
     }
 
 private:
