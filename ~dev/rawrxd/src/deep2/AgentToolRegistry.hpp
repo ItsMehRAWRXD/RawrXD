@@ -89,10 +89,13 @@ public:
             canonical_aliases.push_back(std::move(a));
         }
 
-        Entry entry{descriptor, std::move(handler)};
+        // Preserve the canonical owner ID independently of the inserted entry.
+        // Also avoid relying on moved-from state if insertion changes later.
+        const std::string owner_id = descriptor.id;
+        Entry entry{std::move(descriptor), std::move(handler)};
         entry.descriptor.aliases = canonical_aliases;
-        entries_.emplace(entry.descriptor.id, std::move(entry));
-        for (const auto& alias : canonical_aliases) aliases_.emplace(alias, descriptor.id);
+        entries_.emplace(owner_id, std::move(entry));
+        for (const auto& alias : canonical_aliases) aliases_.emplace(alias, owner_id);
     }
 
     bool unregisterTool(std::string_view id) {
