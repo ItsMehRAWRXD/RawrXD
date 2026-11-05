@@ -169,7 +169,12 @@ ModelReply parseReply(const std::string& raw) {
                 const bool validJson = jsonPart.size() >= 2 &&
                     jsonPart.front() == '{' && jsonPart.back() == '}' &&
                     cleaned.find('\\n') == std::string::npos;
-                if (isKnownTool(candidate) && validJson) {
+                if (isKnownTool(candidate)) {
+                    if (!validJson) {
+                        r.kind = ModelReply::Kind::ProtocolError;
+                        r.text = raw;
+                        return r;
+                    }
                     r.kind = ModelReply::Kind::ToolCall;
                     r.tool = candidate;
                     r.args = jsonPart;
