@@ -595,19 +595,28 @@ bool Win32IDE::promptSaveAllChanges() {
 
 void Win32IDE::saveAll() {
     bool anySaved = false;
-    // Save every modified document buffer, not just the active one.
+    // Save every modified tab, including untitled buffers. saveFile()
+    // handles Save As for untitled documents; never silently skip them.
+    // Keep the active tab until last so the user's current editor remains
+    // the final save target rather than being lost during tab switches.
+    const int originallyActive = m_activeDocument;
     for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
-        if (m_documentBuffers[i].modified &&
-            i < m_openDocuments.size() && !m_openDocuments[i].empty()) {
-            switchDocumentTab(static_cast<int>(i));
-            saveFile();
-            anySaved = true;
-        }
-    }
-    // Ensure the current file is saved if modified.
-    if (m_fileModified && !m_currentFile.empty()) {
-        saveFile();
+        if (static_cast<int>(i) == originallyActive ||
+            !m_documentBuffers[i].modified) continue;
+        if (i >= m_openDocuments.size()) continue;
+        switchDocumentTab(static_cast<int>(i));
+        if (!saveFile()) break; // Save As cancelled or disk write failed
         anySaved = true;
+    }
+    if (originallyActive >= 0 &&
+        static_cast<size_t>(originallyActive) < m_documentBuffers.size()) {
+        switchDocumentTab(originallyActive);
+    }
+    // The active editor may not have a registered document tab.
+    if (m_fileModified || (m_activeDocument >= 0 &&
+        static_cast<size_t>(m_activeDocument) < m_documentBuffers.size() &&
+        m_documentBuffers[static_cast<size_t>(m_activeDocument)].modified)) {
+        if (saveFile()) anySaved = true;
     }
     if (anySaved && !hasUnsavedBuffers() && !m_fileModified) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"All files saved");
