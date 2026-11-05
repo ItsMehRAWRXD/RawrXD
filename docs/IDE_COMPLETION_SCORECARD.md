@@ -23,7 +23,7 @@ Updated: 2026-11-05. Branch: fix/deep2-multimodel-safety-20261025.
 | G05 | CLI numeric policy | Current-SHA 25-case headless PASS | PASS (2026-11-05; GCC/UBSan, Git blob SHA matched) |
 | G06 | Real QuickJS extension activation | Load, command, deactivate, unload | OPEN |
 | G07 | VSIX lifecycle | Safe install, reject, rollback, uninstall | OPEN |
-| G08 | CLI read/edit/write | Real executable, disposable disk fixture and hashes | OPEN |
+| G08 | CLI read/edit/write | Real executable, disposable disk fixture and hashes | OPEN; separate inference CLI canned generate/chat/benchmark now fail closed, not a tool-edit PASS |
 | G09 | CLI authorization | Deny/approve matrix, exact disk effects | OPEN |
 | G10 | CLI cancellation | Timeout, process exit, no stale writes | OPEN |
 | G11 | Native file workflows | Save, Save As, reopen, Unicode, external edits | OPEN |
@@ -45,3 +45,14 @@ hashes and raw command outputs, and never claims GUI or model acceptance.
 The complete five-suite runner has not been independently executed on the current GitHub SHA. The CLI numeric test was independently compiled and executed on exact Git blob-matched source.
 
 Do not equate a percentage of test cases with percentage of IDE completion.
+
+## November 5 additional source audit findings
+
+- `~dev/rawrxd/src/core/rawrxd_cli_main.c` was returning success for canned
+  generation, rotating scripted chat and sleep-derived synthetic inference TPS.
+  Those three modes now fail closed with exit code 3 until wired to a real backend.
+  This is a **source remediation**, not an executed end-to-end CLI PASS.
+- The 69-case central registry test and 15-case bridge integration test remain
+  unexecuted on the current revision. Do not mark either PASS from source alone.
+- `main` is an older tree than the working development branch. The controlling
+  audit revision is `fix/deep2-multimodel-safety-20261025` unless superseded.
