@@ -206,12 +206,12 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
 }
 
 const Command* CommandRegistry::GetCommand(const std::string& commandId) const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = commands_.find(commandId);
-    if (it != commands_.end()) {
-        return &it->second;
-    }
-    return nullptr;
+    // Compatibility API: never expose pointers into the mutable registry.
+    // The snapshot is owned by this thread and valid until its next lookup.
+    // Callers retaining results longer should use TryGetCommand().
+    thread_local Command snapshot;
+    if (!TryGetCommand(commandId, snapshot)) return nullptr;
+    return &snapshot;
 }
 
 bool CommandRegistry::TryGetCommand(const std::string& commandId, Command& out) const {
