@@ -664,7 +664,7 @@ void Win32IDE::closeFile() {
     if (!m_documentBuffers.empty() &&
         (m_activeDocument < 0 ||
          static_cast<size_t>(m_activeDocument) >= m_documentBuffers.size())) {
-        appendToOutput("Close blocked: active tab index is invalid\\n",
+        appendToOutput("Close blocked: active tab index is invalid\n",
                        "Errors", OutputSeverity::Error);
         return;
     }
