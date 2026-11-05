@@ -3548,34 +3548,52 @@ bool Win32IDE::saveFile()
         // Preserve editor bytes exactly; text-mode streams can translate
         // newlines on Windows and make save/reopen integrity lossy.
         const auto nativePath = std::filesystem::u8path(m_currentFile);
-        std::ofstream file(nativePath, std::ios::binary | std::ios::trunc);
+        // Stage in the destination directory so an unsuccessful write or
+        // verification cannot truncate the user's existing file.
+        const auto parent = nativePath.has_parent_path()
+            ? nativePath.parent_path() : std::filesystem::current_path();
+        wchar_t temporaryName[MAX_PATH] = {};
+        if (!GetTempFileNameW(parent.c_str(), L"RXD", 0, temporaryName)) {
+            appendToOutput("Save staging file creation failed: " + m_currentFile + "\n",
+                           "Errors", OutputSeverity::Error);
+            return false;
+        }
+        const std::filesystem::path stagedPath(temporaryName);
+        struct StagedFileCleanup {
+            std::filesystem::path path;
+            ~StagedFileCleanup() {
+                if (!path.empty()) DeleteFileW(path.c_str());
+            }
+        } stagedCleanup{stagedPath};
+        std::ofstream file(stagedPath, std::ios::binary | std::ios::trunc);
         if (file) {
             file.write(content.data(), static_cast<std::streamsize>(content.size()));
             file.flush();
             if (!file) {
-                appendToOutput("Save write/flush failed: " + m_currentFile + "\n",
+                appendToOutput("Save staging write/flush failed: " + m_currentFile + "\n",
                                "Errors", OutputSeverity::Error);
                 return false;
             }
             file.close();
             if (!file) {
-                appendToOutput("Save close failed: " + m_currentFile + "\n",
+                appendToOutput("Save staging close failed: " + m_currentFile + "\n",
                                "Errors", OutputSeverity::Error);
                 return false;
             }
-            std::ifstream verify(nativePath, std::ios::binary);
+            std::ifstream verify(stagedPath, std::ios::binary);
             if (!verify) {
-                appendToOutput("Save verification open failed: " + m_currentFile + "\n",
+                appendToOutput("Save staging verification open failed: " + m_currentFile + "\n",
                                "Errors", OutputSeverity::Error);
                 return false;
             }
             std::string roundTrip((std::istreambuf_iterator<char>(verify)),
                                   std::istreambuf_iterator<char>());
             if (verify.bad()) {
-                appendToOutput("Save verification read failed: " + m_currentFile + "\n",
+                appendToOutput("Save staging verification read failed: " + m_currentFile + "\n",
                                "Errors", OutputSeverity::Error);
                 return false;
             }
+            verify.close();
             const std::string expected = sha256Hex(content);
             const std::string actual = sha256Hex(roundTrip);
             if (expected.empty() || expected != actual) {
@@ -3585,6 +3603,16 @@ bool Win32IDE::saveFile()
                             "Error", MB_OK | MB_ICONERROR);
                 return false;
             }
+            if (!MoveFileExW(stagedPath.c_str(), nativePath.c_str(),
+                             MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+                appendToOutput("Save atomic replacement failed: " + m_currentFile +
+                               " (Win32=" + std::to_string(GetLastError()) + ")\n",
+                               "Errors", OutputSeverity::Error);
+                return false;
+            }
+            // MoveFileEx consumed the temporary file. Cleanup on all earlier
+            // failures is automatic, and the destination remains untouched.
+            stagedCleanup.path.clear();
             m_fileModified = false;
             if (m_activeDocument >= 0 &&
                 m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
