@@ -460,9 +460,9 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             tr << "(tool returned no output)";
         } else {
             if (!toolResult.stdout_text.empty())
-                tr << "[STDOUT]\\n" << toolResult.stdout_text << "\\n";
+                tr << "[STDOUT]\n" << toolResult.stdout_text << "\n";
             if (!toolResult.stderr_text.empty())
-                tr << "[STDERR]\\n" << toolResult.stderr_text << "\\n";
+                tr << "[STDERR]\n" << toolResult.stderr_text << "\n";
         }
         history.push_back({reply.tool, reply.args, excerpt(tr.str(), 4096)});
         // Do not mark reinjection complete until the next generation starts.
