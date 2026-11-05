@@ -10,6 +10,7 @@ on:
       - 'tools/test_fake_model_registry_e2e.cpp'
       - 'tools/test_portable_save_smoke.cpp'
       - 'tools/test_saveall_state_model.cpp'
+      - 'tools/test_close_confirmation_model.cpp'
       - 'src/win32app/Win32IDE.cpp'
       - 'src/win32app/Win32IDE_FileOps.cpp'
       - '~dev/src/rawr_agent_dispatch.cpp'
@@ -30,6 +31,7 @@ on:
       - 'tools/test_fake_model_registry_e2e.cpp'
       - 'tools/test_portable_save_smoke.cpp'
       - 'tools/test_saveall_state_model.cpp'
+      - 'tools/test_close_confirmation_model.cpp'
       - 'src/win32app/Win32IDE.cpp'
       - 'src/win32app/Win32IDE_FileOps.cpp'
       - '~dev/src/rawr_agent_dispatch.cpp'
@@ -91,6 +93,10 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_saveall_state_model.cpp -o /tmp/rawrxd_saveall_model
           /tmp/rawrxd_saveall_model
+      - name: Compile and run close confirmation fail-closed model (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_close_confirmation_model.cpp -o /tmp/rawrxd_close_confirmation
+          /tmp/rawrxd_close_confirmation
       - name: Execute certification receipt verifier unit tests
         run: python3 -m unittest discover -s tools -p 'test_verify_ide_e2e_receipts.py' -v
       - name: Verify production and portable parser parity
