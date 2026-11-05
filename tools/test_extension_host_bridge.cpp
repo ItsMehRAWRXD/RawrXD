@@ -37,6 +37,20 @@ int main() {
     std::thread t2([&] { for (int i=0; i<100; ++i) host.ExecuteCommand("parallel", ""); });
     t1.join(); t2.join();
     check("20_concurrent_dispatch", calls == 200);
+    check("26_owner_register_a", host.RegisterExtensionCommand("owner.a", "owner.a.cmd", [](const std::string&){ return true; }));
+    check("27_owner_register_b", host.RegisterExtensionCommand("owner.b", "owner.b.cmd", [](const std::string&){ return true; }));
+    check("28_owner_empty_denied", !host.RegisterExtensionCommand("", "owner.bad", [](const std::string&){ return true; }));
+    check("29_owner_duplicate_denied", !host.RegisterExtensionCommand("owner.b", "owner.a.cmd", [](const std::string&){ return true; }));
+    check("30_owner_execute_a", host.ExecuteCommand("owner.a.cmd", ""));
+    check("31_owner_execute_b", host.ExecuteCommand("owner.b.cmd", ""));
+    host.UnregisterExtensionCommands("owner.a");
+    check("32_owner_a_unloaded", !host.ExecuteCommand("owner.a.cmd", ""));
+    check("33_owner_b_survives", host.ExecuteCommand("owner.b.cmd", ""));
+    check("34_host_command_survives", host.ExecuteCommand("parallel", ""));
+    check("35_owner_b_direct_unregister", host.UnregisterCommand("owner.b.cmd"));
+    host.UnregisterExtensionCommands("owner.b");
+    check("36_owner_b_unload_idempotent", !host.ExecuteCommand("owner.b.cmd", ""));
+    check("37_owner_reinstall", host.RegisterExtensionCommand("owner.a", "owner.a.cmd", [](const std::string&){ return true; }));
     host.Shutdown();
     check("21_shutdown", !host.IsInitialized() && host.GetAvailableCommands().empty());
     check("22_after_shutdown_denied", !host.ExecuteCommand("parallel", ""));
@@ -44,6 +58,6 @@ int main() {
     check("24_reinitialize", host.Initialize());
     check("25_old_commands_cleared", host.GetAvailableCommands().empty() && !host.ExecuteCommand("parallel", ""));
     host.Shutdown();
-    std::cout << "EXTENSION_BRIDGE=" << passed << "/25\n";
-    return passed == 25 ? 0 : 1;
+    std::cout << "EXTENSION_BRIDGE=" << passed << "/37\n";
+    return passed == 37 ? 0 : 1;
 }
