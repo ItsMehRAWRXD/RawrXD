@@ -120,11 +120,29 @@ ToolResult toolFileRead(const ToolRequest& req, AuditLedger* ledger) {
 
     const std::string rel = jsonField(req.stdin_text, "path");
     if (rel.empty()) { r.exit_code = 64; r.stderr_text = "missing path"; return r; }
-    if (rel.find("..") != std::string::npos) {
+    // Canonicalize both sides: rejecting ".." text alone does not stop
+    // absolute paths or symlinks escaping the authorized workspace.
+    const std::filesystem::path requested(rel);
+    if (requested.is_absolute() || requested.has_root_name() ||
+        requested.has_root_directory()) {
+        r.exit_code = 77; r.stderr_text = "absolute path rejected"; return r;
+    }
+    std::error_code ec;
+    const auto root = std::filesystem::weakly_canonical(ledger->workspaceRoot(), ec);
+    if (ec || root.empty()) {
+        r.exit_code = 77; r.stderr_text = "workspace root unavailable"; return r;
+    }
+    const auto full = std::filesystem::weakly_canonical(root / requested, ec);
+    if (ec || full == root) {
+        r.exit_code = 77; r.stderr_text = "invalid file path"; return r;
+    }
+    auto rootIt = root.begin();
+    auto fileIt = full.begin();
+    for (; rootIt != root.end() && fileIt != full.end() && *rootIt == *fileIt;
+         ++rootIt, ++fileIt) {}
+    if (rootIt != root.end()) {
         r.exit_code = 77; r.stderr_text = "path escape rejected"; return r;
     }
-
-    std::filesystem::path full = ledger->workspaceRoot() / rel;
     std::ifstream f(full, std::ios::binary);
     if (!f) { r.exit_code = 66; r.stderr_text = "cannot open " + rel; return r; }
 
