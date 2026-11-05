@@ -55,6 +55,18 @@ int main() {
     test("28_old_owner_does_not_delete_new_owner",r.HasCommand("fixture.ext"));
     r.UnregisterExtensionCommands("fixture.other");
     test("29_new_owner_unloads",!r.HasCommand("fixture.ext"));
-    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/29\n";
-    return pass==29?0:1;
+    Command bindingOwner=cmd("fixture.binding.owner",[](CommandContext&){});
+    bindingOwner.keybinding="Ctrl+Alt+Collision";
+    test("30_register_binding_owner",r.RegisterCommand(bindingOwner));
+    Command conflict=cmd("fixture.binding.conflict",[](CommandContext&){});
+    conflict.keybinding="Ctrl+Alt+Collision";
+    test("31_builtin_collision_denied",!r.RegisterCommand(conflict));
+    test("32_original_binding_intact",r.GetCommandForKeybinding("Ctrl+Alt+Collision")=="fixture.binding.owner");
+    Command extensionConflict=cmd("fixture.binding.extension",[](CommandContext&){});
+    extensionConflict.keybinding="Ctrl+Alt+Collision";
+    test("33_extension_collision_denied",!r.RegisterExtensionCommand("fixture.attacker",extensionConflict));
+    test("34_no_partial_extension_register",!r.HasCommand("fixture.binding.extension"));
+    test("35_original_command_survives",r.ExecuteCommand("fixture.binding.owner"));
+    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/35\n";
+    return pass==35?0:1;
 }
