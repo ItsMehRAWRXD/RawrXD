@@ -3571,6 +3571,11 @@ bool Win32IDE::saveFile()
             }
             std::string roundTrip((std::istreambuf_iterator<char>(verify)),
                                   std::istreambuf_iterator<char>());
+            if (verify.bad()) {
+                appendToOutput("Save verification read failed: " + m_currentFile + "\n",
+                               "Errors", OutputSeverity::Error);
+                return false;
+            }
             const std::string expected = sha256Hex(content);
             const std::string actual = sha256Hex(roundTrip);
             if (expected.empty() || expected != actual) {
