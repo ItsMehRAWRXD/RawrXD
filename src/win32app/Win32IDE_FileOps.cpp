@@ -562,6 +562,11 @@ bool Win32IDE::promptSaveAllChanges() {
     for (int idx : modifiedIndices) {
         message += "- " + m_documentBuffers[idx].label + "\n";
     }
+    // A scratch editor can be dirty without having a registered document tab.
+    if (m_fileModified && (m_activeDocument < 0 ||
+        static_cast<size_t>(m_activeDocument) >= m_documentBuffers.size())) {
+        message += "- Untitled (active editor)\n";
+    }
     message += "\nDo you want to save all changes?\n\n"
                "YES = Save all\n"
                "NO = Discard all\n"
