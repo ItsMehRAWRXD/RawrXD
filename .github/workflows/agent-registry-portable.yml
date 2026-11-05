@@ -6,6 +6,8 @@ on:
       - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
       - 'tools/test_agent_registry.cpp'
       - 'tools/test_agent_search_smoke.cpp'
+      - 'tools/test_agent_workspace_containment.cpp'
+      - '~dev/src/rawr_agent_dispatch.cpp'
       - '~dev/src/rawr_agent.cpp'
       - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
@@ -19,6 +21,8 @@ on:
       - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
       - 'tools/test_agent_registry.cpp'
       - 'tools/test_agent_search_smoke.cpp'
+      - 'tools/test_agent_workspace_containment.cpp'
+      - '~dev/src/rawr_agent_dispatch.cpp'
       - '~dev/src/rawr_agent.cpp'
       - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
@@ -46,6 +50,10 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror tools/test_agent_search_smoke.cpp -o /tmp/rawrxd_search_smoke
           /tmp/rawrxd_search_smoke
+      - name: Compile and execute workspace containment smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror tools/test_agent_workspace_containment.cpp -o /tmp/rawrxd_workspace_smoke
+          /tmp/rawrxd_workspace_smoke
       - name: Execute certification receipt verifier unit tests
         run: python3 -m unittest discover -s tools -p 'test_verify_ide_e2e_receipts.py' -v
       - name: Verify production and portable parser parity
