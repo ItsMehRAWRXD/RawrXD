@@ -88,6 +88,22 @@ uint32_t jsonFieldU32(const std::string& json, const std::string& key,
     } catch (...) { return fallback; }
 }
 
+// Resolve an enumerated source without following a symlink outside the workspace.
+std::optional<std::filesystem::path> containedSource(
+    const std::filesystem::path& workspace, const std::filesystem::path& relative) {
+    if (relative.empty() || relative.is_absolute() || relative.has_root_name() ||
+        relative.has_root_directory()) return std::nullopt;
+    std::error_code ec;
+    const auto root = std::filesystem::weakly_canonical(workspace, ec);
+    if (ec || root.empty()) return std::nullopt;
+    const auto full = std::filesystem::weakly_canonical(root / relative, ec);
+    if (ec || full == root) return std::nullopt;
+    auto a = root.begin(), b = full.begin();
+    while (a != root.end() && b != full.end() && *a == *b) { ++a; ++b; }
+    if (a != root.end()) return std::nullopt;
+    return full;
+}
+
 CandidateType candidateTypeFromName(const std::string& name) {
     if (name == "todo_fixme")            return CandidateType::Todo;
     if (name == "empty_implementation")  return CandidateType::EmptyImpl;
@@ -195,7 +211,9 @@ ToolResult toolCodeSearch(const ToolRequest& req, AuditLedger* ledger) {
     uint32_t hits = 0;
     for (const auto& rel : ledger->enumeratedFiles()) {
         if (hits >= maxHits) break;
-        std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
+        const auto safe = containedSource(ledger->workspaceRoot(), rel);
+        if (!safe) continue;
+        std::ifstream f(*safe, std::ios::binary);
         if (!f) continue;
         std::string line;
         uint64_t no = 0;
@@ -234,7 +252,9 @@ ToolResult toolSymbolFind(const ToolRequest& req, AuditLedger* ledger,
     uint32_t hits = 0;
     for (const auto& rel : ledger->enumeratedFiles()) {
         if (hits >= maxHits) break;
-        std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
+        const auto safe = containedSource(ledger->workspaceRoot(), rel);
+        if (!safe) continue;
+        std::ifstream f(*safe, std::ios::binary);
         if (!f) continue;
         std::string line;
         uint64_t no = 0;
