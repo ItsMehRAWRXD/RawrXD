@@ -31,8 +31,13 @@ bool CommandRegistry::RegisterCommand(const Command& command) {
     
     commands_[command.id] = command;
     
-    // Register keybinding if provided
+    // Reject conflicting bindings instead of silently stealing another command's shortcut.
     if (!command.keybinding.empty()) {
+        const auto binding = keybindings_.find(command.keybinding);
+        if (binding != keybindings_.end() && binding->second != command.id) {
+            commands_.erase(command.id);
+            return false;
+        }
         keybindings_[command.keybinding] = command.id;
     }
     
@@ -465,6 +470,12 @@ bool CommandRegistry::RegisterExtensionCommand(
     if (extensionId.empty() || command.id.empty() || !command.handler) return false;
     std::lock_guard<std::mutex> lock(mutex_);
     if (commands_.find(command.id) != commands_.end()) return false;
+    if (!command.keybinding.empty()) {
+        const auto binding = keybindings_.find(command.keybinding);
+        if (binding != keybindings_.end() && binding->second != command.id) {
+            return false;
+        }
+    }
     commands_.emplace(command.id, command);
     extensionCommands_[extensionId].push_back(command.id);
     if (!command.keybinding.empty()) keybindings_[command.keybinding] = command.id;
