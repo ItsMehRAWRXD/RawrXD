@@ -25,4 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify native C++ bridge fail-closed behavior
-        run: python3 '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+        run: |
+          python3 '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+          python3 -O '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
