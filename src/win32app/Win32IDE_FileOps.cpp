@@ -632,7 +632,11 @@ void Win32IDE::saveAll() {
     if (!saveFailed && (m_fileModified || (m_activeDocument >= 0 &&
         static_cast<size_t>(m_activeDocument) < m_documentBuffers.size() &&
         m_documentBuffers[static_cast<size_t>(m_activeDocument)].modified))) {
-        if (saveFile()) anySaved = true;
+        if (saveFile()) {
+            anySaved = true;
+        } else {
+            saveFailed = true; // Never report success after active Save As cancel/failure.
+        }
     }
     if (!saveFailed && anySaved && !hasUnsavedBuffers() && !m_fileModified) {
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"All files saved");
