@@ -1,12 +1,13 @@
-// Portable close-decision model. Not a native MessageBox/Win32IDE test.
+// Directly tests the production close-discard policy; not a native GUI test.
+#include "../src/win32app/CloseConfirmationPolicy.hpp"
 #include <iostream>
 #include <array>
 constexpr int kYes=6, kNo=7, kCancel=2;
 struct Decision { bool mayClose; bool invokeSave; };
 constexpr Decision decide(int response, bool dirty, bool saveSucceeded) {
     if (!dirty) return {true,false};
-    if (response==kNo) return {true,false};
-    if (response==kYes) return {saveSucceeded,true};
+    if (rawrxd::ide::isExplicitDiscard(response)) return {true,false};
+    if (response==kYes) return {rawrxd::ide::mayCloseDirtyDocument(response,saveSucceeded),true};
     return {false,false}; // Cancel, API error (0), or unexpected result
 }
 struct Case { const char* name; int response; bool dirty; bool saveSucceeded; bool close; bool save; };
@@ -28,6 +29,9 @@ int main() {
         {"14_cancel_with_failed_save",kCancel,true,false,false,false},
         {"15_unexpected_large",65535,true,false,false,false}
     }};
+    static_assert(rawrxd::ide::isExplicitDiscard(kNo));
+    static_assert(!rawrxd::ide::isExplicitDiscard(0));
+    static_assert(!rawrxd::ide::isExplicitDiscard(kCancel));
     int passed=0;
     for(const auto& c:cases){
         const auto actual=decide(c.response,c.dirty,c.saveSucceeded);
