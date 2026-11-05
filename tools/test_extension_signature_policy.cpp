@@ -18,15 +18,15 @@ int main() {
         {"unsigned_2",false,"2",false},
         {"unsigned_space",false," 1",false},
         {"unsigned_trailing",false,"1 ",false},
-        {"unsigned_newline",false,"1\\n",false}
+        {"unsigned_newline",false,"1\n",false}
     }};
     int passed=0;
     for (const auto& c : cases) {
         bool got=rawrxd::extensions::mayInstallVSIX(c.signedOk,c.flag);
         bool ok=got==c.expected;
         passed+=ok;
-        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\\n";
+        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\n";
     }
-    std::cout<<"VSIX_SIGNATURE_POLICY="<<passed<<"/"<<cases.size()<<"\\n";
+    std::cout<<"VSIX_SIGNATURE_POLICY="<<passed<<"/"<<cases.size()<<"\n";
     return passed==static_cast<int>(cases.size())?0:1;
 }
