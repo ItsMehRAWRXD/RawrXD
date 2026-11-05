@@ -482,9 +482,9 @@ ToolResult toolAuditCandidates(const ToolRequest& req, AuditLedger* ledger) {
     const uint32_t limit = std::min<uint32_t>(
         jsonFieldU32(req.stdin_text, "limit", 16), 100);
     const uint32_t offset = jsonFieldU32(req.stdin_text, "offset", 0);
-    if (offset > UINT32_MAX - limit) {
+    if (offset > 100000 || offset > UINT32_MAX - limit) {
         r.exit_code = 64;
-        r.stderr_text = "candidate page offset overflow";
+        r.stderr_text = "candidate page offset out of range";
         return r;
     }
     const auto pend = ledger->pendingCandidates(limit + offset);
