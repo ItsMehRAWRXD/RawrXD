@@ -17,7 +17,7 @@ int main() {
         {"shell_name", "acme", "tool;echo", "1.2.3", false},
         {"path_name", "acme", "../tool", "1.2.3", false},
         {"space_publisher", "my org", "tool", "1.2.3", false},
-        {"unicode_id", "acme", "t\\xC3\\xB6ol", "1.2.3", false},
+        {"unicode_id", "acme", "t\xC3\xB6ol", "1.2.3", false},
         {"long_version", "acme", "tool", "11111111111111111111111111111111111111111111111111111111111111111.2.3", false}
     }};
     int passed=0;
@@ -25,8 +25,8 @@ int main() {
         const bool actual=rawrxd::extensions::validManifestIdentity(c.publisher,c.id,c.version);
         const bool ok=actual==c.valid;
         passed+=ok;
-        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\\n";
+        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\n";
     }
-    std::cout<<"MANIFEST_IDENTITY="<<passed<<"/"<<cases.size()<<"\\n";
+    std::cout<<"MANIFEST_IDENTITY="<<passed<<"/"<<cases.size()<<"\n";
     return passed==static_cast<int>(cases.size())?0:1;
 }
