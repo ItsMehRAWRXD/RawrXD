@@ -9,6 +9,7 @@ on:
       - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
       - '~dev/tests/rawr_agent_protocol_selftest.cpp'
+      - 'tools/check_agent_parser_parity.py'
       - '.github/workflows/agent-registry-portable.yml'
   pull_request:
     paths:
@@ -18,6 +19,7 @@ on:
       - '~dev/src/rawr_agent.hpp'
       - '~dev/src/rawr_agent_parse_only.cpp'
       - '~dev/tests/rawr_agent_protocol_selftest.cpp'
+      - 'tools/check_agent_parser_parity.py'
       - '.github/workflows/agent-registry-portable.yml'
   workflow_dispatch:
 
@@ -34,6 +36,8 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/rawrxd/src' tools/test_agent_registry.cpp -o /tmp/rawrxd_agent_registry_test
           /tmp/rawrxd_agent_registry_test
+      - name: Verify production and portable parser parity
+        run: python3 tools/check_agent_parser_parity.py
       - name: Compile and execute portable agent protocol selftest
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' '~dev/src/rawr_agent_parse_only.cpp' '~dev/tests/rawr_agent_protocol_selftest.cpp' -o /tmp/rawrxd_agent_protocol_test
