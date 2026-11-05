@@ -48,3 +48,19 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' '~dev/src/rawr_agent_parse_only.cpp' '~dev/tests/rawr_agent_protocol_selftest.cpp' -o /tmp/rawrxd_agent_protocol_test
           /tmp/rawrxd_agent_protocol_test
+
+  registry-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python certification verifier tests
+        run: python -m unittest discover -s tools -p test_verify_ide_e2e_receipts.py -v
+      - name: Production/portable parser parity
+        run: python tools/check_agent_parser_parity.py
+      - name: Compile and execute portable agent parser (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set VSROOT=%%i\n          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /I "~dev\src" "~dev\src\rawr_agent_parse_only.cpp" "~dev\tests\rawr_agent_protocol_selftest.cpp" /Fe:rawrxd_agent_protocol_test.exe
+          rawrxd_agent_protocol_test.exe
