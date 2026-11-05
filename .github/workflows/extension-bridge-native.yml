@@ -6,6 +6,9 @@ on:
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - 'tools/test_extension_host_bridge.cpp'
       - 'tools/test_js_extension_bridge.cpp'
+      - 'tools/test_command_registry_headless.cpp'
+      - '~dev/rawrxd/src/core/command_registry.cpp'
+      - '~dev/rawrxd/src/core/command_registry.h'
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - '.github/workflows/extension-bridge-native.yml'
   pull_request:
@@ -13,6 +16,9 @@ on:
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - 'tools/test_extension_host_bridge.cpp'
       - 'tools/test_js_extension_bridge.cpp'
+      - 'tools/test_command_registry_headless.cpp'
+      - '~dev/rawrxd/src/core/command_registry.cpp'
+      - '~dev/rawrxd/src/core/command_registry.h'
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - '.github/workflows/extension-bridge-native.yml'
 permissions:
@@ -31,6 +37,8 @@ jobs:
           /tmp/rawrxd_command_bridge
           g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_js_extension_bridge.cpp -o /tmp/rawrxd_js_bridge
           /tmp/rawrxd_js_bridge
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_command_registry_headless.cpp -o /tmp/rawrxd_central_registry
+          /tmp/rawrxd_central_registry
   bridge-windows:
     runs-on: windows-latest
     timeout-minutes: 10
