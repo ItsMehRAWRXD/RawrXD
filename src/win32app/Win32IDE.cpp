@@ -3677,6 +3677,7 @@ bool Win32IDE::saveFileAs()
             return false;
         selected.pop_back(); // Remove UTF-8 terminating NUL.
         const std::string previousFile = m_currentFile;
+        const std::string previousDirectory = m_currentDirectory;
         m_currentFile = std::move(selected);
         appendToOutput("Save As: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
         setCurrentDirectoryFromFile(m_currentFile);
@@ -3685,7 +3686,7 @@ bool Win32IDE::saveFileAs()
 
         // Do not leave the document pointed at a path that was never written.
         m_currentFile = previousFile;
-        if (!m_currentFile.empty()) setCurrentDirectoryFromFile(m_currentFile);
+        m_currentDirectory = previousDirectory;
         updateTitleBarText();
         updateMenuEnableStates();
         return false;
