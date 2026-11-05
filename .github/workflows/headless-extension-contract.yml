@@ -1,0 +1,20 @@
+name: Headless extension contract
+on:
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
+      - 'tests/test_headless_extension_contract.py'
+      - '.github/workflows/headless-extension-contract.yml'
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
+      - 'tests/test_headless_extension_contract.py'
+      - '.github/workflows/headless-extension-contract.yml'
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify unsupported JS extension APIs fail closed
+        run: python3 tests/test_headless_extension_contract.py
