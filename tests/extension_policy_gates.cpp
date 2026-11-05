@@ -33,6 +33,11 @@ int main() {
     gate("13_empty_path_rejected", !entryWithinRoot({}, root / "extension.js") && !entryWithinRoot(root, {}));
     gate("14_unsigned_default_denied", !mayInstallVSIX(false, "") && !mayInstallVSIX(false, "true"));
     gate("15_signed_or_explicit_optin", mayInstallVSIX(true, "") && mayInstallVSIX(false, "1") && mayInstallVSIX(false, "Y") && !mayInstallVSIX(false, "0"));
-    std::cout << "SUMMARY " << passed << "/15 PASS; " << failed << " FAIL\n";
+    gate("16_absolute_outside_rejected", !entryWithinRoot(root, fs::temp_directory_path() / "rawrxd_outside" / "extension.js"));
+    gate("17_nested_child_allowed", entryWithinRoot(root, root / "dist" / "main.js"));
+    gate("18_four_part_version_rejected", !validVersion("1.2.3.4"));
+    gate("19_version_letters_rejected", !validVersion("a.b.c"));
+    gate("20_signed_override", mayInstallVSIX(true, "0"));
+    std::cout << "SUMMARY " << passed << "/20 PASS; " << failed << " FAIL\n";
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
