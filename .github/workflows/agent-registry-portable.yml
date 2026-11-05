@@ -124,6 +124,13 @@ jobs:
           call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
           cl /nologo /std:c++20 /EHsc /W4 /I "~dev\\rawrxd\\src" "tools\\test_agent_registry.cpp" /Fe:rawrxd_registry_test.exe
           rawrxd_registry_test.exe
+      - name: Compile and execute production close policy (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /WX "tools\\test_close_confirmation_model.cpp" /Fe:rawrxd_close_confirmation_test.exe
+          rawrxd_close_confirmation_test.exe
       - name: Compile and execute portable agent parser (MSVC)
         shell: cmd
         run: |
