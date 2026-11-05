@@ -17,14 +17,18 @@ SOURCE = Path(__file__).resolve().parents[1] / "src/core/js_extension_host_produ
 def main():
     if not SOURCE.is_file():
         raise SystemExit(f"BLOCKED: source missing: {SOURCE}")
-    compiler = shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
+    windows = sys.platform == "win32"
+    compiler = (shutil.which("cl") if windows else None) or shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
     if not compiler:
         raise SystemExit("BLOCKED: no C++ compiler available")
     with tempfile.TemporaryDirectory(prefix="rawrxd-jsext-") as tmp:
         libpath = Path(tmp) / ("bridge.dll" if sys.platform == "win32" else "bridge.so")
-        command = [compiler, "-std=c++17", "-shared", "-fPIC", str(SOURCE), "-o", str(libpath)]
-        if sys.platform == "win32":
-            raise SystemExit("BLOCKED: Windows toolchain needs its own shared-library build lane")
+        if windows and Path(compiler).stem.lower() == "cl":
+            command = [compiler, "/nologo", "/std:c++17", "/EHsc", "/LD", str(SOURCE), "/link", "/OUT:" + str(libpath)]
+        elif windows:
+            command = [compiler, "-std=c++17", "-shared", str(SOURCE), "-o", str(libpath)]
+        else:
+            command = [compiler, "-std=c++17", "-shared", "-fPIC", str(SOURCE), "-o", str(libpath)]
         subprocess.run(command, check=True, capture_output=True, text=True)
         lib = ctypes.CDLL(str(libpath))
         for name in ("RawrXD_JSExt_Initialize", "RawrXD_JSExt_IsInitialized"):
