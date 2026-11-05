@@ -419,7 +419,11 @@ ToolResult toolAuditFilesReviewed(const ToolRequest& req, AuditLedger* ledger) {
     std::string tok;
     while (ss >> tok) files.push_back(tok);
     if (files.empty()) { r.exit_code = 64; r.stderr_text = "missing files"; return r; }
-    ledger->markFilesReviewed(files);
+    if (!ledger->markFilesReviewed(files)) {
+        r.exit_code = 1;
+        r.stderr_text = "file review rejected by ledger";
+        return r;
+    }
     r.stdout_text = "marked=" + std::to_string(files.size());
     return r;
 }
