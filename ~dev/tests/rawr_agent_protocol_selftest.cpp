@@ -87,9 +87,42 @@ int main() {
     check("workspace.list {\"limit\":100}");
     check("workspace-list {\"limit\":100}");
     check("<tool>workspace.list</tool>\n<args>{\"limit\":100}</args>");
-    check("```workspace.list {\"limit\":100}```");
+    check("```json\nworkspace.list {\"limit\":100}\n```");
     check("audit.coverage {}");
     check("audit-coverage {}");
+
+    // B9: Fifteen parser cases using the same portable parser contract.
+    auto reject = [&](const std::string& raw) {
+        ++cases;
+        const auto p = parseModelReplyForTest(raw);
+        if (p.isTool || p.isFinal) {
+            std::printf("FAIL(expected rejection): %s\n", raw.c_str());
+            ++parseFailures; ++failures;
+        }
+    };
+    auto finalReply = [&](const std::string& raw) {
+        ++cases;
+        const auto p = parseModelReplyForTest(raw);
+        if (!p.isFinal || p.isTool) {
+            std::printf("FAIL(expected final): %s\n", raw.c_str());
+            ++parseFailures; ++failures;
+        }
+    };
+    check("<tool>file.read</tool><args>{\"path\":\"a.cpp\"}</args>"); // 01
+    check("<tool>audit.coverage</tool><args>{}</args>"); // 02
+    check("file.read {\"path\":\"a.cpp\"}"); // 03
+    check("code.search {\"query\":\"TODO\"}"); // 04
+    check("<tool>workspace.list</tool><args></args>"); // 05
+    reject("<tool>file.read"); // 06
+    reject("<tool>file.read</tool><args>{}</args><tool>file.read</tool><args>{}</args>"); // 07
+    reject("<tool>file.read</tool><args>{}</args><args>{}</args>"); // 08
+    reject("<tool>file.read</tool><args>{}</args></args>"); // 09
+    reject("<args>{}</args>"); // 10
+    reject("<tool>file.read</tool><args>not-json</args>"); // 11
+    reject("<args>{}</args><tool>file.read</tool>"); // 12
+    reject("<tool>file.read</tool><args>{}</args></tool>"); // 13
+    finalReply("Task complete."); // 14
+    finalReply("Plain response with literal `backticks`."); // 15
 
     std::printf("CASES=%d\n", cases);
     std::printf("PARSE_FAILURES=%d\n", parseFailures);
