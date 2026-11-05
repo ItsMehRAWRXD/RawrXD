@@ -12,8 +12,8 @@ int main() {
     {
         std::ofstream out(path);
         if (!out) return 2;
-        out << std::string(20000, 'x') << "NEEDLE\\n";
-        out << "prefixsymbol symbol symbol_suffix\\n";
+        out << std::string(20000, 'x') << "NEEDLE\n";
+        out << "prefixsymbol symbol symbol_suffix\n";
     }
     std::ifstream in(path);
     std::string line;
@@ -39,7 +39,7 @@ int main() {
         }
     }
     std::filesystem::remove(path);
-    std::cout << "LONG_LINE_SEARCH=" << (longLine ? "PASS" : "FAIL") << "\\n";
-    std::cout << "TOKEN_BOUNDARY=" << (tokenBoundary ? "PASS" : "FAIL") << "\\n";
+    std::cout << "LONG_LINE_SEARCH=" << (longLine ? "PASS" : "FAIL") << "\n";
+    std::cout << "TOKEN_BOUNDARY=" << (tokenBoundary ? "PASS" : "FAIL") << "\n";
     return longLine && tokenBoundary ? 0 : 1;
 }
