@@ -3547,11 +3547,28 @@ bool Win32IDE::saveFile()
         }
         // Preserve editor bytes exactly; text-mode streams can translate
         // newlines on Windows and make save/reopen integrity lossy.
-        std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
+        const auto nativePath = std::filesystem::u8path(m_currentFile);
+        std::ofstream file(nativePath, std::ios::binary | std::ios::trunc);
         if (file) {
             file.write(content.data(), static_cast<std::streamsize>(content.size()));
+            file.flush();
+            if (!file) {
+                appendToOutput("Save write/flush failed: " + m_currentFile + "\n",
+                               "Errors", OutputSeverity::Error);
+                return false;
+            }
             file.close();
-            std::ifstream verify(m_currentFile, std::ios::binary);
+            if (!file) {
+                appendToOutput("Save close failed: " + m_currentFile + "\n",
+                               "Errors", OutputSeverity::Error);
+                return false;
+            }
+            std::ifstream verify(nativePath, std::ios::binary);
+            if (!verify) {
+                appendToOutput("Save verification open failed: " + m_currentFile + "\n",
+                               "Errors", OutputSeverity::Error);
+                return false;
+            }
             std::string roundTrip((std::istreambuf_iterator<char>(verify)),
                                   std::istreambuf_iterator<char>());
             const std::string expected = sha256Hex(content);
