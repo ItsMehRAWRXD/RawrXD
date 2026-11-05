@@ -79,6 +79,18 @@ int main() {
     check(denied.exit_code == 77, "05_mutation_denied_without_approval");
     check(read(fixture) == initial, "06_denial_preserves_disk_bytes");
     approved = true;
+    // Negative controls: a test-only handler must not silently edit when
+    // model arguments are wrong or contain an unexpected path.
+    const std::string validPayload = req.stdin_text;
+    req.stdin_text = R"({"path":"../outside.cpp","old":"int before = 1;","new":"int after = 2;"})";
+    check(registry.invoke(req, {}).exit_code == 64,
+          "16_traversal_payload_rejected");
+    check(read(fixture) == initial, "17_traversal_preserves_disk");
+    req.stdin_text = R"({"path":"fixture.cpp","old":"wrong","new":"int after = 2;"})";
+    check(registry.invoke(req, {}).exit_code == 64,
+          "18_wrong_old_text_rejected");
+    check(read(fixture) == initial, "19_bad_payload_preserves_disk");
+    req.stdin_text = validPayload;
     const auto edited = registry.invoke(req, {});
     check(edited.ok(), "07_approved_mutation_dispatch");
     check(mutations == 1, "08_one_edit_executed");
