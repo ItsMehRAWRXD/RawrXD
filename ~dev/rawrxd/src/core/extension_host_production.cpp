@@ -30,6 +30,7 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         initialized_ = false;
         commands_.clear();
+        owners_.clear();
     }
 
     bool RegisterCommand(const std::string& command, CommandHandler handler) {
@@ -39,9 +40,35 @@ public:
         return commands_.emplace(command, std::move(handler)).second;
     }
 
+    // Explicit ownership is required for extension-contributed commands.
+    // The legacy RegisterCommand API remains available for host commands.
+    bool RegisterExtensionCommand(const std::string& extensionId,
+                                  const std::string& command,
+                                  CommandHandler handler) {
+        if (extensionId.empty() || command.empty() || !handler) return false;
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!initialized_ || commands_.find(command) != commands_.end()) return false;
+        commands_.emplace(command, std::move(handler));
+        owners_[command] = extensionId;
+        return true;
+    }
+
+    void UnregisterExtensionCommands(const std::string& extensionId) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto it = owners_.begin(); it != owners_.end();) {
+            if (it->second == extensionId) {
+                commands_.erase(it->first);
+                it = owners_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
     bool UnregisterCommand(const std::string& command) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_) return false;
+        owners_.erase(command);
         return commands_.erase(command) == 1;
     }
 
@@ -86,6 +113,7 @@ private:
     mutable std::mutex mutex_;
     bool initialized_ = false;
     std::map<std::string, CommandHandler> commands_;
+    std::map<std::string, std::string> owners_; // command -> extension ID
 };
 
 } // namespace Extensions
