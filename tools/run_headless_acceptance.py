@@ -90,8 +90,15 @@ def main():
                     "extension_integration": "EXTENSION_CENTRAL_INTEGRATION",
                     "cli_numeric": "CLI_NUMERIC_POLICY",
                 }[label]
+                lines = output.splitlines()
+                expected_marker = marker + "=" + str(expected) + "/" + str(expected)
+                case_lines = [line for line in lines
+                              if line.endswith("=PASS") or line.endswith("=FAIL")]
+                entry["observed_case_lines"] = len(case_lines)
                 entry["passed"] = (entry["execute"].get("returncode") == 0 and
-                                   (marker + "=" + str(expected) + "/" + str(expected)) in output)
+                                   lines.count(expected_marker) == 1 and
+                                   len(case_lines) == expected and
+                                   all(line.endswith("=PASS") for line in case_lines))
             else:
                 entry["passed"] = False
             failures += not entry["passed"]
