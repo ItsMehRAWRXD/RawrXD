@@ -1,0 +1,28 @@
+name: Extension bridge fail-closed smoke
+on:
+  push:
+    branches:
+      - fix/deep2-multimodel-safety-20261025
+    paths:
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+      - '.github/workflows/extension-bridge-smoke.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
+      - '.github/workflows/extension-bridge-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fail-closed-bridge:
+    name: Native bridge contract (NOT real JS runtime)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native C++ bridge fail-closed behavior
+        run: python3 '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
