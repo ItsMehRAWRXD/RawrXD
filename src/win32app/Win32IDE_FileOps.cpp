@@ -576,6 +576,15 @@ bool Win32IDE::promptSaveAllChanges() {
 
     if (result == IDYES) {
         saveAll();
+        // Never close the IDE after a failed save or a cancelled Save As.
+        // A successful save must clear each modified buffer's dirty flag.
+        if (hasUnsavedBuffers() || m_fileModified) {
+            MessageBoxA(m_hwndMain,
+                        "One or more documents could not be saved. "
+                        "The close operation was cancelled to protect your changes.",
+                        "Unsaved Changes", MB_OK | MB_ICONWARNING);
+            return false;
+        }
         return true;
     }
 
@@ -586,7 +595,8 @@ void Win32IDE::saveAll() {
     bool anySaved = false;
     // Save every modified document buffer, not just the active one.
     for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
-        if (m_documentBuffers[i].modified && !m_openDocuments[i].empty()) {
+        if (m_documentBuffers[i].modified &&
+            i < m_openDocuments.size() && !m_openDocuments[i].empty()) {
             switchDocumentTab(static_cast<int>(i));
             saveFile();
             anySaved = true;
