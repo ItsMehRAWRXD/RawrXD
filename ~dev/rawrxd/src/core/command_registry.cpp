@@ -382,7 +382,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Undo
+            ctx.errorMessage = "Not implemented: Undo";
         }
     });
     
@@ -394,7 +394,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Redo
+            ctx.errorMessage = "Not implemented: Redo";
         }
     });
     
@@ -419,7 +419,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Toggle terminal visibility
+            ctx.errorMessage = "Not implemented: Toggle terminal visibility";
         }
     });
     
@@ -432,7 +432,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Quick open
+            ctx.errorMessage = "Not implemented: Quick open";
         }
     });
     
@@ -461,7 +461,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Trigger AI completion
+            ctx.errorMessage = "Not implemented: Trigger AI completion";
         }
     });
     
@@ -473,7 +473,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Open AI chat panel
+            ctx.errorMessage = "Not implemented: Open AI chat panel";
         }
     });
 }
