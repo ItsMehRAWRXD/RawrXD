@@ -609,7 +609,14 @@ void Win32IDE::saveAll() {
     for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
         if (static_cast<int>(i) == originallyActive ||
             !m_documentBuffers[i].modified) continue;
-        if (i >= m_openDocuments.size()) continue;
+        if (i >= m_openDocuments.size()) {
+            // A modified buffer without a matching tab must never be
+            // silently skipped and reported as successfully saved.
+            saveFailed = true;
+            appendToOutput("Save All blocked: modified document has no matching tab\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
         switchDocumentTab(static_cast<int>(i));
         if (!saveFile()) {
             saveFailed = true;
