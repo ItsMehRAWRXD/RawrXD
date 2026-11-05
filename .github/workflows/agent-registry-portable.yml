@@ -59,6 +59,10 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror tools/test_agent_workspace_containment.cpp -o /tmp/rawrxd_workspace_smoke
           /tmp/rawrxd_workspace_smoke
+      - name: Compile and execute portable Save As disk smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_portable_save_roundtrip.cpp -o /tmp/rawrxd_save_smoke
+          /tmp/rawrxd_save_smoke
       - name: Compile and execute fake-model registry-to-disk E2E smoke
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' -I '~dev/rawrxd/src' '~dev/src/rawr_agent_parse_only.cpp' tools/test_fake_model_registry_e2e.cpp -o /tmp/rawrxd_fake_model_e2e
