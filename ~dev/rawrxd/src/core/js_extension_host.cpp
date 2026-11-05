@@ -2935,7 +2935,10 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
                                              VSCodeExtensionManifest* outManifest) {
     if (!extensionDir || !outManifest) return PatchResult::error("Null parameters");
 
-    std::memset(outManifest, 0, sizeof(VSCodeExtensionManifest));
+    // VSCodeExtensionManifest owns std::string/std::vector members.
+    // Byte-zeroing it corrupts their object invariants and is undefined behavior.
+    // Value assignment resets every member through its proper C++ operations.
+    *outManifest = VSCodeExtensionManifest{};
 
     // Find package.json
     std::string pkgPath = std::string(extensionDir) + "\\extension\\package.json";
