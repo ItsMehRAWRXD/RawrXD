@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -19,8 +20,8 @@ static std::string read(const fs::path&p) {
     return std::string((std::istreambuf_iterator<char>(f)),{});
 }
 int main(){
- fs::path root=fs::temp_directory_path()/"rawrxd_batch27_portable";
- fs::remove_all(root);fs::create_directories(root);
+ fs::path root=fs::temp_directory_path()/("rawrxd_batch27_portable_"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+ fs::create_directories(root);
  int pass=0,all=0;
  auto check=[&](bool ok,const char*name){++all;pass+=ok;std::cout<<name<<"="<<(ok?"PASS":"FAIL")<<"\n";};
  auto p=root/"fixture.cpp";
