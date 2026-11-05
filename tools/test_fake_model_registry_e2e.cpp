@@ -35,8 +35,13 @@ int main() {
     registry.registerTool({"editFiles", {"edit_files"}, "TEST-ONLY fixture editor"},
         [&](const ToolRequest& req, ToolContext&) -> ToolResult {
             if (!approved) return {77, "", "mutation denied"};
-            if (req.stdin_text.find("fixture.cpp") == std::string::npos)
-                return {64, "", "unknown fixture"};
+            // This deterministic fake provider accepts exactly one known
+            // fixture transaction. Never claim that it tests arbitrary JSON
+            // parsing or the production editFiles implementation.
+            const std::string expected =
+                R"({"path":"fixture.cpp","old":"int before = 1;","new":"int after = 2;"})";
+            if (req.stdin_text != expected)
+                return {64, "", "unexpected fixture transaction"};
             const std::string original = read(fixture);
             const std::string oldText = "int before = 1;";
             const auto pos = original.find(oldText);
@@ -51,7 +56,9 @@ int main() {
             return {0, "edit complete", ""};
         });
     registry.registerTool({"readFile", {"read_file"}, "TEST-ONLY fixture reader"},
-        [&](const ToolRequest&, ToolContext&) -> ToolResult {
+        [&](const ToolRequest& req, ToolContext&) -> ToolResult {
+            if (req.stdin_text != R"({"path":"fixture.cpp"})")
+                return {64, "", "invalid fixture read"};
             return {0, read(fixture), ""};
         });
     rawrxd::agent::setKnownToolNames({"editFiles", "readFile"});
@@ -77,6 +84,7 @@ int main() {
     check(mutations == 1, "08_one_edit_executed");
     check(read(fixture) == "int after = 2;\n", "09_exact_disk_readback");
     req.tool_id = "readFile";
+    req.stdin_text = R"({"path":"fixture.cpp"})";
     const auto readback = registry.invoke(req, {});
     check(readback.ok(), "10_readback_tool_dispatch");
     check(readback.stdout_text == read(fixture), "11_tool_result_matches_disk");
