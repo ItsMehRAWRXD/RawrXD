@@ -30,31 +30,31 @@ def check_sources(root=ROOT):
     h, s = header.read_text(encoding="utf-8"), stub.read_text(encoding="utf-8")
     results = []
     for name in METHODS:
-        declared = bool(re.search(r"\\b" + re.escape(name) + r"\\s*\\(", h))
+        declared = bool(re.search(r"\b" + re.escape(name) + r"\s*\(", h))
         # Restrict to the actual method body to avoid comments and other methods.
-        match = re.search(r"JSExtensionHost::" + re.escape(name) + r"\\s*\\([^)]*\\)(?:\\s*const)?\\s*\\{([^}]*)\\}", s, re.S)
+        match = re.search(r"JSExtensionHost::" + re.escape(name) + r"\s*\([^)]*\)(?:\s*const)?\s*\{([^}]*)\}", s, re.S)
         explicit_error = bool(match and "PatchResult::error(" in match.group(1))
         ok = declared and explicit_error
         results.append({"gate": name + "_fails_closed", "status": "PASS" if ok else "FAIL",
                         "detail": "Source-contract only: explicit unsupported error" if ok else "Missing declaration or explicit failure"})
     # The headless host must not falsely claim successful initialization.
-    init = re.search(r"JSExtensionHost::initialize\\s*\\([^)]*\\)\\s*\\{([^}]*)\\}", s, re.S)
+    init = re.search(r"JSExtensionHost::initialize\s*\([^)]*\)\s*\{([^}]*)\}", s, re.S)
     ok = bool(init and "m_initialized = false" in init.group(1))
     results.append({"gate": "initialize_clears_state", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     # No fake timer handles: 0 means unsupported.
-    timer = re.search(r"JSExtensionHost::createTimer\\s*\\([^)]*\\)\\s*\\{([^}]*)\\}", s, re.S)
-    ok = bool(timer and re.search(r"return\\s+0\\s*;", timer.group(1)))
+    timer = re.search(r"JSExtensionHost::createTimer\s*\([^)]*\)\s*\{([^}]*)\}", s, re.S)
+    ok = bool(timer and re.search(r"return\s+0\s*;", timer.group(1)))
     results.append({"gate": "timer_failure_sentinel", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     # No fake loaded extensions.
-    loaded = re.search(r"JSExtensionHost::getLoadedExtensions\\s*\\([^)]*\\)\\s*const\\s*\\{([^}]*)\\}", s, re.S)
+    loaded = re.search(r"JSExtensionHost::getLoadedExtensions\s*\([^)]*\)\s*const\s*\{([^}]*)\}", s, re.S)
     ok = bool(loaded and "*outCount = 0" in loaded.group(1))
     results.append({"gate": "loaded_count_zero", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     # No fake VSIX verification success.
-    verify = re.search(r"JSExtensionHost::verifyVSIX\\s*\\([^)]*\\)\\s*const\\s*\\{([^}]*)\\}", s, re.S)
+    verify = re.search(r"JSExtensionHost::verifyVSIX\s*\([^)]*\)\s*const\s*\{([^}]*)\}", s, re.S)
     ok = bool(verify and "r.isValid = false" in verify.group(1) and "r.signatureVerified = false" in verify.group(1))
     results.append({"gate": "vsix_verification_fails_closed", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     # No fake JS execution result when unsupported.
-    script = re.search(r"JSExtensionHost::executeScript\\s*\\([^)]*\\)\\s*\\{([^}]*)\\}", s, re.S)
+    script = re.search(r"JSExtensionHost::executeScript\s*\([^)]*\)\s*\{([^}]*)\}", s, re.S)
     ok = bool(script and "outResult[0] = '\\0'" in script.group(1))
     results.append({"gate": "script_output_cleared", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     return results
