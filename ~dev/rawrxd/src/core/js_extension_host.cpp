@@ -2976,6 +2976,11 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     assignField(jsonGetString(json, "description"),    outManifest->description);
     assignField(jsonGetString(json, "main"),           outManifest->main);
 
+    if (!rawrxd::extensions::validManifestIdentity(
+            outManifest->publisher, outManifest->name, outManifest->version)) {
+        return PatchResult::error("Invalid manifest publisher, name, or version");
+    }
+
     // Build the id from publisher.name
     if (!outManifest->publisher.empty() && !outManifest->name.empty()) {
         outManifest->id = outManifest->publisher + "." + outManifest->name;
