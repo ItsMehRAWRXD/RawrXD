@@ -1,6 +1,7 @@
 #ifndef RAWRXD_CLI_NUMERIC_POLICY_H
 #define RAWRXD_CLI_NUMERIC_POLICY_H
 #include <errno.h>
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdint.h>
@@ -28,7 +29,14 @@ static inline int rawrxd_parse_f32_range(const char* text, double minimum,
     double value = strtod(text, &end);
     if (errno == ERANGE || end == text || *end != '\0' ||
         !isfinite(value) || value < minimum || value > maximum) return 0;
-    *out = (float)value;
+    // A valid double may still overflow or underflow when stored as float.
+    // Reject loss of the required nonzero range and non-finite conversion.
+    if (value > FLT_MAX || value < -FLT_MAX) return 0;
+    const float converted = (float)value;
+    if (!isfinite(converted) ||
+        (value != 0.0 && converted == 0.0f) ||
+        (double)converted < minimum || (double)converted > maximum) return 0;
+    *out = converted;
     return 1;
 }
 #endif
