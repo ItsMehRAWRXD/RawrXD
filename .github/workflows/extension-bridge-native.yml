@@ -5,15 +5,32 @@ on:
     paths:
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - 'tools/test_extension_host_bridge.cpp'
+      - 'tools/test_js_extension_bridge.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - '.github/workflows/extension-bridge-native.yml'
   pull_request:
     paths:
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - 'tools/test_extension_host_bridge.cpp'
+      - 'tools/test_js_extension_bridge.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - '.github/workflows/extension-bridge-native.yml'
 permissions:
   contents: read
 jobs:
+  bridge-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run production bridge headless acceptance (40 cases)
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_extension_host_bridge.cpp -o /tmp/rawrxd_command_bridge
+          /tmp/rawrxd_command_bridge
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_js_extension_bridge.cpp -o /tmp/rawrxd_js_bridge
+          /tmp/rawrxd_js_bridge
   bridge-windows:
     runs-on: windows-latest
     timeout-minutes: 10
@@ -28,3 +45,6 @@ jobs:
           $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_bridge_test.exe tools\test_extension_host_bridge.cpp && extension_bridge_test.exe"
           cmd /d /s /c $command
           if ($LASTEXITCODE -ne 0) { throw "EXTENSION_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:js_bridge_test.exe tools\\test_js_extension_bridge.cpp && js_bridge_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "JS_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
