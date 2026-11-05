@@ -63,36 +63,44 @@ bool CommandRegistry::ExecuteCommand(const std::string& commandId, const std::ve
 }
 
 bool CommandRegistry::ExecuteCommand(const std::string& commandId, CommandContext& context) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    auto it = commands_.find(commandId);
-    if (it == commands_.end()) {
-        context.errorMessage = "Command not found: " + commandId;
+    CommandHandler handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto it = commands_.find(commandId);
+        if (it == commands_.end()) {
+            context.errorMessage = "Command not found: " + commandId;
+            return false;
+        }
+        const Command& cmd = it->second;
+        if (!cmd.enabled) {
+            context.errorMessage = "Command is disabled: " + commandId;
+            return false;
+        }
+        if (!CheckConditions(cmd.when)) {
+            context.errorMessage = "Command not available in current context";
+            return false;
+        }
+        if (!cmd.handler) {
+            context.errorMessage = "Command has no handler: " + commandId;
+            return false;
+        }
+        // Copy the handler under the lock, then invoke outside it.
+        // Handlers can call SetContext, register commands, or dispatch nested commands.
+        handler = cmd.handler;
+    }
+
+    try {
+        handler(context);
+    } catch (const std::exception& ex) {
+        context.errorMessage = std::string("Command handler exception: ") + ex.what();
+        return false;
+    } catch (...) {
+        context.errorMessage = "Command handler threw an unknown exception";
         return false;
     }
-    
-    const Command& cmd = it->second;
-    
-    if (!cmd.enabled) {
-        context.errorMessage = "Command is disabled: " + commandId;
-        return false;
-    }
-    
-    // Check context conditions
-    if (!CheckConditions(cmd.when)) {
-        context.errorMessage = "Command not available in current context";
-        return false;
-    }
-    
-    if (!cmd.handler) {
-        context.errorMessage = "Command has no handler: " + commandId;
-        return false;
-    }
-    
-    // Execute handler
-    cmd.handler(context);
+    // Do not overwrite an explicit handler failure.
+    if (!context.errorMessage.empty()) return false;
     context.handled = true;
-    
     return true;
 }
 
