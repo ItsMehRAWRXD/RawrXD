@@ -8,6 +8,7 @@ on:
       - 'tools/test_agent_search_smoke.cpp'
       - 'tools/test_agent_workspace_containment.cpp'
       - 'tools/test_fake_model_registry_e2e.cpp'
+      - 'tools/test_portable_save_smoke.cpp'
       - '~dev/src/rawr_agent_dispatch.cpp'
       - '~dev/src/rawr_agent.cpp'
       - '~dev/src/rawr_agent.hpp'
@@ -24,6 +25,7 @@ on:
       - 'tools/test_agent_search_smoke.cpp'
       - 'tools/test_agent_workspace_containment.cpp'
       - 'tools/test_fake_model_registry_e2e.cpp'
+      - 'tools/test_portable_save_smoke.cpp'
       - '~dev/src/rawr_agent_dispatch.cpp'
       - '~dev/src/rawr_agent.cpp'
       - '~dev/src/rawr_agent.hpp'
@@ -75,6 +77,10 @@ jobs:
           name: fake-model-registry-smoke-NOT-PRODUCTION-CERTIFICATION
           path: fake_model_registry_smoke.log
           if-no-files-found: ignore
+      - name: Compile and run portable filesystem save smoke (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_portable_save_smoke.cpp -o /tmp/rawrxd_save_smoke
+          /tmp/rawrxd_save_smoke
       - name: Execute certification receipt verifier unit tests
         run: python3 -m unittest discover -s tools -p 'test_verify_ide_e2e_receipts.py' -v
       - name: Verify production and portable parser parity
