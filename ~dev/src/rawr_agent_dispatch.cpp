@@ -154,14 +154,12 @@ ToolResult toolFileRead(const ToolRequest& req, AuditLedger* ledger) {
     std::string out;
     std::string line;
     uint32_t no = 0;
-    char buf[8192];
-    while (f.good() && no < end && no < start + maxLines) {
-        f.getline(buf, sizeof(buf));
+    while (no < end && no < start + maxLines && std::getline(f, line)) {
         ++no;
         if (no < start) continue;
         out += std::to_string(no);
         out += '|';
-        out += buf;
+        out += line;
         out += '\n';
     }
     if (out.empty()) { r.exit_code = 1; r.stderr_text = "range empty"; return r; }
