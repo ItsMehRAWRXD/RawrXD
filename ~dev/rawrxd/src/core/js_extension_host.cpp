@@ -2783,6 +2783,10 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
                              sizeof(result.errorDetail) - 1);
                 return result;
             }
+        } else {
+            std::strncpy(result.errorDetail, "Cannot reopen VSIX for ZIP signature check",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
     }
 
