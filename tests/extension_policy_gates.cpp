@@ -43,6 +43,25 @@ int main() {
     gate("23_version_leading_dot_rejected", !validVersion(".1.2.3"));
     gate("24_version_trailing_dot_rejected", !validVersion("1.2.3."));
     gate("25_unsigned_case_sensitive", !mayInstallVSIX(false, "YES") && mayInstallVSIX(false, "y"));
-    std::cout << "SUMMARY " << passed << "/25 PASS; " << failed << " FAIL\n";
+    // Exercise a real filesystem symlink, not only lexical ".." traversal.
+    // Windows runners without symlink privileges report SKIP, never a false PASS.
+    {
+        const fs::path sandbox = fs::temp_directory_path() / "rawrxd_policy_symlink_gate";
+        const fs::path outside = fs::temp_directory_path() / "rawrxd_policy_symlink_outside";
+        std::error_code ec;
+        fs::remove_all(sandbox, ec);
+        fs::remove_all(outside, ec);
+        fs::create_directories(sandbox, ec);
+        if (!ec) fs::create_directories(outside, ec);
+        if (!ec) fs::create_directory_symlink(outside, sandbox / "escape", ec);
+        if (ec) {
+            std::cout << "SKIP 26_symlink_escape_rejected: " << ec.message() << '\\n';
+        } else {
+            gate("26_symlink_escape_rejected", !entryWithinRoot(sandbox, sandbox / "escape" / "evil.js"));
+        }
+        fs::remove_all(sandbox, ec);
+        fs::remove_all(outside, ec);
+    }
+    std::cout << "SUMMARY " << passed << "/26 maximum PASS; " << failed << " FAIL\n";
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
