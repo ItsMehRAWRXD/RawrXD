@@ -1,0 +1,34 @@
+name: Extension policy gates
+on:
+  push:
+    paths:
+      - 'tests/extension_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '.github/workflows/extension-policy-gates.yml'
+  pull_request:
+    paths:
+      - 'tests/extension_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '.github/workflows/extension-policy-gates.yml'
+  workflow_dispatch:
+jobs:
+  policy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile extension policy gates
+        shell: bash
+        run: |
+          mkdir -p build/policy
+          c++ -std=c++17 -Wall -Wextra -pedantic -I~dev/rawrxd/src/core tests/extension_policy_gates.cpp -o build/policy/extension_policy_gates
+      - name: Execute extension policy gates
+        shell: bash
+        run: ./build/policy/extension_policy_gates
