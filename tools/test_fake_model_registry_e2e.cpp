@@ -68,7 +68,7 @@ int main() {
     const auto parsed = rawrxd::agent::parseModelReplyForTest(fakeModelOutput);
     check(parsed.isTool, "01_model_reply_parses_as_tool");
     check(parsed.tool == "editFiles", "02_model_tool_name_preserved");
-    check(parsed.args.find("fixture.cpp") != std::string::npos, "03_model_args_preserved");
+    check(parsed.args == R"({"path":"fixture.cpp","old":"int before = 1;","new":"int after = 2;"})", "03_model_args_preserved_exactly");
     check(registry.contains(parsed.tool), "04_tool_registered");
     ToolRequest req;
     req.surface = AgentToolSurface::AgentCore;
@@ -102,8 +102,9 @@ int main() {
     check(readback.stdout_text == read(fixture), "11_tool_result_matches_disk");
     const std::string simulatedNextPrompt =
         "[TOOL EXIT_CODE=0 STATUS=SUCCESS]\n[STDOUT]\n" + readback.stdout_text;
-    check(simulatedNextPrompt.find("int after = 2;") != std::string::npos,
-          "12_tool_result_inserted_in_mock_prompt");
+    check(simulatedNextPrompt ==
+          "[TOOL EXIT_CODE=0 STATUS=SUCCESS]\n[STDOUT]\nint after = 2;\n",
+          "12_mock_prompt_matches_exact_expected_bytes");
     const auto fakeFinal = rawrxd::agent::parseModelReplyForTest("Done.");
     check(fakeFinal.isFinal, "13_fake_model_final_parses");
     req.tool_id = "not_registered";
