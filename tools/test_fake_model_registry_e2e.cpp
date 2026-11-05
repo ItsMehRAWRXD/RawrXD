@@ -70,6 +70,14 @@ int main() {
     check(parsed.tool == "editFiles", "02_model_tool_name_preserved");
     check(parsed.args == R"({"path":"fixture.cpp","old":"int before = 1;","new":"int after = 2;"})", "03_model_args_preserved_exactly");
     check(registry.contains(parsed.tool), "04_tool_registered");
+    // Fail-closed parser probes: a malformed tool reply must not be
+    // interpreted as a valid dispatchable tool call.
+    const auto malformed = rawrxd::agent::parseModelReplyForTest(
+        "<tool>editFiles</tool><args>{}</args>TRAILING");
+    check(!malformed.isTool, "20_trailing_tool_text_rejected");
+    const auto doubled = rawrxd::agent::parseModelReplyForTest(
+        "<tool>editFiles</tool><args>{}</args><tool>readFile</tool><args>{}</args>");
+    check(!doubled.isTool, "21_duplicate_tool_frames_rejected");
     ToolRequest req;
     req.surface = AgentToolSurface::AgentCore;
     req.tool_id = parsed.tool;
