@@ -114,7 +114,11 @@ ModelReply parseReply(const std::string& raw) {
         if (trim(tool).empty() || argsOpen == std::string::npos ||
             argsEnd == std::string::npos ||
             cleaned.find("<tool>", toolEnd + 7) != std::string::npos ||
-            cleaned.find("<args>", argsOpen + 6) != std::string::npos) {
+            cleaned.find("<args>", argsOpen + 6) != std::string::npos ||
+            cleaned.find("</tool>", toolEnd + 7) != std::string::npos ||
+            cleaned.find("</args>", argsEnd + 7) != std::string::npos ||
+            cleaned.find("<args>") < toolEnd ||
+            cleaned.find("<tool>", argsOpen) != std::string::npos) {
             r.kind = ModelReply::Kind::ProtocolError;
             r.text = raw;
             return r;
