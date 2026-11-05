@@ -3,9 +3,6 @@
 //
 // Provides real JS extension host functionality
 
-#include <windows.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <mutex>
 #include <string>
 
