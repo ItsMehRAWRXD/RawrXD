@@ -125,9 +125,10 @@ ToolResult toolWorkspaceList(const ToolRequest& req, AuditLedger* ledger) {
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
 
     const auto& files = ledger->enumeratedFiles();
-    uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 2000);
+    const uint32_t limit = std::min<uint32_t>(
+        jsonFieldU32(req.stdin_text, "limit", 2000), 2000);
     std::string out;
-    out.reserve(files.size() * 32);
+    out.reserve(std::min<size_t>(files.size(), limit) * 32);
     size_t n = 0;
     for (const auto& f : files) {
         if (n++ >= limit) { out += "...(" + std::to_string(files.size()) +
