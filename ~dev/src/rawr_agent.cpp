@@ -63,12 +63,16 @@ std::string trim(std::string s) {
 
 // Strip markdown code fences that models habitually wrap around replies.
 std::string stripFences(std::string s) {
-    auto eraseAll = [&](const std::string& t) {
-        size_t p;
-        while ((p = s.find(t)) != std::string::npos) s.erase(p, t.size());
-    };
-    eraseAll("```");
-    return s;
+    // Remove only an enclosing Markdown code fence. Removing every backtick
+    // corrupts legitimate JSON string arguments and final-answer content.
+    s = trim(std::move(s));
+    if (s.rfind("```", 0) != 0) return s;
+    const size_t openingNewline = s.find('\n');
+    if (openingNewline == std::string::npos) return s;
+    const size_t closing = s.rfind("```");
+    if (closing == 0 || closing == std::string::npos ||
+        !trim(s.substr(closing + 3)).empty()) return s;
+    return trim(s.substr(openingNewline + 1, closing - openingNewline - 1));
 }
 
 // Known tool names (filled at registration time by setKnownToolNames).
