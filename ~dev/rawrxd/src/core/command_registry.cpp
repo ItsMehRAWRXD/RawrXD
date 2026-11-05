@@ -210,6 +210,11 @@ const Command* CommandRegistry::GetCommand(const std::string& commandId) const {
 
 void CommandRegistry::RegisterKeybinding(const std::string& keybinding, const std::string& commandId) {
     std::lock_guard<std::mutex> lock(mutex_);
+    // A keybinding cannot point to an unknown command or hijack an existing
+    // shortcut. The void API is retained for existing callers.
+    if (keybinding.empty() || commands_.find(commandId) == commands_.end()) return;
+    const auto existing = keybindings_.find(keybinding);
+    if (existing != keybindings_.end() && existing->second != commandId) return;
     keybindings_[keybinding] = commandId;
 }
 
