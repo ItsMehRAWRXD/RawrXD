@@ -7,8 +7,8 @@ Updated: 2026-11-05. Branch: fix/deep2-multimodel-safety-20261025.
 - **Implementation estimate**: provisional 68% historical estimate; not a measured
   current-source feature inventory. Do not increment from individual commits.
 - **Production certification**: 0% (not certified; PROMOTE=0).
-- **Headless suite coverage**: 0/5 *current-revision* suites independently verified
-  after latest changes. Earlier 25/25 extension-bridge production-source PASS
+- **Headless suite coverage**: 1/5 *current-revision* suites independently verified
+  after latest changes (CLI numeric 25/25, Git blob hashes matched). Earlier 25/25 extension-bridge production-source PASS
   applied to an older SHA and does not certify the updated ownership API.
 - **Full IDE end-to-end**: NOT VERIFIED. No native Windows build, physical GUI,
   extension activation, package install, or soak receipt on this revision.
@@ -21,7 +21,7 @@ Updated: 2026-11-05. Branch: fix/deep2-multimodel-safety-20261025.
 | G02 | Extension bridge | Current-SHA 37-case headless PASS | OPEN |
 | G03 | JS fail-closed bridge | Current-SHA 15-case headless PASS | OPEN |
 | G04 | Bridge-to-registry | Current-SHA 15-case headless PASS | OPEN |
-| G05 | CLI numeric policy | Current-SHA 25-case headless PASS | OPEN |
+| G05 | CLI numeric policy | Current-SHA 25-case headless PASS | PASS (2026-11-05; GCC/UBSan, Git blob SHA matched) |
 | G06 | Real QuickJS extension activation | Load, command, deactivate, unload | OPEN |
 | G07 | VSIX lifecycle | Safe install, reject, rollback, uninstall | OPEN |
 | G08 | CLI read/edit/write | Real executable, disposable disk fixture and hashes | OPEN |
@@ -43,6 +43,6 @@ python3 tools/run_headless_acceptance.py --output headless-acceptance-receipt.js
 
 The runner fails nonzero on any compile/test failure, includes source SHA-256
 hashes and raw command outputs, and never claims GUI or model acceptance.
-The runner has not been independently executed on the current GitHub SHA.
+The complete five-suite runner has not been independently executed on the current GitHub SHA. The CLI numeric test was independently compiled and executed on exact Git blob-matched source.
 
 Do not equate a percentage of test cases with percentage of IDE completion.
