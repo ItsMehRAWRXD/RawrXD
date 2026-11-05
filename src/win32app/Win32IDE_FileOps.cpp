@@ -659,6 +659,16 @@ void Win32IDE::closeFile() {
         return;
     }
 
+    // Refuse to close an inconsistent tab state. Otherwise a missing active
+    // index can leave the old document open while reporting "File closed".
+    if (!m_documentBuffers.empty() &&
+        (m_activeDocument < 0 ||
+         static_cast<size_t>(m_activeDocument) >= m_documentBuffers.size())) {
+        appendToOutput("Close blocked: active tab index is invalid\\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
+
     // Remove the document tab for the file being closed so the tab control
     // and the document buffer list stay in sync with the editor state.
     if (m_activeDocument >= 0) {
