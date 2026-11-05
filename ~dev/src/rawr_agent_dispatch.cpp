@@ -75,8 +75,16 @@ uint32_t jsonFieldU32(const std::string& json, const std::string& key,
                       uint32_t fallback) {
     const std::string v = jsonField(json, key);
     if (v.empty()) return fallback;
-    try { return static_cast<uint32_t>(std::stoul(v)); }
-    catch (...) { return fallback; }
+    // stoul accepts signs and partial numbers; narrowing can wrap values above
+    // UINT32_MAX. Treat every malformed/out-of-range value as absent.
+    if (v.empty() || !std::all_of(v.begin(), v.end(), [](unsigned char c) {
+            return c >= '0' && c <= '9';
+        })) return fallback;
+    try {
+        const unsigned long long value = std::stoull(v);
+        if (value > UINT32_MAX) return fallback;
+        return static_cast<uint32_t>(value);
+    } catch (...) { return fallback; }
 }
 
 CandidateType candidateTypeFromName(const std::string& name) {
