@@ -214,6 +214,14 @@ const Command* CommandRegistry::GetCommand(const std::string& commandId) const {
     return nullptr;
 }
 
+bool CommandRegistry::TryGetCommand(const std::string& commandId, Command& out) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto it = commands_.find(commandId);
+    if (it == commands_.end()) return false;
+    out = it->second;
+    return true;
+}
+
 void CommandRegistry::RegisterKeybinding(const std::string& keybinding, const std::string& commandId) {
     std::lock_guard<std::mutex> lock(mutex_);
     // A keybinding cannot point to an unknown command or hijack an existing
