@@ -76,5 +76,43 @@ class EvidenceGateTests(unittest.TestCase):
             self.assertTrue(any("absent or empty" in e for e in verify(root, SHA)))
 
 
+    def test_fifteen_malformed_receipt_variants_fail_closed(self):
+        # Each variant must produce a gate-specific failure, never an exception.
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            gate = GATES[0]
+            evidence = root / "sample.log"
+            evidence.write_bytes(b"verified-content")
+            receipt_file = root / (gate + ".json")
+            base = dict(gate=gate, status="PASS", candidate_sha256=SHA,
+                        evidence_path=evidence.name,
+                        evidence_sha256=hashlib.sha256(evidence.read_bytes()).hexdigest())
+            mutations = [
+                {"gate": None},                         # 01
+                {"gate": 42},                           # 02
+                {"status": "FAIL"},                      # 03
+                {"status": True},                        # 04
+                {"candidate_sha256": None},             # 05
+                {"candidate_sha256": 123},              # 06
+                {"candidate_sha256": []},               # 07
+                {"candidate_sha256": "b" * 64},          # 08
+                {"evidence_path": None},                # 09
+                {"evidence_path": []},                  # 10
+                {"evidence_path": "../sample.log"},     # 11
+                {"evidence_path": "missing.log"},       # 12
+                {"evidence_sha256": None},              # 13
+                {"evidence_sha256": "f" * 64},           # 14
+                {"evidence_sha256": []},                # 15
+            ]
+            self.assertEqual(len(mutations), 15)
+            for i, change in enumerate(mutations, 1):
+                with self.subTest(case=i):
+                    receipt_file.write_text(json.dumps({**base, **change}), encoding="utf-8")
+                    errors = verify(root, SHA)
+                    self.assertTrue(any(gate in error for error in errors))
+            receipt_file.write_text(json.dumps(base), encoding="utf-8")
+            self.assertEqual(len(verify(root, SHA)), len(GATES) - 1)
+
+
 if __name__ == "__main__":
     unittest.main()
