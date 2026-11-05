@@ -34,12 +34,17 @@ def main():
             fn.argtypes = [ctypes.c_char_p]
             fn.restype = ctypes.c_bool
         lib.RawrXD_JSExt_Shutdown.restype = None
-        assert not lib.RawrXD_JSExt_IsInitialized(), "FAIL: starts initialized without an engine"
-        assert not lib.RawrXD_JSExt_Initialize(), "FAIL: false-positive runtime initialization"
-        assert not lib.RawrXD_JSExt_ExecuteScript(b"throw Error('must not execute')"), "FAIL: false-positive script execution"
-        assert not lib.RawrXD_JSExt_LoadExtension(b"/nonexistent/extension.vsix"), "FAIL: false-positive extension load"
+        if lib.RawrXD_JSExt_IsInitialized():
+            raise RuntimeError("FAIL: starts initialized without an engine")
+        if lib.RawrXD_JSExt_Initialize():
+            raise RuntimeError("FAIL: false-positive runtime initialization")
+        if lib.RawrXD_JSExt_ExecuteScript(b"throw Error('must not execute')"):
+            raise RuntimeError("FAIL: false-positive script execution")
+        if lib.RawrXD_JSExt_LoadExtension(b"/nonexistent/extension.vsix"):
+            raise RuntimeError("FAIL: false-positive extension load")
         lib.RawrXD_JSExt_Shutdown()
-        assert not lib.RawrXD_JSExt_IsInitialized(), "FAIL: shutdown did not clear state"
+        if lib.RawrXD_JSExt_IsInitialized():
+            raise RuntimeError("FAIL: shutdown did not clear state")
         print("PASS: native bridge fail-closed contract (5 assertions)")
         print("BLOCKED: real JavaScript execution / VSIX activation (no engine in this bridge)")
 
