@@ -114,5 +114,18 @@ class EvidenceGateTests(unittest.TestCase):
             self.assertEqual(len(verify(root, SHA)), len(GATES) - 1)
 
 
+    def test_duplicate_receipt_keys_are_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            gate = GATES[0]
+            path = root / (gate + ".json")
+            # A malicious PASS override must never be silently accepted.
+            path.write_text('{"gate":"' + gate +
+                            '","status":"FAIL","status":"PASS",'
+                            '"candidate_sha256":"' + SHA + '"}', encoding="utf-8")
+            errors = verify(root, SHA)
+            self.assertTrue(any("duplicate receipt field" in e for e in errors))
+
+
 if __name__ == "__main__":
     unittest.main()
