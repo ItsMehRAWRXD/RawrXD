@@ -208,6 +208,17 @@ std::string excerpt(const std::string& s, size_t maxBytes) {
            std::to_string(s.size() - maxBytes) + " bytes]";
 }
 
+// Treat model-visible user and tool data as content, never chat-template
+// structure. Break reserved role delimiters before interpolation.
+std::string escapeChatRoleDelimiters(std::string s) {
+    size_t pos = 0;
+    while ((pos = s.find("<|", pos)) != std::string::npos) {
+        s.replace(pos, 2, "< |");
+        pos += 3;
+    }
+    return s;
+}
+
 std::string buildPrompt(const std::string& systemPrompt,
                         const std::string& userRequest,
                         const std::vector<ToolTransaction>& history,
@@ -221,15 +232,15 @@ std::string buildPrompt(const std::string& systemPrompt,
     // run (model role-played results because its own calls were invisible).
     for (size_t i = from; i < history.size(); ++i) {
         ctx << "<|im_start|>assistant\n<tool>" << history[i].tool
-            << "</tool>\n<args>" << history[i].args << "</args><|im_end|>\n"
+            << "</tool>\n<args>" << escapeChatRoleDelimiters(history[i].args) << "</args><|im_end|>\n"
             << "<|im_start|>user\n[TOOL RESULT for " << history[i].tool << "]\n"
-            << history[i].resultExcerpt << "<|im_end|>\n";
+            << escapeChatRoleDelimiters(history[i].resultExcerpt) << "<|im_end|>\n";
     }
 
     std::ostringstream p;
     p << "<|im_start|>system\n" << systemPrompt
       << "<|im_end|>\n"
-         "<|im_start|>user\n" << userRequest << "<|im_end|>\n";
+         "<|im_start|>user\n" << escapeChatRoleDelimiters(userRequest) << "<|im_end|>\n";
     p << ctx.str();
     p << "<|im_start|>user\n" << stepInstruction << "<|im_end|>\n"
          "<|im_start|>assistant\n";
