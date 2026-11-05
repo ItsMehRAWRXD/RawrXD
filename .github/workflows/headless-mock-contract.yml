@@ -1,0 +1,30 @@
+name: Headless Mock Inference Contract
+
+on:
+  push:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-mock-contract.yml'
+  pull_request:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-mock-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mock-contract:
+    name: Python mock inference contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile test fixtures
+        run: python -m compileall -q tests/headless
+      - name: Run acceptance tests
+        run: python -m unittest discover -s tests/headless -p 'test_mock_inference_server.py' -v
