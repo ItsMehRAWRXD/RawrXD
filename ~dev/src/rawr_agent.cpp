@@ -350,8 +350,7 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             ? std::string(auditMode && requireCoverage
                               ? kAuditSystemPrompt
                               : kLoopCertSystemPrompt) +
-                  (auditMode && requireCoverage ? agentToolCatalogJson()
-                                                : std::string())
+                  agentToolCatalogJson()
             : options.systemPrompt;
 
     std::vector<ToolTransaction> history;
@@ -400,6 +399,13 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             replyText = replyText.substr(0, cut);
         }
 
+        // Empty generation is not a successful final answer. In particular,
+        // a backend numeric abort must never certify agent completion.
+        if (trim(replyText).empty()) {
+            result.status = "EMPTY_MODEL_RESPONSE";
+            result.reachedFinal = false;
+            return result;
+        }
         const ModelReply reply = parseReply(trim(replyText));
 
         if (reply.kind == ModelReply::Kind::Final) {
