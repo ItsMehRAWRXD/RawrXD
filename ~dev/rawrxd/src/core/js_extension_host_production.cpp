@@ -54,25 +54,31 @@ private:
     bool initialized_ = false;
 };
 
+#ifdef _WIN32
+#define RAWRXD_BRIDGE_API __declspec(dllexport)
+#else
+#define RAWRXD_BRIDGE_API __attribute__((visibility("default")))
+#endif
+
 extern "C" {
 
-bool RawrXD_JSExt_Initialize() {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_Initialize() {
     return JSExtensionHost::Instance().Initialize();
 }
 
-void RawrXD_JSExt_Shutdown() {
+RAWRXD_BRIDGE_API void RawrXD_JSExt_Shutdown() {
     JSExtensionHost::Instance().Shutdown();
 }
 
-bool RawrXD_JSExt_IsInitialized() {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_IsInitialized() {
     return JSExtensionHost::Instance().IsInitialized();
 }
 
-bool RawrXD_JSExt_ExecuteScript(const char* script) {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_ExecuteScript(const char* script) {
     return JSExtensionHost::Instance().ExecuteScript(script);
 }
 
-bool RawrXD_JSExt_LoadExtension(const char* path) {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_LoadExtension(const char* path) {
     return JSExtensionHost::Instance().LoadExtension(path);
 }
 
