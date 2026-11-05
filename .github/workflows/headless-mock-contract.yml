@@ -26,5 +26,9 @@ jobs:
           python-version: '3.12'
       - name: Compile test fixtures
         run: python -m compileall -q tests/headless
-      - name: Run acceptance tests
+      - name: Run inference transport acceptance tests
         run: python -m unittest discover -s tests/headless -p 'test_mock_inference_server.py' -v
+      - name: Compile production extension registry contract
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
+      - name: Run production extension registry contract
+        run: timeout 15s /tmp/extension_command_contract
