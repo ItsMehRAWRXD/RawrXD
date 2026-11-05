@@ -62,7 +62,15 @@ jobs:
       - name: Compile and execute fake-model registry-to-disk E2E smoke
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' -I '~dev/rawrxd/src' '~dev/src/rawr_agent_parse_only.cpp' tools/test_fake_model_registry_e2e.cpp -o /tmp/rawrxd_fake_model_e2e
-          /tmp/rawrxd_fake_model_e2e
+          set -o pipefail
+          /tmp/rawrxd_fake_model_e2e | tee fake_model_registry_smoke.log
+      - name: Upload mock-only smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fake-model-registry-smoke-NOT-PRODUCTION-CERTIFICATION
+          path: fake_model_registry_smoke.log
+          if-no-files-found: ignore
       - name: Execute certification receipt verifier unit tests
         run: python3 -m unittest discover -s tools -p 'test_verify_ide_e2e_receipts.py' -v
       - name: Verify production and portable parser parity
