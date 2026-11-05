@@ -521,20 +521,26 @@ ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
         << "snippet: " << match->evidence << "\n";
 
     // Surrounding context: bounded window around the candidate line.
-    const std::filesystem::path full = ledger->workspaceRoot() / match->file;
-    std::ifstream f(full, std::ios::binary);
-    if (f) {
-        const uint32_t from = match->line > 20 ? match->line - 20 : 1;
-        const uint32_t to   = match->line + 20;
-        std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && no < to) {
-            f.getline(buf, sizeof(buf));
-            ++no;
-            if (no < from) continue;
-            out << no << "|" << buf << "\n";
-        }
+    const auto full = containedSource(ledger->workspaceRoot(), match->file);
+    if (!full) {
+        r.exit_code = 77;
+        r.stderr_text = "candidate path escapes workspace";
+        return r;
+    }
+    std::ifstream f(*full, std::ios::binary);
+    if (!f) {
+        r.exit_code = 66;
+        r.stderr_text = "candidate source unavailable";
+        return r;
+    }
+    const uint32_t from = match->line > 20 ? match->line - 20 : 1;
+    const uint64_t to = static_cast<uint64_t>(match->line) + 20;
+    std::string line;
+    uint64_t no = 0;
+    while (no < to && std::getline(f, line)) {
+        ++no;
+        if (no < from) continue;
+        out << no << "|" << line << "\n";
     }
     r.stdout_text = out.str();
     return r;
