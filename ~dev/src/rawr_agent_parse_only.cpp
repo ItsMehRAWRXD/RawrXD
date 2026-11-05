@@ -1,11 +1,7 @@
 // ============================================================================
 // rawr_agent_parse_only.cpp — RAWR_AGENT_PROTOCOL_SELFTEST_001 support TU.
-// The EXACT production reply parser (copied verbatim from rawr_agent.cpp's
-// internal contract) compiled without the Deep2Engine header chain so the
-// self-test needs no Vulkan headers. rawr_agent.cpp asserts behavioral
-// equality at build time via the same ProtocolParseResultForTest entry —
-// when the selftest links, the parse contract below is the same one the
-// loop uses; any divergence shows up as a selftest case failure.
+// Portable copy of the production reply parser for Vulkan-free tests.
+// Keep this in sync until the parser is extracted into a shared unit.
 // ============================================================================
 #include <cctype>
 #include <cstdint>
@@ -160,81 +156,6 @@ ModelReply parseReply(const std::string& raw) {
     return r;
 }
 
-// ---------------------------------------------------------------------------
-// Chat assembly — Qwen2.5 chat template. Context compaction: each step feeds
-// only (system + original request + recent N tool transactions + instruction).
-// ---------------------------------------------------------------------------
-constexpr size_t kMaxHistoryEntries = 6;   // tool transactions kept per step
-
-struct ToolTransaction {
-    std::string tool;
-    std::string args;         // echoed assistant call
-    std::string resultExcerpt;  // bounded excerpt
-};
-
-std::string excerpt(const std::string& s, size_t maxBytes) {
-    if (s.size() <= maxBytes) return s;
-    return s.substr(0, maxBytes) + "\n...[truncated " +
-           std::to_string(s.size() - maxBytes) + " bytes]";
-}
-
-std::string buildPrompt(const std::string& systemPrompt,
-                        const std::string& userRequest,
-                        const std::vector<ToolTransaction>& history,
-                        const std::string& stepInstruction) {
-    std::ostringstream ctx;
-    size_t from = history.size() > kMaxHistoryEntries
-                      ? history.size() - kMaxHistoryEntries : 0;
-    // Replay each transaction as its own assistant turn + user result turn so
-    // the model sees exactly what IT called and what came back. This is the
-    // coherence fix for the fabrication failure observed in the first smoke
-    // run (model role-played results because its own calls were invisible).
-    for (size_t i = from; i < history.size(); ++i) {
-        ctx << "<|im_start|>assistant\n<tool>" << history[i].tool
-            << "</tool>\n<args>" << history[i].args << "</args><|im_end|>\n"
-            << "<|im_start|>user\n[TOOL RESULT for " << history[i].tool << "]\n"
-            << history[i].resultExcerpt << "<|im_end|>\n";
-    }
-
-    std::ostringstream p;
-    p << "<|im_start|>system\n" << systemPrompt
-      << "<|im_end|>\n"
-         "<|im_start|>user\n" << userRequest << "<|im_end|>\n";
-    p << ctx.str();
-    p << "<|im_start|>user\n" << stepInstruction << "<|im_end|>\n"
-         "<|im_start|>assistant\n";
-    return p.str();
-}
-
-const char* kAuditSystemPrompt =
-    "You are a rigorous code auditor running inside the RawrXD runtime with "
-    "read-only tool authority. You audit a repository for unfinished, fake, "
-    "disabled, or stub implementations.\n\n"
-    "PROTOCOL (strict):\n"
-    "1. To call exactly ONE tool, reply with ONLY:\n"
-    "   <tool>tool_name</tool>\n"
-    "   <args>{\"param\":\"value\"}</args>\n"
-    "2. When you have fully completed the request, reply with your final "
-    "answer text (no tool tags).\n"
-    "3. NEVER fabricate file contents or tool results.\n"
-    "4. Work systematically: enumerate files, inspect suspicious candidates "
-    "with file.read/code.search, record every finding with "
-    "audit.add_candidate, review each candidate with audit.review, and mark "
-    "inspected files with audit.files_reviewed.\n"
-    "5. Before finishing, call audit.coverage and ensure every enumerated "
-    "file is reviewed and every candidate has a verdict. The runtime refuses "
-    "completion otherwise.\n\n"
-    "TOOL-SELECTION LAW (candidate review):\n"
-    "- First call audit.coverage once. If the scan is not complete, call "
-    "audit.scan exactly once.\n"
-    "- Then page pending candidates with audit.candidates {\"limit\":16}.\n"
-    "- For each candidate: audit.candidate.read FIRST. If the evidence is "
-    "already clear, immediately audit.candidate.review it.\n"
-    "- Only call file.read / symbol.find / symbol.references / code.search "
-    "when a verdict genuinely needs more context.\n"
-    "- Never run workspace.list during candidate review. Never rerun "
-    "audit.scan once SOURCE_SCAN_COMPLETE=1.\n"
-    "- Call audit.coverage once per candidate batch, not per candidate.\n\n";
 
 } // namespace
 
