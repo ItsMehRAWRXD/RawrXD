@@ -435,8 +435,21 @@ void CommandRegistry::RegisterBuiltInCommands() {
     });
 }
 
+bool CommandRegistry::RegisterExtensionCommand(
+    const std::string& extensionId, const Command& command) {
+    if (extensionId.empty() || command.id.empty() || !command.handler) return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (commands_.find(command.id) != commands_.end()) return false;
+    commands_.emplace(command.id, command);
+    extensionCommands_[extensionId].push_back(command.id);
+    if (!command.keybinding.empty()) keybindings_[command.keybinding] = command.id;
+    return true;
+}
+
 void CommandRegistry::RegisterExtensionCommands(const std::string& extensionId) {
-    // TODO: Load commands from extension manifest
+    // Legacy no-argument entry point cannot infer contributed commands.
+    // Registration must supply a concrete Command and handler.
+    (void)extensionId;
 }
 
 void CommandRegistry::UnregisterExtensionCommands(const std::string& extensionId) {
@@ -446,7 +459,15 @@ void CommandRegistry::UnregisterExtensionCommands(const std::string& extensionId
     if (it == extensionCommands_.end()) return;
     
     for (const auto& cmdId : it->second) {
-        commands_.erase(cmdId);
+        const auto commandIt = commands_.find(cmdId);
+        if (commandIt == commands_.end()) continue;
+        if (!commandIt->second.keybinding.empty()) {
+            const auto bindingIt = keybindings_.find(commandIt->second.keybinding);
+            if (bindingIt != keybindings_.end() && bindingIt->second == cmdId) {
+                keybindings_.erase(bindingIt);
+            }
+        }
+        commands_.erase(commandIt);
     }
     
     extensionCommands_.erase(it);
