@@ -33,8 +33,8 @@ int main() {
         const auto actual=decide(c.response,c.dirty,c.saveSucceeded);
         const bool ok=actual.mayClose==c.close && actual.invokeSave==c.save;
         passed+=ok;
-        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\\n";
+        std::cout<<c.name<<"="<<(ok?"PASS":"FAIL")<<"\n";
     }
-    std::cout<<"CLOSE_DECISION_MODEL="<<passed<<"/"<<cases.size()<<"\\n";
+    std::cout<<"CLOSE_DECISION_MODEL="<<passed<<"/"<<cases.size()<<"\n";
     return passed==static_cast<int>(cases.size())?0:1;
 }
