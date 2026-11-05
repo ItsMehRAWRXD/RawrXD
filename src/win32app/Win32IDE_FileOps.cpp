@@ -2,6 +2,7 @@
 // 9 comprehensive file management features
 
 #include "Win32IDE.h"
+#include "CloseConfirmationPolicy.hpp"
 #include "IDELogger.h"
 #include <fstream>
 #include <sstream>
@@ -598,7 +599,7 @@ bool Win32IDE::promptSaveAllChanges() {
     // Only an explicit NO authorizes discarding unsaved changes.
     // MessageBox can return 0 on API failure; fail closed rather than
     // interpreting any unexpected result as permission to discard.
-    if (result == IDNO) return true;
+    if (rawrxd::ide::isExplicitDiscard(result)) return true;
     appendToOutput("Unsaved Changes dialog returned an unexpected result; close aborted\n",
                    "Errors", OutputSeverity::Error);
     return false;
