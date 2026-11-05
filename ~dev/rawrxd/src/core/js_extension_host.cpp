@@ -30,6 +30,7 @@
 #include "js_extension_host.hpp"
 #include "extension_entry_policy.hpp"
 #include "extension_manifest_policy.hpp"
+#include "extension_signature_policy.hpp"
 #include "../modules/vscode_extension_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -2821,21 +2822,21 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         WinVerifyTrust(nullptr, &policyGUID, &trustData);
     }
 
-    // ---- If unsigned, check environment variable ----
+    // An unsigned or unverified VSIX must never silently pass strict mode.
+    // Developers can opt in explicitly for locally generated test fixtures.
     if (!result.signatureVerified) {
         char allowUnsigned[16] = {};
         DWORD envLen = GetEnvironmentVariableA("RAWRXD_ALLOW_UNSIGNED_EXTENSIONS",
                                                 allowUnsigned, sizeof(allowUnsigned));
-        if (envLen > 0 && (allowUnsigned[0] == '1' || allowUnsigned[0] == 'Y' ||
-            allowUnsigned[0] == 'y')) {
-            // Allow unsigned extensions
-            OutputDebugStringA("[JSExtensionHost] WARNING: Loading unsigned VSIX "
-                             "(RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1)\n");
-        } else {
-            // In strict mode, reject unsigned VSIX
-            // For now, we allow but warn (many extensions are unsigned)
-            OutputDebugStringA("[JSExtensionHost] NOTICE: VSIX is not signed\n");
+        const bool explicitOptIn = envLen > 0 && envLen < sizeof(allowUnsigned) &&
+            rawrxd::extensions::allowUnsignedVSIX(allowUnsigned);
+        if (!explicitOptIn) {
+            std::strncpy(result.errorDetail,
+                         "Unsigned or unverified VSIX rejected; explicit opt-in required",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
+        OutputDebugStringA("[JSExtensionHost] WARNING: unsigned VSIX explicitly allowed\\n");
     }
 
     // ---- Mark as valid ----
