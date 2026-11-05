@@ -164,8 +164,11 @@ ModelReply parseReply(const std::string& raw) {
             if (brace != std::string::npos && brace > 0) {
                 const std::string candidate = trim(first.substr(0, brace));
                 const std::string jsonPart = trim(first.substr(brace));
-                const size_t close = jsonPart.rfind('}');
-                const bool validJson = close != std::string::npos;
+                // Bare tool calls must contain exactly one object-shaped
+                // argument payload, without trailing text or extra lines.
+                const bool validJson = jsonPart.size() >= 2 &&
+                    jsonPart.front() == '{' && jsonPart.back() == '}' &&
+                    cleaned.find('\\n') == std::string::npos;
                 if (isKnownTool(candidate) && validJson) {
                     r.kind = ModelReply::Kind::ToolCall;
                     r.tool = candidate;
