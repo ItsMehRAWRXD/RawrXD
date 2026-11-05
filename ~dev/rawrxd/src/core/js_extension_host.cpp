@@ -2841,6 +2841,16 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir) {
     if (!zipPath || !destDir) return PatchResult::error("Null parameters");
 
+    // Paths are interpolated into single-quoted PowerShell literals below.
+    // Reject quote injection and truncated commands until this fallback is
+    // replaced by an archive library with argument-free extraction.
+    if (std::strchr(zipPath, '\\'') || std::strchr(destDir, '\\'')) {
+        return PatchResult::error("VSIX extraction path contains unsupported quote");
+    }
+    if (std::strlen(zipPath) + std::strlen(destDir) + 128 >= 2048) {
+        return PatchResult::error("VSIX extraction command exceeds safe length");
+    }
+
     // Create destination directory
     std::filesystem::create_directories(destDir);
 
