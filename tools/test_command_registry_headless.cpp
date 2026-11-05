@@ -88,6 +88,12 @@ int main() {
     r.SetContext("fixture.never.enabled",true);
     bool visible=false;for(const auto& item:r.SearchCommands("ContextHiddenTest"))if(item.id=="fixture.hidden.when")visible=true;
     test("43_palette_condition_visible",visible);
-    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/43\n";
-    return pass==43?0:1;
+    Command snapshot;
+    test("44_snapshot_found",r.TryGetCommand("fixture.binding.owner",snapshot));
+    test("45_snapshot_id",snapshot.id=="fixture.binding.owner");
+    test("46_snapshot_missing",!r.TryGetCommand("fixture.not.registered",snapshot));
+    test("47_snapshot_survives_unload",r.UnregisterCommand("fixture.binding.owner") && snapshot.id=="fixture.binding.owner");
+    test("48_snapshot_copy_handler",static_cast<bool>(snapshot.handler));
+    std::cout<<"CENTRAL_REGISTRY="<<pass<<"/48\n";
+    return pass==48?0:1;
 }
