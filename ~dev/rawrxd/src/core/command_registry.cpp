@@ -1,14 +1,18 @@
 #include "command_registry.h"
+#ifndef RAWRXD_COMMAND_REGISTRY_HEADLESS
 #include "application.h"
 #include <windows.h>
 #include <commdlg.h>
+#endif
 #include <algorithm>
 #include <sstream>
 #include <ctype.h>
 #include <fstream>
 #include <exception>
 
+#if defined(_MSC_VER) && !defined(RAWRXD_COMMAND_REGISTRY_HEADLESS)
 #pragma comment(lib, "comdlg32.lib")
+#endif
 
 namespace RawrXD {
 
@@ -239,6 +243,7 @@ void CommandRegistry::ClearContext(const std::string& key) {
     context_.erase(key);
 }
 
+#ifndef RAWRXD_COMMAND_REGISTRY_HEADLESS
 void CommandRegistry::RegisterBuiltInCommands() {
     // File commands
     RegisterCommand({
@@ -440,6 +445,12 @@ void CommandRegistry::RegisterBuiltInCommands() {
         }
     });
 }
+
+#else
+void CommandRegistry::RegisterBuiltInCommands() {
+    // Headless acceptance intentionally excludes Win32 application commands.
+}
+#endif
 
 bool CommandRegistry::RegisterExtensionCommand(
     const std::string& extensionId, const Command& command) {
