@@ -379,6 +379,12 @@ PatchResult JSExtensionHost::initialize() {
         return PatchResult::error("JSExtensionHost shut down; re-init refused");
     if (m_initialized) return PatchResult::error("Already initialized");
 
+#if !RAWRXD_HAS_QUICKJS
+    // Never advertise a functional VSIX runtime when only compile-time JS
+    // compatibility stubs are linked. Native extension lanes remain separate.
+    return PatchResult::error("QuickJS unavailable: JavaScript extension host disabled");
+#endif
+
     OutputDebugStringA("[JSExtensionHost] Initializing QuickJS runtime...\n");
 
     // ---- Initialize Polyfill Engine ----
