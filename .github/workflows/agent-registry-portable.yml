@@ -123,14 +123,18 @@ jobs:
           for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
           call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
           cl /nologo /std:c++20 /EHsc /W4 /I "~dev\\rawrxd\\src" "tools\\test_agent_registry.cpp" /Fe:rawrxd_registry_test.exe
+          if errorlevel 1 exit /b 1
           rawrxd_registry_test.exe
+          if errorlevel 1 exit /b 1
       - name: Compile and execute production close policy (MSVC)
         shell: cmd
         run: |
           for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
           call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
           cl /nologo /std:c++20 /EHsc /W4 /WX "tools\\test_close_confirmation_model.cpp" /Fe:rawrxd_close_confirmation_test.exe
+          if errorlevel 1 exit /b 1
           rawrxd_close_confirmation_test.exe
+          if errorlevel 1 exit /b 1
       - name: Compile and execute Save All model (MSVC)
         shell: cmd
         run: |
@@ -155,4 +159,6 @@ jobs:
           for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
           call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
           cl /nologo /std:c++20 /EHsc /W4 /I "~dev\src" "~dev\src\rawr_agent_parse_only.cpp" "~dev\tests\rawr_agent_protocol_selftest.cpp" /Fe:rawrxd_agent_protocol_test.exe
+          if errorlevel 1 exit /b 1
           rawrxd_agent_protocol_test.exe
+          if errorlevel 1 exit /b 1
