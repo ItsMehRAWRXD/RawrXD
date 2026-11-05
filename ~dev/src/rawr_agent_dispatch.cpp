@@ -7,6 +7,7 @@
 #include "rawr_agent_dispatch.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -293,6 +294,16 @@ ToolResult toolBuildTarget(const ToolRequest& req, AuditLedger* ledger,
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
 
     const std::string target = jsonField(req.stdin_text, "target");
+    // This value is inserted into a shell command. Permit only CMake target
+    // identifiers; reject whitespace, shell metacharacters and path separators.
+    if (!target.empty() &&
+        !std::all_of(target.begin(), target.end(), [](unsigned char c) {
+            return std::isalnum(c) || c == '_' || c == '-' || c == '.';
+        })) {
+        r.exit_code = 64;
+        r.stderr_text = "invalid CMake target identifier";
+        return r;
+    }
     const std::string buildDir =
         (ledger->workspaceRoot() / "build_p2").string();
 
