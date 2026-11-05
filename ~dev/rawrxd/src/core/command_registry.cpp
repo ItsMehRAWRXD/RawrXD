@@ -372,12 +372,9 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            auto* tasks = Application::Instance().GetTaskRunner();
-            if (tasks) {
-                tasks->RunBuildTask();
-            } else {
-                ctx.errorMessage = "Build task runner is unavailable";
-            }
+            // TaskRunner is only forward-declared in application.h. This
+            // registry has no verified task-execution adapter yet.
+            ctx.errorMessage = "Not implemented: Build task integration";
         }
     });
     
