@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp"
 
 def body_of(source: str, name: str) -> str:
-    pattern = rf"\b(?:PatchResult|bool)\s+JSExtensionHost::{re.escape(name)}\s*\([^)]*\)\s*(?:const\s*)?\{{"
+    pattern = rf"\b(?:PatchResult|bool|JSExtensionHost::VSIXVerificationResult)\s+JSExtensionHost::{re.escape(name)}\s*\([^)]*\)\s*(?:const\s*)?\{{"
     match = re.search(pattern, source)
     if match is None:
         raise AssertionError(f"Missing method: {name}")
