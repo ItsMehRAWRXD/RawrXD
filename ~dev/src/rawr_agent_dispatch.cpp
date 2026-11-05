@@ -478,8 +478,14 @@ ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
 ToolResult toolAuditCandidates(const ToolRequest& req, AuditLedger* ledger) {
     ToolResult r;
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
-    const uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 16);
+    const uint32_t limit = std::min<uint32_t>(
+        jsonFieldU32(req.stdin_text, "limit", 16), 100);
     const uint32_t offset = jsonFieldU32(req.stdin_text, "offset", 0);
+    if (offset > UINT32_MAX - limit) {
+        r.exit_code = 64;
+        r.stderr_text = "candidate page offset overflow";
+        return r;
+    }
     const auto pend = ledger->pendingCandidates(limit + offset);
     std::ostringstream out;
     uint32_t emitted = 0;
