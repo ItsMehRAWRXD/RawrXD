@@ -41,10 +41,11 @@ public:
     
     bool ExecuteCommand(const std::string& command, const std::string& args) {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (!initialized_) {
-            return false;
-        }
-        return true;
+        // No command dispatch is implemented in this bridge. Reporting
+        // success here falsely certifies arbitrary unknown commands.
+        (void)command;
+        (void)args;
+        return false;
     }
     
     std::vector<std::string> GetAvailableCommands() const {
