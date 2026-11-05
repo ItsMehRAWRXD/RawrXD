@@ -71,6 +71,9 @@ public:
     std::vector<Command> GetAllCommands() const;
     std::vector<CommandPaletteItem> SearchCommands(const std::string& query) const;
     const Command* GetCommand(const std::string& commandId) const;
+    // Thread-safe snapshot; unlike GetCommand(), the returned copy remains
+    // valid after the registry lock is released or the command is unloaded.
+    bool TryGetCommand(const std::string& commandId, Command& out) const;
     
     // Keybindings
     void RegisterKeybinding(const std::string& keybinding, const std::string& commandId);
