@@ -17,10 +17,10 @@ int main() {
     };
     bridge.Shutdown();
     test("01_bridge_init",bridge.Initialize());
-    int diskFixtureWrites=0;
+    int callbackCount=0;
     std::string lastPayload;
     test("02_bridge_register",bridge.RegisterCommand("fixture.edit",[&](const std::string& payload){
-        ++diskFixtureWrites;lastPayload=payload;return payload=="replace:before:after";
+        ++callbackCount;lastPayload=payload;return payload=="replace:before:after";
     }));
     Command command;
     command.id="fixture.edit";command.title="Fixture Edit";command.category="Extension";
@@ -35,7 +35,7 @@ int main() {
     test("05_shortcut_route",registry.GetCommandForKeybinding("Ctrl+Alt+F")=="fixture.edit");
     CommandContext ctx;ctx.arguments={"replace:before:after"};
     test("06_dispatch_success",registry.ExecuteCommand("fixture.edit",ctx));
-    test("07_callback_payload",diskFixtureWrites==1&&lastPayload=="replace:before:after");
+    test("07_callback_payload",callbackCount==1&&lastPayload=="replace:before:after");
     CommandContext rejected;rejected.arguments={"bad"};
     test("08_callback_rejection",!registry.ExecuteCommand("fixture.edit",rejected));
     test("09_error_propagated",!rejected.errorMessage.empty());
