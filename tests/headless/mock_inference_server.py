@@ -74,7 +74,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, {"id": "fixture-1", "object": "chat.completion",
                 "model": MODEL, "choices": [{"index": 0, "message":
                 {"role": "assistant", "content": "".join(TOKENS)}, "finish_reason": "stop"}]})
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, UnicodeError):
             self.send_json(400, {"error": {"message": "invalid JSON"}})
         except (BrokenPipeError, ConnectionResetError):
             pass  # Client cancellation is expected, not a server failure.
