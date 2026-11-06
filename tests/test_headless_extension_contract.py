@@ -210,6 +210,16 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("if (outCount) *outCount = 0;"),
                         body.find("if (!outCount || (!outStates && maxStates != 0)) return;"))
 
+    def test_vsix_verifier_rejects_directories_and_invalid_utf8_paths(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "verifyVSIX")
+        self.assertIn("attrs & FILE_ATTRIBUTE_DIRECTORY", body)
+        self.assertIn("VSIX path refers to a directory", body)
+        self.assertIn("MB_ERR_INVALID_CHARS", body)
+        self.assertIn("if (pathChars == 0)", body)
+        self.assertLess(body.find("if (pathChars == 0)"),
+                        body.find("WINTRUST_FILE_INFO fileInfo"))
+
     def test_vsix_verifier_fails_closed_on_unsigned_and_io_errors(self):
         source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
         body = body_of(source, "verifyVSIX")
