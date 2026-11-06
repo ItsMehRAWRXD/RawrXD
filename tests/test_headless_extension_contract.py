@@ -210,6 +210,17 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("if (outCount) *outCount = 0;"),
                         body.find("if (!outCount || (!outStates && maxStates != 0)) return;"))
 
+    def test_vsix_verifier_fails_closed_on_unsigned_and_io_errors(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "verifyVSIX")
+        self.assertIn("const BOOL gotFileSize = GetFileSizeEx(", body)
+        self.assertIn("if (!gotFileSize)", body)
+        self.assertIn("Cannot reopen VSIX for signature check", body)
+        self.assertIn("if (!readOk)", body)
+        self.assertIn("Unsigned VSIX rejected", body)
+        self.assertLess(body.find("Unsigned VSIX rejected"),
+                        body.find("result.isValid = true;"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
