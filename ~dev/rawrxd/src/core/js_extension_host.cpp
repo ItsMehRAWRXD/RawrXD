@@ -319,7 +319,9 @@ std::string readFileToString(const char* path) {
                         &bytesRead, nullptr);
     CloseHandle(hFile);
 
-    if (!ok || bytesRead != content.size()) content.resize(bytesRead);
+    // Reject incomplete reads: a truncated package.json or script must not be
+    // interpreted as a successfully loaded extension input.
+    if (!ok || bytesRead != content.size()) return "";
     return content;
 }
 
