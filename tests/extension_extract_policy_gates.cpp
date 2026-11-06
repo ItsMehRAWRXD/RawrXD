@@ -36,6 +36,16 @@ int main() {
     } else {
         gate("directory_symlink_rejected", !safeExtractionDestination(link));
     }
+    // A dangling symlink must not be treated as a missing extraction target.
+    const auto dangling = base / "dangling";
+    std::error_code danglingEc;
+    fs::create_directory_symlink(base / "not-present", dangling, danglingEc);
+    if (danglingEc) {
+        ++skipped;
+        std::cout << "SKIP dangling_symlink_rejected: " << danglingEc.message() << '\\n';
+    } else {
+        gate("dangling_symlink_rejected", !safeExtractionDestination(dangling));
+    }
     fs::remove_all(base, ec);
     std::cout << "SUMMARY " << passed << " PASS; " << failed << " FAIL; " << skipped << " SKIP\n";
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
