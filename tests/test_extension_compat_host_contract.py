@@ -15,9 +15,19 @@ class ExtensionCompatHostContractTests(unittest.TestCase):
         cls.source = SOURCE.read_text(encoding="utf-8")
 
     def method(self, signature):
-        match = re.search(re.escape(signature) + r"\s*\{([^{}]*)\}", self.source, re.S)
+        match = re.search(re.escape(signature) + r"\s*\{", self.source, re.S)
         self.assertIsNotNone(match, signature)
-        return match.group(1)
+        # Walk nested C++ blocks; a non-greedy regex truncates at the first if-body.
+        start = match.end()
+        depth = 1
+        for index in range(start, len(self.source)):
+            if self.source[index] == "{":
+                depth += 1
+            elif self.source[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    return self.source[start:index]
+        self.fail(f"Unclosed method body: {signature}")
 
     def test_unknown_commands_never_succeed(self):
         body = self.method("bool ExecuteCommand(const std::string& command, const std::string& args)")
