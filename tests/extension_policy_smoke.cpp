@@ -105,6 +105,29 @@ int main() {
         check(readExactly(nullptr, 0,
               [](char*, std::size_t) { return std::size_t{0}; }), true, "zero-length read");
     }
+    // Exercise production writeExactly with short writes and failure cases.
+    {
+        const std::string bytes = "hello";
+        std::string sink;
+        check(writeExactly(bytes.data(), bytes.size(),
+              [&](const char* src, std::size_t remaining) {
+                  const auto n = std::min<std::size_t>(2, remaining);
+                  sink.append(src, n);
+                  return n;
+              }) && sink == bytes, true, "short writes assembled");
+        check(writeExactly(bytes.data(), bytes.size(),
+              [](const char*, std::size_t) { return std::size_t{0}; }),
+              false, "zero-progress write rejected");
+        check(writeExactly(bytes.data(), bytes.size(),
+              [](const char*, std::size_t n) { return n + 1; }),
+              false, "oversized writer result rejected");
+        check(writeExactly(nullptr, 1,
+              [](const char*, std::size_t) { return std::size_t{1}; }),
+              false, "null write source rejected");
+        check(writeExactly(nullptr, 0,
+              [](const char*, std::size_t) { return std::size_t{0}; }),
+              true, "zero-length write");
+    }
     std::cout << "EXTENSION_POLICY_GATE assertions=" << assertions
               << " failures=" << failures << (failures ? " FAIL" : " PASS") << "\n";
     return failures ? 1 : 0;
