@@ -1,6 +1,8 @@
 // Production command bridge for Win32IDE extensions.
 // This registry is an explicit local command surface, not a VS Code/QuickJS host.
 // Only registered callbacks execute; arbitrary command names fail closed.
+#include <algorithm>
+#include <cctype>
 #include <functional>
 #include <map>
 #include <mutex>
@@ -46,6 +48,7 @@ public:
                                   const std::string& command,
                                   CommandHandler handler) {
         if (extensionId.empty() || command.empty() || !handler) return false;
+        if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
         commands_.emplace(command, std::move(handler));
