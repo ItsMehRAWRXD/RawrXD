@@ -39,6 +39,15 @@ int main(){
  CHECK("28 shutdown clears owners", (h.Shutdown(), h.Initialize(), h.RegisterExtensionCommand("two", "two.cmd", [](auto const&){return true;})));
  CHECK("29 enumeration sorted", h.RegisterCommand("alpha", [](auto const&){return true;}) && h.GetAvailableCommands().front()=="alpha");
  CHECK("30 final shutdown", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty()));
+ CHECK("31 reject newline command", !h.RegisterCommand("bad\\ncmd", [](auto const&){return true;}));
+ CHECK("32 reject NUL command", !h.RegisterCommand(std::string("bad\\0cmd",7), [](auto const&){return true;}));
+ CHECK("33 reject oversized command", !h.RegisterCommand(std::string(257, 'x'), [](auto const&){return true;}));
+ CHECK("34 accept 256-character command", h.RegisterCommand(std::string(256, 'x'), [](auto const&){return true;}));
+ CHECK("35 reject extension control character", !h.RegisterExtensionCommand("ext", "bad\\tcmd", [](auto const&){return true;}));
+ CHECK("36 reject extension oversized command", !h.RegisterExtensionCommand("ext", std::string(257, 'x'), [](auto const&){return true;}));
+ CHECK("37 reject DEL command", !h.RegisterCommand(std::string("bad")+char(127), [](auto const&){return true;}));
+ CHECK("38 preserve UTF8 command bytes", h.RegisterCommand("ext.\\xC3\\xA9", [](auto const&){return true;}) && h.ExecuteCommand("ext.\\xC3\\xA9", ""));
+ CHECK("39 cleanup after validation tests", (h.Shutdown(), h.GetAvailableCommands().empty()));
  std::cout << "RESULT " << passed << " passed " << failed << " failed\n";
  return failed ? 1 : 0;
 }
