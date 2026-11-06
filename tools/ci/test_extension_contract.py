@@ -40,6 +40,35 @@ class ExtensionContract(unittest.TestCase):
             body = src[start:src.find("\n    }", start) + 6]
             self.assertIn("return false;", body, f"{name} cannot claim success without runtime")
 
+    def test_extension_loader_rejects_invalid_entry_before_registration(self):
+        """Source guard only: fail-closed loader checks must remain wired."""
+        src = self.source("js_extension_host.cpp")
+        start = src.index("PatchResult JSExtensionHost::loadExtensionFromDir(")
+        end = src.index("PatchResult JSExtensionHost::activateExtension(", start)
+        loader = src[start:end]
+        for check in (
+            'if (mainEntry.empty()) mainEntry = "extension.js";',
+            "validRelativeMain(mainEntry)",
+            "entryWithinRoot(",
+            "mainSize == 0 || mainSize > 10 * 1024 * 1024",
+            'if (mainSource.empty())',
+        ):
+            self.assertIn(check, loader)
+        self.assertLess(loader.index('if (mainSource.empty())'),
+                        loader.index('m_extensions.emplace('))
+
+    def test_activation_failure_invalidates_native_callbacks(self):
+        """Source guard only: never free a context with live command callbacks."""
+        src = self.source("js_extension_host.cpp")
+        start = src.index("PatchResult JSExtensionHost::activateExtension(")
+        end = src.index("PatchResult JSExtensionHost::deactivateExtension(", start)
+        activation = src[start:end]
+        failure = activation[activation.index("if (JS_IsException(result))"):]
+        self.assertLess(failure.index("binding.ctx = nullptr;"),
+                        failure.index("JS_FreeContext(extCtx);"))
+        self.assertLess(failure.index("JS_FreeContext(extCtx);"),
+                        failure.index("state->jsContext = nullptr;"))
+
     def test_agent_bridge_modes_are_instance_scoped(self):
         """Guard against cross-IDE mode leakage from function static toggles."""
         header = ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.h"
