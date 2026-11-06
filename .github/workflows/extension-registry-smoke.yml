@@ -5,6 +5,7 @@ on:
     paths:
       - 'tests/extension_command_registry_smoke.cpp'
       - 'tests/run_extension_registry_local.py'
+      - 'tests/test_extension_smoke_validator.py'
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - '.github/workflows/extension-registry-smoke.yml'
   pull_request:
@@ -25,6 +26,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Test fail-closed acceptance validator
+        shell: bash
+        run: python -m unittest discover -s tests -p test_extension_smoke_validator.py -v
       - name: Compile and run on Linux (no model required)
         if: runner.os == 'Linux'
         shell: bash
