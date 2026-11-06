@@ -2254,12 +2254,15 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::error_code mainSizeError;
     const auto mainSize = std::filesystem::file_size(mainPath, mainSizeError);
     if (mainSizeError || mainSize == 0 || mainSize > 10 * 1024 * 1024) {
-        return PatchResult::error("Extension main entry exceeds 16 MiB or is unreadable");
+        return PatchResult::error("Extension main entry empty, exceeds 10 MiB, or is unreadable");
     }
 
     // ---- Pre-analyze requires ----
     std::string mainSource = readFileToString(mainPath.c_str());
-    if (!mainSource.empty()) {
+    if (mainSource.empty()) {
+        return PatchResult::error("Failed to read extension main entry");
+    }
+    {
         auto requiredModules = PolyfillEngine::instance().analyzeRequires(
             mainSource.c_str(), mainSource.size());
         state->requiredPolyfills = requiredModules;
