@@ -7481,6 +7481,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             target_link_libraries(RawrXD-InferenceEngine PRIVATE quickjs_static)
             target_include_directories(RawrXD-InferenceEngine PRIVATE ${QUICKJS_DIR}/..)
         endif()
+        # Fail closed if the host source cannot see the real QuickJS header.
+        # RAWR_HAS_QUICKJS alone does not prevent its compile-only shim.
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_REQUIRE_QUICKJS=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=1)
         if(TARGET RawrEngine)
             target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_QUICKJS=1)
