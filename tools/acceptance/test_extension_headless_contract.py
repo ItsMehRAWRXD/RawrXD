@@ -25,6 +25,7 @@ class HeadlessContractTests(unittest.TestCase):
         self.header.write_text("\n".join("PatchResult " + name + "();" for name in METHODS), encoding="utf-8")
         functions = [
             "JSExtensionHost::JSExtensionHost() : m_jsRuntime(nullptr), m_jsContext(nullptr), m_queueEvent(nullptr), m_nextTimerId(0), m_initialized(false), m_shutdownCompleted(false), m_hostThread(nullptr), m_running(false), m_stats{} {}",
+            "JSExtensionHost::~JSExtensionHost() = default;",
         ]
         for name in METHODS:
             body = 'return PatchResult::error("unsupported");'
