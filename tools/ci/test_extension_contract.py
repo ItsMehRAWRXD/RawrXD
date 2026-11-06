@@ -69,6 +69,22 @@ class ExtensionContract(unittest.TestCase):
         self.assertLess(failure.index("JS_FreeContext(extCtx);"),
                         failure.index("state->jsContext = nullptr;"))
 
+    def test_activation_microtask_failure_is_fail_closed(self):
+        """Source contract: failed QuickJS jobs must not count as activation."""
+        src = self.source("js_extension_host.cpp")
+        start = src.index("PatchResult JSExtensionHost::activateExtension(")
+        end = src.index("PatchResult JSExtensionHost::deactivateExtension(", start)
+        activation = src[start:end]
+        self.assertIn("jobResult < 0", activation)
+        self.assertIn('PatchResult::error("Extension activation microtask failed")', activation)
+        failure = activation[activation.index("if (jobResult < 0)"):]
+        self.assertLess(failure.index("binding.ctx = nullptr;"),
+                        failure.index("JS_FreeContext(extCtx);"))
+        self.assertLess(failure.index("JS_FreeContext(extCtx);"),
+                        failure.index('return PatchResult::error("Extension activation microtask failed")'))
+        self.assertLess(failure.index('return PatchResult::error("Extension activation microtask failed")'),
+                        failure.index("state->activated = true;"))
+
     def test_agent_bridge_modes_are_instance_scoped(self):
         """Guard against cross-IDE mode leakage from function static toggles."""
         header = ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.h"
