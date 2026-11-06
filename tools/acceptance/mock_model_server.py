@@ -62,7 +62,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Connection", "close")
             self.end_headers()
-            for delta, finish in [({"content": "MOCK_RESPONSE_OK"}, None), ({}, "stop")]:
+            for delta, finish in [({"role": "assistant"}, None), ({"content": "MOCK_RESPONSE_OK"}, None), ({}, "stop")]:
                 event = {"id": "mock-1", "object": "chat.completion.chunk", "model": MODEL,
                          "choices": [{"index": 0, "delta": delta, "finish_reason": finish}]}
                 self.wfile.write(b"data: " + json.dumps(event).encode() + b"\n\n")
