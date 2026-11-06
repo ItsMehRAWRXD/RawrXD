@@ -45,6 +45,11 @@ int main() {
     check(entryWithinRoot(base / "extension", base / "extension" / "main.js"), "entry inside root accepted");
     check(!entryWithinRoot(base / "extension", base / "outside" / "main.js"), "entry outside root rejected");
     check(!entryWithinRoot(base / "extension", base / "extension"), "root itself rejected");
+    check(!entryWithinRoot({}, base / "extension" / "main.js"), "empty root rejected");
+    check(!entryWithinRoot(base / "extension", {}), "empty entry rejected");
+    fs::create_directories(base / "extension-sibling", ec);
+    if (ec) { std::cerr << "BLOCKED: cannot create sibling fixture\\n"; return 2; }
+    check(!entryWithinRoot(base / "extension", base / "extension-sibling" / "main.js"), "sibling prefix rejected");
     fs::create_directory_symlink(base / "outside", base / "extension" / "link", ec);
     if (!ec) check(!entryWithinRoot(base / "extension", base / "extension" / "link" / "main.js"), "symlink escape rejected");
     else std::cout << "SKIP symlink fixture unavailable\n";
