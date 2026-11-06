@@ -53,17 +53,18 @@ public:
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
         // Insert ownership first: if allocation fails, no executable orphan
         // command can escape extension unload cleanup.
-        auto owner = owners_.emplace(command, extensionId);
-        if (!owner.second) return false;
         try {
+            auto owner = owners_.emplace(command, extensionId);
+            if (!owner.second) return false;
             auto inserted = commands_.emplace(command, std::move(handler));
             if (!inserted.second) {
                 owners_.erase(owner.first);
                 return false;
             }
         } catch (...) {
+            // If ownership was inserted, erase it. If insertion itself failed,
+            // there is no owner record to remove.
             owners_.erase(command);
-            // Registry failures must not escape into extension activation.
             return false;
         }
         return true;
