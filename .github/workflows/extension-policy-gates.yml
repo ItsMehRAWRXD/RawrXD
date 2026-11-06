@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
       - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
@@ -10,6 +11,7 @@ on:
   pull_request:
     paths:
       - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
       - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
@@ -26,6 +28,11 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -pedantic -I~dev/rawrxd/src/core tests/extension_policy_gates.cpp -o build/policy/extension_policy_gates
       - name: Run policy gates
         run: ./build/policy/extension_policy_gates
+      - name: CMake configure and CTest
+        run: |
+          cmake -S tests/extension_policy -B build/extension-policy
+          cmake --build build/extension-policy
+          ctest --test-dir build/extension-policy --output-on-failure
   windows:
     runs-on: windows-latest
     steps:
@@ -39,3 +46,9 @@ jobs:
       - name: Run policy gates
         shell: cmd
         run: build\policy\extension_policy_gates.exe
+      - name: CMake configure and CTest
+        shell: pwsh
+        run: |
+          cmake -S tests/extension_policy -B build/extension-policy
+          cmake --build build/extension-policy --config Release
+          ctest --test-dir build/extension-policy -C Release --output-on-failure
