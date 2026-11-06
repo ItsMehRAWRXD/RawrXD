@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -14,6 +15,17 @@
 
 namespace RawrXD { namespace OfflineExtensions {
 namespace fs = std::filesystem;
+
+// Single default root shared by GUI and CLI. Explicit --root overrides this.
+inline fs::path defaultRoot() {
+    const char* local = std::getenv("LOCALAPPDATA");
+    if (local && *local) return fs::path(local) / "RawrXD" / "extensions";
+    const char* xdg = std::getenv("XDG_DATA_HOME");
+    if (xdg && *xdg) return fs::path(xdg) / "RawrXD" / "extensions";
+    const char* home = std::getenv("HOME");
+    if (home && *home) return fs::path(home) / ".local" / "share" / "RawrXD" / "extensions";
+    return fs::current_path() / "extensions";
+}
 
 struct Extension {
     std::string id, name, version, description, publisher;
