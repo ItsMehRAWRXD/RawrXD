@@ -7,6 +7,8 @@ namespace rawrxd::extensions {
 inline bool entryWithinRoot(const std::filesystem::path& root,
                             const std::filesystem::path& entry) {
     if (root.empty() || entry.empty()) return false;
+    // Never resolve caller-supplied relative paths against the process CWD.
+    if (!root.is_absolute() || !entry.is_absolute()) return false;
     std::error_code ec;
     const auto base = std::filesystem::weakly_canonical(root, ec);
     if (ec || base.empty()) return false;
