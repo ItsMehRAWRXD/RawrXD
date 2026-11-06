@@ -1,58 +1,68 @@
 // Headless acceptance gates for the REAL production command registry.
 // This includes the production translation unit, not a reimplemented mock.
 // The bridge has no platform-specific dependencies; run with MSVC or g++.
-#include <cassert>
+#include <cstdlib>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include "../../~dev/rawrxd/src/core/extension_host_production.cpp"
+
+// CHECK always evaluates the expression, including Release/NDEBUG builds.
+#define CHECK(expr) do { \
+    if (!(expr)) { \
+        std::cerr << "FAIL " << __FILE__ << ":" << __LINE__ << " " << #expr << "\\n"; \
+        return EXIT_FAILURE; \
+    } \
+} while (false)
 
 int main() {
     using RawrXD::Extensions::ExtensionHost;
     auto& host = ExtensionHost::GetInstance();
 
     host.Shutdown();
-    assert(!host.IsInitialized());
-    assert(!host.RegisterCommand("before-init", [](const auto&) { return true; }));
+    CHECK(!host.IsInitialized());
+    CHECK(!host.RegisterCommand("before-init", [](const auto&) { return true; }));
 
-    assert(host.Initialize());
-    assert(!host.RegisterCommand("", [](const auto&) { return true; }));
-    assert(!host.RegisterExtensionCommand("", "x", [](const auto&) { return true; }));
-    assert(!host.RegisterExtensionCommand("extension", "", [](const auto&) { return true; }));
-    assert(host.RegisterExtensionCommand("extension-a", "echo",
+    CHECK(host.Initialize());
+    CHECK(!host.RegisterCommand("", [](const auto&) { return true; }));
+    CHECK(!host.RegisterExtensionCommand("", "x", [](const auto&) { return true; }));
+    CHECK(!host.RegisterExtensionCommand("extension", "", [](const auto&) { return true; }));
+    CHECK(host.RegisterExtensionCommand("extension-a", "echo",
         [](const std::string& arg) { return arg == "expected"; }));
-    assert(!host.RegisterExtensionCommand("extension-b", "echo",
+    CHECK(!host.RegisterExtensionCommand("extension-b", "echo",
         [](const auto&) { return true; }));
-    assert(host.ExecuteCommand("echo", "expected"));
-    assert(!host.ExecuteCommand("echo", "wrong"));
+    CHECK(host.ExecuteCommand("echo", "expected"));
+    CHECK(!host.ExecuteCommand("echo", "wrong"));
 
     // Reentrant dispatch detects callbacks executed while the registry mutex is held.
-    assert(host.RegisterExtensionCommand("extension-a", "nested",
+    CHECK(host.RegisterExtensionCommand("extension-a", "nested",
         [&](const auto&) { return host.ExecuteCommand("echo", "expected"); }));
-    assert(host.ExecuteCommand("nested", ""));
+    CHECK(host.ExecuteCommand("nested", ""));
 
-    assert(host.RegisterCommand("throws",
+    CHECK(host.RegisterCommand("throws",
         [](const auto&) -> bool { throw std::runtime_error("callback failed"); }));
-    assert(!host.ExecuteCommand("throws", ""));
-    assert(!host.ExecuteCommand("unknown", ""));
-    assert(host.GetAvailableCommands().size() == 3);
+    CHECK(!host.ExecuteCommand("throws", ""));
+    CHECK(!host.ExecuteCommand("unknown", ""));
+    CHECK(host.GetAvailableCommands().size() == 3);
 
     host.UnregisterExtensionCommands("extension-b");
-    assert(host.ExecuteCommand("echo", "expected"));
+    CHECK(host.ExecuteCommand("echo", "expected"));
     host.UnregisterExtensionCommands("extension-a");
-    assert(!host.ExecuteCommand("echo", "expected"));
-    assert(!host.ExecuteCommand("nested", ""));
-    assert(host.GetAvailableCommands().size() == 1);
+    CHECK(!host.ExecuteCommand("echo", "expected"));
+    CHECK(!host.ExecuteCommand("nested", ""));
+    CHECK(host.GetAvailableCommands().size() == 1);
 
-    assert(host.UnregisterCommand("throws"));
-    assert(!host.UnregisterCommand("throws"));
-    assert(host.GetAvailableCommands().empty());
+    CHECK(host.UnregisterCommand("throws"));
+    CHECK(!host.UnregisterCommand("throws"));
+    CHECK(host.GetAvailableCommands().empty());
 
     host.Shutdown();
-    assert(!host.IsInitialized());
-    assert(!host.ExecuteCommand("unknown", ""));
-    assert(host.GetAvailableCommands().empty());
-    assert(host.Initialize());
-    assert(host.GetAvailableCommands().empty());
+    CHECK(!host.IsInitialized());
+    CHECK(!host.ExecuteCommand("unknown", ""));
+    CHECK(host.GetAvailableCommands().empty());
+    CHECK(host.Initialize());
+    CHECK(host.GetAvailableCommands().empty());
     host.Shutdown();
-    return 0;
+    std::cout << "PASS: production extension command registry contract\\n";
+    return EXIT_SUCCESS;
 }
