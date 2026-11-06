@@ -35,8 +35,13 @@ public:
         owners_.clear();
     }
 
+    static bool ValidIdentifier(const std::string& value) {
+        return !value.empty() && !std::any_of(value.begin(), value.end(),
+            [](unsigned char c) { return std::isspace(c) != 0 || c < 0x20 || c == 0x7f; });
+    }
+
     bool RegisterCommand(const std::string& command, CommandHandler handler) {
-        if (command.empty() || !handler) return false;
+        if (!ValidIdentifier(command) || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_) return false;
         return commands_.emplace(command, std::move(handler)).second;
@@ -47,8 +52,7 @@ public:
     bool RegisterExtensionCommand(const std::string& extensionId,
                                   const std::string& command,
                                   CommandHandler handler) {
-        if (extensionId.empty() || command.empty() || !handler) return false;
-        if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
+        if (!ValidIdentifier(extensionId) || !ValidIdentifier(command) || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
         // Insert ownership first: if allocation fails, no executable orphan
