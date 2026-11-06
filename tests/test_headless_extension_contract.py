@@ -191,6 +191,15 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("if (!deactivation.success) return deactivation"),
                         body.find("m_extensions.erase(it)"))
 
+    def test_manifest_parser_rejects_invalid_ids(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "parseManifest")
+        self.assertIn("validManifestIdPart(outManifest->name)", body)
+        self.assertIn("Invalid extension manifest name or publisher", body)
+        self.assertIn("outManifest->publisher.empty()", body)
+        self.assertLess(body.find("Invalid extension manifest name or publisher"),
+                        body.find("Manifest parsed"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
