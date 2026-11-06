@@ -1,7 +1,10 @@
 // Headless acceptance gates for the REAL production command registry.
 // This includes the production translation unit, not a reimplemented mock.
 // The bridge has no platform-specific dependencies; run with MSVC or g++.
+#include <atomic>
+#include <chrono>
 #include <cstdlib>
+#include <thread>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -74,6 +77,32 @@ int main() {
     CHECK(host.ExecuteCommand("newly-registered", ""));
     CHECK(host.UnregisterCommand("register-during-callback"));
     CHECK(host.UnregisterCommand("newly-registered"));
+
+    // Unload while a callback is already running: it must finish safely,
+    // but no new dispatch may start after unregister returns.
+    std::atomic<bool> entered{false};
+    std::atomic<bool> release{false};
+    std::atomic<int> completed{0};
+    CHECK(host.RegisterExtensionCommand("extension-concurrent", "slow",
+        [&](const auto&) {
+            entered.store(true);
+            while (!release.load()) std::this_thread::yield();
+            ++completed;
+            return true;
+        }));
+    std::thread worker([&] { host.ExecuteCommand("slow", ""); });
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    while (!entered.load() && std::chrono::steady_clock::now() < deadline)
+        std::this_thread::yield();
+    // Always release/join before reporting failure.
+    const bool started = entered.load();
+    host.UnregisterExtensionCommands("extension-concurrent");
+    const bool denied = !host.ExecuteCommand("slow", "");
+    release.store(true);
+    worker.join();
+    CHECK(started);
+    CHECK(denied);
+    CHECK(completed.load() == 1);
 
     CHECK(host.UnregisterCommand("throws"));
     CHECK(!host.UnregisterCommand("throws"));
