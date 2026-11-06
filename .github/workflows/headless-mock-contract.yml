@@ -1,0 +1,89 @@
+name: Headless Mock Inference Contract
+
+on:
+  push:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-mock-contract.yml'
+  pull_request:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-mock-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mock-contract:
+    name: Python mock inference contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Show checkout and runtime diagnostics
+        shell: bash
+        run: |
+          pwd
+          python --version
+          ls -la tests/headless
+          test -f '~dev/rawrxd/src/core/extension_host_production.cpp'
+          g++ --version
+      - name: Compile test fixtures
+        run: python -m compileall -q tests/headless
+      - name: Run inference transport acceptance tests
+        run: python -m unittest discover -s tests/headless -p 'test_mock_inference_server.py' -v
+      - name: Compile and run production extension manifest policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_manifest_contract.cpp -o /tmp/extension_manifest_contract
+          /tmp/extension_manifest_contract
+      - name: Compile and run extension entry containment policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_entry_contract.cpp -o /tmp/extension_entry_contract
+          /tmp/extension_entry_contract
+      - name: Compile and run VSIX signature policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_signature_contract.cpp -o /tmp/extension_signature_contract
+          /tmp/extension_signature_contract
+      - name: Compile production extension registry contract
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
+      - name: Run production extension registry contract
+        run: timeout 15s /tmp/extension_command_contract
+  windows-extension-contract:
+    name: Windows MSVC extension registry contract
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Show checkout and MSVC diagnostics
+        shell: pwsh
+        run: |
+          Get-Location
+          Test-Path 'tests/headless/extension_command_contract.cpp'
+          Test-Path '~dev/rawrxd/src/core/extension_host_production.cpp'
+          Get-Command cl.exe
+      - name: Compile and run with MSVC
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_command_contract.cpp /Fe:extension_command_contract.exe
+          if errorlevel 1 exit /b 1
+          extension_command_contract.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and run VSIX signature policy on MSVC
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_signature_contract.cpp /Fe:extension_signature_contract.exe
+          if errorlevel 1 exit /b 1
+          extension_signature_contract.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and run manifest policy on MSVC
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_manifest_contract.cpp /Fe:extension_manifest_contract.exe
+          if errorlevel 1 exit /b 1
+          extension_manifest_contract.exe
+          if errorlevel 1 exit /b 1
