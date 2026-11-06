@@ -23,6 +23,9 @@ int main() {
     require(!validIdentifier("with space"), "identifier whitespace");
     require(!validIdentifier(std::string(129, 'a')), "identifier length");
     require(validVersion("1.2.3"), "version valid");
+    require(validVersion("0.0.0"), "zero version valid");
+    require(!validVersion("1.2.3."), "version trailing dot");
+    require(!validVersion("1.2.-3"), "version negative segment");
     require(!validVersion("1.2"), "version short");
     require(!validVersion("1.2.3.4"), "version long");
     require(!validVersion("1..3"), "version empty segment");
