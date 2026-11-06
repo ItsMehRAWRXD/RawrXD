@@ -159,5 +159,18 @@ class ExtensionLifecycleSimulationTests(unittest.TestCase):
         with self.assertRaises(ExtensionError):
             self.host.install_vsix(archive)
 
+    def test_26_single_backslash_traversal_rejected(self):
+        archive = self._vsix({chr(46)+chr(46)+chr(92)+"evil.txt": "x", "extension/package.json": json.dumps(MANIFEST)})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_27_backslash_manifest_supported(self):
+        archive = self._vsix({"extension"+chr(92)+"package.json": json.dumps(MANIFEST)})
+        self.assertEqual(self.host.install_vsix(archive), "test.sample")
+
+    def test_28_case_variant_manifest_supported(self):
+        archive = self._vsix({"Extension/Package.json": json.dumps(MANIFEST)})
+        self.assertEqual(self.host.install_vsix(archive), "test.sample")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
