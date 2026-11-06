@@ -60,7 +60,7 @@ int main() {
     check(!validRelativeMain("out\\\\/main.js"), "mixed consecutive separators rejected");
     check(!validRelativeMain("out/CON.txt"), "nested Windows device rejected");
     check(!validRelativeMain("out/LPT1"), "nested printer device rejected");
-    check(validRelativeMain("out\\\\main.js"), "ordinary Windows relative path accepted");
+    check(validRelativeMain("out\\main.js"), "ordinary Windows relative path accepted");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
