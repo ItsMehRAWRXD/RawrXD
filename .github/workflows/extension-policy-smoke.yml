@@ -12,6 +12,8 @@ on:
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
+      - 'src/win32app/Win32IDE_AgenticBridge.cpp'
+      - 'src/win32app/Win32IDE_AgenticBridge.h'
       - '~dev/rawrxd/src/core/js_extension_host*.cpp'
       - '.github/workflows/extension-policy-smoke.yml'
   pull_request:
@@ -24,6 +26,8 @@ on:
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
+      - 'src/win32app/Win32IDE_AgenticBridge.cpp'
+      - 'src/win32app/Win32IDE_AgenticBridge.h'
       - '~dev/rawrxd/src/core/js_extension_host*.cpp'
       - '.github/workflows/extension-policy-smoke.yml'
   workflow_dispatch:
