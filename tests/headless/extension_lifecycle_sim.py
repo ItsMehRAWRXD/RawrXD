@@ -6,7 +6,7 @@ A PASS here certifies only the simulator contract, never Win32IDE/QuickJS.
 """
 from dataclasses import dataclass
 import json
-from pathlib import Path
+from pathlib import PurePosixPath
 import re
 import zipfile
 
@@ -42,17 +42,41 @@ class SimulatedExtensionHost:
         return identifier
 
     def install_vsix(self, archive):
+        # Test-double validation only: this does not extract or execute VSIX code.
         with zipfile.ZipFile(archive) as z:
-            names = z.namelist()
-            if len(names) > 512 or len(set(names)) != len(names):
-                raise ExtensionError("unsafe archive entries")
-            for item in z.infolist():
-                p = Path(item.filename.replace("\\", "/"))
-                if p.is_absolute() or ".." in p.parts or item.file_size > 8 * 1024 * 1024:
-                    raise ExtensionError("unsafe archive path/size")
-            if "extension/package.json" not in names:
+            entries = z.infolist()
+            if len(entries) > 512:
+                raise ExtensionError("too many archive entries")
+            normalized = set()
+            total_size = 0
+            for item in entries:
+                name = item.filename.replace("\\\\", "/")
+                path = PurePosixPath(name)
+                # Treat Windows drive letters, UNC paths, and empty segments as unsafe
+                # even when tests execute on a POSIX runner.
+                if (not name or name.startswith("/") or name.startswith("//")
+                        or ":" in name or any(part in ("", ".", "..") for part in name.split("/"))):
+                    raise ExtensionError("unsafe archive path")
+                if path.as_posix().casefold() in normalized:
+                    raise ExtensionError("duplicate archive entry")
+                normalized.add(path.as_posix().casefold())
+                if (item.external_attr >> 16) & 0o170000 == 0o120000:
+                    raise ExtensionError("symlink archive entry")
+                if item.file_size > 8 * 1024 * 1024:
+                    raise ExtensionError("oversized archive entry")
+                total_size += item.file_size
+                if total_size > 32 * 1024 * 1024:
+                    raise ExtensionError("oversized archive")
+            if "extension/package.json" not in normalized:
                 raise ExtensionError("missing extension manifest")
-            return self.install_manifest(json.loads(z.read("extension/package.json")))
+            manifest_info = next(i for i in entries if i.filename.casefold() == "extension/package.json")
+            if manifest_info.file_size > 256 * 1024:
+                raise ExtensionError("oversized manifest")
+            try:
+                manifest = json.loads(z.read(manifest_info).decode("utf-8"))
+            except (UnicodeError, ValueError) as exc:
+                raise ExtensionError("invalid manifest JSON") from exc
+            return self.install_manifest(manifest)
 
     def activate(self, identifier):
         ext = self.extensions.get(identifier)
