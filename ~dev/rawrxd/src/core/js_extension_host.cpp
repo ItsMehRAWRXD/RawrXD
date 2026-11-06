@@ -2253,7 +2253,7 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // The runtime can apply a stricter per-extension budget in future.
     std::error_code mainSizeError;
     const auto mainSize = std::filesystem::file_size(mainPath, mainSizeError);
-    if (mainSizeError || mainSize > 16 * 1024 * 1024) {
+    if (mainSizeError || mainSize == 0 || mainSize > 10 * 1024 * 1024) {
         return PatchResult::error("Extension main entry exceeds 16 MiB or is unreadable");
     }
 
