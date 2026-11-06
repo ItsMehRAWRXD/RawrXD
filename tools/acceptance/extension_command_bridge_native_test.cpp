@@ -10,6 +10,7 @@
 
 struct ThrowOnCopy {
     ThrowOnCopy() = default;
+    ThrowOnCopy(ThrowOnCopy&&) noexcept = default;
     ThrowOnCopy(const ThrowOnCopy&) { throw std::runtime_error("copy failed"); }
     bool operator()(const std::string&) const { return true; }
 };
