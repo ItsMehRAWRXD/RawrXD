@@ -32,3 +32,17 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
       - name: Run production extension registry contract
         run: timeout 15s /tmp/extension_command_contract
+  windows-extension-contract:
+    name: Windows MSVC extension registry contract
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run with MSVC
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_command_contract.cpp /Fe:extension_command_contract.exe
+          if errorlevel 1 exit /b 1
+          extension_command_contract.exe
+          if errorlevel 1 exit /b 1
