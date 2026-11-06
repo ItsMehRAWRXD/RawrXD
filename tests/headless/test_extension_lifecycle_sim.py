@@ -101,5 +101,63 @@ class ExtensionLifecycleSimulationTests(unittest.TestCase):
         with self.assertRaises(ExtensionError):
             self.host.install_vsix(archive)
 
+    def test_16_windows_drive_path_rejected(self):
+        archive = self._vsix({"C:/evil.txt": "x", "extension/package.json": json.dumps(MANIFEST)})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_17_backslash_traversal_rejected(self):
+        archive = self._vsix({"..\\\\evil.txt": "x", "extension/package.json": json.dumps(MANIFEST)})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_18_case_colliding_entries_rejected(self):
+        archive = self._vsix({"extension/package.json": json.dumps(MANIFEST), "Extension/Package.json": "{}"})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_19_invalid_json_rejected(self):
+        archive = self._vsix({"extension/package.json": "{bad"})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_20_missing_manifest_rejected(self):
+        archive = self._vsix({"extension/README.md": "readme"})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_21_absolute_path_rejected(self):
+        archive = self._vsix({"/tmp/evil": "x", "extension/package.json": json.dumps(MANIFEST)})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_22_oversized_manifest_rejected(self):
+        archive = self._vsix({"extension/package.json": " " * (256 * 1024 + 1)})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_23_symlink_entry_rejected(self):
+        archive = self._vsix({"extension/package.json": json.dumps(MANIFEST)})
+        with zipfile.ZipFile(archive, "a") as z:
+            info = zipfile.ZipInfo("extension/link")
+            info.create_system = 3
+            info.external_attr = (0o120777 << 16)
+            z.writestr(info, "target")
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_24_archive_total_size_rejected(self):
+        entries = {"extension/package.json": json.dumps(MANIFEST)}
+        for n in range(5):
+            entries[f"extension/data{n}"] = "a" * (8 * 1024 * 1024)
+        archive = self._vsix(entries)
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
+    def test_25_manifest_not_object_rejected(self):
+        archive = self._vsix({"extension/package.json": "[]"})
+        with self.assertRaises(ExtensionError):
+            self.host.install_vsix(archive)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
