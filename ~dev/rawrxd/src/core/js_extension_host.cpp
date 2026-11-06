@@ -2905,10 +2905,18 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error("VSIX extraction timed out (60s)");
     }
 
+    if (waitResult != WAIT_OBJECT_0) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return PatchResult::error("VSIX extraction process wait failed");
+    }
+
     DWORD exitCode = 0;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
+    const BOOL gotExitCode = GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    if (!gotExitCode || exitCode == STILL_ACTIVE)
+        return PatchResult::error("VSIX extraction exit status unavailable");
 
     if (exitCode != 0) {
         char err[256];
