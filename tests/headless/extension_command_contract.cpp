@@ -76,8 +76,16 @@ int main() {
     CHECK(!host.UnregisterCommand("throws"));
     CHECK(host.GetAvailableCommands().empty());
 
+    // Shutdown invalidates previously registered callbacks, not just visibility.
+    int invocations = 0;
+    CHECK(host.RegisterExtensionCommand("extension-lifecycle", "before-shutdown",
+        [&](const auto&) { ++invocations; return true; }));
+    CHECK(host.ExecuteCommand("before-shutdown", ""));
+    CHECK(invocations == 1);
     host.Shutdown();
     CHECK(!host.IsInitialized());
+    CHECK(!host.ExecuteCommand("before-shutdown", ""));
+    CHECK(invocations == 1);
     CHECK(!host.ExecuteCommand("unknown", ""));
     CHECK(host.GetAvailableCommands().empty());
     CHECK(host.Initialize());
