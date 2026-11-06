@@ -2024,35 +2024,33 @@ void Win32IDE::loadInstalledExtensions()
         }
     }
 
+    // Preserve external VS Code/Cursor discovery, then add actual RawrXD-managed
+    // extensions. A corrupt local installation must not hide external packages.
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        for (const auto& ext : store.list()) {
+            const std::string key = ext.id + "|" + ext.version;
+            if (!seen.insert(key).second) continue;
+            m_extensions.push_back({ext.id, ext.name, ext.version, ext.description,
+                                    ext.publisher, true, ext.enabled});
+        }
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("RawrXD extension inventory warning: ") + ex.what() + "\n",
+                       "Errors", OutputSeverity::Warning);
+    }
+
     std::sort(m_extensions.begin(), m_extensions.end(),
         [](const Extension& a, const Extension& b) { return a.name < b.name; });
 
-    LVITEMA item = {};
-    item.mask = LVIF_TEXT;
-
-    for (size_t i = 0; i < m_extensions.size(); i++) {
-        if (!IsWindow(m_hwndExtensionsList)) return;
-        item.iItem = (int)i;
-        item.iSubItem = 0;
-        
-        char* extNameHeap = new char[m_extensions[i].name.length() + 1];
-        strcpy_s(extNameHeap, m_extensions[i].name.length() + 1, m_extensions[i].name.c_str());
-        item.pszText = extNameHeap;
-        g_sidebarStringHeap.push_back(extNameHeap);
-        item.lParam = reinterpret_cast<LPARAM>(extNameHeap);
-        ListView_InsertItem(m_hwndExtensionsList, &item);
-
-        item.iSubItem = 1;
-        char* extVersionHeap = new char[m_extensions[i].version.length() + 1];
-        strcpy_s(extVersionHeap, m_extensions[i].version.length() + 1, m_extensions[i].version.c_str());
-        item.pszText = extVersionHeap;
-        g_sidebarStringHeap.push_back(extVersionHeap);
-        item.lParam = reinterpret_cast<LPARAM>(extVersionHeap);
-        ListView_SetItem(m_hwndExtensionsList, &item);
-    }
+    // Search draws list items with stable m_extensions indices as lParam; do
+    // not store raw heap pointers in the list's item parameter.
+    char query[256] = {};
+    if (m_hwndExtensionSearch && IsWindow(m_hwndExtensionSearch))
+        GetWindowTextA(m_hwndExtensionSearch, query, sizeof(query));
+    searchExtensions(query);
 
         appendToOutput("Discovered " + std::to_string(m_extensions.size()) +
-                       " installed extensions from local VS Code/Cursor roots\n",
+                       " installed extensions from VS Code, Cursor and RawrXD local roots\n",
                        "Output", OutputSeverity::Info);
     } catch (const std::exception& ex) {
         m_extensions.clear();
