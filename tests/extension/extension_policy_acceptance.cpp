@@ -48,6 +48,8 @@ int main() {
     require(entryWithinRoot(root, root / "plugin" / "index.js"), "entry inside root");
     require(!entryWithinRoot(root, root), "root itself not entry");
     require(!entryWithinRoot(root, outside / "index.js"), "entry outside root");
+    require(!entryWithinRoot(root, base / "extensions-evil" / "index.js"), "sibling prefix confusion");
+    require(entryWithinRoot(root, root / "plugin" / "." / "index.js"), "normalized child entry");
     require(!entryWithinRoot(root, root / ".." / "outside" / "index.js"), "parent traversal");
     require(!entryWithinRoot({}, root / "plugin" / "index.js"), "empty root");
     require(!entryWithinRoot(root, {}), "empty entry");
