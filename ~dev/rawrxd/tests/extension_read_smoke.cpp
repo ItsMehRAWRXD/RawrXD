@@ -21,5 +21,13 @@ int main() {
  check(!readExactly(buffer,5,[&](char* p,std::size_t n){++attempt;if(attempt==1){p[0]='a';return std::size_t(1);}return n+1;}) && attempt==2,"partial then overreport rejected");
  check(readExactly(nullptr,0,[](char*,std::size_t){return std::size_t(1);}),"zero length null buffer accepted");
  check(readExactly(buffer,5,[](char* p,std::size_t n){std::memset(p,'z',n);return n;}) && std::string(buffer,5)=="zzzzz","buffer overwritten exactly");
+ std::string written;
+ check(writeExactly("abcde",5,[&](const char* p,std::size_t n){written.append(p,n);return n;}) && written=="abcde","full write");
+ written.clear();
+ check(writeExactly("abcde",5,[&](const char* p,std::size_t n){const auto k=std::min<std::size_t>(n,2);written.append(p,k);return k;}) && written=="abcde","short writes retried");
+ check(!writeExactly("abcde",5,[](const char*,std::size_t){return std::size_t(0);}),"failed write rejected");
+ check(!writeExactly("abcde",5,[](const char*,std::size_t n){return n+1;}),"overreported write rejected");
+ check(!writeExactly(nullptr,1,[](const char*,std::size_t){return std::size_t(1);}),"null write buffer rejected");
+ check(writeExactly(nullptr,0,[](const char*,std::size_t){return std::size_t(0);}),"empty write accepted");
  std::cout<<"RESULT "<<(failures?"FAIL":"PASS")<<" failures="<<failures<<'\n';return failures?1:0;
 }
