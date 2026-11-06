@@ -60,6 +60,11 @@ class MockTransportTests(unittest.TestCase):
         code, _, _ = self.request("POST", "/v1/chat/completions", {"model": "not-mock", "messages": []})
         self.assertEqual(code, 400)
 
+    def test_empty_body_rejected(self):
+        code, _, body = self.request("POST", "/v1/chat/completions", raw=b"")
+        self.assertEqual(code, 400)
+        self.assertIn(b"empty request body", body)
+
     def test_invalid_json(self):
         code, _, _ = self.request("POST", "/v1/chat/completions", raw=b"{")
         self.assertEqual(code, 400)
