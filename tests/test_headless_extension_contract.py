@@ -106,6 +106,18 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Unsupported quote character in VSIX extraction path"),
                         body.find("std::filesystem::create_directories(destDir)"))
 
+    def test_manifest_initialization_preserves_cpp_object_invariants(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "parseManifest")
+        self.assertIn("*outManifest = VSCodeExtensionManifest{};", body)
+        self.assertNotIn("std::memset(outManifest", body)
+
+    def test_vsix_path_quote_guard_is_valid_cpp(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("std::strchr(path, 0x27)", body)
+        self.assertIn("Unsupported quote character in VSIX extraction path", body)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
