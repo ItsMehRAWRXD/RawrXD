@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <system_error>
 namespace fs = std::filesystem;
 int main() {
     int passed = 0, failed = 0;
@@ -56,7 +57,14 @@ int main() {
     ec.clear();
     fs::create_directory_symlink(base / "outside", base / "extension" / "link", ec);
     if (!ec) check(!entryWithinRoot(base / "extension", base / "extension" / "link" / "main.js"), "symlink escape rejected");
-    else std::cout << "SKIP symlink fixture unavailable\n";
+    else {
+#ifdef _WIN32
+        std::cout << "SKIP symlink fixture unavailable on Windows: " << ec.message() << '\\n';
+#else
+        std::cerr << "FAIL symlink fixture unavailable: " << ec.message() << '\\n';
+        ++failed;
+#endif
+    }
     fs::remove_all(base, ec);
     std::cout << "RESULT " << passed << " passed " << failed << " failed\n";
     return failed ? 1 : 0;
