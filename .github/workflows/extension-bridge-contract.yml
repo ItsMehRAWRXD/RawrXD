@@ -23,7 +23,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
       - name: Audit extension source lanes (static-only)
-        shell: bash
+        shell: pwsh
         run: python tests/extension/audit_extension_lanes.py
       - name: Compile and execute extension policy acceptance (Linux)
         if: runner.os == 'Linux'
