@@ -45,5 +45,51 @@ class SmokeTranscriptValidation(unittest.TestCase):
             "RESULT 60/60 checks; PASS", "prefix RESULT 60/60 checks; PASS"), 0))
 
 
+    def test_empty_output(self):
+        self.assertFalse(validate_output("", 0))
+
+    def test_summary_only(self):
+        self.assertFalse(validate_output("RESULT 60/60 checks; PASS\\n", 0))
+
+    def test_success_with_missing_summary(self):
+        self.assertFalse(validate_output(self.valid.rsplit("RESULT ", 1)[0], 0))
+
+    def test_wrong_summary_count(self):
+        self.assertFalse(validate_output(self.valid.replace("60/60", "61/61"), 0))
+
+    def test_zero_padded_wrong_gate(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 01", "PASS 00"), 0))
+
+    def test_negative_gate_number(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 01", "PASS -1"), 0))
+
+    def test_gate_without_description(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 01 test", "PASS 01 "), 0))
+
+    def test_lowercase_pass(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 01", "pass 01"), 0))
+
+    def test_partial_summary(self):
+        self.assertFalse(validate_output(self.valid.replace(" checks; PASS", " checks"), 0))
+
+    def test_extra_blank_line(self):
+        self.assertFalse(validate_output(self.valid + "\\n", 0))
+
+    def test_prefix_noise(self):
+        self.assertFalse(validate_output("noise\\n" + self.valid, 0))
+
+    def test_embedded_failure_marker(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 01 test", "FAIL 01 test"), 0))
+
+    def test_wrong_expected_gate_count(self):
+        self.assertFalse(validate_output(self.valid, 0, expected=59))
+
+    def test_gate_number_out_of_order(self):
+        self.assertFalse(validate_output(self.valid.replace("PASS 60 test", "PASS 59 test"), 0))
+
+    def test_nonzero_exit_even_if_summary_passes(self):
+        self.assertFalse(validate_output(self.valid, 137))
+
+
 if __name__ == "__main__":
     unittest.main()
