@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 using rawrxd::extensions::readExactly;
+using rawrxd::extensions::writeExactly;
 int main() {
  int failures=0; auto check=[&](bool b,const char* n){std::cout<<(b?"PASS ":"FAIL ")<<n<<'\n';if(!b)++failures;};
  char buffer[16]{};
