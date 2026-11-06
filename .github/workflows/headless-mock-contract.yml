@@ -24,6 +24,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Show checkout and runtime diagnostics
+        shell: bash
+        run: |
+          pwd
+          python --version
+          ls -la tests/headless
+          test -f '~dev/rawrxd/src/core/extension_host_production.cpp'
+          g++ --version
       - name: Compile test fixtures
         run: python -m compileall -q tests/headless
       - name: Run inference transport acceptance tests
@@ -39,6 +47,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Show checkout and MSVC diagnostics
+        shell: pwsh
+        run: |
+          Get-Location
+          Test-Path 'tests/headless/extension_command_contract.cpp'
+          Test-Path '~dev/rawrxd/src/core/extension_host_production.cpp'
+          Get-Command cl.exe
       - name: Compile and run with MSVC
         shell: cmd
         run: |
