@@ -2147,7 +2147,8 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // Reject drive-qualified and rooted paths before string concatenation,
     // which would otherwise obscure an absolute-path request.
     const std::filesystem::path manifestMain(mainEntry);
-    if (manifestMain.is_absolute() || manifestMain.has_root_name() ||
+    if (!rawrxd::extensions::validRelativeMain(mainEntry) ||
+        manifestMain.is_absolute() || manifestMain.has_root_name() ||
         manifestMain.has_root_directory()) {
         return PatchResult::error("Extension main must be a relative path");
     }
