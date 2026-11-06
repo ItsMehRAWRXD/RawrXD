@@ -41,6 +41,16 @@ int main() {
     }));
     assert(host.ExecuteCommand("extension-command", ""));
     assert(!host.ExecuteCommand("extension-command", ""));
+    // Ownership must be isolated: unloading one extension cannot remove
+    // another extension's commands or unowned host commands.
+    assert(host.RegisterExtensionCommand("extension.alpha", "alpha", [](const std::string&) { return true; }));
+    assert(host.RegisterExtensionCommand("extension.beta", "beta", [](const std::string&) { return true; }));
+    host.UnregisterExtensionCommands("extension.alpha");
+    assert(!host.ExecuteCommand("alpha", ""));
+    assert(host.ExecuteCommand("beta", ""));
+    assert(host.ExecuteCommand("host-command", "expected"));
+    host.UnregisterExtensionCommands("extension.beta");
+    assert(!host.ExecuteCommand("beta", ""));
     assert(host.RegisterCommand("throwing", [](const std::string&) -> bool {
         throw std::runtime_error("expected");
     }));
