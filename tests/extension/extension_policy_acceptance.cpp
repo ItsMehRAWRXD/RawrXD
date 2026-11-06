@@ -51,6 +51,8 @@ int main() {
     require(!entryWithinRoot(root, root / ".." / "outside" / "index.js"), "parent traversal");
     require(!entryWithinRoot({}, root / "plugin" / "index.js"), "empty root");
     require(!entryWithinRoot(root, {}), "empty entry");
+    require(!entryWithinRoot("extensions", root / "plugin" / "index.js"), "relative root rejected");
+    require(!entryWithinRoot(root, "plugin/index.js"), "relative entry rejected");
     std::error_code ec;
     fs::create_directory_symlink(outside, root / "plugin" / "linked", ec);
     if (!ec) {
