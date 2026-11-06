@@ -85,6 +85,19 @@ class ExtensionContract(unittest.TestCase):
         self.assertLess(failure.index('return PatchResult::error("Extension activation microtask failed")'),
                         failure.index("state->activated = true;"))
 
+    def test_deactivation_disposes_context_and_reports_exceptions(self):
+        """Source-level guard: deactivation must not leave live callbacks."""
+        src = self.source("js_extension_host.cpp")
+        start = src.index("PatchResult JSExtensionHost::deactivateExtension(")
+        end = src.index("PatchResult JSExtensionHost::unloadExtension(", start)
+        body = src[start:end]
+        self.assertIn("JS_IsException(result)", body)
+        self.assertLess(body.index("binding.ctx = nullptr;"),
+                        body.index("JS_FreeContext(extCtx);"))
+        self.assertLess(body.index("JS_FreeContext(extCtx);"),
+                        body.index("state->jsContext = nullptr;"))
+        self.assertIn('PatchResult::error("Extension deactivate() threw an exception")', body)
+
     def test_agent_bridge_modes_are_instance_scoped(self):
         """Guard against cross-IDE mode leakage from function static toggles."""
         header = ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.h"
