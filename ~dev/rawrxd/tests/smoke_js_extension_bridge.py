@@ -21,13 +21,16 @@ def main():
     if not host_source.is_file():
         raise SystemExit(f"BLOCKED: extension host source missing: {host_source}")
     host_text = host_source.read_text(encoding="utf-8")
-    expected_callback = "msg.completionCallback(execution.success, result, msg.completionCtx)"
-    if expected_callback not in host_text:
-        raise RuntimeError("FAIL: queued script callback does not propagate execution status")
-    expected_invalid = 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)'
-    if expected_invalid not in host_text:
-        raise RuntimeError("FAIL: invalid queued script requests do not notify callers")
+    required_fragments = {
+        "queued result status": "msg.completionCallback(execution.success, callbackResult, msg.completionCtx)",
+        "queued error detail fallback": "execution.detail.c_str()",
+        "invalid queued request callback": 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)',
+    }
+    for label, fragment in required_fragments.items():
+        if fragment not in host_text:
+            raise RuntimeError(f"FAIL: {label} invariant missing")
     print("PASS: queued callback source invariants (not runtime PASS)")
+
     windows = sys.platform == "win32"
     compiler = (shutil.which("cl") if windows else None) or shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
     if not compiler:
