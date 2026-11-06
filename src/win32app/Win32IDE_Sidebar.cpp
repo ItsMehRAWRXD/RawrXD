@@ -245,7 +245,7 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
             LVITEMA item = {};
             item.mask = LVIF_PARAM;
             item.iItem = row;
-            if (!ListView_GetItem(pThis->m_hwndExtensionsList, &item) ||
+            if (!ListView_GetItemA(pThis->m_hwndExtensionsList, &item) ||
                 item.lParam < 0 ||
                 static_cast<size_t>(item.lParam) >= pThis->m_extensions.size()) return {};
             return pThis->m_extensions[static_cast<size_t>(item.lParam)].id;
@@ -1370,10 +1370,10 @@ void Win32IDE::createExtensionsView(HWND hwndParent)
     column.mask = LVCF_TEXT | LVCF_WIDTH;
     column.cx = 146;
     column.pszText = const_cast<char*>("Name");
-    ListView_InsertColumn(m_hwndExtensionsList, 0, &column);
+    ListView_InsertColumnA(m_hwndExtensionsList, 0, &column);
     column.cx = 80;
     column.pszText = const_cast<char*>("Version");
-    ListView_InsertColumn(m_hwndExtensionsList, 1, &column);
+    ListView_InsertColumnA(m_hwndExtensionsList, 1, &column);
     appendToOutput("Offline extension inventory available\n", "Output", OutputSeverity::Info);
 }
 
@@ -1395,8 +1395,8 @@ void Win32IDE::searchExtensions(const std::string& query)
         item.iItem = row;
         item.pszText = const_cast<char*>(label.c_str());
         item.lParam = static_cast<LPARAM>(i);
-        const int index = ListView_InsertItem(m_hwndExtensionsList, &item);
-        if (index >= 0) ListView_SetItemText(m_hwndExtensionsList, index, 1,
+        const int index = ListView_InsertItemA(m_hwndExtensionsList, &item);
+        if (index >= 0) ListView_SetItemTextA(m_hwndExtensionsList, index, 1,
                               const_cast<char*>(e.version.c_str()));
         ++row;
     }
