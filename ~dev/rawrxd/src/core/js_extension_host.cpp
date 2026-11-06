@@ -327,13 +327,20 @@ std::string readFileToString(const char* path) {
     std::string content;
     content.resize(static_cast<size_t>(fileSize.QuadPart));
 
-    DWORD bytesRead = 0;
-    BOOL ok = ReadFile(hFile, content.data(), static_cast<DWORD>(content.size()),
-                        &bytesRead, nullptr);
+    // ReadFile may complete with fewer bytes than requested even for a valid
+    // synchronous handle. Continue until the declared size is satisfied.
+    size_t offset = 0;
+    while (offset < content.size()) {
+        DWORD bytesRead = 0;
+        const DWORD requested = static_cast<DWORD>(content.size() - offset);
+        if (!ReadFile(hFile, content.data() + offset, requested, &bytesRead, nullptr) ||
+            bytesRead == 0 || bytesRead > requested) {
+            CloseHandle(hFile);
+            return {}; // Never parse a truncated manifest or script.
+        }
+        offset += bytesRead;
+    }
     CloseHandle(hFile);
-
-    // A short or failed read must never be treated as a complete manifest/script.
-    if (!ok || bytesRead != content.size()) return {};
     return content;
 }
 
