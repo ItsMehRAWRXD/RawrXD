@@ -8,6 +8,7 @@ on:
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
+      - '~dev/rawrxd/src/core/js_extension_host*.cpp'
       - '.github/workflows/extension-policy-smoke.yml'
   pull_request:
     paths:
@@ -15,6 +16,7 @@ on:
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
+      - '~dev/rawrxd/src/core/js_extension_host*.cpp'
       - '.github/workflows/extension-policy-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -61,4 +63,9 @@ jobs:
         shell: pwsh
         run: |
           & "$env:RUNNER_TEMP/rawrxd-extension-policy-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Source contract checks (not runtime certification)
+        shell: pwsh
+        run: |
+          python tools/ci/test_extension_contract.py
           exit $LASTEXITCODE
