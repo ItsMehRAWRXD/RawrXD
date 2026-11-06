@@ -24,7 +24,10 @@ def main():
     expected_callback = "msg.completionCallback(execution.success, result, msg.completionCtx)"
     if expected_callback not in host_text:
         raise RuntimeError("FAIL: queued script callback does not propagate execution status")
-    print("PASS: queued callback status source invariant (not a runtime PASS)")
+    expected_invalid = 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)'
+    if expected_invalid not in host_text:
+        raise RuntimeError("FAIL: invalid queued script requests do not notify callers")
+    print("PASS: queued callback source invariants (not runtime PASS)")
     windows = sys.platform == "win32"
     compiler = (shutil.which("cl") if windows else None) or shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
     if not compiler:
