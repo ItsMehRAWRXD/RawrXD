@@ -63,6 +63,6 @@ int main() {
         fs::remove_all(sandbox, ec);
         fs::remove_all(outside, ec);
     }
-    std::cout << "SUMMARY " << passed << "/26 maximum PASS; " << failed << " FAIL\n";
+    std::cout << "SUMMARY " << passed << " PASS; " << failed << " FAIL; " << skipped << " SKIP\\n";
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
