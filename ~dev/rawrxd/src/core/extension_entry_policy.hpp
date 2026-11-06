@@ -13,6 +13,8 @@ inline bool entryWithinRoot(const std::filesystem::path& root,
     std::error_code ec;
     const auto base = std::filesystem::weakly_canonical(root, ec);
     if (ec || base.empty()) return false;
+    // A non-existent or non-directory installation root is never a valid trust boundary.
+    if (!std::filesystem::is_directory(base, ec) || ec) return false;
     const auto target = std::filesystem::weakly_canonical(entry, ec);
     if (ec || target.empty()) return false;
     auto b = base.begin(), t = target.begin();
