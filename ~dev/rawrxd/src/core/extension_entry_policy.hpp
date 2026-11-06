@@ -7,7 +7,7 @@ namespace rawrxd::extensions {
 // A Windows drive prefix is invalid even when tested by a Linux CI runner.
 inline bool validRelativeMain(std::string_view entry) noexcept {
     if (entry.empty()) return false;
-    if (entry[0] == '/' || entry[0] == '\\\\') return false;
+    if (entry[0] == '/' || entry[0] == 92) return false;
     if (entry.size() >= 2 &&
         ((entry[0] >= 'A' && entry[0] <= 'Z') ||
          (entry[0] >= 'a' && entry[0] <= 'z')) &&
