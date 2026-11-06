@@ -19,6 +19,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Configure MSVC compiler environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Audit extension source lanes (static-only)
         shell: bash
         run: python tests/extension/audit_extension_lanes.py
