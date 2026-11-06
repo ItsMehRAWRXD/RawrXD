@@ -29,6 +29,7 @@
 
 #include "js_extension_host.hpp"
 #include "extension_entry_policy.hpp"
+#include "extension_read_policy.hpp"
 #include "extension_manifest_policy.hpp"
 #include "extension_signature_policy.hpp"
 #include "../modules/vscode_extension_api.h"
@@ -327,20 +328,17 @@ std::string readFileToString(const char* path) {
     std::string content;
     content.resize(static_cast<size_t>(fileSize.QuadPart));
 
-    // ReadFile may complete with fewer bytes than requested even for a valid
-    // synchronous handle. Continue until the declared size is satisfied.
-    size_t offset = 0;
-    while (offset < content.size()) {
-        DWORD bytesRead = 0;
-        const DWORD requested = static_cast<DWORD>(content.size() - offset);
-        if (!ReadFile(hFile, content.data() + offset, requested, &bytesRead, nullptr) ||
-            bytesRead == 0 || bytesRead > requested) {
-            CloseHandle(hFile);
-            return {}; // Never parse a truncated manifest or script.
-        }
-        offset += bytesRead;
-    }
+    const bool complete = rawrxd::extensions::readExactly(
+        content.data(), content.size(),
+        [&](char* destination, size_t remaining) -> size_t {
+            DWORD bytesRead = 0;
+            const DWORD requested = static_cast<DWORD>(remaining);
+            if (!ReadFile(hFile, destination, requested, &bytesRead, nullptr))
+                return 0;
+            return static_cast<size_t>(bytesRead);
+        });
     CloseHandle(hFile);
+    if (!complete) return {};
     return content;
 }
 
