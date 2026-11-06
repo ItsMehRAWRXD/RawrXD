@@ -1,0 +1,23 @@
+name: Headless extension simulation
+on:
+  push:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-extension-sim.yml'
+  pull_request:
+    paths:
+      - 'tests/headless/**'
+      - '.github/workflows/headless-extension-sim.yml'
+  workflow_dispatch:
+
+jobs:
+  simulator-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run deterministic extension simulator assertions
+        run: python -m unittest discover -s tests/headless -p 'test_extension_lifecycle_sim.py' -v
