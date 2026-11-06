@@ -79,8 +79,27 @@ int main() {
     host.UnregisterExtensionCommands("ext.delta");
     check(host.RegisterCommand("delta.run", [](const std::string&) { return true; }), "43 command name reusable after unload");
     check(host.ExecuteCommand("delta.run", ""), "44 reused command executes");
+    // Batch 3: 15 more gates, including the repeated-initialization defect.
+    check(!host.Initialize(), "45 repeated initialize fails closed");
+    check(host.IsInitialized(), "46 rejected initialize preserves running host");
+    check(host.ExecuteCommand("delta.run", ""), "47 rejected initialize preserves callbacks");
+    check(host.RegisterExtensionCommand("ext.epsilon", "epsilon.run", [](const std::string&) { return true; }), "48 epsilon registration");
+    check(host.RegisterExtensionCommand("ext.zeta", "zeta.run", [](const std::string&) { return true; }), "49 zeta registration");
+    host.UnregisterExtensionCommands("ext.epsilon");
+    check(!host.ExecuteCommand("epsilon.run", ""), "50 epsilon unload");
+    check(host.ExecuteCommand("zeta.run", ""), "51 zeta isolated");
+    check(!host.UnregisterCommand("missing.command"), "52 unknown removal fails");
+    check(!host.RegisterExtensionCommand("ext.zeta", "zeta.run", [](const std::string&) { return true; }), "53 duplicate owner command rejected");
+    check(host.ExecuteCommand("zeta.run", ""), "54 original owner command preserved");
     host.Shutdown();
-    check(!host.IsInitialized() && host.GetAvailableCommands().empty() && !host.ExecuteCommand("throws", ""), "45 shutdown clears registry");
+    check(!host.IsInitialized(), "55 shutdown state");
+    check(!host.ExecuteCommand("zeta.run", ""), "56 shutdown rejects dispatch");
+    check(host.Initialize(), "57 clean restart succeeds");
+    check(host.GetAvailableCommands().empty(), "58 restart has no stale commands");
+    check(host.RegisterCommand("after.restart", [](const std::string&) { return true; })
+          && host.ExecuteCommand("after.restart", ""), "59 restart accepts new commands");
+    host.Shutdown();
+    check(!host.IsInitialized() && host.GetAvailableCommands().empty() && !host.ExecuteCommand("throws", ""), "60 shutdown clears registry");
     std::cout << "RESULT " << (checks - failures) << "/" << checks << " checks; " << (failures ? "FAIL" : "PASS") << '\n';
     return failures ? 1 : 0;
 }
