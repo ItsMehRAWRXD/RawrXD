@@ -11,7 +11,7 @@
 #include <cstdlib>
 namespace fs = std::filesystem;
 int main() {
-    int failed = 0, passed = 0;
+    int failed = 0, passed = 0, skipped = 0;
     auto gate = [&](const char* name, bool ok) {
         std::cout << (ok ? "PASS " : "FAIL ") << name << '\n';
         ok ? ++passed : ++failed;
@@ -55,7 +55,8 @@ int main() {
         if (!ec) fs::create_directories(outside, ec);
         if (!ec) fs::create_directory_symlink(outside, sandbox / "escape", ec);
         if (ec) {
-            std::cout << "SKIP 26_symlink_escape_rejected: " << ec.message() << '\\n';
+            ++skipped;
+            std::cout << "SKIP 26_symlink_escape_rejected: " << ec.message() << '\n';
         } else {
             gate("26_symlink_escape_rejected", !entryWithinRoot(sandbox, sandbox / "escape" / "evil.js"));
         }
