@@ -2207,7 +2207,8 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // An extension manifest must not execute code outside its installation.
     // This also rejects traversal through symlinks and absolute main paths.
     if (!rawrxd::extensions::entryWithinRoot(
-            std::filesystem::path(extRoot), std::filesystem::path(mainPath))) {
+            std::filesystem::absolute(std::filesystem::path(extRoot)),
+            std::filesystem::absolute(std::filesystem::path(mainPath)))) {
         return PatchResult::error("Extension main entry escapes installation root");
     }
 
