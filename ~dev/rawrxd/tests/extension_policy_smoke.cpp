@@ -48,6 +48,8 @@ int main() {
     check(!entryWithinRoot(base / "extension", base / "extension"), "root itself rejected");
     check(!entryWithinRoot({}, base / "extension" / "main.js"), "empty root rejected");
     check(!entryWithinRoot(base / "extension", {}), "empty entry rejected");
+    check(!entryWithinRoot(base / "extension", fs::path("relative.js")), "relative entry rejected");
+    check(!entryWithinRoot(fs::path("relative-root"), base / "extension" / "main.js"), "relative root rejected");
     fs::create_directories(base / "extension-sibling", ec);
     if (ec) { std::cerr << "BLOCKED: cannot create sibling fixture\\n"; return 2; }
     check(!entryWithinRoot(base / "extension", base / "extension-sibling" / "main.js"), "sibling prefix rejected");
