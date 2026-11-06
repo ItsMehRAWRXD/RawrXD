@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Audit extension source lanes (static-only)\n        shell: bash\n        run: python tests/extension/audit_extension_lanes.py\n      - name: Compile and execute bridge contract (Linux)
+      - name: Audit extension source lanes (static-only)\n        shell: bash\n        run: python tests/extension/audit_extension_lanes.py\n      - name: Compile and execute extension policy acceptance (Linux)\n        if: runner.os == 'Linux'\n        shell: bash\n        run: |\n          mkdir -p build/extension-contract\n          c++ -std=c++17 -Wall -Wextra -Werror tests/extension/extension_policy_acceptance.cpp -o build/extension-contract/policy-test\n          build/extension-contract/policy-test\n      - name: Compile and execute extension policy acceptance (Windows)\n        if: runner.os == 'Windows'\n        shell: pwsh\n        run: |\n          New-Item -ItemType Directory -Force build/extension-contract | Out-Null\n          cl /nologo /EHsc /W4 /WX /std:c++17 '/Febuild/extension-contract/policy-test.exe' 'tests/extension/extension_policy_acceptance.cpp'\n          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\n          & 'build/extension-contract/policy-test.exe'\n          exit $LASTEXITCODE\n      - name: Compile and execute bridge contract (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
