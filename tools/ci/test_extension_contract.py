@@ -109,5 +109,15 @@ class ExtensionContract(unittest.TestCase):
         self.assertIn("maxIterations <= 0", body)
         self.assertLess(body.index("initialPrompt.empty()"), body.index("m_agentThread = std::thread("))
 
+    def test_agent_bridge_releases_child_pipe_endpoints(self):
+        """Static guard only; Windows process lifecycle still needs runtime testing."""
+        cpp = (ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.cpp").read_text(encoding="utf-8")
+        start = cpp.index("m_hProcess = piProcInfo.hProcess;")
+        end = cpp.index("return true;", start)
+        success = cpp[start:end]
+        for handle in ("m_hStdoutWrite", "m_hStdinRead"):
+            self.assertIn("CloseHandle(" + handle + ");", success)
+            self.assertIn(handle + " = nullptr;", success)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
