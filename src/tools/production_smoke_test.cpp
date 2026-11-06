@@ -3,6 +3,9 @@
 #include "../PerformanceProfiler.hpp"
 #include <iostream>
 #include <cassert>
+#include <cerrno>
+#include <climits>
+#include <cwchar>
 #include <unordered_map>
 
 using namespace Deep2Engine::Emulator;
@@ -12,6 +15,11 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     std::cout << "======================================================================\n";
     std::cout << "          DEEP2ENGINE PRODUCTION VALIDATION & STRESS SUITE            \n";
     std::cout << "======================================================================\n";
+
+    if (shards == 0) {
+        std::cerr << "[-] Invalid test configuration: shard count must be positive.\n";
+        std::exit(2);
+    }
 
     // 1. Assert ROM Loader initialization boundaries
     Win32RomLoader loader;
@@ -57,6 +65,13 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
         info.tensor_bytes = desc.tensor_bytes;
         auto sit = shard_file_sizes.find(desc.shard_id);
         info.file_size = (sit != shard_file_sizes.end()) ? sit->second : 0;
+        if (desc.tensor_bytes == 0 || sit == shard_file_sizes.end() ||
+            desc.absolute_offset > info.file_size ||
+            desc.tensor_bytes > info.file_size - desc.absolute_offset) {
+            std::cerr << "[-] Gate 3 FAIL: tensor " << i
+                      << " exceeds its registered shard bounds.\n";
+            std::exit(1);
+        }
         prefetch.register_tensor_info(i, info);
     }
     std::cout << "[✓] Gate 3: Background Prefetch Worker Engine Thread spawned -> PASS\n";
@@ -119,6 +134,13 @@ int wmain(int argc, wchar_t* argv[]) {
         std::wcout << L"Example: production_smoke_test.exe model.rom G:\\~dev\\rawrxd\\models\\DeepSeek-R1 11\n";
         return 1;
     }
-    run_production_stress_test(argv[1], argv[2], static_cast<uint32_t>(_wtoi(argv[3])));
+    errno = 0;
+    wchar_t* end = nullptr;
+    const unsigned long parsed = std::wcstoul(argv[3], &end, 10);
+    if (errno != 0 || !end || *end != L'\0' || parsed == 0 || parsed > UINT32_MAX) {
+        std::wcerr << L"Invalid shard count: expected a positive uint32 integer.\n";
+        return 2;
+    }
+    run_production_stress_test(argv[1], argv[2], static_cast<uint32_t>(parsed));
     return 0;
 }
