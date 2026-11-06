@@ -5,11 +5,13 @@ on:
       - fix/deep2-multimodel-safety-20261025
     paths:
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
       - '.github/workflows/extension-bridge-smoke.yml'
   pull_request:
     paths:
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - '~dev/rawrxd/tests/smoke_js_extension_bridge.py'
       - '.github/workflows/extension-bridge-smoke.yml'
   workflow_dispatch:
