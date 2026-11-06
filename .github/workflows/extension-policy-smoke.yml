@@ -1,0 +1,40 @@
+name: Extension policy smoke (model-free)
+on:
+  push:
+    branches:
+      - fix/deep2-multimodel-safety-20261025
+    paths:
+      - '~dev/rawrxd/src/core/extension_*policy.hpp'
+      - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - '.github/workflows/extension-policy-smoke.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/extension_*policy.hpp'
+      - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - '.github/workflows/extension-policy-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile policy tests (GCC)
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic '~dev/rawrxd/tests/extension_policy_smoke.cpp' -o /tmp/rawrxd-extension-policy-smoke
+      - name: Execute policy assertions
+        run: /tmp/rawrxd-extension-policy-smoke
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile policy tests (MSVC)
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /std:c++17 /EHsc /W4 /WX "~dev\rawrxd\tests\extension_policy_smoke.cpp" /Fe:"%TEMP%\rawrxd-extension-policy-smoke.exe"
+      - name: Execute policy assertions
+        shell: pwsh
+        run: '& "$env:TEMP\rawrxd-extension-policy-smoke.exe"'
