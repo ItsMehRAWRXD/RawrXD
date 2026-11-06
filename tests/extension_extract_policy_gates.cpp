@@ -42,7 +42,7 @@ int main() {
     fs::create_directory_symlink(base / "not-present", dangling, danglingEc);
     if (danglingEc) {
         ++skipped;
-        std::cout << "SKIP dangling_symlink_rejected: " << danglingEc.message() << '\\n';
+        std::cout << "SKIP dangling_symlink_rejected: " << danglingEc.message() << '\n';
     } else {
         gate("dangling_symlink_rejected", !safeExtractionDestination(dangling));
     }
