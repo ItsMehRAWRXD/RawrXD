@@ -144,6 +144,26 @@ class OfflineExtensionAcceptance(unittest.TestCase):
     def test_19_unsupported_commands_fail(self):
         self.cli("execute", "example.sample", ok=False)
 
+    def test_21_duplicate_manifest_keys_rejected(self):
+        src = self.package()
+        (src / "package.json").write_text(
+            '{"name":"sample","name":"other","publisher":"example","version":"1.0.0"}',
+            encoding="utf-8")
+        self.cli("install", src, ok=False)
+
+    def test_22_malformed_json_numeric_token_rejected(self):
+        src = self.package()
+        (src / "package.json").write_text(
+            '{"name":"sample","publisher":"example","version":"1.0.0","count":1e}',
+            encoding="utf-8")
+        self.cli("install", src, ok=False)
+
+    def test_23_disable_idempotent(self):
+        self.cli("install", self.package())
+        self.cli("disable", "example.sample")
+        self.cli("disable", "example.sample")
+        self.assertIn("disabled", self.cli("list"))
+
     def test_20_unknown_extensions_fail(self):
         self.cli("info", "nonexistent.extension", ok=False)
         self.cli("remove", "nonexistent.extension", ok=False)
