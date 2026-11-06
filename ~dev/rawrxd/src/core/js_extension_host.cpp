@@ -2188,7 +2188,7 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     if (!rawrxd::extensions::validManifestIdentity(publisher, name, version)) {
         return PatchResult::error("Invalid extension publisher, name, or version");
     }
-    if (mainEntry.empty()) mainEntry = "./extension.js";
+    if (mainEntry.empty()) mainEntry = "extension.js";
     // A manifest main is always relative to its own extension root.
     // Reject drive-qualified and rooted paths before string concatenation,
     // which would otherwise obscure an absolute-path request.
