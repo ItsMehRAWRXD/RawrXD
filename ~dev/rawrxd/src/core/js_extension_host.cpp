@@ -29,6 +29,7 @@
 
 #include "js_extension_host.hpp"
 #include "extension_entry_policy.hpp"
+#include "extension_extract_policy.hpp"
 #include "extension_read_policy.hpp"
 #include "extension_manifest_policy.hpp"
 #include "extension_signature_policy.hpp"
@@ -2970,13 +2971,8 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // from the verified package, including package.json or the JS entry point.
     std::error_code destError;
     const std::filesystem::path destination(destDir);
-    if (std::filesystem::exists(destination, destError)) {
-        if (destError || !std::filesystem::is_directory(destination, destError) ||
-            destError || !std::filesystem::is_empty(destination, destError) || destError) {
-            return PatchResult::error("VSIX extraction destination must be an empty directory");
-        }
-    } else if (destError) {
-        return PatchResult::error("VSIX extraction destination cannot be inspected");
+    if (!rawrxd::extensions::safeExtractionDestination(destination)) {
+        return PatchResult::error("VSIX extraction destination must be missing or an empty ordinary directory");
     }
     std::filesystem::create_directories(destination, destError);
     if (destError) return PatchResult::error("Failed to create VSIX extraction destination");
