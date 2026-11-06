@@ -39,7 +39,7 @@ int main() {
     gate("19_version_letters_rejected", !validVersion("a.b.c"));
     gate("20_signed_override", mayInstallVSIX(true, "0"));
     gate("21_empty_publisher_allowed", validManifestIdentity("", "extension", "0.0.1"));
-    gate("22_unicode_identifier_rejected", !validIdentifier("ext\\xC3\\xA9"));
+    gate("22_unicode_identifier_rejected", !validIdentifier("ext\xC3\xA9"));
     gate("23_version_leading_dot_rejected", !validVersion(".1.2.3"));
     gate("24_version_trailing_dot_rejected", !validVersion("1.2.3."));
     gate("25_unsigned_case_sensitive", !mayInstallVSIX(false, "YES") && mayInstallVSIX(false, "y"));
