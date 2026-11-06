@@ -180,6 +180,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# Portable, model-free extension lifecycle CLI for the native development build.
+include(cmake/OfflineExtensionsCli.cmake)
+
 # MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
 # Pin to C++20 for build stability. std::expected is available via
 # <expected> polyfill or 3rdparty if needed.
