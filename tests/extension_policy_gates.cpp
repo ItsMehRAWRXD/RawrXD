@@ -60,6 +60,10 @@ int main() {
     gate("41_leading_dot_allowed", validRelativeMain("./main.js"));
     gate("42_trailing_dot_rejected", !validRelativeMain("dist/main."));
     gate("43_reserved_question_mark_rejected", !validRelativeMain("dist/main?.js"));
+    gate("44_default_main_allowed", validRelativeMain("./extension.js"));
+    gate("45_reserved_device_rejected", !validRelativeMain("dist/CON.js"));
+    gate("46_reserved_serial_rejected", !validRelativeMain("dist/com1.js"));
+    gate("47_reserved_printer_rejected", !validRelativeMain("dist/LPT9.js"));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
