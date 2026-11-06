@@ -22,6 +22,7 @@ public:
 
     bool Initialize() {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (initialized_) return true;
         initialized_ = true;
         return true;
     }
@@ -46,6 +47,9 @@ public:
                                   const std::string& command,
                                   CommandHandler handler) {
         if (extensionId.empty() || command.empty() || !handler) return false;
+        // Reject malformed ownership identifiers before entering the registry.
+        // This is a command bridge, not an extension manifest validator.
+        if (extensionId.find_first_of(" \\t\\r\\n") != std::string::npos) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
         commands_.emplace(command, std::move(handler));
