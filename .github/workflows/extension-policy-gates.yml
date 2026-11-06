@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_bridge_failclosed.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
@@ -11,6 +13,8 @@ on:
   pull_request:
     paths:
       - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_bridge_failclosed.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
