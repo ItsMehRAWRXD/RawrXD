@@ -78,6 +78,19 @@ class MockTransportTests(unittest.TestCase):
         code, _, _ = self.request("POST", "/v1/chat/completions", {"model": MODEL, "messages": [1]})
         self.assertEqual(code, 400)
 
+    def test_invalid_role_rejected(self):
+        code, _, _ = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [{"role": "not-a-role", "content": "hi"}]})
+        self.assertEqual(code, 400)
+
+    def test_valid_system_user_roles(self):
+        code, _, body = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [
+                {"role": "system", "content": "test"},
+                {"role": "user", "content": "hi"}]})
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["choices"][0]["message"]["content"], "MOCK_RESPONSE_OK")
+
     def test_unknown_route(self):
         code, _, _ = self.request("GET", "/unknown")
         self.assertEqual(code, 404)
