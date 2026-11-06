@@ -29,24 +29,29 @@ class Handler(BaseHTTPRequestHandler):
                 {"id": MODEL, "object": "model", "owned_by": "local-mock"}]})
         return self.send_json(404, {"error": "not found"})
 
+    def reject(self, status, message):
+        # Never reuse a keep-alive connection when request bytes may remain.
+        self.close_connection = True
+        self.send_json(status, {"error": message})
+
     def do_POST(self):
         if self.path != "/v1/chat/completions":
-            return self.send_json(404, {"error": "not found"})
+            return self.reject(404, "not found")
         try:
             length = int(self.headers.get("Content-Length", "-1"))
         except ValueError:
             length = -1
         if length < 0 or length > MAX_BODY:
-            return self.send_json(413, {"error": "invalid request size"})
+            return self.reject(413, "invalid request size")
         try:
             data = json.loads(self.rfile.read(length))
         except (ValueError, UnicodeDecodeError):
-            return self.send_json(400, {"error": "invalid JSON"})
+            return self.reject(400, "invalid JSON")
         if not isinstance(data, dict) or data.get("model") != MODEL or not isinstance(data.get("messages"), list):
-            return self.send_json(400, {"error": "invalid model or messages"})
+            return self.reject(400, "invalid model or messages")
         if any(not isinstance(m, dict) or not isinstance(m.get("role"), str)
                or not isinstance(m.get("content"), str) for m in data["messages"]):
-            return self.send_json(400, {"error": "invalid message"})
+            return self.reject(400, "invalid message")
         if data.get("stream") is True:
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
