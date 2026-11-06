@@ -43,6 +43,8 @@ class Handler(BaseHTTPRequestHandler):
             length = -1
         if length < 0 or length > MAX_BODY:
             return self.reject(413, "invalid request size")
+        if length == 0:
+            return self.reject(400, "empty request body")
         try:
             data = json.loads(self.rfile.read(length))
         except (ValueError, UnicodeDecodeError):
