@@ -2781,9 +2781,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         return result;
     }
 
-    LARGE_INTEGER fileSize;
-    GetFileSizeEx(hFile, &fileSize);
+    LARGE_INTEGER fileSize{};
+    const BOOL gotFileSize = GetFileSizeEx(hFile, &fileSize);
     CloseHandle(hFile);
+    if (!gotFileSize) {
+        std::strncpy(result.errorDetail, "Cannot determine VSIX file size",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     if (fileSize.QuadPart < 100) {
         std::strncpy(result.errorDetail, "VSIX file too small (corrupt?)",
@@ -2801,11 +2806,21 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
     {
         hFile = CreateFileA(vsixPath, GENERIC_READ, FILE_SHARE_READ,
                             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (hFile != INVALID_HANDLE_VALUE) {
+        if (hFile == INVALID_HANDLE_VALUE) {
+            std::strncpy(result.errorDetail, "Cannot reopen VSIX for signature check",
+                         sizeof(result.errorDetail) - 1);
+            return result;
+        }
+        {
             unsigned char magic[4] = {};
             DWORD bytesRead = 0;
-            ReadFile(hFile, magic, 4, &bytesRead, nullptr);
+            const BOOL readOk = ReadFile(hFile, magic, 4, &bytesRead, nullptr);
             CloseHandle(hFile);
+            if (!readOk) {
+                std::strncpy(result.errorDetail, "Cannot read VSIX ZIP signature",
+                             sizeof(result.errorDetail) - 1);
+                return result;
+            }
 
             // ZIP magic: PK\x03\x04
             if (bytesRead < 4 || magic[0] != 'P' || magic[1] != 'K' ||
@@ -2859,9 +2874,11 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
             OutputDebugStringA("[JSExtensionHost] WARNING: Loading unsigned VSIX "
                              "(RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1)\n");
         } else {
-            // In strict mode, reject unsigned VSIX
-            // For now, we allow but warn (many extensions are unsigned)
-            OutputDebugStringA("[JSExtensionHost] NOTICE: VSIX is not signed\n");
+            // Fail closed unless unsigned extensions were explicitly opted in.
+            std::strncpy(result.errorDetail,
+                         "Unsigned VSIX rejected (set RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1 to opt in)",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
     }
 
