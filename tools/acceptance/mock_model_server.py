@@ -51,7 +51,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reject(400, "invalid JSON")
         if not isinstance(data, dict) or data.get("model") != MODEL or not isinstance(data.get("messages"), list):
             return self.reject(400, "invalid model or messages")
-        if any(not isinstance(m, dict) or not isinstance(m.get("role"), str)
+        if any(not isinstance(m, dict) or m.get("role") not in ("system", "developer", "user", "assistant", "tool")
                or not isinstance(m.get("content"), str) for m in data["messages"]):
             return self.reject(400, "invalid message")
         if data.get("stream") is True:
