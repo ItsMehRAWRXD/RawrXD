@@ -2723,7 +2723,8 @@ JSExtensionHost::Stats JSExtensionHost::getStats() const {
 
 void JSExtensionHost::getLoadedExtensions(JSExtensionState* outStates, size_t maxStates,
                                             size_t* outCount) const {
-    if (!outStates || !outCount) return;
+    if (outCount) *outCount = 0;
+    if (!outCount || (!outStates && maxStates != 0)) return;
 
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
 
