@@ -1,7 +1,9 @@
-// js_extension_host_production.cpp — Production JS extension host
+// js_extension_host_production.cpp — Fail-closed C ABI compatibility bridge
 // Replaces: js_extension_host_headless_stubs.cpp
 //
-// Provides real JS extension host functionality
+// This file does NOT implement JavaScript execution or VSIX installation.
+// The real QuickJS host lives in js_extension_host.cpp; do not treat this
+// compatibility bridge as an extension-runtime certification target.
 
 #include <mutex>
 #include <string>
