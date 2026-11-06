@@ -18,8 +18,20 @@ int main() {
     check(!RawrXD_JSExt_IsInitialized(), "initialize does not claim ready");
     check(!RawrXD_JSExt_ExecuteScript("1+1"), "script fails closed");
     check(!RawrXD_JSExt_LoadExtension("fixture"), "load fails closed");
+    // Exercise repeated lifecycle calls and rejected null/empty inputs.
+    // These checks must remain fail-closed even after shutdown/reinitialize.
+    check(!RawrXD_JSExt_ExecuteScript(nullptr), "null script rejected");
+    check(!RawrXD_JSExt_ExecuteScript(""), "empty script rejected");
+    check(!RawrXD_JSExt_LoadExtension(nullptr), "null extension rejected");
+    check(!RawrXD_JSExt_LoadExtension(""), "empty extension rejected");
     RawrXD_JSExt_Shutdown();
     check(!RawrXD_JSExt_IsInitialized(), "shutdown leaves uninitialized");
+    RawrXD_JSExt_Shutdown();
+    check(!RawrXD_JSExt_IsInitialized(), "repeated shutdown is safe");
+    check(!RawrXD_JSExt_Initialize(), "reinitialize fails closed");
+    check(!RawrXD_JSExt_IsInitialized(), "reinitialize does not fake readiness");
+    check(!RawrXD_JSExt_ExecuteScript("2+2"), "script rejected after reinitialize");
+    check(!RawrXD_JSExt_LoadExtension("fixture"), "load rejected after reinitialize");
     std::cout << "RESULT " << (failures ? "FAIL" : "PASS")
               << " failures=" << failures << '\n';
     return failures ? 1 : 0;
