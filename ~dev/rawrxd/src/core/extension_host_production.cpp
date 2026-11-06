@@ -22,6 +22,10 @@ public:
 
     bool Initialize() {
         std::lock_guard<std::mutex> lock(mutex_);
+        // Repeated initialization must not silently preserve stale extension
+        // callbacks from a previous host lifetime.
+        if (initialized_) return false;
+        if (!commands_.empty() || !owners_.empty()) return false;
         initialized_ = true;
         return true;
     }
