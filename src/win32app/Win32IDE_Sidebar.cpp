@@ -34,10 +34,7 @@ static std::vector<char*> g_sidebarStringHeap;
 namespace fs = std::filesystem;
 namespace {
 fs::path extensionRoot() {
-    char buffer[32768] = {};
-    const DWORD length = GetEnvironmentVariableA("LOCALAPPDATA", buffer, static_cast<DWORD>(sizeof(buffer)));
-    if (length && length < sizeof(buffer)) return fs::path(buffer) / "RawrXD" / "extensions";
-    return fs::current_path() / "extensions";
+    return RawrXD::OfflineExtensions::defaultRoot();
 }
 std::string chooseUnpackedExtensionFolder(HWND owner) {
     BROWSEINFOA info = {};
