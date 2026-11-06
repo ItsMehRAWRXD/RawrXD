@@ -16,6 +16,7 @@ on:
       - '.github/workflows/extension-policy-smoke.yml'
   pull_request:
     paths:
+      - 'tests/extension_policy_smoke.cpp'
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
       - '~dev/rawrxd/tests/extension_read_smoke.cpp'
@@ -74,6 +75,13 @@ jobs:
           cl /nologo /std:c++17 /EHsc /W4 /WX "~dev/rawrxd/tests/extension_read_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-read-smoke.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:RUNNER_TEMP/rawrxd-extension-read-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile and execute policy edge cases (MSVC)
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++20 /EHsc /W4 /WX "tests/extension_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-policy-edge.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:RUNNER_TEMP/rawrxd-extension-policy-edge.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile additional policy fixtures (MSVC)
         shell: pwsh
