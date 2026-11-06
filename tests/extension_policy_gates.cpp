@@ -70,6 +70,7 @@ int main() {
     gate("49_absolute_normalized_escape_rejected",
          !entryWithinRoot(fs::absolute("relative-extension"),
                           fs::absolute("relative-extension/../outside/main.js")));
+    gate("50_bare_dot_rejected", !validRelativeMain("."));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
