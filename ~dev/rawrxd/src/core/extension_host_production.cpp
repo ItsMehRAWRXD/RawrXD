@@ -44,7 +44,11 @@ public:
         if (!initialized_) {
             return false;
         }
-        return true;
+        // No dispatch implementation is registered in this compatibility host.
+        // Never report successful execution for an unhandled command.
+        (void)command;
+        (void)args;
+        return false;
     }
     
     std::vector<std::string> GetAvailableCommands() const {
