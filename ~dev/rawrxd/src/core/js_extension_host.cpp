@@ -2763,6 +2763,11 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
                       "VSIX file not found: %s", vsixPath);
         return result;
     }
+    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+        std::strncpy(result.errorDetail, "VSIX path refers to a directory",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     // ---- Check file extension ----
     const char* ext = PathFindExtensionA(vsixPath);
@@ -2834,8 +2839,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 
     // ---- Try Authenticode verification (for signed VSIX) ----
     {
-        wchar_t wPath[MAX_PATH];
-        MultiByteToWideChar(CP_UTF8, 0, vsixPath, -1, wPath, MAX_PATH);
+        wchar_t wPath[MAX_PATH] = {};
+        const int pathChars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                                  vsixPath, -1, wPath, MAX_PATH);
+        if (pathChars == 0) {
+            std::strncpy(result.errorDetail, "Cannot convert VSIX path for signature verification",
+                         sizeof(result.errorDetail) - 1);
+            return result;
+        }
 
         WINTRUST_FILE_INFO fileInfo = {};
         fileInfo.cbStruct = sizeof(fileInfo);
