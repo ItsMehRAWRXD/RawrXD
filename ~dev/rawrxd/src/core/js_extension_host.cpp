@@ -2859,7 +2859,7 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // characters rather than allowing a path to terminate either quoting layer.
     // This is a defensive stopgap until extraction uses a native ZIP library.
     for (const char* path : {zipPath, destDir}) {
-        if (std::strchr(path, '\\'') || std::strchr(path, '"'))
+        if (std::strchr(path, 0x27) || std::strchr(path, '"'))
             return PatchResult::error("Unsupported quote character in VSIX extraction path");
     }
 
