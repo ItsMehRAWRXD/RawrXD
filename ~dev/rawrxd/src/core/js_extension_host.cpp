@@ -2145,6 +2145,12 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     if (!validIdPart(name) || (!publisher.empty() && !validIdPart(publisher)))
         return PatchResult::error("Invalid extension name or publisher");
     if (mainEntry.empty()) mainEntry = "./extension.js";
+    // A manifest entrypoint is a relative path inside the extension package.
+    // Reject drive-rooted, UNC, and root-relative forms before joining paths.
+    const std::filesystem::path declaredEntry(mainEntry);
+    if (declaredEntry.is_absolute() || declaredEntry.has_root_name() ||
+        declaredEntry.has_root_directory())
+        return PatchResult::error("Absolute extension entry point is not allowed");
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
 
