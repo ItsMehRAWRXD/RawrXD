@@ -361,7 +361,7 @@ void AgenticBridge::SetOutputCallback(OutputCallback callback) {
 }
 
 bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) {
-    if (!m_initialized || !m_nativeAgent) return false;
+    if (!m_initialized || !m_nativeAgent || initialPrompt.empty() || maxIterations <= 0) return false;
     if (m_agentLoopRunning.load()) return true;
     if (m_agentThread.joinable()) {
         m_agentThread.join();
