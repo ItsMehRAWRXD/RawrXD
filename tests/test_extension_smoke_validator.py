@@ -49,7 +49,7 @@ class SmokeTranscriptValidation(unittest.TestCase):
         self.assertFalse(validate_output("", 0))
 
     def test_summary_only(self):
-        self.assertFalse(validate_output("RESULT 60/60 checks; PASS\\n", 0))
+        self.assertFalse(validate_output("RESULT 60/60 checks; PASS\n", 0))
 
     def test_success_with_missing_summary(self):
         self.assertFalse(validate_output(self.valid.rsplit("RESULT ", 1)[0], 0))
@@ -73,10 +73,10 @@ class SmokeTranscriptValidation(unittest.TestCase):
         self.assertFalse(validate_output(self.valid.replace(" checks; PASS", " checks"), 0))
 
     def test_extra_blank_line(self):
-        self.assertFalse(validate_output(self.valid + "\\n", 0))
+        self.assertFalse(validate_output(self.valid + "\n", 0))
 
     def test_prefix_noise(self):
-        self.assertFalse(validate_output("noise\\n" + self.valid, 0))
+        self.assertFalse(validate_output("noise\n" + self.valid, 0))
 
     def test_embedded_failure_marker(self):
         self.assertFalse(validate_output(self.valid.replace("PASS 01 test", "FAIL 01 test"), 0))
