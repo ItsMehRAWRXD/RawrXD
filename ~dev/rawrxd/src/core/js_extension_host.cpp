@@ -2863,8 +2863,12 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
             return PatchResult::error("Unsupported quote character in VSIX extraction path");
     }
 
-    // Create destination directory
-    std::filesystem::create_directories(destDir);
+    // Report filesystem errors instead of allowing an exception to escape the
+    // extension API boundary.
+    std::error_code createError;
+    std::filesystem::create_directories(destDir, createError);
+    if (createError)
+        return PatchResult::error("Failed to create VSIX destination directory");
 
     // ---- Shell-based extraction using PowerShell ----
     // This is a robust fallback that handles all ZIP variants.
