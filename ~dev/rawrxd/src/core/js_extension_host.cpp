@@ -2512,9 +2512,14 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     // Execute deactivate() if available
     if (state->hasDeactivate && state->jsContext) {
         JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-        JSValue result = JS_Eval(extCtx,
-            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();",
-            68, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        static constexpr char kDeactivateScript[] =
+            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();";
+        JSValue result = JS_Eval(extCtx, kDeactivateScript,
+            sizeof(kDeactivateScript) - 1, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        if (JS_IsException(result)) {
+            JS_FreeValue(extCtx, result);
+            return PatchResult::error("Extension deactivate() threw an exception");
+        }
         JS_FreeValue(extCtx, result);
     }
 
