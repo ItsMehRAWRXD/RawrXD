@@ -617,11 +617,14 @@ void Win32IDE::setSidebarView(SidebarView view)
     // the activity-bar transition atomic and prevents stale pixels/controls
     // from leaking between views.
     if (m_hwndSidebarContent) {
+        // Hide direct view containers only. Hiding every descendant also
+        // hides toolbar buttons, which stay hidden when the toolbar reappears.
         EnumChildWindows(m_hwndSidebarContent,
-            [](HWND child, LPARAM) -> BOOL {
-                ShowWindow(child, SW_HIDE);
+            [](HWND child, LPARAM root) -> BOOL {
+                if (GetParent(child) == reinterpret_cast<HWND>(root))
+                    ShowWindow(child, SW_HIDE);
                 return TRUE;
-            }, 0);
+            }, reinterpret_cast<LPARAM>(m_hwndSidebarContent));
         ShowWindow(m_hwndSidebarContent, SW_SHOW);
     }
 
