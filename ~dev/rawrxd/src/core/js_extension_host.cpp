@@ -2544,6 +2544,21 @@ PatchResult JSExtensionHost::unloadExtension(const char* extensionId) {
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) return PatchResult::error("Extension not found");
 
+    // Invalidate registered callbacks before their owning QuickJS context dies.
+    // Keep the binding objects allocated: the native command registry retains
+    // their addresses until its own registration is removed.
+    {
+        std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+        JSContext* dyingContext = static_cast<JSContext*>(it->second->jsContext);
+        for (auto& binding : s_jsCommands) {
+            if (binding.ctx == dyingContext && dyingContext != nullptr) {
+                JS_FreeValue(dyingContext, binding.callback);
+                binding.callback = JS_UNDEFINED;
+                binding.ctx = nullptr;
+            }
+        }
+    }
+
     // Free JS context
     if (it->second->jsContext && it->second->jsContext != m_jsContext) {
         JS_FreeContext(static_cast<JSContext*>(it->second->jsContext));
