@@ -25,8 +25,9 @@ def main():
         "queued result status": "msg.completionCallback(execution.success, callbackResult, msg.completionCtx)",
         "queued error detail fallback": "execution.detail.c_str()",
         "invalid queued request callback": 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)',
-        "event JS result cleanup": "JS_FreeValue(extCtx, eventResult);",
-        "event JS exception inspection": "JS_IsException(eventResult)",
+        "event JSON parse": "JS_ParseJSON(extCtx, eventData.c_str(),",
+        "event direct callback": "JS_Call(extCtx, handler, handlers, 1, &payload)",
+        "event payload cleanup": "JS_FreeValue(extCtx, payload);",
         "event name validation": "const bool validEventName = !eventName.empty()",
         "unsafe event rejection": "if (!validEventName)",
         "no QuickJS fail closed": 'return PatchResult::error("QuickJS unavailable: JavaScript extension host disabled")',
@@ -34,7 +35,10 @@ def main():
     for label, fragment in required_fragments.items():
         if fragment not in host_text:
             raise RuntimeError(f"FAIL: {label} invariant missing")
-    print("PASS: queued callback source invariants (not runtime PASS)")
+    event_section = host_text.split("case JSMessage::Type::FireEvent:", 1)[-1].split("case JSMessage::Type::TimerFire:", 1)[0]
+    if "JS_Eval(" in event_section:
+        raise RuntimeError("FAIL: event dispatch must not eval generated JavaScript")
+    print("PASS: queued callback and event-dispatch source invariants (not runtime PASS)")
 
     windows = sys.platform == "win32"
     compiler = (shutil.which("cl") if windows else None) or shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
