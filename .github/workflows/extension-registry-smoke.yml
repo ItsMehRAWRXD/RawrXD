@@ -1,0 +1,54 @@
+name: Extension registry headless smoke
+
+on:
+  push:
+    paths:
+      - 'tests/extension_command_registry_smoke.cpp'
+      - 'tests/run_extension_registry_local.py'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '.github/workflows/extension-registry-smoke.yml'
+  pull_request:
+    paths:
+      - 'tests/extension_command_registry_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '.github/workflows/extension-registry-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  extension-registry:
+    name: C++17 deterministic registry acceptance
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run on Linux (no model required)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -o pipefail
+          c++ -std=c++17 -O1 -Wall -Wextra -Werror -pedantic -pthread tests/extension_command_registry_smoke.cpp -o extension_registry_smoke
+          ./extension_registry_smoke | tee extension-registry-results.txt
+          python3 tests/run_extension_registry_local.py | tee -a extension-registry-results.txt
+      - name: Compile and run on Windows (no model required)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_registry_smoke.exe tests/extension_command_registry_smoke.cpp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\\extension_registry_smoke.exe | Tee-Object -FilePath extension-registry-results.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/run_extension_registry_local.py --compiler cl | Tee-Object -FilePath extension-registry-runner-results.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve acceptance output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-registry-${{ matrix.os }}
+          path: |
+            extension-registry-results.txt
+            extension-registry-runner-results.txt
+          if-no-files-found: warn
