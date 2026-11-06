@@ -2934,10 +2934,20 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error("VSIX extraction timed out (60s)");
     }
 
-    DWORD exitCode = 0;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
+    // WAIT_FAILED and exit-code query failures are not successful extraction.
+    if (waitResult != WAIT_OBJECT_0) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return PatchResult::error("VSIX extraction wait failed");
+    }
+
+    DWORD exitCode = STILL_ACTIVE;
+    const BOOL gotExitCode = GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    if (!gotExitCode || exitCode == STILL_ACTIVE) {
+        return PatchResult::error("VSIX extraction process exit status unavailable");
+    }
 
     if (exitCode != 0) {
         char err[256];
