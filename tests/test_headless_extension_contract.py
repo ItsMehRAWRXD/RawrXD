@@ -10,6 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp"
+PRODUCTION_SOURCE = ROOT / "~dev/rawrxd/src/core/js_extension_host.cpp"
 
 def body_of(source: str, name: str) -> str:
     pattern = rf"\b(?:PatchResult|bool|JSExtensionHost::VSIXVerificationResult)\s+JSExtensionHost::{re.escape(name)}\s*\([^)]*\)\s*(?:const\s*)?\{{"
@@ -62,6 +63,16 @@ class HeadlessExtensionContract(unittest.TestCase):
         body = body_of(self.source, "verifyVSIX")
         for statement in ("r.isValid = false;", "r.isSigned = false;", "r.signatureVerified = false;"):
             self.assertIn(statement, body)
+
+    def test_production_host_rejects_missing_quickjs_before_polyfills(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "initialize")
+        guard = body.find("#if !RAWRXD_HAS_QUICKJS")
+        reject = body.find('return PatchResult::error("QuickJS is not compiled')
+        polyfills = body.find("PolyfillEngine::instance().initialize()")
+        self.assertGreaterEqual(guard, 0)
+        self.assertGreater(reject, guard)
+        self.assertGreater(polyfills, reject)
 
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
