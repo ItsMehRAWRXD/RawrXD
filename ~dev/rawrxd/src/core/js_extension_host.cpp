@@ -2601,15 +2601,37 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     JSExtensionState* state = it->second.get();
     if (!state->activated) return PatchResult::ok("Already deactivated");
 
-    // Execute deactivate() if available
-    if (state->hasDeactivate && state->jsContext) {
-        JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
+    // Deactivation destroys the per-extension context, so reactivation
+    // creates a fresh one rather than leaking the previous context.
+    bool deactivateFailed = false;
+    JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
+    if (state->hasDeactivate && extCtx) {
         constexpr char deactivateScript[] =
             "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();";
         JSValue result = JS_Eval(extCtx, deactivateScript,
             sizeof(deactivateScript) - 1, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        deactivateFailed = JS_IsException(result);
         JS_FreeValue(extCtx, result);
+        if (deactivateFailed) {
+            JSValue exc = JS_GetException(extCtx);
+            JS_FreeValue(extCtx, exc);
+        }
     }
+    if (extCtx) {
+        {
+            std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+            for (auto& binding : s_jsCommands) {
+                if (binding.ctx == extCtx) {
+                    JS_FreeValue(extCtx, binding.callback);
+                    binding.callback = JS_UNDEFINED;
+                    binding.ctx = nullptr;
+                }
+            }
+        }
+        JS_FreeContext(extCtx);
+        state->jsContext = nullptr;
+    }
+    state->hasDeactivate = false;
 
     state->activated = false;
     if (m_stats.jsExtensionsActive > 0) m_stats.jsExtensionsActive--;
@@ -2618,6 +2640,7 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     OutputDebugStringA(extensionId);
     OutputDebugStringA("\n");
 
+    if (deactivateFailed) return PatchResult::error("Extension deactivate() threw an exception");
     return PatchResult::ok("Extension deactivated");
 }
 
