@@ -47,6 +47,14 @@ int main() {
     check(!validRelativeMain("out/folder /main.js"), "trailing space component rejected");
     check(!validRelativeMain("out/main.js."), "trailing dot filename rejected");
     check(validRelativeMain("out/main-file_2.js"), "ordinary entry remains accepted");
+    check(!validRelativeMain("CON"), "Windows CON device rejected");
+    check(!validRelativeMain("out/nul.js"), "Windows NUL device with extension rejected");
+    check(!validRelativeMain("out/PRN.txt"), "Windows PRN device with extension rejected");
+    check(!validRelativeMain("out/aux"), "Windows AUX device rejected");
+    check(!validRelativeMain("out/com1.js"), "Windows COM1 device rejected");
+    check(!validRelativeMain("out/LPT9.js"), "Windows LPT9 device rejected");
+    check(validRelativeMain("out/COM0.js"), "nonreserved COM0 allowed");
+    check(validRelativeMain("out/console.js"), "ordinary console name allowed");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
