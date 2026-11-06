@@ -13,14 +13,32 @@ on:
   workflow_dispatch:
 jobs:
   native-extension-bridge:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Compile actual extension registry with warnings
+      - name: Compile actual extension registry with warnings (Linux)
+        if: runner.os == 'Linux'
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -o /tmp/extension_bridge_test tools/acceptance/extension_command_bridge_native_test.cpp
-      - name: Execute native lifecycle and reentrant callback assertions
+      - name: Execute native lifecycle and reentrant callback assertions (Linux)
+        if: runner.os == 'Linux'
         run: timeout 15s /tmp/extension_bridge_test
-      - name: Build with address and undefined behavior sanitizers
+      - name: Build with address and undefined behavior sanitizers (Linux)
+        if: runner.os == 'Linux'
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -o /tmp/extension_bridge_sanitized tools/acceptance/extension_command_bridge_native_test.cpp
-      - name: Execute sanitizer-enabled acceptance
+      - name: Execute sanitizer-enabled acceptance (Linux)
+        if: runner.os == 'Linux'
         run: timeout 15s /tmp/extension_bridge_sanitized
+      - name: Compile actual extension registry with MSVC (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_bridge_test.exe tools\acceptance\extension_command_bridge_native_test.cpp
+      - name: Execute native acceptance (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath '.\extension_bridge_test.exe' -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "Native acceptance failed with exit code $($p.ExitCode)" }
