@@ -22,6 +22,8 @@ def main():
         raise SystemExit(f"BLOCKED: extension host source missing: {host_source}")
     host_text = host_source.read_text(encoding="utf-8")
     required_fragments = {
+        "unload callback invalidation": "binding.ctx = nullptr;",
+        "unload callback release": "JS_FreeValue(dyingContext, binding.callback);",
         "deactivation script exact length": "sizeof(deactivateScript) - 1",
         "stable command binding storage": "std::deque<JSCommandBinding> s_jsCommands",
         "queued result status": "msg.completionCallback(execution.success, callbackResult, msg.completionCtx)",
