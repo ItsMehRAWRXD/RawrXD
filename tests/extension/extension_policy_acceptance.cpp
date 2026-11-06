@@ -24,6 +24,10 @@ int main() {
     require(!validIdentifier(std::string(129, 'a')), "identifier length");
     require(validVersion("1.2.3"), "version valid");
     require(validVersion("0.0.0"), "zero version valid");
+    require(!validVersion("01.2.3"), "leading zero major");
+    require(!validVersion("1.02.3"), "leading zero minor");
+    require(!validVersion("1.2.003"), "leading zero patch");
+    require(validVersion("10.20.30"), "multi digit version valid");
     require(!validVersion("1.2.3."), "version trailing dot");
     require(!validVersion("1.2.-3"), "version negative segment");
     require(!validVersion("1.2"), "version short");
