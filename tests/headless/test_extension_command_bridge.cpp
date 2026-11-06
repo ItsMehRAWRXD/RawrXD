@@ -25,6 +25,20 @@ int main(){
  CHECK("14 unregister host command", h.UnregisterCommand("x") && !h.ExecuteCommand("x", ""));
  CHECK("15 malformed owner rejected", !h.RegisterExtensionCommand("bad owner", "bad.cmd", [](auto const&){return true;}));
  CHECK("16 shutdown clears state", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty() && !h.ExecuteCommand("throw", "")));
+ CHECK("17 idempotent initialize", h.Initialize() && h.Initialize());
+ CHECK("18 missing unregister denied", !h.UnregisterCommand("not.registered"));
+ CHECK("19 empty extension owner denied", !h.RegisterExtensionCommand("", "invalid.owner", [](auto const&){return true;}));
+ CHECK("20 empty extension command denied", !h.RegisterExtensionCommand("owner", "", [](auto const&){return true;}));
+ CHECK("21 null extension callback denied", !h.RegisterExtensionCommand("owner", "invalid.callback", {}));
+ CHECK("22 tab owner denied", !h.RegisterExtensionCommand("bad\\towner", "invalid.tab", [](auto const&){return true;}));
+ CHECK("23 register independent owners", h.RegisterExtensionCommand("one", "one.cmd", [](auto const&){return true;}) && h.RegisterExtensionCommand("two", "two.cmd", [](auto const&){return true;}));
+ CHECK("24 owner cleanup isolated", (h.UnregisterExtensionCommands("one"), !h.ExecuteCommand("one.cmd", "") && h.ExecuteCommand("two.cmd", "")));
+ CHECK("25 nested command dispatch", h.RegisterCommand("nested", [&](auto const&){return h.ExecuteCommand("two.cmd", "");}) && h.ExecuteCommand("nested", ""));
+ CHECK("26 self-unregister callback", h.RegisterCommand("self.remove", [&](auto const&){return h.UnregisterCommand("self.remove");}) && h.ExecuteCommand("self.remove", "") && !h.ExecuteCommand("self.remove", ""));
+ CHECK("27 callback can register command", h.RegisterCommand("register.inside", [&](auto const&){return h.RegisterCommand("registered.inside", [](auto const&){return true;});}) && h.ExecuteCommand("register.inside", "") && h.ExecuteCommand("registered.inside", ""));
+ CHECK("28 shutdown clears owners", (h.Shutdown(), h.Initialize(), h.RegisterExtensionCommand("two", "two.cmd", [](auto const&){return true;})));
+ CHECK("29 enumeration sorted", h.RegisterCommand("alpha", [](auto const&){return true;}) && h.GetAvailableCommands().front()=="alpha");
+ CHECK("30 final shutdown", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty()));
  std::cout << "RESULT " << passed << " passed " << failed << " failed\n";
  return failed ? 1 : 0;
 }
