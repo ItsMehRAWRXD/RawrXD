@@ -6,7 +6,7 @@
 using RawrXD::OfflineExtensions::Store;
 
 static int usage() {
-    std::cerr << "Usage: rawrxd-extensions [--root DIR] "
+    std::cerr << "Usage: rawrxd-extensions [--root DIR] [--approve-mutations] "
                  "list|info ID|install DIRECTORY|update DIRECTORY|enable ID|disable ID|remove ID|recover\n";
     return 2;
 }
@@ -14,9 +14,15 @@ int main(int argc, char** argv) {
     try {
         int i = 1;
         std::string root = "extensions";
-        if (i < argc && std::string(argv[i]) == "--root") {
-            if (++i >= argc) return usage();
-            root = argv[i++];
+        bool approveMutations = false;
+        while (i < argc) {
+            if (std::string(argv[i]) == "--root") {
+                if (++i >= argc) return usage();
+                root = argv[i++];
+            } else if (std::string(argv[i]) == "--approve-mutations") {
+                approveMutations = true;
+                ++i;
+            } else break;
         }
         if (i >= argc) return usage();
         const std::string command = argv[i++];
@@ -27,6 +33,13 @@ int main(int argc, char** argv) {
         if ((!withArg && !withoutArg) ||
             (withoutArg && i != argc) || (withArg && i + 1 != argc))
             return usage();
+        const bool mutation = command == "install" || command == "update" ||
+                              command == "enable" || command == "disable" ||
+                              command == "remove" || command == "recover";
+        if (mutation && !approveMutations) {
+            std::cerr << "ERROR: --approve-mutations required for filesystem changes\n";
+            return 3;
+        }
         Store store(root);
         const std::string arg = withArg ? argv[i] : "";
         auto show = [](const RawrXD::OfflineExtensions::Extension& e) {
