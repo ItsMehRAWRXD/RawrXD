@@ -169,6 +169,13 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("if (!nestedManifest && !rootManifest)", body)
         self.assertNotIn("std::filesystem::is_empty(destDir)", body)
 
+    def test_duplicate_extension_registration_fails_closed(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "loadExtensionFromDir")
+        self.assertIn("Extension already loaded", body)
+        self.assertIn("m_extensions.emplace(extensionId, std::move(state))", body)
+        self.assertNotIn("m_extensions[extensionId] = std::move(state)", body)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
