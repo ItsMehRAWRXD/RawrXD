@@ -27,6 +27,9 @@ int main() {
     CHECK(!host.RegisterCommand("", [](const auto&) { return true; }));
     CHECK(!host.RegisterExtensionCommand("", "x", [](const auto&) { return true; }));
     CHECK(!host.RegisterExtensionCommand("extension", "", [](const auto&) { return true; }));
+    CHECK(!host.RegisterCommand("empty-handler", ExtensionHost::CommandHandler{}));
+    CHECK(!host.RegisterExtensionCommand("extension", "empty-handler",
+                                         ExtensionHost::CommandHandler{}));
     CHECK(host.RegisterExtensionCommand("extension-a", "echo",
         [](const std::string& arg) { return arg == "expected"; }));
     CHECK(!host.RegisterExtensionCommand("extension-b", "echo",
