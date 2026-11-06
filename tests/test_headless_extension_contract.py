@@ -134,6 +134,15 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("const BOOL gotExitCode = GetExitCodeProcess(", body)
         self.assertIn("!gotExitCode || exitCode == STILL_ACTIVE", body)
 
+    def test_vsix_destination_creation_failure_is_reported(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("std::filesystem::create_directories(destDir, createError)", body)
+        self.assertIn("if (createError)", body)
+        self.assertIn("Failed to create VSIX destination directory", body)
+        self.assertLess(body.find("Failed to create VSIX destination directory"),
+                        body.find("CreateProcessA("))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
