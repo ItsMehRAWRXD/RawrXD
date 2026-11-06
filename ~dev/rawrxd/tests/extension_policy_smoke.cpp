@@ -59,9 +59,9 @@ int main() {
     if (!ec) check(!entryWithinRoot(base / "extension", base / "extension" / "link" / "main.js"), "symlink escape rejected");
     else {
 #ifdef _WIN32
-        std::cout << "SKIP symlink fixture unavailable on Windows: " << ec.message() << '\\n';
+        std::cout << "SKIP symlink fixture unavailable on Windows: " << ec.message() << '\n';
 #else
-        std::cerr << "FAIL symlink fixture unavailable: " << ec.message() << '\\n';
+        std::cerr << "FAIL symlink fixture unavailable: " << ec.message() << '\n';
         ++failed;
 #endif
     }
