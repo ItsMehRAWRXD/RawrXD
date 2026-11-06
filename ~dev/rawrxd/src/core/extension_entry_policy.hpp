@@ -15,11 +15,10 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
     // Treat both separator styles as path boundaries on every platform.
     // Reject parent traversal, empty components, and colon-based drive/stream syntax.
     size_t segmentStart = 0;
-    bool firstSegment = true;
     for (size_t i = 0; i <= entry.size(); ++i) {
         if (i == entry.size() || entry[i] == '/' || entry[i] == 92) {
             const auto segment = entry.substr(segmentStart, i - segmentStart);
-            if (segment == ".." || (segment == "." && !firstSegment) || segment.empty() ||
+            if (segment == ".." || segment == "." || segment.empty() ||
                 (segment != "." && segment.back() == '.') || segment.back() == ' ') return false;
             // Windows treats these basenames as devices even with extensions.
             const auto dot = segment.find('.');
@@ -39,7 +38,6 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
                      (a == 'L' && b == 'P' && c == 'T')) &&
                     stem[3] >= '1' && stem[3] <= '9') return false;
             }
-            firstSegment = false;
             segmentStart = i + 1;
         } else {
             const unsigned char c = static_cast<unsigned char>(entry[i]);
