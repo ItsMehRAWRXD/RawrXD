@@ -18,7 +18,7 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
     for (size_t i = 0; i <= entry.size(); ++i) {
         if (i == entry.size() || entry[i] == '/' || entry[i] == 92) {
             const auto segment = entry.substr(segmentStart, i - segmentStart);
-            if (segment == ".." || segment.empty()) return false;
+            if (segment == ".." || segment == "." || segment.empty()) return false;
             segmentStart = i + 1;
         } else {
             const unsigned char c = static_cast<unsigned char>(entry[i]);
