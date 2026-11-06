@@ -38,10 +38,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Compile and run with MSVC
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_command_contract.cpp /Fe:extension_command_contract.exe
           if errorlevel 1 exit /b 1
           extension_command_contract.exe
