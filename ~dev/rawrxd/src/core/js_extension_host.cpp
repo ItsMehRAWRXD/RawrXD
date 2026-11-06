@@ -2142,6 +2142,14 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         return PatchResult::error("Extension manifest escapes installation root");
     }
 
+    // Bound untrusted manifest reads before allocating or parsing JSON.
+    // A malformed VSIX must not cause an unbounded memory allocation.
+    std::error_code manifestSizeError;
+    const auto manifestSize = std::filesystem::file_size(pkgPath, manifestSizeError);
+    if (manifestSizeError || manifestSize == 0 || manifestSize > 256 * 1024) {
+        return PatchResult::error("Extension manifest missing or exceeds 256 KiB");
+    }
+
     std::string pkgJson = readFileToString(pkgPath.c_str());
     if (pkgJson.empty()) return PatchResult::error("Failed to read package.json");
 
@@ -2188,6 +2196,12 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         std::snprintf(err, sizeof(err),
                       "Entry point not found: %s", mainPath.c_str());
         return PatchResult::error(err);
+    }
+
+    // Extension entry points must be ordinary files, not directories.
+    std::error_code mainTypeError;
+    if (!std::filesystem::is_regular_file(mainPath, mainTypeError) || mainTypeError) {
+        return PatchResult::error("Extension main entry is not a regular file");
     }
 
     // An extension manifest must not execute code outside its installation.
