@@ -108,6 +108,36 @@ int main() {
     CHECK(!host.UnregisterCommand("throws"));
     CHECK(host.GetAvailableCommands().empty());
 
+    // Shutdown while a command is executing must not deadlock; a new
+    // registry generation must not resurrect old extension commands.
+    std::atomic<bool> shutdownEntered{false};
+    std::atomic<bool> shutdownRelease{false};
+    std::atomic<int> shutdownCompleted{0};
+    CHECK(host.RegisterExtensionCommand("extension-shutdown", "shutdown-slow",
+        [&](const auto&) {
+            shutdownEntered.store(true);
+            while (!shutdownRelease.load()) std::this_thread::yield();
+            ++shutdownCompleted;
+            return true;
+        }));
+    std::thread shutdownWorker([&] { host.ExecuteCommand("shutdown-slow", ""); });
+    const auto shutdownDeadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    while (!shutdownEntered.load() &&
+           std::chrono::steady_clock::now() < shutdownDeadline)
+        std::this_thread::yield();
+    const bool shutdownStarted = shutdownEntered.load();
+    host.Shutdown();
+    const bool shutdownDenied = !host.ExecuteCommand("shutdown-slow", "");
+    CHECK(host.Initialize());
+    const bool restartDenied = !host.ExecuteCommand("shutdown-slow", "");
+    shutdownRelease.store(true);
+    shutdownWorker.join();
+    CHECK(shutdownStarted);
+    CHECK(shutdownDenied);
+    CHECK(restartDenied);
+    CHECK(shutdownCompleted.load() == 1);
+
     // Shutdown invalidates previously registered callbacks, not just visibility.
     int invocations = 0;
     CHECK(host.RegisterExtensionCommand("extension-lifecycle", "before-shutdown",
