@@ -51,8 +51,20 @@ public:
         if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
-        commands_.emplace(command, std::move(handler));
-        owners_[command] = extensionId;
+        // Insert ownership first: if allocation fails, no executable orphan
+        // command can escape extension unload cleanup.
+        auto owner = owners_.emplace(command, extensionId);
+        if (!owner.second) return false;
+        try {
+            auto inserted = commands_.emplace(command, std::move(handler));
+            if (!inserted.second) {
+                owners_.erase(owner.first);
+                return false;
+            }
+        } catch (...) {
+            owners_.erase(command);
+            throw;
+        }
         return true;
     }
 
