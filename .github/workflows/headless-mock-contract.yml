@@ -76,14 +76,14 @@ jobs:
       - name: Compile and run VSIX signature policy on MSVC
         shell: cmd
         run: |
-          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\\headless\\extension_signature_contract.cpp /Fe:extension_signature_contract.exe
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_signature_contract.cpp /Fe:extension_signature_contract.exe
           if errorlevel 1 exit /b 1
           extension_signature_contract.exe
           if errorlevel 1 exit /b 1
       - name: Compile and run manifest policy on MSVC
         shell: cmd
         run: |
-          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\\headless\\extension_manifest_contract.cpp /Fe:extension_manifest_contract.exe
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DNDEBUG tests\headless\extension_manifest_contract.cpp /Fe:extension_manifest_contract.exe
           if errorlevel 1 exit /b 1
           extension_manifest_contract.exe
           if errorlevel 1 exit /b 1
