@@ -38,6 +38,15 @@ int main() {
     check(!validRelativeMain("out\\..\\escape.js"), "nested Windows parent traversal rejected");
     check(!validRelativeMain("out//main.js"), "empty path component rejected");
     check(!validRelativeMain("out:stream/main.js"), "colon path syntax rejected");
+    check(!validRelativeMain("out/file?.js"), "Windows question mark rejected");
+    check(!validRelativeMain("out/file*.js"), "Windows wildcard rejected");
+    check(!validRelativeMain("out/file|name.js"), "Windows pipe rejected");
+    check(!validRelativeMain("out/file<name.js"), "Windows angle bracket rejected");
+    check(!validRelativeMain("out/file\"name.js"), "Windows quote rejected");
+    check(!validRelativeMain("out/folder./main.js"), "trailing dot component rejected");
+    check(!validRelativeMain("out/folder /main.js"), "trailing space component rejected");
+    check(!validRelativeMain("out/main.js."), "trailing dot filename rejected");
+    check(validRelativeMain("out/main-file_2.js"), "ordinary entry remains accepted");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
