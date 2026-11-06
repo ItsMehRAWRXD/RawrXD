@@ -2133,6 +2133,17 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::string displayName = jsonGetString(pkgJson, "displayName");
 
     if (name.empty()) return PatchResult::error("Extension has no name");
+    // Extension IDs must not contain filesystem separators or control characters.
+    // Reject invalid names before constructing an extension ID or loading scripts.
+    const auto validIdPart = [](const std::string& value) {
+        return !value.empty() && std::all_of(value.begin(), value.end(),
+            [](unsigned char c) {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                       (c >= '0' && c <= '9') || c == '-' || c == '_';
+            });
+    };
+    if (!validIdPart(name) || (!publisher.empty() && !validIdPart(publisher)))
+        return PatchResult::error("Invalid extension name or publisher");
     if (mainEntry.empty()) mainEntry = "./extension.js";
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
