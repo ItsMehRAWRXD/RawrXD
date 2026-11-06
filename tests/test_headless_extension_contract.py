@@ -118,6 +118,22 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("std::strchr(path, 0x27)", body)
         self.assertIn("Unsupported quote character in VSIX extraction path", body)
 
+    def test_vsix_extraction_rejects_truncated_command(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("cmdLen < 0 || static_cast<size_t>(cmdLen) >= sizeof(cmd)", body)
+        self.assertIn("VSIX extraction command exceeds buffer capacity", body)
+        self.assertLess(body.find("VSIX extraction command exceeds buffer capacity"),
+                        body.find("CreateProcessA("))
+
+    def test_vsix_extraction_checks_process_wait_and_exit_status(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("waitResult != WAIT_OBJECT_0", body)
+        self.assertIn("VSIX extraction process wait failed", body)
+        self.assertIn("const BOOL gotExitCode = GetExitCodeProcess(", body)
+        self.assertIn("!gotExitCode || exitCode == STILL_ACTIVE", body)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
