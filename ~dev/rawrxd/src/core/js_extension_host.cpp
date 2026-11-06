@@ -2870,10 +2870,12 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // This is a robust fallback that handles all ZIP variants.
     // In production builds, replace with minizip or direct DEFLATE.
     char cmd[2048];
-    std::snprintf(cmd, sizeof(cmd),
+    const int cmdLen = std::snprintf(cmd, sizeof(cmd),
                   "powershell -NoProfile -Command "
                   "\"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"",
                   zipPath, destDir);
+    if (cmdLen < 0 || static_cast<size_t>(cmdLen) >= sizeof(cmd))
+        return PatchResult::error("VSIX extraction command exceeds buffer capacity");
 
     OutputDebugStringA("[JSExtensionHost] Extracting VSIX: ");
     OutputDebugStringA(cmd);
