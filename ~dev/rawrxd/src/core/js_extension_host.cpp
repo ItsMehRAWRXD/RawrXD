@@ -70,6 +70,12 @@
     #include "quickjs/quickjs.h"
     #define RAWRXD_HAS_QUICKJS 1
 #else
+    // Production/CI builds that require actual extension execution must fail
+    // instead of silently compiling the compatibility-only QuickJS shims.
+    // Define RAWRXD_REQUIRE_QUICKJS=1 on the shipping extension-host target.
+    #if defined(RAWRXD_REQUIRE_QUICKJS) && RAWRXD_REQUIRE_QUICKJS
+        #error "RAWRXD_REQUIRE_QUICKJS=1 but quickjs.h was not found; real VSIX execution is unavailable"
+    #endif
     #define RAWRXD_HAS_QUICKJS 0
 
     // Minimal QuickJS type stubs for compilation without the engine
