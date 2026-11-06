@@ -26,6 +26,8 @@ int main() {
     assert(host.Initialize());
     assert(!host.RegisterCommand("", [](const std::string&) { return true; }));
     assert(!host.RegisterCommand("null-handler", {}));
+    assert(!host.RegisterCommand("bad command", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand("extension.one", "bad command", [](const std::string&) { return true; }));
     int calls = 0;
     assert(host.RegisterCommand("host-command", [&](const std::string& arg) {
         ++calls;
