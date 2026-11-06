@@ -1,5 +1,8 @@
 // Native integration test: compiles the actual extension command bridge, no mocks.
 #include "../../~dev/rawrxd/src/core/extension_host_production.cpp"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <stdexcept>
 #include <string>
