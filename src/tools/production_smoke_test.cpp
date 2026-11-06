@@ -68,7 +68,8 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     bool memory_leaks_detected = false;
 
     if (tensor_count == 0) {
-        std::cout << "[!] No tensors in ROM manifest, skipping page lease stress test.\n";
+        std::cerr << "[-] Gate 4 FAIL: ROM manifest has no tensors; page lease test was not executed.\n";
+        std::exit(1);
     } else {
         for (size_t iter = 0; iter < test_iterations; ++iter) {
             size_t target_idx = iter % tensor_count;
@@ -97,7 +98,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     }
 
     if (!memory_leaks_detected) {
-        std::cout << "[✓] Gate 4: " << test_iterations << " High-Frequency Page Leases -> PASS (0 Memory Leaks)\n";
+        std::cout << "[✓] Gate 4: " << test_iterations << " Page Lease Attempts -> PASS (no invalid views observed)\n";
     } else {
         std::cerr << "[-] CRITICAL: Memory virtualization tracking failure during lease burst.\n";
         std::exit(1);
@@ -108,7 +109,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     std::cout << "[✓] Gate 5: Hardware Profiler initialized -> PASS\n";
 
     std::cout << "----------------------------------------------------------------------\n";
-    std::cout << "STATUS: ENGINE FINALIZED, VERIFIED, AND CERTIFIED PRODUCTION-READY.\n";
+    std::cout << "STATUS: FIVE SMOKE CHECKS COMPLETED; NOT A FULL ENGINE CERTIFICATION.\n";
     std::cout << "======================================================================\n";
 }
 
