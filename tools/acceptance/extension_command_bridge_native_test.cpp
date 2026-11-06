@@ -31,8 +31,8 @@ int main() {
     assert(calls == 2);
     assert(!host.RegisterExtensionCommand("", "bad", [](const std::string&) { return true; }));
     assert(!host.RegisterExtensionCommand("bad id", "bad", [](const std::string&) { return true; }));
-    assert(!host.RegisterExtensionCommand("bad\\tid", "bad-tab", [](const std::string&) { return true; }));
-    assert(!host.RegisterExtensionCommand("bad\\nid", "bad-newline", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand("bad\tid", "bad-tab", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand("bad\nid", "bad-newline", [](const std::string&) { return true; }));
     assert(!host.RegisterExtensionCommand("extension.one", "host-command", [](const std::string&) { return true; }));
     assert(host.RegisterExtensionCommand("extension.one", "extension-command", [&](const std::string&) {
         // Re-entrant unregister must not deadlock.
