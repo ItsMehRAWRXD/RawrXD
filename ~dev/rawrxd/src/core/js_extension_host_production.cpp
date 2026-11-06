@@ -1,7 +1,7 @@
-// js_extension_host_production.cpp — Production JS extension host
-// Replaces: js_extension_host_headless_stubs.cpp
-//
-// Provides real JS extension host functionality
+// js_extension_host_production.cpp — compatibility-only C ABI bridge
+// This translation unit does NOT implement a JavaScript runtime or VSIX loader.
+// Unsupported operations deliberately fail closed; use js_extension_host.cpp
+// for the real QuickJS-backed host. Do not treat a successful link as activation.
 
 #include <mutex>
 #include <string>
