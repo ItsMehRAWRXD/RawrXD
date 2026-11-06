@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -104,6 +105,27 @@ class JsonFields {
         }
         throw std::runtime_error("Unterminated JSON string");
     }
+    static bool validNumber(const std::string& v) {
+        size_t i = 0;
+        if (i < v.size() && v[i] == '-') ++i;
+        if (i == v.size()) return false;
+        if (v[i] == '0') ++i;
+        else if (v[i] >= '1' && v[i] <= '9') {
+            while (i < v.size() && v[i] >= '0' && v[i] <= '9') ++i;
+        } else return false;
+        if (i < v.size() && v[i] == '.') {
+            ++i;
+            if (i == v.size() || v[i] < '0' || v[i] > '9') return false;
+            while (i < v.size() && v[i] >= '0' && v[i] <= '9') ++i;
+        }
+        if (i < v.size() && (v[i] == 'e' || v[i] == 'E')) {
+            ++i;
+            if (i < v.size() && (v[i] == '+' || v[i] == '-')) ++i;
+            if (i == v.size() || v[i] < '0' || v[i] > '9') return false;
+            while (i < v.size() && v[i] >= '0' && v[i] <= '9') ++i;
+        }
+        return i == v.size();
+    }
     void skip(int depth = 0) {
         require(depth < 32, "JSON nested too deeply");
         ws();
@@ -132,16 +154,18 @@ class JsonFields {
         require(p_ > begin, "Missing JSON primitive");
         const auto v = s_.substr(begin, p_ - begin);
         require(v == "true" || v == "false" || v == "null" ||
-                v.find_first_not_of("-+0123456789.eE") == std::string::npos, "Invalid JSON primitive");
+                validNumber(v), "Invalid JSON primitive");
     }
 public:
     explicit JsonFields(const std::string& s) : s_(s) {}
     std::map<std::string, std::string> parse() {
         require(take('{'), "package.json must be an object");
         std::map<std::string, std::string> result;
+        std::set<std::string> keys;
         if (!take('}')) {
             do {
                 std::string key = str();
+                require(keys.insert(key).second, "Duplicate JSON manifest key");
                 require(take(':'), "JSON colon expected");
                 ws(); require(p_ < s_.size(), "Missing JSON field");
                 if (s_[p_] == '"') result[key] = str();
@@ -162,6 +186,8 @@ inline fs::path manifestPath(const fs::path& dir) {
 }
 
 inline Extension manifest(const fs::path& dir) {
+    require(!fs::is_symlink(fs::symlink_status(dir)), "Extension package directory is a symlink");
+    require(!fs::is_symlink(fs::symlink_status(dir / "extension")), "Nested extension directory is a symlink");
     const fs::path file = manifestPath(dir);
     require(fs::is_regular_file(file) && !fs::is_symlink(fs::symlink_status(file)), "Invalid manifest");
     require(fs::file_size(file) <= 65536, "Manifest too large");
@@ -217,6 +243,7 @@ class Store {
         const fs::path marker = dir / ".rawrxd-disabled";
         require(!fs::is_symlink(fs::symlink_status(marker)), "State marker is a symlink");
         if (enabled) { fs::remove(marker); return; }
+        if (fs::exists(marker)) return; // Already disabled; idempotent on Windows.
         const fs::path temp = dir / ".rawrxd-disabled-new";
         require(!fs::exists(temp) && !fs::is_symlink(fs::symlink_status(temp)), "State transaction already exists");
         {
