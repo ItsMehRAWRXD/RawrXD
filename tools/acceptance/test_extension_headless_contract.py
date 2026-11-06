@@ -23,7 +23,9 @@ class HeadlessContractTests(unittest.TestCase):
         self.header = directory / "js_extension_host.hpp"
         self.stub = directory / "js_extension_host_headless_impl.cpp"
         self.header.write_text("\n".join("PatchResult " + name + "();" for name in METHODS), encoding="utf-8")
-        functions = []
+        functions = [
+            "JSExtensionHost::JSExtensionHost() : m_jsRuntime(nullptr), m_jsContext(nullptr), m_queueEvent(nullptr), m_nextTimerId(0), m_initialized(false), m_shutdownCompleted(false), m_hostThread(nullptr), m_running(false), m_stats{} {}",
+        ]
         for name in METHODS:
             body = 'return PatchResult::error("unsupported");'
             if name == "initialize":
@@ -48,9 +50,17 @@ class HeadlessContractTests(unittest.TestCase):
     def test_valid_fixture_passes_all_source_contracts(self):
         process, report = self.run_gate()
         self.assertEqual(process.returncode, 0, report)
-        self.assertEqual(report["passed"], 15)
+        self.assertEqual(report["passed"], 16)
         self.assertEqual(report["failed"], 0)
         self.assertFalse(report["native_runtime_executed"])
+
+    def test_missing_constructor_initializer_fails_closed(self):
+        source = self.stub.read_text(encoding="utf-8")
+        self.stub.write_text(source.replace("m_queueEvent(nullptr), ", ""), encoding="utf-8")
+        process, report = self.run_gate()
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn("headless_constructor_state_initialized",
+                      [r["gate"] for r in report["results"] if r["status"] == "FAIL"])
 
     def test_missing_source_fails_closed(self):
         self.stub.unlink()
