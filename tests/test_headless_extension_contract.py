@@ -176,6 +176,21 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("m_extensions.emplace(extensionId, std::move(state))", body)
         self.assertNotIn("m_extensions[extensionId] = std::move(state)", body)
 
+    def test_deactivate_script_uses_full_length_and_checks_exception(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "deactivateExtension")
+        self.assertIn("sizeof(kDeactivateScript) - 1", body)
+        self.assertIn("JS_IsException(result)", body)
+        self.assertIn("Extension deactivate() threw an exception", body)
+
+    def test_unload_preserves_state_after_deactivate_failure(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "unloadExtension")
+        self.assertIn("const PatchResult deactivation = deactivateExtension(extensionId)", body)
+        self.assertIn("if (!deactivation.success) return deactivation", body)
+        self.assertLess(body.find("if (!deactivation.success) return deactivation"),
+                        body.find("m_extensions.erase(it)"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
