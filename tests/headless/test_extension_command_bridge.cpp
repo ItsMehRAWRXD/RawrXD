@@ -39,6 +39,7 @@ int main(){
  CHECK("28 shutdown clears owners", (h.Shutdown(), h.Initialize(), h.RegisterExtensionCommand("two", "two.cmd", [](auto const&){return true;})));
  CHECK("29 enumeration sorted", h.RegisterCommand("alpha", [](auto const&){return true;}) && h.GetAvailableCommands().front()=="alpha");
  CHECK("30 final shutdown", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty()));
+ h.Initialize();
  CHECK("31 reject newline command", !h.RegisterCommand("bad\\ncmd", [](auto const&){return true;}));
  CHECK("32 reject NUL command", !h.RegisterCommand(std::string("bad\\0cmd",7), [](auto const&){return true;}));
  CHECK("33 reject oversized command", !h.RegisterCommand(std::string(257, 'x'), [](auto const&){return true;}));
