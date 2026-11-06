@@ -17,6 +17,14 @@ SOURCE = Path(__file__).resolve().parents[1] / "src/core/js_extension_host_produ
 def main():
     if not SOURCE.is_file():
         raise SystemExit(f"BLOCKED: source missing: {SOURCE}")
+    host_source = SOURCE.with_name("js_extension_host.cpp")
+    if not host_source.is_file():
+        raise SystemExit(f"BLOCKED: extension host source missing: {host_source}")
+    host_text = host_source.read_text(encoding="utf-8")
+    expected_callback = "msg.completionCallback(execution.success, result, msg.completionCtx)"
+    if expected_callback not in host_text:
+        raise RuntimeError("FAIL: queued script callback does not propagate execution status")
+    print("PASS: queued callback status source invariant (not a runtime PASS)")
     windows = sys.platform == "win32"
     compiler = (shutil.which("cl") if windows else None) or shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
     if not compiler:
