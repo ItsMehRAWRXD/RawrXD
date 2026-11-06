@@ -51,6 +51,39 @@ int main() {
     check(entryWithinRoot(root, root), false, "root not child");
     check(entryWithinRoot("relative", root / "file.js"), false, "relative root");
     check(entryWithinRoot(root, "relative/file.js"), false, "relative entry");
+    // A symlink within the extension directory must never allow an entry
+    // point to escape into a sibling directory. Skip only when the OS
+    // explicitly refuses symlink creation (common on restricted Windows CI).
+    {
+        std::error_code ec;
+        const auto sandbox = std::filesystem::temp_directory_path() /
+                             "rawrxd_extension_policy_symlink";
+        const auto extensionRoot = sandbox / "installed";
+        const auto outside = sandbox / "outside";
+        std::filesystem::create_directories(extensionRoot, ec);
+        if (ec) {
+            check(false, true, "create extension fixture directory");
+        } else {
+            ec.clear();
+            std::filesystem::create_directories(outside, ec);
+            if (ec) {
+                check(false, true, "create external fixture directory");
+            } else {
+                const auto link = extensionRoot / "linked";
+                std::filesystem::remove(link, ec);
+                ec.clear();
+                std::filesystem::create_directory_symlink(outside, link, ec);
+                if (!ec) {
+                    check(entryWithinRoot(extensionRoot, link / "payload.js"),
+                          false, "symlink escape rejected");
+                } else {
+                    std::cout << "SKIP symlink escape fixture: OS denied symlink creation\\n";
+                }
+            }
+        }
+        ec.clear();
+        std::filesystem::remove_all(sandbox, ec);
+    }
     // Exercise the production readExactly template with short reads, EOF and overflow.
     {
         std::string bytes = "hello";
