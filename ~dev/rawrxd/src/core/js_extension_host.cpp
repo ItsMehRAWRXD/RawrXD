@@ -3161,6 +3161,12 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     assignField(jsonGetString(json, "description"),    outManifest->description);
     assignField(jsonGetString(json, "main"),           outManifest->main);
 
+    // Manifest inspection must not accept an entry path the loader rejects.
+    if (!outManifest->main.empty() &&
+        !rawrxd::extensions::validRelativeMain(outManifest->main)) {
+        return PatchResult::error("Invalid extension manifest main entry");
+    }
+
     if (!rawrxd::extensions::validManifestIdentity(
             outManifest->publisher, outManifest->name, outManifest->version)) {
         return PatchResult::error("Invalid manifest publisher, name, or version");
