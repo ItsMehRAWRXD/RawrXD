@@ -23,6 +23,21 @@ A committed test without an observed successful run is **NOT VERIFIED**.
 | 14 | GUI daily usability | Keyboard navigation, file tabs, dialogs, focus and offscreen windows | NOT RUN |
 | 15 | Packaging/release | Independent clean install, launch, smoke, checksums and rollback | NOT RUN |
 
+## 2026-11-06 isolated execution evidence
+
+- **PASS (reconstructed subset only):** GCC C++17 `-Wall -Wextra -Werror -pthread`
+  compiled a manually transferred reconstruction of the production command
+  registry; an isolated concurrency scenario passed (unregister during an
+  in-flight callback, reject later dispatch, allow the active callback to
+  complete). This is **not** execution of the repository's exact translation
+  unit or its full `extension_command_contract.cpp` test suite.
+- GitHub Actions run `42183798152` reported both Linux and Windows jobs
+  failed, with no job steps or logs returned by the connector. Do not promote
+  this isolated result to CI PASS or IDE certification.
+- The registry still does **not** wait for already-running extension callbacks
+  to finish before extension-owned state is destroyed; this requires separate
+  lifecycle coordination and integration verification.
+
 ## Reproduction
 
 - Fixture transport: `python -m unittest discover -s tests/headless -p 'test_mock_inference_server.py' -v`
