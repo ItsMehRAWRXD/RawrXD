@@ -481,6 +481,9 @@ void Win32IDE::createPrimarySidebar(HWND hwndParent)
 
     SetWindowLongPtrA(m_hwndSidebar, GWLP_USERDATA, (LONG_PTR)this);
     SetWindowLongPtrA(m_hwndSidebar, GWLP_WNDPROC, (LONG_PTR)SidebarProc);
+    // Extension controls send notifications to their immediate parent.
+    SetWindowLongPtrA(m_hwndSidebarContent, GWLP_USERDATA, (LONG_PTR)this);
+    SetWindowLongPtrA(m_hwndSidebarContent, GWLP_WNDPROC, (LONG_PTR)SidebarProc);
 
     m_sidebarVisible = true;
     m_sidebarWidth = SIDEBAR_DEFAULT_WIDTH;
@@ -504,6 +507,61 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
     switch (uMsg) {
+    case WM_COMMAND: {
+        if (!pThis) break;
+        const int id = LOWORD(wParam);
+        if (id == IDC_EXT_SEARCH && HIWORD(wParam) == EN_CHANGE) {
+            char query[256] = {};
+            GetWindowTextA(pThis->m_hwndExtensionSearch, query, sizeof(query));
+            pThis->searchExtensions(query);
+            return 0;
+        }
+        auto selected = [&]() -> std::string {
+            if (!pThis->m_hwndExtensionsList) return {};
+            const int row = ListView_GetNextItem(pThis->m_hwndExtensionsList, -1, LVNI_SELECTED);
+            if (row < 0) return {};
+            LVITEMA item = {};
+            item.mask = LVIF_PARAM;
+            item.iItem = row;
+            if (!ListView_GetItemA(pThis->m_hwndExtensionsList, &item) ||
+                item.lParam < 0 ||
+                static_cast<size_t>(item.lParam) >= pThis->m_extensions.size()) return {};
+            return pThis->m_extensions[static_cast<size_t>(item.lParam)].id;
+        };
+        if (id == IDC_EXT_INSTALL || id == IDC_EXT_UPDATE) {
+            const std::string dir = chooseUnpackedExtensionFolder(pThis->m_hwndMain);
+            if (!dir.empty()) {
+                if (id == IDC_EXT_INSTALL) pThis->installExtension(dir);
+                else pThis->updateExtension(dir);
+            }
+            return 0;
+        }
+        if (id == IDC_EXT_UNINSTALL) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty() &&
+                MessageBoxA(pThis->m_hwndMain, ("Remove " + extensionId + "?").c_str(),
+                            "Uninstall extension", MB_ICONQUESTION | MB_YESNO) == IDYES)
+                pThis->uninstallExtension(extensionId);
+            return 0;
+        }
+        if (id == IDC_EXT_ENABLE) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty()) {
+                for (const auto& e : pThis->m_extensions) if (e.id == extensionId) {
+                    if (e.enabled) pThis->disableExtension(extensionId);
+                    else pThis->enableExtension(extensionId);
+                    break;
+                }
+            }
+            return 0;
+        }
+        if (id == IDC_EXT_INFO) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty()) pThis->showExtensionDetails(extensionId);
+            return 0;
+        }
+        break;
+    }
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -520,7 +578,8 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     }
 
     case WM_SIZE: {
-        if (pThis) {
+        // Avoid recursively resizing the content HWND from its own WM_SIZE.
+        if (pThis && hwnd == pThis->m_hwndSidebar) {
             int width = LOWORD(lParam);
             int height = HIWORD(lParam);
             pThis->resizeSidebar(width, height);
@@ -603,6 +662,8 @@ void Win32IDE::setSidebarView(SidebarView view)
     case SidebarView::Extensions:
         ShowWindow(m_hwndExtensionsList, SW_SHOW);
         ShowWindow(m_hwndExtensionSearch, SW_SHOW);
+        for (int id : {IDC_EXT_INSTALL, IDC_EXT_UPDATE, IDC_EXT_UNINSTALL, IDC_EXT_ENABLE, IDC_EXT_INFO})
+            if (HWND btn = GetDlgItem(m_hwndSidebarContent, id)) ShowWindow(btn, SW_SHOW);
         loadInstalledExtensions();
         appendToOutput("Extensions view activated\n", "Output", OutputSeverity::Info);
         break;
@@ -666,7 +727,12 @@ void Win32IDE::resizeSidebar(int width, int height)
     }
     else if (m_hwndExtensionsList && m_currentSidebarView == SidebarView::Extensions) {
         MoveWindow(m_hwndExtensionSearch, 5, 10, width - 10, 25, TRUE);
-        MoveWindow(m_hwndExtensionsList, 5, 40, width - 10, height - 45, TRUE);
+        const int ids[] = {IDC_EXT_INSTALL, IDC_EXT_UPDATE, IDC_EXT_UNINSTALL, IDC_EXT_ENABLE, IDC_EXT_INFO};
+        const int buttonWidth = std::max(36, (width - 10) / 5);
+        for (int i = 0; i < 5; ++i)
+            if (HWND btn = GetDlgItem(m_hwndSidebarContent, ids[i]))
+                MoveWindow(btn, 5 + i * buttonWidth, 40, buttonWidth, 29, TRUE);
+        MoveWindow(m_hwndExtensionsList, 5, 75, width - 10, std::max(30, height - 80), TRUE);
     }
 }
 
