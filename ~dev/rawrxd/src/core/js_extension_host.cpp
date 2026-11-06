@@ -3006,10 +3006,22 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     assignField(jsonGetString(json, "description"),    outManifest->description);
     assignField(jsonGetString(json, "main"),           outManifest->main);
 
-    // Build the id from publisher.name
-    if (!outManifest->publisher.empty() && !outManifest->name.empty()) {
-        outManifest->id = outManifest->publisher + "." + outManifest->name;
-    }
+    // Reject malformed manifests rather than returning success with an empty ID.
+    // Keep the identifier contract aligned with loadExtensionFromDir().
+    const auto validManifestIdPart = [](const std::string& value) {
+        return !value.empty() && std::all_of(value.begin(), value.end(),
+            [](unsigned char c) {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                       (c >= '0' && c <= '9') || c == '-' || c == '_';
+            });
+    };
+    if (!validManifestIdPart(outManifest->name) ||
+        (!outManifest->publisher.empty() &&
+         !validManifestIdPart(outManifest->publisher)))
+        return PatchResult::error("Invalid extension manifest name or publisher");
+
+    outManifest->id = outManifest->publisher.empty()
+        ? outManifest->name : outManifest->publisher + "." + outManifest->name;
 
     // Parse activation events
     auto events = jsonGetStringArray(json, "activationEvents");
