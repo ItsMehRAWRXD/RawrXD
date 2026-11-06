@@ -5,6 +5,8 @@ on:
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
       - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
+      - '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - '.github/workflows/extension-policy-acceptance.yml'
   pull_request:
   workflow_dispatch:
@@ -33,19 +35,30 @@ jobs:
           else
             c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/acceptance '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
           fi
+      - name: Compile production command registry acceptance tests
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/commands.exe '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+          else
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/commands '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+          fi
       - name: Run gates and preserve receipt
         shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
         run: |
           set -euo pipefail
           if [ "$RUNNER_OS" = "Windows" ]; then
             build/extension-policy/acceptance.exe | tee build/extension-policy/receipt.txt
+            build/extension-policy/commands.exe | tee build/extension-policy/commands-receipt.txt
           else
             build/extension-policy/acceptance | tee build/extension-policy/receipt.txt
+            build/extension-policy/commands | tee build/extension-policy/commands-receipt.txt
           fi
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: extension-policy-${{ matrix.os }}-${{ github.sha }}
-          path: build/extension-policy/receipt.txt
+          path: build/extension-policy/*receipt.txt
           if-no-files-found: warn
