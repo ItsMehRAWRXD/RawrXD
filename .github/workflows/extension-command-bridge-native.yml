@@ -32,6 +32,9 @@ jobs:
       - name: Execute sanitizer-enabled acceptance (Linux)
         if: runner.os == 'Linux'
         run: timeout 15s /tmp/extension_bridge_sanitized
+      - name: Configure MSVC compiler environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Compile actual extension registry with MSVC (Windows)
         if: runner.os == 'Windows'
         shell: cmd
