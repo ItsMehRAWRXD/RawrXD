@@ -2516,9 +2516,10 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     // Execute deactivate() if available
     if (state->hasDeactivate && state->jsContext) {
         JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-        JSValue result = JS_Eval(extCtx,
-            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();",
-            68, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        constexpr char deactivateScript[] =
+            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();";
+        JSValue result = JS_Eval(extCtx, deactivateScript,
+            sizeof(deactivateScript) - 1, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
         JS_FreeValue(extCtx, result);
     }
 
