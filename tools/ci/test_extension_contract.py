@@ -40,5 +40,20 @@ class ExtensionContract(unittest.TestCase):
             body = src[start:src.find("\n    }", start) + 6]
             self.assertIn("return false;", body, f"{name} cannot claim success without runtime")
 
+    def test_agent_bridge_modes_are_instance_scoped(self):
+        """Guard against cross-IDE mode leakage from function static toggles."""
+        header = ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.h"
+        impl = ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.cpp"
+        self.assertTrue(header.is_file())
+        self.assertTrue(impl.is_file())
+        h = header.read_text(encoding="utf-8")
+        cpp = impl.read_text(encoding="utf-8")
+        for mode in ("m_deepThinkEnabled", "m_deepResearchEnabled", "m_noRefusalEnabled"):
+            self.assertIn("bool " + mode + " = false;", h)
+            self.assertIn(mode + " = !" + mode + ";", cpp)
+        self.assertNotIn("static bool t = false", cpp)
+        self.assertNotIn("static bool r = false", cpp)
+        self.assertNotIn("static bool n = false", cpp)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
