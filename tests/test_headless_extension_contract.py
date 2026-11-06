@@ -99,6 +99,13 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Extension entry point escapes extension root"),
                         body.find("// ---- Create Extension State ----"))
 
+    def test_vsix_extraction_rejects_quoted_paths(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("Unsupported quote character in VSIX extraction path", body)
+        self.assertLess(body.find("Unsupported quote character in VSIX extraction path"),
+                        body.find("std::filesystem::create_directories(destDir)"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
