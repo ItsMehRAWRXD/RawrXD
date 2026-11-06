@@ -89,6 +89,16 @@ class HeadlessExtensionContract(unittest.TestCase):
                 cleanup = body.rfind("PolyfillEngine::instance().shutdown()", start, failure)
                 self.assertGreater(cleanup, start)
 
+    def test_extension_entrypoint_cannot_escape_root(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "loadExtensionFromDir")
+        self.assertIn("std::filesystem::canonical(extRoot, ec)", body)
+        self.assertIn("std::filesystem::canonical(mainPath, ec)", body)
+        self.assertIn("if (*rootIt != *entryIt)", body)
+        self.assertIn("Extension entry point escapes extension root", body)
+        self.assertLess(body.find("Extension entry point escapes extension root"),
+                        body.find("// ---- Create Extension State ----"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
