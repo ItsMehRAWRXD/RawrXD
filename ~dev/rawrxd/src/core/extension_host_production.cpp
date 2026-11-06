@@ -36,8 +36,15 @@ public:
         owners_.clear();
     }
 
+    static bool ValidCommandName(const std::string& command) {
+        if (command.empty() || command.size() > 256) return false;
+        return std::none_of(command.begin(), command.end(), [](unsigned char c) {
+            return c < 0x20 || c == 0x7f;
+        });
+    }
+
     bool RegisterCommand(const std::string& command, CommandHandler handler) {
-        if (command.empty() || !handler) return false;
+        if (!ValidCommandName(command) || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_) return false;
         return commands_.emplace(command, std::move(handler)).second;
@@ -48,7 +55,7 @@ public:
     bool RegisterExtensionCommand(const std::string& extensionId,
                                   const std::string& command,
                                   CommandHandler handler) {
-        if (extensionId.empty() || command.empty() || !handler) return false;
+        if (extensionId.empty() || !ValidCommandName(command) || !handler) return false;
         // Reject malformed ownership identifiers before entering the registry.
         // This is a command bridge, not an extension manifest validator.
         if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
