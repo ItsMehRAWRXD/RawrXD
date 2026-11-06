@@ -47,7 +47,7 @@ def main() -> int:
         print(result.stdout, end="")
         if result.stderr:
             print(result.stderr, file=sys.stderr)
-        ids = re.findall(r"^(?:PASS|FAIL) (\\d{2}) ", result.stdout, re.MULTILINE)
+        ids = re.findall(r"^(?:PASS|FAIL) (\d{2}) ", result.stdout, re.MULTILINE)
         valid = (result.returncode == 0
                  and ids == [f"{n:02d}" for n in range(1, EXPECTED + 1)]
                  and f"RESULT {EXPECTED}/{EXPECTED} checks; PASS" in result.stdout
