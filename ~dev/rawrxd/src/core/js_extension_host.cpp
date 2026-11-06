@@ -2855,6 +2855,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir) {
     if (!zipPath || !destDir) return PatchResult::error("Null parameters");
 
+    // Paths are embedded in a PowerShell -Command string below. Refuse quote
+    // characters rather than allowing a path to terminate either quoting layer.
+    // This is a defensive stopgap until extraction uses a native ZIP library.
+    for (const char* path : {zipPath, destDir}) {
+        if (std::strchr(path, '\\'') || std::strchr(path, '"'))
+            return PatchResult::error("Unsupported quote character in VSIX extraction path");
+    }
+
     // Create destination directory
     std::filesystem::create_directories(destDir);
 
