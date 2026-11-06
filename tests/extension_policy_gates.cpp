@@ -56,6 +56,10 @@ int main() {
     gate("37_relative_root_rejected", !entryWithinRoot("relative", root / "main.js"));
     gate("38_manifest_child_allowed", entryWithinRoot(root, root / "extension" / "package.json"));
     gate("39_manifest_traversal_rejected", !entryWithinRoot(root, root / ".." / "outside" / "package.json"));
+    gate("40_interior_dot_rejected", !validRelativeMain("dist/./main.js"));
+    gate("41_leading_dot_allowed", validRelativeMain("./main.js"));
+    gate("42_trailing_dot_rejected", !validRelativeMain("dist/main."));
+    gate("43_reserved_question_mark_rejected", !validRelativeMain("dist/main?.js"));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
