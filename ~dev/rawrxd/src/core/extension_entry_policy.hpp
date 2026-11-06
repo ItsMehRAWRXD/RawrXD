@@ -18,7 +18,7 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
     for (size_t i = 0; i <= entry.size(); ++i) {
         if (i == entry.size() || entry[i] == '/' || entry[i] == 92) {
             const auto segment = entry.substr(segmentStart, i - segmentStart);
-            if (segment == ".." || segment == "." || segment.empty() ||
+            if (segment.empty() || segment == ".." || segment == "." ||
                 (segment != "." && segment.back() == '.') || segment.back() == ' ') return false;
             // Windows treats these basenames as devices even with extensions.
             const auto dot = segment.find('.');
