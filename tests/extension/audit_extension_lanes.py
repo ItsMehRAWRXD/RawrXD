@@ -9,6 +9,28 @@ FULL = ROOT / "~dev/rawrxd/src/core/js_extension_host.cpp"
 HEADLESS = ROOT / "~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp"
 BRIDGE = ROOT / "~dev/rawrxd/src/core/js_extension_host_production.cpp"
 
+def function_body(source, signature):
+    """Return the brace-balanced body of a C++ method or None if absent."""
+    match = re.search(signature + r"\s*\{", source)
+    if not match:
+        return None
+    start = match.end()
+    depth = 1
+    for index in range(start, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:index]
+    return None
+
+
+def rejects(source, signature):
+    body = function_body(source, signature)
+    return body is not None and bool(re.search(r"return\s+(?:PatchResult::error\s*\(|false\s*;)", body))
+
+
 def check(label, condition):
     print(("PASS_STATIC" if condition else "FAIL_STATIC") + ": " + label)
     return bool(condition)
@@ -20,12 +42,12 @@ def main():
     tests = [
         ("full host has QuickJS feature detection", "#define RAWRXD_HAS_QUICKJS 1" in full and "#define RAWRXD_HAS_QUICKJS 0" in full),
         ("full host exposes runtime implementation", "JSExtensionHost::" in full),
-        ("headless host explicitly refuses initialization", bool(re.search(r"PatchResult JSExtensionHost::initialize\(\).*?return PatchResult::error", headless, re.S))),
-        ("headless host explicitly refuses VSIX", bool(re.search(r"PatchResult JSExtensionHost::loadVSIX\(.*?return PatchResult::error", headless, re.S))),
-        ("headless host explicitly refuses script execution", bool(re.search(r"PatchResult JSExtensionHost::executeScript\(.*?return PatchResult::error", headless, re.S))),
-        ("compatibility bridge refuses initialization", bool(re.search(r"bool Initialize\(\).*?return false;", bridge, re.S))),
-        ("compatibility bridge refuses script execution", bool(re.search(r"bool ExecuteScript\(.*?return false;", bridge, re.S))),
-        ("compatibility bridge refuses extension load", bool(re.search(r"bool LoadExtension\(.*?return false;", bridge, re.S))),
+        ("headless host explicitly refuses initialization", rejects(headless, r"PatchResult\s+JSExtensionHost::initialize\(\)")),
+        ("headless host explicitly refuses VSIX", rejects(headless, r"PatchResult\s+JSExtensionHost::loadVSIX\([^)]*\)")),
+        ("headless host explicitly refuses script execution", rejects(headless, r"PatchResult\s+JSExtensionHost::executeScript\([^)]*\)")),
+        ("compatibility bridge refuses initialization", rejects(bridge, r"bool\s+Initialize\(\)")),
+        ("compatibility bridge refuses script execution", rejects(bridge, r"bool\s+ExecuteScript\([^)]*\)")),
+        ("compatibility bridge refuses extension load", rejects(bridge, r"bool\s+LoadExtension\([^)]*\)")),
     ]
     passed = sum(check(label, result) for label, result in tests)
     print(f"STATIC_SOURCE_GATES: {passed}/{len(tests)}; runtime certification NOT implied")
