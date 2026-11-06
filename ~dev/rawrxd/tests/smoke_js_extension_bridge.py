@@ -25,6 +25,8 @@ def main():
         "queued result status": "msg.completionCallback(execution.success, callbackResult, msg.completionCtx)",
         "queued error detail fallback": "execution.detail.c_str()",
         "invalid queued request callback": 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)',
+        "event JS result cleanup": "JS_FreeValue(extCtx, eventResult);",
+        "event JS exception inspection": "JS_IsException(eventResult)",
     }
     for label, fragment in required_fragments.items():
         if fragment not in host_text:
