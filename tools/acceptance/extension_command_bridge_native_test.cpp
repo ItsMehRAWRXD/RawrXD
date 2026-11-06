@@ -8,6 +8,12 @@
 #include <string>
 #include <vector>
 
+struct ThrowOnCopy {
+    ThrowOnCopy() = default;
+    ThrowOnCopy(const ThrowOnCopy&) { throw std::runtime_error("copy failed"); }
+    bool operator()(const std::string&) const { return true; }
+};
+
 int main() {
     auto& host = RawrXD::Extensions::ExtensionHost::GetInstance();
     host.Shutdown();
@@ -55,6 +61,11 @@ int main() {
         throw std::runtime_error("expected");
     }));
     assert(!host.ExecuteCommand("throwing", ""));
+    // std::function callback copy may throw even when invoking it would not.
+    // Construct with move, then exercise the copy performed by dispatch.
+    assert(host.RegisterCommand("copy-throws", ThrowOnCopy{}));
+    assert(!host.ExecuteCommand("copy-throws", ""));
+    assert(host.UnregisterCommand("copy-throws"));
     const auto available = host.GetAvailableCommands();
     assert(available.size() == 2);
     assert(host.UnregisterCommand("throwing"));
