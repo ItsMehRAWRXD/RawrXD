@@ -2542,10 +2542,32 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
     }
 
     // ---- Execute pending jobs (microtasks) ----
+    // QuickJS returns a negative result when a pending job throws. Never
+    // report activation success after that exception.
     {
         JSContext* pendingCtx = nullptr;
-        while (JS_ExecutePendingJob(static_cast<JSRuntime*>(m_jsRuntime), &pendingCtx) > 0) {
-            // Process all pending microtasks
+        int jobResult = 0;
+        while ((jobResult = JS_ExecutePendingJob(
+                    static_cast<JSRuntime*>(m_jsRuntime), &pendingCtx)) > 0) {}
+        if (jobResult < 0) {
+            if (pendingCtx) {
+                JSValue exc = JS_GetException(pendingCtx);
+                JS_FreeValue(pendingCtx, exc);
+            }
+            {
+                std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+                for (auto& binding : s_jsCommands) {
+                    if (binding.ctx == extCtx) {
+                        JS_FreeValue(extCtx, binding.callback);
+                        binding.callback = JS_UNDEFINED;
+                        binding.ctx = nullptr;
+                    }
+                }
+            }
+            JS_FreeContext(extCtx);
+            state->jsContext = nullptr;
+            state->hasDeactivate = false;
+            return PatchResult::error("Extension activation microtask failed");
         }
     }
 
