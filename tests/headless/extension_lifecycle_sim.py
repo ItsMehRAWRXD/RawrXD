@@ -6,7 +6,6 @@ A PASS here certifies only the simulator contract, never Win32IDE/QuickJS.
 """
 from dataclasses import dataclass
 import json
-from pathlib import PurePosixPath
 import re
 import zipfile
 
@@ -50,8 +49,7 @@ class SimulatedExtensionHost:
             normalized = set()
             total_size = 0
             for item in entries:
-                name = item.filename.replace("\\\\", "/")
-                path = PurePosixPath(name)
+                name = item.filename.replace(chr(92), "/")
                 is_directory = name.endswith("/")
                 checked_name = name[:-1] if is_directory else name
                 # Treat Windows drive letters, UNC paths, and empty segments as unsafe
@@ -71,7 +69,7 @@ class SimulatedExtensionHost:
                     raise ExtensionError("oversized archive")
             if "extension/package.json" not in normalized:
                 raise ExtensionError("missing extension manifest")
-            manifest_info = next(i for i in entries if i.filename.casefold() == "extension/package.json")
+            manifest_info = next(i for i in entries if i.filename.replace(chr(92), "/").casefold() == "extension/package.json")
             if manifest_info.file_size > 256 * 1024:
                 raise ExtensionError("oversized manifest")
             try:
