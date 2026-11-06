@@ -129,10 +129,11 @@ int main() {
     const bool shutdownStarted = shutdownEntered.load();
     host.Shutdown();
     const bool shutdownDenied = !host.ExecuteCommand("shutdown-slow", "");
-    CHECK(host.Initialize());
+    const bool restarted = host.Initialize();
     const bool restartDenied = !host.ExecuteCommand("shutdown-slow", "");
     shutdownRelease.store(true);
     shutdownWorker.join();
+    CHECK(restarted);
     CHECK(shutdownStarted);
     CHECK(shutdownDenied);
     CHECK(restartDenied);
