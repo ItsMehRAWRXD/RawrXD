@@ -20,6 +20,24 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
             const auto segment = entry.substr(segmentStart, i - segmentStart);
             if (segment == ".." || segment == "." || segment.empty() ||
                 (segment != "." && segment.back() == '.') || segment.back() == ' ') return false;
+            // Windows treats these basenames as devices even with extensions.
+            const auto dot = segment.find('.');
+            const auto stem = segment.substr(0, dot);
+            auto upper = [](char c) noexcept -> char {
+                return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
+            };
+            if (stem.size() == 3) {
+                const char a = upper(stem[0]), b = upper(stem[1]), c = upper(stem[2]);
+                if ((a == 'C' && b == 'O' && c == 'N') ||
+                    (a == 'P' && b == 'R' && c == 'N') ||
+                    (a == 'A' && b == 'U' && c == 'X') ||
+                    (a == 'N' && b == 'U' && c == 'L')) return false;
+            } else if (stem.size() == 4) {
+                const char a = upper(stem[0]), b = upper(stem[1]), c = upper(stem[2]);
+                if (((a == 'C' && b == 'O' && c == 'M') ||
+                     (a == 'L' && b == 'P' && c == 'T')) &&
+                    stem[3] >= '1' && stem[3] <= '9') return false;
+            }
             segmentStart = i + 1;
         } else {
             const unsigned char c = static_cast<unsigned char>(entry[i]);
