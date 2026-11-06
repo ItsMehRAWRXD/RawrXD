@@ -55,6 +55,10 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic '~dev/rawrxd/src/core/js_extension_host_production.cpp' tools/ci/extension_bridge_smoke.cpp -o /tmp/rawrxd-bridge-smoke
           /tmp/rawrxd-bridge-smoke
+      - name: Run bridge lifecycle with AddressSanitizer and UBSan
+        run: |
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined -fno-omit-frame-pointer '~dev/rawrxd/src/core/js_extension_host_production.cpp' tools/ci/extension_bridge_smoke.cpp -o /tmp/rawrxd-bridge-sanitized
+          /tmp/rawrxd-bridge-sanitized
       - name: Source contract checks (not runtime certification)
         run: python3 tools/ci/test_extension_contract.py
   windows:
