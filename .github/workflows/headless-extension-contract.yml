@@ -13,6 +13,8 @@ on:
       - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
       - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - 'tests/test_headless_extension_contract.py'
+      - 'tests/test_rom_smoke_contract.py'
+      - 'src/tools/production_smoke_test.cpp'
       - '.github/workflows/headless-extension-contract.yml'
 jobs:
   source-contract:
