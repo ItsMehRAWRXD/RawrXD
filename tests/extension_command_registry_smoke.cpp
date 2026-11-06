@@ -59,28 +59,28 @@ int main() {
     host.UnregisterExtensionCommands("ext.beta");
     check(!host.ExecuteCommand("beta.run", ""), "29 extension unload removes owned callback");
     // Batch 2: 15 additional deterministic lifecycle and isolation gates.
-    check(host.RegisterExtensionCommand("ext.gamma", "gamma.run", [](const std::string&) { return true; }), "31 second owner registration");
-    check(host.RegisterExtensionCommand("ext.delta", "delta.run", [](const std::string&) { return true; }), "32 independent owner registration");
+    check(host.RegisterExtensionCommand("ext.gamma", "gamma.run", [](const std::string&) { return true; }), "30 second owner registration");
+    check(host.RegisterExtensionCommand("ext.delta", "delta.run", [](const std::string&) { return true; }), "31 independent owner registration");
     host.UnregisterExtensionCommands("ext.gamma");
-    check(!host.ExecuteCommand("gamma.run", ""), "33 gamma unloaded");
-    check(host.ExecuteCommand("delta.run", ""), "34 delta unaffected by gamma unload");
-    check(host.UnregisterCommand("delta.run"), "35 direct removal of owned command");
-    check(!host.ExecuteCommand("delta.run", ""), "36 direct removal blocks execution");
+    check(!host.ExecuteCommand("gamma.run", ""), "32 gamma unloaded");
+    check(host.ExecuteCommand("delta.run", ""), "33 delta unaffected by gamma unload");
+    check(host.UnregisterCommand("delta.run"), "34 direct removal of owned command");
+    check(!host.ExecuteCommand("delta.run", ""), "35 direct removal blocks execution");
     host.UnregisterExtensionCommands("ext.delta");
-    check(host.RegisterExtensionCommand("ext.delta", "delta.run", [](const std::string&) { return true; }), "37 owner can re-register after unload");
-    check(host.ExecuteCommand("delta.run", ""), "38 re-registered callback executes");
+    check(host.RegisterExtensionCommand("ext.delta", "delta.run", [](const std::string&) { return true; }), "36 owner can re-register after unload");
+    check(host.ExecuteCommand("delta.run", ""), "37 re-registered callback executes");
     check(host.RegisterCommand("self.remove", [&](const std::string&) {
         return host.UnregisterCommand("self.remove");
-    }), "39 self-removing callback registered");
-    check(host.ExecuteCommand("self.remove", ""), "40 callback can unregister itself");
-    check(!host.ExecuteCommand("self.remove", ""), "41 self-removal prevents future execution");
-    check(!host.RegisterCommand("delta.run", [](const std::string&) { return true; }), "42 host cannot replace extension command");
-    check(host.ExecuteCommand("delta.run", ""), "43 duplicate attempt preserved original callback");
+    }), "38 self-removing callback registered");
+    check(host.ExecuteCommand("self.remove", ""), "39 callback can unregister itself");
+    check(!host.ExecuteCommand("self.remove", ""), "40 self-removal prevents future execution");
+    check(!host.RegisterCommand("delta.run", [](const std::string&) { return true; }), "41 host cannot replace extension command");
+    check(host.ExecuteCommand("delta.run", ""), "42 duplicate attempt preserved original callback");
     host.UnregisterExtensionCommands("ext.delta");
-    check(host.RegisterCommand("delta.run", [](const std::string&) { return true; }), "44 command name reusable after unload");
-    check(host.ExecuteCommand("delta.run", ""), "45 reused command executes");
+    check(host.RegisterCommand("delta.run", [](const std::string&) { return true; }), "43 command name reusable after unload");
+    check(host.ExecuteCommand("delta.run", ""), "44 reused command executes");
     host.Shutdown();
-    check(!host.IsInitialized() && host.GetAvailableCommands().empty() && !host.ExecuteCommand("throws", ""), "46 shutdown clears registry");
+    check(!host.IsInitialized() && host.GetAvailableCommands().empty() && !host.ExecuteCommand("throws", ""), "45 shutdown clears registry");
     std::cout << "RESULT " << (checks - failures) << "/" << checks << " checks; " << (failures ? "FAIL" : "PASS") << '\n';
     return failures ? 1 : 0;
 }
