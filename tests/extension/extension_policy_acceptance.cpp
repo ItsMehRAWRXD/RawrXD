@@ -52,6 +52,9 @@ int main() {
     require(entryWithinRoot(root, root / "plugin" / "index.js"), "entry inside root");
     require(!entryWithinRoot(root, root), "root itself not entry");
     require(!entryWithinRoot(root, outside / "index.js"), "entry outside root");
+    require(!entryWithinRoot(base / "missing-root", base / "missing-root" / "plugin.js"), "missing root rejected");
+    { std::ofstream file(base / "regular-file"); file << "fixture"; }
+    require(!entryWithinRoot(base / "regular-file", base / "regular-file" / "plugin.js"), "file root rejected");
     require(!entryWithinRoot(root, base / "extensions-evil" / "index.js"), "sibling prefix confusion");
     require(entryWithinRoot(root, root / "plugin" / "." / "index.js"), "normalized child entry");
     require(!entryWithinRoot(root, root / ".." / "outside" / "index.js"), "parent traversal");
