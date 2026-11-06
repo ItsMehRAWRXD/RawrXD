@@ -3185,8 +3185,19 @@ void JSExtensionHost::processMessageQueue() {
                            << eventName << "'](" << eventData << "); }";
 
                         std::string script = js.str();
-                        JS_Eval(extCtx, script.c_str(), script.size(),
+                        JSValue eventResult = JS_Eval(extCtx, script.c_str(), script.size(),
                                 "<event>", JS_EVAL_TYPE_GLOBAL);
+                        if (JS_IsException(eventResult)) {
+                            JSValue eventError = JS_GetException(extCtx);
+                            const char* errorText = JS_ToCString(extCtx, eventError);
+                            if (errorText) {
+                                OutputDebugStringA("[JSExtensionHost] Event handler error: ");
+                                OutputDebugStringA(errorText);
+                                JS_FreeCString(extCtx, errorText);
+                            }
+                            JS_FreeValue(extCtx, eventError);
+                        }
+                        JS_FreeValue(extCtx, eventResult);
                     }
                 }
                 break;
