@@ -51,6 +51,24 @@ class MockContractTests(unittest.TestCase):
         self.assertEqual("".join(json.loads(frame)["choices"][0]["delta"].get("content", "")
                          for frame in frames[:-1]), "fixture response complete")
 
+    def test_invalid_utf8_returns_json_error(self):
+        conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        conn.request("POST", "/v1/chat/completions", body=b"\\xff",
+                     headers={"Content-Type": "application/json"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 400)
+        self.assertEqual(json.loads(response.read())["error"]["message"], "invalid JSON")
+        conn.close()
+
+    def test_truncated_json_returns_error(self):
+        conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        conn.request("POST", "/v1/chat/completions", body=b'{"messages":[',
+                     headers={"Content-Type": "application/json"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 400)
+        self.assertIn("error", json.loads(response.read()))
+        conn.close()
+
     def test_invalid_messages(self):
         status, _, _ = self.request("POST", "/v1/chat/completions", {"messages": "invalid"})
         self.assertEqual(status, 400)
