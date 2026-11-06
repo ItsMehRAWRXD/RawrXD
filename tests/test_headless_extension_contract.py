@@ -161,6 +161,14 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Absolute extension entry point is not allowed"),
                         body.find("std::string mainPath = extRoot"))
 
+    def test_vsix_extraction_requires_manifest_not_nonempty_directory(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn('destination / "extension" / "package.json"', body)
+        self.assertIn('destination / "package.json"', body)
+        self.assertIn("if (!nestedManifest && !rootManifest)", body)
+        self.assertNotIn("std::filesystem::is_empty(destDir)", body)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
