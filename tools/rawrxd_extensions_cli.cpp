@@ -13,7 +13,7 @@ static int usage() {
 int main(int argc, char** argv) {
     try {
         int i = 1;
-        std::string root = "extensions";
+        std::string root = RawrXD::OfflineExtensions::defaultRoot().string();
         bool approveMutations = false;
         while (i < argc) {
             if (std::string(argv[i]) == "--root") {
