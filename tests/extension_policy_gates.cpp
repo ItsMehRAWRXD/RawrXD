@@ -43,6 +43,11 @@ int main() {
     gate("23_version_leading_dot_rejected", !validVersion(".1.2.3"));
     gate("24_version_trailing_dot_rejected", !validVersion("1.2.3."));
     gate("25_unsigned_case_sensitive", !mayInstallVSIX(false, "YES") && mayInstallVSIX(false, "y"));
+    gate("27_relative_main_allowed", validRelativeMain("./dist/extension.js"));
+    gate("28_drive_main_rejected", !validRelativeMain("C:/outside.js"));
+    gate("29_backslash_root_rejected", !validRelativeMain("\\\\server\\share\\main.js"));
+    gate("30_posix_root_rejected", !validRelativeMain("/tmp/main.js"));
+    gate("31_control_char_main_rejected", !validRelativeMain(std::string("main") + char(10) + ".js"));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
