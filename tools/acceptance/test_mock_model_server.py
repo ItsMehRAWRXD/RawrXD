@@ -72,6 +72,22 @@ class MockTransportTests(unittest.TestCase):
         code, _, _ = self.request("GET", "/unknown")
         self.assertEqual(code, 404)
 
+    def test_rejected_request_closes_connection(self):
+        import socket
+        with socket.create_connection(("127.0.0.1", self.server.server_port), timeout=3) as sock:
+            sock.settimeout(3)
+            request = (b"POST /v1/chat/completions HTTP/1.1\r\n"
+                       b"Host: 127.0.0.1\r\nContent-Length: 1048577\r\n"
+                       b"Connection: keep-alive\r\n\r\n")
+            sock.sendall(request)
+            data = bytearray()
+            while True:
+                part = sock.recv(4096)
+                if not part:
+                    break
+                data.extend(part)
+            self.assertIn(b"413", data.split(b"\r\n", 1)[0])
+
     def test_oversized_body(self):
         code, _, _ = self.request("POST", "/v1/chat/completions", raw=b"",
             extra_headers={"Content-Length": str(1024 * 1024 + 1)})
