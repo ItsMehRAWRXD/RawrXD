@@ -11,3 +11,15 @@ else()
 endif()
 enable_testing()
 add_test(NAME rawrxd_extension_policy_gates COMMAND rawrxd_extension_policy_gates)
+
+# Compile the actual fail-closed C ABI bridge, not a mock implementation.
+add_executable(rawrxd_extension_bridge_failclosed
+    ../extension_bridge_failclosed.cpp
+    "../../~dev/rawrxd/src/core/js_extension_host_production.cpp")
+target_compile_features(rawrxd_extension_bridge_failclosed PRIVATE cxx_std_17)
+if(MSVC)
+  target_compile_options(rawrxd_extension_bridge_failclosed PRIVATE /W4)
+else()
+  target_compile_options(rawrxd_extension_bridge_failclosed PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(NAME rawrxd_extension_bridge_failclosed COMMAND rawrxd_extension_bridge_failclosed)
