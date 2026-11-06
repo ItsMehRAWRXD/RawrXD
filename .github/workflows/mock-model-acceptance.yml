@@ -1,15 +1,9 @@
 name: Deterministic mock-model HTTP acceptance
 on:
   push:
-    paths:
-      - 'tools/acceptance/mock_model_server.py'
-      - 'tools/acceptance/test_mock_model_server.py'
-      - '.github/workflows/mock-model-acceptance.yml'
+    branches:
+      - audit/mock-transport-20261106
   pull_request:
-    paths:
-      - 'tools/acceptance/mock_model_server.py'
-      - 'tools/acceptance/test_mock_model_server.py'
-      - '.github/workflows/mock-model-acceptance.yml'
   workflow_dispatch:
 jobs:
   mock-transport:
