@@ -82,6 +82,33 @@ class MockContractTests(unittest.TestCase):
             self.assertEqual(json.loads(data)["choices"][0]["message"]["content"],
                              "fixture response complete")
 
+    def test_cancel_stream_then_new_request(self):
+        # Transport-only A -> disconnect -> B. Does not certify IDE Stop.
+        conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        conn.request("POST", "/v1/chat/completions",
+            body=json.dumps({"model": MODEL, "messages": [], "stream": True}),
+            headers={"Content-Type": "application/json"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+        self.assertIn(b"data: ", response.readline())
+        conn.close()
+        # B must still succeed after A's socket is disconnected.
+        status, _, data = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [{"role": "user", "content": "B"}]})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["choices"][0]["message"]["content"],
+                         "fixture response complete")
+
+    def test_parallel_requests(self):
+        from concurrent.futures import ThreadPoolExecutor
+        def call(_):
+            status, _, data = self.request("POST", "/v1/chat/completions",
+                {"model": MODEL, "messages": []})
+            return status, json.loads(data)["choices"][0]["message"]["content"]
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(call, range(32)))
+        self.assertEqual(results, [(200, "fixture response complete")] * 32)
+
     def test_unknown_endpoint(self):
         status, _, _ = self.request("GET", "/not-real")
         self.assertEqual(status, 404)
