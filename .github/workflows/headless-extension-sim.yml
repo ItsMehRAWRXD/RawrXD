@@ -31,5 +31,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile real production command bridge
         run: g++ -std=c++17 -Wall -Wextra -pedantic -pthread tests/headless/test_extension_command_bridge.cpp -o /tmp/rawrxd-extension-command-smoke
-      - name: Run 16 production command bridge acceptance cases
+      - name: Run 30 production command bridge acceptance cases
         run: /tmp/rawrxd-extension-command-smoke
