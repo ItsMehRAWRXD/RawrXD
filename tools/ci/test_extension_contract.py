@@ -84,5 +84,14 @@ class ExtensionContract(unittest.TestCase):
         self.assertNotIn("static bool r = false", cpp)
         self.assertNotIn("static bool n = false", cpp)
 
+    def test_agent_loop_rejects_invalid_inputs(self):
+        cpp = (ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.cpp").read_text(encoding="utf-8")
+        start = cpp.index("bool AgenticBridge::StartAgentLoop(")
+        end = cpp.index("void AgenticBridge::StopAgentLoop()", start)
+        body = cpp[start:end]
+        self.assertIn("initialPrompt.empty()", body)
+        self.assertIn("maxIterations <= 0", body)
+        self.assertLess(body.index("initialPrompt.empty()"), body.index("m_agentThread = std::thread("))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
