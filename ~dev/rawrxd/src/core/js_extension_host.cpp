@@ -318,7 +318,8 @@ std::string readFileToString(const char* path) {
     if (hFile == INVALID_HANDLE_VALUE) return "";
 
     LARGE_INTEGER fileSize;
-    if (!GetFileSizeEx(hFile, &fileSize) || fileSize.QuadPart > 10 * 1024 * 1024) {
+    if (!GetFileSizeEx(hFile, &fileSize) || fileSize.QuadPart < 0 ||
+        fileSize.QuadPart > 10 * 1024 * 1024) {
         CloseHandle(hFile);
         return "";
     }
