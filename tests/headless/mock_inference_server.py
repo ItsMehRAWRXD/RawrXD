@@ -51,6 +51,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(404, {"error": {"message": "unknown model"}})
             if type(body.get("stream", False)) is not bool:
                 return self.send_json(400, {"error": {"message": "stream must be boolean"}})
+            # Explicit failure injection exercises real client HTTP error handling
+            # without requiring a model. Restricted to this local-only fixture.
+            if body.get("mock_failure") is True:
+                return self.send_json(503, {"error": {"message": "fixture unavailable",
+                    "type": "service_unavailable"}})
+            if "mock_failure" in body and body["mock_failure"] is not False:
+                return self.send_json(400, {"error": {"message": "mock_failure must be boolean"}})
             if body.get("stream") is True:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
