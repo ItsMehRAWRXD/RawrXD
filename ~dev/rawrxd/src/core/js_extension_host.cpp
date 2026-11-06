@@ -48,6 +48,7 @@
 #include <cmath>
 #include <ctime>
 #include <algorithm>
+#include <deque>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
@@ -179,7 +180,8 @@ struct JSCommandBinding {
 };
 
 static std::mutex              s_jsCommandMutex;
-static std::vector<JSCommandBinding> s_jsCommands;
+// Stable addresses are required: the command registry stores pointers to bindings.
+static std::deque<JSCommandBinding> s_jsCommands;
 
 // C++ trampoline: called by VSCodeExtensionAPI when command fires
 static void jsCommandTrampoline(void* ctx) {
