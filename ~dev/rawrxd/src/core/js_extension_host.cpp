@@ -3138,6 +3138,8 @@ void JSExtensionHost::processMessageQueue() {
                     if (msg.completionCallback) {
                         msg.completionCallback(execution.success, result, msg.completionCtx);
                     }
+                } else if (msg.completionCallback) {
+                    msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx);
                 }
                 break;
             }
