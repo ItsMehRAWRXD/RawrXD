@@ -85,6 +85,26 @@ class MockContractTests(unittest.TestCase):
             {"model": MODEL, "messages": [], "mock_failure": 1})
         self.assertEqual(status, 400)
 
+    def test_rejects_malformed_message_entries(self):
+        cases = [None, "hello", 123, {}, {"role": "unknown", "content": "x"},
+                 {"role": "user"}, {"role": "user", "content": 123}]
+        for entry in cases:
+            with self.subTest(entry=entry):
+                status, _, data = self.request("POST", "/v1/chat/completions",
+                    {"model": MODEL, "messages": [entry]})
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(data)["error"]["message"],
+                                 "invalid message entry")
+
+    def test_accepts_valid_message_entries(self):
+        status, _, data = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [
+                {"role": "system", "content": "system"},
+                {"role": "user", "content": "hello"}]})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["choices"][0]["message"]["content"],
+                         "fixture response complete")
+
     def test_invalid_messages(self):
         status, _, _ = self.request("POST", "/v1/chat/completions", {"messages": "invalid"})
         self.assertEqual(status, 400)
