@@ -4,6 +4,9 @@ on:
     paths:
       - 'tests/extension_policy_gates.cpp'
       - 'tests/extension_bridge_failclosed.cpp'
+      - 'tests/extension_extract_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_extract_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
@@ -14,6 +17,9 @@ on:
     paths:
       - 'tests/extension_policy_gates.cpp'
       - 'tests/extension_bridge_failclosed.cpp'
+      - 'tests/extension_extract_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_extract_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - 'tests/extension_policy/CMakeLists.txt'
       - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
