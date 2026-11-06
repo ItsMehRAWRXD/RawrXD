@@ -200,6 +200,16 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Invalid extension manifest name or publisher"),
                         body.find("Manifest parsed"))
 
+    def test_loaded_extension_count_is_initialized_before_early_return(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        signature = "void JSExtensionHost::getLoadedExtensions("
+        start = source.index(signature)
+        body = source[start:source.index("// VSIX Signature Verification", start)]
+        self.assertIn("if (outCount) *outCount = 0;", body)
+        self.assertIn("if (!outCount || (!outStates && maxStates != 0)) return;", body)
+        self.assertLess(body.find("if (outCount) *outCount = 0;"),
+                        body.find("if (!outCount || (!outStates && maxStates != 0)) return;"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
