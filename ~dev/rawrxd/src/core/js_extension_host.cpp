@@ -331,7 +331,8 @@ std::string readFileToString(const char* path) {
                         &bytesRead, nullptr);
     CloseHandle(hFile);
 
-    if (!ok || bytesRead != content.size()) content.resize(bytesRead);
+    // A short or failed read must never be treated as a complete manifest/script.
+    if (!ok || bytesRead != content.size()) return {};
     return content;
 }
 
