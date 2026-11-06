@@ -660,6 +660,19 @@ PatchResult JSExtensionHost::shutdown() {
         m_queueEvent = nullptr;
     }
 
+    // Invalidate native command trampolines before destroying any QuickJS context.
+    // The registry may retain binding addresses beyond host shutdown.
+    {
+        std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+        for (auto& binding : s_jsCommands) {
+            if (binding.ctx) {
+                JS_FreeValue(binding.ctx, binding.callback);
+                binding.callback = JS_UNDEFINED;
+                binding.ctx = nullptr;
+            }
+        }
+    }
+
     // Drop extensions without JS deactivate (eval re-entered moduleLoader → AV).
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
