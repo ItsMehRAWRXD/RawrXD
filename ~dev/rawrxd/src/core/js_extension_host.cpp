@@ -3131,6 +3131,19 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
         }
     }
 
+    // Apply the same containment and size gates as loadExtensionFromDir.
+    // parseManifest is independently callable and must not bypass them.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::absolute(std::filesystem::path(extensionDir)),
+            std::filesystem::absolute(std::filesystem::path(pkgPath)))) {
+        return PatchResult::error("Extension manifest escapes installation root");
+    }
+    std::error_code manifestError;
+    const auto manifestBytes = std::filesystem::file_size(pkgPath, manifestError);
+    if (manifestError || manifestBytes == 0 || manifestBytes > 256 * 1024) {
+        return PatchResult::error("Extension manifest missing or exceeds 256 KiB");
+    }
+
     std::string json = readFileToString(pkgPath.c_str());
     if (json.empty()) return PatchResult::error("Failed to read package.json");
 
