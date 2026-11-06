@@ -42,7 +42,7 @@ def main():
     tests = [
         ("full host has QuickJS feature detection", "#define RAWRXD_HAS_QUICKJS 1" in full and "#define RAWRXD_HAS_QUICKJS 0" in full),
         ("full host exposes runtime implementation", "JSExtensionHost::" in full),
-        ("full host rejects missing QuickJS during initialize", bool(re.search(r"PatchResult\s+JSExtensionHost::initialize\(\)\s*\{[\s\S]*?#if\s+!RAWRXD_HAS_QUICKJS[\s\S]*?return\s+PatchResult::error\(", full))),
+        ("full host rejects missing QuickJS during initialize", (lambda body: body is not None and bool(re.search(r"#if\s+!RAWRXD_HAS_QUICKJS[\s\S]*?return\s+PatchResult::error\(", body)))(function_body(full, r"PatchResult\s+JSExtensionHost::initialize\(\)"))),
         ("headless host explicitly refuses initialization", rejects(headless, r"PatchResult\s+JSExtensionHost::initialize\(\)")),
         ("headless host explicitly refuses VSIX", rejects(headless, r"PatchResult\s+JSExtensionHost::loadVSIX\([^)]*\)")),
         ("headless host explicitly refuses script execution", rejects(headless, r"PatchResult\s+JSExtensionHost::executeScript\([^)]*\)")),
