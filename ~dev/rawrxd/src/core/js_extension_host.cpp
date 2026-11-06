@@ -349,11 +349,17 @@ bool writeStringToFile(const char* path, const std::string& content) {
                                 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) return false;
 
-    DWORD bytesWritten = 0;
-    BOOL ok = WriteFile(hFile, content.data(), static_cast<DWORD>(content.size()),
-                         &bytesWritten, nullptr);
-    CloseHandle(hFile);
-    return ok && bytesWritten == content.size();
+    const bool complete = rawrxd::extensions::writeExactly(
+        content.data(), content.size(),
+        [&](const char* source, size_t remaining) -> size_t {
+            DWORD bytesWritten = 0;
+            const DWORD requested = static_cast<DWORD>(remaining);
+            if (!WriteFile(hFile, source, requested, &bytesWritten, nullptr))
+                return 0;
+            return static_cast<size_t>(bytesWritten);
+        });
+    const bool closed = CloseHandle(hFile) != 0;
+    return complete && closed;
 }
 
 } // anonymous namespace
