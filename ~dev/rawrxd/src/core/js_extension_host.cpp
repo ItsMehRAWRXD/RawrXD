@@ -2536,8 +2536,9 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
 PatchResult JSExtensionHost::unloadExtension(const char* extensionId) {
     if (!extensionId) return PatchResult::error("Null extensionId");
 
-    // Deactivate first
-    deactivateExtension(extensionId);
+    // Preserve extension state if its deactivate hook failed.
+    const PatchResult deactivation = deactivateExtension(extensionId);
+    if (!deactivation.success) return deactivation;
 
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
