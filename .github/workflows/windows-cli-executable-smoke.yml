@@ -13,6 +13,18 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Verify CLI source tree exists before attempting build
+        shell: pwsh
+        run: |
+          $required = @(
+            '~dev/rawrxd/src/win32app/cli_main_headless.cpp',
+            '~dev/rawrxd/src/win32app/HeadlessIDE.cpp'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required CLI source missing from checkout: $path"
+            }
+          }
       - name: Configure actual RawrXD CLI
         shell: pwsh
         run: |
