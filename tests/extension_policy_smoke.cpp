@@ -77,7 +77,7 @@ int main() {
                     check(entryWithinRoot(extensionRoot, link / "payload.js"),
                           false, "symlink escape rejected");
                 } else {
-                    std::cout << "SKIP symlink escape fixture: OS denied symlink creation\\n";
+                    std::cout << "SKIP symlink escape fixture: OS denied symlink creation\n";
                 }
             }
         }
