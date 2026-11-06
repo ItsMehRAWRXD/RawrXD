@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the real extension-registry smoke source with no model or GUI dependency.
+"""Run 45 real extension-registry smoke checks with no model or GUI dependency.
 
 This runner fails closed on compile errors, timeouts, missing checks, duplicate
 check IDs, nonzero exit codes, or malformed test summaries.
@@ -14,7 +14,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tests" / "extension_command_registry_smoke.cpp"
-EXPECTED = 30
+EXPECTED = 45
 
 
 def main() -> int:
