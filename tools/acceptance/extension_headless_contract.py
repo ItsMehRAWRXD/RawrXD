@@ -57,11 +57,13 @@ def check_sources(root=ROOT):
     ok = bool(script and "outResult[0] = '\\0'" in script.group(1))
     results.append({"gate": "script_output_cleared", "status": "PASS" if ok else "FAIL", "detail": "Source-contract only"})
     # Verify all lifecycle/handle fields are initialized, not just the JS pointers.
-    ctor = re.search(r"JSExtensionHost::JSExtensionHost\s*\(\s*\)\s*:\s*(.*?)\{\s*\}", s, re.S)
+    # Match through the destructor marker so m_stats{} does not truncate the
+    # initializer list at its first brace.
+    ctor = re.search(r"JSExtensionHost::JSExtensionHost\s*\(\s*\)\s*:(.*?)JSExtensionHost::~JSExtensionHost", s, re.S)
     required = ("m_jsRuntime", "m_jsContext", "m_queueEvent",
                 "m_nextTimerId", "m_initialized", "m_shutdownCompleted",
                 "m_hostThread", "m_running", "m_stats")
-    initialized = bool(ctor and all(re.search(r"\\b" + field + r"\\s*(?:\\(|\\{)", ctor.group(1)) for field in required))
+    initialized = bool(ctor and all(re.search(r"\b" + field + r"\s*(?:\(|\{)", ctor.group(1)) for field in required))
     results.append({"gate": "headless_constructor_state_initialized",
                     "status": "PASS" if initialized else "FAIL",
                     "detail": "Source-contract only: all lifecycle and handle members explicitly initialized"})
