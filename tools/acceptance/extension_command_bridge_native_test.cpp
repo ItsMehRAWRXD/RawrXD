@@ -69,6 +69,17 @@ int main() {
     assert(host.RegisterCommand("copy-throws", ThrowOnCopy{}));
     assert(!host.ExecuteCommand("copy-throws", ""));
     assert(host.UnregisterCommand("copy-throws"));
+    // Nested command dispatch must not deadlock the registry mutex.
+    assert(host.RegisterCommand("inner", [](const std::string& arg) {
+        return arg == "nested";
+    }));
+    assert(host.RegisterCommand("outer", [&](const std::string&) {
+        return host.ExecuteCommand("inner", "nested");
+    }));
+    assert(host.ExecuteCommand("outer", ""));
+    assert(host.UnregisterCommand("outer"));
+    assert(host.UnregisterCommand("inner"));
+    // Once shut down, neither dispatch nor new registrations may succeed.
     const auto available = host.GetAvailableCommands();
     assert(available.size() == 2);
     assert(host.UnregisterCommand("throwing"));
