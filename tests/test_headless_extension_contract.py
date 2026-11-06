@@ -104,7 +104,7 @@ class HeadlessExtensionContract(unittest.TestCase):
         body = body_of(source, "extractZip")
         self.assertIn("Unsupported quote character in VSIX extraction path", body)
         self.assertLess(body.find("Unsupported quote character in VSIX extraction path"),
-                        body.find("std::filesystem::create_directories(destDir)"))
+                        body.find("std::filesystem::create_directories(destDir, createError)"))
 
     def test_manifest_initialization_preserves_cpp_object_invariants(self):
         source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
