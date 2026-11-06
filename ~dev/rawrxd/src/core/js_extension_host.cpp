@@ -3142,7 +3142,9 @@ void JSExtensionHost::processMessageQueue() {
                     const PatchResult execution = executeScript(msg.extensionId.c_str(), msg.data.c_str(),
                                    result, sizeof(result));
                     if (msg.completionCallback) {
-                        msg.completionCallback(execution.success, result, msg.completionCtx);
+                        const char* callbackResult = execution.success ? result
+                            : (result[0] != '\0' ? result : execution.detail.c_str());
+                        msg.completionCallback(execution.success, callbackResult, msg.completionCtx);
                     }
                 } else if (msg.completionCallback) {
                     msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx);
