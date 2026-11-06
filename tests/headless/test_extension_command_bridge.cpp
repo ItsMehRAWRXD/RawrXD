@@ -23,7 +23,8 @@ int main(){
  CHECK("12 extension-owned registration", h.RegisterExtensionCommand("publisher.ext", "ext.cmd", [](auto const&){return true;}));
  CHECK("13 extension owner cleanup", (h.UnregisterExtensionCommands("publisher.ext"), !h.ExecuteCommand("ext.cmd", "")));
  CHECK("14 unregister host command", h.UnregisterCommand("x") && !h.ExecuteCommand("x", ""));
- CHECK("15 shutdown clears state", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty() && !h.ExecuteCommand("throw", "")));
+ CHECK("15 malformed owner rejected", !h.RegisterExtensionCommand("bad owner", "bad.cmd", [](auto const&){return true;}));
+ CHECK("16 shutdown clears state", (h.Shutdown(), !h.IsInitialized() && h.GetAvailableCommands().empty() && !h.ExecuteCommand("throw", "")));
  std::cout << "RESULT " << passed << " passed " << failed << " failed\n";
  return failed ? 1 : 0;
 }
