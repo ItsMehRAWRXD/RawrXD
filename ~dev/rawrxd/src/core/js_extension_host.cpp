@@ -378,6 +378,12 @@ PatchResult JSExtensionHost::initialize() {
         return PatchResult::error("JSExtensionHost shut down; re-init refused");
     if (m_initialized) return PatchResult::error("Already initialized");
 
+#if !RAWRXD_HAS_QUICKJS
+    // Reject the compile-only QuickJS shim before starting polyfills or creating
+    // any extension state. A missing engine must never look like a live host.
+    return PatchResult::error("QuickJS is not compiled into this build; JS extensions unavailable");
+#endif
+
     OutputDebugStringA("[JSExtensionHost] Initializing QuickJS runtime...\n");
 
     // ---- Initialize Polyfill Engine ----
