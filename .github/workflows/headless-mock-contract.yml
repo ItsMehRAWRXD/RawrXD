@@ -44,6 +44,10 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_entry_contract.cpp -o /tmp/extension_entry_contract
           /tmp/extension_entry_contract
+      - name: Compile and run VSIX signature policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_signature_contract.cpp -o /tmp/extension_signature_contract
+          /tmp/extension_signature_contract
       - name: Compile production extension registry contract
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
       - name: Run production extension registry contract
