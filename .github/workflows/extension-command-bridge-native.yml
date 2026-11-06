@@ -4,6 +4,9 @@ on:
     paths:
       - 'tools/acceptance/extension_command_bridge_native_test.cpp'
       - 'tools/acceptance/js_extension_bridge_failclosed_test.cpp'
+      - 'tools/acceptance/extension_headless_contract.py'
+      - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host.hpp'
       - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - '.github/workflows/extension-command-bridge-native.yml'
@@ -24,6 +27,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check headless extension source contract (not runtime)
+        run: python tools/acceptance/extension_headless_contract.py --json
       - name: Compile actual extension registry with warnings (Linux)
         if: runner.os == 'Linux'
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -o /tmp/extension_bridge_test tools/acceptance/extension_command_bridge_native_test.cpp
