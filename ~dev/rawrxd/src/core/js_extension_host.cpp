@@ -2812,9 +2812,13 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
             OutputDebugStringA("[JSExtensionHost] WARNING: Loading unsigned VSIX "
                              "(RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1)\n");
         } else {
-            // In strict mode, reject unsigned VSIX
-            // For now, we allow but warn (many extensions are unsigned)
-            OutputDebugStringA("[JSExtensionHost] NOTICE: VSIX is not signed\n");
+            // An unverified package must never silently become trusted. Users
+            // may explicitly opt into unsigned LOCAL extensions via the env flag.
+            std::strncpy(result.errorDetail,
+                         "Unsigned VSIX blocked (set RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1 to opt in)",
+                         sizeof(result.errorDetail) - 1);
+            OutputDebugStringA("[JSExtensionHost] Unsigned VSIX rejected by default\n");
+            return result;
         }
     }
 
@@ -2840,11 +2844,20 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // ---- Shell-based extraction using PowerShell ----
     // This is a robust fallback that handles all ZIP variants.
     // In production builds, replace with minizip or direct DEFLATE.
+    // The -Command string cannot safely interpolate quotes and wildcards.
+    // Reject ambiguous paths and use -LiteralPath for the archive itself.
+    const auto unsafePath = [](const char* path) {
+        return !path || !*path || std::strpbrk(path, "\"'\r\n$*?[]") != nullptr;
+    };
+    if (unsafePath(zipPath) || unsafePath(destDir))
+        return PatchResult::error("Unsafe VSIX extraction path");
     char cmd[2048];
-    std::snprintf(cmd, sizeof(cmd),
-                  "powershell -NoProfile -Command "
-                  "\"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"",
+    const int chars = std::snprintf(cmd, sizeof(cmd),
+                  "powershell -NoProfile -NonInteractive -Command "
+                  "\"Expand-Archive -LiteralPath '%s' -DestinationPath '%s' -Force\"",
                   zipPath, destDir);
+    if (chars < 0 || static_cast<size_t>(chars) >= sizeof(cmd))
+        return PatchResult::error("VSIX extraction command would be truncated");
 
     OutputDebugStringA("[JSExtensionHost] Extracting VSIX: ");
     OutputDebugStringA(cmd);
