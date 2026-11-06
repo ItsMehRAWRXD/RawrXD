@@ -30,11 +30,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Configure MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Compile policy tests (MSVC)
-        shell: cmd
+        shell: pwsh
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cl /nologo /std:c++17 /EHsc /W4 /WX "~dev\rawrxd\tests\extension_policy_smoke.cpp" /Fe:"%TEMP%\rawrxd-extension-policy-smoke.exe"
+          cl /nologo /std:c++17 /EHsc /W4 /WX "~dev/rawrxd/tests/extension_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-policy-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Execute policy assertions
         shell: pwsh
-        run: '& "$env:TEMP\rawrxd-extension-policy-smoke.exe"'
+        run: |
+          & "$env:RUNNER_TEMP/rawrxd-extension-policy-smoke.exe"
+          exit $LASTEXITCODE
