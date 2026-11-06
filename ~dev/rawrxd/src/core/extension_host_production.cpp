@@ -63,7 +63,8 @@ public:
             }
         } catch (...) {
             owners_.erase(command);
-            throw;
+            // Registry failures must not escape into extension activation.
+            return false;
         }
         return true;
     }
