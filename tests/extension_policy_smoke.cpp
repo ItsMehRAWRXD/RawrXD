@@ -5,6 +5,10 @@
 // This is a POLICY gate, not proof of a working QuickJS/VSIX runtime.
 #include "../~dev/rawrxd/src/core/extension_entry_policy.hpp"
 #include "../~dev/rawrxd/src/core/extension_manifest_policy.hpp"
+#include "../~dev/rawrxd/src/core/extension_read_policy.hpp"
+#include <algorithm>
+#include <cstring>
+#include <string>
 #include <filesystem>
 #include <iostream>
 #include <string_view>
@@ -47,6 +51,27 @@ int main() {
     check(entryWithinRoot(root, root), false, "root not child");
     check(entryWithinRoot("relative", root / "file.js"), false, "relative root");
     check(entryWithinRoot(root, "relative/file.js"), false, "relative entry");
+    // Exercise the production readExactly template with short reads, EOF and overflow.
+    {
+        std::string bytes = "hello";
+        char output[5]{};
+        std::size_t offset = 0;
+        const bool ok = readExactly(output, sizeof(output), [&](char* dst, std::size_t remaining) {
+            const auto n = std::min<std::size_t>({2, remaining, bytes.size() - offset});
+            std::memcpy(dst, bytes.data() + offset, n);
+            offset += n;
+            return n;
+        });
+        check(ok && std::string(output, sizeof(output)) == bytes, true, "short reads assembled");
+        check(readExactly(output, sizeof(output),
+              [](char*, std::size_t) { return std::size_t{0}; }), false, "premature EOF");
+        check(readExactly(output, sizeof(output),
+              [](char*, std::size_t n) { return n + 1; }), false, "oversized reader result");
+        check(readExactly(nullptr, 1,
+              [](char*, std::size_t) { return std::size_t{1}; }), false, "null destination");
+        check(readExactly(nullptr, 0,
+              [](char*, std::size_t) { return std::size_t{0}; }), true, "zero-length read");
+    }
     std::cout << "EXTENSION_POLICY_GATE assertions=" << assertions
               << " failures=" << failures << (failures ? " FAIL" : " PASS") << "\n";
     return failures ? 1 : 0;
