@@ -16,7 +16,7 @@ int main() {
  check(!readExactly(nullptr,1,[](char*,std::size_t){return std::size_t(1);}),"null buffer rejected");
  check(!readExactly(buffer,5,[](char* p,std::size_t n){p[0]='x';return n+1;}),"overreported bytes rejected after write");
  int attempt=0;
- check(!readExactly(buffer,5,[&](char* p,std::size_t n){++attempt;if(attempt==1){p[0]='a';return std::size_t(1);}return std::size_t(0);}) && attempt==2,"partial then EOF rejected");
+ check(!readExactly(buffer,5,[&](char* p,std::size_t){++attempt;if(attempt==1){p[0]='a';return std::size_t(1);}return std::size_t(0);}) && attempt==2,"partial then EOF rejected");
  attempt=0;
  check(!readExactly(buffer,5,[&](char* p,std::size_t n){++attempt;if(attempt==1){p[0]='a';return std::size_t(1);}return n+1;}) && attempt==2,"partial then overreport rejected");
  check(readExactly(nullptr,0,[](char*,std::size_t){return std::size_t(1);}),"zero length null buffer accepted");
