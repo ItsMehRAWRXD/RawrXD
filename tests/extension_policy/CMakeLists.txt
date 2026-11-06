@@ -23,3 +23,8 @@ else()
   target_compile_options(rawrxd_extension_bridge_failclosed PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 add_test(NAME rawrxd_extension_bridge_failclosed COMMAND rawrxd_extension_bridge_failclosed)
+
+add_executable(rawrxd_extension_extract_policy_gates ../extension_extract_policy_gates.cpp)
+target_compile_features(rawrxd_extension_extract_policy_gates PRIVATE cxx_std_17)
+target_include_directories(rawrxd_extension_extract_policy_gates PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../~dev/rawrxd/src/core")
+add_test(NAME rawrxd_extension_extract_policy_gates COMMAND rawrxd_extension_extract_policy_gates)
