@@ -47,18 +47,19 @@ class ExtensionIntegrationSourceContracts(unittest.TestCase):
         self.assertEqual(body.count('JS_SetPropertyStr(cx, global, "vscode"'), 1)
 
     def test_entry_path_must_resolve_inside_extension(self):
-        self.assertIn("canonicalMain.lexically_relative(canonicalRoot)", HOST)
-        self.assertIn("Extension entry escapes installation directory", HOST)
-        self.assertIn("manifestMain.is_absolute()", HOST)
+        self.assertIn("rawrxd::extensions::entryWithinRoot(", HOST)
+        self.assertIn("Extension main entry escapes installation root", HOST)
+        self.assertIn("std::filesystem::is_regular_file(mainPath", HOST)
 
     def test_unsigned_vsix_is_not_silently_accepted(self):
-        self.assertIn("Unsigned VSIX blocked", HOST)
+        self.assertIn("Unsigned or unverified VSIX rejected", HOST)
+        self.assertIn("explicitOptIn", HOST)
         self.assertIn("return result;", HOST)
 
     def test_extraction_rejects_unsafe_shell_inputs(self):
-        self.assertIn("Unsafe VSIX extraction path", HOST)
+        self.assertIn("VSIX extraction path contains unsafe command characters", HOST)
         self.assertIn("-LiteralPath", HOST)
-        self.assertIn("VSIX extraction command would be truncated", HOST)
+        self.assertIn("VSIX extraction command exceeds safe length", HOST)
 
     def test_store_has_rollback_recovery(self):
         self.assertIn("fs::rename(dest, backup)", STORE)
