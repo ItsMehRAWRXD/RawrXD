@@ -30,6 +30,9 @@ int main() {
     check(!validRelativeMain("C:\\absolute\\main.js"), "Windows drive backslash manifest entry rejected");
     check(!validRelativeMain("out/evil\n.js"), "control character manifest entry rejected");
     check(!validRelativeMain("../escape.js"), "parent traversal rejected");
+    check(!validRelativeMain("./main.js"), "leading dot segment rejected");
+    check(!validRelativeMain("out/./main.js"), "nested dot segment rejected");
+    check(!validRelativeMain("out\\\\.\\\\main.js"), "Windows dot segment rejected");
     check(!validRelativeMain("out/../escape.js"), "nested parent traversal rejected");
     check(!validRelativeMain("..\\escape.js"), "Windows parent traversal rejected");
     check(!validRelativeMain("out\\..\\escape.js"), "nested Windows parent traversal rejected");
