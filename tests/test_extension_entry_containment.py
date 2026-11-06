@@ -1,0 +1,29 @@
+"""Static guard for manifest-controlled JS extension entry-point containment.
+
+Run: python -m unittest discover -s tests -p test_extension_entry_containment.py
+Native path/junction tests must also run on Windows.
+"""
+from pathlib import Path
+import unittest
+
+SOURCE = Path(__file__).resolve().parents[1] / "~dev/rawrxd/src/core/js_extension_host.cpp"
+
+class ExtensionEntryContainmentTests(unittest.TestCase):
+    def test_canonical_root_and_entry_checked_before_registration(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("PatchResult JSExtensionHost::loadExtensionFromDir(")
+        end = source.index("// Extension Lifecycle", start)
+        body = source[start:end]
+        for required in (
+            "weakly_canonical(extRoot", "weakly_canonical(mainPath",
+            "entry.lexically_relative(root)", 'std::filesystem::path("..")',
+            "std::filesystem::is_regular_file(entry",
+            "m_extensions[extensionId] = std::move(state)"
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, body)
+        self.assertLess(body.index("entry.lexically_relative(root)"),
+                        body.index("m_extensions[extensionId] = std::move(state)"))
+
+if __name__ == "__main__":
+    unittest.main()
