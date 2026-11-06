@@ -24,7 +24,6 @@ METHODS = (
 def check_sources(root=ROOT):
     header = root / "~dev/rawrxd/src/core/js_extension_host.hpp"
     stub = root / "~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp"
-    failures = []
     if not header.is_file() or not stub.is_file():
         return [{"gate": "sources_present", "status": "FAIL", "detail": "Missing extension header or headless implementation"}]
     h, s = header.read_text(encoding="utf-8"), stub.read_text(encoding="utf-8")
