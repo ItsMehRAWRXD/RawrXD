@@ -64,6 +64,12 @@ int main() {
     gate("45_reserved_device_rejected", !validRelativeMain("dist/CON.js"));
     gate("46_reserved_serial_rejected", !validRelativeMain("dist/com1.js"));
     gate("47_reserved_printer_rejected", !validRelativeMain("dist/LPT9.js"));
+    gate("48_absolute_normalized_child_allowed",
+         entryWithinRoot(fs::absolute("relative-extension"),
+                         fs::absolute("relative-extension/dist/main.js")));
+    gate("49_absolute_normalized_escape_rejected",
+         !entryWithinRoot(fs::absolute("relative-extension"),
+                          fs::absolute("relative-extension/../outside/main.js")));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
