@@ -281,6 +281,10 @@ bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const 
     
     m_hProcess = piProcInfo.hProcess;
     CloseHandle(piProcInfo.hThread);
+    CloseHandle(m_hStdoutWrite);
+    m_hStdoutWrite = nullptr;
+    CloseHandle(m_hStdinRead);
+    m_hStdinRead = nullptr;
     
     LOG_INFO("SpawnPowerShellProcess: Process started (PID=" + std::to_string(GetProcessId(m_hProcess)) + ")");
     return true;
