@@ -151,6 +151,16 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Invalid extension name or publisher"),
                         body.find("// ---- Create Extension State ----"))
 
+    def test_manifest_entrypoint_must_be_relative(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "loadExtensionFromDir")
+        self.assertIn("declaredEntry.is_absolute()", body)
+        self.assertIn("declaredEntry.has_root_name()", body)
+        self.assertIn("declaredEntry.has_root_directory()", body)
+        self.assertIn("Absolute extension entry point is not allowed", body)
+        self.assertLess(body.find("Absolute extension entry point is not allowed"),
+                        body.find("std::string mainPath = extRoot"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
