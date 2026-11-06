@@ -2151,6 +2151,23 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         return PatchResult::error(err);
     }
 
+    // A manifest-controlled entry point must never escape its extension root.
+    // Canonicalize both paths to resolve '..' and directory junctions/symlinks.
+    {
+        std::error_code ec;
+        const auto root = std::filesystem::weakly_canonical(extRoot, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension root");
+        const auto entry = std::filesystem::weakly_canonical(mainPath, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension entry point");
+        const auto relative = entry.lexically_relative(root);
+        if (relative.empty() || relative.is_absolute() ||
+            *relative.begin() == std::filesystem::path("..") ||
+            !std::filesystem::is_regular_file(entry, ec) || ec) {
+            return PatchResult::error("Extension entry point must be a regular file inside extension root");
+        }
+        mainPath = entry.string();
+    }
+
     // ---- Create Extension State ----
     auto state = std::make_unique<JSExtensionState>();
     state->extensionId = extensionId;
