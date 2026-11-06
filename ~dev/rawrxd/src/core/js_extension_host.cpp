@@ -400,6 +400,7 @@ PatchResult JSExtensionHost::initialize() {
     // ---- Create QuickJS Runtime ----
     JSRuntime* rt = JS_NewRuntime();
     if (!rt) {
+        PolyfillEngine::instance().shutdown();
         return PatchResult::error("Failed to create QuickJS runtime");
     }
 
@@ -419,6 +420,7 @@ PatchResult JSExtensionHost::initialize() {
     if (!ctx) {
         JS_FreeRuntime(rt);
         m_jsRuntime = nullptr;
+        PolyfillEngine::instance().shutdown();
         return PatchResult::error("Failed to create QuickJS context");
     }
 
