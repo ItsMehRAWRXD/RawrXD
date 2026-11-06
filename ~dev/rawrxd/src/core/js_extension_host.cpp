@@ -2513,6 +2513,9 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
         if (excStr) JS_FreeCString(extCtx, excStr);
         JS_FreeValue(extCtx, exc);
         JS_FreeValue(extCtx, result);
+        // A failed activation must not retain a half-initialized JS context.
+        JS_FreeContext(extCtx);
+        state->jsContext = nullptr;
         return PatchResult::error(err);
     }
 
