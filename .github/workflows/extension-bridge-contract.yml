@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Compile and execute bridge contract (Linux)
+      - name: Audit extension source lanes (static-only)\n        shell: bash\n        run: python tests/extension/audit_extension_lanes.py\n      - name: Compile and execute bridge contract (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
