@@ -49,6 +49,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(400, {"error": {"message": "messages must be an array"}})
             if body.get("model", MODEL) != MODEL:
                 return self.send_json(404, {"error": {"message": "unknown model"}})
+            if any(not isinstance(item, dict) or
+                   item.get("role") not in ("system", "developer", "user", "assistant", "tool") or
+                   not isinstance(item.get("content"), (str, list)) for item in body["messages"]):
+                return self.send_json(400, {"error": {"message": "invalid message entry"}})
             if type(body.get("stream", False)) is not bool:
                 return self.send_json(400, {"error": {"message": "stream must be boolean"}})
             # Explicit failure injection exercises real client HTTP error handling
