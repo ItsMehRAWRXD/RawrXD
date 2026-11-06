@@ -1,7 +1,9 @@
 // Production command bridge for Win32IDE extensions.
 // This registry is an explicit local command surface, not a VS Code/QuickJS host.
 // Only registered callbacks execute; arbitrary command names fail closed.
+#include <atomic>
 #include <functional>
+#include <memory>
 #include <map>
 #include <mutex>
 #include <string>
@@ -29,6 +31,7 @@ public:
     void Shutdown() {
         std::lock_guard<std::mutex> lock(mutex_);
         initialized_ = false;
+        for (auto& item : commands_) item.second->active.store(false);
         commands_.clear();
         owners_.clear();
     }
@@ -37,7 +40,7 @@ public:
         if (command.empty() || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_) return false;
-        return commands_.emplace(command, std::move(handler)).second;
+        return commands_.emplace(command, std::make_shared<CommandSlot>(std::move(handler))).second;
     }
 
     // Explicit ownership is required for extension-contributed commands.
@@ -48,7 +51,7 @@ public:
         if (extensionId.empty() || command.empty() || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
-        commands_.emplace(command, std::move(handler));
+        commands_.emplace(command, std::make_shared<CommandSlot>(std::move(handler)));
         owners_[command] = extensionId;
         return true;
     }
@@ -57,7 +60,8 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         for (auto it = owners_.begin(); it != owners_.end();) {
             if (it->second == extensionId) {
-                commands_.erase(it->first);
+                auto cmd = commands_.find(it->first);
+                if (cmd != commands_.end()) { cmd->second->active.store(false); commands_.erase(cmd); }
                 it = owners_.erase(it);
             } else {
                 ++it;
@@ -69,11 +73,15 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_) return false;
         owners_.erase(command);
-        return commands_.erase(command) == 1;
+        auto cmd = commands_.find(command);
+        if (cmd == commands_.end()) return false;
+        cmd->second->active.store(false);
+        commands_.erase(cmd);
+        return true;
     }
 
     bool ExecuteCommand(const std::string& command, const std::string& args) {
-        CommandHandler handler;
+        std::shared_ptr<CommandSlot> slot;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (!initialized_) return false;
@@ -81,10 +89,11 @@ public:
             if (it == commands_.end()) return false;
             // Do not hold the registry lock during user code: callbacks may
             // register/unregister commands or dispatch nested commands.
-            handler = it->second;
+            slot = it->second;
         }
         try {
-            return handler(args);
+            if (!slot->active.load()) return false;
+            return slot->handler(args);
         } catch (...) {
             // Command failure must not crash the IDE or report success.
             return false;
@@ -110,9 +119,14 @@ private:
     ExtensionHost(const ExtensionHost&) = delete;
     ExtensionHost& operator=(const ExtensionHost&) = delete;
 
+    struct CommandSlot {
+        explicit CommandSlot(CommandHandler callback) : handler(std::move(callback)) {}
+        CommandHandler handler;
+        std::atomic<bool> active{true};
+    };
     mutable std::mutex mutex_;
     bool initialized_ = false;
-    std::map<std::string, CommandHandler> commands_;
+    std::map<std::string, std::shared_ptr<CommandSlot>> commands_;
     std::map<std::string, std::string> owners_; // command -> extension ID
 };
 
