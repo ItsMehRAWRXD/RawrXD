@@ -2946,11 +2946,20 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error(err);
     }
 
-    // Verify extraction produced files
-    if (!std::filesystem::exists(destDir) ||
-        std::filesystem::is_empty(destDir)) {
-        return PatchResult::error("VSIX extraction produced no files");
-    }
+    // Verify the expected manifest exists, not merely arbitrary pre-existing
+    // files in the destination. A nonempty directory is not proof of success.
+    std::error_code verifyError;
+    const auto destination = std::filesystem::path(destDir);
+    const bool nestedManifest = std::filesystem::is_regular_file(
+        destination / "extension" / "package.json", verifyError);
+    if (verifyError)
+        return PatchResult::error("Cannot inspect extracted VSIX manifest");
+    const bool rootManifest = std::filesystem::is_regular_file(
+        destination / "package.json", verifyError);
+    if (verifyError)
+        return PatchResult::error("Cannot inspect extracted VSIX manifest");
+    if (!nestedManifest && !rootManifest)
+        return PatchResult::error("VSIX extraction produced no extension manifest");
 
     return PatchResult::ok("VSIX extracted");
 }
