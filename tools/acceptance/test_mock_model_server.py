@@ -61,6 +61,25 @@ class MockTransportTests(unittest.TestCase):
         self.assertEqual(events[-1]["choices"][0]["finish_reason"], "stop")
         self.assertTrue(body.endswith(b"data: [DONE]\n\n"))
 
+    def test_parallel_completion_requests(self):
+        # Exercise ThreadingHTTPServer under simultaneous client connections.
+        from concurrent.futures import ThreadPoolExecutor
+        payload = {"model": MODEL, "messages": [{"role": "user", "content": "parallel"}]}
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            responses = list(pool.map(lambda _: self.request("POST", "/v1/chat/completions", payload), range(24)))
+        self.assertEqual(len(responses), 24)
+        for code, _, body in responses:
+            self.assertEqual(code, 200)
+            self.assertEqual(json.loads(body)["choices"][0]["message"]["content"], "MOCK_RESPONSE_OK")
+
+    def test_recovery_after_bad_request(self):
+        code, _, _ = self.request("POST", "/v1/chat/completions", raw=b"{")
+        self.assertEqual(code, 400)
+        code, _, body = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [{"role": "user", "content": "after error"}]})
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["choices"][0]["message"]["content"], "MOCK_RESPONSE_OK")
+
     def test_wrong_model(self):
         code, _, _ = self.request("POST", "/v1/chat/completions", {"model": "not-mock", "messages": []})
         self.assertEqual(code, 400)
