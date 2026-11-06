@@ -3,6 +3,8 @@
 // Explorer, Search, Source Control, Run & Debug, Extensions
 
 #include "Win32IDE.h"
+#include "OfflineExtensionStore.h"
+#include <cctype>
 #include <commctrl.h>
 #include <shlwapi.h>
 #include <regex>
@@ -22,6 +24,34 @@
 #pragma comment(lib, "shlwapi.lib")
 
 namespace fs = std::filesystem;
+
+namespace {
+fs::path extensionRoot() {
+    char buffer[32768] = {};
+    const DWORD length = GetEnvironmentVariableA("LOCALAPPDATA", buffer, static_cast<DWORD>(sizeof(buffer)));
+    if (length && length < sizeof(buffer)) return fs::path(buffer) / "RawrXD" / "extensions";
+    return fs::current_path() / "extensions";
+}
+std::string chooseUnpackedExtensionFolder(HWND owner) {
+    BROWSEINFOA info = {};
+    info.hwndOwner = owner;
+    info.lpszTitle = "Select unpacked extension directory (not a VSIX archive)";
+    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+    LPITEMIDLIST selection = SHBrowseForFolderA(&info);
+    if (!selection) return {};
+    char path[MAX_PATH] = {};
+    const BOOL ok = SHGetPathFromIDListA(selection, path);
+    CoTaskMemFree(selection);
+    return ok ? std::string(path) : std::string{};
+}
+std::string lowerAscii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return value;
+}
+}
+
 
 // Activity Bar constants
 constexpr int ACTIVITY_BAR_WIDTH = 48;
@@ -70,6 +100,9 @@ constexpr int IDC_EXT_LIST = 6051;
 constexpr int IDC_EXT_DETAILS = 6052;
 constexpr int IDC_EXT_INSTALL = 6053;
 constexpr int IDC_EXT_UNINSTALL = 6054;
+constexpr int IDC_EXT_ENABLE = 6055;
+constexpr int IDC_EXT_UPDATE = 6056;
+constexpr int IDC_EXT_INFO = 6057;
 
 // ============================================================================
 // Activity Bar Implementation
@@ -192,6 +225,61 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
     switch (uMsg) {
+    case WM_COMMAND: {
+        if (!pThis) break;
+        const int id = LOWORD(wParam);
+        if (id == IDC_EXT_SEARCH && HIWORD(wParam) == EN_CHANGE) {
+            char query[256] = {};
+            GetWindowTextA(pThis->m_hwndExtensionSearch, query, sizeof(query));
+            pThis->searchExtensions(query);
+            return 0;
+        }
+        auto selected = [&]() -> std::string {
+            if (!pThis->m_hwndExtensionsList) return {};
+            const int row = ListView_GetNextItem(pThis->m_hwndExtensionsList, -1, LVNI_SELECTED);
+            if (row < 0) return {};
+            LVITEMA item = {};
+            item.mask = LVIF_PARAM;
+            item.iItem = row;
+            if (!ListView_GetItem(pThis->m_hwndExtensionsList, &item) ||
+                item.lParam < 0 ||
+                static_cast<size_t>(item.lParam) >= pThis->m_extensions.size()) return {};
+            return pThis->m_extensions[static_cast<size_t>(item.lParam)].id;
+        };
+        if (id == IDC_EXT_INSTALL || id == IDC_EXT_UPDATE) {
+            const std::string dir = chooseUnpackedExtensionFolder(pThis->m_hwndMain);
+            if (!dir.empty()) {
+                if (id == IDC_EXT_INSTALL) pThis->installExtension(dir);
+                else pThis->updateExtension(dir);
+            }
+            return 0;
+        }
+        if (id == IDC_EXT_UNINSTALL) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty() &&
+                MessageBoxA(pThis->m_hwndMain, ("Remove " + extensionId + "?").c_str(),
+                            "Uninstall extension", MB_ICONQUESTION | MB_YESNO) == IDYES)
+                pThis->uninstallExtension(extensionId);
+            return 0;
+        }
+        if (id == IDC_EXT_ENABLE) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty()) {
+                for (const auto& e : pThis->m_extensions) if (e.id == extensionId) {
+                    if (e.enabled) pThis->disableExtension(extensionId);
+                    else pThis->enableExtension(extensionId);
+                    break;
+                }
+            }
+            return 0;
+        }
+        if (id == IDC_EXT_INFO) {
+            const std::string extensionId = selected();
+            if (!extensionId.empty()) pThis->showExtensionDetails(extensionId);
+            return 0;
+        }
+        break;
+    }
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -251,6 +339,8 @@ void Win32IDE::setSidebarView(SidebarView view)
     ShowWindow(m_hwndDebugToolbar, SW_HIDE);
     ShowWindow(m_hwndExtensionsList, SW_HIDE);
     ShowWindow(m_hwndExtensionSearch, SW_HIDE);
+    for (int id : {IDC_EXT_INSTALL, IDC_EXT_UPDATE, IDC_EXT_UNINSTALL, IDC_EXT_ENABLE, IDC_EXT_INFO})
+        if (HWND button = GetDlgItem(m_hwndSidebarContent, id)) ShowWindow(button, SW_HIDE);
 
     m_currentSidebarView = view;
 
@@ -288,6 +378,8 @@ void Win32IDE::setSidebarView(SidebarView view)
     case SidebarView::Extensions:
         ShowWindow(m_hwndExtensionsList, SW_SHOW);
         ShowWindow(m_hwndExtensionSearch, SW_SHOW);
+        for (int id : {IDC_EXT_INSTALL, IDC_EXT_UPDATE, IDC_EXT_UNINSTALL, IDC_EXT_ENABLE, IDC_EXT_INFO})
+            if (HWND button = GetDlgItem(m_hwndSidebarContent, id)) ShowWindow(button, SW_SHOW);
         loadInstalledExtensions();
         appendToOutput("Extensions view activated\n", "Output", OutputSeverity::Info);
         break;
@@ -351,7 +443,12 @@ void Win32IDE::resizeSidebar(int width, int height)
     }
     else if (m_hwndExtensionsList && m_currentSidebarView == SidebarView::Extensions) {
         MoveWindow(m_hwndExtensionSearch, 5, 10, width - 10, 25, TRUE);
-        MoveWindow(m_hwndExtensionsList, 5, 40, width - 10, height - 45, TRUE);
+        const int buttons[] = {IDC_EXT_INSTALL, IDC_EXT_UPDATE, IDC_EXT_UNINSTALL, IDC_EXT_ENABLE, IDC_EXT_INFO};
+        const int buttonWidth = std::max(36, (width - 10) / 5);
+        for (int i = 0; i < 5; ++i)
+            if (HWND btn = GetDlgItem(m_hwndSidebarContent, buttons[i]))
+                MoveWindow(btn, 5 + i * buttonWidth, 40, buttonWidth, 29, TRUE);
+        MoveWindow(m_hwndExtensionsList, 5, 75, width - 10, std::max(30, height - 80), TRUE);
     }
 }
 
@@ -1248,117 +1345,160 @@ void Win32IDE::updateDebugVariables()
 
 void Win32IDE::createExtensionsView(HWND hwndParent)
 {
-    // Search box
     m_hwndExtensionSearch = CreateWindowExA(
-        WS_EX_CLIENTEDGE, "EDIT", "",
-        WS_CHILD | ES_AUTOHSCROLL,
+        WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL,
         5, 10, SIDEBAR_DEFAULT_WIDTH - 10, 25,
-        hwndParent, (HMENU)IDC_EXT_SEARCH, m_hInstance, nullptr
-    );
-
-    // Extensions list
+        hwndParent, (HMENU)(INT_PTR)IDC_EXT_SEARCH, m_hInstance, nullptr);
+    const struct { int id; const char* label; } buttons[] = {
+        {IDC_EXT_INSTALL, "Add"}, {IDC_EXT_UPDATE, "Update"}, {IDC_EXT_UNINSTALL, "Remove"},
+        {IDC_EXT_ENABLE, "Toggle"}, {IDC_EXT_INFO, "Info"}};
+    for (int i = 0; i < 5; ++i)
+        CreateWindowExA(0, "BUTTON", buttons[i].label, WS_CHILD | BS_PUSHBUTTON,
+            5 + i * 48, 40, 48, 29, hwndParent,
+            (HMENU)(INT_PTR)buttons[i].id, m_hInstance, nullptr);
     m_hwndExtensionsList = CreateWindowExA(
         WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
         WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL,
-        5, 40, SIDEBAR_DEFAULT_WIDTH - 10, 555,
-        hwndParent, (HMENU)IDC_EXT_LIST, m_hInstance, nullptr
-    );
-
-    // Setup columns
-    LVCOLUMNA col = {};
-    col.mask = LVCF_TEXT | LVCF_WIDTH;
-    col.cx = 150;
-    col.pszText = (LPSTR)"Name";
-    ListView_InsertColumn(m_hwndExtensionsList, 0, &col);
-
-    col.cx = 60;
-    col.pszText = (LPSTR)"Version";
-    ListView_InsertColumn(m_hwndExtensionsList, 1, &col);
-
-    appendToOutput("Extensions view created\n", "Output", OutputSeverity::Info);
+        5, 75, SIDEBAR_DEFAULT_WIDTH - 10, 520,
+        hwndParent, (HMENU)(INT_PTR)IDC_EXT_LIST, m_hInstance, nullptr);
+    LVCOLUMNA column = {};
+    column.mask = LVCF_TEXT | LVCF_WIDTH;
+    column.cx = 146;
+    column.pszText = const_cast<char*>("Name");
+    ListView_InsertColumn(m_hwndExtensionsList, 0, &column);
+    column.cx = 80;
+    column.pszText = const_cast<char*>("Version");
+    ListView_InsertColumn(m_hwndExtensionsList, 1, &column);
+    appendToOutput("Offline extension inventory available\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::searchExtensions(const std::string& query)
 {
-    appendToOutput("Searching extensions: " + query + "\n", "Output", OutputSeverity::Info);
-    // Placeholder - would query extension marketplace
-}
-
-void Win32IDE::installExtension(const std::string& extensionId)
-{
-    appendToOutput("Installing extension: " + extensionId + "\n", "Output", OutputSeverity::Info);
-    // Placeholder
-}
-
-void Win32IDE::uninstallExtension(const std::string& extensionId)
-{
-    appendToOutput("Uninstalling extension: " + extensionId + "\n", "Output", OutputSeverity::Info);
-    // Placeholder
-}
-
-void Win32IDE::enableExtension(const std::string& extensionId)
-{
-    for (auto& ext : m_extensions) {
-        if (ext.id == extensionId) {
-            ext.enabled = true;
-            appendToOutput("Extension enabled: " + extensionId + "\n", "Output", OutputSeverity::Info);
-            break;
-        }
+    if (!m_hwndExtensionsList) return;
+    ListView_DeleteAllItems(m_hwndExtensionsList);
+    const std::string needle = lowerAscii(query);
+    int row = 0;
+    for (size_t i = 0; i < m_extensions.size(); ++i) {
+        const auto& e = m_extensions[i];
+        if (!needle.empty() &&
+            lowerAscii(e.id).find(needle) == std::string::npos &&
+            lowerAscii(e.name).find(needle) == std::string::npos &&
+            lowerAscii(e.description).find(needle) == std::string::npos) continue;
+        std::string label = e.enabled ? e.name : e.name + " (disabled)";
+        LVITEMA item = {};
+        item.mask = LVIF_TEXT | LVIF_PARAM;
+        item.iItem = row;
+        item.pszText = const_cast<char*>(label.c_str());
+        item.lParam = static_cast<LPARAM>(i);
+        const int index = ListView_InsertItem(m_hwndExtensionsList, &item);
+        if (index >= 0) ListView_SetItemText(m_hwndExtensionsList, index, 1,
+                              const_cast<char*>(e.version.c_str()));
+        ++row;
     }
 }
 
-void Win32IDE::disableExtension(const std::string& extensionId)
+void Win32IDE::installExtension(const std::string& folder)
 {
-    for (auto& ext : m_extensions) {
-        if (ext.id == extensionId) {
-            ext.enabled = false;
-            appendToOutput("Extension disabled: " + extensionId + "\n", "Output", OutputSeverity::Info);
-            break;
-        }
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        const auto e = store.install(folder);
+        appendToOutput("Installed unpacked extension " + e.id + " (" + e.version +
+                       "); restart/activation not implied\n", "Output", OutputSeverity::Info);
+        loadInstalledExtensions();
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Extension install failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
     }
 }
 
-void Win32IDE::updateExtension(const std::string& extensionId)
+void Win32IDE::uninstallExtension(const std::string& id)
 {
-    appendToOutput("Updating extension: " + extensionId + "\n", "Output", OutputSeverity::Info);
-    // Placeholder
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        store.remove(id);
+        appendToOutput("Removed extension " + id + "\n", "Output", OutputSeverity::Info);
+        loadInstalledExtensions();
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Extension removal failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
+    }
 }
 
-void Win32IDE::showExtensionDetails(const std::string& extensionId)
+void Win32IDE::enableExtension(const std::string& id)
 {
-    appendToOutput("Showing details for: " + extensionId + "\n", "Output", OutputSeverity::Info);
-    // Placeholder
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        store.setEnabled(id, true);
+        appendToOutput("Extension enabled in inventory: " + id +
+                       " (host activation not implied)\n", "Output", OutputSeverity::Info);
+        loadInstalledExtensions();
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Enable failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::disableExtension(const std::string& id)
+{
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        store.setEnabled(id, false);
+        appendToOutput("Extension disabled in inventory: " + id +
+                       " (restart running extensions separately)\n", "Output", OutputSeverity::Info);
+        loadInstalledExtensions();
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Disable failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::updateExtension(const std::string& folder)
+{
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        const auto e = store.update(folder);
+        appendToOutput("Updated unpacked extension " + e.id + " to " + e.version +
+                       "\n", "Output", OutputSeverity::Info);
+        loadInstalledExtensions();
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Extension update failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::showExtensionDetails(const std::string& id)
+{
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        const auto e = store.get(id);
+        appendToOutput("Extension: " + e.id + "\nVersion: " + e.version +
+                       "\nPublisher: " + e.publisher + "\nDescription: " + e.description +
+                       "\nInventory status: " + (e.enabled ? "enabled" : "disabled") +
+                       "\nExecution status: not verified\n", "Output", OutputSeverity::Info);
+    } catch (const std::exception& ex) {
+        appendToOutput(std::string("Extension details failed: ") + ex.what() + "\n",
+                       "Output", OutputSeverity::Error);
+    }
 }
 
 void Win32IDE::loadInstalledExtensions()
 {
     if (!m_hwndExtensionsList) return;
-
-    ListView_DeleteAllItems(m_hwndExtensionsList);
-
-    // Placeholder - load from extensions directory
-    m_extensions = {
-        {"powershell.vscode", "PowerShell", "2024.2.2", "PowerShell language support", "Microsoft", true, true},
-        {"ms-vscode.cpptools", "C/C++", "1.20.5", "C++ IntelliSense", "Microsoft", true, true},
-        {"github.copilot", "GitHub Copilot", "1.150.0", "AI pair programmer", "GitHub", true, true}
-    };
-
-    LVITEMA item = {};
-    item.mask = LVIF_TEXT;
-
-    for (size_t i = 0; i < m_extensions.size(); i++) {
-        item.iItem = (int)i;
-        item.iSubItem = 0;
-        item.pszText = (LPSTR)m_extensions[i].name.c_str();
-        ListView_InsertItem(m_hwndExtensionsList, &item);
-
-        item.iSubItem = 1;
-        item.pszText = (LPSTR)m_extensions[i].version.c_str();
-        ListView_SetItem(m_hwndExtensionsList, &item);
+    try {
+        RawrXD::OfflineExtensions::Store store(extensionRoot());
+        m_extensions.clear();
+        for (const auto& e : store.list())
+            m_extensions.push_back({e.id, e.name, e.version, e.description,
+                                    e.publisher, true, e.enabled});
+        char query[256] = {};
+        if (m_hwndExtensionSearch) GetWindowTextA(m_hwndExtensionSearch, query, sizeof(query));
+        searchExtensions(query);
+    } catch (const std::exception& ex) {
+        m_extensions.clear();
+        ListView_DeleteAllItems(m_hwndExtensionsList);
+        appendToOutput(std::string("Cannot load installed extensions: ") + ex.what() +
+                       "\n", "Output", OutputSeverity::Error);
     }
-
-    appendToOutput("Loaded " + std::to_string(m_extensions.size()) + " extensions\n",
-                   "Output", OutputSeverity::Info);
 }
 
 // ============================================================================
