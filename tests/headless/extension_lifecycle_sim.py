@@ -52,14 +52,16 @@ class SimulatedExtensionHost:
             for item in entries:
                 name = item.filename.replace("\\\\", "/")
                 path = PurePosixPath(name)
+                is_directory = name.endswith("/")
+                checked_name = name[:-1] if is_directory else name
                 # Treat Windows drive letters, UNC paths, and empty segments as unsafe
                 # even when tests execute on a POSIX runner.
                 if (not name or name.startswith("/") or name.startswith("//")
-                        or ":" in name or any(part in ("", ".", "..") for part in name.split("/"))):
+                        or ":" in name or any(part in ("", ".", "..") for part in checked_name.split("/"))):
                     raise ExtensionError("unsafe archive path")
-                if path.as_posix().casefold() in normalized:
+                if checked_name.casefold() in normalized:
                     raise ExtensionError("duplicate archive entry")
-                normalized.add(path.as_posix().casefold())
+                normalized.add(checked_name.casefold())
                 if (item.external_attr >> 16) & 0o170000 == 0o120000:
                     raise ExtensionError("symlink archive entry")
                 if item.file_size > 8 * 1024 * 1024:
