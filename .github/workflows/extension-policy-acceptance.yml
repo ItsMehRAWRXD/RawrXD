@@ -17,9 +17,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install Windows GCC toolchain
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
       - name: Compile production-header acceptance tests
-        shell: bash
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
         run: |
+          set -euo pipefail
           mkdir -p build/extension-policy
           if [ "$RUNNER_OS" = "Windows" ]; then
             c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/acceptance.exe '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
@@ -27,12 +34,12 @@ jobs:
             c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/acceptance '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
           fi
       - name: Run gates and preserve receipt
-        shell: bash
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
         run: |
+          set -euo pipefail
           if [ "$RUNNER_OS" = "Windows" ]; then
             build/extension-policy/acceptance.exe | tee build/extension-policy/receipt.txt
           else
-            set -o pipefail
             build/extension-policy/acceptance | tee build/extension-policy/receipt.txt
           fi
       - name: Upload evidence
