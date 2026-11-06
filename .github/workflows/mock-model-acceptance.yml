@@ -1,0 +1,27 @@
+name: Deterministic mock-model HTTP acceptance
+on:
+  push:
+    paths:
+      - 'tools/acceptance/mock_model_server.py'
+      - 'tools/acceptance/test_mock_model_server.py'
+      - '.github/workflows/mock-model-acceptance.yml'
+  pull_request:
+    paths:
+      - 'tools/acceptance/mock_model_server.py'
+      - 'tools/acceptance/test_mock_model_server.py'
+      - '.github/workflows/mock-model-acceptance.yml'
+  workflow_dispatch:
+jobs:
+  mock-transport:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Real loopback HTTP requests against deterministic mock
+        run: python -m unittest discover -s tools/acceptance -p test_mock_model_server.py -v
