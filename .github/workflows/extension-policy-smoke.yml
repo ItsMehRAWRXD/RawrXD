@@ -6,6 +6,7 @@ on:
     paths:
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_read_policy.hpp'
       - '~dev/rawrxd/tests/extension_read_smoke.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
@@ -16,6 +17,8 @@ on:
     paths:
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - '~dev/rawrxd/tests/extension_read_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_read_policy.hpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
