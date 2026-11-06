@@ -2224,6 +2224,14 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     state->jsContext = nullptr;
     state->jsModule = nullptr;
 
+    // Reject oversized scripts before reading them into memory for analysis.
+    // The runtime can apply a stricter per-extension budget in future.
+    std::error_code mainSizeError;
+    const auto mainSize = std::filesystem::file_size(mainPath, mainSizeError);
+    if (mainSizeError || mainSize > 16 * 1024 * 1024) {
+        return PatchResult::error("Extension main entry exceeds 16 MiB or is unreadable");
+    }
+
     // ---- Pre-analyze requires ----
     std::string mainSource = readFileToString(mainPath.c_str());
     if (!mainSource.empty()) {
