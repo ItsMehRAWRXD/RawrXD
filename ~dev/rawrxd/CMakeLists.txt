@@ -180,6 +180,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# Model-free offline extension CLI; intentionally independent of Ollama and GPU.
+include(cmake/OfflineExtensionsCli.cmake)
+
 # MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
 # Pin to C++20 for build stability. std::expected is available via
 # <expected> polyfill or 3rdparty if needed.
