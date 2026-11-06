@@ -2240,7 +2240,9 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // ---- Register extension ----
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
-        m_extensions[extensionId] = std::move(state);
+        if (m_extensions.find(extensionId) != m_extensions.end())
+            return PatchResult::error("Extension already loaded");
+        m_extensions.emplace(extensionId, std::move(state));
     }
 
     m_stats.jsExtensionsLoaded++;
