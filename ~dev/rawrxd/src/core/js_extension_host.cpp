@@ -110,6 +110,7 @@
     static void JS_SetMaxStackSize(JSRuntime* rt, size_t size) {}
     static JSContext* JS_NewContext(JSRuntime* rt) { return nullptr; }
     static void JS_FreeContext(JSContext* ctx) {}
+    static JSValue JS_ParseJSON(JSContext* ctx, const char* buf, size_t len, const char* filename) { return JS_UNDEFINED; }
     static JSValue JS_NewObject(JSContext* ctx) { return JS_UNDEFINED; }
     static JSValue JS_NewString(JSContext* ctx, const char* str) { return JS_UNDEFINED; }
     static JSValue JS_NewInt32(JSContext* ctx, int32_t val) { return JS_UNDEFINED; }
@@ -3211,25 +3212,30 @@ void JSExtensionHost::processMessageQueue() {
                         if (!state->activated || !state->jsContext) continue;
 
                         JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-                        std::ostringstream js;
-                        js << "if(globalThis.__eventHandlers && globalThis.__eventHandlers['"
-                           << eventName << "']) { globalThis.__eventHandlers['"
-                           << eventName << "'](" << eventData << "); }";
-
-                        std::string script = js.str();
-                        JSValue eventResult = JS_Eval(extCtx, script.c_str(), script.size(),
-                                "<event>", JS_EVAL_TYPE_GLOBAL);
-                        if (JS_IsException(eventResult)) {
-                            JSValue eventError = JS_GetException(extCtx);
-                            const char* errorText = JS_ToCString(extCtx, eventError);
-                            if (errorText) {
-                                OutputDebugStringA("[JSExtensionHost] Event handler error: ");
-                                OutputDebugStringA(errorText);
-                                JS_FreeCString(extCtx, errorText);
+                        JSValue global = JS_GetGlobalObject(extCtx);
+                        JSValue handlers = JS_GetPropertyStr(extCtx, global, "__eventHandlers");
+                        JSValue handler = JS_GetPropertyStr(extCtx, handlers, eventName.c_str());
+                        if (JS_IsFunction(extCtx, handler)) {
+                            JSValue payload = JS_ParseJSON(extCtx, eventData.c_str(),
+                                                           eventData.size(), "<event-json>");
+                            if (!JS_IsException(payload)) {
+                                JSValue callResult = JS_Call(extCtx, handler, handlers, 1, &payload);
+                                if (JS_IsException(callResult)) {
+                                    JSValue error = JS_GetException(extCtx);
+                                    JS_FreeValue(extCtx, error);
+                                    OutputDebugStringA("[JSExtensionHost] Event callback threw\n");
+                                }
+                                JS_FreeValue(extCtx, callResult);
+                            } else {
+                                JSValue error = JS_GetException(extCtx);
+                                JS_FreeValue(extCtx, error);
+                                OutputDebugStringA("[JSExtensionHost] Invalid event JSON\n");
                             }
-                            JS_FreeValue(extCtx, eventError);
+                            JS_FreeValue(extCtx, payload);
                         }
-                        JS_FreeValue(extCtx, eventResult);
+                        JS_FreeValue(extCtx, handler);
+                        JS_FreeValue(extCtx, handlers);
+                        JS_FreeValue(extCtx, global);
                     }
                 }
                 break;
