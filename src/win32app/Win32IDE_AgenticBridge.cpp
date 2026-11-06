@@ -101,19 +101,19 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
          response.content = "Max Mode Enabled (Native Threads)";
     }
     else if (prompt == "/think") {
-         static bool t = false; t = !t;
-         m_nativeAgent->SetDeepThink(t);
-         response.content = std::string("Deep Thinking ") + (t ? "Enabled" : "Disabled");
+         m_deepThinkEnabled = !m_deepThinkEnabled;
+         m_nativeAgent->SetDeepThink(m_deepThinkEnabled);
+         response.content = std::string("Deep Thinking ") + (m_deepThinkEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt == "/research") {
-         static bool r = false; r = !r;
-         m_nativeAgent->SetDeepResearch(r);
-         response.content = std::string("Deep Research ") + (r ? "Enabled" : "Disabled");
+         m_deepResearchEnabled = !m_deepResearchEnabled;
+         m_nativeAgent->SetDeepResearch(m_deepResearchEnabled);
+         response.content = std::string("Deep Research ") + (m_deepResearchEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt == "/norefusal") {
-         static bool n = false; n = !n;
-         m_nativeAgent->SetNoRefusal(n);
-         response.content = std::string("No Refusal Mode ") + (n ? "Enabled" : "Disabled");
+         m_noRefusalEnabled = !m_noRefusalEnabled;
+         m_nativeAgent->SetNoRefusal(m_noRefusalEnabled);
+         response.content = std::string("No Refusal Mode ") + (m_noRefusalEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt.find("/load ") == 0) {
         std::string path = prompt.substr(6);
