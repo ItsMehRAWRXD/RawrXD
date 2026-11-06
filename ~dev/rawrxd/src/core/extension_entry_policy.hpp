@@ -1,7 +1,22 @@
 #pragma once
 #include <filesystem>
 #include <system_error>
+#include <string_view>
 namespace rawrxd::extensions {
+// Manifest entry paths must be relative on Windows as well as POSIX.
+// A Windows drive prefix is invalid even when tested by a Linux CI runner.
+inline bool validRelativeMain(std::string_view entry) noexcept {
+    if (entry.empty()) return false;
+    if (entry[0] == '/' || entry[0] == '\\\\') return false;
+    if (entry.size() >= 2 &&
+        ((entry[0] >= 'A' && entry[0] <= 'Z') ||
+         (entry[0] >= 'a' && entry[0] <= 'z')) &&
+        entry[1] == ':') return false;
+    for (unsigned char c : entry) {
+        if (c < 32 || c == 127) return false;
+    }
+    return true;
+}
 // Reject extension entry points outside the installed extension directory.
 // weakly_canonical handles non-existent leaf paths and resolves existing symlinks.
 inline bool entryWithinRoot(const std::filesystem::path& root,
