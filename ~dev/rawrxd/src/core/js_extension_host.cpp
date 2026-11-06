@@ -2159,6 +2159,25 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         return PatchResult::error(err);
     }
 
+    // Keep the extension entry point within its installed root. In particular,
+    // reject absolute paths, ".." traversal, and symlinks escaping the root.
+    // canonical() is used only after both paths have been checked to exist.
+    {
+        std::error_code ec;
+        const auto root = std::filesystem::canonical(extRoot, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension root");
+        const auto entry = std::filesystem::canonical(mainPath, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension entry point");
+        auto rootIt = root.begin();
+        auto entryIt = entry.begin();
+        for (; rootIt != root.end() && entryIt != entry.end(); ++rootIt, ++entryIt) {
+            if (*rootIt != *entryIt)
+                return PatchResult::error("Extension entry point escapes extension root");
+        }
+        if (rootIt != root.end() || entryIt == entry.end())
+            return PatchResult::error("Extension entry point escapes extension root");
+    }
+
     // ---- Create Extension State ----
     auto state = std::make_unique<JSExtensionState>();
     state->extensionId = extensionId;
