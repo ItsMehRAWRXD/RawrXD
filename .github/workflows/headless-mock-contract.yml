@@ -36,6 +36,10 @@ jobs:
         run: python -m compileall -q tests/headless
       - name: Run inference transport acceptance tests
         run: python -m unittest discover -s tests/headless -p 'test_mock_inference_server.py' -v
+      - name: Compile and run production extension manifest policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/headless/extension_manifest_contract.cpp -o /tmp/extension_manifest_contract
+          /tmp/extension_manifest_contract
       - name: Compile production extension registry contract
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
       - name: Run production extension registry contract
