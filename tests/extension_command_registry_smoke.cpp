@@ -37,6 +37,27 @@ int main() {
     check(!host.ExecuteCommand("throws", ""), "13 exception converted to failure");
     host.UnregisterExtensionCommands("ext.alpha");
     check(!host.ExecuteCommand("alpha.run", ""), "14 owner unload removes command");
+    // Additional lifecycle and reentrancy gates; no model or GUI required.
+    check(!host.RegisterExtensionCommand("", "bad", [](const std::string&) { return true; }), "16 empty owner rejected");
+    check(!host.RegisterExtensionCommand("ext.bad", "", [](const std::string&) { return true; }), "17 empty extension command rejected");
+    check(!host.RegisterExtensionCommand("ext.bad", "bad", {}), "18 empty extension callback rejected");
+    check(host.RegisterCommand("host.run", [](const std::string&) { return true; }), "19 host command registered");
+    host.UnregisterExtensionCommands("other.owner");
+    check(host.ExecuteCommand("host.run", ""), "20 unrelated unload preserves host command");
+    check(host.UnregisterCommand("host.run"), "21 explicit unregister succeeds");
+    check(!host.UnregisterCommand("host.run"), "22 duplicate unregister fails");
+    check(!host.ExecuteCommand("host.run", ""), "23 removed command fails closed");
+    check(host.RegisterCommand("nested", [&](const std::string&) {
+        return host.RegisterCommand("from.nested", [](const std::string&) { return true; });
+    }), "24 reentrant command registered");
+    check(host.ExecuteCommand("nested", ""), "25 callback can register command without deadlock");
+    check(host.ExecuteCommand("from.nested", ""), "26 nested registration is executable");
+    check(host.RegisterExtensionCommand("ext.beta", "beta.run", [](const std::string&) { return false; }), "27 false-returning extension registered");
+    check(!host.ExecuteCommand("beta.run", ""), "28 callback false propagates");
+    const auto available = host.GetAvailableCommands();
+    check(std::find(available.begin(), available.end(), "beta.run") != available.end(), "29 available commands reflect registry");
+    host.UnregisterExtensionCommands("ext.beta");
+    check(!host.ExecuteCommand("beta.run", ""), "30 extension unload removes owned callback");
     host.Shutdown();
     check(!host.IsInitialized() && host.GetAvailableCommands().empty() && !host.ExecuteCommand("throws", ""), "15 shutdown clears registry");
     std::cout << "RESULT " << (checks - failures) << "/" << checks << " checks; " << (failures ? "FAIL" : "PASS") << '\n';
