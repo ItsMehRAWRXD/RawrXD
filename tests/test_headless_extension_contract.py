@@ -143,6 +143,14 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertLess(body.find("Failed to create VSIX destination directory"),
                         body.find("CreateProcessA("))
 
+    def test_extension_id_parts_are_validated_before_registration(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "loadExtensionFromDir")
+        self.assertIn("std::all_of(value.begin(), value.end()", body)
+        self.assertIn("Invalid extension name or publisher", body)
+        self.assertLess(body.find("Invalid extension name or publisher"),
+                        body.find("// ---- Create Extension State ----"))
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
