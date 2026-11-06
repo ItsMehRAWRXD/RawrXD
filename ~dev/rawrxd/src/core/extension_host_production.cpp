@@ -57,6 +57,7 @@ public:
     }
     
     bool IsInitialized() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return initialized_;
     }
 
