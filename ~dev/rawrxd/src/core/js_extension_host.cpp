@@ -3192,6 +3192,19 @@ void JSExtensionHost::processMessageQueue() {
                 if (newline != std::string::npos) {
                     std::string eventName = msg.data.substr(0, newline);
                     std::string eventData = msg.data.substr(newline + 1);
+                    // Event names are interpolated into a JavaScript string below.
+                    // Reject syntax metacharacters rather than allowing script injection.
+                    const bool validEventName = !eventName.empty() &&
+                        std::all_of(eventName.begin(), eventName.end(), [](unsigned char ch) {
+                            return (ch >= 'a' && ch <= 'z') ||
+                                   (ch >= 'A' && ch <= 'Z') ||
+                                   (ch >= '0' && ch <= '9') ||
+                                   ch == '.' || ch == '_' || ch == '-' || ch == ':';
+                        });
+                    if (!validEventName) {
+                        OutputDebugStringA("[JSExtensionHost] Rejected unsafe event name\n");
+                        break;
+                    }
 
                     std::lock_guard<std::mutex> lock(m_extensionsMutex);
                     for (auto& [id, state] : m_extensions) {
