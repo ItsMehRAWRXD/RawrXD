@@ -28,7 +28,7 @@ int main() {
     check(!validRelativeMain("\\absolute\\main.js"), "Windows rooted manifest entry rejected");
     check(!validRelativeMain("C:/absolute/main.js"), "Windows drive manifest entry rejected");
     check(!validRelativeMain("C:\\absolute\\main.js"), "Windows drive backslash manifest entry rejected");
-    check(!validRelativeMain("out/evil\\n.js"), "control character manifest entry rejected");
+    check(!validRelativeMain("out/evil\n.js"), "control character manifest entry rejected");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
