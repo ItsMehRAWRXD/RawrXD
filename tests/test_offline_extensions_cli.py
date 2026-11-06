@@ -25,7 +25,7 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         return src
 
     def cli(self, *argv, ok=True):
-        proc = subprocess.run([str(EXE), "--root", str(self.installed), *map(str, argv)],
+        proc = subprocess.run([str(EXE), "--root", str(self.installed), "--approve-mutations", *map(str, argv)],
                               capture_output=True, text=True, timeout=15)
         if ok:
             self.assertEqual(proc.returncode, 0, (proc.stdout, proc.stderr))
@@ -132,6 +132,14 @@ class OfflineExtensionAcceptance(unittest.TestCase):
     def test_18_no_execution_during_install(self):
         self.cli("install", self.package())
         self.assertTrue((self.installed / "example.sample" / "main.js").exists())
+
+    def test_19_mutations_require_explicit_approval(self):
+        src = self.package()
+        proc = subprocess.run([str(EXE), "--root", str(self.installed), "install", str(src)],
+                              capture_output=True, text=True, timeout=15)
+        self.assertEqual(proc.returncode, 3)
+        self.assertIn("--approve-mutations", proc.stderr)
+        self.assertFalse(self.installed.exists())
 
     def test_19_unsupported_commands_fail(self):
         self.cli("execute", "example.sample", ok=False)
