@@ -55,6 +55,12 @@ int main() {
     check(!validRelativeMain("out/LPT9.js"), "Windows LPT9 device rejected");
     check(validRelativeMain("out/COM0.js"), "nonreserved COM0 allowed");
     check(validRelativeMain("out/console.js"), "ordinary console name allowed");
+    check(!validRelativeMain("out/"), "trailing POSIX separator rejected");
+    check(!validRelativeMain("out\\\\"), "trailing Windows separator rejected");
+    check(!validRelativeMain("out\\\\/main.js"), "mixed consecutive separators rejected");
+    check(!validRelativeMain("out/CON.txt"), "nested Windows device rejected");
+    check(!validRelativeMain("out/LPT1"), "nested printer device rejected");
+    check(validRelativeMain("out\\\\main.js"), "ordinary Windows relative path accepted");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
