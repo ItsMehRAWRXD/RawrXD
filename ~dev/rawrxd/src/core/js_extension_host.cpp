@@ -687,9 +687,11 @@ void JSExtensionHost::bindVSCodeAPI(void* ctx) {
     if (!cx) return;
 
     JSValue global = JS_GetGlobalObject(cx);
-    JSValue vscode = JS_NewObject(cx);
+    // Every bindVSCode* method reads and extends globalThis.vscode.
+    // Publish it BEFORE invoking them: writing a fresh object afterwards erased
+    // all eight registered API namespaces and broke extension activation.
+    JS_SetPropertyStr(cx, global, "vscode", JS_NewObject(cx));
 
-    // Bind each namespace
     bindVSCodeCommands(ctx);
     bindVSCodeWindow(ctx);
     bindVSCodeWorkspace(ctx);
@@ -699,7 +701,6 @@ void JSExtensionHost::bindVSCodeAPI(void* ctx) {
     bindVSCodeEnv(ctx);
     bindVSCodeExtensions(ctx);
 
-    JS_SetPropertyStr(cx, global, "vscode", vscode);
     JS_FreeValue(cx, global);
 
     OutputDebugStringA("[JSExtensionHost] vscode.* API bound to QuickJS context\n");
