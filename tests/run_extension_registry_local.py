@@ -17,6 +17,17 @@ SOURCE = ROOT / "tests" / "extension_command_registry_smoke.cpp"
 EXPECTED = 60
 
 
+def validate_output(output: str, exit_code: int, expected: int = EXPECTED) -> bool:
+    """Accept only the complete ordered PASS transcript and exact summary."""
+    lines = output.splitlines()
+    if len(lines) != expected + 1 or exit_code != 0:
+        return False
+    for index, line in enumerate(lines[:expected], 1):
+        if not re.fullmatch(rf"PASS {index:02d} .+", line):
+            return False
+    return lines[-1] == f"RESULT {expected}/{expected} checks; PASS"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--compiler", default=os.environ.get("CXX", "c++"))
@@ -47,11 +58,7 @@ def main() -> int:
         print(result.stdout, end="")
         if result.stderr:
             print(result.stderr, file=sys.stderr)
-        ids = re.findall(r"^(?:PASS|FAIL) (\d{2}) ", result.stdout, re.MULTILINE)
-        valid = (result.returncode == 0
-                 and ids == [f"{n:02d}" for n in range(1, EXPECTED + 1)]
-                 and f"RESULT {EXPECTED}/{EXPECTED} checks; PASS" in result.stdout
-                 and not re.search(r"^FAIL ", result.stdout, re.MULTILINE))
+        valid = validate_output(result.stdout, result.returncode)
         print("ACCEPTANCE " + ("PASS" if valid else "FAIL"))
         return 0 if valid else 1
 
