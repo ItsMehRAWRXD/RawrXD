@@ -22,6 +22,7 @@ def main():
         raise SystemExit(f"BLOCKED: extension host source missing: {host_source}")
     host_text = host_source.read_text(encoding="utf-8")
     required_fragments = {
+        "stable command binding storage": "std::deque<JSCommandBinding> s_jsCommands",
         "queued result status": "msg.completionCallback(execution.success, callbackResult, msg.completionCtx)",
         "queued error detail fallback": "execution.detail.c_str()",
         "invalid queued request callback": 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)',
