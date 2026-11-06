@@ -202,6 +202,10 @@ void Win32IDE::createPrimarySidebar(HWND hwndParent)
 
     SetWindowLongPtrA(m_hwndSidebar, GWLP_USERDATA, (LONG_PTR)this);
     SetWindowLongPtrA(m_hwndSidebar, GWLP_WNDPROC, (LONG_PTR)SidebarProc);
+    // Extension buttons and search are children of the content HWND, so their
+    // WM_COMMAND notifications arrive there, not at the outer sidebar HWND.
+    SetWindowLongPtrA(m_hwndSidebarContent, GWLP_USERDATA, (LONG_PTR)this);
+    SetWindowLongPtrA(m_hwndSidebarContent, GWLP_WNDPROC, (LONG_PTR)SidebarProc);
 
     m_sidebarVisible = true;
     m_sidebarWidth = SIDEBAR_DEFAULT_WIDTH;
@@ -296,7 +300,8 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     }
 
     case WM_SIZE: {
-        if (pThis) {
+        // Avoid recursively resizing the content HWND from its own WM_SIZE.
+        if (pThis && hwnd == pThis->m_hwndSidebar) {
             int width = LOWORD(lParam);
             int height = HIWORD(lParam);
             pThis->resizeSidebar(width, height);
