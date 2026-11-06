@@ -88,20 +88,20 @@ public:
     }
 
     bool ExecuteCommand(const std::string& command, const std::string& args) {
-        CommandHandler handler;
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            if (!initialized_) return false;
-            const auto it = commands_.find(command);
-            if (it == commands_.end()) return false;
-            // Do not hold the registry lock during user code: callbacks may
-            // register/unregister commands or dispatch nested commands.
-            handler = it->second;
-        }
         try {
+            CommandHandler handler;
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                if (!initialized_) return false;
+                const auto it = commands_.find(command);
+                if (it == commands_.end()) return false;
+                // Copy the callback under lock, then execute without the lock.
+                // Copying std::function can itself throw (e.g. allocation).
+                handler = it->second;
+            }
             return handler(args);
         } catch (...) {
-            // Command failure must not crash the IDE or report success.
+            // Callback failures and callback-copy failures both fail closed.
             return false;
         }
     }
