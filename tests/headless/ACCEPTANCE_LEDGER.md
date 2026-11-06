@@ -34,6 +34,14 @@ The mock server does **not** test a real inference model, GPU, IDE HTTP client,
 or Win32 Stop button. The production command registry is **not** the QuickJS
 host. Neither test can certify VSIX installation.
 
+## Isolated local evidence
+
+- VSIX signature-policy contract: **LOCAL PASS** on Linux GCC C++17 with
+  `-Wall -Wextra -Werror`. This checks only the header policy, not VSIX
+  installation or the Windows extension host.
+- Windows MSVC manifest and signature-policy jobs are authored but **NOT VERIFIED**.
+- Do not infer a full extension-host PASS from these isolated checks.
+
 ## CI incident
 
 GitHub workflow run 42175796159 reported **failure** for both the Python and
