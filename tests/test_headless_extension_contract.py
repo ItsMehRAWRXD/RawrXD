@@ -74,6 +74,21 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertGreater(reject, guard)
         self.assertGreater(polyfills, reject)
 
+    def test_quickjs_allocation_failures_release_polyfills(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "initialize")
+        for allocation, error in (
+            ("JS_NewRuntime()", "Failed to create QuickJS runtime"),
+            ("JS_NewContext(rt)", "Failed to create QuickJS context"),
+        ):
+            with self.subTest(allocation=allocation):
+                start = body.find(allocation)
+                self.assertGreaterEqual(start, 0)
+                failure = body.find('return PatchResult::error("' + error, start)
+                self.assertGreater(failure, start)
+                cleanup = body.rfind("PolyfillEngine::instance().shutdown()", start, failure)
+                self.assertGreater(cleanup, start)
+
     def test_unavailable_js_extension_predicate(self):
         body = body_of(self.source, "isJSExtension")
         self.assertIn("return false;", body)
