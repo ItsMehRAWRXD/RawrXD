@@ -2136,21 +2136,26 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         extRoot = std::string(extensionDir) + "\\extension";
     }
 
-    // ---- Resolve main entry point ----
-    std::string mainPath = extRoot + "\\" + mainEntry;
-    // Normalize path separators
-    std::replace(mainPath.begin(), mainPath.end(), '/', '\\');
-    // Add .js extension if missing
-    if (!std::filesystem::exists(mainPath) && std::filesystem::exists(mainPath + ".js")) {
-        mainPath += ".js";
-    }
-
-    if (!std::filesystem::exists(mainPath)) {
-        char err[512];
-        std::snprintf(err, sizeof(err),
-                      "Entry point not found: %s", mainPath.c_str());
-        return PatchResult::error(err);
-    }
+    // ---- Resolve main entry point within the unpacked extension root ----
+    // package.json is not trusted: reject absolute paths, traversal and symlink
+    // escapes BEFORE reading or evaluating the extension's entry point.
+    std::error_code pathError;
+    const std::filesystem::path canonicalRoot = std::filesystem::canonical(extRoot, pathError);
+    if (pathError) return PatchResult::error("Invalid extension root");
+    const std::filesystem::path manifestMain(mainEntry);
+    if (manifestMain.empty() || manifestMain.is_absolute() || manifestMain.has_root_name())
+        return PatchResult::error("Extension entry must be relative");
+    auto candidate = canonicalRoot / manifestMain;
+    if (!std::filesystem::exists(candidate) && std::filesystem::exists(candidate.string() + ".js"))
+        candidate += ".js";
+    const std::filesystem::path canonicalMain = std::filesystem::canonical(candidate, pathError);
+    if (pathError || !std::filesystem::is_regular_file(canonicalMain))
+        return PatchResult::error("Extension entry point missing or invalid");
+    const std::filesystem::path relativeMain = canonicalMain.lexically_relative(canonicalRoot);
+    if (relativeMain.empty() || relativeMain.is_absolute() ||
+        *relativeMain.begin() == std::filesystem::path(".."))
+        return PatchResult::error("Extension entry escapes installation directory");
+    const std::string mainPath = canonicalMain.string();
 
     // ---- Create Extension State ----
     auto state = std::make_unique<JSExtensionState>();
