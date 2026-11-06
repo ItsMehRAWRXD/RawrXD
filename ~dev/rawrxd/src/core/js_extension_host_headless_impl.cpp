@@ -14,7 +14,17 @@ JSExtensionHost& JSExtensionHost::instance()
     return host;
 }
 
-JSExtensionHost::JSExtensionHost() : m_jsRuntime(nullptr), m_jsContext(nullptr), m_initialized(false) {}
+JSExtensionHost::JSExtensionHost()
+    : m_jsRuntime(nullptr),
+      m_jsContext(nullptr),
+      m_queueEvent(nullptr),
+      m_nextTimerId(0),
+      m_initialized(false),
+      m_shutdownCompleted(false),
+      m_hostThread(nullptr),
+      m_running(false),
+      m_stats{} {}
+
 
 JSExtensionHost::~JSExtensionHost() = default;
 
