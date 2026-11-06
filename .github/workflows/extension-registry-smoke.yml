@@ -16,13 +16,33 @@ on:
 jobs:
   extension-registry:
     name: C++17 deterministic registry acceptance
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Compile with strict warnings
+      - name: Compile and run on Linux (no model required)
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
-          c++ -std=c++17 -O1 -Wall -Wextra -Werror -pedantic -pthread \
-            tests/extension_command_registry_smoke.cpp -o extension_registry_smoke
-      - name: Execute assertions (no model required)
-        run: ./extension_registry_smoke
+          set -o pipefail
+          c++ -std=c++17 -O1 -Wall -Wextra -Werror -pedantic -pthread tests/extension_command_registry_smoke.cpp -o extension_registry_smoke
+          ./extension_registry_smoke | tee extension-registry-results.txt
+      - name: Compile and run on Windows (no model required)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_registry_smoke.exe tests/extension_command_registry_smoke.cpp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\\extension_registry_smoke.exe | Tee-Object -FilePath extension-registry-results.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve acceptance output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-registry-${{ matrix.os }}
+          path: extension-registry-results.txt
+          if-no-files-found: warn
