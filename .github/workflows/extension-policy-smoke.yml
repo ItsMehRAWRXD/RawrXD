@@ -6,11 +6,15 @@ on:
     paths:
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - 'tools/ci/extension_policy_smoke.cpp'
+      - 'tools/ci/test_extension_contract.py'
       - '.github/workflows/extension-policy-smoke.yml'
   pull_request:
     paths:
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - 'tools/ci/extension_policy_smoke.cpp'
+      - 'tools/ci/test_extension_contract.py'
       - '.github/workflows/extension-policy-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -25,6 +29,12 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic '~dev/rawrxd/tests/extension_policy_smoke.cpp' -o /tmp/rawrxd-extension-policy-smoke
       - name: Execute policy assertions
         run: /tmp/rawrxd-extension-policy-smoke
+      - name: Compile additional model-free policy fixtures
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic -I'~dev/rawrxd/src/core' tools/ci/extension_policy_smoke.cpp -o /tmp/rawrxd-extension-policy-extra
+      - name: Execute additional policy fixtures
+        run: /tmp/rawrxd-extension-policy-extra
+      - name: Source contract checks (not runtime certification)
+        run: python3 tools/ci/test_extension_contract.py
   windows:
     runs-on: windows-latest
     timeout-minutes: 15
@@ -37,6 +47,16 @@ jobs:
         run: |
           cl /nologo /std:c++17 /EHsc /W4 /WX "~dev/rawrxd/tests/extension_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-policy-smoke.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile additional policy fixtures (MSVC)
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX /I "~dev/rawrxd/src/core" "tools/ci/extension_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-policy-extra.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Execute additional policy fixtures
+        shell: pwsh
+        run: |
+          & "$env:RUNNER_TEMP/rawrxd-extension-policy-extra.exe"
+          exit $LASTEXITCODE
       - name: Execute policy assertions
         shell: pwsh
         run: |
