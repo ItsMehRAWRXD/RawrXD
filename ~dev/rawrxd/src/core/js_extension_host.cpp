@@ -2130,6 +2130,14 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         }
     }
 
+    // A symlinked package.json must not read a manifest outside the
+    // installed extension tree. Validate before opening the file.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::absolute(std::filesystem::path(extensionDir)),
+            std::filesystem::absolute(std::filesystem::path(pkgPath)))) {
+        return PatchResult::error("Extension manifest escapes installation root");
+    }
+
     std::string pkgJson = readFileToString(pkgPath.c_str());
     if (pkgJson.empty()) return PatchResult::error("Failed to read package.json");
 
