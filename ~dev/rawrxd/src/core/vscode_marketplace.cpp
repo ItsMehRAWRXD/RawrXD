@@ -21,6 +21,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <cctype>
 #include <thread>
 #include <chrono>
 #include <regex>
