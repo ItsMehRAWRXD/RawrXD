@@ -8,6 +8,7 @@
 #include "../src/core/extension_entry_policy.hpp"
 #include "../src/core/extension_manifest_policy.hpp"
 #include "../src/core/extension_signature_policy.hpp"
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -34,7 +35,7 @@ int main() {
     check(!mayInstallVSIX(false, ""), "unsigned default rejected");
     check(mayInstallVSIX(false, "1"), "unsigned opt-in accepted");
     check(mayInstallVSIX(true, ""), "verified accepted");
-    const fs::path base = fs::temp_directory_path() / "rawrxd_extension_policy_smoke";
+    const fs::path base = fs::temp_directory_path() / ("rawrxd_extension_policy_smoke_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::error_code ec;
     fs::remove_all(base, ec);
     fs::create_directories(base / "extension", ec);
@@ -50,6 +51,7 @@ int main() {
     fs::create_directories(base / "extension-sibling", ec);
     if (ec) { std::cerr << "BLOCKED: cannot create sibling fixture\\n"; return 2; }
     check(!entryWithinRoot(base / "extension", base / "extension-sibling" / "main.js"), "sibling prefix rejected");
+    ec.clear();
     fs::create_directory_symlink(base / "outside", base / "extension" / "link", ec);
     if (!ec) check(!entryWithinRoot(base / "extension", base / "extension" / "link" / "main.js"), "symlink escape rejected");
     else std::cout << "SKIP symlink fixture unavailable\n";
