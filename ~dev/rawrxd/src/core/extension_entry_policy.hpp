@@ -6,7 +6,7 @@ namespace rawrxd::extensions {
 // Manifest entry paths must be relative on Windows as well as POSIX.
 // A Windows drive prefix is invalid even when tested by a Linux CI runner.
 inline bool validRelativeMain(std::string_view entry) noexcept {
-    if (entry.empty()) return false;
+    if (entry.empty() || entry == ".") return false;
     if (entry[0] == '/' || entry[0] == 92) return false;
     if (entry.size() >= 2 &&
         ((entry[0] >= 'A' && entry[0] <= 'Z') ||
