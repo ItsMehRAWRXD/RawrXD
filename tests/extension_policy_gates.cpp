@@ -48,6 +48,12 @@ int main() {
     gate("29_backslash_root_rejected", !validRelativeMain("\\\\server\\share\\main.js"));
     gate("30_posix_root_rejected", !validRelativeMain("/tmp/main.js"));
     gate("31_control_char_main_rejected", !validRelativeMain(std::string("main") + char(10) + ".js"));
+    gate("32_parent_component_rejected", !validRelativeMain("dist/../main.js"));
+    gate("33_windows_parent_component_rejected", !validRelativeMain("dist\\\\..\\\\main.js"));
+    gate("34_ads_colon_rejected", !validRelativeMain("dist/main.js:stream"));
+    gate("35_empty_component_rejected", !validRelativeMain("dist//main.js"));
+    gate("36_trailing_separator_rejected", !validRelativeMain("dist/"));
+    gate("37_relative_root_rejected", !entryWithinRoot("relative", root / "main.js"));
     // Exercise a real filesystem symlink, not only lexical ".." traversal.
     // Windows runners without symlink privileges report SKIP, never a false PASS.
     {
