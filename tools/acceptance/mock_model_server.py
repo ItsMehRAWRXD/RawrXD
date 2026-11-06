@@ -55,6 +55,9 @@ class Handler(BaseHTTPRequestHandler):
                or not isinstance(m.get("content"), str) for m in data["messages"]):
             return self.reject(400, "invalid message")
         if data.get("stream") is True:
+            # SSE has no Content-Length: explicitly close after [DONE] so
+            # HTTP/1.1 clients do not wait forever for another event.
+            self.close_connection = True
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Connection", "close")
