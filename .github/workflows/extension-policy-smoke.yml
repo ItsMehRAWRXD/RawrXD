@@ -6,6 +6,8 @@ on:
     paths:
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
+      - '~dev/rawrxd/tests/extension_read_smoke.cpp'
+      - '~dev/rawrxd/tests/extension_read_smoke.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
@@ -33,6 +35,10 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic '~dev/rawrxd/tests/extension_policy_smoke.cpp' -o /tmp/rawrxd-extension-policy-smoke
       - name: Execute policy assertions
         run: /tmp/rawrxd-extension-policy-smoke
+      - name: Compile and execute production read-helper regression tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic '~dev/rawrxd/tests/extension_read_smoke.cpp' -o /tmp/rawrxd-extension-read-smoke
+          /tmp/rawrxd-extension-read-smoke
       - name: Compile additional model-free policy fixtures
         run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic -I'~dev/rawrxd/src/core' tools/ci/extension_policy_smoke.cpp -o /tmp/rawrxd-extension-policy-extra
       - name: Execute additional policy fixtures
@@ -54,6 +60,13 @@ jobs:
         shell: pwsh
         run: |
           cl /nologo /std:c++17 /EHsc /W4 /WX "~dev/rawrxd/tests/extension_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-policy-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile and execute production read-helper regression tests (MSVC)
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX "~dev/rawrxd/tests/extension_read_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-extension-read-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:RUNNER_TEMP/rawrxd-extension-read-smoke.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile additional policy fixtures (MSVC)
         shell: pwsh
