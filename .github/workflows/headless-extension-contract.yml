@@ -5,6 +5,8 @@ on:
       - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
       - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - 'tests/test_headless_extension_contract.py'
+      - 'tests/test_rom_smoke_contract.py'
+      - 'src/tools/production_smoke_test.cpp'
       - '.github/workflows/headless-extension-contract.yml'
   push:
     paths:
@@ -20,3 +22,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify unsupported JS extension APIs fail closed
         run: python3 tests/test_headless_extension_contract.py
+      - name: Verify ROM smoke-test fail-closed contracts
+        run: python3 tests/test_rom_smoke_contract.py
