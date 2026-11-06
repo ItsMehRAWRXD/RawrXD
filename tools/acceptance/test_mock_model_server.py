@@ -54,6 +54,11 @@ class MockTransportTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(headers["Content-Type"], "text/event-stream")
         self.assertIn(b"MOCK_RESPONSE_OK", body)
+        events = [json.loads(line[6:]) for line in body.splitlines()
+                  if line.startswith(b"data: ") and line != b"data: [DONE]"]
+        self.assertEqual(events[0]["choices"][0]["delta"]["role"], "assistant")
+        self.assertEqual(events[1]["choices"][0]["delta"]["content"], "MOCK_RESPONSE_OK")
+        self.assertEqual(events[-1]["choices"][0]["finish_reason"], "stop")
         self.assertTrue(body.endswith(b"data: [DONE]\n\n"))
 
     def test_wrong_model(self):
