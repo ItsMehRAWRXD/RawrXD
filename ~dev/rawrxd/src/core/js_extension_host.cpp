@@ -2513,7 +2513,18 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
         if (excStr) JS_FreeCString(extCtx, excStr);
         JS_FreeValue(extCtx, exc);
         JS_FreeValue(extCtx, result);
-        // A failed activation must not retain a half-initialized JS context.
+        // Extension code may have registered native commands before throwing.
+        // Invalidate their callbacks before releasing the owning JS context.
+        {
+            std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+            for (auto& binding : s_jsCommands) {
+                if (binding.ctx == extCtx) {
+                    JS_FreeValue(extCtx, binding.callback);
+                    binding.callback = JS_UNDEFINED;
+                    binding.ctx = nullptr;
+                }
+            }
+        }
         JS_FreeContext(extCtx);
         state->jsContext = nullptr;
         return PatchResult::error(err);
