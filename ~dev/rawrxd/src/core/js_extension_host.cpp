@@ -3133,10 +3133,10 @@ void JSExtensionHost::processMessageQueue() {
             case JSMessage::Type::ExecuteScript: {
                 if (!msg.extensionId.empty() && !msg.data.empty()) {
                     char result[4096] = {};
-                    executeScript(msg.extensionId.c_str(), msg.data.c_str(),
+                    const PatchResult execution = executeScript(msg.extensionId.c_str(), msg.data.c_str(),
                                    result, sizeof(result));
                     if (msg.completionCallback) {
-                        msg.completionCallback(true, result, msg.completionCtx);
+                        msg.completionCallback(execution.success, result, msg.completionCtx);
                     }
                 }
                 break;
