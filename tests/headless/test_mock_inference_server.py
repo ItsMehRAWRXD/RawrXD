@@ -69,6 +69,22 @@ class MockContractTests(unittest.TestCase):
         self.assertIn("error", json.loads(response.read()))
         conn.close()
 
+    def test_injected_503_then_recovery(self):
+        status, _, data = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [], "mock_failure": True})
+        self.assertEqual(status, 503)
+        self.assertEqual(json.loads(data)["error"]["type"], "service_unavailable")
+        status, _, data = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": []})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["choices"][0]["message"]["content"],
+                         "fixture response complete")
+
+    def test_invalid_failure_flag(self):
+        status, _, _ = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [], "mock_failure": 1})
+        self.assertEqual(status, 400)
+
     def test_invalid_messages(self):
         status, _, _ = self.request("POST", "/v1/chat/completions", {"messages": "invalid"})
         self.assertEqual(status, 400)
