@@ -27,6 +27,8 @@ def main():
         "invalid queued request callback": 'msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx)',
         "event JS result cleanup": "JS_FreeValue(extCtx, eventResult);",
         "event JS exception inspection": "JS_IsException(eventResult)",
+        "event name validation": "const bool validEventName = !eventName.empty()",
+        "unsafe event rejection": "if (!validEventName)",
         "no QuickJS fail closed": 'return PatchResult::error("QuickJS unavailable: JavaScript extension host disabled")',
     }
     for label, fragment in required_fragments.items():
