@@ -15,7 +15,7 @@ class HeadlessExtensionFailClosedTests(unittest.TestCase):
         cls.source = SOURCE.read_text(encoding="utf-8")
 
     def method_body(self, method):
-        pattern = r"PatchResult\\s+JSExtensionHost::" + re.escape(method) + r"\\s*\\([^)]*\\)\\s*\\{([^{}]*)\\}"
+        pattern = r"PatchResult\s+JSExtensionHost::" + re.escape(method) + r"\s*\([^)]*\)\s*\{([^{}]*)\}"
         match = re.search(pattern, self.source, re.S)
         self.assertIsNotNone(match, f"Method missing: {method}")
         return match.group(1)
