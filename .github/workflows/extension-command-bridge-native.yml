@@ -20,3 +20,7 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -o /tmp/extension_bridge_test tools/acceptance/extension_command_bridge_native_test.cpp
       - name: Execute native lifecycle and reentrant callback assertions
         run: timeout 15s /tmp/extension_bridge_test
+      - name: Build with address and undefined behavior sanitizers
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -o /tmp/extension_bridge_sanitized tools/acceptance/extension_command_bridge_native_test.cpp
+      - name: Execute sanitizer-enabled acceptance
+        run: timeout 15s /tmp/extension_bridge_sanitized
