@@ -1,0 +1,26 @@
+name: Native compiler pipeline Windows
+on:
+  push:
+    paths:
+      - 'src/compiler/native_process_runner.hpp'
+      - 'tests/native_compiler_pipeline_windows.cpp'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  pull_request:
+    paths:
+      - 'src/compiler/native_process_runner.hpp'
+      - 'tests/native_compiler_pipeline_windows.cpp'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  workflow_dispatch:
+jobs:
+  compiler-pipeline:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build test harness
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 tests\native_compiler_pipeline_windows.cpp /Fe:native_compiler_pipeline_windows.exe
+      - name: Run actual compiler-linker acceptance tests
+        shell: cmd
+        run: native_compiler_pipeline_windows.exe
