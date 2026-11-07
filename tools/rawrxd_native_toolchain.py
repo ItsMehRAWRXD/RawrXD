@@ -131,6 +131,8 @@ def compile_one(source, obj, fmt, preferred, timeout, evidence):
         if base not in ("cl", "clang-cl"):
             raise BuildError("PE compiler must be cl or clang-cl", 3)
         args = [compiler, "/nologo", "/c", str(source), "/Fo" + str(obj), "/W4", "/WX"]
+        if kind(source) == "c++":
+            args += ["/std:c++17", "/EHsc"]
     else:
         if base not in ("cc", "c++", "clang", "clang++", "gcc", "g++"):
             raise BuildError("Host compiler must be clang/gcc", 3)
