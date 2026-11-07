@@ -83,8 +83,20 @@ def inspect(path, fmt, obj=False):
         if len(b) < 20:
             raise BuildError("COFF object too short", 6)
         machine, sections = struct.unpack_from("<HH", b)
-        if machine != 0x8664 or not 0 < sections <= 96:
+        symbols, symbol_count = struct.unpack_from("<II", b, 8)
+        optional_size, = struct.unpack_from("<H", b, 16)
+        headers_end = 20 + optional_size + 40 * sections
+        if (machine != 0x8664 or not 0 < sections <= 96 or headers_end > len(b) or
+                ((symbols == 0) != (symbol_count == 0)) or
+                symbols + symbol_count * 18 > len(b)):
             raise BuildError("Not a valid AMD64 COFF object", 6)
+        for index in range(sections):
+            offset = 20 + optional_size + index * 40
+            raw_size, raw_offset, reloc_offset = struct.unpack_from("<III", b, offset + 16)
+            reloc_count, = struct.unpack_from("<H", b, offset + 32)
+            if ((raw_size and (not raw_offset or raw_offset + raw_size > len(b))) or
+                    (reloc_count and (not reloc_offset or reloc_offset + reloc_count * 10 > len(b)))):
+                raise BuildError("COFF section data/relocations exceed file", 6)
         return "AMD64-COFF"
     if fmt == "pe":
         if len(b) < 256 or b[:2] != b"MZ":
@@ -100,8 +112,15 @@ def inspect(path, fmt, obj=False):
         magic, = struct.unpack_from("<H", b, optoff)
         entry, = struct.unpack_from("<I", b, optoff+16)
         image, = struct.unpack_from("<I", b, optoff+56)
-        if magic != 0x20b or entry == 0 or image == 0:
+        size_of_headers, = struct.unpack_from("<I", b, optoff + 60)
+        if magic != 0x20b or entry == 0 or image == 0 or not 0 < size_of_headers <= len(b):
             raise BuildError("Invalid PE32+ magic, entry, or image size", 6)
+        for index in range(sections):
+            offset = optoff + optsize + index * 40
+            virtual_size, vaddr, raw_size, raw_offset = struct.unpack_from("<IIII", b, offset + 8)
+            if ((raw_size and (raw_offset < size_of_headers or raw_offset + raw_size > len(b))) or
+                    not vaddr or vaddr + max(virtual_size, raw_size) > image):
+                raise BuildError("PE section layout extends beyond file/image", 6)
         return "AMD64-PE32+"
     if b[:4] != b"\x7fELF":
         raise BuildError("Missing host ELF signature", 6)
