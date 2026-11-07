@@ -8,6 +8,7 @@
 #include <cerrno>
 #ifdef _WIN32
 #include <windows.h>
+#include "windows_process_runner.hpp"
 #else
 #include <sys/wait.h>
 #include <unistd.h>
@@ -16,27 +17,7 @@ namespace fs = std::filesystem;
 static int run(const std::vector<std::string>& args) {
     if(args.empty()) return 2;
 #ifdef _WIN32
-    auto quote=[](const std::string& s) {
-        std::string o="\"";unsigned slashes=0;
-        for(char c:s) {
-            if(c=='\\'){++slashes;continue;}
-            if(c=='"'){o.append(slashes*2+1,'\\');o+='"';slashes=0;continue;}
-            o.append(slashes,'\\');slashes=0;o+=c;
-        }
-        o.append(slashes*2,'\\');return o+"\"";
-    };
-    std::string cmd;
-    for(const auto& a:args){if(!cmd.empty())cmd+=' ';cmd+=quote(a);}
-    int n=MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,cmd.data(),(int)cmd.size(),nullptr,0);
-    if(n<=0)return 2;
-    std::wstring wide(n,L'\0');
-    if(MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,cmd.data(),(int)cmd.size(),wide.data(),n)!=n)return 2;
-    wide.push_back(L'\0');
-    STARTUPINFOW si{};si.cb=sizeof(si);PROCESS_INFORMATION pi{};
-    if(!CreateProcessW(nullptr,wide.data(),nullptr,nullptr,FALSE,0,nullptr,nullptr,&si,&pi))return 127;
-    WaitForSingleObject(pi.hProcess,INFINITE);DWORD exitCode=127;
-    GetExitCodeProcess(pi.hProcess,&exitCode);CloseHandle(pi.hThread);CloseHandle(pi.hProcess);
-    return static_cast<int>(exitCode);
+    return rawrxd::build::execute(args).code;
 #else
     std::vector<char*> argv;
     for(const auto& a:args)argv.push_back(const_cast<char*>(a.c_str()));
