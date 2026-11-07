@@ -60,3 +60,18 @@ jobs:
           python-version: '3.12'
       - name: Compile and link real C++ fixtures through the offline build adapter
         run: python -m unittest discover -s tests/headless -p 'test_native_build_bridge.py' -v
+
+  windows-native-compiler-linker:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Initialize MSVC environment and run real C/C++ compile-link-execute tests
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          python -m unittest discover -s tests/headless -p test_native_build_bridge.py -v
