@@ -1883,8 +1883,23 @@ void Win32IDE::showExtensionDetails(const std::string& id)
                        "\nInventory status: " + (e.enabled ? "enabled" : "disabled") +
                        "\nExecution status: not verified\n", "Output", OutputSeverity::Info);
     } catch (const std::exception& ex) {
-        appendToOutput(std::string("Extension details failed: ") + ex.what() + "\n",
-                       "Output", OutputSeverity::Error);
+        // Discovery includes installations owned by VS Code/Cursor. Those are
+        // read-only here, not broken RawrXD packages. Show their actual
+        // metadata instead of reporting a misleading management failure.
+        const auto found = std::find_if(m_extensions.begin(), m_extensions.end(),
+            [&](const Extension& item) { return item.id == id; });
+        if (found != m_extensions.end()) {
+            appendToOutput("External extension: " + found->id +
+                           "\nVersion: " + found->version +
+                           "\nPublisher: " + found->author +
+                           "\nDescription: " + found->description +
+                           "\nManagement: read-only (use VS Code/Cursor)\n" +
+                           "Runtime compatibility: not verified\n",
+                           "Output", OutputSeverity::Info);
+        } else {
+            appendToOutput(std::string("Extension details failed: ") + ex.what() + "\n",
+                           "Output", OutputSeverity::Error);
+        }
     }
 }
 
