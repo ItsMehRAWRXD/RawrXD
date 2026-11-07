@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 
 /* External: relocation resolver */
 extern int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files,
@@ -65,7 +66,8 @@ static uint32_t find_entry_rva(merge_context_t *ctx, const char *explicit_entry)
       if (strcmp(ctx->global_symbols[i].name, explicit_entry) == 0)
         return ctx->global_symbols[i].resolved_rva;
     }
-    fprintf(stderr, "[linker] warning: entry point '%s' not found\n", explicit_entry);
+    fprintf(stderr, "[linker] error: explicit entry point '%s' not found\n", explicit_entry);
+    return 0; /* Never silently substitute a different entry. */
   }
 
   /* Auto-detect: search candidates in order */
@@ -79,24 +81,30 @@ static uint32_t find_entry_rva(merge_context_t *ctx, const char *explicit_entry)
     }
   }
 
-  fprintf(stderr, "[linker] warning: no entry point found, using 0x1000\n");
-  return 0x1000;
+  fprintf(stderr, "[linker] error: no defined entry point found\n");
+  return 0;
 }
 
 /*--------------------------------------------------------------------------
  * Write a .map file with symbol and section info.
  *------------------------------------------------------------------------*/
 static void write_map_file(const char *out_path, merge_context_t *ctx, uint64_t image_base) {
-  char map_path[268];
+  /* Allocate from the actual output path; the old fixed 268-byte map path
+   * overflowed with legitimate long output paths. */
   size_t len = strlen(out_path);
-  memcpy(map_path, out_path, len + 1);
-  /* Replace extension with .map */
-  char *dot = strrchr(map_path, '.');
-  if (dot) strcpy(dot, ".map");
-  else strcat(map_path, ".map");
+  char *map_path = (char *)malloc(len + 5);
+  if (!map_path) return;
+  const char *dot = strrchr(out_path, '.');
+  const char *slash = strrchr(out_path, '/');
+  const char *backslash = strrchr(out_path, '\\');
+  if ((slash && dot && dot < slash) || (backslash && dot && dot < backslash))
+    dot = NULL;
+  size_t prefix = dot ? (size_t)(dot - out_path) : len;
+  memcpy(map_path, out_path, prefix);
+  memcpy(map_path + prefix, ".map", 5);
 
   FILE *f = fopen(map_path, "w");
-  if (!f) return;
+  if (!f) { free(map_path); return; }
 
   fprintf(f, " rawrxd_link Linker Map\n\n");
   fprintf(f, " Image Base: 0x%016llX\n\n", (unsigned long long)image_base);
@@ -123,6 +131,19 @@ static void write_map_file(const char *out_path, merge_context_t *ctx, uint64_t 
 
   fclose(f);
   fprintf(stderr, "[linker] wrote map: %s\n", map_path);
+  free(map_path);
+}
+
+/* Strict positive decimal/hex parser; malformed values must never silently
+ * become zero or truncate into the emitted PE optional header. */
+static int parse_positive_u64(const char *text, uint64_t *value) {
+  if (!text || !*text || *text == '-' || *text == '+') return 0;
+  char *end = NULL;
+  errno = 0;
+  unsigned long long parsed = strtoull(text, &end, 0);
+  if (errno || !end || end == text || *end != '\0' || parsed == 0) return 0;
+  *value = (uint64_t)parsed;
+  return 1;
 }
 
 /*--------------------------------------------------------------------------
@@ -139,6 +160,7 @@ int main(int argc, char **argv) {
   int write_map = 0;
 
   int num_objs = 0;
+  int input_errors = 0;
   coff_file_t **objs = NULL;
 
   /*==== Parse command line ====*/
@@ -148,15 +170,29 @@ int main(int argc, char **argv) {
     } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
       verbose = 1;
     } else if (strcmp(argv[i], "-base") == 0 && i + 1 < argc) {
-      image_base = strtoull(argv[++i], NULL, 0);
+      if (!parse_positive_u64(argv[++i], &image_base) || (image_base & 0xFFFFULL)) {
+        fprintf(stderr, "rawrxd_link: image base must be a nonzero 64K-aligned address\n");
+        return 1;
+      }
     } else if (strcmp(argv[i], "-subsys") == 0 && i + 1 < argc) {
-      subsystem = (uint16_t)atoi(argv[++i]);
+      const char *requested = argv[++i];
+      if (strcmp(requested, "2") != 0 && strcmp(requested, "3") != 0) {
+        fprintf(stderr, "rawrxd_link: subsystem must be 2 (GUI) or 3 (console)\n");
+        return 1;
+      }
+      subsystem = (uint16_t)atoi(requested);
     } else if (strcmp(argv[i], "-entry") == 0 && i + 1 < argc) {
       entry_name = argv[++i];
     } else if (strcmp(argv[i], "-stack") == 0 && i + 1 < argc) {
-      stack_reserve = strtoull(argv[++i], NULL, 0);
+      if (!parse_positive_u64(argv[++i], &stack_reserve)) {
+        fprintf(stderr, "rawrxd_link: invalid stack reserve\n");
+        return 1;
+      }
     } else if (strcmp(argv[i], "-heap") == 0 && i + 1 < argc) {
-      heap_reserve = strtoull(argv[++i], NULL, 0);
+      if (!parse_positive_u64(argv[++i], &heap_reserve)) {
+        fprintf(stderr, "rawrxd_link: invalid heap reserve\n");
+        return 1;
+      }
     } else if (strcmp(argv[i], "-map") == 0) {
       write_map = 1;
     } else if (argv[i][0] == '-') {
@@ -167,15 +203,30 @@ int main(int argc, char **argv) {
       coff_file_t *cf = coff_read(argv[i]);
       if (!cf) {
         fprintf(stderr, "rawrxd_link: cannot read '%s'\n", argv[i]);
+        ++input_errors;
+        continue;
+      }
+      if (cf->machine != COFF_MACHINE_AMD64) {
+        fprintf(stderr, "rawrxd_link: unsupported object machine 0x%04X in '%s'\n",
+                cf->machine, argv[i]);
+        ++input_errors;
+        coff_free(cf);
         continue;
       }
       if (verbose) coff_dump(cf, stderr);
 
       coff_file_t **new_objs = (coff_file_t **)realloc(objs, (size_t)(num_objs + 1) * sizeof(coff_file_t *));
-      if (!new_objs) { coff_free(cf); break; }
+      if (!new_objs) { coff_free(cf); ++input_errors; break; }
       objs = new_objs;
       objs[num_objs++] = cf;
     }
+  }
+
+  if (input_errors) {
+    fprintf(stderr, "rawrxd_link: refusing partial link (%d invalid/missing object(s))\n", input_errors);
+    for (int j = 0; j < num_objs; ++j) coff_free(objs[j]);
+    free(objs);
+    return 1;
   }
 
   if (num_objs == 0) {
@@ -222,6 +273,13 @@ int main(int argc, char **argv) {
 
   /*==== Phase 5: Find/inject entry point ====*/
   uint32_t entry_rva = find_entry_rva(ctx, entry_name);
+  if (!entry_rva) {
+    fprintf(stderr, "rawrxd_link: no usable entry point; output was not written\n");
+    merge_context_free(ctx);
+    for (int j = 0; j < num_objs; ++j) coff_free(objs[j]);
+    free(objs);
+    return 1;
+  }
 
   /*==== Phase 4: Write PE executable ====*/
   pe_builder_t *pb = pe_builder_new(0x8664);
