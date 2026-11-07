@@ -267,6 +267,32 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(result["code"], 6)
         self.assertIn("not a linked executable", result["error"])
 
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
+    def test_31_coff_object_without_section_headers_never_passes(self):
+        fake = self.root / "tools" / "clang-cl"
+        fake.parent.mkdir()
+        fake.write_text("#!/usr/bin/env python3\nimport sys,struct\nfilename = next(arg[3:] for arg in sys.argv if arg.startswith('/Fo'))\nopen(filename,'wb').write(struct.pack('<HHIIIHH',0x8664,1,0,0,0,0,0))\n")
+        fake.chmod(0o755)
+        result = self.invoke("compile", "--source", "a.c", "--format", "pe", "--output", "fake.obj",
+                             "--compiler", str(fake), "--approve-mutations", ok=False)
+        self.assertEqual(result["code"], 6)
+        self.assertFalse((self.root / "fake.obj").exists())
+
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
+    def test_32_pe_with_section_pointer_out_of_bounds_fails_verification(self):
+        self.invoke("build", "--source", "a.c", "--source", "b.c", "--format", "pe",
+                    "--output", "good.exe", "--approve-mutations")
+        original = bytearray((self.root / "good.exe").read_bytes())
+        pe = int.from_bytes(original[0x3c:0x40], 'little')
+        optsz = int.from_bytes(original[pe + 20:pe + 22], 'little')
+        section = pe + 24 + optsz
+        import struct
+        struct.pack_into('<I', original, section + 20, len(original) + 4096)
+        (self.root / "bad.exe").write_bytes(original)
+        result = self.invoke("verify", "--format", "pe", "--output", "bad.exe", ok=False)
+        self.assertEqual(result["code"], 6)
+        self.assertIn("section layout", result["error"])
+
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
