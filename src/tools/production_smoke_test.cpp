@@ -33,15 +33,21 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     MultiShardFlickerManager flicker;
     std::unordered_map<uint32_t, uint64_t> shard_file_sizes;
     for (uint32_t i = 0; i < shards; ++i) {
-        wchar_t current_shard[MAX_PATH];
-        swprintf_s(current_shard, L"%s.gguf.%02d", base_shard_path.c_str(), i);
+        wchar_t current_shard[MAX_PATH] = {};
+        const int shardPathChars = swprintf_s(current_shard, MAX_PATH,
+                                             L"%ls.gguf.%02u", base_shard_path.c_str(), i);
+        if (shardPathChars < 0 || shardPathChars >= MAX_PATH) {
+            std::cerr << "[-] Gate 2 FAIL: shard path exceeds MAX_PATH.\n";
+            std::exit(1);
+        }
         uint64_t file_size = 0;
         {
             HANDLE h = ::CreateFileW(current_shard, GENERIC_READ, FILE_SHARE_READ,
                                      nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
             if (h != INVALID_HANDLE_VALUE) {
                 LARGE_INTEGER sz;
-                if (::GetFileSizeEx(h, &sz)) file_size = static_cast<uint64_t>(sz.QuadPart);
+                if (::GetFileSizeEx(h, &sz) && sz.QuadPart > 0)
+                    file_size = static_cast<uint64_t>(sz.QuadPart);
                 ::CloseHandle(h);
             }
         }
