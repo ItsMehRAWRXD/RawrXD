@@ -101,7 +101,13 @@ public:
             return false;
         }
 
-        if (!LoadPolicy(contents, sha256, error)) return false;
+        if (!LoadPolicy(contents, sha256, error)) {
+            // A failed re-read must revoke any previous acknowledgement from
+            // this turn; never leave previously authorized tools usable.
+            acknowledgedSha256_.clear();
+            state_ = State::TurnStart;
+            return false;
+        }
 
         acknowledgedSha256_ = sha256;
         state_ = State::MotdRead;
@@ -211,13 +217,23 @@ private:
             return false;
         }
 
+        // Reject oversized MOTDs *before* allocating or streaming the entire
+        // file. The old iterator-based read could exhaust memory on an
+        // attacker-controlled policy file despite the 1 MiB post-read limit.
+        const std::uintmax_t bytes = std::filesystem::file_size(canonicalPolicy, ec);
+        if (ec || bytes == 0 || bytes > kMaxMotdBytes) {
+            error = "MOTD_CONTENT_INVALID";
+            return false;
+        }
         std::ifstream input(canonicalPolicy, std::ios::binary);
         if (!input) {
             error = "MOTD_READ_FAILED";
             return false;
         }
-        contents.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
-        if (input.bad() || contents.empty() || contents.size() > kMaxMotdBytes) {
+        contents.resize(static_cast<size_t>(bytes));
+        input.read(&contents[0], static_cast<std::streamsize>(bytes));
+        if (input.bad() || input.gcount() != static_cast<std::streamsize>(bytes) ||
+            input.peek() != std::char_traits<char>::eof()) {
             contents.clear();
             error = "MOTD_CONTENT_INVALID";
             return false;
