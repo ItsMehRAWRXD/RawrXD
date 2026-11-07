@@ -34,6 +34,9 @@ int main() {
     check(validRelativeMain("dist//file.js"), false, "empty segment");
     check(validRelativeMain("dist/CON.txt"), false, "Windows device");
     check(validRelativeMain("dist/COM1.txt"), false, "Windows serial device");
+    check(validRelativeMain("dist/CONIN$.js"), false, "Windows console input alias");
+    check(validRelativeMain("dist/conout$.js"), false, "Windows console output alias");
+    check(validRelativeMain("dist/normal$.js"), true, "ordinary dollar filename");
     check(validRelativeMain("dist/name:stream"), false, "ADS");
     check(validRelativeMain("dist/trailing."), false, "trailing dot");
     check(validRelativeMain("dist/trailing "), false, "trailing space");
