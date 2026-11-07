@@ -37,6 +37,32 @@ int wmain() {
         return 3;
     }
     const std::wstring cl = L"C:\\Windows\\System32\\cmd.exe";
+    // Independent C pipeline: C source -> object -> linker -> runnable program.
+    const auto cSource = root / L"hello_c.c";
+    const auto cObject = root / L"hello_c.obj";
+    const auto cBinary = root / L"hello_c.exe";
+    {
+        std::ofstream file(cSource);
+        file << "#include <stdio.h>\\nint main(void){puts(\\\"C_PIPELINE_OK\\\");return 0;}\\n";
+    }
+    auto cCompile = Run(L"cl.exe", {L"/nologo", L"/TC", L"/c",
+                          L"/Fo" + cObject.wstring(), cSource.wstring()}, root.wstring(), 60000);
+    if (!cCompile.launched || cCompile.timedOut || cCompile.exitCode) {
+        std::cerr << "C COMPILE FAILED: " << cCompile.error << cCompile.stdoutText << cCompile.stderrText;
+        return 7;
+    }
+    auto cLink = Run(L"link.exe", {L"/nologo", L"/OUT:" + cBinary.wstring(),
+                       cObject.wstring()}, root.wstring(), 60000);
+    if (!cLink.launched || cLink.timedOut || cLink.exitCode) {
+        std::cerr << "C LINK FAILED: " << cLink.error << cLink.stdoutText << cLink.stderrText;
+        return 8;
+    }
+    auto cExecute = Run(cBinary.wstring(), {}, root.wstring(), 10000);
+    if (!cExecute.launched || cExecute.timedOut || cExecute.exitCode ||
+        cExecute.stdoutText.find("C_PIPELINE_OK") == std::string::npos) {
+        std::cerr << "C EXEC FAILED: " << cExecute.error << cExecute.stdoutText << cExecute.stderrText;
+        return 9;
+    }
     // Concurrent stdout/stderr pressure exceeds pipe buffers; must not deadlock.
     auto pressure = Run(cl, {L"/d", L"/s", L"/c", L"for /L %i in (1,1,2000) do @echo stdout%i & @echo stderr%i 1>&2"},
                         root.wstring(), 30000);
