@@ -18,15 +18,14 @@ int wmain() {
         std::ofstream file(source);
         file << "#include <cstdio>\nint main(){std::puts(\"BUILD_PIPELINE_OK\");return 0;}\n";
     }
-    const std::wstring cl = L"C:\\Windows\\System32\\cmd.exe";
-    auto compile = Run(cl, {L"/d", L"/s", L"/c", L"cl /nologo /c /Fo\"" + object.wstring() +
-                                  L"\" \"" + source.wstring() + L"\""}, root.wstring(), 60000);
+    auto compile = Run(L"cl.exe", {L"/nologo", L"/c", L"/Fo" + object.wstring(), source.wstring()},
+                       root.wstring(), 60000);
     if (!compile.launched || compile.timedOut || compile.exitCode) {
         std::cerr << "COMPILE FAILED: " << compile.error << "\n" << compile.stdoutText << compile.stderrText;
         return 1;
     }
-    auto link = Run(cl, {L"/d", L"/s", L"/c", L"link /nologo /OUT:\"" + binary.wstring() +
-                               L"\" \"" + object.wstring() + L"\""}, root.wstring(), 60000);
+    auto link = Run(L"link.exe", {L"/nologo", L"/OUT:" + binary.wstring(), object.wstring()},
+                    root.wstring(), 60000);
     if (!link.launched || link.timedOut || link.exitCode) {
         std::cerr << "LINK FAILED: " << link.error << "\n" << link.stdoutText << link.stderrText;
         return 2;
