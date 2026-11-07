@@ -109,6 +109,46 @@ class LinkerIntegration(unittest.TestCase):
         self.assert_pe(exe)
         self.assertTrue((folder / "hello.map").is_file())
 
+    def test_11_malformed_coff_symbol_count_fails(self):
+        b = bytearray(self.obj.read_bytes())
+        struct.pack_into("<I", b, 12, 0xFFFFFFFF)
+        bad = self.root / "bad-symbol-count.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
+    def test_12_initialized_section_out_of_bounds_fails(self):
+        b = bytearray(self.obj.read_bytes())
+        # COFF header is 20 bytes; first section raw data size at +16.
+        struct.pack_into("<I", b, 20 + 16, 0xFFFFFFFF)
+        bad = self.root / "bad-section-range.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
+    def test_13_relocation_count_without_file_offset_fails(self):
+        b = bytearray(self.obj.read_bytes())
+        struct.pack_into("<H", b, 20 + 32, 1)
+        struct.pack_into("<I", b, 20 + 24, 0)
+        bad = self.root / "bad-relocation-range.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
+    def test_14_truncated_string_table_fails(self):
+        b = bytearray(self.obj.read_bytes())
+        symbols_offset, symbols_count = struct.unpack_from("<II", b, 8)
+        if symbols_offset == 0 or symbols_count == 0:
+            self.skipTest("COFF fixture has no symbol table")
+        string_offset = symbols_offset + 18 * symbols_count
+        if string_offset + 4 > len(b):
+            self.skipTest("Toolchain produced unusual COFF string table")
+        struct.pack_into("<I", b, string_offset, 0xFFFFFF00)
+        bad = self.root / "bad-string-table.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
     def test_10_invalid_reserves_are_fatal(self):
         self.link("-o", self.exe, "-stack", "0", self.obj, success=False)
         self.link("-o", self.exe, "-heap", "12oops", self.obj, success=False)
