@@ -10,6 +10,8 @@ on:
       - '.github/workflows/extension-registry-smoke.yml'
   pull_request:
     paths:
+      - 'tests/run_extension_registry_local.py'
+      - 'tests/test_extension_smoke_validator.py'
       - 'tests/extension_command_registry_smoke.cpp'
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
       - '.github/workflows/extension-registry-smoke.yml'
@@ -37,6 +39,9 @@ jobs:
           c++ -std=c++17 -O1 -Wall -Wextra -Werror -pedantic -pthread tests/extension_command_registry_smoke.cpp -o extension_registry_smoke
           ./extension_registry_smoke | tee extension-registry-results.txt
           python3 tests/run_extension_registry_local.py | tee -a extension-registry-results.txt
+      - name: Configure MSVC compiler
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Compile and run on Windows (no model required)
         if: runner.os == 'Windows'
         shell: pwsh
