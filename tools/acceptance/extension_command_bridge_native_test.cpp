@@ -4,6 +4,8 @@
 #undef NDEBUG
 #endif
 #include <cassert>
+#include <atomic>
+#include <thread>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -79,6 +81,27 @@ int main() {
     assert(host.ExecuteCommand("outer", ""));
     assert(host.UnregisterCommand("outer"));
     assert(host.UnregisterCommand("inner"));
+    // Exercise simultaneous readers and writers; each unique command is
+    // independently owned, so concurrent registration must not corrupt state.
+    {
+        std::vector<std::thread> workers;
+        std::atomic<int> successful{0};
+        for (int i = 0; i < 8; ++i) {
+            workers.emplace_back([&, i] {
+                const std::string name = "concurrent." + std::to_string(i);
+                if (host.RegisterExtensionCommand("extension.concurrent", name,
+                    [](const std::string& arg) { return arg == "ok"; }) &&
+                    host.ExecuteCommand(name, "ok")) {
+                    ++successful;
+                }
+            });
+        }
+        for (auto& worker : workers) worker.join();
+        assert(successful == 8);
+        host.UnregisterExtensionCommands("extension.concurrent");
+        for (int i = 0; i < 8; ++i)
+            assert(!host.ExecuteCommand("concurrent." + std::to_string(i), "ok"));
+    }
     // Once shut down, neither dispatch nor new registrations may succeed.
     const auto available = host.GetAvailableCommands();
     assert(available.size() == 2);
