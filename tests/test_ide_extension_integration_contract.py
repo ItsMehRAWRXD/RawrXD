@@ -33,6 +33,11 @@ class ExtensionIntegrationSourceContracts(unittest.TestCase):
         self.assertIn("host activation not implied", SIDEBAR)
         self.assertIn("Execution status: not verified", SIDEBAR)
 
+    def test_external_extensions_have_read_only_details(self):
+        self.assertIn("External extension: ", SIDEBAR)
+        self.assertIn("Management: read-only (use VS Code/Cursor)", SIDEBAR)
+        self.assertIn("Runtime compatibility: not verified", SIDEBAR)
+
     def test_cli_is_in_native_build(self):
         self.assertIn("include(cmake/OfflineExtensionsCli.cmake)", CMAKE)
         fragment = (ROOT / "~dev/rawrxd/cmake/OfflineExtensionsCli.cmake").read_text(encoding="utf-8")
