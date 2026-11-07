@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include <chrono>
 namespace fs = std::filesystem;
 int main() {
     int failed = 0, passed = 0, skipped = 0;
@@ -11,10 +12,21 @@ int main() {
         ok ? ++passed : ++failed;
     };
     std::error_code ec;
-    const auto base = fs::temp_directory_path() / "rawrxd_extract_policy_test";
-    fs::remove_all(base, ec);
-    fs::create_directories(base, ec);
-    if (ec) { std::cerr << "FAIL setup: " << ec.message() << '\n'; return EXIT_FAILURE; }
+    // Never delete a predictable directory in the system temp folder.
+    // Create a fresh test-owned directory exclusively to avoid clobbering
+    // unrelated data or following a pre-planted path.
+    fs::path base;
+    const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
+    bool created = false;
+    for (int attempt = 0; attempt < 32; ++attempt) {
+        ec.clear();
+        base = fs::temp_directory_path() /
+            ("rawrxd_extract_policy_" + std::to_string(nonce) + "_" + std::to_string(attempt));
+        created = fs::create_directory(base, ec);
+        if (created && !ec) break;
+        if (ec && ec != std::errc::file_exists) break;
+    }
+    if (!created || ec) { std::cerr << "FAIL setup: " << ec.message() << '\n'; return EXIT_FAILURE; }
     using rawrxd::extensions::safeExtractionDestination;
     gate("missing_target_allowed", safeExtractionDestination(base / "missing"));
     gate("empty_directory_allowed", safeExtractionDestination(base));
