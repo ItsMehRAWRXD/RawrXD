@@ -1,0 +1,22 @@
+name: Windows native compiler pipeline
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/compiler_subprocess_win32.hpp'
+      - 'tests/compiler_subprocess_win32_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  compile-link-run:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build subprocess integration test
+        shell: cmd
+        run: cl /nologo /std:c++20 /EHsc /W4 /WX tests\\compiler_subprocess_win32_smoke.cpp /Fe:compiler_subprocess_win32_smoke.exe
+      - name: Execute real compiler and linker pipeline
+        shell: cmd
+        run: compiler_subprocess_win32_smoke.exe
