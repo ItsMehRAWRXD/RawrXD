@@ -49,6 +49,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <limits.h>
 
 /* ---- Write helpers (little-endian) ---- */
 static void wr16(uint8_t *p, uint16_t v) { p[0]=(uint8_t)v; p[1]=(uint8_t)(v>>8); }
@@ -146,15 +147,26 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
       for (uint32_t ri = 0; ri < sec->reloc_count; ri++) {
         coff_reloc_t *rel = &sec->relocs[ri];
 
-        /* Calculate offset into merged data buffer */
-        uint32_t patch_offset = contrib->dst_offset + rel->virtual_addr;
-        if (patch_offset + 4 > (uint32_t)m->data_len &&
-            rel->type != REL_AMD64_ADDR64) {
-          fprintf(stderr, "[reloc] %-8s: reloc at 0x%X overflows section (len=0x%zX)\n",
-                  m->name, patch_offset, m->data_len);
+        /* Validate *all* target bytes before forming the patch pointer.
+         * Widths depend on relocation kind. Using uint32_t for addition
+         * previously allowed a malicious COFF offset to wrap into section 0. */
+        if (rel->type == REL_AMD64_ABSOLUTE) continue; /* no patch bytes */
+        size_t patch_width = 4;
+        if (rel->type == REL_AMD64_ADDR64) patch_width = 8;
+        else if (rel->type == REL_AMD64_SECTION) patch_width = 2;
+        else if (rel->type == REL_AMD64_SECREL7) patch_width = 1;
+        uint64_t wide_offset = (uint64_t)contrib->dst_offset + rel->virtual_addr;
+        if ((uint64_t)rel->virtual_addr > contrib->size ||
+            patch_width > (size_t)(contrib->size - rel->virtual_addr) ||
+            wide_offset > m->data_len ||
+            patch_width > m->data_len - (size_t)wide_offset ||
+            wide_offset > UINT32_MAX - (uint64_t)m->rva) {
+          fprintf(stderr, "[reloc] %-8s: relocation exceeds contribution/section bounds\n",
+                  m->name);
           errors++;
           continue;
         }
+        uint32_t patch_offset = (uint32_t)wide_offset;
 
         /* RVA of the relocation site in final image */
         uint32_t reloc_rva = m->rva + patch_offset;
@@ -182,12 +194,18 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
             break;
 
           case REL_AMD64_ADDR64: {
-            /* 64-bit absolute virtual address */
-            if (patch_offset + 8 > (uint32_t)m->data_len) {
+            /* 64-bit absolute virtual address with overflow checking */
+            int64_t addend = rd64s(patch);
+            if (image_base > UINT64_MAX - (uint64_t)sym_rva) {
               errors++; break;
             }
-            int64_t addend = rd64s(patch);
-            uint64_t result = (uint64_t)sym_rva + image_base + addend;
+            uint64_t base = image_base + (uint64_t)sym_rva;
+            if ((addend >= 0 && base > UINT64_MAX - (uint64_t)addend) ||
+                (addend < 0 && base < ((uint64_t)(-(addend + 1)) + 1))) {
+              fprintf(stderr, "[reloc] ADDR64 overflow/underflow at 0x%X\n", patch_offset);
+              errors++; break;
+            }
+            uint64_t result = base + (uint64_t)addend;
             wr64(patch, result);
             applied++;
             break;
@@ -197,10 +215,10 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
             /* 32-bit absolute virtual address */
             int32_t addend = rd32s(patch);
             uint64_t result = (uint64_t)sym_rva + image_base + addend;
-            if (result > 0xFFFFFFFF) {
+            if (result > UINT32_MAX) {
               fprintf(stderr, "[reloc] %-8s: ADDR32 overflow at 0x%X (result=0x%llX)\n",
                       m->name, patch_offset, (unsigned long long)result);
-              errors++;
+              errors++; break;
             }
             wr32(patch, (uint32_t)result);
             applied++;
@@ -210,8 +228,12 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
           case REL_AMD64_ADDR32NB: {
             /* 32-bit RVA (relative to image base, no base added) */
             int32_t addend = rd32s(patch);
-            uint32_t result = sym_rva + addend;
-            wr32(patch, result);
+            int64_t result = (int64_t)sym_rva + (int64_t)addend;
+            if (result < 0 || result > UINT32_MAX) {
+              fprintf(stderr, "[reloc] ADDR32NB out of range at 0x%X\n", patch_offset);
+              errors++; break;
+            }
+            wr32(patch, (uint32_t)result);
             applied++;
             break;
           }
@@ -229,8 +251,12 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
 
             int32_t addend = rd32s(patch);
             /* PC-relative: target - (site + 4 + extra) */
-            int32_t result = (int32_t)sym_rva - (int32_t)(reloc_rva + 4 + extra) + addend;
-            wr32(patch, (uint32_t)result);
+            int64_t result = (int64_t)sym_rva - ((int64_t)reloc_rva + 4 + extra) + addend;
+            if (result < INT32_MIN || result > INT32_MAX) {
+              fprintf(stderr, "[reloc] REL32 displacement overflow at 0x%X\n", patch_offset);
+              errors++; break;
+            }
+            wr32(patch, (uint32_t)(int32_t)result);
             applied++;
             break;
           }
@@ -250,7 +276,12 @@ int reloc_resolve_all(merge_context_t *ctx, coff_file_t **files, int num_files,
             int32_t sym_value = 0;
             if (cf->symbols && rel->symbol_index < cf->num_symbols)
               sym_value = cf->symbols[rel->symbol_index].value;
-            wr32(patch, (uint32_t)(sym_value + addend));
+            int64_t value = (int64_t)sym_value + (int64_t)addend;
+            if (value < 0 || value > UINT32_MAX) {
+              fprintf(stderr, "[reloc] SECREL out of range at 0x%X\n", patch_offset);
+              errors++; break;
+            }
+            wr32(patch, (uint32_t)value);
             applied++;
             break;
           }
