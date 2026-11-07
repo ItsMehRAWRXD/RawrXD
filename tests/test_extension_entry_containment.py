@@ -25,5 +25,22 @@ class ExtensionEntryContainmentTests(unittest.TestCase):
         self.assertLess(body.index("entry.lexically_relative(root)"),
                         body.index("m_extensions[extensionId] = std::move(state)"))
 
+    def test_duplicate_extension_rejected_before_registration(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("PatchResult JSExtensionHost::loadExtensionFromDir(")
+        end = source.index("// Extension Lifecycle", start)
+        body = source[start:end]
+        self.assertIn("m_extensions.find(extensionId) != m_extensions.end()", body)
+        self.assertIn('return PatchResult::error("Extension already loaded', body)
+        self.assertIn("m_extensions.emplace(extensionId, std::move(state))", body)
+        self.assertNotIn("m_extensions[extensionId] = std::move(state)", body)
+
+    def test_incomplete_manifest_reads_are_rejected(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("std::string readFileToString(")
+        end = source.index("// Write string to file", start)
+        body = source[start:end]
+        self.assertIn('if (!ok || bytesRead != content.size()) return "";', body)
+
 if __name__ == "__main__":
     unittest.main()
