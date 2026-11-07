@@ -185,6 +185,12 @@ class NativeToolchainAcceptance(unittest.TestCase):
                     "--compiler", str(fake), "--approve-mutations", ok=False)
 
     @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_23_invalid_cli_args_remain_machine_readable(self):
+        d = self.invoke("build", "--format", "host", "--output", "out",
+                        "--timeout", "0", "--approve-mutations", ok=False)
+        self.assertEqual(d["code"], 2)
+        self.assertEqual(d["operation"], "parse")
+
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
