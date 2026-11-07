@@ -26,6 +26,14 @@ with tempfile.TemporaryDirectory(prefix="rawrxd-build-") as tmp:
         print(f"{label}: expected={expected} actual={result.returncode}", flush=True)
         if result.returncode != expected:
             raise AssertionError(label)
+    object_file = base / ("main.obj" if sys.platform == "win32" else "main.o")
+    check("source-to-object", 0, [toolchain, str(source), str(object_file), "object"])
+    if not object_file.is_file():
+        raise AssertionError("missing object file")
+    check("object-to-executable", 0, [toolchain, str(object_file), str(binary), "link"])
+    if not binary.is_file():
+        raise AssertionError("missing executable from object link")
+    check("linked executable", 0, [str(binary)])
     check("compile-link", 0, [toolchain, str(source), str(binary), "build"])
     if not binary.is_file():
         raise AssertionError("missing binary after build")
@@ -37,4 +45,4 @@ with tempfile.TemporaryDirectory(prefix="rawrxd-build-") as tmp:
     check("missing source rejected", 3, [toolchain, str(base/"missing.cpp"), str(binary), "build"])
     check("missing compiler rejected", 127, ["rawrxd_nonexistent_compiler", str(source), str(binary), "build"])
     check("invalid mode rejected", 2, [toolchain, str(source), str(binary), "invalid"])
-    print("NATIVE_BUILD_GATE PASS: 7 checks")
+    print("NATIVE_BUILD_GATE PASS: 10 checks")
