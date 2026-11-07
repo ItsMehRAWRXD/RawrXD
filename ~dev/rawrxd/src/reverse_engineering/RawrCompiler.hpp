@@ -9,6 +9,7 @@
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -266,87 +267,92 @@ private:
                             DWORD timeoutMs = 30000) {
         stdoutResult.clear();
         stderrResult.clear();
-        exitCode = (DWORD)-1;
-
-        // Create pipes for stdout
+        exitCode = static_cast<DWORD>(-1);
         SECURITY_ATTRIBUTES sa = {};
         sa.nLength = sizeof(sa);
         sa.bInheritHandle = TRUE;
-
-        HANDLE hStdoutRead = nullptr, hStdoutWrite = nullptr;
-        HANDLE hStderrRead = nullptr, hStderrWrite = nullptr;
-        if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0)) return false;
-        if (!CreatePipe(&hStderrRead, &hStderrWrite, &sa, 0)) {
-            CloseHandle(hStdoutRead); CloseHandle(hStdoutWrite);
+        HANDLE outRead = nullptr, outWrite = nullptr;
+        HANDLE errRead = nullptr, errWrite = nullptr;
+        auto close = [](HANDLE& h) {
+            if (h && h != INVALID_HANDLE_VALUE) CloseHandle(h);
+            h = nullptr;
+        };
+        if (!CreatePipe(&outRead, &outWrite, &sa, 0)) return false;
+        if (!CreatePipe(&errRead, &errWrite, &sa, 0)) {
+            close(outRead); close(outWrite); return false;
+        }
+        if (!SetHandleInformation(outRead, HANDLE_FLAG_INHERIT, 0) ||
+            !SetHandleInformation(errRead, HANDLE_FLAG_INHERIT, 0)) {
+            close(outRead); close(outWrite); close(errRead); close(errWrite);
             return false;
         }
-
-        // Ensure read ends are NOT inherited
-        SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
-        SetHandleInformation(hStderrRead, HANDLE_FLAG_INHERIT, 0);
-
         STARTUPINFOA si = {};
         si.cb = sizeof(si);
         si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-        si.hStdOutput = hStdoutWrite;
-        si.hStdError  = hStderrWrite;
+        si.hStdOutput = outWrite;
+        si.hStdError = errWrite;
+        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
         si.wShowWindow = SW_HIDE;
-
         PROCESS_INFORMATION pi = {};
-
-        // CreateProcessA needs mutable string
-        std::vector<char> cmdBuf(cmdLine.begin(), cmdLine.end());
-        cmdBuf.push_back('\0');
-
-        BOOL created = CreateProcessA(
-            nullptr,
-            cmdBuf.data(),
-            nullptr, nullptr,
-            TRUE,           // inherit handles
-            CREATE_NO_WINDOW,
-            nullptr, nullptr,
-            &si, &pi
-        );
-
-        // Close write ends in parent immediately
-        CloseHandle(hStdoutWrite);
-        CloseHandle(hStderrWrite);
-
-        if (!created) {
-            CloseHandle(hStdoutRead);
-            CloseHandle(hStderrRead);
+        std::vector<char> mutableCommand(cmdLine.begin(), cmdLine.end());
+        mutableCommand.push_back('\0');
+        // Suspend until the process is inside the kill-on-close job.
+        HANDLE job = CreateJobObjectA(nullptr, nullptr);
+        if (!job) {
+            close(outRead); close(outWrite); close(errRead); close(errWrite);
             return false;
         }
-
-        // Read stdout in a loop
-        {
-            char buf[4096];
-            DWORD bytesRead = 0;
-            while (ReadFile(hStdoutRead, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-                buf[bytesRead] = '\0';
-                stdoutResult += buf;
-            }
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits = {};
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation,
+                                     &limits, sizeof(limits))) {
+            close(job); close(outRead); close(outWrite); close(errRead); close(errWrite);
+            return false;
         }
-        // Read stderr
-        {
-            char buf[4096];
-            DWORD bytesRead = 0;
-            while (ReadFile(hStderrRead, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-                buf[bytesRead] = '\0';
-                stderrResult += buf;
-            }
+        const BOOL created = CreateProcessA(nullptr, mutableCommand.data(), nullptr,
+                                            nullptr, TRUE,
+                                            CREATE_NO_WINDOW | CREATE_SUSPENDED,
+                                            nullptr, nullptr, &si, &pi);
+        close(outWrite);
+        close(errWrite);
+        if (!created) {
+            close(job); close(outRead); close(errRead);
+            return false;
         }
-
-        CloseHandle(hStdoutRead);
-        CloseHandle(hStderrRead);
-
-        WaitForSingleObject(pi.hProcess, timeoutMs);
-        GetExitCodeProcess(pi.hProcess, &exitCode);
-
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-
-        return true;
+        if (!AssignProcessToJobObject(job, pi.hProcess)) {
+            TerminateProcess(pi.hProcess, 1);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            close(pi.hThread); close(pi.hProcess); close(job);
+            close(outRead); close(errRead);
+            return false;
+        }
+        // Separate readers prevent stdout/stderr pipe-buffer deadlock.
+        auto drain = [](HANDLE pipe, std::string& target) {
+            char buffer[8192];
+            DWORD bytes = 0;
+            while (ReadFile(pipe, buffer, sizeof(buffer), &bytes, nullptr) && bytes)
+                target.append(buffer, bytes);
+        };
+        std::thread stdoutThread(drain, outRead, std::ref(stdoutResult));
+        std::thread stderrThread(drain, errRead, std::ref(stderrResult));
+        const DWORD resumed = ResumeThread(pi.hThread);
+        const DWORD wait = resumed == static_cast<DWORD>(-1)
+            ? WAIT_FAILED : WaitForSingleObject(pi.hProcess, timeoutMs);
+        const bool finished = wait == WAIT_OBJECT_0;
+        if (!finished) {
+            TerminateJobObject(job, 1);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+        }
+        DWORD observed = static_cast<DWORD>(-1);
+        if (finished) GetExitCodeProcess(pi.hProcess, &observed);
+        // Close the job before joining to terminate descendants holding pipe writers.
+        close(job);
+        stdoutThread.join();
+        stderrThread.join();
+        close(outRead); close(errRead);
+        close(pi.hThread); close(pi.hProcess);
+        exitCode = finished ? observed : static_cast<DWORD>(-1);
+        return finished;
     }
 #endif
 
