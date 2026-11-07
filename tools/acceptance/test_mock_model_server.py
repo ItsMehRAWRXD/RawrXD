@@ -80,6 +80,34 @@ class MockTransportTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(json.loads(body)["choices"][0]["message"]["content"], "MOCK_RESPONSE_OK")
 
+    def test_streaming_client_reassembles_completion(self):
+        # Consume the actual SSE wire format as a client, not just substring-match.
+        code, headers, body = self.request("POST", "/v1/chat/completions",
+            {"model": MODEL, "messages": [{"role": "user", "content": "stream"}], "stream": True})
+        self.assertEqual(code, 200)
+        self.assertEqual(headers["Content-Type"], "text/event-stream")
+        chunks = []
+        finished = False
+        done = False
+        for record in body.split(b"\n\n"):
+            if not record:
+                continue
+            self.assertTrue(record.startswith(b"data: "))
+            payload = record[6:]
+            if payload == b"[DONE]":
+                done = True
+                continue
+            self.assertFalse(done, "data received after DONE")
+            event = json.loads(payload)
+            self.assertEqual(event["model"], MODEL)
+            choice = event["choices"][0]
+            chunks.append(choice["delta"].get("content", ""))
+            if choice["finish_reason"] == "stop":
+                finished = True
+        self.assertEqual("".join(chunks), "MOCK_RESPONSE_OK")
+        self.assertTrue(finished)
+        self.assertTrue(done)
+
     def test_wrong_model(self):
         code, _, _ = self.request("POST", "/v1/chat/completions", {"model": "not-mock", "messages": []})
         self.assertEqual(code, 400)
