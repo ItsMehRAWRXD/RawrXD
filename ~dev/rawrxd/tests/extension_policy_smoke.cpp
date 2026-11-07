@@ -61,6 +61,9 @@ int main() {
     check(!validRelativeMain("out/CON.txt"), "nested Windows device rejected");
     check(!validRelativeMain("out/LPT1"), "nested printer device rejected");
     check(validRelativeMain("out\\main.js"), "ordinary Windows relative path accepted");
+    check(!validRelativeMain("CONIN$"), "Windows console input alias rejected");
+    check(!validRelativeMain("out/conout$.js"), "Windows console output alias with extension rejected");
+    check(validRelativeMain("out/console-input.js"), "ordinary console path accepted");
     check(validIdentifier("sample_extension-1"), "identifier valid");
     check(!validIdentifier("../escape"), "identifier traversal rejected");
     check(!validIdentifier(""), "identifier empty rejected");
