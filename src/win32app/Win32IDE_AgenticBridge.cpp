@@ -411,7 +411,9 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
 }
 
 bool AgenticBridge::IsToolCall(const std::string& line) {
-    return line.rfind("TOOL:", 0) == 0 || line.rfind("tool:", 0) == 0;
+    return (line.rfind("TOOL:", 0) == 0 ||
+            line.rfind("tool:", 0) == 0) &&
+           line.find_first_not_of(" \\t\\r\\n", 5) != std::string::npos;
 }
 
 bool AgenticBridge::IsAnswer(const std::string& line) {
