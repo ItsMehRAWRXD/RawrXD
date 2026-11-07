@@ -55,7 +55,14 @@ int main(int argc,char** argv) {
     if(!fs::is_regular_file(fs::u8path(source),ec)){std::cerr<<"source file missing\\n";return 3;}
     std::vector<std::string> args{compiler};
     for(int i=5;i<argc;++i)args.emplace_back(argv[i]);
-    args.push_back(source);args.push_back("-o");args.push_back(output);
+    const auto compilerName=fs::path(compiler).filename().string();
+    const bool msvc=(compilerName=="cl"||compilerName=="cl.exe"||compilerName=="CL.EXE");
+    if(msvc) {
+        args.push_back("/nologo");args.push_back("/EHsc");args.push_back("/std:c++17");
+        args.push_back(source);args.push_back("/Fe:"+output);
+    } else {
+        args.push_back(source);args.push_back("-o");args.push_back(output);
+    }
     const int compileResult=run(args);
     if(compileResult!=0)return compileResult;
     if(!fs::is_regular_file(fs::u8path(output),ec)){std::cerr<<"compiler returned success without output\\n";return 4;}
