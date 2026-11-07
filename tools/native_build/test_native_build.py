@@ -21,11 +21,6 @@ with tempfile.TemporaryDirectory(prefix="rawrxd-build-") as tmp:
     source = base / "main.cpp"
     binary = base / ("hello.exe" if sys.platform == "win32" else "hello")
     source.write_text("int main(){return 0;}\n")
-    # This driver targets GCC/Clang command-line semantics; MSVC's cl.exe is
-    # not a supported backend for the child compilation invocation.
-    if sys.platform == "win32":
-        print("SKIP: driver child compiler requires clang++/g++ on Windows")
-        sys.exit(0)
     def check(label, expected, args):
         result = subprocess.run([str(exe), *args], check=False)
         print(f"{label}: expected={expected} actual={result.returncode}", flush=True)
@@ -38,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix="rawrxd-build-") as tmp:
     source.write_text("int main(){return 7;}\n")
     check("program exit propagated", 7, [toolchain, str(source), str(binary), "run"])
     source.write_text("int main( { broken\n")
-    check("compiler failure propagated", 1, [toolchain, str(source), str(binary), "build"])
+    check("compiler failure propagated", 2 if sys.platform == "win32" else 1, [toolchain, str(source), str(binary), "build"])
     check("missing source rejected", 3, [toolchain, str(base/"missing.cpp"), str(binary), "build"])
     check("missing compiler rejected", 127, ["rawrxd_nonexistent_compiler", str(source), str(binary), "build"])
     check("invalid mode rejected", 2, [toolchain, str(source), str(binary), "invalid"])
