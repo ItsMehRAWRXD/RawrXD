@@ -39,7 +39,7 @@ public:
     static bool ValidCommandName(const std::string& command) {
         if (command.empty() || command.size() > 256) return false;
         return std::none_of(command.begin(), command.end(), [](unsigned char c) {
-            return c < 0x20 || c == 0x7f;
+            return c < 0x20 || c == 0x7f; // Includes embedded NUL (C-string truncation risk).
         });
     }
 
