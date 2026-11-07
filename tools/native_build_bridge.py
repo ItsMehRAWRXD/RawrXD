@@ -43,8 +43,8 @@ def execute(argv, timeout=120, cwd=None):
     """
     if not argv or not isinstance(argv, (list, tuple)):
         raise ValueError("argv must be a nonempty sequence")
-    if not 1 <= timeout <= 600:
-        raise ValueError("timeout must be between 1 and 600 seconds")
+    if not 0 < timeout <= 600:
+        raise ValueError("timeout must be greater than zero and at most 600 seconds")
     kwargs = {"stdout": subprocess.PIPE, "stderr": subprocess.PIPE,
               "stdin": subprocess.DEVNULL, "cwd": cwd, "shell": False}
     if os.name == "nt":
