@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - "tools/rawrxd_native_toolchain.py"
+      - "tools/rawrxd_process_runner.py"
+      - "tools/tests/test_process_runner.py"
       - "tools/tests/test_native_toolchain.py"
       - "src/toolchain/linker/**"
       - "~dev/rawrxd/cmake/NativeToolchain.fragment.cmake"
@@ -11,6 +13,8 @@ on:
   pull_request:
     paths:
       - "tools/rawrxd_native_toolchain.py"
+      - "tools/rawrxd_process_runner.py"
+      - "tools/tests/test_process_runner.py"
       - "tools/tests/test_native_toolchain.py"
       - "src/toolchain/linker/**"
       - "~dev/rawrxd/cmake/NativeToolchain.fragment.cmake"
@@ -31,6 +35,8 @@ jobs:
           lld-link --version
           cmake --version
           ninja --version
+      - name: Test concurrent compiler output and process-tree timeout
+        run: python3 -m unittest discover -s tools/tests -p test_process_runner.py -v
       - name: Execute actual compiler, builder and linker black-box suite
         run: python3 -m unittest discover -s tools/tests -p test_native_toolchain.py -v
       - name: Build RawrXD's own PE linker and diagnostic tool
@@ -53,6 +59,9 @@ jobs:
           where link
           python --version
           cmake --version
+      - name: Windows process-tree cancellation and stdout/stderr stress
+        shell: pwsh
+        run: python -m unittest discover -s tools/tests -p test_process_runner.py -v
       - name: Execute real Windows x64 compile-link acceptance
         shell: pwsh
         run: python -m unittest discover -s tools/tests -p test_native_toolchain.py -v
