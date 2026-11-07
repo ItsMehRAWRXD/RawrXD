@@ -20,6 +20,16 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(r["stdout"]), 200000)
         self.assertEqual(len(r["stderr"]), 200000)
 
+    def test_bounded_concurrent_output(self):
+        code = ("import sys;sys.stdout.write('a'*400000);"
+                "sys.stderr.write('b'*400000)")
+        r = execute([sys.executable, "-c", code], 15, max_output_bytes=1024)
+        self.assertEqual(r["exit_code"], 0, r)
+        self.assertEqual(len(r["stdout"]), 1024)
+        self.assertEqual(len(r["stderr"]), 1024)
+        self.assertTrue(r["stdout_truncated"])
+        self.assertTrue(r["stderr_truncated"])
+
     def test_nonzero_and_timeout(self):
         r = execute([sys.executable, "-c", "import sys;sys.exit(17)"], 5)
         self.assertEqual(r["exit_code"], 17)
