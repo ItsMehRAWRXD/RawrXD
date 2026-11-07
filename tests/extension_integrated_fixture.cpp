@@ -30,6 +30,10 @@ int main(){
  std::string loaded(payload.size(),'\0');size_t pos=0;
  check(readExactly(loaded.data(),loaded.size(),[&](char*p,size_t n){auto k=pos<=persisted.size()?std::min<size_t>({n,4,persisted.size()-pos}):size_t{0};std::copy_n(persisted.data()+pos,k,p);pos+=k;return k;}),"partial-read transport");
  check(loaded==payload,"fixture round-trip integrity");
+ check(!writeExactly(payload.data(),payload.size(),[](const char*,size_t){return size_t{0};}),"zero-progress write fails closed");
+ check(!writeExactly(payload.data(),payload.size(),[](const char*,size_t n){return n+1;}),"oversized write fails closed");
+ check(!readExactly(loaded.data(),loaded.size(),[](char*,size_t){return size_t{0};}),"premature EOF fails closed");
+ check(!readExactly(loaded.data(),loaded.size(),[](char*,size_t n){return n+1;}),"oversized read fails closed");
  check(!mayInstallVSIX(false,""),"unsigned installation denied by default");
  check(mayInstallVSIX(false,"1"),"unsigned installation explicit opt-in");
  check(!validRelativeMain("../escape.js"),"traversal denied");
