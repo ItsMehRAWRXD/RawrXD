@@ -37,6 +37,17 @@ int wmain() {
         auto execution = run({exe.wstring()}, dir.wstring(), 10000);
         check(execution, "execute");
         require(execution.stdoutText.find("RAWRXD_PIPELINE_OK") != std::string::npos, "executable output mismatch");
+        // A compiler error must propagate as a nonzero process exit.
+        fs::path invalid = dir / L"invalid.cpp";
+        {
+            std::ofstream code(invalid);
+            code << "int main( { this is invalid C++ }\\n";
+        }
+        auto compileFailure = run({L"cl.exe", L"/nologo", L"/c", invalid.wstring()}, dir.wstring(), 30000);
+        require(!compileFailure.timedOut && compileFailure.error.empty() &&
+                compileFailure.exitCode != 0, "invalid C++ unexpectedly compiled");
+        require(!compileFailure.stdoutText.empty() || !compileFailure.stderrText.empty(),
+                "compiler diagnostics were lost");
         // Concurrent stream capture must not deadlock on large independent outputs.
         fs::path streams = dir / L"streams.cpp", streamsExe = dir / L"streams.exe";
         {
