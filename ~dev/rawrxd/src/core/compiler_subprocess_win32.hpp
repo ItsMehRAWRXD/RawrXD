@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
