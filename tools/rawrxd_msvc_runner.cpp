@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <thread>
 #include <cwchar>
+#include <cstdlib>
 
 static std::wstring quote(const std::wstring& s) {
     std::wstring out = L"\"";
