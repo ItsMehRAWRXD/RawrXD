@@ -265,6 +265,13 @@ class Store {
     }
     fs::path sourceChecked(const fs::path& source) const {
         checkTree(source);
+        // Package authors cannot inject private management markers into their
+        // archives: only the store may create disabled/staging/backup state.
+        for (const auto& ent : fs::recursive_directory_iterator(source)) {
+            const std::string filename = ent.path().filename().string();
+            require(filename.rfind(".rawrxd-", 0) != 0,
+                    "Package contains reserved RawrXD state filename");
+        }
         const fs::path realSource = fs::canonical(source);
         // Prevent recursively staging an extension folder into itself.
         const fs::path relative = realSource.lexically_relative(root_);
@@ -349,24 +356,53 @@ public:
     }
     size_t recover() {
         mkdirRoot();
-        size_t restored = 0;
+        // Enumerate first: removing/renaming entries during directory iteration
+        // has implementation-dependent behavior on Windows and Unix.
+        struct Pending { std::string id; fs::path path; bool backup; };
+        std::vector<Pending> pending;
         for (const auto& entry : fs::directory_iterator(root_)) {
             if (entry.is_symlink() || !entry.is_directory()) continue;
             const std::string name = entry.path().filename().string();
-            const std::string suffix = ".rawrxd-backup";
-            if (name.size() <= suffix.size() ||
-                name.compare(name.size() - suffix.size(), suffix.size(), suffix) != 0) continue;
-            const std::string id = name.substr(0, name.size() - suffix.size());
-            if (!safeComponent(id)) continue;
-            const auto dest = checked(id);
-            if (fs::exists(dest)) continue;
-            try {
-                require(manifest(entry.path()).id == id, "Backup ID mismatch");
-                fs::rename(entry.path(), dest);
-                ++restored;
-            } catch (const std::exception&) { /* Never delete an invalid backup. */ }
+            for (const auto& suffix : {std::string(".rawrxd-backup"),
+                                       std::string(".rawrxd-stage")}) {
+                if (name.size() <= suffix.size() ||
+                    name.compare(name.size() - suffix.size(), suffix.size(), suffix) != 0)
+                    continue;
+                const std::string id = name.substr(0, name.size() - suffix.size());
+                if (safeComponent(id))
+                    pending.push_back({id, entry.path(), suffix == ".rawrxd-backup"});
+                break;
+            }
         }
-        return restored;
+        // Restore any pre-update originals before discarding unfinished stages.
+        std::stable_sort(pending.begin(), pending.end(),
+            [](const Pending& a, const Pending& b) { return a.backup && !b.backup; });
+        size_t recovered = 0;
+        for (const auto& entry : pending) {
+            try {
+                const fs::path dest = checked(entry.id);
+                require(manifest(entry.path).id == entry.id, "Recovery manifest ID mismatch");
+                checkTree(entry.path); // Do not follow or delete links in invalid stages.
+                if (entry.backup && !fs::exists(dest)) {
+                    fs::rename(entry.path, dest); // Interrupted rename: restore original.
+                } else {
+                    if (entry.backup) {
+                        // The replacement was already published; validate it
+                        // before discarding the old version.
+                        require(manifest(dest).id == entry.id,
+                                "Published extension ID mismatch");
+                        checkTree(dest);
+                    }
+                    // Orphaned stage is never auto-installed. A validated backup
+                    // is removed only when its validated replacement exists.
+                    fs::remove_all(entry.path);
+                }
+                ++recovered;
+            } catch (const std::exception&) {
+                // Preserve suspicious/corrupt transaction folders for diagnosis.
+            }
+        }
+        return recovered;
     }
 };
 }} // RawrXD::OfflineExtensions
