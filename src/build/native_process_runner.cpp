@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "native_process_runner.hpp"
 #include <algorithm>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
