@@ -2,6 +2,7 @@
 // Connects Win32IDE to Native C++ Agent (Parity with rawrxd_cli)
 
 #include "Win32IDE_AgenticBridge.h"
+#include "AgentToolCallPolicy.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "../native_agent.hpp"
@@ -401,9 +402,7 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
     
     // Keep detection consistent with IsToolCall; an empty tool payload is
     // not executable and must not be dispatched as a tool call.
-    if ((rawOutput.rfind("TOOL:", 0) == 0 ||
-         rawOutput.rfind("tool:", 0) == 0) &&
-        rawOutput.find_first_not_of(" \t\r\n", 5) != std::string::npos) {
+    if (rawrxd::agent::hasToolPayload(rawOutput)) {
         response.type = AgentResponseType::TOOL_CALL;
         response.content = rawOutput.substr(5);
     }
@@ -411,9 +410,7 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
 }
 
 bool AgenticBridge::IsToolCall(const std::string& line) {
-    return (line.rfind("TOOL:", 0) == 0 ||
-            line.rfind("tool:", 0) == 0) &&
-           line.find_first_not_of(" \\t\\r\\n", 5) != std::string::npos;
+    return rawrxd::agent::hasToolPayload(line);
 }
 
 bool AgenticBridge::IsAnswer(const std::string& line) {
