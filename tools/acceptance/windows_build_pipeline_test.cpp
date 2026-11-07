@@ -43,7 +43,7 @@ int wmain() {
     const auto cBinary = root / L"hello_c.exe";
     {
         std::ofstream file(cSource);
-        file << "#include <stdio.h>\\nint main(void){puts(\\\"C_PIPELINE_OK\\\");return 0;}\\n";
+        file << "#include <stdio.h>\nint main(void){puts(\"C_PIPELINE_OK\");return 0;}\n";
     }
     auto cCompile = Run(L"cl.exe", {L"/nologo", L"/TC", L"/c",
                           L"/Fo" + cObject.wstring(), cSource.wstring()}, root.wstring(), 60000);
