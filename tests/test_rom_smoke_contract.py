@@ -30,6 +30,16 @@ class RomSmokeContract(unittest.TestCase):
         self.assertLess(self.code.index("exceeds its registered shard bounds"),
                         self.code.index("prefetch.register_tensor_info(i, info)"))
 
+    def test_shard_path_formatting_is_bounded(self):
+        self.assertIn("swprintf_s(current_shard, MAX_PATH", self.code)
+        self.assertIn('L"%ls.gguf.%02u"', self.code)
+        self.assertIn("shardPathChars < 0 || shardPathChars >= MAX_PATH", self.code)
+        self.assertLess(self.code.index("shard path exceeds MAX_PATH"),
+                        self.code.index("CreateFileW(current_shard"))
+
+    def test_nonpositive_file_sizes_are_rejected(self):
+        self.assertIn("GetFileSizeEx(h, &sz) && sz.QuadPart > 0", self.code)
+
     def test_missing_or_empty_shards_fail_before_registration(self):
         self.assertIn("if (file_size == 0)", self.code)
         self.assertIn("shard is missing, unreadable, or empty", self.code)
