@@ -63,6 +63,38 @@ int wmain() {
         std::cerr << "C EXEC FAILED: " << cExecute.error << cExecute.stdoutText << cExecute.stderrText;
         return 9;
     }
+    // Negative gates: syntax errors must fail compilation; missing symbols must
+    // fail linking. A build command returning success here is a serious defect.
+    const auto invalidSource = root / L"invalid.cpp";
+    {
+        std::ofstream file(invalidSource);
+        file << "int main( { return 0; }\\n";
+    }
+    auto badCompile = Run(L"cl.exe", {L"/nologo", L"/c", invalidSource.wstring()},
+                          root.wstring(), 30000);
+    if (!badCompile.launched || badCompile.timedOut || badCompile.exitCode == 0 ||
+        (badCompile.stdoutText.empty() && badCompile.stderrText.empty())) {
+        std::cerr << "INVALID SOURCE WAS NOT REJECTED: " << badCompile.error;
+        return 10;
+    }
+    const auto unresolvedSource = root / L"unresolved.cpp";
+    const auto unresolvedObject = root / L"unresolved.obj";
+    {
+        std::ofstream file(unresolvedSource);
+        file << "extern int absent_symbol(); int main(){return absent_symbol();}\\n";
+    }
+    auto unresolvedCompile = Run(L"cl.exe", {L"/nologo", L"/c",
+                                   L"/Fo" + unresolvedObject.wstring(), unresolvedSource.wstring()},
+                                 root.wstring(), 30000);
+    if (!unresolvedCompile.launched || unresolvedCompile.timedOut || unresolvedCompile.exitCode)
+        return 11;
+    auto badLink = Run(L"link.exe", {L"/nologo", L"/OUT:" + (root / L"bad.exe").wstring(),
+                           unresolvedObject.wstring()}, root.wstring(), 30000);
+    if (!badLink.launched || badLink.timedOut || badLink.exitCode == 0 ||
+        (badLink.stdoutText.empty() && badLink.stderrText.empty())) {
+        std::cerr << "UNRESOLVED SYMBOL WAS NOT REJECTED: " << badLink.error;
+        return 12;
+    }
     // Concurrent stdout/stderr pressure exceeds pipe buffers; must not deadlock.
     auto pressure = Run(cl, {L"/d", L"/s", L"/c", L"for /L %i in (1,1,2000) do @echo stdout%i & @echo stderr%i 1>&2"},
                         root.wstring(), 30000);
