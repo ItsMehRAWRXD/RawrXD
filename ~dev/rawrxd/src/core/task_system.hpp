@@ -493,23 +493,39 @@ inline TaskResult TaskRunner::executeTask(const TaskDefinition& task) {
     
     task_handles_[task.task_id] = hProcess;
     
-    // Read output
+    // Drain both pipes concurrently while the child runs. Reading one pipe to
+    // completion before the other can deadlock when both pipe buffers fill.
+    // Use blocking readers: the parent's write ends are closed by createProcess.
     std::string output, error;
-    readProcessOutput(hProcess, out_read, err_read, output, error);
-    
-    // Wait for process
-    DWORD exit_code = 0;
-    WaitForSingleObject(hProcess, task.timeout_ms > 0 ? task.timeout_ms : INFINITE);
-    GetExitCodeProcess(hProcess, &exit_code);
-    
-    // Close handles
-    CloseHandle(out_read);
-    CloseHandle(err_read);
-    CloseHandle(in_write);
+    auto drain = [](HANDLE pipe, std::string& target) {
+        char buffer[4096];
+        DWORD count = 0;
+        while (ReadFile(pipe, buffer, sizeof(buffer), &count, nullptr) && count != 0) {
+            target.append(buffer, count);
+        }
+    };
+    std::thread stdoutReader(drain, out_read, std::ref(output));
+    std::thread stderrReader(drain, err_read, std::ref(error));
+
+    const DWORD waitResult = WaitForSingleObject(
+        hProcess, task.timeout_ms > 0 ? static_cast<DWORD>(task.timeout_ms) : INFINITE);
+    bool timedOut = waitResult == WAIT_TIMEOUT;
+    if (timedOut || waitResult == WAIT_FAILED) {
+        // A timeout must actually stop the process before joining pipe readers.
+        TerminateProcess(hProcess, timedOut ? 124 : 1);
+        WaitForSingleObject(hProcess, INFINITE);
+    }
+    DWORD exit_code = 1;
+    const bool gotExitCode = GetExitCodeProcess(hProcess, &exit_code) != FALSE;
+    stdoutReader.join();
+    stderrReader.join();
+
+    if (out_read) CloseHandle(out_read);
+    if (err_read) CloseHandle(err_read);
+    if (in_write) CloseHandle(in_write);
     CloseHandle(hProcess);
-    
     task_handles_.erase(task.task_id);
-    
+
     // Parse problems
     result.output = output + error;
     result.problems = parseOutput(result.output, task.problem_matcher);
@@ -523,7 +539,9 @@ inline TaskResult TaskRunner::executeTask(const TaskDefinition& task) {
     
     // Set result
     result.exit_code = exit_code;
-    result.status = (exit_code == 0) ? TaskStatus::Success : TaskStatus::Failed;
+    result.status = (timedOut || waitResult == WAIT_FAILED || !gotExitCode)
+        ? TaskStatus::Failed : (exit_code == 0 ? TaskStatus::Success : TaskStatus::Failed);
+    if (timedOut) result.output += "\\nProcess timed out and was terminated";
     result.end_time = std::chrono::steady_clock::now();
     result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         result.end_time - result.start_time);
