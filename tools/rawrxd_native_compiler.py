@@ -33,9 +33,12 @@ def run_process(command, cwd, timeout):
         timed_out = True
         if os.name == "nt":
             # taskkill /T terminates compiler descendants (link.exe, etc.).
-            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           timeout=10, check=False)
+            try:
+                subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               timeout=10, check=False)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
             if proc.poll() is None:
                 proc.kill()
         else:
