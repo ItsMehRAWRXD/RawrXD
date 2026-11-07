@@ -51,8 +51,20 @@ public:
         if (extensionId.empty() || command.empty() || !handler) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
-        commands_.emplace(command, std::make_shared<CommandSlot>(std::move(handler)));
-        owners_[command] = extensionId;
+        // Preserve ownership invariants even if allocation or copying throws.
+        // A command without an owner could otherwise survive extension unload.
+        try {
+            owners_.emplace(command, extensionId);
+            try {
+                commands_.emplace(command,
+                                  std::make_shared<CommandSlot>(std::move(handler)));
+            } catch (...) {
+                owners_.erase(command);
+                throw;
+            }
+        } catch (...) {
+            return false;
+        }
         return true;
     }
 
