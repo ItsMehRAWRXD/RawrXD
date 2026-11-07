@@ -93,6 +93,27 @@ class NativeCompilerTests(unittest.TestCase):
             self.assertEqual(code, 0, result)
             self.assertEqual(subprocess.run([str(Path(root, "test"))], check=False).returncode, 0)
 
+    def test_concurrent_large_stdout_stderr_capture(self):
+        with tempfile.TemporaryDirectory() as root:
+            code = ('import sys; '
+                    'sys.stdout.write("O"*200000); sys.stdout.flush(); '
+                    'sys.stderr.write("E"*200000); sys.stderr.flush()')
+            result = builder.run_process([sys.executable, "-c", code], Path(root), 10)
+            self.assertTrue(result["ok"], result)
+            self.assertEqual(len(result["stdout"]), 200000)
+            self.assertEqual(len(result["stderr"]), 200000)
+
+    @unittest.skipUnless(shutil.which("g++"), "g++ unavailable")
+    def test_link_failure_removes_output(self):
+        with tempfile.TemporaryDirectory() as root:
+            Path(root, "main.cpp").write_text("extern int missing(); int main(){return missing();}")
+            code, result = self.invoke("--compiler", "g++", "--source", "main.cpp",
+                                       "--output", "test", "--cwd", root)
+            self.assertNotEqual(code, 0)
+            self.assertFalse(result["ok"])
+            self.assertEqual([s["phase"] for s in result["steps"]], ["compile", "link"])
+            self.assertFalse(Path(root, "test").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
