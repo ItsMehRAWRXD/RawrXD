@@ -259,6 +259,14 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(result["commands"][0]["returncode"], 7)
         self.assertFalse((self.root / "out.o").exists())
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_30_elf_object_cannot_be_falsely_reported_as_executable(self):
+        self.invoke("compile", "--source", "a.c", "--format", "host", "--output", "a.o",
+                    "--approve-mutations")
+        result = self.invoke("verify", "--format", "host", "--output", "a.o", ok=False)
+        self.assertEqual(result["code"], 6)
+        self.assertIn("not a linked executable", result["error"])
+
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
