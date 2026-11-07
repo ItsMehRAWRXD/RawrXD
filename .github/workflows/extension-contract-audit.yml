@@ -11,6 +11,7 @@ on:
       - 'tests/test_extension_compat_host_contract.py'
       - 'tests/test_extension_entry_containment.py'
       - '.github/workflows/extension-contract-audit.yml'
+      - 'tests/native_compiler_linker_gate.py'
   workflow_dispatch:
 
 jobs:
@@ -30,3 +31,24 @@ jobs:
           python -m unittest discover -s tests -p test_headless_extension_failclosed.py -v
           python -m unittest discover -s tests -p test_extension_compat_host_contract.py -v
           python -m unittest discover -s tests -p test_extension_entry_containment.py -v
+
+  native-compiler-linker:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile, link, run and reject missing symbols (Linux)
+        if: runner.os == 'Linux'
+        run: python tests/native_compiler_linker_gate.py
+      - name: Compile, link, run and reject missing symbols (MSVC)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          python tests/native_compiler_linker_gate.py --compiler cl
