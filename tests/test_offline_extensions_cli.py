@@ -111,7 +111,7 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.cli("install", self.package())
         (self.installed / "example.sample").rename(
             self.installed / "example.sample.rawrxd-backup")
-        self.assertIn("restored\t1", self.cli("recover"))
+        self.assertIn("recovered\t1", self.cli("recover"))
         self.assertIn("example.sample", self.cli("list"))
 
     def test_16_invalid_extension_ignored(self):
@@ -163,6 +163,69 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.cli("disable", "example.sample")
         self.cli("disable", "example.sample")
         self.assertIn("disabled", self.cli("list"))
+
+    def test_24_recover_orphaned_install_stage(self):
+        src = self.package()
+        self.installed.mkdir()
+        import shutil
+        stage = self.installed / "example.sample.rawrxd-stage"
+        shutil.copytree(src, stage)
+        self.assertIn("recovered\t1", self.cli("recover"))
+        self.assertFalse(stage.exists())
+        self.cli("install", src)
+        self.assertIn("example.sample", self.cli("list"))
+
+    def test_25_recover_update_with_stage_and_backup(self):
+        src = self.package()
+        self.cli("install", src)
+        self.cli("disable", "example.sample")
+        import shutil
+        replacement = self.package("v2", version="2.0.0")
+        stage = self.installed / "example.sample.rawrxd-stage"
+        shutil.copytree(replacement, stage)
+        (self.installed / "example.sample").rename(
+            self.installed / "example.sample.rawrxd-backup")
+        self.assertIn("recovered\t2", self.cli("recover"))
+        self.assertIn("example.sample\t1.0.0\tdisabled", self.cli("info", "example.sample"))
+        self.assertFalse(stage.exists())
+        self.cli("update", replacement)
+        self.assertIn("2.0.0\tdisabled", self.cli("info", "example.sample"))
+
+    def test_26_cleanup_backup_after_committed_update(self):
+        src = self.package()
+        self.cli("install", src)
+        import shutil
+        backup = self.installed / "example.sample.rawrxd-backup"
+        shutil.copytree(self.installed / "example.sample", backup)
+        self.assertIn("recovered\t1", self.cli("recover"))
+        self.assertFalse(backup.exists())
+        self.assertIn("1.0.0", self.cli("info", "example.sample"))
+
+    def test_27_reject_package_internal_control_files(self):
+        src = self.package()
+        (src / ".rawrxd-disabled").write_text("disabled")
+        self.cli("install", src, ok=False)
+        self.assertEqual(self.cli("list"), "")
+
+    def test_28_recover_rejects_symlinked_staging(self):
+        src = self.package()
+        self.installed.mkdir()
+        stage = self.installed / "example.sample.rawrxd-stage"
+        try:
+            stage.symlink_to(src, target_is_directory=True)
+        except (NotImplementedError, OSError):
+            self.skipTest("Symlinks unavailable")
+        self.assertIn("recovered\t0", self.cli("recover"))
+        self.assertTrue(stage.is_symlink())
+
+    def test_29_recover_rejects_mismatched_backup(self):
+        src = self.package(name="other")
+        self.installed.mkdir()
+        import shutil
+        backup = self.installed / "example.sample.rawrxd-backup"
+        shutil.copytree(src, backup)
+        self.assertIn("recovered\t0", self.cli("recover"))
+        self.assertTrue(backup.exists())
 
     def test_20_unknown_extensions_fail(self):
         self.cli("info", "nonexistent.extension", ok=False)
