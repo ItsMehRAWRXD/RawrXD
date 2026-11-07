@@ -17,7 +17,14 @@ namespace fs = std::filesystem;
 static int run(const std::vector<std::string>& args) {
     if(args.empty()) return 2;
 #ifdef _WIN32
-    return rawrxd::build::execute(args).code;
+    unsigned timeoutMs=120000;
+    if(const char* value=std::getenv("RAWRXD_BUILD_TIMEOUT_MS")) {
+        char* end=nullptr;
+        const unsigned long parsed=std::strtoul(value,&end,10);
+        if(end==value||*end!='\\0'||parsed==0||parsed>3600000UL)return 2;
+        timeoutMs=static_cast<unsigned>(parsed);
+    }
+    return rawrxd::build::execute(args,timeoutMs).code;
 #else
     std::vector<char*> argv;
     for(const auto& a:args)argv.push_back(const_cast<char*>(a.c_str()));
