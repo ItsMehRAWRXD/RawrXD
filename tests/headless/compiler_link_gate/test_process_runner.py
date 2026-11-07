@@ -74,5 +74,39 @@ class NativePipelineTests(unittest.TestCase):
             self.assertEqual(result.stdout, b"native-ok")
 
 
+    def test_mixed_c_cpp_object_link_execute(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "arithmetic.c").write_text("int rawrxd_answer(void) { return 42; }\\n")
+            (root / "entry.cpp").write_text(
+                'extern "C" int rawrxd_answer(void);\\n'
+                'int main() { return rawrxd_answer() == 42 ? 0 : 1; }\\n')
+            if os.name == "nt":
+                cc = shutil.which("cl.exe")
+                if not cc:
+                    self.skipTest("MSVC developer environment unavailable")
+                steps = [
+                    [cc, "/nologo", "/TC", "/c", "arithmetic.c", "/Foarithmetic.obj"],
+                    [cc, "/nologo", "/EHsc", "/TP", "/c", "entry.cpp", "/Foentry.obj"],
+                    [cc, "/nologo", "entry.obj", "arithmetic.obj", "/Feapp.exe"],
+                    [str(root / "app.exe")],
+                ]
+            else:
+                cc, cxx = shutil.which("cc"), shutil.which("c++")
+                if not cc or not cxx:
+                    self.skipTest("C and C++ compilers unavailable")
+                steps = [
+                    [cc, "-c", "arithmetic.c", "-o", "arithmetic.o"],
+                    [cxx, "-std=c++20", "-c", "entry.cpp", "-o", "entry.o"],
+                    [cxx, "entry.o", "arithmetic.o", "-o", "app"],
+                    [str(root / "app")],
+                ]
+            for command in steps:
+                result = run(command, cwd=root, timeout=30)
+                self.assertFalse(result.timed_out, command)
+                self.assertEqual(result.returncode, 0,
+                                 result.stderr.decode(errors="replace"))
+
+
 if __name__ == "__main__":
     unittest.main()
