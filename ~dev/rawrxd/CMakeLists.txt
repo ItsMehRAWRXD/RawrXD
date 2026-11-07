@@ -179,6 +179,12 @@ FetchContent_Declare(
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(nlohmann_json)
+# Compiler/build/link facilities run locally and do not depend on loaded models.
+option(RAWRXD_ENABLE_NATIVE_TOOLCHAIN_TOOLS "Build native linker/checker and local toolchain adapter" ON)
+if(RAWRXD_ENABLE_NATIVE_TOOLCHAIN_TOOLS)
+    include(cmake/NativeToolchain.fragment.cmake)
+endif()
+
 
 # MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
 # Pin to C++20 for build stability. std::expected is available via
