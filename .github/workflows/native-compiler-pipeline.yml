@@ -81,6 +81,20 @@ jobs:
           if ($LASTEXITCODE -ne 17) { throw 'Runner C++ execute failed' }
           Write-Host 'RUNNER_C_AND_CPP_PIPELINES PASS'
 
+      - name: Verify linker errors fail closed
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $source = Join-Path $dir 'unresolved.cpp'
+          $obj = Join-Path $dir 'unresolved.obj'
+          $exe = Join-Path $dir 'unresolved.exe'
+          Set-Content -Encoding ascii $source 'extern int missing(); int main() { return missing(); }'
+          & cl /nologo /std:c++17 /c $source "/Fo$obj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $obj)) { throw 'Linker fixture compile failed' }
+          & link /nologo $obj "/OUT:$exe"
+          if ($LASTEXITCODE -eq 0 -or (Test-Path $exe)) { throw 'Unresolved external unexpectedly linked' }
+          Write-Host 'MSVC_LINKER_ERROR_GATE PASS'
       - name: Runner concurrent streams and timeout acceptance
         shell: pwsh
         run: |
