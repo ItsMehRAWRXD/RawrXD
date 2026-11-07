@@ -42,5 +42,24 @@ class ExtensionEntryContainmentTests(unittest.TestCase):
         body = source[start:end]
         self.assertIn('if (!ok || bytesRead != content.size()) return "";', body)
 
+    def test_deactivation_error_prevents_unload(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("PatchResult JSExtensionHost::unloadExtension(")
+        end = source.index("// JS Extension detection", start)
+        body = source[start:end]
+        self.assertIn("PatchResult deactivateResult = deactivateExtension(extensionId)", body)
+        self.assertIn("if (!deactivateResult.success) return deactivateResult;", body)
+        self.assertLess(body.index("if (!deactivateResult.success)"),
+                        body.index("m_extensions.erase(it)"))
+
+    def test_deactivate_js_exception_is_reported(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("PatchResult JSExtensionHost::deactivateExtension(")
+        end = source.index("PatchResult JSExtensionHost::unloadExtension(", start)
+        body = source[start:end]
+        self.assertIn("sizeof(deactivateScript) - 1", body)
+        self.assertIn("JS_IsException(result)", body)
+        self.assertIn('return PatchResult::error("Extension deactivate callback failed")', body)
+
 if __name__ == "__main__":
     unittest.main()
