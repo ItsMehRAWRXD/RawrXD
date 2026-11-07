@@ -59,9 +59,13 @@ All mutating operations require an explicit \`--approve-mutations\` decision
 from the caller. **Do not** infer user approval from the model's own requested
 tool arguments, and do not silently add this flag in an agent bridge. Paths
 are normalized and checked against the caller-supplied workspace. Commands
-are invoked via \`subprocess.run(argv)\`, never through a shell. Every result
-is built in a private staging directory and atomically published only after
-verification, preventing stale output from falsely passing.
+use an argument-vector-only subprocess runner (never a shell), with concurrent
+stdout/stderr pipes, 32 KiB retained tails per stream, a 16 MiB per-stream
+output limit, per-command deadlines, and process-tree termination on timeout.
+On Windows the descendant-kill path uses `taskkill /T` and needs native CI
+verification; the Linux process-group test passes. Every output is built in a
+private staging directory and atomically published only after verification,
+preventing stale output from falsely passing.
 
 The adapter is not a sandbox against malicious source code, malicious CMake
 scripts, or races in a concurrently writable workspace: only build trusted
@@ -72,12 +76,13 @@ model is required.
 
 \`\`\`sh
 python -m unittest discover -s tools/tests -p test_native_toolchain.py -v
+python -m unittest discover -s tools/tests -p test_process_runner.py -v
 cmake -S src/toolchain/linker -B build/linker -G Ninja
 cmake --build build/linker --parallel
 ctest --test-dir build/linker --output-on-failure -V
 \`\`\`
 
-The first command runs the adapter acceptance suite. The last three operate
+The first two commands run the adapter and process runner acceptance suites. The last three operate
 on **RawrXD's separate native PE/COFF linker** and test real COFF-to-PE
 generation and negative cases. Do not substitute success from the external
 \`lld-link\` adapter for certification of \`rawrxd_link\`.
@@ -85,7 +90,7 @@ generation and negative cases. Do not substitute success from the external
 The production native CMake graph exposes \`RawrXD-PELinker\`,
 \`RawrXD-COFFCheck\`, and \`RawrXD-NativeToolchain-Acceptance\` through
 \`~dev/rawrxd/cmake/NativeToolchain.fragment.cmake\`. It installs
-\`rawrxd_link\`, \`rawrxd_check\`, and the Python adapter.
+\`rawrxd_link\`, \`rawrxd_check\`, and the Python adapter with its sibling `rawrxd_process_runner.py` module.
 
 **OPEN:** clean MSVC build, RawrXD native-linker positive acceptance,
 third-party ABI/CRT compatibility, full IDE menu/agent tool registration,
