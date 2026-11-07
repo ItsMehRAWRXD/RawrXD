@@ -108,6 +108,28 @@ class MockTransportTests(unittest.TestCase):
         self.assertTrue(finished)
         self.assertTrue(done)
 
+    def test_delayed_a_fast_b_transport_order(self):
+        # This reproduces the transport ordering needed by T05; it does NOT
+        # certify that the IDE rejects stale A or cancels its own requests.
+        from concurrent.futures import ThreadPoolExecutor
+        import time
+        payload = {"model": MODEL, "messages": [{"role": "user", "content": "race"}]}
+        def timed_request(headers):
+            start = time.monotonic()
+            code, _, body = self.request("POST", "/v1/chat/completions",
+                                         payload, extra_headers=headers)
+            return code, json.loads(body), time.monotonic() - start
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            slow = pool.submit(timed_request, {"X-RawrXD-Test-Delay": "slow-A"})
+            time.sleep(0.05)
+            fast = pool.submit(timed_request, {})
+            b = fast.result(timeout=3)
+            self.assertFalse(slow.done(), "slow A completed before fast B")
+            a = slow.result(timeout=3)
+        for result in (a, b):
+            self.assertEqual(result[0], 200)
+            self.assertEqual(result[1]["choices"][0]["message"]["content"], "MOCK_RESPONSE_OK")
+
     def test_wrong_model(self):
         code, _, _ = self.request("POST", "/v1/chat/completions", {"model": "not-mock", "messages": []})
         self.assertEqual(code, 400)
