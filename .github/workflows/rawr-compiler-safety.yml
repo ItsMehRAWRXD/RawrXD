@@ -1,0 +1,32 @@
+name: RawrCompiler safety smoke
+on:
+  push:
+    paths:
+      - 'tests/rawr_compiler_safety_smoke.cpp'
+      - '~dev/rawrxd/src/reverse_engineering/RawrCompiler.hpp'
+      - '.github/workflows/rawr-compiler-safety.yml'
+  pull_request:
+    paths:
+      - 'tests/rawr_compiler_safety_smoke.cpp'
+      - '~dev/rawrxd/src/reverse_engineering/RawrCompiler.hpp'
+      - '.github/workflows/rawr-compiler-safety.yml'
+  workflow_dispatch:
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production compiler header and execute fail-closed gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          c++ -std=c++17 -O1 -Wall -Wextra -pedantic -pthread tests/rawr_compiler_safety_smoke.cpp -o rawr_compiler_safety_smoke
+          ./rawr_compiler_safety_smoke | tee rawr-compiler-safety-results.txt
+          grep -Fx 'RESULT 10/10 checks; PASS' rawr-compiler-safety-results.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rawr-compiler-safety-results
+          path: rawr-compiler-safety-results.txt
+          if-no-files-found: warn
