@@ -1,0 +1,43 @@
+name: Native compiler runner acceptance
+on:
+  pull_request:
+    paths:
+      - 'tools/rawrxd_msvc_runner.cpp'
+      - '.github/workflows/native-compiler-runner.yml'
+  workflow_dispatch:
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile runner and real C/C++ object-link-execute fixtures
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force runner-fixture | Out-Null
+          cl /nologo /std:c++17 /EHsc /W4 /WX tools/rawrxd_msvc_runner.cpp /Fe:runner-fixture/runner.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Runner compile failed' }
+          Set-Content runner-fixture/c_part.c 'int c_answer(void) { return 40; }'
+          Set-Content runner-fixture/cpp_part.cpp 'extern "C" int c_answer(void); int main() { return c_answer() == 40 ? 0 : 9; }'
+          & runner-fixture/runner.exe exec cl.exe /nologo /c /TC runner-fixture/c_part.c /Fo:runner-fixture/c_part.obj
+          if ($LASTEXITCODE -ne 0) { throw 'C object compilation failed' }
+          & runner-fixture/runner.exe exec cl.exe /nologo /c /TP runner-fixture/cpp_part.cpp /Fo:runner-fixture/cpp_part.obj
+          if ($LASTEXITCODE -ne 0) { throw 'C++ object compilation failed' }
+          & runner-fixture/runner.exe exec link.exe /nologo /OUT:runner-fixture/fixture.exe runner-fixture/c_part.obj runner-fixture/cpp_part.obj
+          if ($LASTEXITCODE -ne 0) { throw 'Object linking failed' }
+          & runner-fixture/runner.exe exec runner-fixture/fixture.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Linked executable failed' }
+      - name: Verify concurrent stdout/stderr, nonzero status and enforced timeout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & runner-fixture/runner.exe exec powershell.exe -NoProfile -Command '[Console]::Out.WriteLine("OUT_OK"); [Console]::Error.WriteLine("ERR_OK"); exit 7' 1> runner-fixture/out.txt 2> runner-fixture/err.txt
+          if ($LASTEXITCODE -ne 7) { throw 'Child exit code was not propagated' }
+          if (-not (Select-String -Path runner-fixture/out.txt -Pattern 'OUT_OK' -Quiet)) { throw 'stdout missing' }
+          if (-not (Select-String -Path runner-fixture/err.txt -Pattern 'ERR_OK' -Quiet)) { throw 'stderr missing' }
+          & runner-fixture/runner.exe --timeout-ms 500 exec powershell.exe -NoProfile -Command 'Start-Sleep -Seconds 15'
+          if ($LASTEXITCODE -ne 124) { throw 'Timeout was not enforced' }
+          & runner-fixture/runner.exe --timeout-ms invalid exec cmd.exe
+          if ($LASTEXITCODE -ne 2) { throw 'Invalid timeout was not rejected' }
