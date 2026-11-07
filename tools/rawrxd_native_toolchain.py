@@ -243,8 +243,15 @@ def run(args):
         return 4, result
 
 
+class JsonArgParser(argparse.ArgumentParser):
+    def error(self, message):
+        print(json.dumps({"ok": False, "operation": "parse", "format": None,
+                          "commands": [], "error": message, "code": 2}, sort_keys=True))
+        self.exit(2)
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = JsonArgParser(description=__doc__)
     parser.add_argument("operation", choices=("compile", "link", "build", "project", "verify"))
     parser.add_argument("--workspace", required=True)
     parser.add_argument("--source", action="append", default=[])
