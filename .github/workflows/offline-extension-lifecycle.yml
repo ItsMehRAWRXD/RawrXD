@@ -7,6 +7,8 @@ on:
       - "tools/rawrxd_extensions_cli.cpp"
       - "tests/test_offline_extensions_cli.py"
       - "tests/offline_extension_build/CMakeLists.txt"
+      - "tests/cancel_token_smoke.cpp"
+      - "~dev/rawrxd/src/generation/module2_cancel.h"
       - "tests/test_ide_extension_integration_contract.py"
       - "~dev/rawrxd/src/core/js_extension_host.cpp"
       - "~dev/rawrxd/CMakeLists.txt"
@@ -19,6 +21,8 @@ on:
       - "tools/rawrxd_extensions_cli.cpp"
       - "tests/test_offline_extensions_cli.py"
       - "tests/offline_extension_build/CMakeLists.txt"
+      - "tests/cancel_token_smoke.cpp"
+      - "~dev/rawrxd/src/generation/module2_cancel.h"
       - "tests/test_ide_extension_integration_contract.py"
       - "~dev/rawrxd/src/core/js_extension_host.cpp"
       - "~dev/rawrxd/CMakeLists.txt"
@@ -46,6 +50,10 @@ jobs:
         run: |
           clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tools/rawrxd_extensions_cli.cpp -o .build/offline-cli-sanitized
           RAWRXD_EXTENSIONS_BIN="$PWD/.build/offline-cli-sanitized" ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Execute AddressSanitizer cancellation concurrency stress
+        run: |
+          clang++ -std=c++14 -Wall -Wextra -Wpedantic -Werror -pthread -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/cancel_token_smoke.cpp -o .build/cancel-token-sanitized
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/cancel-token-sanitized
       - name: Verify source integration contracts without claiming runtime certification
         run: python3 -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
 
