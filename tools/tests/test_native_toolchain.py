@@ -9,6 +9,9 @@ import tempfile
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "rawrxd_native_toolchain.py"
+PE_AVAILABLE = bool((shutil.which("clang-cl") or shutil.which("cl")) and
+                    (shutil.which("lld-link") or shutil.which("link")))
+HOST_AVAILABLE = sys.platform.startswith("linux") and bool(shutil.which("clang") or shutil.which("gcc"))
 
 
 class NativeToolchainAcceptance(unittest.TestCase):
@@ -28,7 +31,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(data["ok"], ok, data)
         return data
 
-    @unittest.skipUnless(shutil.which("clang-cl") and shutil.which("lld-link"), "PE toolchain unavailable")
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
     def test_01_compile_link_pe(self):
         a = self.invoke("compile", "--format", "pe", "--source", "a.c", "--output", "a.obj", "--approve-mutations")
         b = self.invoke("compile", "--format", "pe", "--source", "b.c", "--output", "b.obj", "--approve-mutations")
@@ -39,13 +42,14 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(exe["type"], "AMD64-PE32+")
         self.assertEqual(self.invoke("verify", "--format", "pe", "--output", "linked.exe")["sha256"], exe["sha256"])
 
-    @unittest.skipUnless(shutil.which("clang-cl") and shutil.which("lld-link"), "PE toolchain unavailable")
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
     def test_02_build_multi_file_pe(self):
         artifact = self.invoke("build", "--source", "a.c", "--source", "b.c", "--format", "pe",
                                "--output", "app.exe", "--approve-mutations")
         self.assertEqual(len(artifact["commands"]), 3)
         self.assertTrue((self.root / "app.exe").read_bytes().startswith(b"MZ"))
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_03_host_build_and_execute(self):
         result = self.invoke("build", "--source", "a.c", "--source", "b.c", "--format", "host",
                              "--output", "app", "--approve-mutations")
@@ -78,6 +82,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
                         "--compiler", "/usr/bin/python3", "--approve-mutations", ok=False)
         self.assertEqual(d["code"], 3)
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_09_no_stale_success_on_link_failure(self):
         old = self.root / "old"
         old.write_bytes(b"PREEXISTING")
@@ -86,6 +91,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(d["code"], 4)
         self.assertEqual(old.read_bytes(), b"PREEXISTING")
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_10_no_stale_success_on_compile_failure(self):
         (self.root / "bad.c").write_text("int invalid( {\n")
         old = self.root / "a.o"
@@ -122,6 +128,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.invoke("compile", "--source", "external.c", "--format", "host", "--output", "x.o",
                     "--approve-mutations", ok=False)
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_16_argv_no_shell_injection(self):
         hacked = self.root / "HACKED"
         source = "foo;touch HACKED.c"
@@ -131,6 +138,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertTrue(d["ok"])
         self.assertFalse(hacked.exists())
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_17_project_cmake_build(self):
         if not shutil.which("cmake"):
             self.skipTest("CMake unavailable")
@@ -141,6 +149,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(p["type"], "x86_64-ELF")
         self.assertEqual(subprocess.run([str(self.root / "built")]).returncode, 42)
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_18_project_rejects_stale_missing_artifact(self):
         (self.root / "CMakeLists.txt").write_text("cmake_minimum_required(VERSION 3.16)\nproject(rawrxd_smoke C)\nadd_executable(smoke b.c a.c)\n")
         (self.root / "existing").write_bytes(b"unchanged")
@@ -150,12 +159,13 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(d["code"], 6)  # stale or missing linked artifacts never count as success
         self.assertEqual((self.root / "existing").read_bytes(), b"unchanged")
 
-    @unittest.skipUnless(shutil.which("lld-link") and shutil.which("clang-cl"), "PE toolchain unavailable")
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
     def test_19_unresolved_pe_symbol_fails_closed(self):
         self.invoke("build", "--source", "b.c", "--format", "pe", "--output", "bad.exe",
                     "--approve-mutations", ok=False)
         self.assertFalse((self.root / "bad.exe").exists())
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_20_timeout_is_real_failure(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
@@ -165,6 +175,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
                         "--compiler", str(fake), "--timeout", "1", "--approve-mutations", ok=False)
         self.assertIn("timeout", d["error"].lower())
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_21_fake_compiler_success_without_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
@@ -173,6 +184,7 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.invoke("compile", "--source", "a.c", "--format", "host", "--output", "noobj.o",
                     "--compiler", str(fake), "--approve-mutations", ok=False)
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
