@@ -61,6 +61,29 @@ int wmain(int argc, wchar_t** argv) {
         require(execute.stdout_text.find("PIPELINE_OK") != std::string::npos,
                 "linked executable output mismatch");
         std::cout << "PASS: C++ -> OBJ -> LINK -> EXE -> stdout\n";
+        // Verify the C compiler frontend and linker independently of C++.
+        auto c_source = temp / L"hello c.c";
+        auto c_object = temp / L"hello c.obj";
+        auto c_binary = temp / L"hello c.exe";
+        {
+            std::ofstream out(c_source);
+            out << "#include <stdio.h>\\nint main(void) { puts(\\\"C_PIPELINE_OK\\\"); return 0; }\\n";
+        }
+        auto c_compile = run_process(compiler, {L"/nologo", L"/TC", L"/c",
+            c_source.wstring(), L"/Fo" + c_object.wstring()}, 60000, temp.wstring());
+        require(c_compile.started && !c_compile.timed_out && c_compile.exit_code == 0,
+                "real C compile failed");
+        require(fs::is_regular_file(c_object), "C compiler did not produce object");
+        auto c_link = run_process(linker, {L"/nologo", c_object.wstring(),
+            L"/OUT:" + c_binary.wstring()}, 60000, temp.wstring());
+        require(c_link.started && !c_link.timed_out && c_link.exit_code == 0,
+                "real C object link failed");
+        auto c_execute = run_process(c_binary.wstring(), {}, 10000);
+        require(c_execute.started && !c_execute.timed_out && c_execute.exit_code == 0 &&
+                c_execute.stdout_text.find("C_PIPELINE_OK") != std::string::npos,
+                "C executable output mismatch");
+        std::cout << "PASS: C -> OBJ -> LINK -> EXE -> stdout\\n";
+
 
         auto missing = run_process(L"Z:\\rawrxd-nonexistent-compiler.exe", {}, 1000);
         require(!missing.started && missing.exit_code != 0,
