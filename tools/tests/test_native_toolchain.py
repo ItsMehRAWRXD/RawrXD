@@ -191,6 +191,30 @@ class NativeToolchainAcceptance(unittest.TestCase):
         self.assertEqual(d["code"], 2)
         self.assertEqual(d["operation"], "parse")
 
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
+    def test_24_compile_and_link_cpp_pe(self):
+        (self.root / "cpp_a.cpp").write_text('extern "C" int answer(){return 42;}\n')
+        (self.root / "cpp_b.cpp").write_text('extern "C" int answer(); int main(){return answer();}\n')
+        result = self.invoke("build", "--source", "cpp_a.cpp", "--source", "cpp_b.cpp",
+                             "--format", "pe", "--output", "cpp.exe", "--approve-mutations")
+        self.assertEqual(result["type"], "AMD64-PE32+")
+
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_25_compile_and_execute_cpp_host(self):
+        (self.root / "cpp_a.cpp").write_text('extern "C" int answer(){return 42;}\n')
+        (self.root / "cpp_b.cpp").write_text('extern "C" int answer(); int main(){return answer();}\n')
+        result = self.invoke("build", "--source", "cpp_a.cpp", "--source", "cpp_b.cpp",
+                             "--format", "host", "--output", "cpp", "--approve-mutations")
+        self.assertEqual(result["type"], "x86_64-ELF")
+        self.assertEqual(subprocess.run([str(self.root / "cpp")]).returncode, 42)
+
+    @unittest.skipUnless(PE_AVAILABLE, "PE toolchain unavailable")
+    def test_26_missing_pe_entry_never_links(self):
+        self.invoke("build", "--source", "a.c", "--source", "b.c", "--format", "pe",
+                    "--entry", "missingEntry", "--output", "wrongentry.exe",
+                    "--approve-mutations", ok=False)
+        self.assertFalse((self.root / "wrongentry.exe").exists())
+
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
