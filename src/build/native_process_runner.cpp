@@ -105,7 +105,9 @@ ProcessResult RunProcess(const std::vector<std::wstring>& argv,
     startup.dwFlags = STARTF_USESTDHANDLES;
     startup.hStdOutput = out_write.h;
     startup.hStdError = err_write.h;
-    startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    // A compiler must not inherit an interactive console input handle.
+    // The standard input handle is intentionally null for unattended builds.
+    startup.hStdInput = nullptr;
 
     PROCESS_INFORMATION pi{};
     const wchar_t* cwd = working_directory.empty() ? nullptr : working_directory.c_str();
