@@ -1,6 +1,6 @@
 // Compile with MSVC developer environment: cl /std:c++17 /EHsc /W4 this_file.cpp
 // Run from any directory. Uses a temp directory and the real MSVC cl/link tools.
-#include "../src/core/windows_subprocess_runner.h"
+#include "../src/core/windows_compiler_pipeline.h"
 #include <windows.h>
 #include <filesystem>
 #include <fstream>
@@ -30,11 +30,15 @@ int wmain() {
             std::ofstream code(src);
             code << "#include <iostream>\nint main(){std::cout<<\"RAWRXD_PIPELINE_OK\\n\";return 0;}\n";
         }
-        check(run({L"cl.exe", L"/nologo", L"/EHsc", L"/c", src.wstring(), L"/Fo" + obj.wstring()}, dir.wstring(), 60000), "compile");
+        auto compileStage = rawrxd::build::compileObject(src, obj, dir, 60000);
+        check(compileStage.process, "compile");
+        require(compileStage.success(), "compile stage did not produce a fresh object");
         require(fs::exists(obj), "compiler did not create object");
-        check(run({L"link.exe", L"/nologo", obj.wstring(), L"/OUT:" + exe.wstring()}, dir.wstring(), 60000), "link");
+        auto linkStage = rawrxd::build::linkExecutable({obj}, exe, dir, 60000);
+        check(linkStage.process, "link");
+        require(linkStage.success(), "link stage did not produce a fresh executable");
         require(fs::exists(exe), "linker did not create executable");
-        auto execution = run({exe.wstring()}, dir.wstring(), 10000);
+        auto execution = rawrxd::build::runExecutable(exe, dir, 10000);
         check(execution, "execute");
         require(execution.stdoutText.find("RAWRXD_PIPELINE_OK") != std::string::npos, "executable output mismatch");
         // A compiler error must propagate as a nonzero process exit.
