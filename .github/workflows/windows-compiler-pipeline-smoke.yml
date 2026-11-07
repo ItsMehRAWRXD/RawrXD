@@ -1,0 +1,26 @@
+name: Windows compiler pipeline smoke
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/windows_subprocess_runner.h'
+      - '~dev/rawrxd/tests/windows_compiler_pipeline_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline-smoke.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/windows_subprocess_runner.h'
+      - '~dev/rawrxd/tests/windows_compiler_pipeline_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline-smoke.yml'
+  workflow_dispatch:
+jobs:
+  msvc-pipeline:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile test harness
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 /Fe:compiler_smoke.exe "~dev/rawrxd/tests/windows_compiler_pipeline_smoke.cpp"
+      - name: Run real compile object link execute and timeout gates
+        shell: cmd
+        run: compiler_smoke.exe
