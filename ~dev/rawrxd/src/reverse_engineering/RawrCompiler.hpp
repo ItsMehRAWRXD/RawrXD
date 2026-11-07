@@ -293,6 +293,7 @@ private:
             if (!PeekNamedPipe(readPipe, nullptr, 0, nullptr, &available, nullptr)) {
                 // Broken pipe is expected after child closes its last writer.
                 if (GetLastError() != ERROR_BROKEN_PIPE) failed = true;
+                else exited = (WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0);
                 break;
             }
             while (available) {
@@ -337,7 +338,7 @@ private:
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
         if (timedOut) stderrResult += "\nRawrCompiler: process timed out";
-        return !failed && !timedOut && gotExit && exited;
+        return !failed && !timedOut && gotExit && exited && exitCode != STILL_ACTIVE;
     }
 #endif
 
