@@ -5,6 +5,8 @@ on:
       - 'tests/headless/compiler_link_gate/**'
       - '~dev/rawrxd/cmake/CompilerChecks.cmake'
       - '.github/workflows/compiler-link-gate.yml'
+      - 'tests/headless/compiler_link_gate/process_runner.py'
+      - 'tests/headless/compiler_link_gate/test_process_runner.py'
   pull_request:
     paths:
       - 'tests/headless/compiler_link_gate/**'
@@ -27,6 +29,8 @@ jobs:
         run: cmake --build build/compiler-link-gate --verbose
       - name: Execute compiled binary
         run: ctest --test-dir build/compiler-link-gate --output-on-failure
+      - name: Execute subprocess and native pipeline contracts
+        run: python3 -m unittest discover -s tests/headless/compiler_link_gate -p "test_*.py" -v
   windows:
     runs-on: windows-latest
     steps:
@@ -38,3 +42,5 @@ jobs:
         run: cmake --build build/compiler-link-gate --verbose
       - name: Execute compiled binary
         run: ctest --test-dir build/compiler-link-gate --output-on-failure
+      - name: Execute Windows subprocess and MSVC pipeline contracts
+        run: python -m unittest discover -s tests/headless/compiler_link_gate -p "test_*.py" -v
