@@ -1,0 +1,41 @@
+name: RawrCompiler Windows end-to-end
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/reverse_engineering/RawrCompiler.hpp'
+      - 'tests/rawr_compiler_windows_e2e.cpp'
+      - '.github/workflows/rawr-compiler-windows-e2e.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/reverse_engineering/RawrCompiler.hpp'
+      - 'tests/rawr_compiler_windows_e2e.cpp'
+      - '.github/workflows/rawr-compiler-windows-e2e.yml'
+  workflow_dispatch:
+jobs:
+  compile-link-run:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MinGW-w64 compiler
+        run: choco install mingw --no-progress -y
+      - name: Build real compiler acceptance executable
+        run: |
+          $ErrorActionPreference = 'Stop'
+          g++ --version
+          g++ -std=c++17 -O1 -Wall -Wextra -pedantic tests/rawr_compiler_windows_e2e.cpp -o rawr_compiler_windows_e2e.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Execute C and C++ source to object to link to executable gates
+        run: |
+          .\rawr_compiler_windows_e2e.exe | Tee-Object -FilePath rawr-compiler-windows-e2e-results.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Path rawr-compiler-windows-e2e-results.txt -Pattern '^RESULT 13/13 checks; PASS$' -Quiet)) { exit 1 }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rawr-compiler-windows-e2e-results
+          path: rawr-compiler-windows-e2e-results.txt
+          if-no-files-found: warn
