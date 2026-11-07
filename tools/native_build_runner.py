@@ -5,7 +5,7 @@ Examples (from a VS Developer Command Prompt):
   python tools/native_build_runner.py --timeout 60 -- link /nologo hello.obj /OUT:hello.exe
 
 Outputs one JSON receipt on stdout. Child stdout/stderr are captured concurrently
-by subprocess.communicate(), avoiding pipe-buffer deadlocks. This is a CLI adapter;
+by independent draining threads with per-stream caps, avoiding pipe-buffer deadlocks. This is a CLI adapter;
 IDE wiring is a separate acceptance gate.
 """
 import argparse
@@ -70,6 +70,8 @@ def execute(argv, timeout, cwd=None, max_output_bytes=4 * 1024 * 1024):
             proc.wait()
         for reader in readers:
             reader.join(timeout=5)
+        if any(reader.is_alive() for reader in readers):
+            receipt["launch_error"] = "Output pipe remained open after child exit; possible inherited descendant handle"
         receipt["exit_code"] = proc.returncode
         receipt["stdout"] = buffers["stdout"].decode("utf-8", errors="replace")
         receipt["stderr"] = buffers["stderr"].decode("utf-8", errors="replace")
