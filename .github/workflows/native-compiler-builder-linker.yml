@@ -49,8 +49,8 @@ jobs:
       - name: Verify MSVC compiler and linker tools
         shell: cmd
         run: |
-          cl
-          link
+          where cl
+          where link
           python --version
           cmake --version
       - name: Execute real Windows x64 compile-link acceptance
