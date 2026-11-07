@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - 'src/agentic_executor.cpp'
+      - 'tools/rawrxd_msvc_runner.cpp'
       - 'tests/native_compiler_pipeline/**'
       - '.github/workflows/native-compiler-pipeline.yml'
   workflow_dispatch:
@@ -79,3 +80,37 @@ jobs:
           & $runner 10000 -- $cppexe
           if ($LASTEXITCODE -ne 17) { throw 'Runner C++ execute failed' }
           Write-Host 'RUNNER_C_AND_CPP_PIPELINES PASS'
+
+      - name: Runner concurrent streams and timeout acceptance
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $runner = Join-Path $dir 'runner.exe'
+          $stress = Join-Path $dir 'stress.cpp'
+          $stressExe = Join-Path $dir 'stress.exe'
+          @'
+          #include <cstdio>
+          #include <thread>
+          #include <chrono>
+          int main(int argc, char**) {
+              if (argc > 1) { std::this_thread::sleep_for(std::chrono::seconds(10)); return 0; }
+              for (int i=0;i<4096;++i) {
+                  std::printf("STDOUT-%04d-abcdefghijklmnopqrstuvwxyz\\n", i);
+                  std::fprintf(stderr,"STDERR-%04d-abcdefghijklmnopqrstuvwxyz\\n", i);
+              }
+              std::fflush(stdout); std::fflush(stderr);
+              return 0;
+          }
+          '@ | Set-Content -Encoding ascii $stress
+          & cl /nologo /EHsc /std:c++17 $stress "/Fe:$stressExe"
+          if ($LASTEXITCODE -ne 0) { throw 'Stress fixture compile failed' }
+          $out = Join-Path $dir 'stdout.txt'
+          $err = Join-Path $dir 'stderr.txt'
+          & $runner 20000 -- $stressExe 1> $out 2> $err
+          if ($LASTEXITCODE -ne 0) { throw 'Concurrent capture runner failed' }
+          if ((Get-Content $out | Measure-Object -Line).Lines -ne 4096) { throw 'stdout truncated' }
+          if ((Get-Content $err | Measure-Object -Line).Lines -ne 4096) { throw 'stderr truncated' }
+          & $runner 250 -- $stressExe sleep
+          if ($LASTEXITCODE -ne 124) { throw "Timeout gate failed: $LASTEXITCODE" }
+          Write-Host 'RUNNER_CONCURRENT_CAPTURE_TIMEOUT PASS'
