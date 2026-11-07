@@ -31,7 +31,7 @@ static int run(const std::vector<std::string>& args) {
 int main(int argc,char** argv) {
     if(argc<5){std::cerr<<"usage: rawrxd-native-build <compiler> <source.cpp> <output> <build|run> [compiler flags...]\\n";return 2;}
     const std::string compiler=argv[1],source=argv[2],output=argv[3],mode=argv[4];
-    if(compiler.empty()||source.empty()||output.empty()||(mode!="build"&&mode!="run"))return 2;
+    if(compiler.empty()||source.empty()||output.empty()||(mode!="build"&&mode!="run"&&mode!="object"&&mode!="link"))return 2;
     std::error_code ec;
     if(!fs::is_regular_file(fs::u8path(source),ec)){std::cerr<<"source file missing\\n";return 3;}
     std::vector<std::string> args{compiler};
@@ -39,9 +39,15 @@ int main(int argc,char** argv) {
     const auto compilerName=fs::path(compiler).filename().string();
     const bool msvc=(compilerName=="cl"||compilerName=="cl.exe"||compilerName=="CL.EXE");
     if(msvc) {
-        args.push_back("/nologo");args.push_back("/EHsc");args.push_back("/std:c++17");
-        args.push_back(source);args.push_back("/Fe:"+output);
+        args.push_back("/nologo");
+        if(mode=="object") {
+            args.push_back("/c");args.push_back(source);args.push_back("/Fo:"+output);
+        } else {
+            if(mode!="link") {args.push_back("/EHsc");args.push_back("/std:c++17");}
+            args.push_back(source);args.push_back("/Fe:"+output);
+        }
     } else {
+        if(mode=="object")args.push_back("-c");
         args.push_back(source);args.push_back("-o");args.push_back(output);
     }
     // Never accept a stale executable from a previous successful build.
