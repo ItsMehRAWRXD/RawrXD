@@ -17,7 +17,7 @@ class NativeBuildBridgeTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.source = self.root / "main.cpp"
         self.output = self.root / ("hello.exe" if __import__("os").name == "nt" else "hello")
-        self.compiler = next((x for x in ("c++", "g++", "clang++", "cl") if shutil.which(x)), None)
+        self.compiler = next((x for x in (("cl", "clang++", "g++", "c++") if __import__("os").name == "nt" else ("c++", "g++", "clang++")) if shutil.which(x)), None)
 
     def test_missing_source_fails_closed(self):
         with self.assertRaises(FileNotFoundError):
