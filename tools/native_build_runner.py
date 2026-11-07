@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import subprocess
+import signal
 import sys
 import time
 
@@ -25,17 +26,26 @@ def execute(argv, timeout, cwd=None):
     try:
         proc = subprocess.Popen(argv, cwd=cwd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
-                                creationflags=flags)
+                                creationflags=flags, start_new_session=os.name != "nt")
         try:
             out, err = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             receipt["timed_out"] = True
             if os.name == "nt":
                 # Kill descendants as well as the immediate compiler/linker.
-                subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                               timeout=10, check=False)
-            proc.kill() if proc.poll() is None else None
+                try:
+                    subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   timeout=5, check=False)
+                except (OSError, subprocess.TimeoutExpired):
+                    pass
+            if os.name != "nt":
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            if proc.poll() is None:
+                proc.kill()
             out, err = proc.communicate()
         receipt["exit_code"] = proc.returncode
         receipt["stdout"] = out.decode("utf-8", errors="replace")
