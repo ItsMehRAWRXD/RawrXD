@@ -36,8 +36,9 @@ int wmain() {
         std::cerr << "EXEC FAILED: " << execute.error << "\n" << execute.stdoutText << execute.stderrText;
         return 3;
     }
+    const std::wstring cl = L"C:\\Windows\\System32\\cmd.exe";
     // Concurrent stdout/stderr pressure exceeds pipe buffers; must not deadlock.
-    auto pressure = Run(cl, {L"/d", L"/c", L"for /L %i in (1,1,2000) do @echo stdout%i & @echo stderr%i 1>&2"},
+    auto pressure = Run(cl, {L"/d", L"/s", L"/c", L"for /L %i in (1,1,2000) do @echo stdout%i & @echo stderr%i 1>&2"},
                         root.wstring(), 30000);
     if (!pressure.launched || pressure.timedOut || pressure.exitCode ||
         pressure.stdoutText.find("stdout2000") == std::string::npos ||
