@@ -76,7 +76,7 @@ def run_command(argv, cwd, timeout):
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             shell=False, bufsize=0,
                             start_new_session=(os.name != "nt"),
-                            creationflags=(subprocess.CREATE_SUSPENDED if os.name == "nt" else 0))
+                            creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0))
     job = None
     chunks = {"stdout": [], "stderr": []}
     def drain(stream, name):
@@ -92,17 +92,7 @@ def run_command(argv, cwd, timeout):
     timed_out = False
     try:
         if os.name == "nt":
-            try:
-                job = _job_for_process(proc)
-            finally:
-                import ctypes
-                k = ctypes.WinDLL("kernel32", use_last_error=True)
-                k.ResumeThread.argtypes = [ctypes.c_void_p]
-                k.ResumeThread.restype = ctypes.c_ulong
-                # Popen exposes the primary thread handle on Windows.
-                if getattr(proc, "_thread", None) is None:
-                    raise RuntimeError("suspended child thread handle unavailable")
-                k.ResumeThread(int(proc._thread))
+            job = _job_for_process(proc)
         for name, stream in (("stdout", proc.stdout), ("stderr", proc.stderr)):
             t = threading.Thread(target=drain, args=(stream, name), daemon=True)
             t.start()
