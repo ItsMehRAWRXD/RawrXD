@@ -35,7 +35,6 @@ class ProcessRunnerTests(unittest.TestCase):
         self.assertTrue(result.timed_out)
         self.assertEqual(result.returncode, 124)
 
-    @unittest.skipIf(os.name == 'nt', 'Windows descendant cleanup needs runner execution on MSVC CI')
     def test_04_timeout_kills_descendant_tree(self):
         with tempfile.TemporaryDirectory() as d:
             marker = Path(d) / 'orphan-marker'
