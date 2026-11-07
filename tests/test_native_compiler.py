@@ -58,6 +58,41 @@ class NativeCompilerTests(unittest.TestCase):
             self.assertFalse(result["ok"])
             self.assertFalse(Path(root, "test").exists())
 
+    @unittest.skipUnless(shutil.which("g++"), "g++ unavailable")
+    def test_two_translation_units_compile_link_execute(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as root:
+            Path(root, "main.cpp").write_text('extern int answer(); int main(){return answer()==42?0:1;}')
+            Path(root, "answer.cpp").write_text('int answer(){return 42;}')
+            code, result = self.invoke("--compiler", "g++",
+                                       "--source", "main.cpp", "--source", "answer.cpp",
+                                       "--output", "test", "--cwd", root)
+            self.assertEqual(code, 0, result)
+            self.assertEqual([x["phase"] for x in result["steps"]], ["compile", "compile", "link"])
+            self.assertEqual(subprocess.run([str(Path(root, "test"))], check=False).returncode, 0)
+
+    def test_timeout_kills_child_and_reports_failure(self):
+        import subprocess
+        import time
+        with tempfile.TemporaryDirectory() as root:
+            code = 'import time; print("started", flush=True); time.sleep(60)'
+            result = builder.run_process([sys.executable, "-c", code], Path(root), 0.2)
+            self.assertFalse(result["ok"])
+            self.assertTrue(result["timed_out"])
+            self.assertIn("started", result["stdout"])
+
+    @unittest.skipUnless(shutil.which("gcc"), "gcc unavailable")
+    def test_c_pipeline(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as root:
+            Path(root, "main.c").write_text('extern int answer(void); int main(void){return answer()==42?0:1;}')
+            Path(root, "answer.c").write_text('int answer(void){return 42;}')
+            code, result = self.invoke("--compiler", "gcc",
+                                       "--source", "main.c", "--source", "answer.c",
+                                       "--output", "test", "--cwd", root)
+            self.assertEqual(code, 0, result)
+            self.assertEqual(subprocess.run([str(Path(root, "test"))], check=False).returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
