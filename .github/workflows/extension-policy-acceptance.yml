@@ -1,0 +1,36 @@
+name: Extension policy acceptance (model-free)
+on:
+  push:
+    paths:
+      - 'tests/extension_policy_acceptance.cpp'
+      - '~dev/rawrxd/src/core/extension_*_policy.hpp'
+      - '.github/workflows/extension-policy-acceptance.yml'
+  pull_request:
+    paths:
+      - 'tests/extension_policy_acceptance.cpp'
+      - '~dev/rawrxd/src/core/extension_*_policy.hpp'
+      - '.github/workflows/extension-policy-acceptance.yml'
+  workflow_dispatch:
+jobs:
+  policy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and execute (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          c++ -std=c++17 -Wall -Wextra -pedantic -I'~dev/rawrxd/src/core' tests/extension_policy_acceptance.cpp -o extension_policy_acceptance
+          ./extension_policy_acceptance
+      - name: Build and execute (Windows MSVC)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /std:c++17 /EHsc /W4 /I"~dev\rawrxd\src\core" tests\extension_policy_acceptance.cpp /Fe:extension_policy_acceptance.exe
+          extension_policy_acceptance.exe
