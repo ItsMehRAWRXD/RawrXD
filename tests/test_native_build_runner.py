@@ -61,7 +61,7 @@ class RunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="rawrxd c build space ") as tmp:
             root = Path(tmp)
             src, obj, exe = root / "hello.c", root / "hello.obj", root / "hello.exe"
-            src.write_text('#include <stdio.h>\\nint main(void){puts("RAWRXD_C_OK");return 0;}\\n')
+            src.write_text('#include <stdio.h>\nint main(void){puts("RAWRXD_C_OK");return 0;}\n')
             compile_result = execute(["cl", "/nologo", "/TC", "/c", str(src),
                                       "/Fo" + str(obj)], 60, tmp)
             self.assertEqual(compile_result["exit_code"], 0, compile_result)
