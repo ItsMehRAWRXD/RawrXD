@@ -68,7 +68,7 @@ int wmain() {
     const auto invalidSource = root / L"invalid.cpp";
     {
         std::ofstream file(invalidSource);
-        file << "int main( { return 0; }\\n";
+        file << "int main( { return 0; }\n";
     }
     auto badCompile = Run(L"cl.exe", {L"/nologo", L"/c", invalidSource.wstring()},
                           root.wstring(), 30000);
@@ -81,7 +81,7 @@ int wmain() {
     const auto unresolvedObject = root / L"unresolved.obj";
     {
         std::ofstream file(unresolvedSource);
-        file << "extern int absent_symbol(); int main(){return absent_symbol();}\\n";
+        file << "extern int absent_symbol(); int main(){return absent_symbol();}\n";
     }
     auto unresolvedCompile = Run(L"cl.exe", {L"/nologo", L"/c",
                                    L"/Fo" + unresolvedObject.wstring(), unresolvedSource.wstring()},
