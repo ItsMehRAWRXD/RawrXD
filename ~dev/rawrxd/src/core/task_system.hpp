@@ -541,7 +541,7 @@ inline TaskResult TaskRunner::executeTask(const TaskDefinition& task) {
     result.exit_code = exit_code;
     result.status = (timedOut || waitResult == WAIT_FAILED || !gotExitCode)
         ? TaskStatus::Failed : (exit_code == 0 ? TaskStatus::Success : TaskStatus::Failed);
-    if (timedOut) result.output += "\\nProcess timed out and was terminated";
+    if (timedOut) result.output += "\nProcess timed out and was terminated";
     result.end_time = std::chrono::steady_clock::now();
     result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         result.end_time - result.start_time);
