@@ -36,6 +36,30 @@ int wmain() {
     const auto run = runProcess(binary.wstring(), {}, 10000, root.wstring());
     ok &= require(run.launched && !run.timed_out && run.exit_code == 0 &&
                   run.stdout_text.find("RAWRXD_COMPILE_LINK_OK") != std::string::npos, "run compiled executable");
+    // Independently verify the C toolchain, not just C++.
+    const auto c_source = root / "hello_c.c";
+    const auto c_object = root / "hello_c.obj";
+    const auto c_binary = root / "hello_c.exe";
+    {
+        std::ofstream f(c_source);
+        f << "#include <stdio.h>\\nint main(void){puts(\\\"RAWRXD_C_LINK_OK\\\");return 0;}\\n";
+    }
+    const auto c_compile = runProcess(L"cl.exe",
+        {L"/nologo", L"/TC", L"/c", L"/Fo:" + c_object.wstring(), c_source.wstring()},
+        60000, root.wstring());
+    ok &= require(c_compile.launched && !c_compile.timed_out &&
+                  c_compile.exit_code == 0 && fs::exists(c_object), "compile C object");
+    if (!ok) { std::cerr << c_compile.stderr_text << c_compile.stdout_text; return 1; }
+    const auto c_link = runProcess(L"link.exe",
+        {L"/NOLOGO", L"/OUT:" + c_binary.wstring(), c_object.wstring()}, 60000, root.wstring());
+    ok &= require(c_link.launched && !c_link.timed_out &&
+                  c_link.exit_code == 0 && fs::exists(c_binary), "link C executable");
+    if (!ok) { std::cerr << c_link.stderr_text << c_link.stdout_text; return 1; }
+    const auto c_run = runProcess(c_binary.wstring(), {}, 10000, root.wstring());
+    ok &= require(c_run.launched && !c_run.timed_out && c_run.exit_code == 0 &&
+                  c_run.stdout_text.find("RAWRXD_C_LINK_OK") != std::string::npos,
+                  "run C executable");
+    if (!ok) { std::cerr << c_run.stderr_text << c_run.stdout_text; return 1; }
     const auto dual = runProcess(L"cmd.exe", {L"/d",L"/s",L"/c",L"for /L %i in (1,1,3000) do @echo stdout-%i & @echo stderr-%i 1>&2"},30000);
     ok &= require(dual.launched && !dual.timed_out && dual.exit_code == 0 &&
                   dual.stdout_text.find("stdout-3000") != std::string::npos &&
