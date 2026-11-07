@@ -118,6 +118,14 @@ class HeadlessExtensionContract(unittest.TestCase):
         self.assertIn("std::strchr(path, 0x27)", body)
         self.assertIn("Unsupported quote character in VSIX extraction path", body)
 
+    def test_vsix_extraction_rejects_control_characters(self):
+        source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
+        body = body_of(source, "extractZip")
+        self.assertIn("*p < 0x20 || *p == 0x7f", body)
+        self.assertIn("Control character in VSIX extraction path", body)
+        self.assertLess(body.find("Control character in VSIX extraction path"),
+                        body.find("CreateProcessA("))
+
     def test_vsix_extraction_rejects_truncated_command(self):
         source = PRODUCTION_SOURCE.read_text(encoding="utf-8")
         body = body_of(source, "extractZip")
