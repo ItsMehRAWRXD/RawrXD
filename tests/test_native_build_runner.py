@@ -38,6 +38,23 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(r["timed_out"])
         self.assertIsNotNone(r["exit_code"])
 
+    def test_cli_json_receipt_and_exit_codes(self):
+        import json
+        import subprocess
+        runner = Path(__file__).resolve().parents[1] / "tools" / "native_build_runner.py"
+        good = subprocess.run([sys.executable, str(runner), "--timeout", "5",
+                               "--", sys.executable, "-c", "print('RAWRXD_CLI_OK')"],
+                              capture_output=True, text=True, timeout=15)
+        self.assertEqual(good.returncode, 0, good.stderr)
+        receipt = json.loads(good.stdout)
+        self.assertEqual(receipt["stdout"].strip(), "RAWRXD_CLI_OK")
+        self.assertEqual(receipt["exit_code"], 0)
+        bad = subprocess.run([sys.executable, str(runner), "--timeout", "5",
+                              "--", sys.executable, "-c", "import sys;sys.exit(23)"],
+                             capture_output=True, text=True, timeout=15)
+        self.assertEqual(bad.returncode, 1, bad.stderr)
+        self.assertEqual(json.loads(bad.stdout)["exit_code"], 23)
+
     def test_launch_error(self):
         r = execute(["__rawrxd_missing_compiler_12345__"], 5)
         self.assertIsNotNone(r["launch_error"])
