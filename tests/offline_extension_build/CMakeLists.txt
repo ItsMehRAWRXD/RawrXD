@@ -43,3 +43,15 @@ else()
 endif()
 add_test(NAME inference-cancel-no-model COMMAND $<TARGET_FILE:rawrxd-inference-cancel-smoke>)
 set_tests_properties(inference-cancel-no-model PROPERTIES TIMEOUT 30)
+
+# Model-free agent MUTATION AUTHORIZATION gate; on unsupported cryptographic
+# platforms positive authorization fails closed and negative cases still run.
+add_executable(rawrxd-motd-smoke "${RAWRXD_REPO_ROOT}/tests/motd_authorization_smoke.cpp")
+set_target_properties(rawrxd-motd-smoke PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+if(MSVC)
+    target_compile_options(rawrxd-motd-smoke PRIVATE /W4 /WX /EHsc)
+else()
+    target_compile_options(rawrxd-motd-smoke PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_test(NAME motd-authorization-no-model COMMAND $<TARGET_FILE:rawrxd-motd-smoke>)
+set_tests_properties(motd-authorization-no-model PROPERTIES TIMEOUT 30)
