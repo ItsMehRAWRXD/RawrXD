@@ -2137,6 +2137,14 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         return PatchResult::error("Invalid extension publisher, name, or version");
     }
     if (mainEntry.empty()) mainEntry = "./extension.js";
+    // Manifest entry points must be relative to their installed extension root.
+    // Reject absolute and rooted paths before joining; std::filesystem::operator/
+    // otherwise replaces the root for absolute right-hand operands.
+    const std::filesystem::path manifestEntry(mainEntry);
+    if (manifestEntry.is_absolute() || manifestEntry.has_root_name() ||
+        manifestEntry.has_root_directory()) {
+        return PatchResult::error("Absolute extension main entry rejected");
+    }
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
 
@@ -2164,8 +2172,12 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
 
     // An extension manifest must not execute code outside its installation.
     // This also rejects traversal through symlinks and absolute main paths.
-    if (!rawrxd::extensions::entryWithinRoot(
-            std::filesystem::path(extRoot), std::filesystem::path(mainPath))) {
+    std::error_code entryPathError;
+    const auto absoluteRoot = std::filesystem::absolute(std::filesystem::path(extRoot), entryPathError);
+    if (entryPathError) return PatchResult::error("Invalid extension installation root");
+    const auto absoluteEntry = std::filesystem::absolute(std::filesystem::path(mainPath), entryPathError);
+    if (entryPathError) return PatchResult::error("Invalid extension entry path");
+    if (!rawrxd::extensions::entryWithinRoot(absoluteRoot, absoluteEntry)) {
         return PatchResult::error("Extension main entry escapes installation root");
     }
 
