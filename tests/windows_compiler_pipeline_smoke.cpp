@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include <stdexcept>
 #include <string>
 using namespace rawrxd::build;
@@ -19,7 +21,16 @@ static std::wstring env(const wchar_t* name) {
     value.resize(n - 1);
     return value;
 }
-int wmain() {
+int wmain(int argc, wchar_t** argv) {
+    if (argc == 2 && std::wstring(argv[1]) == L"--streams") {
+        std::cout << "STDOUT_OK" << std::endl;
+        std::cerr << "STDERR_OK" << std::endl;
+        return 0;
+    }
+    if (argc == 2 && std::wstring(argv[1]) == L"--sleep") {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        return 0;
+    }
     try {
         auto temp = fs::temp_directory_path() / L"rawrxd compiler runner smoke";
         fs::create_directories(temp);
@@ -56,8 +67,10 @@ int wmain() {
                 "missing compiler was not rejected");
         std::cout << "PASS: missing executable rejected\n";
 
-        auto stdout_stderr = run_process(L"C:\\Windows\\System32\\cmd.exe",
-            {L"/d", L"/s", L"/c", L"echo STDOUT_OK & echo STDERR_OK 1>&2"}, 10000);
+        wchar_t self_path[32768] = {};
+        DWORD self_chars = GetModuleFileNameW(nullptr, self_path, 32768);
+        require(self_chars > 0 && self_chars < 32768, "cannot locate test executable");
+        auto stdout_stderr = run_process(self_path, {L"--streams"}, 10000);
         require(stdout_stderr.started && !stdout_stderr.timed_out &&
                 stdout_stderr.exit_code == 0 &&
                 stdout_stderr.stdout_text.find("STDOUT_OK") != std::string::npos &&
@@ -65,8 +78,7 @@ int wmain() {
                 "concurrent stdout/stderr capture failed");
         std::cout << "PASS: concurrent stdout and stderr\n";
 
-        auto timeout = run_process(L"C:\\Windows\\System32\\ping.exe",
-            {L"-n", L"20", L"127.0.0.1"}, 200);
+        auto timeout = run_process(self_path, {L"--sleep"}, 200);
         require(timeout.started && timeout.timed_out, "timeout enforcement failed");
         std::cout << "PASS: enforced process timeout\n";
         return 0;
