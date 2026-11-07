@@ -2915,6 +2915,12 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     for (const char* path : {zipPath, destDir}) {
         if (std::strchr(path, 0x27) || std::strchr(path, '"'))
             return PatchResult::error("Unsupported quote character in VSIX extraction path");
+        // PowerShell -Command and CreateProcess must never receive embedded
+        // control characters from an untrusted archive or destination path.
+        for (const unsigned char* p = reinterpret_cast<const unsigned char*>(path); *p; ++p) {
+            if (*p < 0x20 || *p == 0x7f)
+                return PatchResult::error("Control character in VSIX extraction path");
+        }
     }
 
     // Report filesystem errors instead of allowing an exception to escape the
