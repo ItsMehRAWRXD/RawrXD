@@ -28,7 +28,7 @@ jobs:
       - name: Configure actual RawrXD CLI
         shell: pwsh
         run: |
-          cmake -S '~dev/rawrxd' -B build-cli-smoke -G 'Visual Studio 17 2022' -A x64 -DRAWR_ENABLE_VULKAN=OFF
+          cmake -S '~dev/rawrxd' -B build-cli-smoke -G 'Visual Studio 17 2022' -A x64 -DRAWR_ENABLE_VULKAN=OFF -DRAWRXD_BUILD_CLI=ON
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build actual CLI
         shell: pwsh
