@@ -38,6 +38,14 @@ jobs:
           cmake --build .build/offline-extensions --parallel
       - name: Execute CTest black-box extension lifecycle acceptance
         run: ctest --test-dir .build/offline-extensions --output-on-failure -V
+      - name: Install and cold-start test redistributable CLI
+        run: |
+          cmake --install .build/offline-extensions --prefix .build/offline-package
+          RAWRXD_EXTENSIONS_BIN="$PWD/.build/offline-package/bin/rawrxd-extensions" python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Test CLI with AddressSanitizer and UndefinedBehaviorSanitizer
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tools/rawrxd_extensions_cli.cpp -o .build/offline-cli-sanitized
+          RAWRXD_EXTENSIONS_BIN="$PWD/.build/offline-cli-sanitized" ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
       - name: Verify source integration contracts without claiming runtime certification
         run: python3 -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
 
@@ -55,6 +63,13 @@ jobs:
       - name: Execute MSVC CTest black-box extension acceptance
         shell: pwsh
         run: ctest --test-dir .build/offline-extensions -C Release --output-on-failure -V
+      - name: Install and cold-start test packaged Windows CLI
+        shell: pwsh
+        run: |
+          $prefix = Join-Path $PWD ".build/offline-package"
+          cmake --install .build/offline-extensions --config Release --prefix $prefix
+          $env:RAWRXD_EXTENSIONS_BIN = Join-Path $prefix "bin/rawrxd-extensions.exe"
+          python -m unittest discover -s tests -p test_offline_extensions_cli.py -v
       - name: Verify Windows-side source integration contracts
         shell: pwsh
         run: python -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
