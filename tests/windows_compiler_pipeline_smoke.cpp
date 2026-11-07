@@ -27,6 +27,16 @@ int wmain(int argc, wchar_t** argv) {
         std::cerr << "STDERR_OK" << std::endl;
         return 0;
     }
+    if (argc == 2 && std::wstring(argv[1]) == L"--flood") {
+        const std::string chunk(8192, 'x');
+        for (int i = 0; i < 256; ++i) {
+            std::cout.write(chunk.data(), chunk.size());
+            std::cerr.write(chunk.data(), chunk.size());
+        }
+        std::cout << "OUT_END" << std::flush;
+        std::cerr << "ERR_END" << std::flush;
+        return 0;
+    }
     if (argc == 2 && std::wstring(argv[1]) == L"--sleep") {
         std::this_thread::sleep_for(std::chrono::seconds(10));
         return 0;
@@ -100,6 +110,15 @@ int wmain(int argc, wchar_t** argv) {
                 stdout_stderr.stderr_text.find("STDERR_OK") != std::string::npos,
                 "concurrent stdout/stderr capture failed");
         std::cout << "PASS: concurrent stdout and stderr\n";
+
+        auto flood = run_process(self_path, {L"--flood"}, 15000);
+        require(flood.started && !flood.timed_out && flood.exit_code == 0 &&
+                flood.stdout_text.size() > 2 * 1024 * 1024 &&
+                flood.stderr_text.size() > 2 * 1024 * 1024 &&
+                flood.stdout_text.find("OUT_END") != std::string::npos &&
+                flood.stderr_text.find("ERR_END") != std::string::npos,
+                "large concurrent pipe output failed or deadlocked");
+        std::cout << "PASS: large concurrent stdout and stderr without deadlock\n";
 
         auto timeout = run_process(self_path, {L"--sleep"}, 200);
         require(timeout.started && timeout.timed_out, "timeout enforcement failed");
