@@ -56,6 +56,7 @@ public:
     CompilationResult CompileSource(const std::string& sourceFile) {
         CompilationResult result;
         result.success = false;
+        result.compileTimeMs = 0;
 
         // Read source
         std::ifstream file(sourceFile);
@@ -94,6 +95,7 @@ public:
 
         CompilationResult result;
         result.success = false;
+        result.compileTimeMs = 0;
         result.errors.push_back("Unsupported language: " + language);
         return result;
     }
@@ -108,41 +110,12 @@ public:
         std::string signature;
     };
 
+    // A relocatable object is not executable machine code. Until the loader
+    // implements relocations, symbol resolution and executable-page protection,
+    // JIT requests must fail closed rather than return an uninitialized page.
     JITFunction CompileAndLoadJIT(const std::string& source) {
-        JITFunction func;
-        func.codePtr = nullptr;
-        func.codeSize = 0;
-
-        // Simplified JIT compilation
-        // Real implementation would:
-        // 1. Parse source
-        // 2. Generate IR
-        // 3. Optimize IR
-        // 4. Generate machine code
-        // 5. Allocate executable memory
-        // 6. Write code to memory
-        // 7. Return function pointer
-
-        auto result = CompileString(source, "cpp");
-        if (!result.success) {
-            return func;
-        }
-
-        // Allocate executable memory (Windows)
-#ifdef _WIN32
-        void* mem = VirtualAlloc(nullptr, 4096, 
-                                MEM_COMMIT | MEM_RESERVE, 
-                                PAGE_EXECUTE_READWRITE);
-        
-        if (mem) {
-            // Write compiled code to executable memory
-            // This is simplified - real implementation would load object file
-            func.codePtr = mem;
-            func.codeSize = 4096;
-        }
-#endif
-
-        return func;
+        (void)source;
+        return JITFunction{nullptr, 0, std::string{}};
     }
 
     void FreeJITFunction(JITFunction& func) {
@@ -226,6 +199,10 @@ public:
     bool Link(const std::vector<std::string>& objectFiles,
               const std::string& outputFile,
               bool isDLL = false) {
+        if (objectFiles.empty() || outputFile.empty()) return false;
+        for (const auto& object : objectFiles) {
+            if (object.empty() || !std::filesystem::is_regular_file(object)) return false;
+        }
 #ifdef _WIN32
         // Build command line: g++ -o <output> <obj1> <obj2> ... [-shared]
         std::string cmdLine = "g++ -o \"" + outputFile + "\"";
