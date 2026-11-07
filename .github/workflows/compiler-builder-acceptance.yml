@@ -1,0 +1,35 @@
+name: Native compiler builder and linker acceptance
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/reverse_engineering/RawrCompiler.hpp'
+      - '~dev/rawrxd/tests/compiler_pipeline_windows.cpp'
+      - '.github/workflows/compiler-builder-acceptance.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  windows-compiler-pipeline:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Build native compiler acceptance executable
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          mkdir -p build/compiler-acceptance
+          g++ -std=c++17 -Wall -Wextra -pthread -o build/compiler-acceptance/test.exe '~dev/rawrxd/tests/compiler_pipeline_windows.cpp'
+      - name: Execute C and C++ object-link pipeline
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          ./build/compiler-acceptance/test.exe | tee build/compiler-acceptance/receipt.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compiler-acceptance-${{ github.sha }}
+          path: build/compiler-acceptance/receipt.txt
+          if-no-files-found: warn
