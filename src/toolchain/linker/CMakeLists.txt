@@ -42,5 +42,8 @@ if(WIN32)
   target_link_libraries(rawrxd_check PRIVATE kernel32)
 endif()
 
-# ---- Tests ----
-add_subdirectory(tests)
+# ---- Tests: real COFF->PE acceptance, not a placeholder target ----
+include(CTest)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
