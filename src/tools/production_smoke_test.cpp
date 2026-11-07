@@ -45,6 +45,11 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
                 ::CloseHandle(h);
             }
         }
+        if (file_size == 0) {
+            std::wcerr << L"[-] Gate 2 FAIL: shard is missing, unreadable, or empty: "
+                       << current_shard << L"\n";
+            std::exit(1);
+        }
         shard_file_sizes[i] = file_size;
         if (!flicker.register_shard(i, current_shard, file_size)) {
             std::wcout << L"[-] CRITICAL: Shard file missing or locked: " << current_shard << L"\n";
@@ -74,7 +79,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
         }
         prefetch.register_tensor_info(i, info);
     }
-    std::cout << "[✓] Gate 3: Background Prefetch Worker Engine Thread spawned -> PASS\n";
+    std::cout << "[✓] Gate 3: Tensor descriptors registered for prefetch -> PASS\n";
     std::cout << "    Tensor descriptors registered: " << tensor_count << "\n";
 
     // 4. Fire high-frequency virtual memory operations to assert structural bounds stability
@@ -121,7 +126,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
 
     // 5. Print hardware profiler telemetry (baseline)
     HardwareProfiler profiler;
-    std::cout << "[✓] Gate 5: Hardware Profiler initialized -> PASS\n";
+    std::cout << "[✓] Gate 5: Hardware Profiler constructed -> PASS\n";
 
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << "STATUS: FIVE SMOKE CHECKS COMPLETED; NOT A FULL ENGINE CERTIFICATION.\n";
