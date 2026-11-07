@@ -25,6 +25,8 @@ int main(){
  check("reject-whitespace-owner",!host.RegisterExtensionCommand("bad owner","ext.run",[](const std::string&){return true;}));
  check("reject-control-owner",!host.RegisterExtensionCommand(std::string("bad")+char(1)+"owner","ext.run",[](const std::string&){return true;}));
  check("reject-long-owner",!host.RegisterExtensionCommand(std::string(257, 'x'),"ext.run",[](const std::string&){return true;}));
+ check("reject-path-owner",!host.RegisterExtensionCommand("bad/owner","ext.run",[](const std::string&){return true;}));
+ check("reject-windows-path-owner",!host.RegisterExtensionCommand("bad\\\\owner","ext.run",[](const std::string&){return true;}));
  check("register-owned",host.RegisterExtensionCommand("ext","ext.run",[](const std::string&){return true;}));
  check("reject-owner-duplicate",!host.RegisterExtensionCommand("other","ext.run",[](const std::string&){return true;}));
  check("execute-owned",host.ExecuteCommand("ext.run",""));
