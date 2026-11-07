@@ -55,10 +55,13 @@ public:
     bool RegisterExtensionCommand(const std::string& extensionId,
                                   const std::string& command,
                                   CommandHandler handler) {
-        if (extensionId.empty() || !ValidCommandName(command) || !handler) return false;
-        // Reject malformed ownership identifiers before entering the registry.
-        // This is a command bridge, not an extension manifest validator.
-        if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
+        if (extensionId.empty() || extensionId.size() > 256 ||
+            !ValidCommandName(command) || !handler) return false;
+        // Reject embedded control bytes, including NUL, which can truncate
+        // extension IDs when crossing native APIs. This bridge does not parse manifests.
+        if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) {
+            return c < 0x20 || c == 0x7f || std::isspace(c) != 0;
+        })) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
         // Install ownership first, then the callback. If callback insertion
