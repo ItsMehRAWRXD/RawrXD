@@ -6,6 +6,8 @@
 #endif
 #include <windows.h>
 #include <algorithm>
+#include <atomic>
+#include <functional>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -131,6 +133,7 @@ inline ProcessResult runProcess(const ProcessSpec& spec) {
     // Parent must close its write ends so readers can observe EOF.
     outWrite.reset();
     errWrite.reset();
+    std::atomic<bool> truncated{false};
     auto reader = [&](HANDLE pipe, std::string& destination) {
         char buffer[8192];
         DWORD count = 0;
@@ -139,7 +142,7 @@ inline ProcessResult runProcess(const ProcessSpec& spec) {
                 ? spec.maxOutputBytes - destination.size() : 0;
             const size_t copy = std::min(remaining, static_cast<size_t>(count));
             destination.append(buffer, copy);
-            if (copy != count) result.outputTruncated = true;
+            if (copy != count) truncated.store(true, std::memory_order_relaxed);
         }
     };
     // Each pipe must be drained concurrently to avoid compiler deadlocks.
@@ -163,8 +166,10 @@ inline ProcessResult runProcess(const ProcessSpec& spec) {
     // TerminateJobObject ensures descendants do not retain inherited pipe writers.
     // Successful builds may launch descendants; the job remains alive until process
     // completion, and normal EOF requires all descendants to close inherited handles.
+    job.reset(); // Kill lingering descendants holding inherited pipe writers.
     stdoutReader.join();
     stderrReader.join();
+    result.outputTruncated = truncated.load(std::memory_order_relaxed);
     return result;
 }
 } // namespace rawrxd::build
