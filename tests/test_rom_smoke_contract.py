@@ -30,6 +30,16 @@ class RomSmokeContract(unittest.TestCase):
         self.assertLess(self.code.index("exceeds its registered shard bounds"),
                         self.code.index("prefetch.register_tensor_info(i, info)"))
 
+    def test_missing_or_empty_shards_fail_before_registration(self):
+        self.assertIn("if (file_size == 0)", self.code)
+        self.assertIn("shard is missing, unreadable, or empty", self.code)
+        self.assertLess(self.code.index("if (file_size == 0)"),
+                        self.code.index("flicker.register_shard(i, current_shard, file_size)"))
+
+    def test_gate_messages_do_not_claim_unobserved_worker_or_leak_results(self):
+        self.assertNotIn("Background Prefetch Worker Engine Thread spawned -> PASS", self.code)
+        self.assertNotIn("0 Memory Leaks", self.code)
+
     def test_no_unearned_engine_certification(self):
         self.assertNotIn("ENGINE FINALIZED, VERIFIED, AND CERTIFIED PRODUCTION-READY", self.code)
         self.assertIn("NOT A FULL ENGINE CERTIFICATION", self.code)
