@@ -105,8 +105,15 @@ def inspect(path, fmt, obj=False):
         return "AMD64-PE32+"
     if b[:4] != b"\x7fELF":
         raise BuildError("Missing host ELF signature", 6)
-    if len(b) < 20 or b[4] != 2 or struct.unpack_from("<H", b, 18)[0] != 62:
-        raise BuildError("Not an x86-64 ELF artifact", 6)
+    if len(b) < 64 or b[4] != 2 or b[5] != 1 or struct.unpack_from("<H", b, 18)[0] != 62:
+        raise BuildError("Not an x86-64 little-endian ELF artifact", 6)
+    elf_type, = struct.unpack_from("<H", b, 16)
+    if obj:
+        if elf_type != 1:  # ET_REL only
+            raise BuildError("Compiler did not produce an ELF relocatable object", 6)
+    elif elf_type not in (2, 3) or struct.unpack_from("<Q", b, 24)[0] == 0:
+        # ET_REL would be a real ELF file but NOT a linked executable.
+        raise BuildError("ELF output is not a linked executable", 6)
     return "x86_64-ELF"
 
 
