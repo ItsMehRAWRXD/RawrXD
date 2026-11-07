@@ -1,0 +1,26 @@
+name: Windows native compiler pipeline acceptance
+on:
+  push:
+    branches:
+      - audit/mock-transport-20261106
+    paths:
+      - 'tools/build/windows_process_runner.hpp'
+      - 'tools/acceptance/windows_build_pipeline_test.cpp'
+      - '.github/workflows/windows-build-pipeline.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  msvc-build-pipeline:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile subprocess acceptance harness with MSVC
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:windows_build_pipeline_test.exe tools\acceptance\windows_build_pipeline_test.cpp
+      - name: Execute compile-object-link-executable and failure gates
+        shell: pwsh
+        run: |
+          & .\windows_build_pipeline_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Windows build pipeline failed: $LASTEXITCODE" }
