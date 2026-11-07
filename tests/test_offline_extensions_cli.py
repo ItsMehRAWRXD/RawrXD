@@ -130,8 +130,14 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.cli("install", source, ok=False)
 
     def test_18_no_execution_during_install(self):
-        self.cli("install", self.package())
+        src = self.package()
+        marker = self.home / "executed-by-extension"
+        (src / "main.js").write_text(
+            'require("fs").writeFileSync(' + json.dumps(str(marker)) + ', "executed")',
+            encoding="utf-8")
+        self.cli("install", src)
         self.assertTrue((self.installed / "example.sample" / "main.js").exists())
+        self.assertFalse(marker.exists(), "Installing must not activate extension JS")
 
     def test_19_mutations_require_explicit_approval(self):
         src = self.package()
@@ -237,6 +243,38 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertNotIn("\nINJECTED", rows[0])
         self.assertEqual(len(rows[0].split("\t")), 4)
+
+    def test_31_default_data_root_persists_across_processes(self):
+        src = self.package()
+        home = self.home / "xdg"
+        env = os.environ.copy()
+        env.pop("LOCALAPPDATA", None)
+        env["XDG_DATA_HOME"] = str(home)
+        run = lambda *args: subprocess.run(
+            [str(EXE), "--approve-mutations", *args],
+            env=env, capture_output=True, text=True, timeout=15)
+        created = run("install", str(src))
+        self.assertEqual(created.returncode, 0, created.stderr)
+        self.assertTrue((home / "RawrXD" / "extensions" / "example.sample" / "package.json").exists())
+        listed = run("list")
+        self.assertEqual(listed.returncode, 0, listed.stderr)
+        self.assertIn("example.sample", listed.stdout)
+
+    def test_32_install_unpacked_nested_vsix_layout(self):
+        src = self.home / "nested"
+        nested = src / "extension"
+        nested.mkdir(parents=True)
+        (nested / "package.json").write_text(json.dumps(dict(
+            name="sample", publisher="example", version="2.3.4")), encoding="utf-8")
+        (nested / "main.js").write_text("module.exports = {}", encoding="utf-8")
+        self.cli("install", src)
+        self.assertIn("example.sample\t2.3.4", self.cli("list"))
+
+    def test_33_enable_idempotent(self):
+        self.cli("install", self.package())
+        self.cli("enable", "example.sample")
+        self.cli("enable", "example.sample")
+        self.assertIn("enabled", self.cli("list"))
 
     def test_20_unknown_extensions_fail(self):
         self.cli("info", "nonexistent.extension", ok=False)
