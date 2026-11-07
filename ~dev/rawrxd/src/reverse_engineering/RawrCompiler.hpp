@@ -206,7 +206,7 @@ public:
         }
 #ifdef _WIN32
         // Build command line: g++ -o <output> <obj1> <obj2> ... [-shared]
-        std::string cmdLine = "g++ -o \"" + outputFile + "\"";
+        std::string cmdLine = "\"" + FindCompiler("g++.exe") + "\" -o \"" + outputFile + "\"";
         if (isDLL) cmdLine += " -shared";
         for (auto& obj : objectFiles) {
             cmdLine += " \"" + obj + "\"";
@@ -215,6 +215,10 @@ public:
             cmdLine += " -L\"" + libPath + "\"";
         }
 
+        // A pre-existing output must never be mistaken for a new link result.
+        std::error_code removeError;
+        std::filesystem::remove(outputFile, removeError);
+        if (removeError) return false;
         std::string stdoutBuf, stderrBuf;
         DWORD exitCode = 0;
         bool ok = RunExternalProcess(cmdLine, stdoutBuf, stderrBuf, exitCode, 60000);
@@ -332,7 +336,7 @@ private:
         CloseHandle(readPipe);
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
-        if (timedOut) stderrResult += "\\nRawrCompiler: process timed out";
+        if (timedOut) stderrResult += "\nRawrCompiler: process timed out";
         return !failed && !timedOut && gotExit && exited;
     }
 #endif
