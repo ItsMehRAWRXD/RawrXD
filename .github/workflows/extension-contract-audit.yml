@@ -12,6 +12,9 @@ on:
       - 'tests/test_extension_entry_containment.py'
       - '.github/workflows/extension-contract-audit.yml'
       - 'tests/native_compiler_linker_gate.py'
+      - 'src/build/native_process_runner.hpp'
+      - 'src/build/native_process_runner.cpp'
+      - 'tests/native_process_runner_win.cpp'
   workflow_dispatch:
 
 jobs:
@@ -55,3 +58,15 @@ jobs:
           call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
           if errorlevel 1 exit /b 1
           python tests/native_compiler_linker_gate.py --compiler cl
+
+      - name: Build and run Win32 subprocess integration harness
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSROOT=%%I"
+          if not defined VSROOT exit /b 1
+          call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          cl /nologo /EHsc /std:c++17 /utf-8 /Isrc\build src\build\native_process_runner.cpp tests\native_process_runner_win.cpp /Fe:native_process_runner_test.exe
+          if errorlevel 1 exit /b 1
+          native_process_runner_test.exe
