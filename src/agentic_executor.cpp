@@ -12,6 +12,8 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QProcess>
+#include <QElapsedTimer>
 #include "qt_block.h"
 
 // ============================================================================
@@ -449,77 +451,100 @@ QJsonObject AgenticExecutor::compileProject(const QString& projectPath, const QS
     result["compiler"] = compiler;
     result["project_path"] = projectPath;
 
-    qInfo() << "[AgenticExecutor] Compiling project:" << projectPath << "with" << compiler;
-    emit logMessage("Compiling with " + compiler + "...");
+    // QProcess drains both redirected streams while the child is running.
+    // Waiting until exit before reading can deadlock when a compiler fills a pipe.
+    auto execute = [](const QString& program, const QStringList& arguments,
+                      const QString& workingDirectory) {
+        QJsonObject step;
+        QProcess process;
+        process.setWorkingDirectory(workingDirectory);
+        process.setProcessChannelMode(QProcess::SeparateChannels);
+        process.start(program, arguments);
+        if (!process.waitForStarted(10000)) {
+            step["success"] = false;
+            step["error"] = process.errorString();
+            step["exit_code"] = -1;
+            return step;
+        }
+        QElapsedTimer elapsed;
+        elapsed.start();
+        constexpr qint64 timeoutMs = 120000;
+        QByteArray out, err;
+        while (process.state() != QProcess::NotRunning && elapsed.elapsed() < timeoutMs) {
+            process.waitForReadyRead(50);
+            out += process.readAllStandardOutput();
+            err += process.readAllStandardError();
+        }
+        if (process.state() != QProcess::NotRunning) {
+            process.kill();
+            process.waitForFinished(5000);
+            step["timed_out"] = true;
+        }
+        out += process.readAllStandardOutput();
+        err += process.readAllStandardError();
+        step["stdout"] = QString::fromUtf8(out);
+        step["stderr"] = QString::fromUtf8(err);
+        step["exit_code"] = process.exitCode();
+        step["success"] = !step.value("timed_out").toBool() &&
+                          process.exitStatus() == QProcess::NormalExit &&
+                          process.exitCode() == 0;
+        return step;
+    };
 
-    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
-    std::vector<std::string> nativeArgs = {".."};
-    NativeProcessResult result = NativeProcess::execute(
-        "cmake",
-        nativeArgs,
-        projectPath + "/build",
-        -1  // no timeout
-    );
-
-    QString cmakeOutput = QString::fromStdString(result.stdoutOutput);
-    QString cmakeError = QString::fromStdString(result.stderrOutput);
-
-    if (result.exitCode() != 0) {
+    const QDir sourceDir(projectPath);
+    if (!sourceDir.exists()) {
         result["success"] = false;
-        result["error"] = "CMake configuration failed: " + cmakeError;
-        qWarning() << "[AgenticExecutor]" << result["error"].toString();
+        result["error"] = "Project directory does not exist";
         return result;
     }
-        
-        // Run make
-        process.start("cmake", QStringList() << "--build" << ".");
-        process.waitForFinished(-1);
-        
-        QString buildOutput = process.readAllStandardOutput();
-        QString buildError = process.readAllStandardError();
-        
-        result["cmake_output"] = cmakeOutput;
-        result["build_output"] = buildOutput;
-        result["build_error"] = buildError;
-        result["exit_code"] = process.exitCode();
-        result["success"] = (process.exitCode() == 0);
-        
-    } else {
-        // Direct compilation
-        QStringList files;
-        QDir dir(projectPath);
-        files = dir.entryList(QStringList() << "*.cpp" << "*.c", QDir::Files);
-        
-        if (files.isEmpty()) {
+    if (QFileInfo::exists(sourceDir.filePath("CMakeLists.txt"))) {
+        const QString buildDir = sourceDir.filePath("build");
+        if (!QDir().mkpath(buildDir)) {
             result["success"] = false;
-            result["error"] = "No source files found";
+            result["error"] = "Cannot create build directory";
             return result;
         }
-        
-        QStringList args;
-        args << "-o" << "output";
-        for (const QString& file : files) {
-            args << file;
+        const QJsonObject configure = execute("cmake", {"-S", sourceDir.absolutePath(),
+                                                         "-B", buildDir}, sourceDir.absolutePath());
+        result["cmake_output"] = configure.value("stdout");
+        result["cmake_error"] = configure.value("stderr");
+        if (!configure.value("success").toBool()) {
+            result["success"] = false;
+            result["error"] = configure.value("error").toString("CMake configuration failed");
+            result["timed_out"] = configure.value("timed_out").toBool();
+            result["exit_code"] = configure.value("exit_code");
+            return result;
         }
-        
-        process.start(compiler, args);
-        process.waitForFinished(-1);
-        
-        result["compiler_output"] = QString::fromUtf8(process.readAllStandardOutput());
-        result["compiler_error"] = QString::fromUtf8(process.readAllStandardError());
-        result["exit_code"] = process.exitCode();
-        result["success"] = (process.exitCode() == 0);
-    }
-
-    if (result["success"].toBool()) {
-        qInfo() << "[AgenticExecutor] Compilation successful";
-        emit logMessage("Compilation successful!");
+        const QJsonObject build = execute("cmake", {"--build", buildDir}, sourceDir.absolutePath());
+        result["build_output"] = build.value("stdout");
+        result["build_error"] = build.value("stderr");
+        result["exit_code"] = build.value("exit_code");
+        result["timed_out"] = build.value("timed_out").toBool();
+        result["success"] = build.value("success").toBool();
+        result["error"] = build.value("error");
     } else {
-        qWarning() << "[AgenticExecutor] Compilation failed";
-        emit logMessage("Compilation failed: " + result["compiler_error"].toString());
-        emit errorOccurred("Compilation failed");
+        const QStringList files = sourceDir.entryList({"*.cpp", "*.c"}, QDir::Files);
+        if (files.isEmpty()) {
+            result["success"] = false;
+            result["error"] = "No C/C++ source files found";
+            return result;
+        }
+        QStringList arguments;
+        if (QFileInfo(compiler).fileName().compare("cl.exe", Qt::CaseInsensitive) == 0 ||
+            QFileInfo(compiler).fileName().compare("cl", Qt::CaseInsensitive) == 0) {
+            arguments << "/nologo" << ("/Fe:" + sourceDir.filePath("output.exe"));
+        } else {
+            arguments << "-o" << sourceDir.filePath("output");
+        }
+        for (const QString& file : files) arguments << sourceDir.filePath(file);
+        const QJsonObject build = execute(compiler, arguments, sourceDir.absolutePath());
+        result["compiler_output"] = build.value("stdout");
+        result["compiler_error"] = build.value("stderr");
+        result["exit_code"] = build.value("exit_code");
+        result["timed_out"] = build.value("timed_out").toBool();
+        result["success"] = build.value("success").toBool();
+        result["error"] = build.value("error");
     }
-
     addToMemory("last_compilation", result);
     return result;
 }
