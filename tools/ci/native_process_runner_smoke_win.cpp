@@ -36,6 +36,22 @@ int wmain(int argc, wchar_t** argv) {
   auto e=runProcess(exe.wstring(),{},10000,dir.wstring());
   check(e.launched&&!e.timedOut&&e.exitCode==0&&e.stdoutText.find("RAWRXD_OK")!=std::string::npos,"execute binary");
  } else check(false,"execute binary");
+ // Multi-unit C++ build validates symbol resolution and the C++ runtime.
+ auto helper=dir/"helper.cpp",maincpp=dir/"main.cpp";
+ auto helperObj=dir/"helper.obj",mainObj=dir/"main.obj",cppExe=dir/"multi.exe";
+ {std::ofstream f(helper);f<<"extern \"C\" int answer(){return 42;}\\n";}
+ {std::ofstream f(maincpp);f<<"#include <iostream>\\nextern \"C\" int answer();\\nint main(){std::cout<<answer()<<\"\\\\n\";return answer()==42?0:1;}\\n";}
+ auto hc=runProcess(L"cl.exe",{L"/nologo",L"/EHsc",L"/std:c++17",L"/c",helper.wstring(),L"/Fo"+helperObj.wstring()},60000,dir.wstring());
+ auto mc=runProcess(L"cl.exe",{L"/nologo",L"/EHsc",L"/std:c++17",L"/c",maincpp.wstring(),L"/Fo"+mainObj.wstring()},60000,dir.wstring());
+ check(hc.launched&&hc.exitCode==0&&mc.launched&&mc.exitCode==0&&fs::exists(helperObj)&&fs::exists(mainObj),"multi-unit C++ object compilation");
+ if(fs::exists(helperObj)&&fs::exists(mainObj)) {
+  auto lk=runProcess(L"link.exe",{L"/nologo",helperObj.wstring(),mainObj.wstring(),L"/OUT:"+cppExe.wstring()},60000,dir.wstring());
+  check(lk.launched&&!lk.timedOut&&lk.exitCode==0&&fs::exists(cppExe),"multi-unit C++ linking");
+ } else check(false,"multi-unit C++ linking");
+ if(fs::exists(cppExe)) {
+  auto e=runProcess(cppExe.wstring(),{},10000,dir.wstring());
+  check(e.launched&&!e.timedOut&&e.exitCode==0&&e.stdoutText.find("42")!=std::string::npos,"multi-unit C++ executable");
+ } else check(false,"multi-unit C++ executable");
  std::error_code ec;fs::remove_all(dir,ec);
  std::cout<<"RESULT "<<(failed?"FAIL":"PASS")<<" failures="<<failed<<"\n";
  return failed?1:0;
