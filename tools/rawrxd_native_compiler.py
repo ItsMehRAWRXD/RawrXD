@@ -46,7 +46,19 @@ def run_process(command, cwd, timeout):
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-        stdout, stderr = proc.communicate()
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            # Descendants can inherit pipe handles. Never hang indefinitely
+            # waiting for EOF after the compiler process has been killed.
+            if proc.poll() is None:
+                proc.kill()
+            if proc.stdout:
+                proc.stdout.close()
+            if proc.stderr:
+                proc.stderr.close()
+            proc.wait(timeout=5)
+            stdout, stderr = b"", b""
     return {"ok": not timed_out and proc.returncode == 0,
             "exit_code": proc.returncode, "timed_out": timed_out,
             "stdout": stdout.decode("utf-8", "replace"),
@@ -137,6 +149,8 @@ def main(argv=None):
             result = run_process(command, cwd, remaining)
             report["steps"].append({"phase": "link", "command": command, **result})
             report["ok"] = bool(result["ok"] and output.is_file())
+            if not report["ok"] and output.is_file():
+                output.unlink()  # Partial linker output is never a usable artifact.
             return finish(None if report["ok"] else "link failed, timed out, or executable missing")
     except (OSError, ValueError) as exc:
         return finish("build setup failed: " + str(exc))
