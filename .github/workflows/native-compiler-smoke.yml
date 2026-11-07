@@ -4,6 +4,7 @@ on:
     paths:
       - 'tools/rawrxd_native_compiler.py'
       - 'tests/test_native_compiler.py'
+      - 'tests/test_windows_native_compiler.py'
       - '.github/workflows/native-compiler-smoke.yml'
   pull_request:
     paths:
@@ -38,3 +39,5 @@ jobs:
           python tools\rawrxd_native_compiler.py --compiler cl --source "%TEMP%\rawrxd_build_fixture.cpp" --output "%TEMP%\rawrxd_build_fixture.exe"
           if errorlevel 1 exit /b 1
           "%TEMP%\rawrxd_build_fixture.exe"
+          if errorlevel 1 exit /b 1
+          python -m unittest discover -s tests -p test_windows_native_compiler.py -v
