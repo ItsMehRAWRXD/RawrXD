@@ -61,5 +61,45 @@ class NativeBuildBridgeTests(unittest.TestCase):
         self.assertNotEqual(result["exit_code"], 0)
         self.assertIsNone(result["artifact"])
 
+    def test_compile_object_link_run_cpp(self):
+        if not self.compiler:
+            self.skipTest("no C++ compiler installed")
+        self.source.write_text("int main(){return 0;}\\n")
+        result = module.run_build(self.source, self.output, self.compiler, run=True)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual([x["stage"] for x in result["stages"]], ["compile", "link", "run"])
+        self.assertTrue(self.output.with_suffix(".obj" if __import__("os").name == "nt" else ".o").is_file())
+
+    def test_compile_object_link_run_c(self):
+        compiler = next((x for x in (("cl",) if __import__("os").name == "nt" else ("cc", "gcc", "clang")) if shutil.which(x)), None)
+        if not compiler:
+            self.skipTest("no C compiler installed")
+        source = self.root / "main.c"
+        source.write_text("int main(void){return 0;}\\n")
+        result = module.run_build(source, self.output, compiler, run=True)
+        self.assertTrue(result["ok"], result)
+
+    def test_subprocess_concurrent_stdout_stderr(self):
+        script = "import sys;sys.stdout.write('o'*100000);sys.stdout.flush();sys.stderr.write('e'*100000);sys.stderr.flush()"
+        result = module.execute([__import__("sys").executable, "-c", script], timeout=10)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(len(result["stdout"]), 32768)
+        self.assertEqual(len(result["stderr"]), 32768)
+
+    def test_subprocess_timeout(self):
+        result = module.execute([__import__("sys").executable, "-c",
+                                 "import time;time.sleep(10)"], timeout=0.2)
+        self.assertFalse(result["ok"])
+        self.assertTrue(result["timed_out"])
+
+    def test_nonzero_program_exit_fails(self):
+        if not self.compiler:
+            self.skipTest("no C++ compiler installed")
+        self.source.write_text("int main(){return 7;}\\n")
+        result = module.run_build(self.source, self.output, self.compiler, run=True)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["stage"], "run")
+        self.assertEqual(result["exit_code"], 7)
+
 if __name__ == "__main__":
     unittest.main()
