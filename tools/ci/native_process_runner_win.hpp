@@ -97,9 +97,11 @@ inline ProcessResult runProcess(const std::wstring& executable,
         WaitForSingleObject(pi.hProcess, INFINITE);
     }
     GetExitCodeProcess(pi.hProcess, &r.exitCode);
+    // Kill descendants holding inherited pipe writers before joining readers.
+    CloseHandle(job); job = nullptr;
     stdoutThread.join(); stderrThread.join();
     close(outRead); close(errRead);
-    CloseHandle(pi.hThread); CloseHandle(pi.hProcess); CloseHandle(job);
+    CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
     return r;
 }
 } // namespace rawrxd::build
