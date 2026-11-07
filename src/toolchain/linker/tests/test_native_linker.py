@@ -149,6 +149,36 @@ class LinkerIntegration(unittest.TestCase):
         self.link("-o", self.exe, bad, success=False)
         self.assertFalse(self.exe.exists())
 
+    def test_15_relocation_offset_wrap_is_fatal(self):
+        self.code.write_text("extern int missing(void); int main(void){return missing();}\n")
+        self.compile(self.code, self.obj)
+        b = bytearray(self.obj.read_bytes())
+        reloc_off = struct.unpack_from("<I", b, 20 + 24)[0]
+        reloc_count = struct.unpack_from("<H", b, 20 + 32)[0]
+        if not reloc_off or not reloc_count:
+            self.skipTest("Compiler did not emit relocation in first section")
+        struct.pack_into("<I", b, reloc_off, 0xFFFFFFFF)
+        bad = self.root / "reloc-wrap.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
+    def test_16_64bit_reloc_cannot_write_past_contribution(self):
+        self.code.write_text("extern int missing(void); int main(void){return missing();}\n")
+        self.compile(self.code, self.obj)
+        b = bytearray(self.obj.read_bytes())
+        raw_size = struct.unpack_from("<I", b, 20 + 16)[0]
+        reloc_off = struct.unpack_from("<I", b, 20 + 24)[0]
+        reloc_count = struct.unpack_from("<H", b, 20 + 32)[0]
+        if not reloc_off or not reloc_count or raw_size < 4:
+            self.skipTest("Compiler did not emit compatible relocation fixture")
+        struct.pack_into("<I", b, reloc_off, raw_size - 4)
+        struct.pack_into("<H", b, reloc_off + 8, 0x0001)  # IMAGE_REL_AMD64_ADDR64
+        bad = self.root / "reloc-addr64-overrun.obj"
+        bad.write_bytes(b)
+        self.link("-o", self.exe, bad, success=False)
+        self.assertFalse(self.exe.exists())
+
     def test_10_invalid_reserves_are_fatal(self):
         self.link("-o", self.exe, "-stack", "0", self.obj, success=False)
         self.link("-o", self.exe, "-heap", "12oops", self.obj, success=False)
