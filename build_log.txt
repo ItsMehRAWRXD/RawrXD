@@ -1,0 +1,858 @@
+[1/1] Cleaning all built files...
+Cleaning... 204 files.
+[1/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-alloc.c.obj
+[2/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-quants.c.obj
+[3/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.c.obj
+[4/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[5/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\hbm.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[6/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(114): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(121): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(128): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(138): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(453): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(454): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(455): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(2447): warning C4245: '=': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+[7/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\quants.c.obj
+[8/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-threading.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[9/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-backend.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+[10/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\repack.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[11/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\traits.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[12/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(44): warning C4456: declaration of 'bufts' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(43): note: see declaration of 'bufts'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(518): warning C4456: declaration of 'features' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(515): note: see declaration of 'features'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[13/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(276): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(526): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[14/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-opt.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(24): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(25): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(669): warning C4457: declaration of 'loss' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(657): note: see declaration of 'loss'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[15/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\amx.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[16/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\mmq.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(180): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(208): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(229): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(270): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(297): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(314): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[17/121] Linking CXX static library 3rdparty\ggml\src\ggml-base.lib
+[18/121] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\quants.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\quants.c(873): warning C4310: cast truncates constant value
+[19/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\binary-ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[20/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\vec.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[21/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\unary-ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[22/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6618): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6671): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): warning C4456: declaration of 'src' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5764): note: see declaration of 'src'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5807): note: see reference to function template instantiation 'void ggml_compute_forward_rope_flt<ggml_fp16_t>(const ggml_compute_params *,ggml_tensor *,const bool)' being compiled
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5787): warning C4456: declaration of 'dst_data' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5765): note: see declaration of 'dst_data'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[23/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\repack.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(338): warning C4456: declaration of 'v0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(305): note: see declaration of 'v0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(339): warning C4456: declaration of 'v1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(306): note: see declaration of 'v1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(340): warning C4456: declaration of 'v2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(307): note: see declaration of 'v2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(341): warning C4456: declaration of 'v3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(308): note: see declaration of 'v3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(344): warning C4456: declaration of 'abs0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(312): note: see declaration of 'abs0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(345): warning C4456: declaration of 'abs1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(313): note: see declaration of 'abs1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(346): warning C4456: declaration of 'abs2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(314): note: see declaration of 'abs2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(347): warning C4456: declaration of 'abs3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(315): note: see declaration of 'abs3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(434): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(290): note: see declaration of 'k'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[24/121] Linking CXX static library 3rdparty\ggml\src\ggml-cpu.lib
+[25/121] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml.dir\ggml-backend-reg.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[26/121] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[27/121] Linking CXX static library 3rdparty\ggml\src\ggml.lib
+[28/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Log.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[29/121] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[30/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\ChatTemplate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[31/121] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[32/121] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2287): warning C4456: declaration of 'lane' hides previous local declaration
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2268): note: see declaration of 'lane'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6303): warning C4100: 'epoch': unreferenced parameter
+[33/121] Linking CXX static library rawrxd_gpu_compute.lib
+[34/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_engine_adapter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[35/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\KVCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[36/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\CompressedKVCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[37/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\tool_call_parser.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[38/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\VwaResolveBlocks.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[39/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_subsystems.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[40/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SlidingWindowEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[41/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2CLIBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(38): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(58): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(63): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+[42/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\NVMeStream.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\NVMeStream.cpp(91): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\NVMeStream.cpp(119): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\NVMeStream.cpp(127): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\NVMeStream.cpp(137): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\NVMeStream.cpp(147): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+[43/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\CycloneScheduler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\CycloneScheduler.cpp(436): warning C4100: 'sequenceNumber': unreferenced parameter
+F:\rawrxd\src\deep2\CycloneScheduler.cpp(435): warning C4100: 'tensorName': unreferenced parameter
+[44/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\../telemetry/DoubleBufferedHistogram.hpp(130): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\Deep2Telemetry.hpp(60): note: see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(101): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\Deep2Engine.cpp(918): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(919): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1810): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1813): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1817): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1845): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1814): warning C4189: 'kvHeads': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2270): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3291): warning C4456: declaration of 'attnLayers' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2845): note: see declaration of 'attnLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3754): warning C4458: declaration of 'weightSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1003): note: see declaration of 'Deep2::Deep2Engine::weightSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3864): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3877): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3913): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3945): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4679): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4678): warning C4189: 'diff': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4985): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5312): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6208): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6208): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6256): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6256): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6326): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6461): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6461): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6567): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6205): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6253): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6397): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6458): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7195): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7206): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7524): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7543): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7544): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7545): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7546): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7570): warning C4456: declaration of 'headDim' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7546): note: see declaration of 'headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7571): warning C4456: declaration of 'numHeads' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7544): note: see declaration of 'numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8225): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7634): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7632): warning C4189: 'attnOutSize': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7679): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7686): warning C4189: 'K_t': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7734): warning C4189: 'V_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7733): warning C4189: 'K_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7732): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7811): warning C4189: 'q': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8442): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8472): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8561): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8638): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8637): warning C4189: 'headsPerGroup': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8919): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9082): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9094): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9119): warning C4189: 'rowBytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9142): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9169): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9263): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9307): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10162): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10163): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10164): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10425): warning C4100: 'outDim': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11236): warning C4100: 'seqLen': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(666): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(711): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(835): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(866): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1105): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1193): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1257): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1323): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1390): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1449): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1496): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4594): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4617): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5554): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5559): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10649): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed
+[45/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_ModelFit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(573): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(574): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(575): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(896): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(926): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+[46/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ResidencyManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ResidencyManager.cpp(603): warning C4189: 'hFile': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\ResidencyManager.cpp(604): warning C4189: 'hMapping': local variable is initialized but not referenced
+[47/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\AgentOrchestrator.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(159): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(186): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(210): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(233): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(221): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(256): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(244): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(406): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(414): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(424): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(442): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(458): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+[48/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\NUFusedPacker.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[49/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\WarmupScheduler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\WarmupScheduler.cpp(52): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\WarmupScheduler.cpp(63): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+F:\rawrxd\src\deep2\WarmupScheduler.cpp(163): warning C4100: 'expertId': unreferenced parameter
+F:\rawrxd\src\deep2\WarmupScheduler.cpp(163): warning C4100: 'layerId': unreferenced parameter
+[50/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MARS.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\MARS.cpp(499): warning C4100: 'priority': unreferenced parameter
+[51/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoERouter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\MoERouter.cpp(72): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\MoERouter.cpp(202): warning C4189: 'numTokens': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\MoERouter.cpp(347): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[52/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\QuantKernelRegistry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(385): warning C4189: 'q8i': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(345): warning C4189: 'hm': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(344): warning C4189: 'q4': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(290): warning C4100: 'rows': unreferenced parameter
+F:\rawrxd\src\deep2\QuantKernelRegistry_K.h(502): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(191): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(205): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(226): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(238): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(262): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(274): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1056): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1084): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1094): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1177): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1262): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed
+[53/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\RouterPrefetchTelemetry.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[54/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\BP16Streamer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[55/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[56/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Chamber.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[57/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightsLoader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\MoEWeightsLoader.cpp(385): warning C4189: 'cursorBeforeValue': local variable is initialized but not referenced
+[58/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightProxy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[59/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HotPatcher.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(762): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(778): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(779): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(780): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(781): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(782): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(783): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252)
+[60/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(141): warning C4100: 'output': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(141): warning C4100: 'id': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(147): warning C4100: 'output': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(147): warning C4100: 'size': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(147): warning C4100: 'offset': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(147): warning C4100: 'id': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(152): warning C4100: 'size': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(152): warning C4100: 'data': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(152): warning C4100: 'offset': unreferenced parameter
+F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.cpp(152): warning C4100: 'id': unreferenced parameter
+[61/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(539): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(539): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(539): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(538): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 2 has type 'std::string'
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(817): warning C4100: 'files': unreferenced parameter
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(164): warning C4505: 'Deep2::unBlock_gguf_q2k': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(198): warning C4505: 'Deep2::unBlock_gguf_q3k': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(236): warning C4505: 'Deep2::unBlock_gguf_q4k': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(294): warning C4505: 'Deep2::unBlock_gguf_q5k': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(350): warning C4505: 'Deep2::unBlock_gguf_q6k': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\ReverseHotpatchEngine.cpp(396): warning C4505: 'Deep2::unBlock_gguf_tensor_data': unreferenced function with internal linkage has been removed
+[62/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[63/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\VulkanWeightStreamerVulkanBackend.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[64/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\AttnCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[65/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpuLayerPlan.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[66/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\PlasmaGovernor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[67/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_GpuGemv.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[68/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SsmCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[69/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\FusedLiveController.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[70/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MlaCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[71/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2DeviceManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[72/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[73/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2ShardIo.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[74/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[75/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\DualGPUHook.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[76/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticDynamicBudget.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[77/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenMicroZone.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[78/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumerSpace.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[79/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[80/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GhostCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\GhostCache.cpp(93): warning C4100: 'layerIndex': unreferenced parameter
+[81/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticResidencyManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[82/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\TrailBrake.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[83/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[84/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\KimiK2Config.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[85/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\sampling\advanced_sampler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\sampling\advanced_sampler.cpp(240): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\src\sampling\advanced_sampler.cpp(271): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\src\sampling\advanced_sampler.cpp(419): warning C4100: 'context': unreferenced parameter
+[86/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyStore.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[87/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QaCritical.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[88/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\mars\VRAMManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\mars\VRAMManager.cpp(394): warning C4100: 'priority': unreferenced parameter
+[89/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\PlacementPlan.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[90/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ReverseTensorRecovery.cpp(59): warning C4100: 'graph': unreferenced parameter
+F:\rawrxd\src\deep2\ReverseTensorRecovery.cpp(90): warning C4100: 'graph': unreferenced parameter
+[91/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ollama_blob_parser_impl.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(41): warning C4189: 'file_size': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(97): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(353): warning C4389: '==': signed/unsigned mismatch
+[92/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Gate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[93/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\asm_stubs.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed
+[94/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_FusedQ4KT.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[95/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsLineage.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[96/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2BraidExecutionPolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[97/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[98/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GpuTransfer_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[99/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEEliminate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[100/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[101/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[102/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Pinball.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[103/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[104/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpu_CostCut.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[105/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy_Apply.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[106/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2C1C9.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[107/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_missing_members.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[108/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[109/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy_Overlap.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[110/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Thermal.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[111/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Mech.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[112/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_link_supplement.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[113/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_adapter_fused.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(252): warning C4100: 'cacheKey': unreferenced parameter
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(751): warning C4100: 'cacheKey': unreferenced parameter
+[114/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenFutureCompletion.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[115/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_MechEnd.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[116/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamerParity_Post.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[117/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\StreamEngine.cpp(83): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(207): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(354): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(445): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(454): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(478): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(579): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(626): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(628): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(629): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(630): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(631): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(632): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(633): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(634): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(635): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(636): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(637): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(638): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(639): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(640): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252)
+[118/121] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HotPatcherSafety.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[119/121] Linking CXX static library deep2_engine_lib.lib
+[120/121] Building CXX object CMakeFiles\rawrxd_deep2_engine.dir\src\deep2\engine_main.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[121/121] Linking CXX executable bin\rawrxd_deep2_engine.exe

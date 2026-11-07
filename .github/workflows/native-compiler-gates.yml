@@ -1,0 +1,27 @@
+name: Native compiler and linker gates
+on:
+  push:
+    paths:
+      - 'tools/native_build_runner.py'
+      - 'tests/test_native_build_runner.py'
+      - '.github/workflows/native-compiler-gates.yml'
+  pull_request:
+    paths:
+      - 'tools/native_build_runner.py'
+      - 'tests/test_native_build_runner.py'
+      - '.github/workflows/native-compiler-gates.yml'
+  workflow_dispatch:
+jobs:
+  native-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Run subprocess and real MSVC pipeline tests
+        run: python -m unittest discover -s tests -p test_native_build_runner.py -v
+  portable-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run subprocess contract tests
+        run: python3 -m unittest discover -s tests -p test_native_build_runner.py -v

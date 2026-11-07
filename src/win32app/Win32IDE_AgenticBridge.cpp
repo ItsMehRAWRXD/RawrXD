@@ -2,6 +2,7 @@
 // Connects Win32IDE to Native C++ Agent (Parity with rawrxd_cli)
 
 #include "Win32IDE_AgenticBridge.h"
+#include "AgentToolCallPolicy.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "../native_agent.hpp"
@@ -27,6 +28,8 @@ AgenticBridge::AgenticBridge(Win32IDE* ide)
 }
 
 AgenticBridge::~AgenticBridge() {
+    StopAgentLoop();
+    KillPowerShellProcess();
     LOG_INFO("AgenticBridge destroyed");
 }
 
@@ -80,12 +83,14 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
         return response;
     }
 
-    std::string fullOutput;
+    auto fullOutput = std::make_shared<std::string>();
     
     // Temporary override of callback to capture full output for the return struct
-    // while ALSO streaming to the GUI
-    m_nativeAgent->SetOutputCallback([&](const std::string& chunk) {
-        fullOutput += chunk;
+    // while ALSO streaming to the GUI.  Use shared_ptr so the callback remains
+    // valid even if the native agent retains it and invokes it after this
+    // function returns (prevents dangling reference to local fullOutput).
+    m_nativeAgent->SetOutputCallback([this, fullOutput](const std::string& chunk) {
+        *fullOutput += chunk;
         if (m_outputCallback) {
             m_outputCallback("stream", chunk);
         }
@@ -97,19 +102,19 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
          response.content = "Max Mode Enabled (Native Threads)";
     }
     else if (prompt == "/think") {
-         static bool t = false; t = !t;
-         m_nativeAgent->SetDeepThink(t);
-         response.content = std::string("Deep Thinking ") + (t ? "Enabled" : "Disabled");
+         m_deepThinkEnabled = !m_deepThinkEnabled;
+         m_nativeAgent->SetDeepThink(m_deepThinkEnabled);
+         response.content = std::string("Deep Thinking ") + (m_deepThinkEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt == "/research") {
-         static bool r = false; r = !r;
-         m_nativeAgent->SetDeepResearch(r);
-         response.content = std::string("Deep Research ") + (r ? "Enabled" : "Disabled");
+         m_deepResearchEnabled = !m_deepResearchEnabled;
+         m_nativeAgent->SetDeepResearch(m_deepResearchEnabled);
+         response.content = std::string("Deep Research ") + (m_deepResearchEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt == "/norefusal") {
-         static bool n = false; n = !n;
-         m_nativeAgent->SetNoRefusal(n);
-         response.content = std::string("No Refusal Mode ") + (n ? "Enabled" : "Disabled");
+         m_noRefusalEnabled = !m_noRefusalEnabled;
+         m_nativeAgent->SetNoRefusal(m_noRefusalEnabled);
+         response.content = std::string("No Refusal Mode ") + (m_noRefusalEnabled ? "Enabled" : "Disabled");
     }
     else if (prompt.find("/load ") == 0) {
         std::string path = prompt.substr(6);
@@ -122,8 +127,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     }
     else if (prompt.find("/bugreport ") == 0) {
          std::string path = prompt.substr(11);
-         m_nativeAgent->BugReport(path); 
-         response.content = fullOutput;
+          m_nativeAgent->BugReport(path); 
+          response.content = *fullOutput;
     }
     // Explicit /edit logic
     else if (prompt.find("/edit ") == 0) {
@@ -133,8 +138,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
          if (spacePos != std::string::npos) {
              std::string path = rest.substr(0, spacePos);
              std::string inst = rest.substr(spacePos + 1);
-             m_nativeAgent->Edit(path, inst);
-             response.content = fullOutput;
+              m_nativeAgent->Edit(path, inst);
+              response.content = *fullOutput;
          } else {
              response.content = "Usage: /edit <file> <instructions>";
          }
@@ -142,32 +147,35 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     // Explicit /plan logic
     else if (prompt.find("/plan ") == 0) {
          std::string task = prompt.substr(6);
-         m_nativeAgent->Plan(task);
-         response.content = fullOutput;
+          m_nativeAgent->Plan(task);
+          response.content = *fullOutput;
     }
     // Explicit /suggest logic
     else if (prompt.find("/suggest ") == 0) {
          std::string path = prompt.substr(9);
-         m_nativeAgent->Suggest(path);
-         response.content = fullOutput;
+          m_nativeAgent->Suggest(path);
+          response.content = *fullOutput;
     }
     // Explicit /patch logic (HotPatching)
     else if (prompt.find("/patch ") == 0) {
          std::string path = prompt.substr(7);
-         m_nativeAgent->HotPatch(path);
-         response.content = fullOutput;
+          m_nativeAgent->HotPatch(path);
+          response.content = *fullOutput;
     }
     // General Query
-    else {
-         m_nativeAgent->Ask(prompt);
-         response.content = fullOutput;
-         if (fullOutput.find("<thinking>") != std::string::npos) {
-             response.type = AgentResponseType::THINKING;
-         }
-    }
+     else {
+          m_nativeAgent->Ask(prompt);
+          response = ParseAgentResponse(*fullOutput);
+          // Tool calls take precedence over incidental thinking tags so the
+          // caller can route a structured tool request instead of dropping it.
+          if (response.type == AgentResponseType::ANSWER &&
+              fullOutput->find("<thinking>") != std::string::npos) {
+              response.type = AgentResponseType::THINKING;
+          }
+     }
 
-    response.rawOutput = fullOutput;
-    return response;
+     response.rawOutput = *fullOutput;
+     return response;
 }
 
 // Deprecated Stubs — replaced with real implementations
@@ -223,7 +231,34 @@ bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const 
     siStartInfo.hStdInput = m_hStdinRead;
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
     
-    std::wstring wcmdLine(cmdLine.begin(), cmdLine.end());
+    // The command line is assembled as UTF-8.  Widening bytes directly
+    // corrupts non-ASCII paths/prompts (for example an em dash becomes the
+    // invalid UTF-8 byte 0x97 before JSON serialization).  Convert through
+    // the Windows UTF-8 codec explicitly before calling CreateProcessW.
+    const int wideLength = MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, cmdLine.data(),
+        static_cast<int>(cmdLine.size()), nullptr, 0);
+    if (wideLength <= 0) {
+        LOG_ERROR("SpawnPowerShellProcess: invalid UTF-8 command line");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
+    std::wstring wcmdLine(static_cast<size_t>(wideLength), L'\0');
+    if (MultiByteToWideChar(
+            CP_UTF8, MB_ERR_INVALID_CHARS, cmdLine.data(),
+            static_cast<int>(cmdLine.size()), wcmdLine.data(), wideLength) != wideLength) {
+        LOG_ERROR("SpawnPowerShellProcess: UTF-8 command line conversion failed");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
     
     BOOL success = CreateProcessW(
         NULL,               // No module name (use command line)
@@ -250,6 +285,10 @@ bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const 
     
     m_hProcess = piProcInfo.hProcess;
     CloseHandle(piProcInfo.hThread);
+    CloseHandle(m_hStdoutWrite);
+    m_hStdoutWrite = nullptr;
+    CloseHandle(m_hStdinRead);
+    m_hStdinRead = nullptr;
     
     LOG_INFO("SpawnPowerShellProcess: Process started (PID=" + std::to_string(GetProcessId(m_hProcess)) + ")");
     return true;
@@ -330,27 +369,33 @@ void AgenticBridge::SetOutputCallback(OutputCallback callback) {
 }
 
 bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) {
-    if (!m_initialized || !m_nativeAgent) return false;
-    if (m_agentLoopRunning) return true;
+    if (!m_initialized || !m_nativeAgent || initialPrompt.empty() || maxIterations <= 0) return false;
+    if (m_agentLoopRunning.load()) return true;
+    if (m_agentThread.joinable()) {
+        m_agentThread.join();
+    }
     
-    m_agentLoopRunning = true;
+    m_agentLoopRunning.store(true);
     m_agentThread = std::thread([this, initialPrompt, maxIterations]() {
         int iteration = 0;
-        while (m_agentLoopRunning && iteration < maxIterations) {
+        while (m_agentLoopRunning.load() && iteration < maxIterations) {
             // Process one agent iteration
             m_nativeAgent->Ask(initialPrompt);
             ++iteration;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        m_agentLoopRunning = false;
+        m_agentLoopRunning.store(false);
     });
-    m_agentThread.detach();
     
     return true;
 }
 
 void AgenticBridge::StopAgentLoop() {
-    m_agentLoopRunning = false;
+    m_agentLoopRunning.store(false);
+    if (m_agentThread.joinable() &&
+        m_agentThread.get_id() != std::this_thread::get_id()) {
+        m_agentThread.join();
+    }
 }
 
 AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
@@ -358,8 +403,9 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
     response.type = AgentResponseType::ANSWER;
     response.content = rawOutput;
     
-    // Simple heuristic: if output starts with "TOOL:", treat as tool call
-    if (rawOutput.rfind("TOOL:", 0) == 0) {
+    // Keep detection consistent with IsToolCall; an empty tool payload is
+    // not executable and must not be dispatched as a tool call.
+    if (rawrxd::agent::hasToolPayload(rawOutput)) {
         response.type = AgentResponseType::TOOL_CALL;
         response.content = rawOutput.substr(5);
     }
@@ -367,7 +413,7 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
 }
 
 bool AgenticBridge::IsToolCall(const std::string& line) {
-    return line.rfind("TOOL:", 0) == 0 || line.rfind("tool:", 0) == 0;
+    return rawrxd::agent::hasToolPayload(line);
 }
 
 bool AgenticBridge::IsAnswer(const std::string& line) {

@@ -1,0 +1,84 @@
+{
+  "schema": "RAWRXD_FIVE_OS_BUILD_MATRIX",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "working_tree_dirty": true,
+  "host_os": "Windows",
+  "host_arch": "x86-64",
+  "toolchains_available": [
+    { "name": "MSVC cl.exe", "path": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe", "version": "14.44.35207" },
+    { "name": "MSVC link.exe", "path": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\link.exe", "version": "14.44.35207" },
+    { "name": "Ninja", "path": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja\\ninja.exe" }
+  ],
+  "toolchains_missing": [
+    { "name": "Clang", "reason": "not installed on this host" },
+    { "name": "Android NDK", "reason": "ANDROID_NDK not set, no NDK found" },
+    { "name": "Xcode / macOS SDK", "reason": "no macOS host available" },
+    { "name": "ld64", "reason": "macOS linker not available" },
+    { "name": "WSL2 / Linux", "reason": "Windows Subsystem for Linux not installed" }
+  ],
+  "targets": [
+    {
+      "os": "Windows",
+      "arch": "x86-64",
+      "preset": "ninja-release",
+      "generator": "Ninja",
+      "toolchain": "MSVC",
+      "cmake_configure": "PASS",
+      "build_command": "ninja -C build_ide RawrXD-Win32IDE-Native cpu_engine_e2e rawrxd_deep2_engine",
+      "build_exit_code": 0,
+      "build_steps": 37,
+      "build_warnings": "multiple (C4244, C4302, etc. - non-fatal)",
+      "build_errors": 0,
+      "status": "COMPILE_PASS"
+    },
+    {
+      "os": "Linux",
+      "arch": "x86-64",
+      "preset": "linux-ninja-release",
+      "generator": "Ninja",
+      "toolchain": "none_available",
+      "cmake_configure": "NOT_RUN",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "WSL2 not installed, no Linux cross-compiler"
+    },
+    {
+      "os": "macOS",
+      "arch": "x86-64/ARM64",
+      "preset": "darwin-ninja-release",
+      "generator": "Ninja",
+      "toolchain": "none_available",
+      "cmake_configure": "NOT_RUN",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No macOS host, no Xcode, no ld64"
+    },
+    {
+      "os": "Android",
+      "arch": "arm64-v8a",
+      "preset": "android-ndk-release",
+      "generator": "Ninja",
+      "toolchain": "none_available",
+      "cmake_configure": "NOT_RUN",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "ANDROID_NDK not set, no NDK installed"
+    },
+    {
+      "os": "iOS",
+      "arch": "ARM64",
+      "preset": "ios-xcode-release",
+      "generator": "Xcode",
+      "toolchain": "none_available",
+      "cmake_configure": "NOT_RUN",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Xcode, no macOS host, no iOS SDK"
+    }
+  ],
+  "summary": {
+    "targets_discovered": 5,
+    "compile_pass": 1,
+    "compile_blocked": 4,
+    "five_os_compile": "1/5 PASS"
+  }
+}

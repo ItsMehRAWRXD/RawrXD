@@ -63,6 +63,24 @@ bool GDNReferenceStep(const GDNDescriptor& descriptor,
 size_t GDNQkvWidth(const GDNDescriptor& d);
 size_t GDNOutputWidth(const GDNDescriptor& d);
 
+// Qwen3.6/Qwen4Exp gated-delta recurrence. This layout is distinct from
+// the generic per-channel GDNReferenceStep contract above: Q/K/V are packed
+// by heads, alpha/beta are per-value-head projections, and the recurrent
+// state is [value_heads, head_dim, head_dim].
+size_t GDNQwenStateElements(const GDNDescriptor& d);
+
+bool GDNQwenReferenceStep(const GDNDescriptor& descriptor,
+                          const std::vector<float>& mixed_qkv,
+                          const std::vector<float>& beta_logits,
+                          const std::vector<float>& alpha_logits,
+                          const std::vector<float>& a_log,
+                          const std::vector<float>& dt_bias,
+                          const std::vector<float>& norm,
+                          const std::vector<float>& gate,
+                          std::vector<float>& state,
+                          std::vector<float>& output,
+                          std::string& failure);
+
 bool GDNReferenceDecode(const GDNDescriptor& descriptor,
                         const std::vector<float>& qkv,
                         const std::vector<float>& beta,

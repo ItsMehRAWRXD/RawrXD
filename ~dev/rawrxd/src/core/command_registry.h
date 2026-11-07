@@ -70,7 +70,12 @@ public:
     // Query
     std::vector<Command> GetAllCommands() const;
     std::vector<CommandPaletteItem> SearchCommands(const std::string& query) const;
+    // Compatibility pointer: thread-local copy, valid until the next GetCommand
+    // call on the same thread. Prefer TryGetCommand for retained snapshots.
     const Command* GetCommand(const std::string& commandId) const;
+    // Thread-safe snapshot; unlike GetCommand(), the returned copy remains
+    // valid after the registry lock is released or the command is unloaded.
+    bool TryGetCommand(const std::string& commandId, Command& out) const;
     
     // Keybindings
     void RegisterKeybinding(const std::string& keybinding, const std::string& commandId);
@@ -87,6 +92,7 @@ public:
     void RegisterBuiltInCommands();
     
     // Extension commands
+    bool RegisterExtensionCommand(const std::string& extensionId, const Command& command);
     void RegisterExtensionCommands(const std::string& extensionId);
     void UnregisterExtensionCommands(const std::string& extensionId);
     

@@ -21,6 +21,8 @@
 #include "InferenceBackend.h"
 #include "tool_core.hpp"
 #include "MotdAuthorization.h"
+#include "AgentEventJournal.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 #include <functional>
@@ -128,6 +130,15 @@ public:
 
     void SetApprovalCallback(ApprovalCallback cb) { m_approval = cb; }
 
+    void SetEventJournal(std::shared_ptr<AgentEventJournal> journal) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_journal = std::move(journal);
+    }
+    void SetJournalTaskId(std::string taskId) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_journalTaskId = std::move(taskId);
+    }
+
     // ---- Tool schema generation for LLM ----
     // Returns OpenAI-format tool definitions for all registered tools
     json GetToolSchemasForLLM() const;
@@ -152,6 +163,8 @@ private:
     uint64_t m_authorizationTurn = 0;
     bool m_turnOpen = false;
     std::mutex m_turnMutex;
+    std::shared_ptr<AgentEventJournal> m_journal;
+    std::string m_journalTaskId;
 
     // Convert LLM tool arguments (json) to rawrxd::tools::Request args (string map)
     rawrxd::tools::Request ConvertArgs(const ToolCall& call) const;
@@ -175,17 +188,25 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
         std::vector<std::string> required;
     };
 
+    // Canonical + Cursor-parity aliases (must match register_workspace_tools).
     std::vector<ToolInfo> tools = {
-        {"readFile",       "Read bounded workspace file", {"path"}},
-        {"listDirectory",  "List workspace directory", {"path"}},
-        {"fileSearch",     "Find paths by filename substring", {"pattern"}},
-        {"textSearch",     "Search bounded text files", {"needle"}},
+        {"readFile",        "Read bounded workspace file", {"path"}},
+        {"Read",            "Cursor-parity alias for readFile", {"path"}},
+        {"listDirectory",   "List workspace directory", {"path"}},
+        {"fileSearch",      "Find paths by filename substring", {"pattern"}},
+        {"Glob",            "Cursor-parity alias for fileSearch", {"pattern"}},
+        {"textSearch",      "Search bounded text files", {"needle"}},
+        {"Grep",            "Cursor-parity alias for textSearch", {"needle"}},
         {"createDirectory", "Create directory inside workspace", {"path"}},
         {"createFile",      "Create a new file without overwriting", {"path", "content"}},
+        {"writeFile",       "Write/overwrite a workspace file", {"path", "content"}},
+        {"Write",           "Cursor-parity alias for writeFile", {"path", "content"}},
         {"editFiles",       "Replace exact unique text in a file", {"path", "old", "new"}},
-#ifdef _WIN32
-        {"runInTerminal",   "Execute explicitly approved command in workspace", {"command"}},
-#endif
+        {"StrReplace",      "Cursor-parity alias for editFiles", {"path", "old", "new"}},
+        {"deleteFile",      "Delete a workspace file", {"path"}},
+        {"Delete",          "Cursor-parity alias for deleteFile", {"path"}},
+        {"runInTerminal",   "Execute approved command in workspace cwd", {"command"}},
+        {"Shell",           "Cursor-parity alias for runInTerminal", {"command"}},
     };
 
     for (const auto& t : tools) {
@@ -223,14 +244,34 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
 
 inline rawrxd::tools::Request ToolCallBridge::ConvertArgs(const ToolCall& call) const {
     rawrxd::tools::Request req;
+    // Prefer Cursor-native names when registered; else canonicalize to RawrXD.
     req.name = call.name;
+    if (m_registry) {
+        rawrxd::tools::Tool probe;
+        if (!m_registry->find(call.name, probe)) {
+            if (const char* canon = rawrxd::tools::canonicalize_tool_name(call.name)) {
+                req.name = canon;
+            }
+        }
+    } else if (const char* canon = rawrxd::tools::canonicalize_tool_name(call.name)) {
+        req.name = canon;
+    }
 
+    // Cursor Grep uses "pattern"; textSearch requires "needle".
+    // Cursor StrReplace uses old_string/new_string; editFiles uses old/new.
+    // Cursor Write/Shell use path/contents or command — already aligned.
     for (auto it = call.arguments.begin(); it != call.arguments.end(); ++it) {
+        std::string key = it.key();
+        if (key == "pattern" && (req.name == "textSearch" || req.name == "Grep"))
+            key = "needle";
+        if (key == "old_string") key = "old";
+        if (key == "new_string") key = "new";
+        if (key == "contents") key = "content";
+        if (key == "file_path") key = "path";
         if (it->is_string()) {
-            req.args[it.key()] = it->get<std::string>();
+            req.args[key] = it->get<std::string>();
         } else {
-            // Non-string arguments: serialize to JSON string
-            req.args[it.key()] = it->dump();
+            req.args[key] = it->dump();
         }
     }
 
@@ -293,10 +334,22 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
         };
     }
 
+    if (m_journal) {
+        m_journal->ToolStart("main", req.name, call.arguments.dump(), m_journalTaskId);
+    }
+
     rawrxd::tools::Result tool_result = m_registry->call(req, approve);
     m_motdAuthorization.NoteExecution(m_authorizationSession, m_authorizationTurn);
     result_msg.content = tool_result.ok ? tool_result.output : tool_result.error;
     result_msg.success = tool_result.ok;
+
+    if (m_journal) {
+        const std::string detail = tool_result.ok
+            ? (tool_result.output.size() > 512 ? tool_result.output.substr(0, 512) + "..."
+                                               : tool_result.output)
+            : tool_result.error;
+        m_journal->ToolFinish("main", req.name, tool_result.ok ? 0 : 1, detail, m_journalTaskId);
+    }
 
     return result_msg;
 }

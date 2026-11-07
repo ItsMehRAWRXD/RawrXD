@@ -9,7 +9,7 @@ layout(set=0,binding=2,std430) buffer C0 { float c[]; };
 layout(set=0,binding=3,std430) buffer D0 { float d[]; };
 
 layout(push_constant) uniform Push {
-    uint op;       // 0 RMSNorm, 1 SwiGLU, 2 residual
+    uint op;       // 0 RMSNorm, 1 SwiGLU, 2 residual, 3 scaled add
     uint width;
     uint batch;
     uint reserved;
@@ -60,5 +60,11 @@ void main() {
     if(pc.op==2u) {
         for(uint i=lane;i<pc.width;i+=256u)
             c[base+i]=a[base+i]+b[base+i];
+        return;
+    }
+
+    if(pc.op==3u) {
+        for(uint i=lane;i<pc.width;i+=256u)
+            c[base+i]=a[base+i]+pc.eps*b[base+i];
     }
 }

@@ -7,6 +7,8 @@
 #include "rawr_agent_dispatch.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -74,8 +76,32 @@ uint32_t jsonFieldU32(const std::string& json, const std::string& key,
                       uint32_t fallback) {
     const std::string v = jsonField(json, key);
     if (v.empty()) return fallback;
-    try { return static_cast<uint32_t>(std::stoul(v)); }
-    catch (...) { return fallback; }
+    // stoul accepts signs and partial numbers; narrowing can wrap values above
+    // UINT32_MAX. Treat every malformed/out-of-range value as absent.
+    if (v.empty() || !std::all_of(v.begin(), v.end(), [](unsigned char c) {
+            return c >= '0' && c <= '9';
+        })) return fallback;
+    try {
+        const unsigned long long value = std::stoull(v);
+        if (value > UINT32_MAX) return fallback;
+        return static_cast<uint32_t>(value);
+    } catch (...) { return fallback; }
+}
+
+// Resolve an enumerated source without following a symlink outside the workspace.
+std::optional<std::filesystem::path> containedSource(
+    const std::filesystem::path& workspace, const std::filesystem::path& relative) {
+    if (relative.empty() || relative.is_absolute() || relative.has_root_name() ||
+        relative.has_root_directory()) return std::nullopt;
+    std::error_code ec;
+    const auto root = std::filesystem::weakly_canonical(workspace, ec);
+    if (ec || root.empty()) return std::nullopt;
+    const auto full = std::filesystem::weakly_canonical(root / relative, ec);
+    if (ec || full == root) return std::nullopt;
+    auto a = root.begin(), b = full.begin();
+    while (a != root.end() && b != full.end() && *a == *b) { ++a; ++b; }
+    if (a != root.end()) return std::nullopt;
+    return full;
 }
 
 CandidateType candidateTypeFromName(const std::string& name) {
@@ -99,9 +125,10 @@ ToolResult toolWorkspaceList(const ToolRequest& req, AuditLedger* ledger) {
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
 
     const auto& files = ledger->enumeratedFiles();
-    uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 2000);
+    const uint32_t limit = std::min<uint32_t>(
+        jsonFieldU32(req.stdin_text, "limit", 2000), 2000);
     std::string out;
-    out.reserve(files.size() * 32);
+    out.reserve(std::min<size_t>(files.size(), limit) * 32);
     size_t n = 0;
     for (const auto& f : files) {
         if (n++ >= limit) { out += "...(" + std::to_string(files.size()) +
@@ -120,29 +147,50 @@ ToolResult toolFileRead(const ToolRequest& req, AuditLedger* ledger) {
 
     const std::string rel = jsonField(req.stdin_text, "path");
     if (rel.empty()) { r.exit_code = 64; r.stderr_text = "missing path"; return r; }
-    if (rel.find("..") != std::string::npos) {
+    // Canonicalize both sides: rejecting ".." text alone does not stop
+    // absolute paths or symlinks escaping the authorized workspace.
+    const std::filesystem::path requested(rel);
+    if (requested.is_absolute() || requested.has_root_name() ||
+        requested.has_root_directory()) {
+        r.exit_code = 77; r.stderr_text = "absolute path rejected"; return r;
+    }
+    std::error_code ec;
+    const auto root = std::filesystem::weakly_canonical(ledger->workspaceRoot(), ec);
+    if (ec || root.empty()) {
+        r.exit_code = 77; r.stderr_text = "workspace root unavailable"; return r;
+    }
+    const auto full = std::filesystem::weakly_canonical(root / requested, ec);
+    if (ec || full == root) {
+        r.exit_code = 77; r.stderr_text = "invalid file path"; return r;
+    }
+    auto rootIt = root.begin();
+    auto fileIt = full.begin();
+    for (; rootIt != root.end() && fileIt != full.end() && *rootIt == *fileIt;
+         ++rootIt, ++fileIt) {}
+    if (rootIt != root.end()) {
         r.exit_code = 77; r.stderr_text = "path escape rejected"; return r;
     }
-
-    std::filesystem::path full = ledger->workspaceRoot() / rel;
     std::ifstream f(full, std::ios::binary);
     if (!f) { r.exit_code = 66; r.stderr_text = "cannot open " + rel; return r; }
 
     const uint32_t start = jsonFieldU32(req.stdin_text, "start", 1);
-    const uint32_t end   = jsonFieldU32(req.stdin_text, "end", start + 199);
-    const uint32_t maxLines = 400;
+    const uint64_t end = jsonFieldU32(req.stdin_text, "end",
+                                     start > UINT32_MAX - 199 ? UINT32_MAX : start + 199);
+    constexpr uint64_t maxLines = 400;
+    if (start == 0 || end < start) {
+        r.exit_code = 64; r.stderr_text = "invalid line range"; return r;
+    }
+    const uint64_t limit = std::min(end, static_cast<uint64_t>(start) + maxLines - 1);
 
     std::string out;
     std::string line;
-    uint32_t no = 0;
-    char buf[8192];
-    while (f.good() && no < end && no < start + maxLines) {
-        f.getline(buf, sizeof(buf));
+    uint64_t no = 0;
+    while (no < limit && std::getline(f, line)) {
         ++no;
         if (no < start) continue;
         out += std::to_string(no);
         out += '|';
-        out += buf;
+        out += line;
         out += '\n';
     }
     if (out.empty()) { r.exit_code = 1; r.stderr_text = "range empty"; return r; }
@@ -158,22 +206,22 @@ ToolResult toolCodeSearch(const ToolRequest& req, AuditLedger* ledger) {
 
     const std::string needle = jsonField(req.stdin_text, "query");
     if (needle.empty()) { r.exit_code = 64; r.stderr_text = "missing query"; return r; }
-    uint32_t maxHits = jsonFieldU32(req.stdin_text, "max_hits", 50);
+    uint32_t maxHits = std::min<uint32_t>(jsonFieldU32(req.stdin_text, "max_hits", 50), 200);
 
     std::string out;
     uint32_t hits = 0;
     for (const auto& rel : ledger->enumeratedFiles()) {
         if (hits >= maxHits) break;
-        std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
+        const auto safe = containedSource(ledger->workspaceRoot(), rel);
+        if (!safe) continue;
+        std::ifstream f(*safe, std::ios::binary);
         if (!f) continue;
         std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && hits < maxHits) {
-            f.getline(buf, sizeof(buf));
+        uint64_t no = 0;
+        while (hits < maxHits && std::getline(f, line)) {
             ++no;
-            if (std::strstr(buf, needle.c_str()) != nullptr) {
-                out += rel + ":" + std::to_string(no) + ": " + buf + "\n";
+            if (line.find(needle) != std::string::npos) {
+                out += rel + ":" + std::to_string(no) + ": " + line + "\n";
                 ++hits;
             }
         }
@@ -192,41 +240,47 @@ ToolResult toolSymbolFind(const ToolRequest& req, AuditLedger* ledger,
 
     const std::string sym = jsonField(req.stdin_text, "symbol");
     if (sym.empty()) { r.exit_code = 64; r.stderr_text = "missing symbol"; return r; }
-    uint32_t maxHits = jsonFieldU32(req.stdin_text, "max_hits", 50);
+    uint32_t maxHits = std::min<uint32_t>(jsonFieldU32(req.stdin_text, "max_hits", 50), 200);
 
-    auto isIdent = [&](const std::string& s) {
-        for (char c : s)
-            if (!isalnum(static_cast<unsigned char>(c)) && c != '_') return false;
-        return !s.empty();
-    };
-    (void)isIdent;
+    if (!std::all_of(sym.begin(), sym.end(), [](unsigned char c) {
+            return std::isalnum(c) || c == '_';
+        })) {
+        r.exit_code = 64;
+        r.stderr_text = "invalid symbol identifier";
+        return r;
+    }
 
     std::string out;
     uint32_t hits = 0;
     for (const auto& rel : ledger->enumeratedFiles()) {
         if (hits >= maxHits) break;
-        std::ifstream f(ledger->workspaceRoot() / rel, std::ios::binary);
+        const auto safe = containedSource(ledger->workspaceRoot(), rel);
+        if (!safe) continue;
+        std::ifstream f(*safe, std::ios::binary);
         if (!f) continue;
         std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && hits < maxHits) {
-            f.getline(buf, sizeof(buf));
+        uint64_t no = 0;
+        while (hits < maxHits && std::getline(f, line)) {
             ++no;
-            char* p = std::strstr(buf, sym.c_str());
-            if (!p) continue;
-            // word-boundary check
-            const bool lo = p == buf ||
-                             !isalnum(static_cast<unsigned char>(p[-1]));
-            const char after = p[sym.size()];
-            const bool hi = after == '\0' ||
-                            !isalnum(static_cast<unsigned char>(after));
-            if (!lo || !hi) continue;
-            if (referencesOnly && std::strstr(buf, "::") != nullptr &&
-                p > buf && p[-1] == ':') {
-                // still a reference for our purposes
+            // Check every occurrence; the first substring may be embedded in
+            // another identifier while a later occurrence is a valid symbol.
+            size_t pos = 0;
+            bool matched = false;
+            while ((pos = line.find(sym, pos)) != std::string::npos) {
+                const auto ident = [](unsigned char c) {
+                    return std::isalnum(c) || c == '_';
+                };
+                const bool lo = pos == 0 ||
+                    !ident(static_cast<unsigned char>(line[pos - 1]));
+                const size_t after = pos + sym.size();
+                const bool hi = after == line.size() ||
+                    !ident(static_cast<unsigned char>(line[after]));
+                if (lo && hi) { matched = true; break; }
+                pos += sym.size();
             }
-            out += rel + ":" + std::to_string(no) + ": " + buf + "\n";
+            if (!matched) continue;
+            (void)referencesOnly;
+            out += rel + ":" + std::to_string(no) + ": " + line + "\n";
             ++hits;
         }
     }
@@ -275,6 +329,16 @@ ToolResult toolBuildTarget(const ToolRequest& req, AuditLedger* ledger,
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
 
     const std::string target = jsonField(req.stdin_text, "target");
+    // This value is inserted into a shell command. Permit only CMake target
+    // identifiers; reject whitespace, shell metacharacters and path separators.
+    if (!target.empty() &&
+        !std::all_of(target.begin(), target.end(), [](unsigned char c) {
+            return std::isalnum(c) || c == '_' || c == '-' || c == '.';
+        })) {
+        r.exit_code = 64;
+        r.stderr_text = "invalid CMake target identifier";
+        return r;
+    }
     const std::string buildDir =
         (ledger->workspaceRoot() / "build_p2").string();
 
@@ -356,7 +420,11 @@ ToolResult toolAuditFilesReviewed(const ToolRequest& req, AuditLedger* ledger) {
     std::string tok;
     while (ss >> tok) files.push_back(tok);
     if (files.empty()) { r.exit_code = 64; r.stderr_text = "missing files"; return r; }
-    ledger->markFilesReviewed(files);
+    if (!ledger->markFilesReviewed(files)) {
+        r.exit_code = 1;
+        r.stderr_text = "file review rejected by ledger";
+        return r;
+    }
     r.stdout_text = "marked=" + std::to_string(files.size());
     return r;
 }
@@ -393,8 +461,14 @@ ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
     if (ledger->enumeratedFiles().empty()) {
         r.exit_code = 1; r.stderr_text = "sources not enumerated"; return r;
     }
-    ledger->runSourceScan();
+    const bool scanOk = ledger->runSourceScan();
     const AuditCounters c = ledger->counters();
+    if (!scanOk || !c.sourceScanComplete ||
+        c.filesScanned != c.filesEnumerated) {
+        r.exit_code = 1;
+        r.stderr_text = "source scan incomplete or failed";
+        return r;
+    }
     std::ostringstream out;
     out << "RAWR_STUB_SCAN_001_RECEIPT\n"
         << "FILES_ENUMERATED=" << c.filesEnumerated << "\n"
@@ -416,8 +490,14 @@ ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
 ToolResult toolAuditCandidates(const ToolRequest& req, AuditLedger* ledger) {
     ToolResult r;
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
-    const uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 16);
+    const uint32_t limit = std::min<uint32_t>(
+        jsonFieldU32(req.stdin_text, "limit", 16), 100);
     const uint32_t offset = jsonFieldU32(req.stdin_text, "offset", 0);
+    if (offset > 100000 || offset > UINT32_MAX - limit) {
+        r.exit_code = 64;
+        r.stderr_text = "candidate page offset out of range";
+        return r;
+    }
     const auto pend = ledger->pendingCandidates(limit + offset);
     std::ostringstream out;
     uint32_t emitted = 0;
@@ -446,6 +526,12 @@ ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
     for (const auto& c : ledger->candidates())
         if (c.id == id) { match = c; break; }
     if (!match) { r.exit_code = 66; r.stderr_text = "candidate not found"; return r; }
+    const int freshness = ledger->candidateFileFreshness(id);
+    if (freshness != 0 || !ledger->candidateMatchesEpoch(id)) {
+        r.exit_code = 75;
+        r.stderr_text = "candidate source stale or missing; rescan required";
+        return r;
+    }
 
     std::ostringstream out;
     out << "[" << match->id << "] " << candidateTypeName(match->type)
@@ -453,20 +539,26 @@ ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
         << "snippet: " << match->evidence << "\n";
 
     // Surrounding context: bounded window around the candidate line.
-    const std::filesystem::path full = ledger->workspaceRoot() / match->file;
-    std::ifstream f(full, std::ios::binary);
-    if (f) {
-        const uint32_t from = match->line > 20 ? match->line - 20 : 1;
-        const uint32_t to   = match->line + 20;
-        std::string line;
-        uint32_t no = 0;
-        char buf[16384];
-        while (f.good() && no < to) {
-            f.getline(buf, sizeof(buf));
-            ++no;
-            if (no < from) continue;
-            out << no << "|" << buf << "\n";
-        }
+    const auto full = containedSource(ledger->workspaceRoot(), match->file);
+    if (!full) {
+        r.exit_code = 77;
+        r.stderr_text = "candidate path escapes workspace";
+        return r;
+    }
+    std::ifstream f(*full, std::ios::binary);
+    if (!f) {
+        r.exit_code = 66;
+        r.stderr_text = "candidate source unavailable";
+        return r;
+    }
+    const uint32_t from = match->line > 20 ? match->line - 20 : 1;
+    const uint64_t to = static_cast<uint64_t>(match->line) + 20;
+    std::string line;
+    uint64_t no = 0;
+    while (no < to && std::getline(f, line)) {
+        ++no;
+        if (no < from) continue;
+        out << no << "|" << line << "\n";
     }
     r.stdout_text = out.str();
     return r;

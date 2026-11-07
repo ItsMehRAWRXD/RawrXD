@@ -1,0 +1,30 @@
+﻿EVIDENCE: AGENTIC_CURSOR_PARITY_SMOKE_001
+UTC_LOCAL: 2026-10-26T23:54:02-04:00
+REPO: F:\rawrxd
+BRANCH: fix/deep2-multimodel-safety-20261025
+COMMIT_SHA: 3f87e1fb6420b4ac432092fb3ece839310fb0cea
+REMOTE_SHA: 3f87e1fb6420b4ac432092fb3ece839310fb0cea
+REMOTE: https://github.com/ItsMehRAWRXD/RawrXD.git
+REMOTE_BRANCH_URL: https://github.com/ItsMehRAWRXD/RawrXD/tree/fix/deep2-multimodel-safety-20261025
+
+PARITY_COMMIT: 3f0f68eac3892e2d7752fd839acbcf728831f7ec
+PARITY_ANCESTOR_OF_HEAD: 1
+PRIOR_PUSH_TIP_SEEN: 579cd9148aee83633478a7082239980a3f367ce5
+
+REBUILD: _rebuild_agentic_cursor_parity.bat
+REBUILD_TARGET: rawrxd_agentic_backend
+REBUILD_EXIT: 0
+
+SMOKE: tests/agentic/cursor_parity_registry_smoke.cpp
+SMOKE_BINARY: build_smoke/cursor_parity_registry_smoke.exe
+SMOKE_CRT: /MD
+SMOKE_EXIT: 0
+FAIL_COUNT: 0
+GATES_PASS: readFile Read listDirectory fileSearch Glob textSearch Grep createDirectory createFile writeFile Write editFiles StrReplace deleteFile Delete runInTerminal Shell Shell_risk_eq_runInTerminal outside_workspace_denied Write_alias Read_alias Shell_echo Ask_Shell_denied Ask_runInTerminal_denied Ask_Write_denied
+
+PUSH_RESULT: first attempt race-rejected; retry set upstream; remote tip matched local then advanced with concurrent commits; current remote==local 3f87e1fb6420b4ac432092fb3ece839310fb0cea
+FORCE_PUSH: 0
+LLAMA_CPP_REF: SKIP (no .git at F:\rawrxd\llama.cpp-ref)
+
+PROMOTE=0
+TIP_CLIMB=HOLD

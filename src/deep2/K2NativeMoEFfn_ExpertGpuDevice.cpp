@@ -215,6 +215,14 @@ bool K2MoEStickEndDevice(unsigned stick, float* hostPartial, size_t H,
     const int ok =
         vc->DownloadBuf(ffn, hostPartial, (uint32_t)H) ? 1 : 0;
     MoeGpuTrace("LIVE_K2_MOE_D2H_DONE stick=%u ok=%d", stick, ok);
+    if (!ok) {
+        std::fprintf(stderr,
+            "[GPU_D2H_FAIL] stick=%u H=%zu lastD2hVk=%llu lastD2hPhase=%s\n",
+            stick, H,
+            (unsigned long long)vc->LastD2hVk(),
+            vc->LastD2hPhase());
+        std::fflush(stderr);
+    }
     ed3::NoteD2h(ok, vc->LastD2hVk(), vc->LastD2hPhase(), hostPartial, H);
     ed3::EmitBoundary(ok ? "END_OK" : "END_FAIL");
     if (!ok) return false;

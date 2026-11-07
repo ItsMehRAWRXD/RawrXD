@@ -1,0 +1,48 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Reply exactly RAWRXD_MODEL_SMOKE_OK",
+      "role": "user",
+      "timestamp": 1793016785
+    }
+  ],
+  "driver_exit_code": -1,
+  "failure_reasons": [
+    "inference failed: tool denied: editFiles (Tool 'editFiles' denied in mode 'code' (granted: controlled, ceiling: controlled))"
+  ],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "fix/deep2-multimodel-safety-20261025",
+  "git_revision": "a7b14a9f8c61c239c3834b1028274a1060170b92",
+  "model_identity": "ollama/llama3.1:8b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1793016785,
+  "task_id": "",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\tmp_build\\ollama_family_smoke\\llama3.1_8b"
+}

@@ -1,19 +1,10 @@
 {
-  "gpu_recovery_result": "blocked_active_inference",
-  "devices": [
-    {
-      "reason": "active_inference",
-      "name": "AMD Radeon RX 7800 XT",
-      "action": "skipped",
-      "originalCode": 43,
-      "finalCode": 43,
-      "id": "PCI\\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\\6&2E27FDA8&0&0000000B"
-    }
-  ],
-  "event": "gpu_recovery",
-  "timestamp": "2026-10-20T16:48:58.9872667-04:00",
-  "gpu_admission_result": "denied_recovery_failed",
-  "gpu_recovery_attempted": true,
   "primary_gpu_id": "PCI\\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\\6&8916A45&0&00000009",
-  "vulkan_available": false
+  "gpu_recovery_attempted": false,
+  "gpu_admission_result": "no_recovery_needed",
+  "gpu_recovery_result": "none",
+  "vulkan_available": true,
+  "timestamp": "2026-10-27T04:18:51.5785957-04:00",
+  "event": "gpu_recovery",
+  "devices": []
 }

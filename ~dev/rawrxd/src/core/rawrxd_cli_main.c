@@ -6,6 +6,7 @@
 
 #include "rawrxd_inference.h"
 #include "rawrxd_model_stream.h"
+#include "cli_numeric_policy.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -264,101 +265,40 @@ static int cmd_generate(int argc, char** argv) {
     f32 top_p = 0.9f;
     u32 top_k = 40;
     
-    // Parse options
+    // Reject malformed or out-of-range values before opening the model.
     for (int i = 3; i < argc; i++) {
-        if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--prompt") == 0) && i + 1 < argc) {
-            prompt = argv[++i];
-        } else if ((strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--temperature") == 0) && i + 1 < argc) {
-            temperature = (f32)atof(argv[++i]);
-        } else if ((strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--tokens") == 0) && i + 1 < argc) {
-            max_tokens = (u32)atoi(argv[++i]);
-        } else if (strcmp(argv[i], "--top-p") == 0 && i + 1 < argc) {
-            top_p = (f32)atof(argv[++i]);
-        } else if (strcmp(argv[i], "--top-k") == 0 && i + 1 < argc) {
-            top_k = (u32)atoi(argv[++i]);
+        const char* opt = argv[i];
+        if (strcmp(opt, "-p") == 0 || strcmp(opt, "--prompt") == 0) {
+            if (++i >= argc) { fprintf(stderr, "Missing prompt value\n"); return 2; }
+            prompt = argv[i];
+        } else if (strcmp(opt, "-t") == 0 || strcmp(opt, "--temperature") == 0) {
+            if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.0, 2.0, &temperature)) {
+                fprintf(stderr, "Invalid temperature (expected 0..2)\n"); return 2;
+            }
+        } else if (strcmp(opt, "-n") == 0 || strcmp(opt, "--tokens") == 0) {
+            if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 65536, &max_tokens)) {
+                fprintf(stderr, "Invalid token count (expected 1..65536)\n"); return 2;
+            }
+        } else if (strcmp(opt, "--top-p") == 0) {
+            if (++i >= argc || !rawrxd_parse_f32_range(argv[i], 0.000001, 1.0, &top_p)) {
+                fprintf(stderr, "Invalid top-p (expected >0 and <=1)\n"); return 2;
+            }
+        } else if (strcmp(opt, "--top-k") == 0) {
+            if (++i >= argc || !rawrxd_parse_u32_range(argv[i], 1, 4096, &top_k)) {
+                fprintf(stderr, "Invalid top-k (expected 1..4096)\n"); return 2;
+            }
+        } else {
+            fprintf(stderr, "Unknown generate option: %s\n", opt);
+            return 2;
         }
     }
-    
-    printf("Loading model: %s\n", path);
-    
-    // Open and stream model
-    rawrxd_model_stream* stream = rawrxd_stream_open(path);
-    if (!stream || stream->state == RAWRXD_STREAM_ERROR) {
-        printf("Error: Failed to open model\n");
-        return 1;
-    }
-    
-    printf("Streaming model...\n");
-    u32* order = rawrxd_stream_order_llama(stream);
-    rawrxd_stream_start(stream, order, stream->tensor_count);
-    rawrxd_free(order, stream->tensor_count * sizeof(u32));
-    
-    // Wait for embeddings to be ready (can start inference early)
-    rawrxd_stream_wait(stream, 0);
-    
-    printf("Model ready.\n\n");
-    
-    // Create model (simplified - would use actual config from GGUF)
-    rawrxd_model_config config = {
-        .arch = RAWRXD_ARCH_LLAMA,
-        .vocab_size = 32000,
-        .hidden_size = 4096,
-        .intermediate_size = 11008,
-        .num_layers = 32,
-        .num_heads = 32,
-        .num_kv_heads = 32,
-        .head_dim = 128,
-        .max_seq_len = 4096,
-        .context_length = 4096,
-        .rms_norm_eps = 1e-6f,
-        .rope_theta = 10000.0f,
-        .hidden_act = ACT_SILU,
-        .bos_token_id = 1,
-        .eos_token_id = 2,
-        .pad_token_id = 0,
-    };
-    
-    // Note: In real implementation, config would be read from GGUF metadata
-    printf("Note: Using default LLaMA-7B config.\n");
-    printf("      In production, config is auto-detected from GGUF.\n\n");
-    
-    printf("Prompt: %s\n", prompt);
-    printf("Generating %u tokens (temperature=%.2f, top_p=%.2f, top_k=%u)...\n\n", 
-           max_tokens, temperature, top_p, top_k);
-    
-    // Simulate generation output
-    printf("Output:\n");
-    printf("--------\n");
-    printf("%s", prompt);
-    
-    // In real implementation, this would call rawrxd_generate()
-    // For now, simulate output
-    const char* simulated_output = " a large language model trained by AI researchers. I can help with a wide range of tasks including answering questions, writing code, analyzing text, and having conversations. I'm designed to be helpful, harmless, and honest in my responses.";
-    
-    for (size_t i = 0; i < strlen(simulated_output) && i < max_tokens * 4; i++) {
-        putchar(simulated_output[i]);
-        fflush(stdout);
-        #ifdef _WIN32
-        Sleep(10);
-        #else
-        usleep(10000);
-        #endif
-    }
-    
-    printf("\n--------\n\n");
-    
-    // Show stats
-    printf("Generation stats:\n");
-    printf("  Tokens generated:   %u\n", max_tokens);
-    printf("  Time:               ~%.2f ms\n", max_tokens * 50.0f);
-    printf("  Tokens/sec:       ~%.2f\n", 1000.0f / 50.0f);
-    printf("\n");
-    
-    printf("Note: This is a simulated output.\n");
-    printf("      Real generation requires full model weights.\n");
-    
-    rawrxd_stream_close(stream);
-    return 0;
+
+    // This entry point has no real model-backed generation implementation.
+    // Never return a successful inference receipt for canned text.
+    (void)path; (void)prompt; (void)temperature;
+    (void)max_tokens; (void)top_p; (void)top_k;
+    fprintf(stderr, "UNAVAILABLE: generate requires a wired inference backend; no tokens generated\n");
+    return 3;
 }
 
 //=============================================================================
@@ -367,84 +307,13 @@ static int cmd_generate(int argc, char** argv) {
 
 static int cmd_chat(int argc, char** argv) {
     if (argc < 3) {
-        printf("Error: Model path required\n");
-        printf("Usage: chat <model.gguf> [options]\n");
+        fprintf(stderr, "Usage: chat <model.gguf> [options]\n");
         return 1;
     }
-    
-    const char* path = argv[2];
-    f32 temperature = 0.7f;
-    
-    // Parse options
-    for (int i = 3; i < argc; i++) {
-        if ((strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--temperature") == 0) && i + 1 < argc) {
-            temperature = (f32)atof(argv[++i]);
-        }
-    }
-    
-    printf("Loading model: %s\n\n", path);
-    
-    // Open model
-    rawrxd_model_stream* stream = rawrxd_stream_open(path);
-    if (!stream || stream->state == RAWRXD_STREAM_ERROR) {
-        printf("Error: Failed to open model\n");
-        return 1;
-    }
-    
-    printf("Model loaded. Starting interactive chat...\n");
-    printf("Temperature: %.2f\n\n", temperature);
-    
-    printf("Chat mode (type 'quit' or 'exit' to stop)\n");
-    printf("========================================\n\n");
-    
-    char input[1024];
-    int turn = 1;
-    
-    while (1) {
-        printf("[%d] You: ", turn);
-        fflush(stdout);
-        
-        if (!fgets(input, sizeof(input), stdin)) {
-            break;
-        }
-        
-        // Remove newline
-        size_t len = strlen(input);
-        if (len > 0 && input[len - 1] == '\n') {
-            input[len - 1] = '\0';
-        }
-        
-        // Check for exit
-        if (strcmp(input, "quit") == 0 || strcmp(input, "exit") == 0) {
-            printf("\nGoodbye!\n");
-            break;
-        }
-        
-        if (strlen(input) == 0) {
-            continue;
-        }
-        
-        printf("[%d] Assistant: ", turn);
-        fflush(stdout);
-        
-        // Simulate response
-        const char* responses[] = {
-            "I understand. Could you tell me more about that?",
-            "That's interesting! Let me think about it...",
-            "I see what you mean. Here's my perspective...",
-            "Great question! Based on my training...",
-            "I'd be happy to help with that.",
-        };
-        
-        printf("%s\n\n", responses[turn % 5]);
-        
-        turn++;
-    }
-    
-    printf("\n");
-    
-    rawrxd_stream_close(stream);
-    return 0;
+    (void)argv;
+    // The former chat path returned rotating canned responses as if inferred.
+    fprintf(stderr, "UNAVAILABLE: chat requires a wired inference backend; no response generated\n");
+    return 3;
 }
 
 //=============================================================================
@@ -453,105 +322,13 @@ static int cmd_chat(int argc, char** argv) {
 
 static int cmd_benchmark(int argc, char** argv) {
     if (argc < 3) {
-        printf("Error: Model path required\n");
-        printf("Usage: benchmark <model.gguf>\n");
+        fprintf(stderr, "Usage: benchmark <model.gguf>\n");
         return 1;
     }
-    
-    const char* path = argv[2];
-    printf("Benchmarking model: %s\n\n", path);
-    
-    // Open model
-    rawrxd_model_stream* stream = rawrxd_stream_open(path);
-    if (!stream || stream->state == RAWRXD_STREAM_ERROR) {
-        printf("Error: Failed to open model\n");
-        return 1;
-    }
-    
-    printf("Running benchmarks...\n\n");
-    
-    // Benchmark 1: Model loading
-    printf("[1/5] Model loading...\n");
-    rawrxd_timer timer = rawrxd_timer_start();
-    
-    u32* order = rawrxd_stream_order_llama(stream);
-    rawrxd_stream_start(stream, order, stream->tensor_count);
-    rawrxd_free(order, stream->tensor_count * sizeof(u32));
-    rawrxd_stream_wait(stream, 0);
-    
-    double load_time = rawrxd_timer_elapsed_ms(&timer);
-    double throughput = rawrxd_stream_get_throughput_mbps(stream);
-    
-    printf("      Time:     %.2f ms\n", load_time);
-    printf("      Throughput: %.2f MB/s\n", throughput);
-    printf("\n");
-    
-    // Benchmark 2: Tokenization (simulated)
-    printf("[2/5] Tokenization...\n");
-    timer = rawrxd_timer_start();
-    
-    const char* test_text = "The quick brown fox jumps over the lazy dog. "
-                            "This is a test of the tokenization system. "
-                            "It should handle various text inputs efficiently.";
-    (void)test_text;
-    
-    #ifdef _WIN32
-    Sleep(10);
-    #else
-    usleep(10000);
-    #endif
-    
-    double tokenize_time = rawrxd_timer_elapsed_ms(&timer);
-    printf("      Time:     %.2f ms\n", tokenize_time);
-    printf("      Text:     %zu chars\n", strlen(test_text));
-    printf("\n");
-    
-    // Benchmark 3: Inference (simulated)
-    printf("[3/5] Inference (100 tokens)...\n");
-    timer = rawrxd_timer_start();
-    
-    #ifdef _WIN32
-    Sleep(500);
-    #else
-    usleep(500000);
-    #endif
-    
-    double inference_time = rawrxd_timer_elapsed_ms(&timer);
-    double tokens_per_sec = 100.0 / (inference_time / 1000.0);
-    
-    printf("      Time:     %.2f ms\n", inference_time);
-    printf("      Tokens/s: %.2f\n", tokens_per_sec);
-    printf("      ms/token: %.2f\n", inference_time / 100.0);
-    printf("\n");
-    
-    // Benchmark 4: Memory
-    printf("[4/5] Memory usage...\n");
-    printf("      Model size:   %.2f MB\n", stream->bytes_total / (1024.0 * 1024.0));
-    printf("      Working set:  ~%.2f MB\n", stream->bytes_total / (1024.0 * 1024.0) * 1.1f);
-    printf("\n");
-    
-    // Benchmark 5: KV cache
-    printf("[5/5] KV cache...\n");
-    printf("      Cache size:   ~%.2f MB (for 4096 context)\n", 
-           32.0f * 2 * 32 * 4096 * 128 * sizeof(f16) / (1024.0 * 1024.0));
-    printf("\n");
-    
-    // Summary
-    printf("========================================\n");
-    printf("Benchmark Summary\n");
-    printf("========================================\n");
-    printf("Model:              %s\n", path);
-    printf("Load time:          %.2f ms\n", load_time);
-    printf("Load throughput:    %.2f MB/s\n", throughput);
-    printf("Inference speed:    %.2f tokens/s\n", tokens_per_sec);
-    printf("Memory usage:       %.2f MB\n", stream->bytes_total / (1024.0 * 1024.0));
-    printf("\n");
-    
-    printf("Note: Benchmarks are simulated.\n");
-    printf("      Real benchmarks require full model weights.\n");
-    
-    rawrxd_stream_close(stream);
-    return 0;
+    (void)argv;
+    // Sleeping for a fixed interval is not an inference throughput benchmark.
+    fprintf(stderr, "UNAVAILABLE: benchmark requires real inference timing; no TPS measured\n");
+    return 3;
 }
 
 //=============================================================================

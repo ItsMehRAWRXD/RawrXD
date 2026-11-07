@@ -1,0 +1,50 @@
+﻿{
+    "schema":  "RAWRXD_PE_STRUCTURAL_VALIDATE_001",
+    "path":  "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\out\\02_exit_sentinel_O2.exe",
+    "sha256":  "9d47756da8c54b643c5b85c4f44601d798538628c9729654a39117574bbfae6f",
+    "pass":  true,
+    "issues":  [
+
+               ],
+    "machine":  "0x8664",
+    "sections":  4,
+    "entry_rva":  "0x4000",
+    "size_of_headers":  "0x400",
+    "size_of_image":  "0x5000",
+    "import_rva":  "0x3000",
+    "import_size":  "0x28",
+    "section_table":  [
+                          {
+                              "name":  ".text$mn",
+                              "rva":  4096,
+                              "vsize":  6,
+                              "rawoff":  1024,
+                              "rawsz":  512,
+                              "ch":  "0x60001020"
+                          },
+                          {
+                              "name":  ".chks64",
+                              "rva":  8192,
+                              "vsize":  32,
+                              "rawoff":  1536,
+                              "rawsz":  512,
+                              "ch":  "0xa00"
+                          },
+                          {
+                              "name":  ".idata",
+                              "rva":  12288,
+                              "vsize":  99,
+                              "rawoff":  2048,
+                              "rawsz":  512,
+                              "ch":  "0xc0000040"
+                          },
+                          {
+                              "name":  ".stub",
+                              "rva":  16384,
+                              "vsize":  18,
+                              "rawoff":  2560,
+                              "rawsz":  512,
+                              "ch":  "0x60000020"
+                          }
+                      ]
+}

@@ -62,6 +62,14 @@ bool Deep2Engine::gpuResidentDecodeEnabled() const {
     return gpuFwdCommitted_;
 }
 
+// Keep the public witness tied to the same predicate used by the emitted
+// telemetry.  This must not report GPU residency merely because Vulkan was
+// initialized or a device was discovered.
+bool Deep2Engine::isRealGpuForward() const {
+    return Deep2GpuForward_IsReal(
+        gpuFwd_, gpuFwd_.hostForwardLayerCalls + gpuFwd_.cpuF32Expands);
+}
+
 // ----------------------------------------------------------------------------
 // forwardTokenAllLayers — run one token through every model layer.
 // This is the same control law Deep2Engine.cpp applies inline in its
@@ -73,6 +81,12 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (!hidden) return false;
     if (modelWeights.numLayers == 0) return false;
     if (!attentionOutput) return false;
+
+    // Give the canonical resident Vulkan path first claim.  It returns false
+    // for unsupported topologies or any failed device operation, preserving
+    // the existing host implementation as the explicit compatibility path.
+    // No GPU counter is promoted unless every layer completes on-device.
+    if (tryGpuTokenForward(hidden)) return true;
 
     float* layerInput = hidden;
     float* layerOutput = attentionOutput;
@@ -162,16 +176,26 @@ void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
 // ----------------------------------------------------------------------------
 bool Deep2Engine::safeForwardLayer(size_t layer, float* input, float* output, size_t seqLen)
 {
+    EXCEPTION_POINTERS* exceptionInfo = nullptr;
     __try
     {
         forwardLayer(layer, input, output, seqLen);
         return true;
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    __except ((exceptionInfo = GetExceptionInformation()), EXCEPTION_EXECUTE_HANDLER)
     {
+        const DWORD code = GetExceptionCode();
+        const void* address = (exceptionInfo && exceptionInfo->ExceptionRecord)
+                                  ? exceptionInfo->ExceptionRecord->ExceptionAddress
+                                  : nullptr;
+        ULONG_PTR faultAddress = 0;
+        if (exceptionInfo && exceptionInfo->ExceptionRecord && exceptionInfo->ExceptionRecord->NumberParameters >= 2)
+            faultAddress = exceptionInfo->ExceptionRecord->ExceptionInformation[1];
         fprintf(stderr,
-                "[B3_ABORT] forwardLayer access violation at layer=%zu, "
-                "stopping generation\n", layer);
+                "[B3_ABORT] forwardLayer exception at layer=%zu code=0x%08lX "
+                "instruction=%p fault=%p stopping generation\n",
+                layer, static_cast<unsigned long>(code), address,
+                reinterpret_cast<const void*>(faultAddress));
         fflush(stderr);
         return false;
     }

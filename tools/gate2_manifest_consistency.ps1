@@ -44,9 +44,28 @@ function Fail([string]$Why) {
 
 Say "=== Gate 2: manifest consistency ($(Get-Date -Format o)) ==="
 
+function Resolve-BuildExecutable([string]$Name) {
+    $candidates = @(
+        (Join-Path $BuildDir ("bin-msvc\" + $Name + ".exe")),
+        (Join-Path $BuildDir ("bin-msvc\Release\" + $Name + ".exe")),
+        (Join-Path $BuildDir ("Release\" + $Name + ".exe"))
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+    $fallback = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter ($Name + ".exe") -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($fallback) { return $fallback.FullName }
+    return $null
+}
+
 # ---- C1: authoritative registry emitter --------------------------------------
 $registryJson = Join-Path $EvidenceDir "registry.json"
-$regOut = & (Join-Path $BuildDir "bin-msvc\Release\quant_parity_cert.exe") --blocks 8 --seed 12345 --json $registryJson 2>&1
+$registryExe = Resolve-BuildExecutable "quant_parity_cert"
+if (-not $registryExe) { Fail "quant_parity_cert.exe not found under '$BuildDir'" }
+$regOut = & $registryExe --blocks 8 --seed 12345 --json $registryJson 2>&1
 if ($LASTEXITCODE -ne 0) { Fail "quant_parity_cert exited $LASTEXITCODE" }
 Say "C1 quant_parity_cert           PASS (exit 0, RESULT: $(($regOut | Select-String 'RESULT:').Line))"
 
@@ -60,8 +79,10 @@ $cli = Get-Content $cliJson -Raw | ConvertFrom-Json
 Say "C2 rawr capabilities           PASS (exit 0, tools=$($cli.tool_count), revision=$($cli.source_revision))"
 
 # ---- C3: revision freshness (staleness rejection) ------------------------------
-$head = (git -C $RepoRoot rev-parse HEAD 2>$null)
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($head)) { Fail "git rev-parse HEAD failed" }
+$headOutput = @(& git.exe -C $RepoRoot rev-parse HEAD 2>&1)
+if ($LASTEXITCODE -ne 0 -or $headOutput.Count -eq 0) { Fail "git rev-parse HEAD failed" }
+$head = [string]$headOutput[0].Trim()
+if ([string]::IsNullOrWhiteSpace($head)) { Fail "git rev-parse HEAD returned an empty revision" }
 if ($cli.source_revision -notmatch '^[0-9a-f]{40}$') {
     Fail "manifest revision is not a real commit: '$($cli.source_revision)' (git-unavailable manifests are stale by definition)"
 }
@@ -97,8 +118,8 @@ foreach ($q in $verified) {
         if (-not $evid) { Fail "Q8_K claimed verified but registry has no verified evidence row" }
     }
 }
-$kq = Join-Path $BuildDir "bin-msvc\Release\kquant_dot_parity.exe"
-if (-not (Test-Path $kq)) { $kq = (Get-ChildItem $RepoRoot -Recurse -Filter kquant_dot_parity.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
+$kq = Resolve-BuildExecutable "kquant_dot_parity"
+if (-not $kq) { $kq = (Get-ChildItem $RepoRoot -Recurse -Filter kquant_dot_parity.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
 if (-not $kq) { Fail "kquant_dot_parity.exe not found" }
 & $kq | Out-Null
 if ($LASTEXITCODE -ne 0) { Fail "kquant_dot_parity exited $LASTEXITCODE (Q4_K/Q6_K/Q8_K dot parity)" }

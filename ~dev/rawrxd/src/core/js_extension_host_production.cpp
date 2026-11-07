@@ -1,11 +1,10 @@
-// js_extension_host_production.cpp — Production JS extension host
+// js_extension_host_production.cpp — Fail-closed C ABI compatibility bridge
 // Replaces: js_extension_host_headless_stubs.cpp
 //
-// Provides real JS extension host functionality
+// This file does NOT implement JavaScript execution or VSIX installation.
+// The real QuickJS host lives in js_extension_host.cpp; do not treat this
+// compatibility bridge as an extension-runtime certification target.
 
-#include <windows.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <mutex>
 #include <string>
 
@@ -19,41 +18,32 @@ public:
         return instance;
     }
 
+    // This bridge has no JavaScript engine or module loader.
+    // The full QuickJS host is implemented separately in js_extension_host.cpp.
+    // Do not claim runtime initialization, script execution, or installation.
     bool Initialize() {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (initialized_) {
-            return true;
-        }
-        
-        initialized_ = true;
-        return true;
+        return false;
     }
-    
+
     void Shutdown() {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (!initialized_) {
-            return;
-        }
-        
         initialized_ = false;
     }
-    
+
     bool IsInitialized() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return initialized_;
     }
-    
+
     bool ExecuteScript(const char* script) {
-        if (!initialized_ || !script) {
-            return false;
-        }
-        return true;
+        (void)script;
+        return false;
     }
-    
+
     bool LoadExtension(const char* path) {
-        if (!initialized_ || !path) {
-            return false;
-        }
-        return true;
+        (void)path;
+        return false;
     }
 
 private:
@@ -66,25 +56,31 @@ private:
     bool initialized_ = false;
 };
 
+#ifdef _WIN32
+#define RAWRXD_BRIDGE_API __declspec(dllexport)
+#else
+#define RAWRXD_BRIDGE_API __attribute__((visibility("default")))
+#endif
+
 extern "C" {
 
-bool RawrXD_JSExt_Initialize() {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_Initialize() {
     return JSExtensionHost::Instance().Initialize();
 }
 
-void RawrXD_JSExt_Shutdown() {
+RAWRXD_BRIDGE_API void RawrXD_JSExt_Shutdown() {
     JSExtensionHost::Instance().Shutdown();
 }
 
-bool RawrXD_JSExt_IsInitialized() {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_IsInitialized() {
     return JSExtensionHost::Instance().IsInitialized();
 }
 
-bool RawrXD_JSExt_ExecuteScript(const char* script) {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_ExecuteScript(const char* script) {
     return JSExtensionHost::Instance().ExecuteScript(script);
 }
 
-bool RawrXD_JSExt_LoadExtension(const char* path) {
+RAWRXD_BRIDGE_API bool RawrXD_JSExt_LoadExtension(const char* path) {
     return JSExtensionHost::Instance().LoadExtension(path);
 }
 

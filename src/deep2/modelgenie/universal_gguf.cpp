@@ -1074,6 +1074,9 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             // block whose mixer is the Mamba2 scan emitted above, and emitting
             // attention ops with empty weight names there fails at bind time
             // with "linear: no weight".
+            const bool qwen35GatedAttention =
+                s.architecture == "qwen35moe" &&
+                !name(Role::AttnQNorm).empty() && !name(Role::AttnKNorm).empty();
             for (Role r : {Role::AttnQ, Role::AttnK, Role::AttnV}) {
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
@@ -1085,6 +1088,16 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 GraphOp o;
                 o.op = Op::Attention; o.block = (int32_t)b;
                 o.a = "q"; o.b = "k,v"; o.out = "attn_out";
+                if (qwen35GatedAttention) {
+                    // Qwen3.6 attention stores [query, gate] in attn_q and
+                    // applies per-head q/k RMS norms before GQA.  Preserve the
+                    // architecture contract in the graph so OpAttention can
+                    // split the projection instead of treating the 8192-wide
+                    // fused query as 16 heads of width 512.
+                    o.detail = "qwen35_gated_attention;qnorm=" +
+                               name(Role::AttnQNorm) + ";knorm=" +
+                               name(Role::AttnKNorm);
+                }
                 g.ops.push_back(o);
             }
 // Output projection: only for non-MLA models (MLA handles its own output projection)

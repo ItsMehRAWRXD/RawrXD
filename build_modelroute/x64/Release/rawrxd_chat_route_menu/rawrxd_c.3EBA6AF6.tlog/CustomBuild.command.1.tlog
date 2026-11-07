@@ -1,0 +1,28 @@
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\260FEFE037977AB752DC0C1DF9E354C2\GENERATEDCHATROUTEMENU.H.RULE
+setlocal
+C:\Users\Garrett\AppData\Local\Programs\Python\Python313\python.exe F:/rawrxd/scripts/generate_chat_route_menu.py --manifest F:/rawrxd/config/chat_model_routes.json --output F:/rawrxd/build_modelroute/generated/GeneratedChatRouteMenu.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\E10C79B1E480E1997A5BC27E0231533E\RAWRXD_CHAT_ROUTE_MENU.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_modelroute --check-stamp-file F:/rawrxd/build_modelroute/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

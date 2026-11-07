@@ -44,10 +44,11 @@ struct TensorZoneInfo {
 struct TensorRef {
     std::string name;
     std::string zone_name;              // Which zone does this belong to?
-    uint64_t offset;                    // Byte offset in file
+    uint64_t offset;                    // Absolute byte offset in file (includes data_start_)
     uint64_t size;                      // Size of this tensor
     RawrXD::GGMLType type;
     std::vector<uint64_t> shape;
+    uint32_t shard_id = 0;              // Which GGUF shard this tensor lives in (0-based)
 };
 
 class StreamingGGUFLoader : public RawrXD::IGGUFLoader {
@@ -88,7 +89,7 @@ public:
 
     // Access tensor data (loads zone if needed) - implements base class LoadTensorZone
     bool LoadTensorZone(const std::string& tensor_name, std::vector<uint8_t>& data) override;
-    bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data); // Non-virtual alias
+    bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data) override;
 
     // Get zone info (what's loaded, what's not)
     TensorZoneInfo GetZoneInfo(const std::string& zone_name) const;
@@ -106,20 +107,36 @@ public:
     // ---- Random-access lookup (RawrXD::IGGUFLoader) -------------------------
     const RawrXD::TensorInfo* GetTensorInfo(const std::string& name) const override;
     const std::vector<std::string>& GetVocabulary() const override;
+    bool LoadTensorSlice(const std::string& name,
+                         uint64_t byte_offset,
+                         uint64_t byte_count,
+                         std::vector<uint8_t>& data) override;
 
 private:
     // ---- File Handle (kept open for streaming) ----
     std::string filepath_;
-    mutable std::ifstream file_;
+    // Multi-shard support: one open file handle per shard
+    std::map<uint32_t, std::unique_ptr<std::ifstream>> shard_files_;
+    std::map<uint32_t, uint64_t> shard_data_starts_;   // Per-shard data section start
+    std::ifstream* current_file_ = nullptr;            // Currently active shard stream
     bool is_open_;
 
     // ---- Metadata (always in RAM, ~50-100 MB) ----
     RawrXD::GGUFHeader header_;
     RawrXD::GGUFMetadata metadata_;
 
+    // Per-shard header and metadata (each shard has its own)
+    std::map<uint32_t, RawrXD::GGUFHeader> shard_headers_;
+    std::map<uint32_t, RawrXD::GGUFMetadata> shard_metadata_;
+
     // ---- Tensor Index (always in RAM, ~40 MB) ----
     // Maps tensor_name -> {offset, size, type, shape}
     std::map<std::string, TensorRef> tensor_index_;
+
+    // GGUF tensor offsets are relative to the aligned tensor-data section,
+    // not to the beginning of the file.  Keep the computed absolute base so
+    // all streaming reads use one unambiguous coordinate system.
+    uint64_t data_start_ = 0;
 
     // ---- Zone Information ----
     // Maps zone_name -> {tensors, total_bytes, is_loaded, data}
@@ -151,5 +168,19 @@ private:
     template<typename T>
     bool ReadValue(T& value);
     bool ReadString(std::string& value);
+    bool SkipMetadataValue(uint32_t value_type);
     uint64_t CalculateTensorSize(const std::vector<uint64_t>& shape, RawrXD::GGMLType type) const;
+
+    // ---- Multi-shard support ----
+    std::vector<std::string> discover_shard_files(const std::string& filepath);
+    bool ParseHeaderFromShard(uint32_t shard_id);
+    bool ParseMetadataFromShard(uint32_t shard_id);
+    bool BuildTensorIndexFromAllShards();
+    bool BuildTensorIndexFromShard(uint32_t shard_id);
+
+    // ---- Per-shard stream reading ----
+    template<typename T>
+    bool ReadValueFromStream(std::ifstream& f, T& value);
+    bool ReadStringFromStream(std::ifstream& f, std::string& value);
+    bool SkipMetadataValueFromStream(std::ifstream& f, uint32_t value_type);
 };

@@ -196,6 +196,19 @@ namespace RawrXD {
             (void)data;
             return false;
         }
+        // Bounded random access for large tensors (embeddings and streamed
+        // weights). Implementations without slice support retain this safe
+        // default and callers must fall back or fail closed.
+        virtual bool LoadTensorSlice(const std::string& name,
+                                     uint64_t byte_offset,
+                                     uint64_t byte_count,
+                                     std::vector<uint8_t>& data) {
+            (void)name;
+            (void)byte_offset;
+            (void)byte_count;
+            (void)data;
+            return false;
+        }
     };
 
 } // namespace RawrXD

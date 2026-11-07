@@ -1,0 +1,112 @@
+{
+  "manifest_id": "RAWRXD_DEEP2_CPU_QWEN3_CERTIFIED_BASELINE_001",
+  "created_at": "2026-10-26T02:19:00Z",
+  "status": "CERTIFIED_BASELINE_FROZEN",
+  "gate": "qwen3_8b_cpu_inference_probe",
+  "gate_result": "PASS",
+
+  "repository": {
+    "path": "F:\\rawrxd",
+    "branch": "fix/deep2-multimodel-safety-20261025",
+    "head_commit": "cee5039457e339aa1180cb4140bd450d41d28b43",
+    "head_message": "feat(reap): add MoE topology feasibility report",
+    "working_tree_dirty": true,
+    "modified_files": [
+      "src/cpu_inference_engine_impl.cpp",
+      "src/deep2/Deep2Engine.cpp",
+      "src/deep2/Deep2Engine_missing_members.cpp",
+      "src/deep2/K2NativeStreamGate.cpp",
+      "src/deep2/K2NativeStreamGate.hpp",
+      "src/deep2/ReapMoETransformer.cpp",
+      "src/streaming_gguf_loader.cpp",
+      "src/streaming_gguf_loader.h"
+    ],
+    "diff_stat": "8 files changed, 144 insertions(+), 20 deletions(-)"
+  },
+
+  "build_configuration": {
+    "build_dir": "F:\\rawrxd\\build_ide",
+    "generator": "Ninja",
+    "build_type": "Release",
+    "platform": "Win32/x64",
+    "compiler": "MSVC 14.44.35207 (cl.exe)",
+    "cxx_flags": "/DWIN32 /D_WINDOWS /EHsc",
+    "cxx_flags_release": "/O2 /Ob2 /DNDEBUG",
+    "c_flags": "/DWIN32 /D_WINDOWS",
+    "c_flags_release": "/O2 /Ob2 /DNDEBUG",
+    "linker": "MSVC link.exe",
+    "asm_compiler": "ml64.exe"
+  },
+
+  "model": {
+    "path": "F:\\OllamaModels\\DeepSeek-R1-0528-Qwen3-8B-GGUF\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+    "sha256": "713D3A7A93F306763A6DE2B5E9F9350E3AEEE3BBFE8C3EE0066B61939FEAA332",
+    "format": "GGUF",
+    "quantization": "Q4_K_M",
+    "tensors": 399,
+    "zones": 7,
+    "vocab_size": 151936,
+    "embedding_dim": 4096,
+    "layers": 36,
+    "heads": 16,
+    "architecture": "qwen3 (dense attention)",
+    "original_model_modified": false
+  },
+
+  "executables": {
+    "ide_native": {
+      "path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+      "sha256": "9CB5DA9A145F9D3C302B100C46DCBAD0BADF576C359BF3316B429C9665F1A53A"
+    },
+    "qwen_cpu_probe": {
+      "path": "F:\\rawrxd\\build_ide\\bin\\qwen_cpu_probe.exe",
+      "sha256": "090E828AFD4FCA7554FD9786AC16B13DAB8774C6755723CB438E3032EF14D537"
+    },
+    "qwen_generate_probe": {
+      "path": "F:\\rawrxd\\build_ide\\bin\\qwen_generate_probe.exe",
+      "sha256": "C8CCB8A367A6AF53451D3348C8CCAF2C6B097672EDF13945FEB48688D7923D59"
+    }
+  },
+
+  "evidence_receipt": {
+    "receipt_id": "RAWRXD_GGUF_BUDGETED_RESIDENCY_QWEN3_CPU_001",
+    "path": "F:\\rawrxd\\evidence\\gguf_residency_qwen3_cpu_20261025.json",
+    "timestamp": "2026-10-25"
+  },
+
+  "gate_results": {
+    "gguf_parse_399_tensors": "PASS",
+    "seven_zone_indexing": "PASS",
+    "cpu_forward_36_layers": "PASS",
+    "logits_finite": "PASS",
+    "logit_count": 151936,
+    "finite_logit_count": 151936,
+    "greedy_decode_six_tokens": "PASS",
+    "bounded_embedding_slice_access": "PASS",
+    "ide_executable_hash_consistent": "PASS",
+    "reported_memory_bytes": 4831838208
+  },
+
+  "capability_boundary": {
+    "qwen3_standard_attention": "CERTIFIED_FOR_THIS_PROBE",
+    "qwen3_6_hybrid_qkv_ssm": "REJECTED_UNSUPPORTED_CPU_TOPOLOGY",
+    "full_qwen3_6_generation": "NOT_CERTIFIED"
+  },
+
+  "pending_not_authorized": [
+    "independent_reference_token_parity",
+    "128_512_1024_token_sustained_decode",
+    "cpu_performance_benchmarking_tps_ttft_latency",
+    "vulkan_parity_on_radeon_ai_pro_r9700",
+    "native_ide_inference_integration",
+    "agentic_tool_use_certification",
+    "production_release_certification"
+  ],
+
+  "claims": {
+    "supported": "RawrXD's canonical CPU engine has demonstrated a real, six-token autoregressive generation run on DeepSeek-R1-0528-Qwen3-8B Q4_K_M, with finite logits and bounded embedding-zone access.",
+    "not_supported": "reference-correct output, competitive throughput, broad Qwen-family compatibility, or Qwen3.6 hybrid QKV/SSM support"
+  },
+
+  "next_milestone_recommended": "DEEP2_QWEN3_REFERENCE_PARITY_001 (steps: tokenizer parity, prefill numerical parity, greedy decode parity, KV-cache correctness)"
+}

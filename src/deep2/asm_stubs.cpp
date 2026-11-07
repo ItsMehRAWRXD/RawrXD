@@ -230,6 +230,7 @@ static void NVFP4_GEMV_AVX2(const uint8_t* weights, const float* scales,
 
 // FP16 GEMV Fallback — Used when MASM implementation is not available
 // ============================================================================
+#if !defined(RAWRXD_TOOL_OWNS_FP16_GEMV)
 extern "C" void Deep2_FP16_GEMV(const void* weights, const float* input, float* output, unsigned int rows, unsigned int cols) {
     const uint16_t* w = static_cast<const uint16_t*>(weights);
     for (unsigned int r = 0; r < rows; ++r) {
@@ -247,3 +248,4 @@ extern "C" void Deep2_FP16_GEMV(const void* weights, const float* input, float* 
         output[r] = sum;
     }
 }
+#endif

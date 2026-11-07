@@ -1,0 +1,41 @@
+[0/2] Re-checking globbed directories...
+[1/62] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/62] Linking CXX executable deep2_q5_0_parity.exe
+FAILED: [code=4294967295] deep2_q5_0_parity.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\deep2_q5_0_parity.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\deep2_q5_0_parity.dir\tests\deep2_q5_0_parity.cpp.obj CMakeFiles\deep2_q5_0_parity.dir\src\deep2\QuantKernelRegistry.cpp.obj CMakeFiles\deep2_q5_0_parity.dir\src\deep2\asm_stubs.cpp.obj  /out:deep2_q5_0_parity.exe /implib:deep2_q5_0_parity.lib /pdb:deep2_q5_0_parity.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\deep2_q5_0_parity.dir\tests\deep2_q5_0_parity.cpp.obj CMakeFiles\deep2_q5_0_parity.dir\src\deep2\QuantKernelRegistry.cpp.obj CMakeFiles\deep2_q5_0_parity.dir\src\deep2\asm_stubs.cpp.obj /out:deep2_q5_0_parity.exe /implib:deep2_q5_0_parity.lib /pdb:deep2_q5_0_parity.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+asm_stubs.cpp.obj : error LNK2005: Deep2_FP16_GEMV already defined in deep2_q5_0_parity.cpp.obj
+QuantKernelRegistry.cpp.obj : error LNK2001: unresolved external symbol dequantize_row_iq2_xxs
+deep2_q5_0_parity.exe : fatal error LNK1120: 1 unresolved externals
+[3/62] Linking CXX executable deep2_cpu_state_probe.exe
+FAILED: [code=4294967295] deep2_cpu_state_probe.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\deep2_cpu_state_probe.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\deep2_cpu_state_probe.dir\tests\deep2_cpu_state_probe.cpp.obj CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\QuantKernelRegistry.cpp.obj CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\asm_stubs.cpp.obj  /out:deep2_cpu_state_probe.exe /implib:deep2_cpu_state_probe.lib /pdb:deep2_cpu_state_probe.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\deep2_cpu_state_probe.dir\tests\deep2_cpu_state_probe.cpp.obj CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\QuantKernelRegistry.cpp.obj CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\asm_stubs.cpp.obj /out:deep2_cpu_state_probe.exe /implib:deep2_cpu_state_probe.lib /pdb:deep2_cpu_state_probe.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+asm_stubs.cpp.obj : error LNK2005: Deep2_FP16_GEMV already defined in deep2_cpu_state_probe.cpp.obj
+QuantKernelRegistry.cpp.obj : error LNK2001: unresolved external symbol dequantize_row_iq2_xxs
+deep2_cpu_state_probe.exe : fatal error LNK1120: 1 unresolved externals
+[4/62] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[5/62] Linking CXX executable stub_test.exe
+[6/62] Linking CXX executable bin\RawrXD-Chromatic.exe
+[7/62] Linking CXX executable tests\quant_scalar_smoke.exe
+[8/62] Linking CXX executable tests\test_kv_cache.exe
+[9/62] Building CXX object src\workflow\CMakeFiles\rawrxd_workflow.dir\__\browser\BrowserTestEngine.cpp.obj
+FAILED: [code=2] src/workflow/CMakeFiles/rawrxd_workflow.dir/__/browser/BrowserTestEngine.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src\workflow\.. -IF:\rawrxd\src\workflow\..\.. -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++17 /bigobj /wd4530 /wd4003 /wd4319 /wd4005 /showIncludes /Fosrc\workflow\CMakeFiles\rawrxd_workflow.dir\__\browser\BrowserTestEngine.cpp.obj /Fdsrc\workflow\CMakeFiles\rawrxd_workflow.dir\rawrxd_workflow.pdb /FS -c F:\rawrxd\src\browser\BrowserTestEngine.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+cl : Command line warning D9025 : overriding '/std:c++20' with '/std:c++17'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3503): error C2039: 'evaluateJavaScript': is not a member of 'RawrXD::Browser::Page'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(256): note: see declaration of 'RawrXD::Browser::Page'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3507): error C3536: 'jsResult': cannot be used before it is initialized
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3510): error C2039: 'testsRun': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3511): error C2039: 'testsPassed': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3514): error C2039: 'testsRun': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3515): error C2039: 'testsPassed': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,3 @@
+#include "gameplay.hpp"
+#include <iostream>
+int main(int argc,char**argv){using namespace wf::gameplay;std::string path=argc>1?argv[1]:"worldforge-demo.wav";auto a=synthesize({440,.2,.25},{.01,.08,.4,.2},22050,0);auto b=synthesize({660,.2,.18},{.01,.08,.4,.2},22050,3);auto out=lowpass(mix({a,b}),4000,22050);if(!writeWav(path,out,22050))return 2;auto code=compile("set 0 0\nadd 0 1\nwait 0.01\nadd 0 1\nemit 7\nstop\n");VM vm;execute(vm,code,.016);execute(vm,code,.016);std::cout<<"GAMEPLAY_PASS samples="<<out.size()<<" events="<<vm.events.size()<<" fingerprint="<<fingerprint(vm)<<"\n";return vm.events.size()==1?0:3;}

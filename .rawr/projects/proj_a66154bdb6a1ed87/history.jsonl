@@ -1,1 +1,2 @@
 {"at":"2026-10-16T14:38:03","detail":"tests","kind":"follow_up","raw":"Read the test source, identify the defect, repair it, compile, execute the tests, and report the results."}
+{"at":"2026-10-26T07:52:04","detail":"C++20","kind":"follow_up","raw":"Work only on tmp_build/agent_e2e_live/calc.cpp. Read it, change the return value from 1 to 0, use the native toolchain to build it, run the executable, and report the verified exit code. Do not touch any other file."}

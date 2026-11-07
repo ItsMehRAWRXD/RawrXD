@@ -1,0 +1,11 @@
+# Build log summary
+
+Command used an MSVC amd64 Developer Command Prompt and a separate build tree:
+
+`cmake -S F:\rawrxd -B F:\rawrxd\build_ghosttext_boundary -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_WIN32IDE=ON -DRAWRXD_BUILD_WIN32IDE_QT=OFF -DRAWRXD_BUILD_TESTS=OFF -DRAWRXD_BUILD_FUZZ=ON -DRAWRXD_ENABLE_HARDENING=ON -DRAWRXD_BUILD_SECURITY_LIB=ON`
+
+`cmake --build F:\rawrxd\build_ghosttext_boundary --target RawrXD-Win32IDE-Native --parallel 8`
+
+Configure: PASS
+Build: PASS (486/486; exit 0)
+Warnings: existing MSVC warning set; no observed compile or link error.

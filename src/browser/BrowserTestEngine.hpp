@@ -553,6 +553,8 @@ struct BrowserTestTask {
 
 struct BrowserTestResult {
     bool success;
+    int testsRun = 0;
+    int testsPassed = 0;
     std::string summary;
     std::vector<std::string> stepsExecuted;
     std::vector<std::string> screenshots;

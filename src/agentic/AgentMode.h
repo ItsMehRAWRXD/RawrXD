@@ -84,6 +84,10 @@ inline bool AgentModeParse(const std::string& s, AgentMode& out) {
         {"benchmark", AgentMode::Benchmark},
         {"audit", AgentMode::Audit},
         {"autonomous", AgentMode::Autonomous},
+        // Product-facing alias: the GUI and external agent contract call the
+        // full mutation-capable mode "agent". Keep the persisted internal
+        // name "autonomous" for backward-compatible ledgers.
+        {"agent", AgentMode::Autonomous},
     };
     std::string key = s;
     for (auto& c : key) c = static_cast<char>(::tolower(c));

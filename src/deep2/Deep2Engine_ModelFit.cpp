@@ -803,6 +803,9 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
 size_t Deep2Engine::prefillSerial(const int* promptTokens, size_t promptLen,
                                  float* hiddenOut) {
     if (!promptTokens || promptLen == 0 || !hiddenOut) return 0;
+    if (promptLen > config.maxSeqLen ||
+        (promptLen > hiddenStatesCapacity && !growContext(promptLen)))
+        return 0;
     size_t done = 0;
     for (size_t t = 0; t < promptLen; ++t) {
         float* h = hiddenStates + t * config.hiddenDim;
@@ -838,6 +841,9 @@ size_t Deep2Engine::prefillBatched(const int* promptTokens, size_t promptLen,
     if (!promptTokens || promptLen == 0 || !hiddenOut) return 0;
     if (config.hiddenDim == 0 || modelWeights.numLayers == 0) return 0;
     if (!hiddenStates) return 0;
+    if (promptLen > config.maxSeqLen ||
+        (promptLen > hiddenStatesCapacity && !growContext(promptLen)))
+        return 0;
 
     const size_t H = config.hiddenDim;
     size_t chunk = chunkTokens ? chunkTokens
@@ -895,9 +901,9 @@ void Deep2Engine::resetInferenceState() {
     kvProvenanceTokens_.clear();
     kvReusedPrefixTokens_ = 0;
     kvAppendedTokens_ = 0;
-    if (hiddenStates)
+    if (hiddenStates && hiddenStatesCapacity && config.hiddenDim)
         std::memset(hiddenStates, 0,
-                    config.maxSeqLen * config.hiddenDim * sizeof(float));
+                    hiddenStatesCapacity * config.hiddenDim * sizeof(float));
 
     // Reset SSM / Mamba-2 recurrent and conv state
     if (ssmMambaState)

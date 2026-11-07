@@ -29,6 +29,7 @@
 #include "vulkan_compute_cpu_ns.hpp"
 #include "vulkan_compute.h"
 
+#include <cstdint>
 #include <cstring>
 
 namespace {
@@ -46,6 +47,12 @@ Deep2::VulkanCompute::DeviceBuf ToBackend(const CPUInference::VulkanCompute::Dev
     o.buffer = b.buffer;
     o.memory = b.memory;
     o.size = static_cast<VkDeviceSize>(b.bytes);
+    /* The engine-facing contract predates Deep2's descriptor-cache IDs.  A
+       zero ID for every adapted buffer aliases unrelated descriptor sets and
+       can bind a fused op to stale storage.  The Vulkan buffer handle is a
+       stable identity for the lifetime of the allocation, so use it whenever
+       crossing this adapter boundary. */
+    o.id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(b.buffer));
     return o;
 }
 
@@ -624,7 +631,15 @@ bool VulkanCompute::UploadBuf(DeviceBuf& b, const float* host, uint32_t n) {
 bool VulkanCompute::DownloadBuf(DeviceBuf& b, float* host, uint32_t n) {
     if (backend_ == nullptr || host == nullptr || n == 0) return false;
     Deep2::VulkanCompute::DeviceBuf bi = ToBackend(b);
-    if (!backend_->DownloadVector(bi, host, n)) return false;
+    if (!backend_->DownloadVector(bi, host, n)) {
+        last_d2h_vk_ = static_cast<uint64_t>(backend_->LastLostVk());
+        last_d2h_phase_ = backend_->LastLostPhase();
+        if (backend_->DeviceIsLost())
+            (void)backend_->RecoverDeviceIfOptIn();
+        return false;
+    }
+    last_d2h_vk_ = 0;
+    last_d2h_phase_ = "ok";
     b = FromBackend(bi);
     return true;
 }
@@ -696,7 +711,11 @@ bool VulkanCompute::DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float sc
     if (backend_ == nullptr || n == 0) return false;
     Deep2::VulkanCompute::DeviceBuf ba = ToBackend(accum);
     Deep2::VulkanCompute::DeviceBuf bs = ToBackend(src);
-    if (!backend_->dispatchSpecOps(ba, bs, bs, bs, {0, n, 1, 0, scale})) return false;
+    /* op=3 is the dedicated scaled-add branch.  The previous implementation
+       accidentally selected op=0 (RMSNorm) and wrote into the source buffer,
+       leaving the MoE accumulator at zero while still reporting a successful
+       dispatch. */
+    if (!backend_->dispatchSpecOps(ba, bs, ba, bs, {3, n, 1, 0, scale})) return false;
     accum = FromBackend(ba);
     src = FromBackend(bs);
     return true;
@@ -727,14 +746,14 @@ bool VulkanCompute::DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& ou
 
 bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
                                        DeviceBuf& out, uint32_t seqLen, uint32_t headDim,
-                                       uint32_t nHeads, uint32_t kvDim, float scale,
+                                       uint32_t nHeads, uint32_t kvHeads, float scale,
                                        uint32_t layer) {
     if (backend_ == nullptr) return false;
     Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
     Deep2::VulkanCompute::DeviceBuf bk = ToBackend(kCache);
     Deep2::VulkanCompute::DeviceBuf bv = ToBackend(vCache);
     Deep2::VulkanCompute::DeviceBuf bo = ToBackend(out);
-    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvDim, seqLen, scale, layer)) return false;
+    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvHeads, seqLen, scale, layer)) return false;
     q = FromBackend(bq);
     kCache = FromBackend(bk);
     vCache = FromBackend(bv);

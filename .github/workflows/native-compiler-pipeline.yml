@@ -1,0 +1,130 @@
+name: Native compiler and linker pipeline (model-free)
+on:
+  push:
+    paths:
+      - 'src/agentic_executor.cpp'
+      - 'tools/rawrxd_msvc_runner.cpp'
+      - 'tests/native_compiler_pipeline/**'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  pull_request:
+    paths:
+      - 'src/agentic_executor.cpp'
+      - 'tools/rawrxd_msvc_runner.cpp'
+      - 'tests/native_compiler_pipeline/**'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile object, link executable, and execute
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          $source = Join-Path $dir 'main.cpp'
+          $object = Join-Path $dir 'main.obj'
+          $exe = Join-Path $dir 'main.exe'
+          Set-Content -Encoding ascii $source 'int main() { return 42; }'
+          & cl /nologo /std:c++17 /W4 /WX /c $source "/Fo$object"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $object)) { throw 'Compile/object gate failed' }
+          & link /nologo $object "/OUT:$exe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $exe)) { throw 'Link gate failed' }
+          & $exe
+          if ($LASTEXITCODE -ne 42) { throw "Executable gate failed: $LASTEXITCODE" }
+          Write-Host 'MSVC_COMPILE_OBJECT_LINK_RUN PASS'
+      - name: Verify compiler diagnostics fail closed
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $bad = Join-Path $dir 'bad.cpp'
+          Set-Content -Encoding ascii $bad 'int main() { return missing_symbol; }'
+          & cl /nologo /c $bad "/Fo$(Join-Path $dir 'bad.obj')"
+          if ($LASTEXITCODE -eq 0) { throw 'Invalid C++ unexpectedly compiled' }
+          Write-Host 'MSVC_COMPILER_ERROR_GATE PASS'
+
+      - name: Runner integration with real MSVC and C pipeline
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          & cl /nologo /EHsc /std:c++17 tools/rawrxd_msvc_runner.cpp "/Fe:$(Join-Path $dir 'runner.exe')"
+          if ($LASTEXITCODE -ne 0) { throw 'Runner build failed' }
+          $runner = Join-Path $dir 'runner.exe'
+          $compiler = (Get-Command cl.exe).Source
+          $linker = (Get-Command link.exe).Source
+          $c = Join-Path $dir 'hello.c'
+          $obj = Join-Path $dir 'hello_c.obj'
+          $exe = Join-Path $dir 'hello_c.exe'
+          Set-Content -Encoding ascii $c 'int main(void) { return 23; }'
+          & $runner 120000 -- $compiler /nologo /c $c "/Fo$obj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $obj)) { throw 'Runner C compile failed' }
+          & $runner 120000 -- $linker /nologo $obj "/OUT:$exe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $exe)) { throw 'Runner C link failed' }
+          & $runner 10000 -- $exe
+          if ($LASTEXITCODE -ne 23) { throw 'Runner C execute/exit code failed' }
+          $cpp = Join-Path $dir 'hello2.cpp'
+          $cppobj = Join-Path $dir 'hello2.obj'
+          $cppexe = Join-Path $dir 'hello2.exe'
+          Set-Content -Encoding ascii $cpp 'int main() { return 17; }'
+          & $runner 120000 -- $compiler /nologo /EHsc /c $cpp "/Fo$cppobj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $cppobj)) { throw 'Runner C++ compile failed' }
+          & $runner 120000 -- $linker /nologo $cppobj "/OUT:$cppexe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $cppexe)) { throw 'Runner C++ link failed' }
+          & $runner 10000 -- $cppexe
+          if ($LASTEXITCODE -ne 17) { throw 'Runner C++ execute failed' }
+          Write-Host 'RUNNER_C_AND_CPP_PIPELINES PASS'
+
+      - name: Verify linker errors fail closed
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $source = Join-Path $dir 'unresolved.cpp'
+          $obj = Join-Path $dir 'unresolved.obj'
+          $exe = Join-Path $dir 'unresolved.exe'
+          Set-Content -Encoding ascii $source 'extern int missing(); int main() { return missing(); }'
+          & cl /nologo /std:c++17 /c $source "/Fo$obj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $obj)) { throw 'Linker fixture compile failed' }
+          & link /nologo $obj "/OUT:$exe"
+          if ($LASTEXITCODE -eq 0 -or (Test-Path $exe)) { throw 'Unresolved external unexpectedly linked' }
+          Write-Host 'MSVC_LINKER_ERROR_GATE PASS'
+      - name: Runner concurrent streams and timeout acceptance
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $runner = Join-Path $dir 'runner.exe'
+          $stress = Join-Path $dir 'stress.cpp'
+          $stressExe = Join-Path $dir 'stress.exe'
+          @'
+          #include <cstdio>
+          #include <thread>
+          #include <chrono>
+          int main(int argc, char**) {
+              if (argc > 1) { std::this_thread::sleep_for(std::chrono::seconds(10)); return 0; }
+              for (int i=0;i<4096;++i) {
+                  std::printf("STDOUT-%04d-abcdefghijklmnopqrstuvwxyz\n", i);
+                  std::fprintf(stderr,"STDERR-%04d-abcdefghijklmnopqrstuvwxyz\n", i);
+              }
+              std::fflush(stdout); std::fflush(stderr);
+              return 0;
+          }
+          '@ | Set-Content -Encoding ascii $stress
+          & cl /nologo /EHsc /std:c++17 $stress "/Fe:$stressExe"
+          if ($LASTEXITCODE -ne 0) { throw 'Stress fixture compile failed' }
+          $out = Join-Path $dir 'stdout.txt'
+          $err = Join-Path $dir 'stderr.txt'
+          & $runner 20000 -- $stressExe 1> $out 2> $err
+          if ($LASTEXITCODE -ne 0) { throw 'Concurrent capture runner failed' }
+          if ((Get-Content $out | Measure-Object -Line).Lines -ne 4096) { throw 'stdout truncated' }
+          if ((Get-Content $err | Measure-Object -Line).Lines -ne 4096) { throw 'stderr truncated' }
+          & $runner 250 -- $stressExe sleep
+          if ($LASTEXITCODE -ne 124) { throw "Timeout gate failed: $LASTEXITCODE" }
+          Write-Host 'RUNNER_CONCURRENT_CAPTURE_TIMEOUT PASS'

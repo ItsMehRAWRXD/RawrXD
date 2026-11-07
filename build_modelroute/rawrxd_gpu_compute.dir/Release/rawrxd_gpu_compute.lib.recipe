@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>F:\rawrxd\build_modelroute\x64\Release\ZERO_CHECK</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>F:\rawrxd\build_modelroute\x64\Release\deep2_resident_qgemv_shader</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>F:\rawrxd\build_modelroute\3rdparty\ggml\src\ggml-vulkan\x64\Release\vulkan-shaders-gen</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles />
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

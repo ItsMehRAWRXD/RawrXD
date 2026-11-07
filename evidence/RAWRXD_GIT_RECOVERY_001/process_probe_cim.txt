@@ -1,0 +1,26 @@
+﻿=== git CIM probe 2026-10-26T19:55:04.0190769-04:00
+PID=10832
+PPID=21948
+CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+CREATE=10/26/2026 03:05:10
+---
+PID=9720
+PPID=24044
+CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+CREATE=10/26/2026 03:47:25
+---
+PID=20656
+PPID=2908
+CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+CREATE=10/26/2026 04:01:41
+---
+PID=27676
+PPID=41116
+CMD=
+CREATE=10/26/2026 19:55:04
+---
+PID=28260
+PPID=27676
+CMD=
+CREATE=10/26/2026 19:55:04
+---

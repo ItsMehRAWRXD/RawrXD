@@ -182,6 +182,13 @@ int main(int argc, char** argv) {
 
     constexpr uint32_t tokens = 3;
     GDNDescriptor descriptor{};
+    // The probe exercises the Qwen head-packed recurrence below, while the
+    // shared validator also requires the generic descriptor fields to be
+    // non-zero. Keep those admission fields bounded and derive the actual
+    // allocation from GDNQwenStateElements, not GDNStateElements.
+    descriptor.channels = 1;
+    descriptor.state_size = 1;
+    descriptor.groups = 1;
     descriptor.key_heads = 16;
     descriptor.value_heads = 48;
     descriptor.head_dim = 128;
@@ -201,7 +208,7 @@ int main(int argc, char** argv) {
     const size_t qkv_width = GDNQkvWidth(descriptor);
     const size_t output_width = GDNOutputWidth(descriptor);
     const size_t scalar_width = descriptor.value_heads;
-    const size_t state_width = static_cast<size_t>(GDNStateElements(descriptor));
+    const size_t state_width = static_cast<size_t>(GDNQwenStateElements(descriptor));
     std::vector<float> qkv(static_cast<size_t>(tokens) * qkv_width);
     std::vector<float> beta(static_cast<size_t>(tokens) * scalar_width);
     std::vector<float> alpha(static_cast<size_t>(tokens) * scalar_width);
@@ -222,11 +229,35 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < norm.size(); ++i)
         norm[i] = 0.9f + 0.001f * static_cast<float>(i % 29);
 
-    std::vector<float> cpu_state(state_width, 0.0f), cpu_output;
-    if (!GDNReferenceDecode(descriptor, qkv, beta, alpha, gate, a_log, dt_bias,
-                            norm, cpu_state, cpu_output, failure)) {
-        std::cerr << "GDN_REFERENCE=FAIL reason=" << failure << "\n";
-        return 4;
+    // GDNReferenceDecode is the legacy generic [key|value] contract. This
+    // probe is for the Qwen head-packed [q|k|v] recurrence, so compare the
+    // exact production reference step token-by-token instead of silently
+    // feeding it incompatible widths.
+    std::vector<float> cpu_state(state_width, 0.0f);
+    std::vector<float> cpu_output(static_cast<size_t>(tokens) * output_width,
+                                  0.0f);
+    for (uint32_t token = 0; token < tokens; ++token) {
+        const size_t qkv_base = static_cast<size_t>(token) * qkv_width;
+        const size_t scalar_base = static_cast<size_t>(token) * scalar_width;
+        const size_t gate_base = static_cast<size_t>(token) * output_width;
+        std::vector<float> mixed_token(
+            qkv.begin() + qkv_base, qkv.begin() + qkv_base + qkv_width);
+        std::vector<float> beta_token(
+            beta.begin() + scalar_base, beta.begin() + scalar_base + scalar_width);
+        std::vector<float> alpha_token(
+            alpha.begin() + scalar_base, alpha.begin() + scalar_base + scalar_width);
+        std::vector<float> gate_token(
+            gate.begin() + gate_base, gate.begin() + gate_base + output_width);
+        std::vector<float> step_output;
+        if (!GDNQwenReferenceStep(
+                descriptor, mixed_token, beta_token, alpha_token,
+                a_log, dt_bias, norm, gate_token,
+                cpu_state, step_output, failure)) {
+            std::cerr << "GDN_REFERENCE=FAIL reason=" << failure << "\n";
+            return 4;
+        }
+        std::copy(step_output.begin(), step_output.end(),
+                  cpu_output.begin() + gate_base);
     }
 
     VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO};

@@ -1,0 +1,25 @@
+name: Native extension command bridge smoke
+on:
+  push:
+    paths:
+      - 'tests/extension_command_bridge_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '.github/workflows/extension-command-bridge-smoke.yml'
+  pull_request:
+    paths:
+      - 'tests/extension_command_bridge_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '.github/workflows/extension-command-bridge-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  command-bridge:
+    name: 15 deterministic command bridge checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile standalone regression gate
+        run: c++ -std=c++17 -Wall -Wextra -Werror -pthread tests/extension_command_bridge_smoke.cpp -o /tmp/extension_command_bridge_smoke
+      - name: Run native command bridge regression gate
+        run: /tmp/extension_command_bridge_smoke

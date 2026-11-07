@@ -87,6 +87,8 @@ ModeRegistry::ModeRegistry() {
         p.tool_overrides["textSearch"]     = ToolAuthority::ReadOnly;
         p.tool_overrides["createDirectory"] = ToolAuthority::Denied;
         p.tool_overrides["createFile"]     = ToolAuthority::Denied;
+        p.tool_overrides["writeFile"]      = ToolAuthority::Denied;
+        p.tool_overrides["deleteFile"]     = ToolAuthority::Denied;
         p.tool_overrides["editFiles"]      = ToolAuthority::Denied;
         p.tool_overrides["runInTerminal"]  = ToolAuthority::Denied;
     }
@@ -99,8 +101,10 @@ ModeRegistry::ModeRegistry() {
         p.tool_overrides["fileSearch"]     = ToolAuthority::ReadOnly;
         p.tool_overrides["textSearch"]     = ToolAuthority::ReadOnly;
         p.tool_overrides["createFile"]     = ToolAuthority::PlanFiles;
+        p.tool_overrides["writeFile"]      = ToolAuthority::PlanFiles;
         p.tool_overrides["editFiles"]      = ToolAuthority::PlanFiles;
         p.tool_overrides["createDirectory"] = ToolAuthority::PlanFiles;
+        p.tool_overrides["deleteFile"]     = ToolAuthority::Denied;
         p.tool_overrides["runInTerminal"]  = ToolAuthority::Denied;
     }
 
@@ -111,6 +115,8 @@ ModeRegistry::ModeRegistry() {
     bench.tool_overrides["fileSearch"]    = ToolAuthority::ReadOnly;
     bench.tool_overrides["textSearch"]    = ToolAuthority::ReadOnly;
     bench.tool_overrides["runInTerminal"] = ToolAuthority::Controlled;
+    bench.tool_overrides["writeFile"]     = ToolAuthority::Controlled;
+    bench.tool_overrides["deleteFile"]    = ToolAuthority::Denied;
 
     // Autonomous mirrors Code (Full ceiling) but commits still gated.
     auto& auton = m_policies[AgentMode::Autonomous];
@@ -137,7 +143,17 @@ ToolAuthority ModeRegistry::AuthorityFor(AgentMode mode, const std::string& tool
     const ModePolicy* p = Get(mode);
     if (!p) return ToolAuthority::Denied;
 
-    auto it = p->tool_overrides.find(tool_name);
+    // Cursor aliases must hit the same override as the canonical tool —
+    // Shell must not bypass Ask-mode denial of runInTerminal.
+    std::string lookup = tool_name;
+    if (const char* canon = rawrxd::tools::canonicalize_tool_name(tool_name)) {
+        lookup = canon;
+    }
+
+    auto it = p->tool_overrides.find(lookup);
+    if (it == p->tool_overrides.end()) {
+        it = p->tool_overrides.find(tool_name);
+    }
     if (it != p->tool_overrides.end()) {
         // Explicit override wins, but it cannot exceed the mode ceiling.
         ToolAuthority ceiling = p->authority;

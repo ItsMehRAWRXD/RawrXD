@@ -1,0 +1,9 @@
+F:\rawrxd\src\deep2\vulkan_compute.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\vulkan_compute.obj
+F:\rawrxd\src\deep2\QuantKernelRegistry.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\QuantKernelRegistry.obj
+F:\rawrxd\src\deep2\asm_stubs.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\asm_stubs.obj
+F:\rawrxd\src\deep2\lavapath\GpuDeviceLostReset.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\GpuDeviceLostReset.obj
+F:\rawrxd\src\deep2\lavapath\GpuDeviceLostReset_Vk.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\GpuDeviceLostReset_Vk.obj
+F:\rawrxd\src\streaming_gguf_loader.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\streaming_gguf_loader.obj
+F:\rawrxd\src\gguf_loader.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\gguf_loader.obj
+F:\rawrxd\src\gguf_vocab_resolver.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\gguf_vocab_resolver.obj
+F:\rawrxd\src\utils\Diagnostics.cpp;F:\rawrxd\build_modelroute\rawrxd_gpu_compute.dir\Release\Diagnostics.obj

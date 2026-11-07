@@ -28,6 +28,11 @@
 // ============================================================================
 
 #include "js_extension_host.hpp"
+#include "extension_entry_policy.hpp"
+#include "extension_extract_policy.hpp"
+#include "extension_read_policy.hpp"
+#include "extension_manifest_policy.hpp"
+#include "extension_signature_policy.hpp"
 #include "../modules/vscode_extension_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -45,6 +50,7 @@
 #include <cmath>
 #include <ctime>
 #include <algorithm>
+#include <deque>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
@@ -67,6 +73,12 @@
     #include "quickjs/quickjs.h"
     #define RAWRXD_HAS_QUICKJS 1
 #else
+    // Production/CI builds that require actual extension execution must fail
+    // instead of silently compiling the compatibility-only QuickJS shims.
+    // Define RAWRXD_REQUIRE_QUICKJS=1 on the shipping extension-host target.
+    #if defined(RAWRXD_REQUIRE_QUICKJS) && RAWRXD_REQUIRE_QUICKJS
+        #error "RAWRXD_REQUIRE_QUICKJS=1 but quickjs.h was not found; real VSIX execution is unavailable"
+    #endif
     #define RAWRXD_HAS_QUICKJS 0
 
     // Minimal QuickJS type stubs for compilation without the engine
@@ -101,6 +113,7 @@
     static void JS_SetMaxStackSize(JSRuntime* rt, size_t size) {}
     static JSContext* JS_NewContext(JSRuntime* rt) { return nullptr; }
     static void JS_FreeContext(JSContext* ctx) {}
+    static JSValue JS_ParseJSON(JSContext* ctx, const char* buf, size_t len, const char* filename) { return JS_UNDEFINED; }
     static JSValue JS_NewObject(JSContext* ctx) { return JS_UNDEFINED; }
     static JSValue JS_NewString(JSContext* ctx, const char* str) { return JS_UNDEFINED; }
     static JSValue JS_NewInt32(JSContext* ctx, int32_t val) { return JS_UNDEFINED; }
@@ -169,7 +182,8 @@ struct JSCommandBinding {
 };
 
 static std::mutex              s_jsCommandMutex;
-static std::vector<JSCommandBinding> s_jsCommands;
+// Stable addresses are required: the command registry stores pointers to bindings.
+static std::deque<JSCommandBinding> s_jsCommands;
 
 // C++ trampoline: called by VSCodeExtensionAPI when command fires
 static void jsCommandTrampoline(void* ctx) {
@@ -306,7 +320,8 @@ std::string readFileToString(const char* path) {
     if (hFile == INVALID_HANDLE_VALUE) return "";
 
     LARGE_INTEGER fileSize;
-    if (!GetFileSizeEx(hFile, &fileSize) || fileSize.QuadPart > 10 * 1024 * 1024) {
+    if (!GetFileSizeEx(hFile, &fileSize) || fileSize.QuadPart < 0 ||
+        fileSize.QuadPart > 10 * 1024 * 1024) {
         CloseHandle(hFile);
         return "";
     }
@@ -314,12 +329,17 @@ std::string readFileToString(const char* path) {
     std::string content;
     content.resize(static_cast<size_t>(fileSize.QuadPart));
 
-    DWORD bytesRead = 0;
-    BOOL ok = ReadFile(hFile, content.data(), static_cast<DWORD>(content.size()),
-                        &bytesRead, nullptr);
+    const bool complete = rawrxd::extensions::readExactly(
+        content.data(), content.size(),
+        [&](char* destination, size_t remaining) -> size_t {
+            DWORD bytesRead = 0;
+            const DWORD requested = static_cast<DWORD>(remaining);
+            if (!ReadFile(hFile, destination, requested, &bytesRead, nullptr))
+                return 0;
+            return static_cast<size_t>(bytesRead);
+        });
     CloseHandle(hFile);
-
-    if (!ok || bytesRead != content.size()) content.resize(bytesRead);
+    if (!complete) return {};
     return content;
 }
 
@@ -329,11 +349,17 @@ bool writeStringToFile(const char* path, const std::string& content) {
                                 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) return false;
 
-    DWORD bytesWritten = 0;
-    BOOL ok = WriteFile(hFile, content.data(), static_cast<DWORD>(content.size()),
-                         &bytesWritten, nullptr);
-    CloseHandle(hFile);
-    return ok && bytesWritten == content.size();
+    const bool complete = rawrxd::extensions::writeExactly(
+        content.data(), content.size(),
+        [&](const char* source, size_t remaining) -> size_t {
+            DWORD bytesWritten = 0;
+            const DWORD requested = static_cast<DWORD>(remaining);
+            if (!WriteFile(hFile, source, requested, &bytesWritten, nullptr))
+                return 0;
+            return static_cast<size_t>(bytesWritten);
+        });
+    const bool closed = CloseHandle(hFile) != 0;
+    return complete && closed;
 }
 
 } // anonymous namespace
@@ -377,6 +403,12 @@ PatchResult JSExtensionHost::initialize() {
     if (m_shutdownCompleted)
         return PatchResult::error("JSExtensionHost shut down; re-init refused");
     if (m_initialized) return PatchResult::error("Already initialized");
+
+#if !RAWRXD_HAS_QUICKJS
+    // Never advertise a functional VSIX runtime when only compile-time JS
+    // compatibility stubs are linked. Native extension lanes remain separate.
+    return PatchResult::error("QuickJS unavailable: JavaScript extension host disabled");
+#endif
 
     OutputDebugStringA("[JSExtensionHost] Initializing QuickJS runtime...\n");
 
@@ -631,6 +663,19 @@ PatchResult JSExtensionHost::shutdown() {
         if (queueEvent == nullptr)
             queueEvent = m_queueEvent;
         m_queueEvent = nullptr;
+    }
+
+    // Invalidate native command trampolines before destroying any QuickJS context.
+    // The registry may retain binding addresses beyond host shutdown.
+    {
+        std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+        for (auto& binding : s_jsCommands) {
+            if (binding.ctx) {
+                JS_FreeValue(binding.ctx, binding.callback);
+                binding.callback = JS_UNDEFINED;
+                binding.ctx = nullptr;
+            }
+        }
     }
 
     // Drop extensions without JS deactivate (eval re-entered moduleLoader → AV).
@@ -2114,6 +2159,22 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         }
     }
 
+    // A symlinked package.json must not read a manifest outside the
+    // installed extension tree. Validate before opening the file.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::absolute(std::filesystem::path(extensionDir)),
+            std::filesystem::absolute(std::filesystem::path(pkgPath)))) {
+        return PatchResult::error("Extension manifest escapes installation root");
+    }
+
+    // Bound untrusted manifest reads before allocating or parsing JSON.
+    // A malformed VSIX must not cause an unbounded memory allocation.
+    std::error_code manifestSizeError;
+    const auto manifestSize = std::filesystem::file_size(pkgPath, manifestSizeError);
+    if (manifestSizeError || manifestSize == 0 || manifestSize > 256 * 1024) {
+        return PatchResult::error("Extension manifest missing or exceeds 256 KiB");
+    }
+
     std::string pkgJson = readFileToString(pkgPath.c_str());
     if (pkgJson.empty()) return PatchResult::error("Failed to read package.json");
 
@@ -2124,8 +2185,19 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::string mainEntry = jsonGetString(pkgJson, "main");
     std::string displayName = jsonGetString(pkgJson, "displayName");
 
-    if (name.empty()) return PatchResult::error("Extension has no name");
-    if (mainEntry.empty()) mainEntry = "./extension.js";
+    if (!rawrxd::extensions::validManifestIdentity(publisher, name, version)) {
+        return PatchResult::error("Invalid extension publisher, name, or version");
+    }
+    if (mainEntry.empty()) mainEntry = "extension.js";
+    // A manifest main is always relative to its own extension root.
+    // Reject drive-qualified and rooted paths before string concatenation,
+    // which would otherwise obscure an absolute-path request.
+    const std::filesystem::path manifestMain(mainEntry);
+    if (!rawrxd::extensions::validRelativeMain(mainEntry) ||
+        manifestMain.is_absolute() || manifestMain.has_root_name() ||
+        manifestMain.has_root_directory()) {
+        return PatchResult::error("Extension main must be a relative path");
+    }
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
 
@@ -2151,6 +2223,20 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         return PatchResult::error(err);
     }
 
+    // Extension entry points must be ordinary files, not directories.
+    std::error_code mainTypeError;
+    if (!std::filesystem::is_regular_file(mainPath, mainTypeError) || mainTypeError) {
+        return PatchResult::error("Extension main entry is not a regular file");
+    }
+
+    // An extension manifest must not execute code outside its installation.
+    // This also rejects traversal through symlinks and absolute main paths.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::absolute(std::filesystem::path(extRoot)),
+            std::filesystem::absolute(std::filesystem::path(mainPath)))) {
+        return PatchResult::error("Extension main entry escapes installation root");
+    }
+
     // ---- Create Extension State ----
     auto state = std::make_unique<JSExtensionState>();
     state->extensionId = extensionId;
@@ -2163,9 +2249,20 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     state->jsContext = nullptr;
     state->jsModule = nullptr;
 
+    // Reject oversized scripts before reading them into memory for analysis.
+    // The runtime can apply a stricter per-extension budget in future.
+    std::error_code mainSizeError;
+    const auto mainSize = std::filesystem::file_size(mainPath, mainSizeError);
+    if (mainSizeError || mainSize == 0 || mainSize > 10 * 1024 * 1024) {
+        return PatchResult::error("Extension main entry empty, exceeds 10 MiB, or is unreadable");
+    }
+
     // ---- Pre-analyze requires ----
     std::string mainSource = readFileToString(mainPath.c_str());
-    if (!mainSource.empty()) {
+    if (mainSource.empty()) {
+        return PatchResult::error("Failed to read extension main entry");
+    }
+    {
         auto requiredModules = PolyfillEngine::instance().analyzeRequires(
             mainSource.c_str(), mainSource.size());
         state->requiredPolyfills = requiredModules;
@@ -2196,7 +2293,12 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // ---- Register extension ----
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
-        m_extensions[extensionId] = std::move(state);
+        // Reject duplicate IDs rather than silently replacing an activated
+        // extension and losing ownership of its live JS context.
+        if (m_extensions.find(extensionId) != m_extensions.end()) {
+            return PatchResult::error("Extension ID already loaded; unload before reinstall");
+        }
+        m_extensions.emplace(extensionId, std::move(state));
     }
 
     m_stats.jsExtensionsLoaded++;
@@ -2411,6 +2513,20 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
         if (excStr) JS_FreeCString(extCtx, excStr);
         JS_FreeValue(extCtx, exc);
         JS_FreeValue(extCtx, result);
+        // Extension code may have registered native commands before throwing.
+        // Invalidate their callbacks before releasing the owning JS context.
+        {
+            std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+            for (auto& binding : s_jsCommands) {
+                if (binding.ctx == extCtx) {
+                    JS_FreeValue(extCtx, binding.callback);
+                    binding.callback = JS_UNDEFINED;
+                    binding.ctx = nullptr;
+                }
+            }
+        }
+        JS_FreeContext(extCtx);
+        state->jsContext = nullptr;
         return PatchResult::error(err);
     }
 
@@ -2426,10 +2542,32 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
     }
 
     // ---- Execute pending jobs (microtasks) ----
+    // QuickJS returns a negative result when a pending job throws. Never
+    // report activation success after that exception.
     {
         JSContext* pendingCtx = nullptr;
-        while (JS_ExecutePendingJob(static_cast<JSRuntime*>(m_jsRuntime), &pendingCtx) > 0) {
-            // Process all pending microtasks
+        int jobResult = 0;
+        while ((jobResult = JS_ExecutePendingJob(
+                    static_cast<JSRuntime*>(m_jsRuntime), &pendingCtx)) > 0) {}
+        if (jobResult < 0) {
+            if (pendingCtx) {
+                JSValue exc = JS_GetException(pendingCtx);
+                JS_FreeValue(pendingCtx, exc);
+            }
+            {
+                std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+                for (auto& binding : s_jsCommands) {
+                    if (binding.ctx == extCtx) {
+                        JS_FreeValue(extCtx, binding.callback);
+                        binding.callback = JS_UNDEFINED;
+                        binding.ctx = nullptr;
+                    }
+                }
+            }
+            JS_FreeContext(extCtx);
+            state->jsContext = nullptr;
+            state->hasDeactivate = false;
+            return PatchResult::error("Extension activation microtask failed");
         }
     }
 
@@ -2463,14 +2601,37 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     JSExtensionState* state = it->second.get();
     if (!state->activated) return PatchResult::ok("Already deactivated");
 
-    // Execute deactivate() if available
-    if (state->hasDeactivate && state->jsContext) {
-        JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-        JSValue result = JS_Eval(extCtx,
-            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();",
-            68, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+    // Deactivation destroys the per-extension context, so reactivation
+    // creates a fresh one rather than leaking the previous context.
+    bool deactivateFailed = false;
+    JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
+    if (state->hasDeactivate && extCtx) {
+        constexpr char deactivateScript[] =
+            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();";
+        JSValue result = JS_Eval(extCtx, deactivateScript,
+            sizeof(deactivateScript) - 1, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        deactivateFailed = JS_IsException(result);
         JS_FreeValue(extCtx, result);
+        if (deactivateFailed) {
+            JSValue exc = JS_GetException(extCtx);
+            JS_FreeValue(extCtx, exc);
+        }
     }
+    if (extCtx) {
+        {
+            std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+            for (auto& binding : s_jsCommands) {
+                if (binding.ctx == extCtx) {
+                    JS_FreeValue(extCtx, binding.callback);
+                    binding.callback = JS_UNDEFINED;
+                    binding.ctx = nullptr;
+                }
+            }
+        }
+        JS_FreeContext(extCtx);
+        state->jsContext = nullptr;
+    }
+    state->hasDeactivate = false;
 
     state->activated = false;
     if (m_stats.jsExtensionsActive > 0) m_stats.jsExtensionsActive--;
@@ -2479,6 +2640,7 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     OutputDebugStringA(extensionId);
     OutputDebugStringA("\n");
 
+    if (deactivateFailed) return PatchResult::error("Extension deactivate() threw an exception");
     return PatchResult::ok("Extension deactivated");
 }
 
@@ -2491,6 +2653,21 @@ PatchResult JSExtensionHost::unloadExtension(const char* extensionId) {
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) return PatchResult::error("Extension not found");
+
+    // Invalidate registered callbacks before their owning QuickJS context dies.
+    // Keep the binding objects allocated: the native command registry retains
+    // their addresses until its own registration is removed.
+    {
+        std::lock_guard<std::mutex> commandLock(s_jsCommandMutex);
+        JSContext* dyingContext = static_cast<JSContext*>(it->second->jsContext);
+        for (auto& binding : s_jsCommands) {
+            if (binding.ctx == dyingContext && dyingContext != nullptr) {
+                JS_FreeValue(dyingContext, binding.callback);
+                binding.callback = JS_UNDEFINED;
+                binding.ctx = nullptr;
+            }
+        }
+    }
 
     // Free JS context
     if (it->second->jsContext && it->second->jsContext != m_jsContext) {
@@ -2728,9 +2905,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         return result;
     }
 
-    LARGE_INTEGER fileSize;
-    GetFileSizeEx(hFile, &fileSize);
+    LARGE_INTEGER fileSize{};
+    const BOOL sizeRead = GetFileSizeEx(hFile, &fileSize);
     CloseHandle(hFile);
+    if (!sizeRead) {
+        std::strncpy(result.errorDetail, "Cannot read VSIX file size",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     if (fileSize.QuadPart < 100) {
         std::strncpy(result.errorDetail, "VSIX file too small (corrupt?)",
@@ -2761,6 +2943,10 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
                              sizeof(result.errorDetail) - 1);
                 return result;
             }
+        } else {
+            std::strncpy(result.errorDetail, "Cannot reopen VSIX for ZIP signature check",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
     }
 
@@ -2795,21 +2981,21 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         WinVerifyTrust(nullptr, &policyGUID, &trustData);
     }
 
-    // ---- If unsigned, check environment variable ----
+    // An unsigned or unverified VSIX must never silently pass strict mode.
+    // Developers can opt in explicitly for locally generated test fixtures.
     if (!result.signatureVerified) {
         char allowUnsigned[16] = {};
         DWORD envLen = GetEnvironmentVariableA("RAWRXD_ALLOW_UNSIGNED_EXTENSIONS",
                                                 allowUnsigned, sizeof(allowUnsigned));
-        if (envLen > 0 && (allowUnsigned[0] == '1' || allowUnsigned[0] == 'Y' ||
-            allowUnsigned[0] == 'y')) {
-            // Allow unsigned extensions
-            OutputDebugStringA("[JSExtensionHost] WARNING: Loading unsigned VSIX "
-                             "(RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1)\n");
-        } else {
-            // In strict mode, reject unsigned VSIX
-            // For now, we allow but warn (many extensions are unsigned)
-            OutputDebugStringA("[JSExtensionHost] NOTICE: VSIX is not signed\n");
+        const bool explicitOptIn = envLen > 0 && envLen < sizeof(allowUnsigned) &&
+            rawrxd::extensions::allowUnsignedVSIX(allowUnsigned);
+        if (!explicitOptIn) {
+            std::strncpy(result.errorDetail,
+                         "Unsigned or unverified VSIX rejected; explicit opt-in required",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
+        OutputDebugStringA("[JSExtensionHost] WARNING: unsigned VSIX explicitly allowed\\n");
     }
 
     // ---- Mark as valid ----
@@ -2828,8 +3014,36 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir) {
     if (!zipPath || !destDir) return PatchResult::error("Null parameters");
 
-    // Create destination directory
-    std::filesystem::create_directories(destDir);
+    // Paths are interpolated into single-quoted PowerShell literals below.
+    // Reject quote injection and truncated commands until this fallback is
+    // replaced by an archive library with argument-free extraction.
+    const auto unsafeCommandPath = [](const char* path) {
+        for (const unsigned char* p =
+                 reinterpret_cast<const unsigned char*>(path); *p; ++p) {
+            // The outer -Command string uses double quotes, while its
+            // PowerShell literals use single quotes. Reject both, as well
+            // as control characters that could alter command parsing.
+            if (*p == 39 || *p == 34 || *p < 32 || *p == 127) return true;
+        }
+        return false;
+    };
+    if (unsafeCommandPath(zipPath) || unsafeCommandPath(destDir)) {
+        return PatchResult::error("VSIX extraction path contains unsafe command characters");
+    }
+    if (std::strlen(zipPath) + std::strlen(destDir) + 128 >= 2048) {
+        return PatchResult::error("VSIX extraction command exceeds safe length");
+    }
+
+    // Never merge a VSIX into a pre-existing installation. Expand-Archive
+    // -Force otherwise leaves stale files that can be mistaken for content
+    // from the verified package, including package.json or the JS entry point.
+    std::error_code destError;
+    const std::filesystem::path destination(destDir);
+    if (!rawrxd::extensions::safeExtractionDestination(destination)) {
+        return PatchResult::error("VSIX extraction destination must be missing or an empty ordinary directory");
+    }
+    std::filesystem::create_directories(destination, destError);
+    if (destError) return PatchResult::error("Failed to create VSIX extraction destination");
 
     // ---- Shell-based extraction using PowerShell ----
     // This is a robust fallback that handles all ZIP variants.
@@ -2868,10 +3082,20 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error("VSIX extraction timed out (60s)");
     }
 
-    DWORD exitCode = 0;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
+    // WAIT_FAILED and exit-code query failures are not successful extraction.
+    if (waitResult != WAIT_OBJECT_0) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return PatchResult::error("VSIX extraction wait failed");
+    }
+
+    DWORD exitCode = STILL_ACTIVE;
+    const BOOL gotExitCode = GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    if (!gotExitCode || exitCode == STILL_ACTIVE) {
+        return PatchResult::error("VSIX extraction process exit status unavailable");
+    }
 
     if (exitCode != 0) {
         char err[256];
@@ -2893,7 +3117,10 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
                                              VSCodeExtensionManifest* outManifest) {
     if (!extensionDir || !outManifest) return PatchResult::error("Null parameters");
 
-    std::memset(outManifest, 0, sizeof(VSCodeExtensionManifest));
+    // VSCodeExtensionManifest owns std::string/std::vector members.
+    // Byte-zeroing it corrupts their object invariants and is undefined behavior.
+    // Value assignment resets every member through its proper C++ operations.
+    *outManifest = VSCodeExtensionManifest{};
 
     // Find package.json
     std::string pkgPath = std::string(extensionDir) + "\\extension\\package.json";
@@ -2902,6 +3129,19 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
         if (!std::filesystem::exists(pkgPath)) {
             return PatchResult::error("package.json not found");
         }
+    }
+
+    // Apply the same containment and size gates as loadExtensionFromDir.
+    // parseManifest is independently callable and must not bypass them.
+    if (!rawrxd::extensions::entryWithinRoot(
+            std::filesystem::absolute(std::filesystem::path(extensionDir)),
+            std::filesystem::absolute(std::filesystem::path(pkgPath)))) {
+        return PatchResult::error("Extension manifest escapes installation root");
+    }
+    std::error_code manifestError;
+    const auto manifestBytes = std::filesystem::file_size(pkgPath, manifestError);
+    if (manifestError || manifestBytes == 0 || manifestBytes > 256 * 1024) {
+        return PatchResult::error("Extension manifest missing or exceeds 256 KiB");
     }
 
     std::string json = readFileToString(pkgPath.c_str());
@@ -2920,6 +3160,17 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     assignField(jsonGetString(json, "version"),        outManifest->version);
     assignField(jsonGetString(json, "description"),    outManifest->description);
     assignField(jsonGetString(json, "main"),           outManifest->main);
+
+    // Manifest inspection must not accept an entry path the loader rejects.
+    if (!outManifest->main.empty() &&
+        !rawrxd::extensions::validRelativeMain(outManifest->main)) {
+        return PatchResult::error("Invalid extension manifest main entry");
+    }
+
+    if (!rawrxd::extensions::validManifestIdentity(
+            outManifest->publisher, outManifest->name, outManifest->version)) {
+        return PatchResult::error("Invalid manifest publisher, name, or version");
+    }
 
     // Build the id from publisher.name
     if (!outManifest->publisher.empty() && !outManifest->name.empty()) {
@@ -3073,11 +3324,15 @@ void JSExtensionHost::processMessageQueue() {
             case JSMessage::Type::ExecuteScript: {
                 if (!msg.extensionId.empty() && !msg.data.empty()) {
                     char result[4096] = {};
-                    executeScript(msg.extensionId.c_str(), msg.data.c_str(),
+                    const PatchResult execution = executeScript(msg.extensionId.c_str(), msg.data.c_str(),
                                    result, sizeof(result));
                     if (msg.completionCallback) {
-                        msg.completionCallback(true, result, msg.completionCtx);
+                        const char* callbackResult = execution.success ? result
+                            : (result[0] != '\0' ? result : execution.detail.c_str());
+                        msg.completionCallback(execution.success, callbackResult, msg.completionCtx);
                     }
+                } else if (msg.completionCallback) {
+                    msg.completionCallback(false, "Empty extension ID or script", msg.completionCtx);
                 }
                 break;
             }
@@ -3103,20 +3358,49 @@ void JSExtensionHost::processMessageQueue() {
                 if (newline != std::string::npos) {
                     std::string eventName = msg.data.substr(0, newline);
                     std::string eventData = msg.data.substr(newline + 1);
+                    // Event names are interpolated into a JavaScript string below.
+                    // Reject syntax metacharacters rather than allowing script injection.
+                    const bool validEventName = !eventName.empty() &&
+                        std::all_of(eventName.begin(), eventName.end(), [](unsigned char ch) {
+                            return (ch >= 'a' && ch <= 'z') ||
+                                   (ch >= 'A' && ch <= 'Z') ||
+                                   (ch >= '0' && ch <= '9') ||
+                                   ch == '.' || ch == '_' || ch == '-' || ch == ':';
+                        });
+                    if (!validEventName) {
+                        OutputDebugStringA("[JSExtensionHost] Rejected unsafe event name\n");
+                        break;
+                    }
 
                     std::lock_guard<std::mutex> lock(m_extensionsMutex);
                     for (auto& [id, state] : m_extensions) {
                         if (!state->activated || !state->jsContext) continue;
 
                         JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-                        std::ostringstream js;
-                        js << "if(globalThis.__eventHandlers && globalThis.__eventHandlers['"
-                           << eventName << "']) { globalThis.__eventHandlers['"
-                           << eventName << "'](" << eventData << "); }";
-
-                        std::string script = js.str();
-                        JS_Eval(extCtx, script.c_str(), script.size(),
-                                "<event>", JS_EVAL_TYPE_GLOBAL);
+                        JSValue global = JS_GetGlobalObject(extCtx);
+                        JSValue handlers = JS_GetPropertyStr(extCtx, global, "__eventHandlers");
+                        JSValue handler = JS_GetPropertyStr(extCtx, handlers, eventName.c_str());
+                        if (JS_IsFunction(extCtx, handler)) {
+                            JSValue payload = JS_ParseJSON(extCtx, eventData.c_str(),
+                                                           eventData.size(), "<event-json>");
+                            if (!JS_IsException(payload)) {
+                                JSValue callResult = JS_Call(extCtx, handler, handlers, 1, &payload);
+                                if (JS_IsException(callResult)) {
+                                    JSValue error = JS_GetException(extCtx);
+                                    JS_FreeValue(extCtx, error);
+                                    OutputDebugStringA("[JSExtensionHost] Event callback threw\n");
+                                }
+                                JS_FreeValue(extCtx, callResult);
+                            } else {
+                                JSValue error = JS_GetException(extCtx);
+                                JS_FreeValue(extCtx, error);
+                                OutputDebugStringA("[JSExtensionHost] Invalid event JSON\n");
+                            }
+                            JS_FreeValue(extCtx, payload);
+                        }
+                        JS_FreeValue(extCtx, handler);
+                        JS_FreeValue(extCtx, handlers);
+                        JS_FreeValue(extCtx, global);
                     }
                 }
                 break;

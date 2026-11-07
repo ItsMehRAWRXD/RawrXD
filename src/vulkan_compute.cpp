@@ -285,9 +285,9 @@ bool VulkanCompute::ExecuteSingleTimeCommands(std::function<void(VkCommandBuffer
     const auto wait_end = std::chrono::steady_clock::now();
     ++gpu_counters_.waits;
     gpu_counters_.wait_ms += std::chrono::duration<double, std::milli>(wait_end - wait_begin).count();
-    // The queue-side execution of this submission is the interval between the
-    // submit and the fence signalling; the wait duration is its host-visible
-    // component.
+    // Preserve the legacy kernel_ms counter for existing receipts. It is the
+    // host-visible fence-wait span, not an independent device-time measure;
+    // gpu_ms below is populated from Vulkan timestamp queries when supported.
     gpu_counters_.kernel_ms += std::chrono::duration<double, std::milli>(wait_end - wait_begin).count();
 
     // Cleanup
@@ -1782,7 +1782,8 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
     gpu_counters_.wait_ms += waited_ms;
     // The fence signals only after the whole submission (upload, dispatch,
-    // copy) drains, so this is the measured queue-side cost of the call.
+    // copy) drains. Record this host-visible wait in the legacy kernel_ms
+    // field; gpu_ms below is the device-timeline measurement.
     gpu_counters_.kernel_ms += waited_ms;
     // RAWRXD_GATE7_TPS_001: the same span read off the DEVICE timeline. This is
     // the only measure of actual GPU work; kernel_ms above is host time.
@@ -1985,6 +1986,48 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     quant_batch_entries_.push_back(e);
     QDTRACE("queued entry n_out=" << n_out << " n_in=" << n_in << " kind=" << kind
                                    << " q8_bytes=" << q8_bytes << " entries=" << quant_batch_entries_.size());
+    return true;
+}
+
+bool VulkanCompute::BeginFusedLayer() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (quant_fuse_active_) return false;
+    quant_fuse_active_ = true;
+    quant_fuse_submits_ = 0;
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr, "SUBMIT_TRACE kind=BeginFusedLayer\n");
+        std::fflush(stderr);
+    }
+    return true;
+}
+
+bool VulkanCompute::ForceHostSync() {
+    // Stack-A batches already host-sync inside EndQuantDotBatch. This marks the
+    // RuntimeGraph barrier where host data is truly required (e.g. OpAttention).
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=ForceHostSync dependency=HOST_DATA necessary=1 fuse=%d\n",
+            quant_fuse_active_ ? 1 : 0);
+        std::fflush(stderr);
+    }
+    return true;
+}
+
+bool VulkanCompute::EndFusedLayer() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!quant_fuse_active_) return false;
+    if (quant_batch_active_) {
+        quant_fuse_active_ = false;
+        return false;
+    }
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=EndFusedLayer submits_in_window=%u\n",
+            quant_fuse_submits_);
+        std::fflush(stderr);
+    }
+    quant_fuse_active_ = false;
+    quant_fuse_submits_ = 0;
     return true;
 }
 
@@ -2208,6 +2251,15 @@ bool VulkanCompute::EndQuantDotBatch() {
     QDTRACE("end-batch submitted entries=" << quant_batch_entries_.size());
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
+    if (quant_fuse_active_) ++quant_fuse_submits_;
+    // DEEP2_VULKAN_SUBMIT_OPT_001: classify fence wait (host needs readback).
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=EndQuantDotBatch entries=%zu dependency=HOST_READBACK "
+            "necessary=1 fuse=%d\n",
+            quant_batch_entries_.size(), quant_fuse_active_ ? 1 : 0);
+        std::fflush(stderr);
+    }
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();
@@ -2223,6 +2275,7 @@ bool VulkanCompute::EndQuantDotBatch() {
     ++gpu_counters_.waits;
     gpu_counters_.wait_ms +=
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
+    // Legacy alias: this is the host fence wait, not device shader time.
     gpu_counters_.kernel_ms +=
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
     if (ts) {

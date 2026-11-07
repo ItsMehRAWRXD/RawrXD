@@ -38,6 +38,8 @@
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "K2MlaOProjTiming.hpp"
+#include "GenerationWallAccounting.hpp"
+#include "K2MoEExpertAccounting.hpp"
 #include "VirtualTensorDesc.hpp"
 #include "VirtualTensorRange.hpp"
 #include "vulkan_compute.h"
@@ -920,10 +922,6 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             Deep2::moe_ltrace::SetToken(position);
             if (!Deep2::K2NativeMoE_AfterMla(index, k2cfg, layer, decodePhase, out,
                                              scratch.data(), error)) {
-                fprintf(stderr,
-                    "[K2_DIAG_LAYER39] layer=%u MoE AFTER_MLA FAILED: %s\n",
-                    layer, error.c_str());
-                fflush(stderr);
                 joinAll();
                 releaseKvTrack();
                 return false;
@@ -965,9 +963,6 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     if (kvPtr) {
         try { kvPtr->CommitPosition(); }
         catch (const std::exception& ex) {
-            fprintf(stderr,
-                "[K2_DIAG_LAYER39] KV CommitPosition FAILED: %s\n", ex.what());
-            fflush(stderr);
             joinOutPrefetch();
             releaseKvTrack();
             error = std::string("K2KVCache commit: ") + ex.what();
@@ -1322,6 +1317,7 @@ Result Run(const fs::path& shardDir,
     Deep2::LogitsClimb_Reset();
     Deep2::MlaStage_Reset();
     Deep2::MoEPlaceLiveReset();
+    Deep2::K2MoEExpertAccounting::Instance().Reset();
     Deep2::MoEPlaceGlobal().Reset();
     Deep2::DualStickExpertResidencyReset();
     Deep2::DualStickSyncQuotaLiveCounters();
@@ -1745,6 +1741,7 @@ Result Run(const fs::path& shardDir,
     result.peakResidencyBytes = g_peakResidency;
     result.finalResidencyBytes = g_currentResidency;
     result.streamingCallbackFired = callbackFired;
+    result.generatedTokenIds = ghostTok;
     result.generatedTokenId = curToken;
     result.outputNonempty = !result.generatedText.empty();
     {
@@ -1776,6 +1773,7 @@ Result Run(const fs::path& shardDir,
         const uint64_t wallNs =
             (rs && now > rs) ? (now - rs) * 1000ull : 0ull;
         const uint64_t tokN = (uint64_t)ghostTok.size();
+        Deep2::GenerationWallAccounting_Emit(stdout, wallNs, tokN);
         Deep2::OProj_EmitWallBudget(stdout, wallNs,
                                     (uint32_t)tokN);
         Deep2::Ev512::HostEmitWallNs(wallNs, tokN);

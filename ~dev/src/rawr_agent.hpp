@@ -5,6 +5,8 @@
 // tool calls; the runtime owns the ledger, step bounds, and completion.
 // ============================================================================
 #include <cstdint>
+#include <filesystem>
+#include <vector>
 #include <string>
 
 #include "rawr_audit_state.hpp"

@@ -1,0 +1,38 @@
+name: Compiler pipeline acceptance
+on:
+  push:
+    paths:
+      - 'tools/compiler_pipeline.py'
+      - 'tests/acceptance/test_compiler_pipeline.py'
+      - '.github/workflows/compiler-pipeline-acceptance.yml'
+  pull_request:
+    paths:
+      - 'tools/compiler_pipeline.py'
+      - 'tests/acceptance/test_compiler_pipeline.py'
+      - '.github/workflows/compiler-pipeline-acceptance.yml'
+  workflow_dispatch:
+
+jobs:
+  compiler-pipeline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run native MSVC acceptance gates
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSROOT=%%i"
+          if not defined VSROOT exit /b 1
+          call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          python -m unittest discover -s tests/acceptance -p test_compiler_pipeline.py -v
+      - name: Run GNU acceptance gates
+        if: runner.os == 'Linux'
+        run: python -m unittest discover -s tests/acceptance -p test_compiler_pipeline.py -v

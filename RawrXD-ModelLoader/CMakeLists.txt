@@ -129,6 +129,8 @@ if(FALSE AND MSVC) # Disabled until headers exist
         src/win32app/Win32IDE_AgenticBridge.h
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_AgentStepTimeline.cpp
+        src/win32app/Win32IDE_lifecycle.cpp
         src/win32app/Win32IDE_Autonomy.h
         src/win32app/Win32IDE_Autonomy.cpp
         src/gguf_loader.cpp
@@ -474,6 +476,8 @@ add_executable(RawrXD-TestRunner
     src/win32app/Win32IDE_VSCodeUI.cpp
     src/win32app/Win32IDE_AgenticBridge.cpp
     src/win32app/Win32IDE_AgentCommands.cpp
+    src/win32app/Win32IDE_AgentStepTimeline.cpp
+    src/win32app/Win32IDE_lifecycle.cpp
     src/win32app/Win32TerminalManager.cpp
     src/win32app/TransparentRenderer.cpp
     src/win32app/VulkanRenderer.cpp

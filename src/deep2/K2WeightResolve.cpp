@@ -148,6 +148,13 @@ bool ResolveWeight(const GlobalTensorIndex& index, const char* name,
     bool okRead =
         K2ShardIo_Read(path, ref.fileOffset, ownedBuf.data(), ref.byteSize);
     if (!okRead) {
+        fprintf(stderr,
+            "[READ_MISMATCH_PRE] owner=MLA_FORWARD tensor=%s shard=%u "
+            "fileOffset=%llu requested=%llu K2ShardIo_Read=0\n",
+            name ? name : "NULL", ref.shardId,
+            (unsigned long long)ref.fileOffset,
+            (unsigned long long)ref.byteSize);
+        fflush(stderr);
         std::ifstream f(path, std::ios::binary);
         StreamPathTiming_Add(SPT_shardOpen(), tOpen);
         if (attn) {
@@ -171,6 +178,15 @@ bool ResolveWeight(const GlobalTensorIndex& index, const char* name,
             StreamPathTiming_Add(SPT_shardOther(), tRd);
         if (static_cast<size_t>(f.gcount()) != ref.byteSize) {
             error = "Read size mismatch";
+            fprintf(stderr,
+                "[READ_MISMATCH] owner=MLA_FORWARD tensor=%s shard=%u "
+                "fileOffset=%llu requested=%llu actual=%llu ggmlType=%d\n",
+                name ? name : "NULL", ref.shardId,
+                (unsigned long long)ref.fileOffset,
+                (unsigned long long)ref.byteSize,
+                (unsigned long long)static_cast<size_t>(f.gcount()),
+                (int)ref.ggmlType);
+            fflush(stderr);
             return false;
         }
     } else {

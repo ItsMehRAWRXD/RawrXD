@@ -1,0 +1,3 @@
+state=recovered
+target=calc.cpp
+backup=F:\rawrxd\tmp_build\native_deep2_e2e_20261027\.rawrxd\agent_transactions\txn_273628407014700\before.bin

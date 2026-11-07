@@ -11,6 +11,8 @@
 #include <cctype>
 #include <cstdio>
 #include <string>
+#include <thread>
+#include <atomic>
 #include <vector>
 
 #include "rawr_agent.hpp"
@@ -87,10 +89,97 @@ int main() {
     check("workspace.list {\"limit\":100}");
     check("workspace-list {\"limit\":100}");
     check("<tool>workspace.list</tool>\n<args>{\"limit\":100}</args>");
-    check("```workspace.list {\"limit\":100}```");
+    check("```json\nworkspace.list {\"limit\":100}\n```");
     check("audit.coverage {}");
     check("audit-coverage {}");
 
+    // B9: Fifteen parser cases using the same portable parser contract.
+    auto reject = [&](const std::string& raw) {
+        ++cases;
+        const auto p = parseModelReplyForTest(raw);
+        if (p.isTool || p.isFinal) {
+            std::printf("FAIL(expected rejection): %s\n", raw.c_str());
+            ++parseFailures; ++failures;
+        }
+    };
+    auto finalReply = [&](const std::string& raw) {
+        ++cases;
+        const auto p = parseModelReplyForTest(raw);
+        if (!p.isFinal || p.isTool) {
+            std::printf("FAIL(expected final): %s\n", raw.c_str());
+            ++parseFailures; ++failures;
+        }
+    };
+    check("<tool>file.read</tool><args>{\"path\":\"a.cpp\"}</args>"); // 01
+    check("<tool>audit.coverage</tool><args>{}</args>"); // 02
+    check("file.read {\"path\":\"a.cpp\"}"); // 03
+    check("code.search {\"query\":\"TODO\"}"); // 04
+    check("<tool>workspace.list</tool><args></args>"); // 05
+    reject("<tool>file.read"); // 06
+    reject("<tool>file.read</tool><args>{}</args><tool>file.read</tool><args>{}</args>"); // 07
+    reject("<tool>file.read</tool><args>{}</args><args>{}</args>"); // 08
+    reject("<tool>file.read</tool><args>{}</args></args>"); // 09
+    reject("<args>{}</args>"); // 10
+    reject("<tool>file.read</tool><args>not-json</args>"); // 11
+    reject("<args>{}</args><tool>file.read</tool>"); // 12
+    reject("<tool>file.read</tool><args>{}</args></tool>"); // 13
+    finalReply("Task complete."); // 14
+    finalReply("Plain response with literal `backticks`."); // 15
+
+    // Batch 11: reject tool-call framing contamination (15 cases).
+    reject("preface<tool>file.read</tool><args>{}</args>"); // 01
+    reject("<tool>file.read</tool><args>{}</args>suffix"); // 02
+    reject("<tool>file.read</tool>noise<args>{}</args>"); // 03
+    reject(" \n<tool>file.read</tool><args>{}</args>suffix"); // 04
+    reject("<tool>file.read</tool><args>{}</args><|im_end|>"); // 05
+    reject("<tool>file.read</tool><args>{}</args><tool>"); // 06
+    reject("<tool>file.read</tool><args>{}</args>DONE"); // 07
+    reject("<tool>file.read</tool> extra <args>{}</args>"); // 08
+    reject("assistant:\n<tool>file.read</tool><args>{}</args>"); // 09
+    reject("<tool>file.read</tool><args>{}</args>\nTask complete."); // 10
+    reject("<tool>file.read</tool>\nprose\n<args>{}</args>"); // 11
+    reject("<tool>file.read</tool><args>{}</args>\n<args>"); // 12
+    reject("<tool>file.read</tool><args>{}</args>\n</tool>"); // 13
+    reject("<tool>file.read</tool><args>{}</args>\n<tool>other"); // 14
+    check(" \n<tool>file.read</tool>\n<args>{}</args>\n "); // 15
+
+    // Batch 12: malformed bare tool-call boundary matrix (15 cases).
+    reject("file.read {\"path\":\"a.cpp\"} trailing"); // 01
+    reject("file.read {\"path\":\"a.cpp\"}\nextra"); // 02
+    reject("file.read {\"path\":\"a.cpp\"}\nfile.read {}"); // 03
+    reject("file.read {\"path\":\"a.cpp\"} {}"); // 04
+    reject("file.read {\"path\":\"a.cpp\"} <tool>"); // 05
+    reject("file.read {\"path\":\"a.cpp\"} prose"); // 06
+    reject("file.read {\"path\":\"a.cpp\"}\nDONE"); // 07
+    reject("file.read {\"path\":\"a.cpp\"}\n<|im_end|>"); // 08
+    reject("file.read {\"path\":\"a.cpp\"}   extra"); // 09
+    check("file.read {\"path\":\"a.cpp\"}\n\n"); // 10 whitespace tolerated
+    check("file.read {\"path\":\"a.cpp\"} \n"); // 11 whitespace tolerated
+    reject("file.read {\"path\":\"a.cpp\"}#comment"); // 12
+    reject("file.read {\"path\":\"a.cpp\"} [complete]"); // 13
+    check("file.read {\"path\":\"a.cpp\"}"); // 14
+    check("audit.coverage {}"); // 15
+
+    // Batch 13: 15 isolated catalogs must not leak across concurrent threads.
+    std::atomic<int> threadFailures{0};
+    std::vector<std::thread> workers;
+    for (int i = 0; i < 15; ++i) {
+        workers.emplace_back([i, &threadFailures] {
+            const std::string mine = "private_tool_" + std::to_string(i);
+            setKnownToolNames({mine});
+            const auto own = parseModelReplyForTest(mine + " {}");
+            const auto foreign = parseModelReplyForTest(
+                "private_tool_" + std::to_string((i + 1) % 15) + " {}");
+            if (!own.isTool || foreign.isTool) ++threadFailures;
+        });
+    }
+    for (auto& worker : workers) worker.join();
+    cases += 15;
+    if (threadFailures != 0) {
+        std::printf("FAIL(thread-isolation): %d\n", int(threadFailures.load()));
+        failures += threadFailures.load();
+        parseFailures += threadFailures.load();
+    }
     std::printf("CASES=%d\n", cases);
     std::printf("PARSE_FAILURES=%d\n", parseFailures);
     std::printf("CANONICALIZATION_FAILURES=%d\n", canonFailures);

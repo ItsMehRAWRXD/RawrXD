@@ -36,8 +36,8 @@
     "tests_total": 0,
     "tool_ok": false
   },
-  "tokens_per_second": 0.6607305792404744,
-  "total_inference_ms": 31783,
+  "tokens_per_second": 0.6606890042472865,
+  "total_inference_ms": 31785,
   "total_tokens": 21,
-  "updated_at": "2026-10-16T14:38:03"
+  "updated_at": "2026-10-26T07:52:04"
 }

@@ -58,6 +58,13 @@ int main(int argc, char* argv[])
         std::fprintf(stderr, "Failed to load model: %s\n", model_path);
         return 1;
     }
+    const int n_embd = llama_model_n_embd(model);
+    if (n_embd <= 0) {
+        std::fprintf(stderr, "Invalid model embedding width: %d\n", n_embd);
+        llama_model_free(model);
+        llama_backend_free();
+        return 2;
+    }
 
     // Create context
     llama_context_params ctx_params = llama_context_default_params();
@@ -130,12 +137,12 @@ int main(int argc, char* argv[])
             std::snprintf(path, sizeof(path), "%s/ref_hidden_pos%zu.bin", out_dir, pos);
             f = std::fopen(path, "wb");
             if (f) {
-                size_t hidden_written = std::fwrite(embeddings, sizeof(float), 3072, f);
+                size_t hidden_written = std::fwrite(embeddings, sizeof(float), static_cast<size_t>(n_embd), f);
                 std::fclose(f);
-                if (hidden_written == 3072) {
+                if (hidden_written == static_cast<size_t>(n_embd)) {
                     std::printf("Wrote ref_hidden_pos%zu.bin (%zu floats)\n", pos, hidden_written);
                 } else {
-                    std::fprintf(stderr, "Incomplete hidden write: %zu/3072\n", hidden_written);
+                    std::fprintf(stderr, "Incomplete hidden write: %zu/%d\n", hidden_written, n_embd);
                 }
             }
         } else {

@@ -1,0 +1,93 @@
+{
+  "CERTIFIED": 0,
+  "OFFICIAL_GATES": "UNCHANGED \u2014 do not attach G06 PASS without manual review",
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "anchors_pristine": [
+    "KIMI_LAYER39_FIRST_FAIL_001",
+    "KIMI_LAYER39_SINGLE_002"
+  ],
+  "certified": false,
+  "primary": {
+    "band_max_abs": 1e-06,
+    "band_ok": true,
+    "first_exceeding_band": null,
+    "metrics": {
+      "cosine_similarity": 0.9999999999999404,
+      "elements": 7168,
+      "max_abs": 3.1770030461952814e-07,
+      "max_relative": 0.03859536170107095,
+      "mean_abs": 6.268771647847839e-08,
+      "nonfinite": 0,
+      "rms_abs": 7.88447261235162e-08,
+      "rms_relative_to_reference": 3.697845727097263e-07,
+      "worst_candidate": -0.383772969,
+      "worst_index": 2844,
+      "worst_reference": -0.3837726512996954
+    },
+    "name": "gpu_vs_q6k_q8k_oracle"
+  },
+  "schema": "DEEP2_KIMI_G06_Q8K_ORACLE_HARNESS_001/v1",
+  "secondary_telemetry": {
+    "cpu_vs_fp32": {
+      "cosine_similarity": 0.9999999999999994,
+      "elements": 7168,
+      "max_abs": 4.401140718535146e-08,
+      "max_relative": 0.00015423499118631055,
+      "mean_abs": 5.838303824066043e-09,
+      "nonfinite": 0,
+      "rms_abs": 7.643616218184708e-09,
+      "rms_relative_to_reference": 3.586150805172435e-08,
+      "worst_candidate": -0.633048892,
+      "worst_index": 2700,
+      "worst_reference": -0.6330488479885928
+    },
+    "cpu_vs_q8k": {
+      "cosine_similarity": 0.9998999332789972,
+      "elements": 7168,
+      "max_abs": 0.010918781589811966,
+      "max_relative": 2097.7599033184247,
+      "mean_abs": 0.0024138150648167584,
+      "nonfinite": 0,
+      "rms_abs": 0.003016772016370987,
+      "rms_relative_to_reference": 0.01414876816603818,
+      "worst_candidate": 0.26900813,
+      "worst_index": 5418,
+      "worst_reference": 0.279926911589812
+    },
+    "metrics": {
+      "cosine_similarity": 0.9998999330434921,
+      "elements": 7168,
+      "max_abs": 0.010918879306201279,
+      "max_relative": 60.99790291758231,
+      "mean_abs": 0.0024138183205469174,
+      "nonfinite": 0,
+      "rms_abs": 0.003016776465503423,
+      "rms_relative_to_reference": 0.01415379192515199,
+      "worst_candidate": 0.279927015,
+      "worst_index": 5418,
+      "worst_reference": 0.2690081356937987
+    },
+    "name": "gpu_vs_fp32_scalar_contract_delta",
+    "note": "EXPECTED mismatch under VAL-051.11 FP32 CPU vs GPU Q8_K act quant"
+  },
+  "sha256": {
+    "cpu_down": "e7b5c18ececd09736fa6d2fdc45615e0d68914ae85d8dc44310244b295758339",
+    "gpu_down": "e84915e16680b5379d0b9a61f06183911e5c95cd4a93f0af9ece13440dc53275",
+    "oracle_fp32": "34c943cc3df1c7f4d77b94bac18ee94f9f86790c1a637eb523c375055458d1c6",
+    "oracle_q6k_q8k": "5397b5ab71e2afd80b2223798c671219d1f218cb176a1f7b2e287fd0c0c5ffbc",
+    "post_swiglu": "5722bc39939fc10842e14bda81c1b312ef08ee4128af8dead7022b9641661333",
+    "weights": "83a4217ca4b4590e83ea424c0f8f7268754b2349f155421bc7dabe1b648eb014"
+  },
+  "source_capture": {
+    "completion_boundary": "K2MoEStickEndDevice",
+    "expert": 108,
+    "gpu_arena_owner_expert": 108,
+    "gpu_submits": 1,
+    "layer": 39,
+    "manifest": "F:\\rawrxd\\evidence\\KIMI_LAYER39_SINGLE_002\\k2_l39_e108_s0.manifest.txt",
+    "stick": 0
+  },
+  "status": "PRIMARY_BAND_OK",
+  "type14_contract_path": "F:\\rawrxd\\evidence\\KIMI_G06_Q8K_ORACLE_HARNESS_001_20261027_225031\\TYPE14_CONTRACT.json"
+}

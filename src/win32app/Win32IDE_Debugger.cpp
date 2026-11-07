@@ -6,6 +6,14 @@
 #include "Win32IDE.h"
 #include <sstream>
 #include <algorithm>
+#include <vector>
+
+// Heap-allocated strings retained by ListView controls (LVIF_TEXT does not
+// copy text; it retains the pointer).  Cleared at the start of each update
+// cycle after ListView_DeleteAllItems removes the items that referenced them.
+static std::vector<char*> g_debuggerStringHeap;
+static std::vector<char*> g_watchStringHeap;
+static std::vector<char*> g_stackStringHeap;
 
 // Debugger Control IDs
 #define IDC_DEBUGGER_CONTAINER 2100
@@ -447,28 +455,52 @@ void Win32IDE::updateBreakpointList()
 {
     if (!m_hwndDebuggerBreakpoints) return;
 
+    // Free heap-allocated lParam strings from previous cycle.
+    LVITEMA lvi = { 0 };
+    lvi.mask = LVIF_PARAM;
+    int count = ListView_GetItemCount(m_hwndDebuggerBreakpoints);
+    for (int i = count - 1; i >= 0; --i) {
+        lvi.iItem = i;
+        if (ListView_GetItem(m_hwndDebuggerBreakpoints, &lvi)) {
+            delete[] reinterpret_cast<char*>(lvi.lParam);
+        }
+    }
+    g_debuggerStringHeap.clear();
+
     ListView_DeleteAllItems(m_hwndDebuggerBreakpoints);
 
-    LVITEMA lvi;
-    lvi.mask = LVIF_TEXT;
+    LVITEMA item{};
+    item.mask = LVIF_TEXT | LVIF_PARAM;
 
     for (size_t i = 0; i < m_breakpoints.size(); ++i) {
         const auto& bp = m_breakpoints[i];
 
-        lvi.iItem = static_cast<int>(i);
-        lvi.iSubItem = 0;
-        lvi.pszText = const_cast<char*>(bp.file.c_str());
-        ListView_InsertItem(m_hwndDebuggerBreakpoints, &lvi);
+        item.iItem = static_cast<int>(i);
+        item.iSubItem = 0;
+        item.pszText = const_cast<char*>(bp.file.c_str());
+        item.lParam = reinterpret_cast<LPARAM>(new char[bp.file.length() + 1]);
+        strcpy_s(reinterpret_cast<char*>(item.lParam), bp.file.length() + 1, bp.file.c_str());
+        ListView_InsertItem(m_hwndDebuggerBreakpoints, &item);
 
-        lvi.iSubItem = 1;
-        std::string line_str = std::to_string(bp.line);
-        lvi.pszText = const_cast<char*>(line_str.c_str());
-        ListView_SetItem(m_hwndDebuggerBreakpoints, &lvi);
+        item.iSubItem = 1;
+        char lineBuf[32];
+        _snprintf_s(lineBuf, sizeof(lineBuf), "%d", bp.line);
+        char* lineHeap = new char[strlen(lineBuf) + 1];
+        strcpy_s(lineHeap, strlen(lineBuf) + 1, lineBuf);
+        g_debuggerStringHeap.push_back(lineHeap);
+        item.pszText = lineHeap;
+        item.lParam = reinterpret_cast<LPARAM>(lineHeap);
+        ListView_SetItem(m_hwndDebuggerBreakpoints, &item);
 
-        lvi.iSubItem = 2;
-        std::string hits_str = std::to_string(bp.hitCount);
-        lvi.pszText = const_cast<char*>(hits_str.c_str());
-        ListView_SetItem(m_hwndDebuggerBreakpoints, &lvi);
+        item.iSubItem = 2;
+        char hitsBuf[32];
+        _snprintf_s(hitsBuf, sizeof(hitsBuf), "%d", bp.hitCount);
+        char* hitsHeap = new char[strlen(hitsBuf) + 1];
+        strcpy_s(hitsHeap, strlen(hitsBuf) + 1, hitsBuf);
+        g_debuggerStringHeap.push_back(hitsHeap);
+        item.pszText = hitsHeap;
+        item.lParam = reinterpret_cast<LPARAM>(hitsHeap);
+        ListView_SetItem(m_hwndDebuggerBreakpoints, &item);
     }
 }
 
@@ -509,25 +541,40 @@ void Win32IDE::updateWatchList()
 {
     if (!m_hwndDebuggerWatch) return;
 
+    // Free heap-allocated strings from previous cycle.
+    g_watchStringHeap.clear();
+
     ListView_DeleteAllItems(m_hwndDebuggerWatch);
 
     LVITEMA lvi;
-    lvi.mask = LVIF_TEXT;
+    lvi.mask = LVIF_TEXT | LVIF_PARAM;
 
     for (size_t i = 0; i < m_watchList.size(); ++i) {
         auto& item = m_watchList[i];
 
         lvi.iItem = static_cast<int>(i);
         lvi.iSubItem = 0;
-        lvi.pszText = const_cast<char*>(item.expression.c_str());
+        char* exprHeap = new char[item.expression.length() + 1];
+        strcpy_s(exprHeap, item.expression.length() + 1, item.expression.c_str());
+        lvi.pszText = exprHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(exprHeap);
+        g_watchStringHeap.push_back(exprHeap);
         ListView_InsertItem(m_hwndDebuggerWatch, &lvi);
 
         lvi.iSubItem = 1;
-        lvi.pszText = const_cast<char*>(item.value.c_str());
+        char* valHeap = new char[item.value.length() + 1];
+        strcpy_s(valHeap, item.value.length() + 1, item.value.c_str());
+        lvi.pszText = valHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(valHeap);
+        g_watchStringHeap.push_back(valHeap);
         ListView_SetItem(m_hwndDebuggerWatch, &lvi);
 
         lvi.iSubItem = 2;
-        lvi.pszText = const_cast<char*>(item.type.c_str());
+        char* typeHeap = new char[item.type.length() + 1];
+        strcpy_s(typeHeap, item.type.length() + 1, item.type.c_str());
+        lvi.pszText = typeHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(typeHeap);
+        g_watchStringHeap.push_back(typeHeap);
         ListView_SetItem(m_hwndDebuggerWatch, &lvi);
     }
 }
@@ -569,10 +616,15 @@ void Win32IDE::updateVariables()
             tvis.hParent = TVI_ROOT;
             tvis.hInsertAfter = TVI_LAST;
             tvis.item.mask = TVIF_TEXT;
-            
+
+            // Build and persist the display text so the TreeView control's
+            // pszText pointer remains valid (same class of defect as T08).
             std::string item_text = var.name + " = " + var.value + " (" + var.type + ")";
-            tvis.item.pszText = const_cast<char*>(item_text.c_str());
-            
+            char* heapText = new char[item_text.length() + 1];
+            memcpy(heapText, item_text.c_str(), item_text.length() + 1);
+            tvis.item.pszText = heapText;
+            tvis.item.lParam = reinterpret_cast<LPARAM>(heapText);
+
             TreeView_InsertItem(m_hwndDebuggerVariables, &tvis);
         }
     }
@@ -582,26 +634,42 @@ void Win32IDE::updateCallStack()
 {
     if (!m_hwndDebuggerStackTrace) return;
 
+    // Free heap-allocated strings from previous cycle.
+    g_stackStringHeap.clear();
+
     ListView_DeleteAllItems(m_hwndDebuggerStackTrace);
 
     LVITEMA lvi;
-    lvi.mask = LVIF_TEXT;
+    lvi.mask = LVIF_TEXT | LVIF_PARAM;
 
     for (size_t i = 0; i < m_callStack.size(); ++i) {
         const auto& frame = m_callStack[i];
 
         lvi.iItem = static_cast<int>(i);
         lvi.iSubItem = 0;
-        lvi.pszText = const_cast<char*>(frame.function.c_str());
+        char* funcHeap = new char[frame.function.length() + 1];
+        strcpy_s(funcHeap, frame.function.length() + 1, frame.function.c_str());
+        lvi.pszText = funcHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(funcHeap);
+        g_stackStringHeap.push_back(funcHeap);
         ListView_InsertItem(m_hwndDebuggerStackTrace, &lvi);
 
         lvi.iSubItem = 1;
-        lvi.pszText = const_cast<char*>(frame.file.c_str());
+        char* fileHeap = new char[frame.file.length() + 1];
+        strcpy_s(fileHeap, frame.file.length() + 1, frame.file.c_str());
+        lvi.pszText = fileHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(fileHeap);
+        g_stackStringHeap.push_back(fileHeap);
         ListView_SetItem(m_hwndDebuggerStackTrace, &lvi);
 
         lvi.iSubItem = 2;
-        std::string line_str = std::to_string(frame.line);
-        lvi.pszText = const_cast<char*>(line_str.c_str());
+        char lineBuf[32];
+        _snprintf_s(lineBuf, sizeof(lineBuf), "%d", frame.line);
+        char* lineHeap = new char[strlen(lineBuf) + 1];
+        strcpy_s(lineHeap, strlen(lineBuf) + 1, lineBuf);
+        lvi.pszText = lineHeap;
+        lvi.lParam = reinterpret_cast<LPARAM>(lineHeap);
+        g_stackStringHeap.push_back(lineHeap);
         ListView_SetItem(m_hwndDebuggerStackTrace, &lvi);
     }
 }

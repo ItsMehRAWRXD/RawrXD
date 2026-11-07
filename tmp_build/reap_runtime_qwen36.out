@@ -1,0 +1,87 @@
+[Deep2Engine] Loading model from: F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf mode=GPU_MULTI devices=1 kv_per_token=11520 max_ctx_est=250494
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\Qwen3.6-35B-A3B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'qwen35moe'  hidden=2048 layers=40 heads=16 kvHeads=2 inter=0 vocab=248320
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=248320 bos=248044 eos=248046 (Spm::encode)
+[ATTN_GATE] Mapped blk.0.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=1x32 type=0)
+[SSM_MAP] blk.0.ssm_alpha.weight -> ssmAlpha (dims=32x2048 type=12)
+[SSM_MAP] blk.0.ssm_beta.weight -> ssmBeta (dims=32x2048 type=12)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=8192x4 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=1x32 type=0)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=1x128 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=2048x4096 type=12)
+[ATTN_GATE] Mapped blk.1.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.10.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.12.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.13.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.14.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.16.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.17.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.18.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.2.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.20.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.21.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.22.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.24.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.25.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.26.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.28.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.29.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.30.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.32.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.33.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.34.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.36.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.37.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.38.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.4.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.5.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.6.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.8.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.9.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[Deep2Engine] Layer topology: 40 attention, 30 SSM, 18446744073709551586 unknown of 40 total
+[Deep2Engine] KV cache sized for 40 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000262A2442040  Registered 'blk.0.attn_norm.weight': shard=0 offset=0 bytes=8192  |  registry_size=1  registeredBytes=8192  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=00000262A2442040  Registered 'blk.9.ssm_dt.bias': shard=0 offset=0 bytes=128  |  registry_size=100  registeredBytes=103880192  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=00000262A2442040  Registered 'blk.19.ffn_gate_inp_shexp.weight': shard=0 offset=0 bytes=8192  |  registry_size=200  registeredBytes=222620928  zeroOffset=200  maxResidentBytes=536870912
+[ResidencyManager] this=00000262A2442040  Registered 'blk.29.ssm_dt.bias': shard=0 offset=0 bytes=128  |  registry_size=300  registeredBytes=325960448  zeroOffset=300  maxResidentBytes=536870912
+[ResidencyManager] this=00000262A2442040  Registered 'blk.39.ffn_gate_inp_shexp.weight': shard=0 offset=0 bytes=8192  |  registry_size=400  registeredBytes=445241856  zeroOffset=400  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=00000262A2442040  registered=403 tensors  bytes=1148492288  max=536870912
+[Deep2Engine] Mamba-2 state buffers: proj=0 state=163840x1310720 conv=4x8192
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7A7C05BB0 dequant=00007FF7A7C02420 GetGEMV(12)=00007FF7A7C05BB0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=40 page=8 virtualMax=250494 heads=2 dim=128
+[KVCache] HOT_BYTES=655360 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 40 layers x 250494 positions x 2 heads x 128 dim = 19569.84 MB
+[Deep2Engine] Model loaded successfully (733 tensors)
+[Deep2Engine] MoE model: 256 experts, top-8, 0 shared
+[Deep2Engine] MoE streaming loader ready
+[Deep2Engine] MoE dims: expertDim=512 sharedExpertDim=512 sharedCount=0
+[Deep2Engine] Injected router weights for 40 layers
+[Deep2Engine] RouterPrefetchTelemetry initialized: 40 layers x 256 experts
+[Deep2Engine] RAWR_REAP_CPU_ONLY=1: CPU reference mode active
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+{"schema":"rawrxd.reap.runtime_receipt.v1","status":"PASS","model":"F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf","plan":{"schema":"rawrxd.reap.runtime_injection.v1","model":"F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf","architecture":"qwen35moe","injection_mode":"STREAMER_HOTPATCH","streamer_path":"MoEWeightProxy+VulkanPrefetch","requested_parameters":35000000000,"requested_experts":8,"actual_parameters":34660610688,"actual_tensor_bytes":21155768832,"actual_experts":0,"actual_experts_per_token":0,"target_working_set_bytes":21362921611,"direction":"UPSIZE","status":"PLAN_READY","reason":"NON_DESTRUCTIVE_RUNTIME_TARGET","source_immutable":true,"writer_invoked":false,"shards":1,"tensors":733},"runtime":{"active":true,"route_configured":true,"streamer_configured":true,"working_set_configured":true,"effective_experts":8,"status":"ACTIVE_RUNTIME_INJECTION","reason":"MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED"},"generation_requested":false,"generation_completed":false,"generated_tokens":0,"prompt_tokens":0,"load_ms":8409,"output":"","writer_invoked":false,"source_immutable":true}

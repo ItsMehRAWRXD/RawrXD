@@ -1,0 +1,30 @@
+{
+  "generated": 25, "cache_hits": 0, "evictions": 0,
+  "chunks": [
+    {"x": -2, "z": -2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "12147599895447371044"},
+    {"x": -2, "z": -1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "12025131925387447781"},
+    {"x": -2, "z": 0, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "2131502311893831243"},
+    {"x": -2, "z": 1, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "2725110369043734915"},
+    {"x": -2, "z": 2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "2108197176578550861"},
+    {"x": -1, "z": -2, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "12557337036979966621"},
+    {"x": -1, "z": -1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "3421567681012705010"},
+    {"x": -1, "z": 0, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "1257505288076643983"},
+    {"x": -1, "z": 1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "6447406675786872077"},
+    {"x": -1, "z": 2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "6506908292452161177"},
+    {"x": 0, "z": -2, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "12981541879439790243"},
+    {"x": 0, "z": -1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "13818991772479008314"},
+    {"x": 0, "z": 0, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "14107381096426524868"},
+    {"x": 0, "z": 1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "16180029316276022958"},
+    {"x": 0, "z": 2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "14343672084171917459"},
+    {"x": 1, "z": -2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "424713504259215142"},
+    {"x": 1, "z": -1, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "5531317808893301604"},
+    {"x": 1, "z": 0, "resolution": 17, "vertices": 289, "triangles": 512, "fingerprint": "18230472264799422070"},
+    {"x": 1, "z": 1, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "12885323347282705636"},
+    {"x": 1, "z": 2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "5531177704545057330"},
+    {"x": 2, "z": -2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "1341675492993803718"},
+    {"x": 2, "z": -1, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "1427048898722363205"},
+    {"x": 2, "z": 0, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "5796661242422273357"},
+    {"x": 2, "z": 1, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "16889726944705950344"},
+    {"x": 2, "z": 2, "resolution": 9, "vertices": 81, "triangles": 128, "fingerprint": "7328051785070069094"}
+  ]
+}

@@ -10,6 +10,7 @@
 
 #ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
+#include <cstdlib>
 #include "deep2_snap.hpp"
 #include "snap_process_guard.hpp"
 #endif
@@ -56,7 +57,13 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
     }
 
     LOG_INFO("Initializing Deep2 Bridge...");
-    
+    // Opt-in only: honor DEEP2_GPU_DEVICE_RESET if already set; never default ON.
+    {
+        const char* gpuReset = std::getenv("DEEP2_GPU_DEVICE_RESET");
+        const bool enabled = gpuReset && gpuReset[0] == '1';
+        LOG_INFO(std::string("DEEP2_GPU_DEVICE_RESET=") + (enabled ? "1 (opt-in device-lost teardown/recreate/retry)" : "0 (default; mark-only on code31/VK_ERROR_DEVICE_LOST)"));
+    }
+
     try {
 #ifdef HAVE_DEEP2_ENGINE
         m_engine = new Deep2::Deep2Engine();

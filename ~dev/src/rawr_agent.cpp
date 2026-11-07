@@ -63,17 +63,23 @@ std::string trim(std::string s) {
 
 // Strip markdown code fences that models habitually wrap around replies.
 std::string stripFences(std::string s) {
-    auto eraseAll = [&](const std::string& t) {
-        size_t p;
-        while ((p = s.find(t)) != std::string::npos) s.erase(p, t.size());
-    };
-    eraseAll("```");
-    return s;
+    // Remove only an enclosing Markdown code fence. Removing every backtick
+    // corrupts legitimate JSON string arguments and final-answer content.
+    s = trim(std::move(s));
+    if (s.rfind("```", 0) != 0) return s;
+    const size_t openingNewline = s.find('\n');
+    if (openingNewline == std::string::npos) return s;
+    const size_t closing = s.rfind("```");
+    if (closing == 0 || closing == std::string::npos ||
+        !trim(s.substr(closing + 3)).empty()) return s;
+    return trim(s.substr(openingNewline + 1, closing - openingNewline - 1));
 }
 
 // Known tool names (filled at registration time by setKnownToolNames).
 std::vector<std::string>& knownTools() {
-    static std::vector<std::string> names;
+    // Each agent session owns its tool catalog on its invoking thread.
+    // A process-global mutable catalog races across concurrent sessions.
+    static thread_local std::vector<std::string> names;
     return names;
 }
 
@@ -105,14 +111,45 @@ ModelReply parseReply(const std::string& raw) {
     const std::string cleaned = stripFences(raw);
     const std::string tool = between(cleaned, "<tool>", "</tool>");
     if (!tool.empty()) {
+        // Never execute a partially formed or multi-call response. A single
+        // model turn is permitted to request exactly one complete tool call.
+        const size_t toolEnd = cleaned.find("</tool>");
+        const size_t argsOpen = cleaned.find("<args>", toolEnd);
+        const size_t argsEnd = argsOpen == std::string::npos
+            ? std::string::npos : cleaned.find("</args>", argsOpen);
+        if (trim(tool).empty() || argsOpen == std::string::npos ||
+            argsEnd == std::string::npos ||
+            cleaned.find("<tool>", toolEnd + 7) != std::string::npos ||
+            cleaned.find("<args>", argsOpen + 6) != std::string::npos ||
+            cleaned.find("</tool>", toolEnd + 7) != std::string::npos ||
+            cleaned.find("</args>", argsEnd + 7) != std::string::npos ||
+            cleaned.find("<args>") < toolEnd ||
+            cleaned.find("<tool>", argsOpen) != std::string::npos ||
+            !trim(cleaned.substr(0, cleaned.find("<tool>"))).empty() ||
+            !trim(cleaned.substr(argsEnd + 7)).empty() ||
+            !trim(cleaned.substr(toolEnd + 7, argsOpen - (toolEnd + 7))).empty()) {
+            r.kind = ModelReply::Kind::ProtocolError;
+            r.text = raw;
+            return r;
+        }
         r.kind = ModelReply::Kind::ToolCall;
         r.tool = trim(tool);
-        r.args = between(cleaned, "<args>", "</args>");
+        r.args = trim(cleaned.substr(argsOpen + 6, argsEnd - (argsOpen + 6)));
+        // A tool request must carry an object payload, not arbitrary prose.
+        // The dispatcher is not a full JSON parser; reject non-object framing.
         if (r.args.empty()) r.args = "{}";
+        if (r.args.front() != '{' || r.args.back() != '}') {
+            r.kind = ModelReply::Kind::ProtocolError;
+            r.text = raw;
+            return r;
+        }
         return r;
     }
-    // A bare <args> block with no tool is a protocol error.
-    if (cleaned.find("<args>") != std::string::npos) {
+    // A malformed tag block is a protocol error, not a final answer.
+    if (cleaned.find("<tool>") != std::string::npos ||
+        cleaned.find("</tool>") != std::string::npos ||
+        cleaned.find("</args>") != std::string::npos ||
+        cleaned.find("<args>") != std::string::npos) {
         r.kind = ModelReply::Kind::ProtocolError;
         r.text = raw;
         return r;
@@ -129,9 +166,17 @@ ModelReply parseReply(const std::string& raw) {
             if (brace != std::string::npos && brace > 0) {
                 const std::string candidate = trim(first.substr(0, brace));
                 const std::string jsonPart = trim(first.substr(brace));
-                const size_t close = jsonPart.rfind('}');
-                const bool validJson = close != std::string::npos;
-                if (isKnownTool(candidate) && validJson) {
+                // Bare tool calls must contain exactly one object-shaped
+                // argument payload, without trailing text or extra lines.
+                const bool validJson = jsonPart.size() >= 2 &&
+                    jsonPart.front() == '{' && jsonPart.back() == '}' &&
+                    cleaned.find('\n') == std::string::npos;
+                if (isKnownTool(candidate)) {
+                    if (!validJson) {
+                        r.kind = ModelReply::Kind::ProtocolError;
+                        r.text = raw;
+                        return r;
+                    }
                     r.kind = ModelReply::Kind::ToolCall;
                     r.tool = candidate;
                     r.args = jsonPart;
@@ -163,6 +208,17 @@ std::string excerpt(const std::string& s, size_t maxBytes) {
            std::to_string(s.size() - maxBytes) + " bytes]";
 }
 
+// Treat model-visible user and tool data as content, never chat-template
+// structure. Break reserved role delimiters before interpolation.
+std::string escapeChatRoleDelimiters(std::string s) {
+    size_t pos = 0;
+    while ((pos = s.find("<|", pos)) != std::string::npos) {
+        s.replace(pos, 2, "< |");
+        pos += 3;
+    }
+    return s;
+}
+
 std::string buildPrompt(const std::string& systemPrompt,
                         const std::string& userRequest,
                         const std::vector<ToolTransaction>& history,
@@ -176,15 +232,15 @@ std::string buildPrompt(const std::string& systemPrompt,
     // run (model role-played results because its own calls were invisible).
     for (size_t i = from; i < history.size(); ++i) {
         ctx << "<|im_start|>assistant\n<tool>" << history[i].tool
-            << "</tool>\n<args>" << history[i].args << "</args><|im_end|>\n"
+            << "</tool>\n<args>" << escapeChatRoleDelimiters(history[i].args) << "</args><|im_end|>\n"
             << "<|im_start|>user\n[TOOL RESULT for " << history[i].tool << "]\n"
-            << history[i].resultExcerpt << "<|im_end|>\n";
+            << escapeChatRoleDelimiters(history[i].resultExcerpt) << "<|im_end|>\n";
     }
 
     std::ostringstream p;
     p << "<|im_start|>system\n" << systemPrompt
       << "<|im_end|>\n"
-         "<|im_start|>user\n" << userRequest << "<|im_end|>\n";
+         "<|im_start|>user\n" << escapeChatRoleDelimiters(userRequest) << "<|im_end|>\n";
     p << ctx.str();
     p << "<|im_start|>user\n" << stepInstruction << "<|im_end|>\n"
          "<|im_start|>assistant\n";
@@ -294,8 +350,7 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             ? std::string(auditMode && requireCoverage
                               ? kAuditSystemPrompt
                               : kLoopCertSystemPrompt) +
-                  (auditMode && requireCoverage ? agentToolCatalogJson()
-                                                : std::string())
+                  agentToolCatalogJson()
             : options.systemPrompt;
 
     std::vector<ToolTransaction> history;
@@ -310,6 +365,8 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
                 : "Continue. Call exactly one tool, or give your final answer.";
         const std::string prompt = buildPrompt(systemPrompt, userRequest,
                                                 history, stepInstruction);
+        // A result counts as seen only after the subsequent generation
+        // produces a nonempty reply; constructing a prompt is insufficient.
 
         // Generation with stop-on-<|im_end|>.
         std::string replyText;
@@ -342,6 +399,14 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
             replyText = replyText.substr(0, cut);
         }
 
+        // Empty generation is not a successful final answer. In particular,
+        // a backend numeric abort must never certify agent completion.
+        if (trim(replyText).empty()) {
+            result.status = "EMPTY_MODEL_RESPONSE";
+            result.reachedFinal = false;
+            return result;
+        }
+        if (!history.empty()) result.sawToolResult = true;
         const ModelReply reply = parseReply(trim(replyText));
 
         if (reply.kind == ModelReply::Kind::Final) {
@@ -385,15 +450,22 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
         }
 
         std::ostringstream tr;
-        tr << (toolResult.ok() ? toolResult.stdout_text : toolResult.stderr_text);
-        // Anti-fabrication tripwire: an EMPTY tool result must be presented
-        // as empty to the model — silence invites invented content.
-        if (tr.str().empty()) {
+        // Preserve the real exit status in model context: stderr alone cannot
+        // distinguish a failed tool from a successful empty response.
+        tr << "[TOOL EXIT_CODE=" << toolResult.exit_code
+           << " STATUS=" << (toolResult.ok() ? "SUCCESS" : "FAILURE") << "]\n";
+        // Preserve both streams. A failing tool may have important stdout,
+        // while a successful tool may emit warnings on stderr.
+        if (toolResult.stdout_text.empty() && toolResult.stderr_text.empty()) {
             tr << "(tool returned no output)";
+        } else {
+            if (!toolResult.stdout_text.empty())
+                tr << "[STDOUT]\n" << toolResult.stdout_text << "\n";
+            if (!toolResult.stderr_text.empty())
+                tr << "[STDERR]\n" << toolResult.stderr_text << "\n";
         }
         history.push_back({reply.tool, reply.args, excerpt(tr.str(), 4096)});
-        // The next generation runs with this real tool result in context.
-        result.sawToolResult = true;
+        // Do not mark reinjection complete until the next generation starts.
 
         std::fprintf(stderr, "[RAWR_AGENT] step=%u tool=%s exit=%d len=%zu\n",
                      step, reply.tool.c_str(), toolResult.exit_code,

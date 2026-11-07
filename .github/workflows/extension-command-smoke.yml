@@ -1,0 +1,31 @@
+name: Extension command registry smoke
+on:
+  push:
+    branches: [fix/deep2-multimodel-safety-20261025]
+    paths:
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '~dev/rawrxd/tests/extension_command_registry_smoke.cpp'
+      - '.github/workflows/extension-command-smoke.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  portable-registry:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute actual registry implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            g++ -std=c++20 -Wall -Wextra -pedantic -pthread '~dev/rawrxd/tests/extension_command_registry_smoke.cpp' -o extension_registry_smoke.exe
+            ./extension_registry_smoke.exe
+          else
+            c++ -std=c++20 -Wall -Wextra -pedantic -pthread '~dev/rawrxd/tests/extension_command_registry_smoke.cpp' -o extension_registry_smoke
+            ./extension_registry_smoke
+          fi

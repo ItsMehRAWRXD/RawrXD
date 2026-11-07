@@ -1,13 +1,18 @@
 #include "command_registry.h"
+#ifndef RAWRXD_COMMAND_REGISTRY_HEADLESS
 #include "application.h"
 #include <windows.h>
 #include <commdlg.h>
+#endif
 #include <algorithm>
 #include <sstream>
 #include <ctype.h>
 #include <fstream>
+#include <exception>
 
+#if defined(_MSC_VER) && !defined(RAWRXD_COMMAND_REGISTRY_HEADLESS)
 #pragma comment(lib, "comdlg32.lib")
+#endif
 
 namespace RawrXD {
 
@@ -19,14 +24,20 @@ CommandRegistry& CommandRegistry::Instance() {
 bool CommandRegistry::RegisterCommand(const Command& command) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    if (commands_.find(command.id) != commands_.end()) {
-        return false; // Already registered
+    if (command.id.empty() || !command.handler ||
+        commands_.find(command.id) != commands_.end()) {
+        return false; // Invalid or already registered
     }
     
     commands_[command.id] = command;
     
-    // Register keybinding if provided
+    // Reject conflicting bindings instead of silently stealing another command's shortcut.
     if (!command.keybinding.empty()) {
+        const auto binding = keybindings_.find(command.keybinding);
+        if (binding != keybindings_.end() && binding->second != command.id) {
+            commands_.erase(command.id);
+            return false;
+        }
         keybindings_[command.keybinding] = command.id;
     }
     
@@ -41,12 +52,23 @@ bool CommandRegistry::UnregisterCommand(const std::string& commandId) {
         return false;
     }
     
-    // Remove keybinding
-    if (!it->second.keybinding.empty()) {
-        keybindings_.erase(it->second.keybinding);
+    // Remove every binding targeting the command, including aliases installed
+    // through RegisterKeybinding; otherwise unloaded extensions leave dangling
+    // shortcuts that can be inherited by a newly registered command ID.
+    for (auto binding = keybindings_.begin(); binding != keybindings_.end();) {
+        if (binding->second == commandId) binding = keybindings_.erase(binding);
+        else ++binding;
     }
     
     commands_.erase(it);
+    // A direct unregister must also detach extension ownership so that
+    // unloading an extension cannot later remove a reused command ID.
+    for (auto owner = extensionCommands_.begin(); owner != extensionCommands_.end();) {
+        auto& ids = owner->second;
+        ids.erase(std::remove(ids.begin(), ids.end(), commandId), ids.end());
+        if (ids.empty()) owner = extensionCommands_.erase(owner);
+        else ++owner;
+    }
     return true;
 }
 
@@ -63,36 +85,50 @@ bool CommandRegistry::ExecuteCommand(const std::string& commandId, const std::ve
 }
 
 bool CommandRegistry::ExecuteCommand(const std::string& commandId, CommandContext& context) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    auto it = commands_.find(commandId);
-    if (it == commands_.end()) {
-        context.errorMessage = "Command not found: " + commandId;
+    // Each dispatch owns its result. A prior error/handled flag must not leak
+    // into a later call when a CommandContext is reused.
+    context.commandId = commandId;
+    context.handled = false;
+    context.errorMessage.clear();
+    CommandHandler handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto it = commands_.find(commandId);
+        if (it == commands_.end()) {
+            context.errorMessage = "Command not found: " + commandId;
+            return false;
+        }
+        const Command& cmd = it->second;
+        if (!cmd.enabled) {
+            context.errorMessage = "Command is disabled: " + commandId;
+            return false;
+        }
+        if (!CheckConditions(cmd.when)) {
+            context.errorMessage = "Command not available in current context";
+            return false;
+        }
+        if (!cmd.handler) {
+            context.errorMessage = "Command has no handler: " + commandId;
+            return false;
+        }
+        // Copy the handler under the lock, then invoke outside it.
+        // Handlers can call SetContext, register commands, or dispatch nested commands.
+        handler = cmd.handler;
+    }
+
+    try {
+        handler(context);
+    } catch (const std::exception& ex) {
+        context.errorMessage = std::string("Command handler exception: ") + ex.what();
+        return false;
+    } catch (...) {
+        context.errorMessage = "Command handler threw an unknown exception";
         return false;
     }
-    
-    const Command& cmd = it->second;
-    
-    if (!cmd.enabled) {
-        context.errorMessage = "Command is disabled: " + commandId;
-        return false;
-    }
-    
-    // Check context conditions
-    if (!CheckConditions(cmd.when)) {
-        context.errorMessage = "Command not available in current context";
-        return false;
-    }
-    
-    if (!cmd.handler) {
-        context.errorMessage = "Command has no handler: " + commandId;
-        return false;
-    }
-    
-    // Execute handler
-    cmd.handler(context);
+    // Built-in handlers historically leave handled unset on success.
+    // Preserve that contract until each handler is migrated and tested.
+    if (!context.errorMessage.empty()) return false;
     context.handled = true;
-    
     return true;
 }
 
@@ -113,17 +149,23 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
     
     std::vector<CommandPaletteItem> results;
     std::string lowerQuery = query;
-    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+    const auto lowerAscii = [](unsigned char c) -> char {
+        return (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a')
+                                      : static_cast<char>(c);
+    };
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), lowerAscii);
     
     for (const auto& [id, cmd] : commands_) {
-        if (!cmd.visible || !cmd.enabled) continue;
+        if (!cmd.visible || !cmd.enabled || !CheckConditions(cmd.when)) continue;
         
         // Check if command matches query
         std::string lowerTitle = cmd.title;
-        std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
+        std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), lowerAscii);
         std::string lowerCategory = cmd.category;
-        std::transform(lowerCategory.begin(), lowerCategory.end(), lowerCategory.begin(), ::tolower);
+        std::transform(lowerCategory.begin(), lowerCategory.end(), lowerCategory.begin(), lowerAscii);
         
+        std::string lowerId = id;
+        std::transform(lowerId.begin(), lowerId.end(), lowerId.begin(), lowerAscii);
         int score = 0;
         
         // Exact match
@@ -143,7 +185,7 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
             score = 40;
         }
         // ID match
-        else if (id.find(lowerQuery) != std::string::npos) {
+        else if (lowerId.find(lowerQuery) != std::string::npos) {
             score = 20;
         }
         
@@ -162,23 +204,36 @@ std::vector<CommandPaletteItem> CommandRegistry::SearchCommands(const std::strin
     // Sort by score descending
     std::sort(results.begin(), results.end(),
         [](const CommandPaletteItem& a, const CommandPaletteItem& b) {
-            return a.score > b.score;
+            return a.score != b.score ? a.score > b.score : a.id < b.id;
         });
     
     return results;
 }
 
 const Command* CommandRegistry::GetCommand(const std::string& commandId) const {
+    // Compatibility API: never expose pointers into the mutable registry.
+    // The snapshot is owned by this thread and valid until its next lookup.
+    // Callers retaining results longer should use TryGetCommand().
+    thread_local Command snapshot;
+    if (!TryGetCommand(commandId, snapshot)) return nullptr;
+    return &snapshot;
+}
+
+bool CommandRegistry::TryGetCommand(const std::string& commandId, Command& out) const {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = commands_.find(commandId);
-    if (it != commands_.end()) {
-        return &it->second;
-    }
-    return nullptr;
+    const auto it = commands_.find(commandId);
+    if (it == commands_.end()) return false;
+    out = it->second;
+    return true;
 }
 
 void CommandRegistry::RegisterKeybinding(const std::string& keybinding, const std::string& commandId) {
     std::lock_guard<std::mutex> lock(mutex_);
+    // A keybinding cannot point to an unknown command or hijack an existing
+    // shortcut. The void API is retained for existing callers.
+    if (keybinding.empty() || commands_.find(commandId) == commands_.end()) return;
+    const auto existing = keybindings_.find(keybinding);
+    if (existing != keybindings_.end() && existing->second != commandId) return;
     keybindings_[keybinding] = commandId;
 }
 
@@ -225,103 +280,31 @@ void CommandRegistry::ClearContext(const std::string& key) {
     context_.erase(key);
 }
 
+#ifndef RAWRXD_COMMAND_REGISTRY_HEADLESS
 void CommandRegistry::RegisterBuiltInCommands() {
-    // File commands
+    // The document manager is not wired to this registry yet. Do not create
+    // temporary files or show fake "Opened"/"Saved" success dialogs.
+    // Keep commands discoverable, but fail closed until native editor handlers
+    // are installed and covered by physical save/reopen acceptance.
     RegisterCommand({
-        Commands::FileNew,
-        "New File",
-        "File",
-        "Ctrl+N",
-        "",
-        true, true,
+        Commands::FileNew, "New File", "File", "Ctrl+N", "", true, true,
         [](CommandContext& ctx) {
-            // Create new untitled file
-            auto& app = Application::Instance();
-            // Generate unique filename
-            static int untitledCount = 1;
-            std::string filename = "Untitled-" + std::to_string(untitledCount++) + ".txt";
-            
-            // Create empty file in temp directory
-            char tempPath[MAX_PATH];
-            GetTempPathA(MAX_PATH, tempPath);
-            std::string fullPath = std::string(tempPath) + "\\" + filename;
-            
-            std::ofstream file(fullPath);
-            if (file.is_open()) {
-                file.close();
-                // Notify application to open the new file
-                // In full implementation, would integrate with document manager
-                MessageBoxA(nullptr, ("Created new file: " + fullPath).c_str(), "RawrXD", MB_OK);
-            } else {
-                MessageBoxA(nullptr, "Failed to create new file", "RawrXD", MB_OK | MB_ICONERROR);
-            }
+            ctx.errorMessage = "Not implemented: New File document integration";
         }
     });
-    
     RegisterCommand({
-        Commands::FileOpen,
-        "Open File",
-        "File",
-        "Ctrl+O",
-        "",
-        true, true,
+        Commands::FileOpen, "Open File", "File", "Ctrl+O", "", true, true,
         [](CommandContext& ctx) {
-            // Open file dialog
-            char filename[MAX_PATH] = {0};
-            OPENFILENAMEA ofn = {0};
-            ofn.lStructSize = sizeof(ofn);
-            ofn.hwndOwner = nullptr;
-            ofn.lpstrFilter = "All Files\0*.*\0Text Files\0*.txt\0C++ Files\0*.cpp;*.h;*.hpp\0";
-            ofn.lpstrFile = filename;
-            ofn.nMaxFile = MAX_PATH;
-            ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-            
-            if (GetOpenFileNameA(&ofn)) {
-                // File selected, open it
-                // In full implementation, would integrate with document manager
-                MessageBoxA(nullptr, ("Opening file: " + std::string(filename)).c_str(), "RawrXD", MB_OK);
-                
-                // Store in context for potential use
-                ctx.Set("lastOpenedFile", filename);
-            }
+            ctx.errorMessage = "Not implemented: Open File document integration";
         }
     });
-    
     RegisterCommand({
-        Commands::FileSave,
-        "Save",
-        "File",
-        "Ctrl+S",
-        "",
-        true, true,
+        Commands::FileSave, "Save", "File", "Ctrl+S", "", true, true,
         [](CommandContext& ctx) {
-            // Save current file
-            // In full implementation, would get current document and save
-            std::string currentFile = ctx.Get("currentFile");
-            if (currentFile.empty()) {
-                // No current file, use Save As
-                char filename[MAX_PATH] = {0};
-                OPENFILENAMEA ofn = {0};
-                ofn.lStructSize = sizeof(ofn);
-                ofn.hwndOwner = nullptr;
-                ofn.lpstrFilter = "All Files\0*.*\0";
-                ofn.lpstrFile = filename;
-                ofn.nMaxFile = MAX_PATH;
-                ofn.Flags = OFN_OVERWRITEPROMPT;
-                
-                if (GetSaveFileNameA(&ofn)) {
-                    currentFile = filename;
-                    ctx.Set("currentFile", currentFile);
-                } else {
-                    return; // User cancelled
-                }
-            }
-            
-            // In full implementation, would get content from editor and save
-            MessageBoxA(nullptr, ("Saved file: " + currentFile).c_str(), "RawrXD", MB_OK);
+            ctx.errorMessage = "Not implemented: Save editor buffer integration";
         }
     });
-    
+
     // Edit commands
     RegisterCommand({
         Commands::EditUndo,
@@ -331,7 +314,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Undo
+            ctx.errorMessage = "Not implemented: Undo";
         }
     });
     
@@ -343,7 +326,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Redo
+            ctx.errorMessage = "Not implemented: Redo";
         }
     });
     
@@ -368,7 +351,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Toggle terminal visibility
+            ctx.errorMessage = "Not implemented: Toggle terminal visibility";
         }
     });
     
@@ -381,7 +364,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Quick open
+            ctx.errorMessage = "Not implemented: Quick open";
         }
     });
     
@@ -394,10 +377,9 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            auto* tasks = Application::Instance().GetTaskRunner();
-            if (tasks) {
-                tasks->RunBuildTask();
-            }
+            // TaskRunner is only forward-declared in application.h. This
+            // registry has no verified task-execution adapter yet.
+            ctx.errorMessage = "Not implemented: Build task integration";
         }
     });
     
@@ -410,7 +392,7 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Trigger AI completion
+            ctx.errorMessage = "Not implemented: Trigger AI completion";
         }
     });
     
@@ -422,13 +404,38 @@ void CommandRegistry::RegisterBuiltInCommands() {
         "",
         true, true,
         [](CommandContext& ctx) {
-            // TODO: Open AI chat panel
+            ctx.errorMessage = "Not implemented: Open AI chat panel";
         }
     });
 }
 
+#else
+void CommandRegistry::RegisterBuiltInCommands() {
+    // Headless acceptance intentionally excludes Win32 application commands.
+}
+#endif
+
+bool CommandRegistry::RegisterExtensionCommand(
+    const std::string& extensionId, const Command& command) {
+    if (extensionId.empty() || command.id.empty() || !command.handler) return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (commands_.find(command.id) != commands_.end()) return false;
+    if (!command.keybinding.empty()) {
+        const auto binding = keybindings_.find(command.keybinding);
+        if (binding != keybindings_.end() && binding->second != command.id) {
+            return false;
+        }
+    }
+    commands_.emplace(command.id, command);
+    extensionCommands_[extensionId].push_back(command.id);
+    if (!command.keybinding.empty()) keybindings_[command.keybinding] = command.id;
+    return true;
+}
+
 void CommandRegistry::RegisterExtensionCommands(const std::string& extensionId) {
-    // TODO: Load commands from extension manifest
+    // Legacy no-argument entry point cannot infer contributed commands.
+    // Registration must supply a concrete Command and handler.
+    (void)extensionId;
 }
 
 void CommandRegistry::UnregisterExtensionCommands(const std::string& extensionId) {
@@ -438,7 +445,13 @@ void CommandRegistry::UnregisterExtensionCommands(const std::string& extensionId
     if (it == extensionCommands_.end()) return;
     
     for (const auto& cmdId : it->second) {
-        commands_.erase(cmdId);
+        const auto commandIt = commands_.find(cmdId);
+        if (commandIt == commands_.end()) continue;
+        for (auto binding = keybindings_.begin(); binding != keybindings_.end();) {
+            if (binding->second == cmdId) binding = keybindings_.erase(binding);
+            else ++binding;
+        }
+        commands_.erase(commandIt);
     }
     
     extensionCommands_.erase(it);

@@ -1,0 +1,11 @@
+=== git process probe Mon 10/26/2026 19:13:14.52 
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+ 
+=== tasklist 
+
+Image Name                     PID Session Name        Session#    Mem Usage Status          User Name                                              CPU Time Window Title                                                            
+========================= ======== ================ =========== ============ =============== ================================================== ============ ========================================================================
+git.exe                      10832 Console                    1     11,356 K Unknown         RAWRXD\Garrett                                          0:00:00 N/A                                                                     
+git.exe                       9720 Console                    1     10,080 K Unknown         RAWRXD\Garrett                                          0:00:08 N/A                                                                     
+git.exe                      20656 Console                    1     12,028 K Unknown         RAWRXD\Garrett                                          0:00:09 N/A                                                                     

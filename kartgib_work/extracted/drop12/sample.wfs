@@ -1,0 +1,5 @@
+WORLDFORGE_SCENE 1
+3 4 3
+1 0 "Sunshine World" 1 0 0 0 0 0 0 0 1 1 1
+2 1 "Race Track" 1 0 0 0 0 0 0 0 1 1 1
+3 1 "Kart Spawn" 1 0 5 0 12 0 0 0 1 1 1

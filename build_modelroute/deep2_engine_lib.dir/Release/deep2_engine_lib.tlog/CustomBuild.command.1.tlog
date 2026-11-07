@@ -1,0 +1,94 @@
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\VWARANGELINEAGEX64.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/VwaRangeLineageX64.obj F:/rawrxd/src/deep2/vwa/VwaRangeLineageX64.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\KN_O3KKEN.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/KN_O3KKEN.obj F:/rawrxd/src/deep2/lavapath/KN_O3KKEN.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\RUNTIMEEVIDENCE512_CORE.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/RuntimeEvidence512_Core.obj F:/rawrxd/src/asm/RuntimeEvidence512_Core.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\RUNTIMEEVIDENCE512_EMIT.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/RuntimeEvidence512_Emit.obj F:/rawrxd/src/asm/RuntimeEvidence512_Emit.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\RUNTIMEEVIDENCE512_COLLECT.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/RuntimeEvidence512_Collect.obj F:/rawrxd/src/asm/RuntimeEvidence512_Collect.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\RUNTIMEEVIDENCE512_IDEEMIT.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/RuntimeEvidence512_IDEEmit.obj F:/rawrxd/src/asm/RuntimeEvidence512_IDEEmit.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_MODELROUTE\CMAKEFILES\2A12D2FEEB2BD373FBF14C3A21870B66\RUNTIMEEVIDENCE512_IDECOLLECT.OBJ.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_modelroute/reap_masm
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /nologo /c /FoF:/rawrxd/build_modelroute/reap_masm/RuntimeEvidence512_IDECollect.obj F:/rawrxd/src/asm/RuntimeEvidence512_IDECollect.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_modelroute --check-stamp-file F:/rawrxd/build_modelroute/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

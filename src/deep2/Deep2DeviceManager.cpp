@@ -1,4 +1,4 @@
-// Deep2DeviceManager.cpp — DXGI enumerate + capability policy (no card hard-codes)
+// Deep2DeviceManager.cpp ï¿½ DXGI enumerate + capability policy (no card hard-codes)
 #include "Deep2DeviceManager.hpp"
 #include <cstring>
 #include <cstdlib>
@@ -7,11 +7,27 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <dxgi.h>
+#include <cfgmgr32.h>
+#include <setupapi.h>
+#include <devguid.h>
+#include <initguid.h>
+#include <devpkey.h>
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "setupapi.lib")
+#pragma comment(lib, "cfgmgr32.lib")
+#ifndef CM_PROB_FAILED_ADD
+#define CM_PROB_FAILED_ADD 31
 #endif
-#include "deep2/quant_dot_dispatch.hpp"
+#ifndef CR_ACCESS_DENIED
+#define CR_ACCESS_DENIED ((CONFIGRET)0x33)
+#endif
+#pragma comment(lib, "advapi32.lib")
+#endif
 
 namespace Deep2 {
 namespace {
@@ -120,7 +136,267 @@ void SetPrimary(DevicePlan& plan, const DeviceIdentity& d) noexcept {
     std::snprintf(plan.primaryStableId, sizeof(plan.primaryStableId), "%s", d.stableId);
 }
 
+bool Usable(const DeviceIdentity& d) noexcept {
+    return d.healthy && d.problemCode == 0;
+}
+
+#ifdef _WIN32
+bool DeviceResetOptIn() noexcept {
+    const char* p = std::getenv("DEEP2_GPU_DEVICE_RESET");
+    if (!p || !*p) p = std::getenv("RAWRXD_GPU_DEVICE_RESET");
+    return p && (HasI(p, "1") || HasI(p, "ON") || HasI(p, "TRUE") || HasI(p, "YES"));
+}
+
+bool IsProcessElevated() noexcept {
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return false;
+    TOKEN_ELEVATION elevation{};
+    DWORD returned = 0;
+    const BOOL ok = GetTokenInformation(token, TokenElevation, &elevation,
+                                        sizeof(elevation), &returned);
+    CloseHandle(token);
+    return ok && elevation.TokenIsElevated != 0;
+}
+
+bool MatchHwId(const wchar_t* hw, uint32_t vendorId, uint32_t deviceId) noexcept {
+    if (!hw) return false;
+    wchar_t needle[64];
+    _snwprintf_s(needle, _TRUNCATE, L"VEN_%04X&DEV_%04X", vendorId & 0xFFFFu,
+                 deviceId & 0xFFFFu);
+    for (const wchar_t* p = hw; *p; ++p) {
+        const wchar_t* a = p;
+        const wchar_t* b = needle;
+        while (*a && *b) {
+            wchar_t ca = (*a >= L'a' && *a <= L'z') ? (wchar_t)(*a - 32) : *a;
+            wchar_t cb = (*b >= L'a' && *b <= L'z') ? (wchar_t)(*b - 32) : *b;
+            if (ca != cb) break;
+            ++a;
+            ++b;
+        }
+        if (!*b) return true;
+    }
+    return false;
+}
+
+bool QueryProblemForIds(uint32_t vendorId, uint32_t deviceId, ULONG* outCode,
+                        char* instOut, size_t instChars) noexcept {
+    if (outCode) *outCode = 0;
+    if (instOut && instChars) instOut[0] = 0;
+    // Prefer PRESENT; fall back to class-wide enum for FAILED_ADD nodes.
+    const DWORD flagsTry[2] = {DIGCF_PRESENT, 0};
+    for (int pass = 0; pass < 2; ++pass) {
+        HDEVINFO di = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, nullptr,
+                                           nullptr, flagsTry[pass]);
+        if (di == INVALID_HANDLE_VALUE) continue;
+        SP_DEVINFO_DATA info{};
+        info.cbSize = sizeof(info);
+        for (DWORD i = 0; SetupDiEnumDeviceInfo(di, i, &info); ++i) {
+            wchar_t hw[1024]{};
+            if (!SetupDiGetDeviceRegistryPropertyW(di, &info, SPDRP_HARDWAREID,
+                                                   nullptr, (PBYTE)hw,
+                                                   sizeof(hw), nullptr))
+                continue;
+            if (!MatchHwId(hw, vendorId, deviceId)) continue;
+            wchar_t iid[256]{};
+            SetupDiGetDeviceInstanceIdW(di, &info, iid, 256, nullptr);
+            ULONG status = 0, problem = 0;
+            ULONG code = 0;
+            if (CM_Get_DevNode_Status(&status, &problem, info.DevInst, 0) ==
+                    CR_SUCCESS &&
+                (status & DN_HAS_PROBLEM))
+                code = problem;
+            else {
+                DEVPROPTYPE pt = 0;
+                DWORD sz = sizeof(code);
+                ULONG prop = 0;
+                if (SetupDiGetDevicePropertyW(di, &info,
+                                              &DEVPKEY_Device_ProblemCode, &pt,
+                                              (PBYTE)&prop, sz, &sz, 0))
+                    code = prop;
+            }
+            if (outCode) *outCode = code;
+            if (instOut && instChars)
+                WideCharToMultiByte(CP_UTF8, 0, iid, -1, instOut,
+                                    (int)instChars, nullptr, nullptr);
+            SetupDiDestroyDeviceInfoList(di);
+            return true;
+        }
+        SetupDiDestroyDeviceInfoList(di);
+    }
+    return false;
+}
+
+bool AttemptDevNodeReset(const char* instanceIdUtf8, bool* accessDenied) noexcept {
+    if (accessDenied) *accessDenied = false;
+    if (!instanceIdUtf8 || !*instanceIdUtf8) return false;
+    // CM_Disable_DevNode/CM_Enable_DevNode require elevation.  Refuse before
+    // touching the device tree so a normal IDE launch never performs a futile
+    // privileged call or reports a misleading reset attempt.
+    if (!IsProcessElevated()) {
+        if (accessDenied) *accessDenied = true;
+        return false;
+    }
+    wchar_t iid[256]{};
+    MultiByteToWideChar(CP_UTF8, 0, instanceIdUtf8, -1, iid, 256);
+    DEVINST node = 0;
+    CONFIGRET loc = CM_Locate_DevNodeW(&node, iid, CM_LOCATE_DEVNODE_NORMAL);
+    if (loc != CR_SUCCESS)
+        loc = CM_Locate_DevNodeW(&node, iid, CM_LOCATE_DEVNODE_PHANTOM);
+    if (loc != CR_SUCCESS) return false;
+    CONFIGRET cr = CM_Disable_DevNode(node, 0);
+    if (cr == CR_ACCESS_DENIED) {
+        if (accessDenied) *accessDenied = true;
+        return false;
+    }
+    if (cr != CR_SUCCESS && cr != CR_NO_SUCH_DEVNODE) return false;
+    Sleep(750);
+    cr = CM_Enable_DevNode(node, 0);
+    if (cr == CR_ACCESS_DENIED) {
+        if (accessDenied) *accessDenied = true;
+        return false;
+    }
+    return cr == CR_SUCCESS;
+}
+
+#ifdef _WIN32
+// DXGI omits adapters in CM_PROB_FAILED_ADD; merge those PnP display GPUs in.
+void MergeUnlistedPnPDisplays(DeviceManagerSnapshot& snap) noexcept {
+    const DWORD flagsTry[2] = {DIGCF_PRESENT, 0};
+    for (int pass = 0; pass < 2 && snap.deviceCount < 8; ++pass) {
+        HDEVINFO di = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, nullptr,
+                                           nullptr, flagsTry[pass]);
+        if (di == INVALID_HANDLE_VALUE) continue;
+        SP_DEVINFO_DATA info{};
+        info.cbSize = sizeof(info);
+        for (DWORD i = 0; SetupDiEnumDeviceInfo(di, i, &info) &&
+             snap.deviceCount < 8; ++i) {
+            wchar_t hw[1024]{};
+            if (!SetupDiGetDeviceRegistryPropertyW(di, &info, SPDRP_HARDWAREID,
+                                                   nullptr, (PBYTE)hw,
+                                                   sizeof(hw), nullptr))
+                continue;
+            // Parse first PCI\VEN_xxxx&DEV_yyyy
+            const wchar_t* p = hw;
+            uint32_t ven = 0, dev = 0;
+            bool parsed = false;
+            while (*p) {
+                if ((p[0] == L'V' || p[0] == L'v') &&
+                    (p[1] == L'E' || p[1] == L'e') &&
+                    (p[2] == L'N' || p[2] == L'n') && p[3] == L'_') {
+                    wchar_t* end = nullptr;
+                    ven = (uint32_t)wcstoul(p + 4, &end, 16);
+                    if (end && wcsncmp(end, L"&DEV_", 5) == 0) {
+                        dev = (uint32_t)wcstoul(end + 5, nullptr, 16);
+                        parsed = true;
+                    }
+                    break;
+                }
+                ++p;
+            }
+            if (!parsed || ven == 0 || ven == 0x1414) continue;
+            bool exists = false;
+            for (unsigned j = 0; j < snap.deviceCount; ++j) {
+                if (snap.devices[j].vendorId == ven &&
+                    snap.devices[j].deviceId == dev) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (exists) continue;
+            DeviceIdentity& id = snap.devices[snap.deviceCount];
+            id = DeviceIdentity{};
+            id.index = (int)snap.deviceCount;
+            id.vendorId = ven;
+            id.deviceId = dev;
+            id.healthy = true;
+            id.duty = DeviceDuty::Unused;
+            wchar_t desc[128]{};
+            if (!SetupDiGetDeviceRegistryPropertyW(di, &info, SPDRP_FRIENDLYNAME,
+                                                   nullptr, (PBYTE)desc,
+                                                   sizeof(desc), nullptr))
+                SetupDiGetDeviceRegistryPropertyW(di, &info, SPDRP_DEVICEDESC,
+                                                  nullptr, (PBYTE)desc,
+                                                  sizeof(desc), nullptr);
+            WideCharToMultiByte(CP_UTF8, 0, desc, -1, id.name,
+                                (int)sizeof(id.name), nullptr, nullptr);
+            if (!id.name[0])
+                std::snprintf(id.name, sizeof(id.name), "PCI %04X:%04X",
+                              ven & 0xFFFFu, dev & 0xFFFFu);
+            wchar_t iid[256]{};
+            SetupDiGetDeviceInstanceIdW(di, &info, iid, 256, nullptr);
+            WideCharToMultiByte(CP_UTF8, 0, iid, -1, id.instanceId,
+                                (int)sizeof(id.instanceId), nullptr, nullptr);
+            MakeStableId(id);
+            id.score = 0;
+            id.integrated = false;
+            ++snap.deviceCount;
+        }
+        SetupDiDestroyDeviceInfoList(di);
+    }
+}
+#endif
+
+#endif
+
 } // namespace
+
+void Deep2Device_RefreshPnPHealth(DeviceManagerSnapshot& snap) noexcept {
+#ifdef _WIN32
+    for (unsigned i = 0; i < snap.deviceCount; ++i) {
+        DeviceIdentity& d = snap.devices[i];
+        ULONG code = 0;
+        if (!QueryProblemForIds(d.vendorId, d.deviceId, &code, d.instanceId,
+                                sizeof(d.instanceId))) {
+            continue; // leave healthy=true if PnP match unknown
+        }
+        d.problemCode = (uint32_t)code;
+        if (code == 0) {
+            d.healthy = true;
+            continue;
+        }
+        // Any CM_PROB_* (incl. 31 FAILED_ADD): unhealthy. Device-node reset is
+        // deliberately opt-in and requires an elevated process; a skipped or
+        // denied reset never changes the unhealthy disposition.
+        d.healthy = false;
+        d.duty = DeviceDuty::Excluded;
+        d.resetAttempted = false;
+        d.resetOk = false;
+        d.resetSkipped = false;
+        d.resetRequiresElevation = false;
+        if (!DeviceResetOptIn()) {
+            d.resetSkipped = true;
+        } else if (!IsProcessElevated()) {
+            d.resetSkipped = true;
+            d.resetRequiresElevation = true;
+            d.accessDenied = true;
+        } else {
+            d.resetAttempted = true;
+            d.resetOk = AttemptDevNodeReset(d.instanceId, &d.accessDenied);
+            Sleep(500);
+        }
+        ULONG after = 0;
+        QueryProblemForIds(d.vendorId, d.deviceId, &after, d.instanceId,
+                           sizeof(d.instanceId));
+        d.problemCode = (uint32_t)after;
+        d.healthy = (after == 0);
+        if (d.healthy)
+            d.duty = DeviceDuty::Unused;
+        std::fprintf(stderr,
+                     "[Deep2Device] PnP name=%s PROBLEM_CODE=%u "
+                     "RESET_ATTEMPTED=%d RESET_OK=%d RESET_SKIPPED=%d "
+                     "RESET_REQUIRES_ELEVATION=%d ACCESS_DENIED=%d "
+                     "HEALTHY=%d instance=%s\n",
+                     d.name, d.problemCode, (int)d.resetAttempted,
+                     (int)d.resetOk, (int)d.resetSkipped,
+                     (int)d.resetRequiresElevation, (int)d.accessDenied,
+                     (int)d.healthy,
+                     d.instanceId);
+        std::fflush(stderr);
+    }
+#else
+    (void)snap;
+#endif
+}
 
 bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
     snap = DeviceManagerSnapshot{};
@@ -149,6 +425,11 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
             id.score = Deep2Device_ScoreAdapter(id.dedicatedVram, id.sharedVram,
                                                 NameFlags(id.name, id.dedicatedVram));
             id.healthy = true;
+            id.problemCode = 0;
+            id.resetAttempted = false;
+            id.resetOk = false;
+            id.resetSkipped = false;
+            id.resetRequiresElevation = false;
             id.duty = DeviceDuty::Unused;
             MakeStableId(id);
             bool dupPci = false;
@@ -171,7 +452,9 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
         adapter = nullptr;
     }
     factory->Release();
+    MergeUnlistedPnPDisplays(snap);
     snap.plan.detected = snap.deviceCount;
+    Deep2Device_RefreshPnPHealth(snap);
     return snap.deviceCount > 0;
 #else
     return false;
@@ -214,7 +497,7 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         int needleIdx = -1;
         for (unsigned i = 0; i < snap.deviceCount; ++i) {
             const DeviceIdentity& d = snap.devices[i];
-            if (d.integrated || d.score < 10) continue;
+            if (!Usable(d) || d.integrated || d.score < 10) continue;
             if (needle && *needle &&
                 (HasI(d.name, needle) || HasI(d.stableId, needle)))
                 needleIdx = (int)i;
@@ -256,7 +539,7 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     if (needle && *needle) {
         for (unsigned i = 0; i < snap.deviceCount; ++i) {
             const DeviceIdentity& d = snap.devices[i];
-            if (d.integrated) continue;
+            if (!Usable(d) || d.integrated) continue;
             if (!HasI(d.name, needle) && !HasI(d.stableId, needle)) continue;
             plan.openIndexes[0] = d.index;
             plan.openCount = 1;
@@ -273,13 +556,15 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     if (hasList) {
         if (userN == 1 && userList[0] == -1) {
             for (unsigned i = 0; i < snap.deviceCount && plan.openCount < 8; ++i) {
-                if (!snap.devices[i].integrated && snap.devices[i].score >= 10)
+                if (Usable(snap.devices[i]) && !snap.devices[i].integrated &&
+                    snap.devices[i].score >= 10)
                     plan.openIndexes[plan.openCount++] = snap.devices[i].index;
             }
         } else {
             for (unsigned i = 0; i < userN && plan.openCount < 8; ++i) {
                 const int idx = userList[i];
-                if (idx >= 0 && idx < (int)snap.deviceCount)
+                if (idx >= 0 && idx < (int)snap.deviceCount &&
+                    Usable(snap.devices[idx]))
                     plan.openIndexes[plan.openCount++] = idx;
             }
         }
@@ -307,7 +592,7 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         return true;
     }
 
-    // NOTE: MultiGpuShard shares residency — prefer DUAL_LANE for dual-model.
+    // NOTE: MultiGpuShard shares residency ï¿½ prefer DUAL_LANE for dual-model.
     // HYBRID / MULTI: DEEP2_GPU_DEVICE_CLASS=DISCRETE excludes iGPU.
     const char* dclass = std::getenv("DEEP2_GPU_DEVICE_CLASS");
     if (!dclass || !*dclass) dclass = std::getenv("RAWRXD_GPU_DEVICE_CLASS");
@@ -317,6 +602,10 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     if (plan.policy == GpuPolicy::Hybrid || plan.policy == GpuPolicy::Multi) {
         for (unsigned i = 0; i < snap.deviceCount && plan.openCount < 8; ++i) {
             DeviceIdentity& d = snap.devices[i];
+            if (!Usable(d)) {
+                d.duty = DeviceDuty::Excluded;
+                continue;
+            }
             if (discreteOnly && d.integrated) {
                 d.duty = DeviceDuty::Excluded;
                 continue;
@@ -348,6 +637,11 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     unsigned scores[8]{};
     unsigned long long vram[8]{};
     for (unsigned i = 0; i < snap.deviceCount; ++i) {
+        if (!Usable(snap.devices[i])) {
+            scores[i] = 0;
+            vram[i] = 0;
+            continue;
+        }
         scores[i] = snap.devices[i].score;
         vram[i] = snap.devices[i].dedicatedVram;
     }
@@ -362,7 +656,9 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         unsigned long long discreteVram[2] = {0, 0};
         for (unsigned i = 0; i < snap.deviceCount && discreteN < 2; ++i) {
             const DeviceIdentity& d = snap.devices[i];
-            if (d.integrated || d.score < 10 || d.dedicatedVram < (1ull << 30)) continue;
+            if (!Usable(d) || d.integrated || d.score < 10 ||
+                d.dedicatedVram < (1ull << 30))
+                continue;
             discreteIdx[discreteN] = (int)i;
             discreteVram[discreteN] = d.dedicatedVram;
             ++discreteN;
@@ -459,6 +755,18 @@ void Deep2Device_EmitWitnesses(FILE* f, const DeviceManagerSnapshot& snap) noexc
                     (unsigned long long)d.dedicatedVram);
             fprintf(o, "DEEP2_DEVICE_%u_SCORE=%u\n", i, d.score);
             fprintf(o, "DEEP2_DEVICE_%u_DUTY=%s\n", i, DutyName(duty));
+            fprintf(o, "DEEP2_DEVICE_%u_PROBLEM_CODE=%u\n", i, d.problemCode);
+            fprintf(o, "DEEP2_DEVICE_%u_HEALTHY=%d\n", i, (int)d.healthy);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_ATTEMPTED=%d\n", i,
+                    (int)d.resetAttempted);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_OK=%d\n", i, (int)d.resetOk);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_SKIPPED=%d\n", i,
+                    (int)d.resetSkipped);
+            fprintf(o, "DEEP2_DEVICE_%u_RESET_REQUIRES_ELEVATION=%d\n", i,
+                    (int)d.resetRequiresElevation);
+            fprintf(o, "DEEP2_DEVICE_%u_ACCESS_DENIED=%d\n", i, (int)d.accessDenied);
+            if (d.instanceId[0])
+                fprintf(o, "DEEP2_DEVICE_%u_INSTANCE_ID=%s\n", i, d.instanceId);
         }
     };
     emit(stdout);

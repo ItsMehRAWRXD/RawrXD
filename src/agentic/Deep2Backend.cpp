@@ -51,6 +51,7 @@ bool Deep2Backend::Initialize(const BackendConfig& config) {
 }
 
 void Deep2Backend::Shutdown() {
+    cancelActiveRequests();
     m_cancelRequested.store(true);
     m_streaming.store(false);
     m_initialized.store(false);
@@ -583,8 +584,39 @@ bool Deep2Backend::FIMStream(
 }
 
 void Deep2Backend::Cancel() {
+    cancelActiveRequests();
     m_cancelRequested.store(true);
     m_streaming.store(false);
+}
+
+void Deep2Backend::registerActiveRequest(void* request) {
+    if (!request) return;
+    std::lock_guard<std::mutex> lock(m_active_request_mutex);
+    m_active_requests.insert(request);
+}
+
+bool Deep2Backend::releaseActiveRequest(void* request) noexcept {
+    if (!request) return false;
+    std::lock_guard<std::mutex> lock(m_active_request_mutex);
+    return m_active_requests.erase(request) != 0;
+}
+
+void Deep2Backend::cancelActiveRequests() noexcept {
+#ifdef _WIN32
+    std::vector<void*> requests;
+    {
+        std::lock_guard<std::mutex> lock(m_active_request_mutex);
+        requests.reserve(m_active_requests.size());
+        for (void* request : m_active_requests) requests.push_back(request);
+        m_active_requests.clear();
+    }
+    for (void* request : requests) {
+        if (request) WinHttpCloseHandle(reinterpret_cast<HINTERNET>(request));
+    }
+#else
+    std::lock_guard<std::mutex> lock(m_active_request_mutex);
+    m_active_requests.clear();
+#endif
 }
 
 bool Deep2Backend::IsStreaming() const {
@@ -671,6 +703,10 @@ std::string Deep2Backend::makeGetRequest(const std::string& endpoint) {
         return "";
     }
 
+    registerActiveRequest(reinterpret_cast<void*>(hRequest));
+    const DWORD timeout = static_cast<DWORD>((std::max)(1000, m_config.timeout_ms));
+    WinHttpSetTimeouts(hRequest, timeout, timeout, timeout, timeout);
+
     BOOL bResults = WinHttpSendRequest(hRequest,
                                        WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                                        WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
@@ -695,7 +731,9 @@ std::string Deep2Backend::makeGetRequest(const std::string& endpoint) {
         }
     }
 
-    WinHttpCloseHandle(hRequest);
+    if (releaseActiveRequest(reinterpret_cast<void*>(hRequest))) {
+        WinHttpCloseHandle(hRequest);
+    }
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
 
@@ -741,6 +779,10 @@ std::string Deep2Backend::makePostRequest(const std::string& endpoint, const std
         return "";
     }
 
+    registerActiveRequest(reinterpret_cast<void*>(hRequest));
+    const DWORD timeout = static_cast<DWORD>((std::max)(1000, m_config.timeout_ms));
+    WinHttpSetTimeouts(hRequest, timeout, timeout, timeout, timeout);
+
     std::wstring headers = L"Content-Type: application/json\r\n";
 
     BOOL bResults = WinHttpSendRequest(hRequest,
@@ -768,7 +810,9 @@ std::string Deep2Backend::makePostRequest(const std::string& endpoint, const std
         }
     }
 
-    WinHttpCloseHandle(hRequest);
+    if (releaseActiveRequest(reinterpret_cast<void*>(hRequest))) {
+        WinHttpCloseHandle(hRequest);
+    }
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
 
@@ -818,6 +862,10 @@ std::string Deep2Backend::makePostRequestStreaming(
         WinHttpCloseHandle(hSession);
         return "";
     }
+
+    registerActiveRequest(reinterpret_cast<void*>(hRequest));
+    const DWORD timeout = static_cast<DWORD>((std::max)(1000, m_config.timeout_ms));
+    WinHttpSetTimeouts(hRequest, timeout, timeout, timeout, timeout);
 
     std::wstring headers = L"Content-Type: application/json\r\n";
 
@@ -869,7 +917,9 @@ std::string Deep2Backend::makePostRequestStreaming(
         }
     }
 
-    WinHttpCloseHandle(hRequest);
+    if (releaseActiveRequest(reinterpret_cast<void*>(hRequest))) {
+        WinHttpCloseHandle(hRequest);
+    }
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
 

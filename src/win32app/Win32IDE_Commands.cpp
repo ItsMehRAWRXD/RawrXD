@@ -8,8 +8,107 @@
 #include <functional>
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <vector>
 
 #include "Win32IDE_CommandIDs.h"
+
+namespace {
+
+bool isDirectoryPath(const std::string& path)
+{
+    if (path.empty()) return false;
+    const DWORD attributes = GetFileAttributesA(path.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES &&
+           (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+bool pathExists(const std::string& path)
+{
+    return !path.empty() && GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
+}
+
+std::string parentDirectory(std::string path)
+{
+    while (path.size() > 3 && (path.back() == '\\' || path.back() == '/')) {
+        path.pop_back();
+    }
+    const size_t slash = path.find_last_of("\\/");
+    if (slash == std::string::npos) return {};
+    if (slash == 2 && path.size() >= 3 && path[1] == ':') return path.substr(0, 3);
+    return path.substr(0, slash);
+}
+
+std::string workspaceRootFromSeeds(const std::vector<std::string>& seeds)
+{
+    for (std::string seed : seeds) {
+        if (seed.empty()) continue;
+        if (!isDirectoryPath(seed)) seed = parentDirectory(seed);
+        for (int depth = 0; !seed.empty() && depth < 12; ++depth) {
+            if (pathExists(seed + "\\.git") || pathExists(seed + "\\CMakeLists.txt")) {
+                return seed;
+            }
+            const std::string parent = parentDirectory(seed);
+            if (parent.empty() || parent == seed) break;
+            seed = parent;
+        }
+    }
+    return {};
+}
+
+std::string configuredBuildDirectory(const std::string& workspaceRoot)
+{
+    if (const char* configured = std::getenv("RAWRXD_BUILD_DIR")) {
+        std::string value(configured);
+        if (!value.empty() && !isDirectoryPath(value) && !workspaceRoot.empty() &&
+            value.find(':') == std::string::npos && value[0] != '\\' && value[0] != '/') {
+            value = workspaceRoot + "\\" + value;
+        }
+        if (isDirectoryPath(value) &&
+            (pathExists(value + "\\CMakeCache.txt") || pathExists(value + "\\build.ninja"))) {
+            return value;
+        }
+    }
+
+    // Prefer the active repair/IDE build over unrelated model-route output.
+    static constexpr const char* names[] = {
+        "build_repair_candidate", "build_ide", "build_cmake", "build_modelroute"
+    };
+    for (const char* name : names) {
+        const std::string candidate = workspaceRoot.empty()
+            ? std::string(name) : workspaceRoot + "\\" + name;
+        if (isDirectoryPath(candidate) &&
+            (pathExists(candidate + "\\CMakeCache.txt") ||
+             pathExists(candidate + "\\build.ninja"))) {
+            return candidate;
+        }
+    }
+    return {};
+}
+
+std::string powerShellLiteral(const std::string& value)
+{
+    std::string escaped;
+    escaped.reserve(value.size() + 8);
+    for (char ch : value) {
+        escaped.push_back(ch);
+        if (ch == '\'') escaped.push_back('\'');
+    }
+    return "'" + escaped + "'";
+}
+
+std::string currentDirectoryPath()
+{
+    std::vector<char> buffer(MAX_PATH, '\0');
+    for (;;) {
+        const DWORD length = GetCurrentDirectoryA(static_cast<DWORD>(buffer.size()), buffer.data());
+        if (length == 0) return {};
+        if (length < buffer.size()) return std::string(buffer.data(), length);
+        buffer.resize(static_cast<size_t>(length) + 1, '\0');
+    }
+}
+
+} // namespace
 
 // The menu IDs are sparse and mix File/Edit/View commands in the 2000 range.
 // Range routing misclassified them and claimed unknown commands were handled.
@@ -45,6 +144,7 @@ bool Win32IDE::routeCommand(int commandId) {
         handleTerminalCommand(commandId); return true;
     case IDM_TOOLS_PROFILE_START: case IDM_TOOLS_PROFILE_STOP:
     case IDM_TOOLS_PROFILE_RESULTS: case IDM_TOOLS_ANALYZE_SCRIPT:
+    case IDM_TOOLS_BUILD_PROJECT: case IDM_TOOLS_TEST_PROJECT:
         handleToolsCommand(commandId); return true;
     case IDM_MODULES_REFRESH: case IDM_MODULES_IMPORT: case IDM_MODULES_EXPORT:
         handleModulesCommand(commandId); return true;
@@ -65,6 +165,9 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_AGENT_VIEW_TOOLS: onAgentViewTools(); return true;
     case IDM_AGENT_VIEW_STATUS: onAgentViewStatus(); return true;
     case IDM_AGENT_STOP: onAgentStop(); return true;
+    case IDM_AGENTIC_LOOP_RUN: onAgenticLoopRunTask(); return true;
+    case IDM_AGENTIC_LOOP_CANCEL: onAgenticLoopCancel(); return true;
+    case IDM_AGENTIC_LOOP_STATUS: onAgenticLoopStatus(); return true;
     case IDM_AUTONOMY_TOGGLE: onAutonomyToggle(); return true;
     case IDM_AUTONOMY_START: onAutonomyStart(); return true;
     case IDM_AUTONOMY_STOP: onAutonomyStop(); return true;
@@ -258,7 +361,10 @@ void Win32IDE::handleViewCommand(int commandId) {
             MF_BYCOMMAND | (m_useStreamingLoader ? MF_CHECKED : MF_UNCHECKED));
         break;
     case IDM_VIEW_THEME_EDITOR:
-        unsupported("Unsupported: interactive theme editing is unavailable in this build."); break;
+        // The built-in theme gallery is a real, modal editor backed by
+        // applyTheme(); route the menu item to it instead of reporting a
+        // stale unsupported placeholder.
+        showThemeEditor(); break;
     case IDM_VIEW_FLOATING_PANEL:
         if (m_hwndFloatingPanel && IsWindow(m_hwndFloatingPanel)) toggleFloatingPanel();
         else unsupported("Unsupported: floating panel has no window in this build.");
@@ -266,7 +372,10 @@ void Win32IDE::handleViewCommand(int commandId) {
     case IDM_VIEW_USE_VULKAN_RENDERER:
         unsupported("Unsupported: switching the Vulkan editor renderer is not integrated."); break;
     case IDM_VIEW_OUTPUT_TABS: case IDM_VIEW_OUTPUT_PANEL: case IDM_VIEW_PANEL:
-        unsupported("Unsupported: output-panel layout is not integrated in this build."); break;
+        // Output tabs, PowerShell, terminals, and the debugger all share the
+        // live docked bottom surface.  Toggle that surface through the real
+        // layout path so these menu aliases cannot create overlapping panes.
+        toggleOutputPanel(); break;
     case IDM_VIEW_TERMINAL:
         if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
         for (auto& pane : m_terminalPanes) {
@@ -303,6 +412,92 @@ void Win32IDE::handleToolsCommand(int commandId) {
     case IDM_TOOLS_PROFILE_STOP: stopProfiling(); break;
     case IDM_TOOLS_PROFILE_RESULTS: showProfileResults(); break;
     case IDM_TOOLS_ANALYZE_SCRIPT: analyzeScript(); break;
+    case IDM_TOOLS_BUILD_PROJECT: {
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Build");
+        startPowerShell();
+        std::vector<std::string> roots;
+        roots.push_back(m_currentFile);
+        roots.push_back(m_currentExplorerPath);
+        roots.push_back(m_explorerRootPath);
+        roots.push_back(m_gitRepoPath);
+        roots.push_back(currentDirectoryPath());
+        const std::string workspaceRoot = workspaceRootFromSeeds(roots);
+        const std::string buildDir = configuredBuildDirectory(workspaceRoot);
+        auto* pane = getActiveTerminalPane();
+        if (buildDir.empty()) {
+            appendToOutput("Native IDE build not started: no configured CMake build directory was found. Set RAWRXD_BUILD_DIR or configure build_ide.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        if (!pane || !pane->manager || !pane->manager->isRunning()) {
+            appendToOutput("Native IDE build not started: PowerShell terminal is unavailable.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        const std::string rootLiteral = powerShellLiteral(workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot);
+        const std::string buildLiteral = powerShellLiteral(buildDir);
+        const std::string cmd =
+            "$ErrorActionPreference='Continue'; "
+            "Set-Location -LiteralPath " + rootLiteral + "; "
+            "Write-Output '[RAWRXD_BUILD_START]'; "
+            "$vswhere=\"${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe\"; "
+            "$vcvars=$null; "
+            "if(Test-Path -LiteralPath $vswhere){ "
+            "$installPath=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null; "
+            "if($installPath){ $vcvars=Join-Path $installPath \"VC\\Auxiliary\\Build\\vcvars64.bat\" } }; "
+            "if(-not $vcvars){ $vcvars=@('C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat',"
+            "'C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1 }; "
+            "if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { "
+            "cmd.exe /d /s /c ('call \"' + $vcvars + '\" && cmake --build \"' + " + buildLiteral +
+            " + '\" --target RawrXD-Win32IDE-Native --config Release'); $rc=$LASTEXITCODE }; "
+            "Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); "
+            "if($rc -ne 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }\r\n";
+        pane->manager->writeInput(cmd);
+        appendToOutput("Native IDE build started (workspace=" +
+                           (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot) +
+                           ", dir=" + buildDir + ").\n",
+                       "Output", OutputSeverity::Info);
+        break;
+    }
+    case IDM_TOOLS_TEST_PROJECT: {
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "Tests");
+        startPowerShell();
+        std::vector<std::string> roots;
+        roots.push_back(m_currentFile);
+        roots.push_back(m_currentExplorerPath);
+        roots.push_back(m_explorerRootPath);
+        roots.push_back(m_gitRepoPath);
+        roots.push_back(currentDirectoryPath());
+        const std::string workspaceRoot = workspaceRootFromSeeds(roots);
+        const std::string testDir = configuredBuildDirectory(workspaceRoot);
+        auto* pane = getActiveTerminalPane();
+        if (testDir.empty()) {
+            appendToOutput("Native IDE tests not started: no configured CMake build directory was found. Set RAWRXD_BUILD_DIR or configure build_ide.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        if (!pane || !pane->manager || !pane->manager->isRunning()) {
+            appendToOutput("Native IDE tests not started: PowerShell terminal is unavailable.\n",
+                           "Errors", OutputSeverity::Error);
+            break;
+        }
+        const std::string rootLiteral = powerShellLiteral(workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot);
+        const std::string testLiteral = powerShellLiteral(testDir);
+        const std::string cmd =
+            "$ErrorActionPreference='Continue'; "
+            "Set-Location -LiteralPath " + rootLiteral + "; "
+            "Write-Output '[RAWRXD_TEST_START]'; "
+            "ctest --test-dir " + testLiteral +
+            " -C Release --output-on-failure; "
+            "$rc=$LASTEXITCODE; Write-Output ('[RAWRXD_TEST_RESULT] EXIT=' + $rc); "
+            "if($rc -ne 0){ Write-Error ('Native IDE tests failed with exit code ' + $rc) }\r\n";
+        pane->manager->writeInput(cmd);
+        appendToOutput("Native IDE test run started (workspace=" +
+                           (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot) +
+                           ", dir=" + testDir + ").\n",
+                       "Output", OutputSeverity::Info);
+        break;
+    }
     default: break;
     }
 }
@@ -508,8 +703,9 @@ void Win32IDE::showCommandPalette()
         m_hwndCommandPalette, nullptr, m_hInstance, nullptr
     );
     
-    // Set placeholder text appearance
-    SendMessageA(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)L"> Type a command...");
+    // Set placeholder text appearance (ANSI edit control created via
+    // CreateWindowExA, so use SendMessageA with a narrow string).
+    SendMessageA(m_hwndCommandPaletteInput, EM_SETCUEBANNER, TRUE, (LPARAM)"> Type a command...");
     
     // Create command list
     m_hwndCommandPaletteList = CreateWindowExA(

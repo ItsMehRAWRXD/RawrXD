@@ -114,6 +114,17 @@ struct InferenceResult {
     double   tokens_per_sec   = 0.0;
     double   total_duration_ms = 0.0;
 
+    // Backend-reported metrics.  These are distinct from wall-clock timing:
+    // Ollama reports nanosecond counters for prompt and decode evaluation.
+    // Keep them in the result so callers cannot accidentally replace them
+    // with synthetic progress estimates.
+    bool     native_metrics_valid = false;
+    std::string metrics_source;
+    uint64_t total_duration_ns = 0;
+    uint64_t load_duration_ns = 0;
+    uint64_t prompt_eval_duration_ns = 0;
+    uint64_t eval_duration_ns = 0;
+
     static InferenceResult Ok(const std::string& resp,
                               uint64_t ptok = 0, uint64_t ctok = 0,
                               double tps = 0.0, double ms = 0.0) {

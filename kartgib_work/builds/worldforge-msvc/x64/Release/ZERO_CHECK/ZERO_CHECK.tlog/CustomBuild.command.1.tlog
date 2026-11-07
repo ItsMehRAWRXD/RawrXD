@@ -1,0 +1,10 @@
+^F:\RAWRXD\KARTGIB_WORK\BUILDS\WORLDFORGE-MSVC\CMAKEFILES\C018AB37241B9E8E5EBDAB90C032E5F9\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd/kartgib_work/merged -BF:/rawrxd/kartgib_work/builds/worldforge-msvc --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/rawrxd/kartgib_work/builds/worldforge-msvc/KartGibWorldForge.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

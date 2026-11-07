@@ -1,0 +1,123 @@
+﻿===LOG===
+[2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] GhostText inference route: qwen2.5-coder:1.5b-base backend=ollama
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-03 08:57:43] [INFO] GhostText inference route: qwen2.5-coder:1.5b-base backend=ollama
+[2026-11-03 08:58:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+
+===CHILD===
+gt_stale_GTSTALE_f76d15f607e5.txt  -  workdir
+Sidebar
+Include:
+*.ps1,*.cpp
+Exclude:
+node_modules,bin
+Message:
+Variables:
+File opened successfully (49 bytes, sha256=df6aab3a12e94a38...)
+
+[08:57:39] [2026-11-03 08:57:39] [SYSTEM] === RawrXD IDE Logging Initialized ===[08:57:39] [2026-11-03 08:57:39] [SYSTEM] Log file: logs\RawrXD_IDE_20261103_085739.log[08:57:39] [2026-11-03 08:57:39] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0[08:57:39] [2026-11-03 08:57:39] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0[08:57:39] [GhostText] native controller READY
+[08:57:39] [GhostText] attached input surfaces=7
+[08:57:39] [2026-11-03 08:57:39] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0[08:57:42] [2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[08:57:42] [2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:42] [2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=1[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:43] [GhostText] GHOSTTEXT_TRIGGER request_id=1 generation=7 editor_bytes=50
+[08:57:43] [GhostText] GHOSTTEXT_REQUEST_SENT request_id=1
+[08:57:43] [2026-11-03 08:57:43] [INFO] GhostText inference route: qwen2.5-coder:1.5b-base backend=ollama[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1[08:57:43] [GhostText] GHOSTTEXT_CANCELLED request_id=1 generation_before=7 pending_before=1
+[08:57:43] [GhostText] GHOSTTEXT_INVALIDATED request_id=1 generation_after=8 pending_after=0
+[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:43] [2026-11-03 08:57:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:57:43] [GhostText] GHOSTTEXT_TRIGGER request_id=2 generation=8 editor_bytes=51
+[08:57:43] [GhostText] GHOSTTEXT_REQUEST_SENT request_id=2
+[08:57:43] [2026-11-03 08:57:43] [INFO] GhostText inference route: qwen2.5-coder:1.5b-base backend=ollama[08:58:03] [GhostText] GHOSTTEXT_RESPONSE_RECEIVED request_id=2 success=1 response_bytes=1283 generated_tokens=N/A request_current=1 pending_current=1 generation_current=1 identity_current=1 snapshot_current=1
+[08:58:03] [GhostText] GHOSTTEXT_RENDER_DECISION request_id=2 eligible=1
+[08:58:03] [GhostText] GHOSTTEXT_RENDERED request_id=2 response_bytes=1283
+[08:58:03] [2026-11-03 08:58:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[08:58:13] [GhostText] GHOSTTEXT_RESPONSE_RECEIVED request_id=1 success=1 response_bytes=77247 generated_tokens=N/A request_current=0 pending_current=0 generation_current=0 identity_current=1 snapshot_current=1
+[08:58:13] [GhostText] GHOSTTEXT_RENDER_DECISION request_id=1 eligible=0
+
+AI Sessions
+Model:
+GhostText model:
+Max tokens:
+4096
+Context:
+64K (pending model admission)
+Reasoning:
+Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+PowerShell Console
+[PowerShell session started]
+
+  RawrXD Integrated PowerShell Console
+
+
+PowerShell Version: 5.1.26100.9818
+
+Edition: Desktop
+
+
+Type commands below or click 'Load RawrXD' to access RawrXD.ps1 functions
+
+Commands:
+  - Enter: Execute command
+  - Up/Down: Navigate history
+  - Ctrl+L: Clear console
+  - Ctrl+`: Toggle panel
+
+PS> 
+PowerShell: Active | 5.1.26100.9818
+
+def add(a, b):
+    // GTSTALE_f76d15f607e5
+     x
+  F:  >  rawrxd  >  evidence  >  POST_E59D_CANDIDATE_001  >  EDITOR  >  workdir  >  gt_stale_GTSTALE_f76d15f607e5.txt
+   = int(a)
+    y = int(b)
+    result = x + y
+    return result
+def add(a, b):
+    // GTSTALE_f76d15f607e5
+     x = int(a)
+    y = int(b)
+    result = x + y
+    return result
+
+Is it possible to create a function in Python that can return only the completion text from a Markdown file without any markdown syntax, and without using any third-party libraries? Certainly! Here's an example of how you can achieve that:
+
+```python
+import re
+
+def get_completion_text(markdown_text):
+    # Extract text between backticks (`)
+    matches = re.findall(r"`(.*?)`", markdown_text)
+    
+    # Join all matches into one string
+    completion_text = ' '.join(matches)
+    
+    return completion_text
+```
+
+You can use the `re` module in Python to extract text between backticks in a Markdown file. The `findall` function is used to find all occurrences of the pattern ``(.*?)` in the `markdown_text`. The `matches` variable will be a list of all the extracted text. Then, the `join` function is used to concatenate all the extracted text into one string.
+
+Here's an example usage:
+
+```python
+markdown_text = """
+Here's some text with `code` and another `piece of code`!
+"""
+
+completion_text = get_completion_text(markdown_text)
+print(completion_text)
+```
+
+Output:
+```
+code
+piece of code
+```
+
+===CHILD_HITS===
+[08:57:39] [2026-11-03 08:57:39] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0[08:57:42] [2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[08:57:42] [2026-11-03 08:57:42] [INFO] [EDITOR_CHANGE] code=1024 s

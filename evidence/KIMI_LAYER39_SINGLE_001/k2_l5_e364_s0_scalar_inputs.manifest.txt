@@ -1,0 +1,12 @@
+schema=DEEP2_KIMI_SCALAR_INPUTS_001
+layer=5
+expert=364
+stick=0
+hidden_dim=7168
+intermediate_dim=2048
+gate_ggml_type=12
+up_ggml_type=12
+down_ggml_type=14
+source=CPU_PACKED_SLICES_AND_NORMED_HIDDEN
+scope=SCALAR_INPUT_ONLY_NO_GPU_OUTPUT
+certified=0

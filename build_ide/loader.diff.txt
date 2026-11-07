@@ -1,0 +1,67 @@
+diff --git a/src/streaming_gguf_loader.cpp b/src/streaming_gguf_loader.cpp
+index f658fdc27a..c626cd6452 100644
+--- a/src/streaming_gguf_loader.cpp
++++ b/src/streaming_gguf_loader.cpp
+@@ -74,6 +74,7 @@ bool StreamingGGUFLoader::Close() {
+     zones_.clear();
+     active_zones_.clear();
+     current_zone_ = "";
++    data_start_ = 0;
+     return true;
+ }
+ 
+@@ -282,6 +283,38 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
+         
+         tensor_index_[ref.name] = ref;
+     }
++
++    // GGUF tensor offsets are relative to the aligned tensor-data section.
++    // Rebase them once, after the complete tensor-info table has been read,
++    // and keep all subsequent residency reads file-absolute.
++    uint64_t alignment = 32;
++    const auto align_it = metadata_.kv_pairs.find("general.alignment");
++    if (align_it != metadata_.kv_pairs.end()) {
++        try {
++            const uint64_t parsed = std::stoull(align_it->second);
++            if (parsed != 0 && (parsed & (parsed - 1)) == 0) alignment = parsed;
++        } catch (...) {
++            // Preserve the GGUF default alignment on malformed optional data.
++        }
++    }
++    const std::streampos info_end_pos = file_.tellg();
++    if (info_end_pos < 0) return false;
++    const uint64_t info_end = static_cast<uint64_t>(info_end_pos);
++    if (alignment > 1 && info_end > std::numeric_limits<uint64_t>::max() - (alignment - 1)) {
++        return false;
++    }
++    data_start_ = (info_end + alignment - 1) & ~(alignment - 1);
++    const uint64_t file_size = GetTotalFileSize();
++    if (data_start_ > file_size) return false;
++    for (auto& [name, ref] : tensor_index_) {
++        if (ref.offset > file_size - data_start_ ||
++            ref.size > file_size - data_start_ - ref.offset) {
++            std::cerr << "[GGUF] tensor exceeds file after data-section rebase: "
++                      << name << std::endl;
++            return false;
++        }
++        ref.offset += data_start_;
++    }
+     
+     return true;
+ }
+diff --git a/src/streaming_gguf_loader.h b/src/streaming_gguf_loader.h
+index ad78066f42..1f42248f9e 100644
+--- a/src/streaming_gguf_loader.h
++++ b/src/streaming_gguf_loader.h
+@@ -125,6 +125,11 @@ private:
+     // Maps tensor_name -> {offset, size, type, shape}
+     std::map<std::string, TensorRef> tensor_index_;
+ 
++    // GGUF tensor offsets are relative to the aligned tensor-data section,
++    // not to the beginning of the file.  Keep the computed absolute base so
++    // all streaming reads use one unambiguous coordinate system.
++    uint64_t data_start_ = 0;
++
+     // ---- Zone Information ----
+     // Maps zone_name -> {tensors, total_bytes, is_loaded, data}
+     std::map<std::string, TensorZoneInfo> zones_;

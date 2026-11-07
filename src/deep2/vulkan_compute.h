@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "lavapath/GpuDeviceLostReset.hpp"
 
 namespace Deep2 {
 
@@ -144,6 +145,16 @@ public:
     bool Initialize() { return initialize(); }
     void cleanup();
 
+    /* Device-lost / Win32 code-31: detect→mark; opt-in reset via
+     * DEEP2_GPU_DEVICE_RESET=1 (teardown→recreate). Fail closed otherwise. */
+    bool NoteVkResult(int vk, const char* stage);
+    bool DeviceIsLost() const noexcept;
+    uint64_t DeviceLostCount() const noexcept;
+    int LastLostVk() const noexcept;
+    const char* LastLostPhase() const noexcept;
+    void InjectDeviceLostForTest(int code);
+    bool RecoverDeviceIfOptIn();
+
     bool initialized() const noexcept { return initialized_; }
     bool computeReady() const noexcept { return opsPipeline_ != VK_NULL_HANDLE; }
     bool quantComputeReady() const noexcept { return qPipeline_ != VK_NULL_HANDLE; }
@@ -215,7 +226,8 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
                            DeviceBuf& input, DeviceBuf& output,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols,
+                           uint64_t cacheKey = 0);
 
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
@@ -517,8 +529,9 @@ public:
     // leaking into a newly bound model.
     void ResetGdnState(uint64_t stateKey);
 
-    // GDN dispatch: Qwen3.5/Qwen4Exp gated delta-net device kernel. Stubbed
-    // to CPU fallback until a matching Vulkan stateful kernel is wired.
+    // GDN dispatch: Qwen3.5/Qwen4Exp gated delta-net device kernel. The
+    // recurrent state is retained by stateKey across token dispatches and is
+    // discarded by ResetGdnState at executor/model-session boundaries.
     bool DispatchGdn(const float* mixed, size_t mixedSize,
                      const float* beta, size_t betaSize,
                      const float* alpha, size_t alphaSize,
@@ -529,6 +542,18 @@ public:
                      uint32_t keyHeads, uint32_t valueHeads, uint32_t headDim,
                      float epsilon, float scale, bool gateSigmoid,
                      uint64_t stateKey, std::vector<float>& output);
+
+    struct GdnPush {
+        uint32_t tokens = 1;
+        uint32_t keyHeads = 0;
+        uint32_t valueHeads = 0;
+        uint32_t headDim = 0;
+        float epsilon = 0.0f;
+        float scale = 1.0f;
+        uint32_t gateSigmoid = 0;
+        uint32_t reserved = 0;
+    };
+    static_assert(sizeof(GdnPush) == 32, "GDN push constants must match GLSL");
 
     // ========== Download ticket ==========
     struct DownloadTicket {
@@ -1382,6 +1407,7 @@ private:
         uint32_t rows = 0;
         uint32_t cols = 0;
         uint32_t weightBytes = 0;
+        uint32_t strictOrder = 0;
     };
 
     bool createInstance();
@@ -1424,7 +1450,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t cacheKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state
@@ -1444,6 +1470,10 @@ private:
     uint32_t requestedOrdinal_ = 0;
     VulkanPhysicalInfo info_{};
     bool initialized_ = false;
+    int lastLostVk_ = 0;
+    const char* lastLostPhase_ = "none";
+    uint64_t deviceLostCount_ = 0;
+    GpuLost::Seq lostSeq_{};
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 
@@ -1473,9 +1503,12 @@ private:
     VkPipelineLayout opsPipelineLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout qPipelineLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout qNvfp4PipelineLayout_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout gdnSetLayout_ = VK_NULL_HANDLE;
+    VkPipelineLayout gdnPipelineLayout_ = VK_NULL_HANDLE;
     VkPipeline opsPipeline_ = VK_NULL_HANDLE;
     VkPipeline qPipeline_ = VK_NULL_HANDLE;
     VkPipeline qNvfp4Pipeline_ = VK_NULL_HANDLE;
+    VkPipeline gdnPipeline_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;
@@ -1592,6 +1625,11 @@ private:
     uint32_t mlaCacheLayers_ = 0;
     uint32_t mlaCacheCapacity_ = 0;
     uint32_t mlaCacheMaxSeq_ = 0;
+
+    // Stateful Qwen GDN device buffers. Entries are keyed by the executor
+    // owner/block identity supplied by RuntimeGraphExecutor. A state buffer
+    // is never reused across a geometry change or an explicit reset.
+    std::unordered_map<uint64_t, DeviceBuf> gdnStates_;
 
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;

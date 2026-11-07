@@ -30,4 +30,4 @@ target_link_libraries(flight_recorder_smoke PRIVATE deep2_flight_recorder)
 
 # Enable testing
 enable_testing()
-add_test(NAME flight_recorder_smoke_test COMMAND flight_recorder_smoke)
+add_test(NAME flight_recorder_smoke_test COMMAND $<TARGET_FILE:flight_recorder_smoke>)

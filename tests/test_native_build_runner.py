@@ -1,0 +1,106 @@
+"""Real process and Windows MSVC compile->object->link->exe acceptance tests."""
+import os
+from pathlib import Path
+import shutil
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from native_build_runner import execute
+
+
+class RunnerTests(unittest.TestCase):
+    def test_concurrent_pipe_drain(self):
+        code = ("import sys; "
+                "sys.stdout.write('A'*200000);sys.stdout.flush();"
+                "sys.stderr.write('B'*200000);sys.stderr.flush()")
+        r = execute([sys.executable, "-c", code], 15)
+        self.assertEqual(r["exit_code"], 0, r)
+        self.assertEqual(len(r["stdout"]), 200000)
+        self.assertEqual(len(r["stderr"]), 200000)
+
+    def test_bounded_concurrent_output(self):
+        code = ("import sys;sys.stdout.write('a'*400000);"
+                "sys.stderr.write('b'*400000)")
+        r = execute([sys.executable, "-c", code], 15, max_output_bytes=1024)
+        self.assertEqual(r["exit_code"], 0, r)
+        self.assertEqual(len(r["stdout"]), 1024)
+        self.assertEqual(len(r["stderr"]), 1024)
+        self.assertTrue(r["stdout_truncated"])
+        self.assertTrue(r["stderr_truncated"])
+
+    def test_nonzero_and_timeout(self):
+        r = execute([sys.executable, "-c", "import sys;sys.exit(17)"], 5)
+        self.assertEqual(r["exit_code"], 17)
+        self.assertFalse(r["timed_out"])
+        r = execute([sys.executable, "-c", "import time;time.sleep(30)"], 0.5)
+        self.assertTrue(r["timed_out"])
+        self.assertIsNotNone(r["exit_code"])
+
+    def test_cli_json_receipt_and_exit_codes(self):
+        import json
+        import subprocess
+        runner = Path(__file__).resolve().parents[1] / "tools" / "native_build_runner.py"
+        good = subprocess.run([sys.executable, str(runner), "--timeout", "5",
+                               "--", sys.executable, "-c", "print('RAWRXD_CLI_OK')"],
+                              capture_output=True, text=True, timeout=15)
+        self.assertEqual(good.returncode, 0, good.stderr)
+        receipt = json.loads(good.stdout)
+        self.assertEqual(receipt["stdout"].strip(), "RAWRXD_CLI_OK")
+        self.assertEqual(receipt["exit_code"], 0)
+        bad = subprocess.run([sys.executable, str(runner), "--timeout", "5",
+                              "--", sys.executable, "-c", "import sys;sys.exit(23)"],
+                             capture_output=True, text=True, timeout=15)
+        self.assertEqual(bad.returncode, 1, bad.stderr)
+        self.assertEqual(json.loads(bad.stdout)["exit_code"], 23)
+
+    def test_launch_error(self):
+        r = execute(["__rawrxd_missing_compiler_12345__"], 5)
+        self.assertIsNotNone(r["launch_error"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows MSVC gate")
+    def test_msvc_compile_link_execute(self):
+        self.assertIsNotNone(shutil.which("cl"), "MSVC cl.exe missing from Windows CI environment")
+        self.assertIsNotNone(shutil.which("link"), "MSVC link.exe missing from Windows CI environment")
+        with tempfile.TemporaryDirectory(prefix="rawrxd cpp build space ") as tmp:
+            root = Path(tmp)
+            src = root / "hello.cpp"
+            obj = root / "hello.obj"
+            exe = root / "hello.exe"
+            src.write_text('#include <cstdio>\nint main(){std::puts("RAWRXD_NATIVE_OK");return 0;}\n')
+            compile_result = execute(["cl", "/nologo", "/EHsc", "/c", str(src),
+                                      "/Fo" + str(obj)], 60, tmp)
+            self.assertEqual(compile_result["exit_code"], 0, compile_result)
+            self.assertTrue(obj.is_file())
+            link_result = execute(["link", "/nologo", str(obj),
+                                   "/OUT:" + str(exe)], 60, tmp)
+            self.assertEqual(link_result["exit_code"], 0, link_result)
+            self.assertTrue(exe.is_file())
+            run_result = execute([str(exe)], 10, tmp)
+            self.assertEqual(run_result["exit_code"], 0, run_result)
+            self.assertEqual(run_result["stdout"].strip(), "RAWRXD_NATIVE_OK")
+
+    @unittest.skipUnless(os.name == "nt", "Windows MSVC gate")
+    def test_msvc_c_compile_link_execute(self):
+        self.assertIsNotNone(shutil.which("cl"), "MSVC cl.exe missing from Windows CI environment")
+        self.assertIsNotNone(shutil.which("link"), "MSVC link.exe missing from Windows CI environment")
+        with tempfile.TemporaryDirectory(prefix="rawrxd c build space ") as tmp:
+            root = Path(tmp)
+            src, obj, exe = root / "hello.c", root / "hello.obj", root / "hello.exe"
+            src.write_text('#include <stdio.h>\nint main(void){puts("RAWRXD_C_OK");return 0;}\n')
+            compile_result = execute(["cl", "/nologo", "/TC", "/c", str(src),
+                                      "/Fo" + str(obj)], 60, tmp)
+            self.assertEqual(compile_result["exit_code"], 0, compile_result)
+            self.assertTrue(obj.is_file())
+            link_result = execute(["link", "/nologo", str(obj),
+                                   "/OUT:" + str(exe)], 60, tmp)
+            self.assertEqual(link_result["exit_code"], 0, link_result)
+            self.assertTrue(exe.is_file())
+            run_result = execute([str(exe)], 10, tmp)
+            self.assertEqual(run_result["exit_code"], 0, run_result)
+            self.assertEqual(run_result["stdout"].strip(), "RAWRXD_C_OK")
+
+
+if __name__ == "__main__":
+    unittest.main()

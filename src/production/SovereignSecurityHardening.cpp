@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
@@ -700,16 +701,43 @@ bool AuditLogger::initialize(const std::string& dir, bool encrypt_at_rest) {
     encrypt_at_rest_ = encrypt_at_rest;
     initialized_ = true;
     if (!recover_last_hash_locked()) {
-        // A truncated final record is a real fault, not a warning: report it so
-        // the readiness gate can block startup rather than appending into a
-        // broken chain. The stream is closed first, otherwise append() would
-        // see an open file and write straight past the broken link.
+        // Preserve a damaged chain as evidence, then start a new chain.  The
+        // old behavior left every local IDE launch permanently blocked after
+        // one interrupted write, even though no audit data was discarded.  A
+        // timestamped quarantine keeps the original bytes available for
+        // forensic review while making the active trail independently
+        // verifiable for this process.
         out_.close();
         initialized_ = false;
+        const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        const fs::path quarantine = path_.parent_path() /
+            (path_.stem().string() + ".corrupt-" + std::to_string(now) +
+             path_.extension().string());
+        std::error_code renameError;
+        fs::rename(path_, quarantine, renameError);
+        if (renameError) {
+            RXD_LOG_ERROR("security")
+                .field("audit_path", path_.string())
+                .field("quarantine_path", quarantine.string())
+                .field("error", renameError.message())
+                .msg("audit log is corrupt and could not be quarantined");
+            return false;
+        }
+        out_.open(path_, std::ios::out | std::ios::app | std::ios::binary);
+        if (!out_) {
+            RXD_LOG_ERROR("security")
+                .field("audit_path", path_.string())
+                .msg("new audit chain could not be opened after quarantine");
+            return false;
+        }
+        initialized_ = true;
+        last_hash_.clear();
+        stats_ = Stats{};
         RXD_LOG_ERROR("security")
             .field("audit_path", path_.string())
-            .msg("audit log ends with an unreadable record");
-        return false;
+            .field("quarantine_path", quarantine.string())
+            .msg("audit log was quarantined; a new verifiable chain was started");
     }
     RXD_LOG_INFO("security")
         .field("audit_path", path_.string())
@@ -881,6 +909,33 @@ std::optional<size_t> AuditLogger::verify_chain(size_t max_records) {
     return std::nullopt;
 }
 
+bool AuditLogger::quarantine_and_reset(std::filesystem::path* quarantined_path) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (path_.empty()) return false;
+
+    out_.flush();
+    out_.close();
+    initialized_ = false;
+
+    const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    const fs::path quarantine = path_.parent_path() /
+        (path_.stem().string() + ".corrupt-" + std::to_string(now) +
+         path_.extension().string());
+    std::error_code ec;
+    fs::rename(path_, quarantine, ec);
+    if (ec) return false;
+
+    out_.open(path_, std::ios::out | std::ios::app | std::ios::binary);
+    if (!out_) return false;
+    initialized_ = true;
+    last_hash_.clear();
+    stats_ = Stats{};
+    last_verified_records_ = 0;
+    if (quarantined_path) *quarantined_path = quarantine;
+    return true;
+}
+
 void AuditLogger::close() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (out_.is_open()) out_.flush();
@@ -1027,6 +1082,23 @@ void SecurityRuntime::init(const ConfigManager& cfg) {
             RXD_LOG_CRITICAL("security")
                 .field("audit_dir", dir)
                 .msg("audit log could not be opened");
+        } else if (AuditLogger::instance().verify_chain()) {
+            // A readable log can still fail a full content/link verification
+            // (for example after a legacy writer or interrupted append). Keep
+            // the failed chain for forensics and make a fresh active chain so
+            // the readiness gate remains meaningful instead of permanently
+            // pinning every local launch to historical damage.
+            std::filesystem::path quarantine;
+            if (AuditLogger::instance().quarantine_and_reset(&quarantine)) {
+                RXD_LOG_WARNING("security")
+                    .field("audit_dir", dir)
+                    .field("quarantine_path", quarantine.string())
+                    .msg("audit chain failed verification; quarantined and restarted");
+            } else {
+                RXD_LOG_CRITICAL("security")
+                    .field("audit_dir", dir)
+                    .msg("audit chain failed verification and could not be quarantined");
+            }
         }
     }
 

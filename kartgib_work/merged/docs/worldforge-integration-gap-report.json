@@ -1,0 +1,218 @@
+﻿{
+    "worldforge_drops_integrated":  15,
+    "cmake_generator":  "Visual Studio 17 2022",
+    "certification_level":  "WorldForge 15-drop portable reference certified",
+    "skipped_tests":  0,
+    "source_root":  "F:\\rawrxd\\kartgib_work\\merged",
+    "certification_date":  "2026-10-25T12:56:24Z",
+    "procedural_generation_test":  {
+                                       "biome":  "tropical",
+                                       "scene_report_identical":  true,
+                                       "heightmap_identical":  true,
+                                       "run1_world_obj_bytes":  3137672,
+                                       "world_json_identical":  true,
+                                       "run2_world_obj_bytes":  3137672,
+                                       "deterministic":  true,
+                                       "seed":  20261025
+                                   },
+    "architecture":  "x64",
+    "cmake_version":  "4.4.2",
+    "certification_scope":  "CPU-only deterministic reference implementation; Vulkan runtime integration pending",
+    "build_dir":  "F:\\rawrxd\\kartgib_work\\builds\\worldforge-msvc",
+    "kartgib_integration_status":  {
+                                       "kartgib_win32_entry_point_found":  false,
+                                       "next_steps":  [
+                                                          "Locate actual KartGib Vulkan executable CMake target",
+                                                          "Identify Win32 application entry point",
+                                                          "Map WorldForge terrain → KartGib renderer mesh upload",
+                                                          "Map WorldForge vehicle physics → KartGib physics integration",
+                                                          "Map WorldForge combat → KartGib gameplay systems",
+                                                          "Map WorldForge editor scene graph → KartGib runtime scene",
+                                                          "Establish WorldForge as CMake subdirectory or find_package in KartGib"
+                                                      ],
+                                       "kartgib_vulkan_renderer_present":  false,
+                                       "kartgib_subdirs":  [
+                                                               "deep2",
+                                                               "renderer",
+                                                               "worldforge"
+                                                           ],
+                                       "kartgib_cmake_root":  "NOT_FOUND",
+                                       "integration_boundary_defined":  false,
+                                       "worldforge_modules_mapped":  [
+
+                                                                     ],
+                                       "kartgib_source_path":  "F:\\rawrxd\\kartgib\\src",
+                                       "kartgib_source_found":  true
+                                   },
+    "failed_tests":  0,
+    "test_results":  [
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-systems-tests",
+                             "duration_sec":  0.03
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-render-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-lighting-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-materials-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-atmosphere-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-assets-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-streaming-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-vehicle-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-combat-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-editor-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-editor-tools-tests",
+                             "duration_sec":  0.02
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-gameplay-tests",
+                             "duration_sec":  0.03
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-network-tests",
+                             "duration_sec":  0.01
+                         },
+                         {
+                             "status":  "PASS",
+                             "name":  "worldforge-integration-tests",
+                             "duration_sec":  0.02
+                         }
+                     ],
+    "total_tests":  15,
+    "deterministic_integration_test":  {
+                                           "run2_combat_hash":  "16200861850814173212",
+                                           "run1_vehicle_hash":  "11348012589401900018",
+                                           "ticks":  600,
+                                           "hashes_match":  true,
+                                           "run1_combat_hash":  "16200861850814173212",
+                                           "run2_vehicle_hash":  "11348012589401900018",
+                                           "output_scenes_identical":  true
+                                       },
+    "compiler":  "MSVC 19.44.35228.0",
+    "passed_tests":  15,
+    "build_targets":  [
+                          "worldforge (lib)",
+                          "worldforge-render-reference (lib)",
+                          "worldforge-lighting-reference (lib)",
+                          "worldforge-materials (lib)",
+                          "worldforge-atmosphere (lib)",
+                          "worldforge-assets (lib)",
+                          "worldforge-streaming (lib)",
+                          "worldforge-vehicle (lib)",
+                          "worldforge-combat (lib)",
+                          "worldforge-editor (lib)",
+                          "worldforge-editor-tools (lib)",
+                          "worldforge-gameplay (lib)",
+                          "worldforge-network (lib)",
+                          "worldforge-integration (lib)",
+                          "kartgib-worldforge (exe)",
+                          "worldforge-tests (exe)",
+                          "worldforge-systems-tests (exe)",
+                          "worldforge-render-tests (exe)",
+                          "worldforge-lighting-tests (exe)",
+                          "worldforge-materials-tests (exe)",
+                          "worldforge-atmosphere-tests (exe)",
+                          "worldforge-assets-tests (exe)",
+                          "worldforge-streaming-tests (exe)",
+                          "worldforge-vehicle-tests (exe)",
+                          "worldforge-combat-tests (exe)",
+                          "worldforge-editor-tests (exe)",
+                          "worldforge-editor-tools-tests (exe)",
+                          "worldforge-gameplay-tests (exe)",
+                          "worldforge-network-tests (exe)",
+                          "worldforge-integration-tests (exe)",
+                          "worldforge-material-bake (exe)",
+                          "worldforge-sky-bake (exe)",
+                          "worldforge-assets-cli (exe)",
+                          "worldforge-streaming-cli (exe)",
+                          "worldforge-vehicle-cli (exe)",
+                          "worldforge-combat-cli (exe)",
+                          "worldforge-scene-cli (exe)",
+                          "worldforge-gameplay-cli (exe)",
+                          "worldforge-network-cli (exe)",
+                          "worldforge-integration-cli (exe)"
+                      ],
+    "pass_rate":  100,
+    "unresolved_gates":  [
+                             {
+                                 "gate":  "KartGib Vulkan integration",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "KartGib executable not yet integrated"
+                             },
+                             {
+                                 "gate":  "Graphical gameplay smoke test",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib Vulkan runtime"
+                             },
+                             {
+                                 "gate":  "Scene persistence round-trip in KartGib",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib runtime"
+                             },
+                             {
+                                 "gate":  "Multiplayer transport integration",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib WinSock layer"
+                             },
+                             {
+                                 "gate":  "Visual editor integration",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib Win32 editor shell"
+                             },
+                             {
+                                 "gate":  "Asset pipeline hot-reload",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib asset system"
+                             },
+                             {
+                                 "gate":  "Packaging and deployment",
+                                 "status":  "NOT_TESTED",
+                                 "blocker":  "Requires KartGib build pipeline"
+                             }
+                         ],
+    "configuration":  "Release"
+}

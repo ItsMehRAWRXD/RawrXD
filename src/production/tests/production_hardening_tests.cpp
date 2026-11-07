@@ -260,14 +260,15 @@ void test_audit_chain() {
         out << content.substr(0, content.size() / 2);
     }
     audit.close();
-    // The open must fail rather than silently continue the chain: a chain that
-    // skips a link is indistinguishable from an untampered one.
-    CHECK(!audit.initialize(dir, false),
-          "open fails on an unreadable trailing record");
-    CHECK(audit.verify_chain().has_value(),
-          "a truncated chain is detected as broken");
-    CHECK(!audit.append("tester", "test.action3", "test.resource3", "success"),
-          "appending into a broken chain is refused");
+    // Startup must not append to a damaged chain.  The production policy
+    // preserves the original bytes in a timestamped quarantine and opens a
+    // fresh active chain so the IDE can recover without discarding evidence.
+    CHECK(audit.initialize(dir, false),
+          "corrupt chain is quarantined and a fresh chain opens");
+    CHECK(!audit.verify_chain().has_value(),
+          "fresh chain verifies after quarantine");
+    CHECK(audit.append("tester", "test.action3", "test.resource3", "success"),
+          "append after quarantine starts a fresh chain");
     audit.close();
     fs::remove_all(fs::path(dir), ec);
 

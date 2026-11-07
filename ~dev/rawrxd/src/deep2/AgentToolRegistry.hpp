@@ -83,15 +83,19 @@ public:
         for (const auto& alias : descriptor.aliases) {
             auto a = canonicalId(alias);
             if (a.empty() || a == descriptor.id) continue;
-            if (entries_.contains(a) || aliases_.contains(a))
+            if (entries_.contains(a) || aliases_.contains(a) ||
+                std::find(canonical_aliases.begin(), canonical_aliases.end(), a) != canonical_aliases.end())
                 throw std::invalid_argument("duplicate tool alias: " + a);
             canonical_aliases.push_back(std::move(a));
         }
 
-        Entry entry{descriptor, std::move(handler)};
+        // Preserve the canonical owner ID independently of the inserted entry.
+        // Also avoid relying on moved-from state if insertion changes later.
+        const std::string owner_id = descriptor.id;
+        Entry entry{std::move(descriptor), std::move(handler)};
         entry.descriptor.aliases = canonical_aliases;
-        entries_.emplace(entry.descriptor.id, std::move(entry));
-        for (const auto& alias : canonical_aliases) aliases_.emplace(alias, descriptor.id);
+        entries_.emplace(owner_id, std::move(entry));
+        for (const auto& alias : canonical_aliases) aliases_.emplace(alias, owner_id);
     }
 
     bool unregisterTool(std::string_view id) {
@@ -226,7 +230,19 @@ public:
 
         for (const auto& root : search_roots) {
             if (root.empty()) continue;
-            if (auto p = validate(root / configured)) return *p;
+            std::error_code ec;
+            const auto canonical_root = std::filesystem::weakly_canonical(root, ec);
+            if (ec || canonical_root.empty()) continue;
+            if (auto p = validate(canonical_root / configured)) {
+                // A relative executable must remain under its authorized
+                // search root after symlink and '..' resolution.
+                auto r = canonical_root.begin(), q = p->begin();
+                while (r != canonical_root.end() && q != p->end() && *r == *q) {
+                    ++r;
+                    ++q;
+                }
+                if (r == canonical_root.end() && *p != canonical_root) return *p;
+            }
         }
 
         throw std::runtime_error("unable to resolve tool executable: " + configured.string());

@@ -95,6 +95,35 @@ static void test_retry_eventually_succeeds() {
     engine.registerPolicy(RetryPolicy::defaultLLMInvocation());
 }
 
+static void test_gpu_kernel_incompatibility_is_not_retried() {
+    section("retry: ROCm kernel-image incompatibility stops immediately");
+    auto& engine = adaptive_retry_test_engine();
+    RetryPolicy p = RetryPolicy::defaultLLMInvocation();
+    p.maxAttempts = 5;
+    p.baseDelayMs = 1;
+    p.maxDelayMs = 2;
+    p.jitterFactor = 0.0;
+    p.enableCircuitBreaker = false;
+    engine.registerPolicy(p);
+    engine.resetStats("llm_invocation");
+
+    int calls = 0;
+    auto r = engine.execute("llm_invocation", [&calls]() -> std::string {
+        ++calls;
+        throw std::runtime_error(
+            "rocblaslt error: Could not load TensileLibrary_lazy_gfx1201.dat; "
+            "ROCm error: no kernel image is available for execution on the device");
+    });
+
+    CHECK(!r.success);
+    CHECK(r.attemptsMade == 1);
+    CHECK(calls == 1);
+    CHECK(r.attemptErrors.size() == 1);
+    CHECK(engine.getStats("llm_invocation").totalRetries == 0);
+
+    engine.registerPolicy(RetryPolicy::defaultLLMInvocation());
+}
+
 static void test_retry_gives_up_and_reports() {
     section("retry: exhausts attempts and reports all errors");
     auto& engine = adaptive_retry_test_engine();
@@ -1002,6 +1031,7 @@ int main() {
 
     test_retry_first_attempt_success();
     test_retry_eventually_succeeds();
+    test_gpu_kernel_incompatibility_is_not_retried();
     test_retry_gives_up_and_reports();
     test_non_retryable_error_short_circuits();
     test_retry_accounting_identity();

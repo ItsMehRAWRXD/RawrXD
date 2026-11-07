@@ -1,0 +1,58 @@
+name: Native compiler linker smoke
+on:
+  push:
+    paths:
+      - 'tools/rawrxd_native_compiler.py'
+      - 'tests/test_native_compiler.py'
+      - 'tests/test_windows_native_compiler.py'
+      - '.github/workflows/native-compiler-smoke.yml'
+      - 'tools/ci/native_process_runner_win.hpp'
+      - 'tools/ci/native_process_runner_smoke_win.cpp'
+  pull_request:
+    paths:
+      - 'tools/rawrxd_native_compiler.py'
+      - 'tests/test_native_compiler.py'
+      - 'tests/test_windows_native_compiler.py'
+      - '.github/workflows/native-compiler-smoke.yml'
+      - 'tools/ci/native_process_runner_win.hpp'
+      - 'tools/ci/native_process_runner_smoke_win.cpp'
+  workflow_dispatch:
+jobs:
+  linux-gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p test_native_compiler.py -v
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Native C++ subprocess and MSVC compile/link acceptance
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX "tools/ci/native_process_runner_smoke_win.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-native-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:RUNNER_TEMP/rawrxd-native-smoke.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Locate MSVC environment and compile-link fixture
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set VSROOT=%%i
+          if not defined VSROOT exit /b 1
+          call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          echo int main(){return 0;} > "%TEMP%\rawrxd_build_fixture.cpp"
+          python tools\rawrxd_native_compiler.py --compiler cl --source "%TEMP%\rawrxd_build_fixture.cpp" --output "%TEMP%\rawrxd_build_fixture.exe"
+          if errorlevel 1 exit /b 1
+          "%TEMP%\rawrxd_build_fixture.exe"
+          if errorlevel 1 exit /b 1
+          python -m unittest discover -s tests -p test_windows_native_compiler.py -v
+          if errorlevel 1 exit /b 1
+          python -m unittest discover -s tests -p test_native_compiler.py -v

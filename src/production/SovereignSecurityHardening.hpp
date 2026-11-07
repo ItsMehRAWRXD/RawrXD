@@ -223,6 +223,12 @@ public:
     /// one-off full walk is affordable. Pass 0 for an unlimited walk.
     std::optional<size_t> verify_chain(size_t max_records = 0);
 
+    /// Preserve a chain that fails full verification and begin a fresh active
+    /// chain.  The original file is renamed, never deleted, so startup can
+    /// recover from an interrupted or legacy-format audit without hiding the
+    /// evidence that caused the failure.
+    bool quarantine_and_reset(std::filesystem::path* quarantined_path = nullptr);
+
     /// Number of records the last bounded verification covered.
     size_t last_verified_records() const { return last_verified_records_; }
 

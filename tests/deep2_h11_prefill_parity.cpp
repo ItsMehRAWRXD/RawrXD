@@ -49,7 +49,9 @@ struct GateResult {
 };
 
 int main(int argc, char** argv) {
-    if (argc < 2) { usage(argv[0]); return 2; }
+    // CTest registers this as an optional real-model gate. A build without
+    // DEEP2_H11_MODEL must skip it, not report a usage error as a regression.
+    if (argc < 2) { usage(argv[0]); return 77; }
     const std::string modelPath = argv[1];
     std::string promptText =
         (argc >= 3 && argv[2][0] != '-')
@@ -62,6 +64,18 @@ int main(int argc, char** argv) {
 
     std::printf("=== H11 PREFILL PARITY GATE ===\n");
     std::printf("model=%s\n", modelPath.c_str());
+
+    // H11 is the serial-vs-batched implementation parity authority.  It is
+    // intentionally a CPU-reference gate: the serial leg and the batched leg
+    // must exercise the same host implementation before a separate GPU-vs-CPU
+    // witness is allowed to make any hardware claim.  Set this before model
+    // admission because loadModel() selects the execution lane.
+#if defined(_WIN32)
+    _putenv_s("RAWR_REAP_CPU_ONLY", "1");
+#else
+    setenv("RAWR_REAP_CPU_ONLY", "1", 1);
+#endif
+    std::printf("H11_EXECUTION_MODE=CPU_REFERENCE\n");
 
     // ---- engine setup ----
     Deep2Engine engine;
