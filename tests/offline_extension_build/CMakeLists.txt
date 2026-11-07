@@ -17,3 +17,17 @@ add_test(NAME offline-extensions-blackbox
     "${Python3_EXECUTABLE}" -m unittest discover
     -s "${RAWRXD_REPO_ROOT}/tests" -p test_offline_extensions_cli.py -v)
 set_tests_properties(offline-extensions-blackbox PROPERTIES TIMEOUT 60)
+
+# Actual no-model cancellation primitive: C++14, multiple concurrent waiters,
+# stop wakeups, predicate transitions and independent A/B request tokens.
+find_package(Threads REQUIRED)
+add_executable(rawrxd-cancel-smoke "${RAWRXD_REPO_ROOT}/tests/cancel_token_smoke.cpp")
+set_target_properties(rawrxd-cancel-smoke PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+target_link_libraries(rawrxd-cancel-smoke PRIVATE Threads::Threads)
+if(MSVC)
+    target_compile_options(rawrxd-cancel-smoke PRIVATE /W4 /WX /EHsc)
+else()
+    target_compile_options(rawrxd-cancel-smoke PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_test(NAME cancel-token-no-model COMMAND $<TARGET_FILE:rawrxd-cancel-smoke>)
+set_tests_properties(cancel-token-no-model PROPERTIES TIMEOUT 30)
