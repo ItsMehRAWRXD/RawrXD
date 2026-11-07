@@ -67,7 +67,7 @@ int wmain(int argc, wchar_t** argv) {
         auto c_binary = temp / L"hello c.exe";
         {
             std::ofstream out(c_source);
-            out << "#include <stdio.h>\\nint main(void) { puts(\\\"C_PIPELINE_OK\\\"); return 0; }\\n";
+            out << "#include <stdio.h>\nint main(void) { puts(\"C_PIPELINE_OK\"); return 0; }\n";
         }
         auto c_compile = run_process(compiler, {L"/nologo", L"/TC", L"/c",
             c_source.wstring(), L"/Fo" + c_object.wstring()}, 60000, temp.wstring());
@@ -82,7 +82,7 @@ int wmain(int argc, wchar_t** argv) {
         require(c_execute.started && !c_execute.timed_out && c_execute.exit_code == 0 &&
                 c_execute.stdout_text.find("C_PIPELINE_OK") != std::string::npos,
                 "C executable output mismatch");
-        std::cout << "PASS: C -> OBJ -> LINK -> EXE -> stdout\\n";
+        std::cout << "PASS: C -> OBJ -> LINK -> EXE -> stdout\n";
 
 
         auto missing = run_process(L"Z:\\rawrxd-nonexistent-compiler.exe", {}, 1000);
