@@ -80,7 +80,7 @@ inline ProcessResult runProcess(const std::wstring& executable,
     PROCESS_INFORMATION pi{};
     // CREATE_SUSPENDED avoids child work escaping before job assignment.
     const DWORD flags = CREATE_SUSPENDED | CREATE_NO_WINDOW;
-    if (!CreateProcessW(executable.c_str(), mutable_command.data(), nullptr, nullptr, TRUE,
+    if (!CreateProcessW(nullptr, mutable_command.data(), nullptr, nullptr, TRUE,
                         flags, nullptr, working_directory.empty() ? nullptr : working_directory.c_str(),
                         &startup, &pi)) {
         result.win32_error = GetLastError(); return result;
