@@ -1,5 +1,12 @@
 name: Windows compiler pipeline acceptance
 on:
+  push:
+    branches:
+      - 'audit/extension-headless-fail-closed-20261105'
+    paths:
+      - '~dev/rawrxd/src/cli/windows_process_runner.hpp'
+      - 'tests/windows_compiler_pipeline_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline.yml'
   workflow_dispatch:
   pull_request:
     paths:
