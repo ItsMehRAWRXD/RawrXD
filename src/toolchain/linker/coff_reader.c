@@ -242,7 +242,10 @@ coff_file_t *coff_read(const char *path) {
     if (strtab_offset > file_size - 4ULL || saved_pos < 0) {
       coff_free(cf); fclose(f); return NULL;
     }
-    if (fseek(f, (long)strtab_offset, SEEK_SET) == 0) {
+    if (fseek(f, (long)strtab_offset, SEEK_SET) != 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
+    {
       uint8_t sz_buf[4];
       if (fread(sz_buf, 1, 4, f) == 4) {
         cf->string_table_size = rd32(sz_buf);
@@ -267,6 +270,9 @@ coff_file_t *coff_read(const char *path) {
           fprintf(stderr, "[coff_reader] %s: invalid string table size\n", path);
           coff_free(cf); fclose(f); return NULL;
         }
+      } else {
+        fprintf(stderr, "[coff_reader] %s: missing COFF string table header\n", path);
+        coff_free(cf); fclose(f); return NULL;
       }
     }
     if (fseek(f, saved_pos, SEEK_SET) != 0) {
@@ -336,9 +342,13 @@ coff_file_t *coff_read(const char *path) {
 
   /*======== Step 6: Load section raw data ========*/
   for (uint16_t i = 0; i < cf->num_sections; i++) {
-    if (cf->sections[i].raw_size == 0 || cf->sections[i].raw_offset == 0) continue;
-    /* BSS sections have no raw data even if characteristics say initialized */
+    if (cf->sections[i].raw_size == 0) continue;
+    /* BSS sections have no initialized raw data. */
     if (cf->sections[i].characteristics & SCN_CNT_UNINITIALIZED) continue;
+    if (cf->sections[i].raw_offset == 0) {
+      fprintf(stderr, "[coff_reader] %s: initialized section missing file offset\n", path);
+      coff_free(cf); fclose(f); return NULL;
+    }
 
     if ((uint64_t)cf->sections[i].raw_offset + cf->sections[i].raw_size > file_size) {
       fprintf(stderr, "[coff_reader] %s: section raw data exceeds file\n", path);
@@ -366,7 +376,11 @@ coff_file_t *coff_read(const char *path) {
    *================================================================*/
   for (uint16_t i = 0; i < cf->num_sections; i++) {
     uint32_t nrelocs = cf->sections[i].reloc_count;
-    if (nrelocs == 0 || cf->sections[i].reloc_offset == 0) continue;
+    if (nrelocs == 0) continue;
+    if (cf->sections[i].reloc_offset == 0) {
+      fprintf(stderr, "[coff_reader] %s: relocations have no file offset\n", path);
+      coff_free(cf); fclose(f); return NULL;
+    }
 
     if ((uint64_t)cf->sections[i].reloc_offset > file_size ||
         fseek(f, (long)cf->sections[i].reloc_offset, SEEK_SET) != 0) {
@@ -384,7 +398,9 @@ coff_file_t *coff_read(const char *path) {
       nrelocs--;
     }
     const uint64_t reloc_bytes = (uint64_t)nrelocs * 10ULL;
-    if (reloc_bytes > file_size - (uint64_t)ftell(f)) {
+    const long reloc_position = ftell(f);
+    if (reloc_position < 0 || (uint64_t)reloc_position > file_size ||
+        reloc_bytes > file_size - (uint64_t)reloc_position) {
       coff_free(cf); fclose(f); return NULL;
     }
 
