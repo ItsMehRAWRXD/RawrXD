@@ -2213,9 +2213,14 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::vector<std::string> contributedCommands = jsonGetStringArray(pkgJson, "commands");
 
     // ---- Register extension ----
+    // Never overwrite an existing live extension without explicit unload.
+    // Replacing its state here would discard lifecycle ownership and callbacks.
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
-        m_extensions[extensionId] = std::move(state);
+        if (m_extensions.find(extensionId) != m_extensions.end()) {
+            return PatchResult::error("Extension already loaded; unload before replacing");
+        }
+        m_extensions.emplace(extensionId, std::move(state));
     }
 
     m_stats.jsExtensionsLoaded++;
