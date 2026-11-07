@@ -9,6 +9,7 @@ on:
       - '~dev/rawrxd/src/core/extension_read_policy.hpp'
       - '~dev/rawrxd/tests/extension_read_smoke.cpp'
       - 'tests/extension_policy_smoke.cpp'
+      - 'tests/extension_subprocess_policy_smoke.cpp'
       - 'tests/extension_integrated_fixture.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
@@ -20,6 +21,7 @@ on:
   pull_request:
     paths:
       - 'tests/extension_policy_smoke.cpp'
+      - 'tests/extension_subprocess_policy_smoke.cpp'
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
       - '~dev/rawrxd/tests/extension_read_smoke.cpp'
@@ -52,6 +54,10 @@ jobs:
         run: |
           g++ -std=c++20 -Wall -Wextra -Werror -pedantic tests/extension_policy_smoke.cpp -o /tmp/rawrxd-extension-policy-edge
           /tmp/rawrxd-extension-policy-edge
+      - name: Execute model-free child-process pipe acceptance
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -pedantic -fsanitize=undefined -fno-omit-frame-pointer tests/extension_subprocess_policy_smoke.cpp -o /tmp/rawrxd-extension-subprocess
+          /tmp/rawrxd-extension-subprocess
       - name: Compile additional model-free policy fixtures
         run: g++ -std=c++17 -Wall -Wextra -Werror -pedantic -I'~dev/rawrxd/src/core' tools/ci/extension_policy_smoke.cpp -o /tmp/rawrxd-extension-policy-extra
       - name: Execute additional policy fixtures
