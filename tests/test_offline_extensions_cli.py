@@ -227,6 +227,17 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.assertIn("recovered\t0", self.cli("recover"))
         self.assertTrue(backup.exists())
 
+    def test_30_manifest_description_cannot_forge_cli_lines(self):
+        src = self.package()
+        (src / "package.json").write_text(json.dumps(dict(
+            name="sample", publisher="example", version="1.0.0",
+            description="line1\nINJECTED\tROW\r")), encoding="utf-8")
+        self.cli("install", src)
+        rows = self.cli("list").splitlines()
+        self.assertEqual(len(rows), 1)
+        self.assertNotIn("\nINJECTED", rows[0])
+        self.assertEqual(len(rows[0].split("\t")), 4)
+
     def test_20_unknown_extensions_fail(self):
         self.cli("info", "nonexistent.extension", ok=False)
         self.cli("remove", "nonexistent.extension", ok=False)
