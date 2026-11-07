@@ -62,7 +62,27 @@ inline ProcessResult Run(const std::wstring& exe, const std::vector<std::wstring
         result.error = "SetInformationJobObject failed";
         CloseHandle(job); close(outRead); close(outWrite); close(errRead); close(errWrite); return result;
     }
-    std::wstring command = Quote(exe);
+    // CreateProcessW with a non-null application name does not search PATH.
+    // Resolve cl.exe/link.exe explicitly while preserving absolute paths.
+    std::wstring resolvedExe = exe;
+    if (exe.find(L'\\\\') == std::wstring::npos &&
+        exe.find(L'/') == std::wstring::npos) {
+        DWORD required = SearchPathW(nullptr, exe.c_str(), nullptr, 0, nullptr, nullptr);
+        if (!required) {
+            result.error = "executable not found on PATH";
+            CloseHandle(job); close(outRead); close(outWrite); close(errRead); close(errWrite);
+            return result;
+        }
+        std::vector<wchar_t> resolved(required);
+        DWORD actual = SearchPathW(nullptr, exe.c_str(), nullptr, required, resolved.data(), nullptr);
+        if (!actual || actual >= required) {
+            result.error = "SearchPathW failed";
+            CloseHandle(job); close(outRead); close(outWrite); close(errRead); close(errWrite);
+            return result;
+        }
+        resolvedExe.assign(resolved.data(), actual);
+    }
+    std::wstring command = Quote(resolvedExe);
     for (const auto& a : args) command += L" " + Quote(a);
     std::vector<wchar_t> mutableCmd(command.begin(), command.end());
     mutableCmd.push_back(0);
@@ -72,7 +92,7 @@ inline ProcessResult Run(const std::wstring& exe, const std::vector<std::wstring
     si.hStdOutput = outWrite; si.hStdError = errWrite;
     PROCESS_INFORMATION pi{};
     // CREATE_SUSPENDED prevents descendants escaping the job before assignment.
-    BOOL ok = CreateProcessW(exe.c_str(), mutableCmd.data(), nullptr, nullptr, TRUE,
+    BOOL ok = CreateProcessW(resolvedExe.c_str(), mutableCmd.data(), nullptr, nullptr, TRUE,
                               CREATE_NO_WINDOW | CREATE_SUSPENDED, nullptr,
                               cwd.empty() ? nullptr : cwd.c_str(), &si, &pi);
     close(outWrite); close(errWrite);
