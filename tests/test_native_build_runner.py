@@ -34,9 +34,9 @@ class RunnerTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "Windows MSVC gate")
     def test_msvc_compile_link_execute(self):
-        if not shutil.which("cl") or not shutil.which("link"):
-            self.skipTest("MSVC developer environment not configured")
-        with tempfile.TemporaryDirectory() as tmp:
+        self.assertIsNotNone(shutil.which("cl"), "MSVC cl.exe missing from Windows CI environment")
+        self.assertIsNotNone(shutil.which("link"), "MSVC link.exe missing from Windows CI environment")
+        with tempfile.TemporaryDirectory(prefix="rawrxd cpp build space ") as tmp:
             root = Path(tmp)
             src = root / "hello.cpp"
             obj = root / "hello.obj"
@@ -56,7 +56,8 @@ class RunnerTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "Windows MSVC gate")
     def test_msvc_c_compile_link_execute(self):
-        self.assertIsNotNone(shutil.which("cl"), "MSVC developer environment missing")
+        self.assertIsNotNone(shutil.which("cl"), "MSVC cl.exe missing from Windows CI environment")
+        self.assertIsNotNone(shutil.which("link"), "MSVC link.exe missing from Windows CI environment")
         with tempfile.TemporaryDirectory(prefix="rawrxd c build space ") as tmp:
             root = Path(tmp)
             src, obj, exe = root / "hello.c", root / "hello.obj", root / "hello.exe"
