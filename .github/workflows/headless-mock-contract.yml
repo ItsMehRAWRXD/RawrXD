@@ -52,6 +52,19 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tests/headless/extension_command_contract.cpp -o /tmp/extension_command_contract
       - name: Run production extension registry contract
         run: timeout 15s /tmp/extension_command_contract
+  linux-extension-sanitizers:
+    name: Linux extension registry ASan UBSan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production registry with sanitizers
+        run: |
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pthread \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/headless/extension_command_contract.cpp -o /tmp/extension_command_sanitized
+      - name: Execute registry lifecycle and concurrent-unload tests
+        run: timeout 30s /tmp/extension_command_sanitized
   windows-extension-contract:
     name: Windows MSVC extension registry contract
     runs-on: windows-latest
