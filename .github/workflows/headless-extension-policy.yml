@@ -30,3 +30,20 @@ jobs:
         run: /tmp/rawrxd_extension_policy_gate
       - name: Run isolated mock-protocol fixture (not product integration)
         run: python3 -m unittest -v tests/headless_mock_protocol_smoke.py
+
+  windows-extension-policy:
+    name: Extension policy (Windows/MSVC)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile production-header policy gate with MSVC
+        shell: cmd
+        run: cl /nologo /std:c++20 /EHsc /W4 /WX tests\\extension_policy_smoke.cpp /Fe:extension_policy_smoke.exe
+      - name: Execute production-header policy gate on Windows
+        shell: pwsh
+        run: .\\extension_policy_smoke.exe
+      - name: Run isolated mock-protocol fixture (not product integration)
+        shell: pwsh
+        run: python -m unittest -v tests/headless_mock_protocol_smoke.py
