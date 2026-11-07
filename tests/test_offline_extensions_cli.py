@@ -276,6 +276,23 @@ class OfflineExtensionAcceptance(unittest.TestCase):
         self.cli("enable", "example.sample")
         self.assertIn("enabled", self.cli("list"))
 
+    def test_34_malformed_state_marker_fails_closed(self):
+        self.cli("install", self.package())
+        marker = self.installed / "example.sample" / ".rawrxd-disabled"
+        marker.write_text("NOT_DISABLED")
+        self.cli("info", "example.sample", ok=False)
+        self.cli("enable", "example.sample", ok=False)
+        self.cli("disable", "example.sample", ok=False)
+        self.assertEqual(self.cli("list"), "")
+
+    def test_35_directory_state_marker_fails_closed(self):
+        self.cli("install", self.package())
+        marker = self.installed / "example.sample" / ".rawrxd-disabled"
+        marker.mkdir()
+        self.cli("info", "example.sample", ok=False)
+        self.cli("disable", "example.sample", ok=False)
+        self.assertEqual(self.cli("list"), "")
+
     def test_20_unknown_extensions_fail(self):
         self.cli("info", "nonexistent.extension", ok=False)
         self.cli("remove", "nonexistent.extension", ok=False)
