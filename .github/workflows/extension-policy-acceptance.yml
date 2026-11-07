@@ -1,0 +1,88 @@
+name: Extension policy acceptance (portable)
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
+      - '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+      - '~dev/rawrxd/tests/extension_adversarial_smoke.cpp'
+      - '~dev/rawrxd/tests/extension_integrated_smoke.cpp'
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '.github/workflows/extension-policy-acceptance.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  extension-policy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Windows GCC toolchain
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Compile production-header acceptance tests
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/extension-policy
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/acceptance.exe '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
+          else
+            c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/acceptance '~dev/rawrxd/tests/extension_policy_acceptance.cpp'
+          fi
+      - name: Compile production command registry acceptance tests
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            c++ -std=c++17 -Wall -Wextra -Werror -o build/extension-policy/commands.exe '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+          else
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/commands '~dev/rawrxd/tests/extension_command_acceptance.cpp'
+          fi
+      - name: Compile adversarial extension integration tests
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/adversarial.exe '~dev/rawrxd/tests/extension_adversarial_smoke.cpp'
+          else
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/adversarial '~dev/rawrxd/tests/extension_adversarial_smoke.cpp'
+          fi
+      - name: Compile integrated extension lifecycle smoke
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/integrated.exe '~dev/rawrxd/tests/extension_integrated_smoke.cpp'
+          else
+            c++ -std=c++17 -Wall -Wextra -Werror -pthread -o build/extension-policy/integrated '~dev/rawrxd/tests/extension_integrated_smoke.cpp'
+          fi
+      - name: Run gates and preserve receipt
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            build/extension-policy/acceptance.exe | tee build/extension-policy/receipt.txt
+            build/extension-policy/commands.exe | tee build/extension-policy/commands-receipt.txt
+            build/extension-policy/adversarial.exe | tee build/extension-policy/adversarial-receipt.txt
+            build/extension-policy/integrated.exe | tee build/extension-policy/integrated-receipt.txt
+          else
+            build/extension-policy/acceptance | tee build/extension-policy/receipt.txt
+            build/extension-policy/commands | tee build/extension-policy/commands-receipt.txt
+            build/extension-policy/adversarial | tee build/extension-policy/adversarial-receipt.txt
+            build/extension-policy/integrated | tee build/extension-policy/integrated-receipt.txt
+          fi
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-policy-${{ matrix.os }}-${{ github.sha }}
+          path: build/extension-policy/*receipt.txt
+          if-no-files-found: warn
