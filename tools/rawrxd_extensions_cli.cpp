@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         else if (command == "remove") {
             store.remove(arg); std::cout << "removed\t" << arg << '\n';
         } else if (command == "recover") {
-            std::cout << "restored\t" << store.recover() << '\n';
+            std::cout << "recovered\t" << store.recover() << '\n';
         }
         return 0;
     } catch (const std::exception& ex) {
