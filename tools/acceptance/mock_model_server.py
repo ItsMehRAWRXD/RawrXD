@@ -2,6 +2,7 @@
 """Loopback-only deterministic OpenAI-compatible mock; NOT model inference."""
 import argparse
 import json
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MODEL = "rawrxd-smoke-mock"
@@ -54,6 +55,10 @@ class Handler(BaseHTTPRequestHandler):
         if any(not isinstance(m, dict) or m.get("role") not in ("system", "developer", "user", "assistant", "tool")
                or not isinstance(m.get("content"), str) for m in data["messages"]):
             return self.reject(400, "invalid message")
+        # Deterministic delayed-A/fast-B scenario for cancellation race tests.
+        # This is test transport behavior, not inference or IDE cancellation.
+        if self.headers.get("X-RawrXD-Test-Delay") == "slow-A":
+            time.sleep(0.25)
         if data.get("stream") is True:
             # SSE has no Content-Length: explicitly close after [DONE] so
             # HTTP/1.1 clients do not wait forever for another event.
