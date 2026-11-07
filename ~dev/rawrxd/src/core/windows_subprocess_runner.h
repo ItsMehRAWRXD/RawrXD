@@ -104,7 +104,8 @@ inline ProcessResult run(const std::vector<std::wstring>& argv,
     if (!SetInformationJobObject(job.h, JobObjectExtendedLimitInformation, &limits, sizeof(limits))) {
         result.error = "job configuration failed"; return result;
     }
-    BOOL started = CreateProcessW(argv[0].c_str(), mutableCommand.data(), nullptr, nullptr,
+    // Null application name enables PATH lookup for cl.exe and link.exe.
+    BOOL started = CreateProcessW(nullptr, mutableCommand.data(), nullptr, nullptr,
                                   TRUE, CREATE_NO_WINDOW | CREATE_SUSPENDED,
                                   nullptr, workingDirectory.empty() ? nullptr : workingDirectory.c_str(),
                                   &si, &pi);
