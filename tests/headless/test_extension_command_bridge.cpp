@@ -49,6 +49,13 @@ int main(){
  CHECK("37 reject DEL command", !h.RegisterCommand(std::string("bad")+char(127), [](auto const&){return true;}));
  CHECK("38 preserve UTF8 command bytes", h.RegisterCommand("ext.\xC3\xA9", [](auto const&){return true;}) && h.ExecuteCommand("ext.\xC3\xA9", ""));
  CHECK("39 cleanup after validation tests", (h.Shutdown(), h.GetAvailableCommands().empty()));
+ h.Initialize();
+ CHECK("40 reject embedded NUL owner", !h.RegisterExtensionCommand(std::string("a\0b",3), "owner.nul", [](auto const&){return true;}));
+ CHECK("41 reject DEL owner", !h.RegisterExtensionCommand(std::string("a")+char(127), "owner.del", [](auto const&){return true;}));
+ CHECK("42 reject oversized owner", !h.RegisterExtensionCommand(std::string(257, 'a'), "owner.long", [](auto const&){return true;}));
+ CHECK("43 allow 256-byte owner", h.RegisterExtensionCommand(std::string(256, 'a'), "owner.max", [](auto const&){return true;}));
+ CHECK("44 owner unregister removes max-length command", (h.UnregisterExtensionCommands(std::string(256, 'a')), !h.ExecuteCommand("owner.max", "")));
+ CHECK("45 shutdown after owner tests", (h.Shutdown(), h.GetAvailableCommands().empty()));
  std::cout << "RESULT " << passed << " passed " << failed << " failed\n";
  return failed ? 1 : 0;
 }
