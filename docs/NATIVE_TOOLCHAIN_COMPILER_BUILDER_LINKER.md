@@ -21,7 +21,7 @@ Example for a minimal x64 PE smoke fixture (no CRT):
 
 \`\`\`sh
 python tools/rawrxd_native_toolchain.py build \
-  --workspace . --source tests/fixtures/main.c \
+  --workspace . --source tools/tests/fixtures/native_pe_smoke.c \
   --format pe --entry main --output out/minimal.exe \
   --approve-mutations
 \`\`\`
