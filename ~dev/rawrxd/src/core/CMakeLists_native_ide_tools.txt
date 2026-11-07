@@ -102,9 +102,13 @@ endif()
 
 # Integration with existing RawrXD components
 # Link against hotpatch_playback for model analysis
-target_link_libraries(native_ide_tools PUBLIC
-    hotpatch_playback
-)
+# This module can be built standalone for compiler/linker smoke tests.
+# Do not emit a bare -lhotpatch_playback / hotpatch_playback.lib dependency
+# when the parent project has not defined that target.
+if(TARGET hotpatch_playback)
+    target_link_libraries(native_ide_tools PUBLIC hotpatch_playback)
+    target_compile_definitions(native_ide_tools PUBLIC RAWRXD_HOTPATCH_PLAYBACK_ENABLED)
+endif()
 
 # Optional: Link against inference components if available
 if(TARGET inference_playback_bridge)
