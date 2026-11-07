@@ -53,7 +53,7 @@ class MockContractTests(unittest.TestCase):
 
     def test_invalid_utf8_returns_json_error(self):
         conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
-        conn.request("POST", "/v1/chat/completions", body=b"\\xff",
+        conn.request("POST", "/v1/chat/completions", body=bytes([0xff]),
                      headers={"Content-Type": "application/json"})
         response = conn.getresponse()
         self.assertEqual(response.status, 400)
