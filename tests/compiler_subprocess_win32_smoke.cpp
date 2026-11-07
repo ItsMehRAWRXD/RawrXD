@@ -42,7 +42,7 @@ int wmain() {
     const auto c_binary = root / "hello_c.exe";
     {
         std::ofstream f(c_source);
-        f << "#include <stdio.h>\\nint main(void){puts(\\\"RAWRXD_C_LINK_OK\\\");return 0;}\\n";
+        f << "#include <stdio.h>\nint main(void){puts(\"RAWRXD_C_LINK_OK\");return 0;}\n";
     }
     const auto c_compile = runProcess(L"cl.exe",
         {L"/nologo", L"/TC", L"/c", L"/Fo:" + c_object.wstring(), c_source.wstring()},
