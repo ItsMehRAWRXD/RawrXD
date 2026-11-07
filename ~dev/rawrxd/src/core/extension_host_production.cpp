@@ -61,8 +61,15 @@ public:
         if (std::any_of(extensionId.begin(), extensionId.end(), [](unsigned char c) { return std::isspace(c) != 0; })) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!initialized_ || commands_.find(command) != commands_.end()) return false;
-        commands_.emplace(command, std::move(handler));
-        owners_[command] = extensionId;
+        // Install ownership first, then the callback. If callback insertion
+        // throws, roll ownership back; never leave an executable orphan.
+        owners_.emplace(command, extensionId);
+        try {
+            commands_.emplace(command, std::move(handler));
+        } catch (...) {
+            owners_.erase(command);
+            throw;
+        }
         return true;
     }
 
