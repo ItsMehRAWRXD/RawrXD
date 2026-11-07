@@ -96,8 +96,8 @@ jobs:
           int main(int argc, char**) {
               if (argc > 1) { std::this_thread::sleep_for(std::chrono::seconds(10)); return 0; }
               for (int i=0;i<4096;++i) {
-                  std::printf("STDOUT-%04d-abcdefghijklmnopqrstuvwxyz\\n", i);
-                  std::fprintf(stderr,"STDERR-%04d-abcdefghijklmnopqrstuvwxyz\\n", i);
+                  std::printf("STDOUT-%04d-abcdefghijklmnopqrstuvwxyz\n", i);
+                  std::fprintf(stderr,"STDERR-%04d-abcdefghijklmnopqrstuvwxyz\n", i);
               }
               std::fflush(stdout); std::fflush(stderr);
               return 0;
