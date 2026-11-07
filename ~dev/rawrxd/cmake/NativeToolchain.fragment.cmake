@@ -26,6 +26,9 @@ endif()
 if(EXISTS "${_RAWR_TOOLCHAIN_ROOT}/tools/rawrxd_native_toolchain.py")
     install(PROGRAMS "${_RAWR_TOOLCHAIN_ROOT}/tools/rawrxd_native_toolchain.py"
             DESTINATION bin)
+    # Required sibling module: without it, the packaged CLI fails at import.
+    install(FILES "${_RAWR_TOOLCHAIN_ROOT}/tools/rawrxd_process_runner.py"
+            DESTINATION bin)
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND AND NOT TARGET RawrXD-NativeToolchain-Acceptance)
         add_custom_target(RawrXD-NativeToolchain-Acceptance
@@ -34,5 +37,11 @@ if(EXISTS "${_RAWR_TOOLCHAIN_ROOT}/tools/rawrxd_native_toolchain.py")
                 -p test_native_toolchain.py -v
             WORKING_DIRECTORY "${_RAWR_TOOLCHAIN_ROOT}"
             COMMENT "Real, model-free compiler/build/link acceptance tests")
+        add_custom_target(RawrXD-Subprocess-Acceptance
+            COMMAND "${Python3_EXECUTABLE}" -m unittest discover
+                -s "${_RAWR_TOOLCHAIN_ROOT}/tools/tests"
+                -p test_process_runner.py -v
+            WORKING_DIRECTORY "${_RAWR_TOOLCHAIN_ROOT}"
+            COMMENT "Concurrent bounded subprocess pipes and timeout tree-kill gates")
     endif()
 endif()
