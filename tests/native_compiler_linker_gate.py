@@ -22,7 +22,7 @@ MAIN = r"""
 extern "C" std::uint32_t rawrxd_build_fixture(std::uint32_t);
 int main() { return rawrxd_build_fixture(11u) == 80u ? 0 : 7; }
 """
-BAD = "int main() { return missing_rawrxd_symbol(); }\n"
+BAD = "extern int missing_rawrxd_symbol(); int main() { return missing_rawrxd_symbol(); }\n"
 
 def run(argv, cwd, expect_success=True):
     proc = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=120)
