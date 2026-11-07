@@ -555,33 +555,41 @@ QJsonObject AgenticExecutor::runExecutable(const QString& executablePath, const 
     result["executable"] = executablePath;
     result["arguments"] = QJsonArray::fromStringList(args);
 
-    qInfo() << "[AgenticExecutor] Running executable:" << executablePath;
-    emit logMessage("Running: " + executablePath);
-
-    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
-    std::vector<std::string> nativeArgs;
-    for (const auto& arg : args) {
-        nativeArgs.push_back(arg.toStdString());
-    }
-    NativeProcessResult procResult = NativeProcess::execute(
-        executablePath.toStdString(),
-        nativeArgs,
-        "",
-        -1  // no timeout
-    );
-
-    result["stdout"] = QString::fromStdString(procResult.stdoutOutput);
-    result["stderr"] = QString::fromStdString(procResult.stderrOutput);
-    result["exit_code"] = procResult.exitCode();
-    result["success"] = (procResult.exitCode() == 0);
-
-    if (result["success"].toBool()) {
-        qInfo() << "[AgenticExecutor] Execution completed successfully";
-        emit logMessage("Execution completed");
-    } else {
-        qWarning() << "[AgenticExecutor] Execution failed with code" << procResult.exitCode();
+    QProcess process;
+    process.setProcessChannelMode(QProcess::SeparateChannels);
+    process.start(executablePath, args);
+    if (!process.waitForStarted(10000)) {
+        result["success"] = false;
+        result["exit_code"] = -1;
+        result["error"] = process.errorString();
+        addToMemory("last_execution", result);
+        return result;
     }
 
+    QElapsedTimer timer;
+    timer.start();
+    constexpr qint64 timeoutMs = 30000;
+    QByteArray stdoutBytes, stderrBytes;
+    while (process.state() != QProcess::NotRunning && timer.elapsed() < timeoutMs) {
+        process.waitForReadyRead(50);
+        stdoutBytes += process.readAllStandardOutput();
+        stderrBytes += process.readAllStandardError();
+    }
+    const bool timedOut = process.state() != QProcess::NotRunning;
+    if (timedOut) {
+        process.kill();
+        process.waitForFinished(5000);
+    }
+    stdoutBytes += process.readAllStandardOutput();
+    stderrBytes += process.readAllStandardError();
+    result["stdout"] = QString::fromUtf8(stdoutBytes);
+    result["stderr"] = QString::fromUtf8(stderrBytes);
+    result["exit_code"] = process.exitCode();
+    result["timed_out"] = timedOut;
+    result["success"] = !timedOut &&
+                        process.exitStatus() == QProcess::NormalExit &&
+                        process.exitCode() == 0;
+    if (timedOut) result["error"] = "Executable exceeded 30-second timeout";
     addToMemory("last_execution", result);
     return result;
 }
