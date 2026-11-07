@@ -52,10 +52,16 @@ static void resolve_symbol_name(const uint8_t *raw_name, const char *string_tabl
   if (raw_name[0] == 0 && raw_name[1] == 0 && raw_name[2] == 0 && raw_name[3] == 0) {
     /* String table reference */
     uint32_t offset = rd32(raw_name + 4);
-    if (string_table && offset < string_table_size) {
-      size_t len = strlen(string_table + offset);
+    if (string_table && offset >= 4 && offset < string_table_size) {
+      const char *start = string_table + offset;
+      const char *end = (const char *)memchr(start, '\0', string_table_size - offset);
+      if (!end) {
+        snprintf(out, out_sz, "<invalid-strtab@%u>", offset);
+        return;
+      }
+      size_t len = (size_t)(end - start);
       if (len >= out_sz) len = out_sz - 1;
-      memcpy(out, string_table + offset, len);
+      memcpy(out, start, len);
       out[len] = '\0';
     } else {
       snprintf(out, out_sz, "<strtab@%u>", offset);
@@ -79,12 +85,16 @@ static void resolve_section_name(const uint8_t *raw_name, const char *string_tab
                                  uint32_t string_table_size, char *out, size_t out_sz) {
   if (raw_name[0] == '/') {
     uint32_t offset = (uint32_t)strtoul((const char *)raw_name + 1, NULL, 10);
-    if (string_table && offset < string_table_size) {
-      size_t len = strlen(string_table + offset);
-      if (len >= out_sz) len = out_sz - 1;
-      memcpy(out, string_table + offset, len);
-      out[len] = '\0';
-      return;
+    if (string_table && offset >= 4 && offset < string_table_size) {
+      const char *start = string_table + offset;
+      const char *end = (const char *)memchr(start, '\0', string_table_size - offset);
+      if (end) {
+        size_t len = (size_t)(end - start);
+        if (len >= out_sz) len = out_sz - 1;
+        memcpy(out, start, len);
+        out[len] = '\0';
+        return;
+      }
     }
   }
   /* Standard 8-char name */
@@ -112,6 +122,12 @@ coff_file_t *coff_read(const char *path) {
     return NULL;
   }
 
+  /* Determine actual file size once; validate all offsets before allocating.
+   * Invalid/truncated COFF must fail closed rather than producing partial PE. */
+  if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return NULL; }
+  long file_length = ftell(f);
+  if (file_length < 20 || fseek(f, 0, SEEK_SET) != 0) { fclose(f); return NULL; }
+  uint64_t file_size = (uint64_t)file_length;
   coff_file_t *cf = (coff_file_t *)calloc(1, sizeof(coff_file_t));
   if (!cf) { fclose(f); return NULL; }
   strncpy(cf->source_path, path, sizeof(cf->source_path) - 1);
@@ -147,9 +163,20 @@ coff_file_t *coff_read(const char *path) {
     free(cf); fclose(f); return NULL;
   }
 
-  /* Skip optional header if present (shouldn't be for .obj, but handle it) */
-  if (cf->optional_hdr_size > 0) {
-    fseek(f, cf->optional_hdr_size, SEEK_CUR);
+  /* No silent integer wraparound, truncated section table or huge symbol
+   * allocation accepted; a valid native object must fit the file envelope. */
+  uint64_t headers_end = 20ULL + cf->optional_hdr_size + 40ULL * cf->num_sections;
+  uint64_t symbols_end = (uint64_t)cf->sym_table_offset + 18ULL * cf->num_symbols;
+  if (cf->num_sections == 0 || cf->num_symbols > 1048576 ||
+      headers_end > file_size ||
+      ((cf->sym_table_offset == 0) != (cf->num_symbols == 0)) ||
+      (cf->num_symbols && symbols_end > file_size)) {
+    fprintf(stderr, "[coff_reader] %s: invalid/truncated COFF table bounds\n", path);
+    coff_free(cf); fclose(f); return NULL;
+  }
+  if (cf->optional_hdr_size > 0 &&
+      fseek(f, cf->optional_hdr_size, SEEK_CUR) != 0) {
+    coff_free(cf); fclose(f); return NULL;
   }
 
   /*======== Step 2: Section Headers (40 bytes each) ========
@@ -174,7 +201,7 @@ coff_file_t *coff_read(const char *path) {
   for (uint16_t i = 0; i < cf->num_sections; i++) {
     if (fread(sec_raw, 1, 40, f) != 40) {
       fprintf(stderr, "[coff_reader] %s: truncated section header %u\n", path, i);
-      break;
+      coff_free(cf); fclose(f); return NULL;
     }
     /* Store raw name bytes temporarily; will resolve after loading string table */
     memcpy(cf->sections[i].name, sec_raw, 8);
@@ -210,13 +237,20 @@ coff_file_t *coff_read(const char *path) {
    * Minimum size is 4 (just the size field, meaning empty table).
    *========================================*/
   if (cf->sym_table_offset > 0 && cf->num_symbols > 0) {
-    uint32_t strtab_offset = cf->sym_table_offset + (cf->num_symbols * 18);
+    uint64_t strtab_offset = (uint64_t)cf->sym_table_offset + (uint64_t)cf->num_symbols * 18ULL;
     long saved_pos = ftell(f);
-    if (fseek(f, strtab_offset, SEEK_SET) == 0) {
+    if (strtab_offset > file_size - 4ULL || saved_pos < 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
+    if (fseek(f, (long)strtab_offset, SEEK_SET) != 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
+    {
       uint8_t sz_buf[4];
       if (fread(sz_buf, 1, 4, f) == 4) {
         cf->string_table_size = rd32(sz_buf);
-        if (cf->string_table_size >= 4 && cf->string_table_size < 0x10000000) {
+        if (cf->string_table_size >= 4 && cf->string_table_size <= file_size - strtab_offset &&
+            cf->string_table_size < 0x10000000) {
           cf->string_table = (char *)calloc(1, cf->string_table_size);
           if (cf->string_table) {
             /* Copy size field as first 4 bytes */
@@ -226,13 +260,24 @@ coff_file_t *coff_read(const char *path) {
               size_t remaining = cf->string_table_size - 4;
               if (fread(cf->string_table + 4, 1, remaining, f) != remaining) {
                 fprintf(stderr, "[coff_reader] %s: truncated string table\n", path);
+                coff_free(cf); fclose(f); return NULL;
               }
             }
+          } else {
+            coff_free(cf); fclose(f); return NULL;
           }
+        } else {
+          fprintf(stderr, "[coff_reader] %s: invalid string table size\n", path);
+          coff_free(cf); fclose(f); return NULL;
         }
+      } else {
+        fprintf(stderr, "[coff_reader] %s: missing COFF string table header\n", path);
+        coff_free(cf); fclose(f); return NULL;
       }
     }
-    fseek(f, saved_pos, SEEK_SET);
+    if (fseek(f, saved_pos, SEEK_SET) != 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
   }
 
   /*======== Step 4: Symbol Table (18 bytes each) ========
@@ -246,13 +291,16 @@ coff_file_t *coff_read(const char *path) {
    *====================================================*/
   if (cf->sym_table_offset > 0 && cf->num_symbols > 0) {
     cf->symbols = (coff_symbol_t *)calloc((size_t)cf->num_symbols, sizeof(coff_symbol_t));
+    if (!cf->symbols) { coff_free(cf); fclose(f); return NULL; }
     if (cf->symbols) {
-      fseek(f, cf->sym_table_offset, SEEK_SET);
+      if (fseek(f, cf->sym_table_offset, SEEK_SET) != 0) {
+        coff_free(cf); fclose(f); return NULL;
+      }
       uint8_t sym_raw[18];
       for (uint32_t i = 0; i < cf->num_symbols; i++) {
         if (fread(sym_raw, 1, 18, f) != 18) {
           fprintf(stderr, "[coff_reader] %s: truncated symbol %u\n", path, i);
-          break;
+          coff_free(cf); fclose(f); return NULL;
         }
         resolve_symbol_name(sym_raw, cf->string_table, cf->string_table_size,
                             cf->symbols[i].name, sizeof(cf->symbols[i].name));
@@ -268,7 +316,9 @@ coff_file_t *coff_read(const char *path) {
         if (cf->symbols[i].num_aux > 0) {
           for (uint8_t a = 0; a < cf->symbols[i].num_aux && (i + 1) < cf->num_symbols; a++) {
             i++;
-            if (fread(sym_raw, 1, 18, f) != 18) break;
+            if (fread(sym_raw, 1, 18, f) != 18) {
+              coff_free(cf); fclose(f); return NULL;
+            }
             /* Mark aux records with empty name */
             cf->symbols[i].name[0] = '\0';
             cf->symbols[i].storage_class = 0xFF; /* sentinel: aux record */
@@ -292,18 +342,29 @@ coff_file_t *coff_read(const char *path) {
 
   /*======== Step 6: Load section raw data ========*/
   for (uint16_t i = 0; i < cf->num_sections; i++) {
-    if (cf->sections[i].raw_size == 0 || cf->sections[i].raw_offset == 0) continue;
-    /* BSS sections have no raw data even if characteristics say initialized */
+    if (cf->sections[i].raw_size == 0) continue;
+    /* BSS sections have no initialized raw data. */
     if (cf->sections[i].characteristics & SCN_CNT_UNINITIALIZED) continue;
+    if (cf->sections[i].raw_offset == 0) {
+      fprintf(stderr, "[coff_reader] %s: initialized section missing file offset\n", path);
+      coff_free(cf); fclose(f); return NULL;
+    }
 
+    if ((uint64_t)cf->sections[i].raw_offset + cf->sections[i].raw_size > file_size) {
+      fprintf(stderr, "[coff_reader] %s: section raw data exceeds file\n", path);
+      coff_free(cf); fclose(f); return NULL;
+    }
     cf->sections[i].data = (uint8_t *)calloc(1, cf->sections[i].raw_size);
-    if (!cf->sections[i].data) continue;
+    if (!cf->sections[i].data) { coff_free(cf); fclose(f); return NULL; }
 
-    fseek(f, cf->sections[i].raw_offset, SEEK_SET);
+    if (fseek(f, (long)cf->sections[i].raw_offset, SEEK_SET) != 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
     size_t rd = fread(cf->sections[i].data, 1, cf->sections[i].raw_size, f);
     if (rd != cf->sections[i].raw_size) {
       fprintf(stderr, "[coff_reader] %s: section %s: read %zu/%u bytes\n",
               path, cf->sections[i].name, rd, cf->sections[i].raw_size);
+      coff_free(cf); fclose(f); return NULL;
     }
   }
 
@@ -315,27 +376,43 @@ coff_file_t *coff_read(const char *path) {
    *================================================================*/
   for (uint16_t i = 0; i < cf->num_sections; i++) {
     uint32_t nrelocs = cf->sections[i].reloc_count;
-    if (nrelocs == 0 || cf->sections[i].reloc_offset == 0) continue;
+    if (nrelocs == 0) continue;
+    if (cf->sections[i].reloc_offset == 0) {
+      fprintf(stderr, "[coff_reader] %s: relocations have no file offset\n", path);
+      coff_free(cf); fclose(f); return NULL;
+    }
 
-    fseek(f, cf->sections[i].reloc_offset, SEEK_SET);
+    if ((uint64_t)cf->sections[i].reloc_offset > file_size ||
+        fseek(f, (long)cf->sections[i].reloc_offset, SEEK_SET) != 0) {
+      coff_free(cf); fclose(f); return NULL;
+    }
 
     /* Handle extended relocation count */
     if ((cf->sections[i].characteristics & SCN_LNK_NRELOC_OVFL) && nrelocs == 0xFFFF) {
       uint8_t first_reloc[10];
-      if (fread(first_reloc, 1, 10, f) == 10) {
-        nrelocs = rd32(first_reloc);  /* actual count from first dummy reloc */
-        /* First entry is consumed; remaining = nrelocs - 1 */
-        if (nrelocs > 0) nrelocs--;
+      if (fread(first_reloc, 1, 10, f) != 10) {
+        coff_free(cf); fclose(f); return NULL;
       }
+      nrelocs = rd32(first_reloc);
+      if (nrelocs == 0) { coff_free(cf); fclose(f); return NULL; }
+      nrelocs--;
+    }
+    const uint64_t reloc_bytes = (uint64_t)nrelocs * 10ULL;
+    const long reloc_position = ftell(f);
+    if (reloc_position < 0 || (uint64_t)reloc_position > file_size ||
+        reloc_bytes > file_size - (uint64_t)reloc_position) {
+      coff_free(cf); fclose(f); return NULL;
     }
 
     cf->sections[i].relocs = (coff_reloc_t *)calloc((size_t)nrelocs, sizeof(coff_reloc_t));
-    if (!cf->sections[i].relocs) { cf->sections[i].reloc_count = 0; continue; }
+    if (!cf->sections[i].relocs) { coff_free(cf); fclose(f); return NULL; }
     cf->sections[i].reloc_count = nrelocs;
 
     uint8_t rel_raw[10];
     for (uint32_t r = 0; r < nrelocs; r++) {
-      if (fread(rel_raw, 1, 10, f) != 10) break;
+      if (fread(rel_raw, 1, 10, f) != 10) {
+        coff_free(cf); fclose(f); return NULL;
+      }
       cf->sections[i].relocs[r].virtual_addr  = rd32(rel_raw + 0);
       cf->sections[i].relocs[r].symbol_index  = rd32(rel_raw + 4);
       cf->sections[i].relocs[r].type          = rd16(rel_raw + 8);

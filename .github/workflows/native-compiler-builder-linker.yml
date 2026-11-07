@@ -1,0 +1,75 @@
+name: RawrXD Native Compiler Builder Linker Acceptance
+on:
+  push:
+    paths:
+      - "tools/rawrxd_native_toolchain.py"
+      - "tools/rawrxd_process_runner.py"
+      - "tools/tests/test_process_runner.py"
+      - "tools/tests/test_native_toolchain.py"
+      - "src/toolchain/linker/**"
+      - "~dev/rawrxd/cmake/NativeToolchain.fragment.cmake"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - ".github/workflows/native-compiler-builder-linker.yml"
+  pull_request:
+    paths:
+      - "tools/rawrxd_native_toolchain.py"
+      - "tools/rawrxd_process_runner.py"
+      - "tools/tests/test_process_runner.py"
+      - "tools/tests/test_native_toolchain.py"
+      - "src/toolchain/linker/**"
+      - "~dev/rawrxd/cmake/NativeToolchain.fragment.cmake"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - ".github/workflows/native-compiler-builder-linker.yml"
+  workflow_dispatch:
+
+jobs:
+  linux-clang-coff-and-cmake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tool availability
+        run: |
+          python3 --version
+          clang-cl --version
+          lld-link --version
+          cmake --version
+          ninja --version
+      - name: Test concurrent compiler output and process-tree timeout
+        run: python3 -m unittest discover -s tools/tests -p test_process_runner.py -v
+      - name: Execute actual compiler, builder and linker black-box suite
+        run: python3 -m unittest discover -s tools/tests -p test_native_toolchain.py -v
+      - name: Build RawrXD's own PE linker and diagnostic tool
+        run: |
+          cmake -S src/toolchain/linker -B .build/rawrxd-linker -G Ninja
+          cmake --build .build/rawrxd-linker --parallel
+      - name: Gate actual RawrXD linker on COFF to PE acceptance
+        run: ctest --test-dir .build/rawrxd-linker --output-on-failure -V
+
+  windows-msvc-and-pe:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Verify MSVC compiler and linker tools
+        shell: cmd
+        run: |
+          where cl
+          where link
+          python --version
+          cmake --version
+      - name: Windows process-tree cancellation and stdout/stderr stress
+        shell: pwsh
+        run: python -m unittest discover -s tools/tests -p test_process_runner.py -v
+      - name: Execute real Windows x64 compile-link acceptance
+        shell: pwsh
+        run: python -m unittest discover -s tools/tests -p test_native_toolchain.py -v
+      - name: Build the actual standalone RawrXD PE linker
+        shell: pwsh
+        run: |
+          cmake -S src/toolchain/linker -B .build/rawrxd-linker -G "Visual Studio 17 2022" -A x64
+          cmake --build .build/rawrxd-linker --config Release --parallel
+      - name: Run native COFF to PE positive/negative linker tests
+        shell: pwsh
+        run: ctest --test-dir .build/rawrxd-linker -C Release --output-on-failure -V
