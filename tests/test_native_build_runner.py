@@ -54,6 +54,25 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(run_result["exit_code"], 0, run_result)
             self.assertEqual(run_result["stdout"].strip(), "RAWRXD_NATIVE_OK")
 
+    @unittest.skipUnless(os.name == "nt", "Windows MSVC gate")
+    def test_msvc_c_compile_link_execute(self):
+        self.assertIsNotNone(shutil.which("cl"), "MSVC developer environment missing")
+        with tempfile.TemporaryDirectory(prefix="rawrxd c build space ") as tmp:
+            root = Path(tmp)
+            src, obj, exe = root / "hello.c", root / "hello.obj", root / "hello.exe"
+            src.write_text('#include <stdio.h>\\nint main(void){puts("RAWRXD_C_OK");return 0;}\\n')
+            compile_result = execute(["cl", "/nologo", "/TC", "/c", str(src),
+                                      "/Fo" + str(obj)], 60, tmp)
+            self.assertEqual(compile_result["exit_code"], 0, compile_result)
+            self.assertTrue(obj.is_file())
+            link_result = execute(["link", "/nologo", str(obj),
+                                   "/OUT:" + str(exe)], 60, tmp)
+            self.assertEqual(link_result["exit_code"], 0, link_result)
+            self.assertTrue(exe.is_file())
+            run_result = execute([str(exe)], 10, tmp)
+            self.assertEqual(run_result["exit_code"], 0, run_result)
+            self.assertEqual(run_result["stdout"].strip(), "RAWRXD_C_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
