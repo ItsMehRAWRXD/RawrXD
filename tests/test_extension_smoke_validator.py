@@ -45,6 +45,9 @@ class SmokeTranscriptValidation(unittest.TestCase):
             "RESULT 60/60 checks; PASS", "prefix RESULT 60/60 checks; PASS"), 0))
 
 
+    def test_missing_terminal_newline(self):
+        self.assertFalse(validate_output(self.valid.rstrip("\n"), 0))
+
     def test_empty_output(self):
         self.assertFalse(validate_output("", 0))
 
