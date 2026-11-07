@@ -20,7 +20,12 @@ static std::wstring quote(const std::wstring& s) {
 static void drain(HANDLE pipe, HANDLE output) {
     char buf[8192]; DWORD n;
     while(ReadFile(pipe,buf,sizeof(buf),&n,nullptr) && n) {
-        DWORD wrote=0; WriteFile(output,buf,n,&wrote,nullptr);
+        DWORD offset=0;
+        while(offset<n) {
+            DWORD wrote=0;
+            if(!WriteFile(output,buf+offset,n-offset,&wrote,nullptr) || !wrote) break;
+            offset+=wrote;
+        }
     }
     CloseHandle(pipe);
 }
@@ -60,7 +65,13 @@ static int run(const std::vector<std::wstring>& argv, DWORD timeout) {
     }
     std::thread stdoutThread(drain,outRead,GetStdHandle(STD_OUTPUT_HANDLE));
     std::thread stderrThread(drain,errRead,GetStdHandle(STD_ERROR_HANDLE));
-    ResumeThread(pi.hThread);
+    if(ResumeThread(pi.hThread)==static_cast<DWORD>(-1)) {
+        TerminateJobObject(job,125);
+        WaitForSingleObject(pi.hProcess,INFINITE);
+        stdoutThread.join();stderrThread.join();
+        CloseHandle(pi.hThread);CloseHandle(pi.hProcess);CloseHandle(job);
+        return 125;
+    }
     DWORD wait=WaitForSingleObject(pi.hProcess,timeout);
     int code=125;
     if(wait==WAIT_TIMEOUT) {
