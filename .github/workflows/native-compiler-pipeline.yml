@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'src/agentic_executor.cpp'
+      - 'tools/rawrxd_msvc_runner.cpp'
       - 'tests/native_compiler_pipeline/**'
       - '.github/workflows/native-compiler-pipeline.yml'
   pull_request:
@@ -46,3 +47,35 @@ jobs:
           & cl /nologo /c $bad "/Fo$(Join-Path $dir 'bad.obj')"
           if ($LASTEXITCODE -eq 0) { throw 'Invalid C++ unexpectedly compiled' }
           Write-Host 'MSVC_COMPILER_ERROR_GATE PASS'
+
+      - name: Runner integration with real MSVC and C pipeline
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          & cl /nologo /EHsc /std:c++17 tools/rawrxd_msvc_runner.cpp "/Fe:$(Join-Path $dir 'runner.exe')"
+          if ($LASTEXITCODE -ne 0) { throw 'Runner build failed' }
+          $runner = Join-Path $dir 'runner.exe'
+          $compiler = (Get-Command cl.exe).Source
+          $linker = (Get-Command link.exe).Source
+          $c = Join-Path $dir 'hello.c'
+          $obj = Join-Path $dir 'hello_c.obj'
+          $exe = Join-Path $dir 'hello_c.exe'
+          Set-Content -Encoding ascii $c 'int main(void) { return 23; }'
+          & $runner 120000 -- $compiler /nologo /c $c "/Fo$obj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $obj)) { throw 'Runner C compile failed' }
+          & $runner 120000 -- $linker /nologo $obj "/OUT:$exe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $exe)) { throw 'Runner C link failed' }
+          & $runner 10000 -- $exe
+          if ($LASTEXITCODE -ne 23) { throw 'Runner C execute/exit code failed' }
+          $cpp = Join-Path $dir 'hello2.cpp'
+          $cppobj = Join-Path $dir 'hello2.obj'
+          $cppexe = Join-Path $dir 'hello2.exe'
+          Set-Content -Encoding ascii $cpp 'int main() { return 17; }'
+          & $runner 120000 -- $compiler /nologo /EHsc /c $cpp "/Fo$cppobj"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $cppobj)) { throw 'Runner C++ compile failed' }
+          & $runner 120000 -- $linker /nologo $cppobj "/OUT:$cppexe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $cppexe)) { throw 'Runner C++ link failed' }
+          & $runner 10000 -- $cppexe
+          if ($LASTEXITCODE -ne 17) { throw 'Runner C++ execute failed' }
+          Write-Host 'RUNNER_C_AND_CPP_PIPELINES PASS'
