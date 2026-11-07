@@ -42,10 +42,19 @@ int main(int argc, char** argv) {
         }
         Store store(root);
         const std::string arg = withArg ? argv[i] : "";
-        auto show = [](const RawrXD::OfflineExtensions::Extension& e) {
+        // Tabular CLI output must not permit manifest-controlled newlines or
+        // tabs to forge additional rows/columns in caller-visible results.
+        auto safeField = [](std::string field) {
+            for (char& ch : field) {
+                if (static_cast<unsigned char>(ch) < 0x20 || ch == 0x7f)
+                    ch = ' ';
+            }
+            return field;
+        };
+        auto show = [&](const RawrXD::OfflineExtensions::Extension& e) {
             std::cout << e.id << '\t' << e.version << '\t'
                       << (e.enabled ? "enabled" : "disabled") << '\t'
-                      << e.description << '\n';
+                      << safeField(e.description) << '\n';
         };
         if (command == "list") {
             for (const auto& e : store.list()) show(e);
