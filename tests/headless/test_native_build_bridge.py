@@ -64,7 +64,7 @@ class NativeBuildBridgeTests(unittest.TestCase):
     def test_compile_object_link_run_cpp(self):
         if not self.compiler:
             self.skipTest("no C++ compiler installed")
-        self.source.write_text("int main(){return 0;}\\n")
+        self.source.write_text("int main(){return 0;}\n")
         result = module.run_build(self.source, self.output, self.compiler, run=True)
         self.assertTrue(result["ok"], result)
         self.assertEqual([x["stage"] for x in result["stages"]], ["compile", "link", "run"])
@@ -75,7 +75,7 @@ class NativeBuildBridgeTests(unittest.TestCase):
         if not compiler:
             self.skipTest("no C compiler installed")
         source = self.root / "main.c"
-        source.write_text("int main(void){return 0;}\\n")
+        source.write_text("int main(void){return 0;}\n")
         result = module.run_build(source, self.output, compiler, run=True)
         self.assertTrue(result["ok"], result)
 
@@ -95,7 +95,7 @@ class NativeBuildBridgeTests(unittest.TestCase):
     def test_nonzero_program_exit_fails(self):
         if not self.compiler:
             self.skipTest("no C++ compiler installed")
-        self.source.write_text("int main(){return 7;}\\n")
+        self.source.write_text("int main(){return 7;}\n")
         result = module.run_build(self.source, self.output, self.compiler, run=True)
         self.assertFalse(result["ok"])
         self.assertEqual(result["stage"], "run")
