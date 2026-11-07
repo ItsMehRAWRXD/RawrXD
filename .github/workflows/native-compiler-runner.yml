@@ -29,6 +29,33 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Object linking failed' }
           & runner-fixture/runner.exe exec runner-fixture/fixture.exe
           if ($LASTEXITCODE -ne 0) { throw 'Linked executable failed' }
+      - name: Verify configure-build-test CMake pipeline and failure diagnostics
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force runner-fixture/cmake-src | Out-Null
+          @'
+          cmake_minimum_required(VERSION 3.20)
+          project(rawrxd_runner_acceptance LANGUAGES C CXX)
+          enable_testing()
+          add_library(c_part STATIC c_part.c)
+          add_executable(cpp_part cpp_part.cpp)
+          target_link_libraries(cpp_part PRIVATE c_part)
+          add_test(NAME executable_runs COMMAND cpp_part)
+          '@ | Set-Content runner-fixture/cmake-src/CMakeLists.txt
+          Copy-Item runner-fixture/c_part.c runner-fixture/cmake-src/c_part.c
+          Copy-Item runner-fixture/cpp_part.cpp runner-fixture/cmake-src/cpp_part.cpp
+          & runner-fixture/runner.exe configure runner-fixture/cmake-build runner-fixture/cmake-src
+          if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
+          & runner-fixture/runner.exe build runner-fixture/cmake-build
+          if ($LASTEXITCODE -ne 0) { throw 'CMake build failed' }
+          & runner-fixture/runner.exe test runner-fixture/cmake-build
+          if ($LASTEXITCODE -ne 0) { throw 'CMake CTest failed' }
+          Set-Content runner-fixture/broken.cpp 'int main( { return 0; }'
+          & runner-fixture/runner.exe exec cl.exe /nologo /c /TP runner-fixture/broken.cpp /Fo:runner-fixture/broken.obj 1> runner-fixture/broken-out.txt 2> runner-fixture/broken-err.txt
+          if ($LASTEXITCODE -eq 0) { throw 'Broken C++ unexpectedly compiled' }
+          $diagnostics = (Get-Content runner-fixture/broken-out.txt -Raw) + (Get-Content runner-fixture/broken-err.txt -Raw)
+          if ($diagnostics -notmatch 'error C[0-9]+') { throw 'Compiler diagnostics not captured' }
       - name: Verify concurrent stdout/stderr, nonzero status and enforced timeout
         shell: pwsh
         run: |
