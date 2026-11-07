@@ -40,7 +40,7 @@ int main() {
     // 11: extension ownership identifier is validated.
     assert(!host.RegisterExtensionCommand("", "badOwner", [](const std::string&) { return true; }));
     assert(!host.RegisterExtensionCommand("bad owner", "badOwner", [](const std::string&) { return true; }));
-    assert(!host.RegisterExtensionCommand(std::string("bad\\0id", 6), "badOwner", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand(std::string("bad\0id", 6), "badOwner", [](const std::string&) { return true; }));
     assert(!host.RegisterExtensionCommand(std::string(257, 'x'), "badOwner", [](const std::string&) { return true; }));
     // 12: extension command registration and execution.
     assert(host.RegisterExtensionCommand("ext.one", "owned", [](const std::string&) { return true; }));
