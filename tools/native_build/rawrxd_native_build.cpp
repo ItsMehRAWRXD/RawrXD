@@ -63,6 +63,12 @@ int main(int argc,char** argv) {
     } else {
         args.push_back(source);args.push_back("-o");args.push_back(output);
     }
+    // Never accept a stale executable from a previous successful build.
+    // Refuse to delete a source file accidentally supplied as the output.
+    if(fs::absolute(fs::u8path(source),ec)==fs::absolute(fs::u8path(output),ec)) return 2;
+    ec.clear();
+    fs::remove(fs::u8path(output),ec);
+    if(ec) {std::cerr<<"cannot clear prior build output\\n";return 4;}
     const int compileResult=run(args);
     if(compileResult!=0)return compileResult;
     if(!fs::is_regular_file(fs::u8path(output),ec)){std::cerr<<"compiler returned success without output\\n";return 4;}
