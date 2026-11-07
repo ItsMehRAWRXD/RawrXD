@@ -19,8 +19,11 @@ EXPECTED = 60
 
 def validate_output(output: str, exit_code: int, expected: int = EXPECTED) -> bool:
     """Accept only the complete ordered PASS transcript and exact summary."""
-    lines = output.splitlines()
-    if len(lines) != expected + 1 or exit_code != 0:
+    # Require exactly one terminal newline; splitlines() silently ignores extra blank lines.
+    if exit_code != 0 or not output.endswith("\n") or output.endswith("\n\n"):
+        return False
+    lines = output[:-1].split("\n")
+    if len(lines) != expected + 1:
         return False
     for index, line in enumerate(lines[:expected], 1):
         if not re.fullmatch(rf"PASS {index:02d} .+", line):
