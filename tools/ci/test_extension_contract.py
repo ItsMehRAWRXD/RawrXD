@@ -132,5 +132,15 @@ class ExtensionContract(unittest.TestCase):
             self.assertIn("CloseHandle(" + handle + ");", success)
             self.assertIn(handle + " = nullptr;", success)
 
+    def test_native_agent_inference_output_is_classified(self):
+        """Static guard: real model output must reach the tool-call parser."""
+        cpp = (ROOT / "src" / "win32app" / "Win32IDE_AgenticBridge.cpp").read_text(encoding="utf-8")
+        start = cpp.index("AgentResponse AgenticBridge::ExecuteAgentCommand(")
+        end = cpp.index("// Deprecated Stubs", start)
+        command = cpp[start:end]
+        self.assertIn("response = ParseAgentResponse(*fullOutput);", command)
+        self.assertIn("response.rawOutput = *fullOutput;", command)
+        self.assertIn("response.type == AgentResponseType::ANSWER", command)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
