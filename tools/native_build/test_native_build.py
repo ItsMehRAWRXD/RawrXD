@@ -33,7 +33,8 @@ with tempfile.TemporaryDirectory(prefix="rawrxd-build-") as tmp:
     check("object-to-executable", 0, [toolchain, str(object_file), str(binary), "link"])
     if not binary.is_file():
         raise AssertionError("missing executable from object link")
-    check("linked executable", 0, [str(binary)])
+    if subprocess.run([str(binary)], check=False).returncode != 0:
+        raise AssertionError("linked executable exit code")
     check("compile-link", 0, [toolchain, str(source), str(binary), "build"])
     if not binary.is_file():
         raise AssertionError("missing binary after build")
