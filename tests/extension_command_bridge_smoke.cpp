@@ -40,12 +40,17 @@ int main() {
     // 11: extension ownership identifier is validated.
     assert(!host.RegisterExtensionCommand("", "badOwner", [](const std::string&) { return true; }));
     assert(!host.RegisterExtensionCommand("bad owner", "badOwner", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand(std::string("bad\\0id", 6), "badOwner", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand(std::string(257, 'x'), "badOwner", [](const std::string&) { return true; }));
     // 12: extension command registration and execution.
     assert(host.RegisterExtensionCommand("ext.one", "owned", [](const std::string&) { return true; }));
     assert(host.ExecuteCommand("owned", ""));
+    assert(host.RegisterExtensionCommand("ext.two", "otherOwned", [](const std::string&) { return true; }));
+    assert(!host.RegisterExtensionCommand("ext.two", "owned", [](const std::string&) { return true; }));
     // 13: extension cleanup revokes its commands but preserves host commands.
     host.UnregisterExtensionCommands("ext.one");
     assert(!host.ExecuteCommand("owned", "") && host.ExecuteCommand("echo", "payload"));
+    assert(host.ExecuteCommand("otherOwned", ""));
     // 14: explicit unregistration revokes dispatch.
     assert(host.UnregisterCommand("echo") && !host.ExecuteCommand("echo", ""));
     assert(!host.UnregisterCommand("echo"));
