@@ -11,6 +11,9 @@ on:
       - 'tests/extension_policy_smoke.cpp'
       - 'tests/extension_subprocess_policy_smoke.cpp'
       - 'tests/extension_integrated_fixture.cpp'
+      - 'tests/agent_tool_policy_smoke.cpp'
+      - 'src/win32app/AgentToolCallPolicy.h'
+      - 'src/win32app/Win32IDE_AgenticBridge.cpp'
       - 'tools/ci/extension_policy_smoke.cpp'
       - 'tools/ci/extension_bridge_smoke.cpp'
       - 'tools/ci/test_extension_contract.py'
@@ -22,6 +25,9 @@ on:
     paths:
       - 'tests/extension_policy_smoke.cpp'
       - 'tests/extension_integrated_fixture.cpp'
+      - 'tests/agent_tool_policy_smoke.cpp'
+      - 'src/win32app/AgentToolCallPolicy.h'
+      - 'src/win32app/Win32IDE_AgenticBridge.cpp'
       - 'tests/extension_subprocess_policy_smoke.cpp'
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
@@ -75,6 +81,10 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined -fno-omit-frame-pointer tests/extension_integrated_fixture.cpp '~dev/rawrxd/src/core/js_extension_host_production.cpp' -o /tmp/rawrxd-integrated-fixture
           /tmp/rawrxd-integrated-fixture
+      - name: Compile and execute model-free agent tool policy
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic tests/agent_tool_policy_smoke.cpp -o /tmp/rawrxd-agent-tool-policy
+          /tmp/rawrxd-agent-tool-policy
       - name: Source contract checks (not runtime certification)
         run: python3 tools/ci/test_extension_contract.py
   windows:
@@ -131,6 +141,13 @@ jobs:
           cl /nologo /std:c++17 /EHsc /W4 /WX "tests/extension_integrated_fixture.cpp" "~dev/rawrxd/src/core/js_extension_host_production.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-integrated-fixture.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$env:RUNNER_TEMP/rawrxd-integrated-fixture.exe"
+          exit $LASTEXITCODE
+      - name: Compile and execute agent tool policy (MSVC)
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /WX "tests/agent_tool_policy_smoke.cpp" /Fe:"$env:RUNNER_TEMP/rawrxd-agent-tool-policy.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:RUNNER_TEMP/rawrxd-agent-tool-policy.exe"
           exit $LASTEXITCODE
       - name: Source contract checks (not runtime certification)
         shell: pwsh
