@@ -21,6 +21,7 @@ on:
   pull_request:
     paths:
       - 'tests/extension_policy_smoke.cpp'
+      - 'tests/extension_integrated_fixture.cpp'
       - 'tests/extension_subprocess_policy_smoke.cpp'
       - '~dev/rawrxd/src/core/extension_*policy.hpp'
       - '~dev/rawrxd/tests/extension_policy_smoke.cpp'
