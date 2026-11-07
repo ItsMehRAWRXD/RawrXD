@@ -66,5 +66,11 @@ jobs:
           if (-not (Select-String -Path runner-fixture/err.txt -Pattern 'ERR_OK' -Quiet)) { throw 'stderr missing' }
           & runner-fixture/runner.exe --timeout-ms 500 exec powershell.exe -NoProfile -Command 'Start-Sleep -Seconds 15'
           if ($LASTEXITCODE -ne 124) { throw 'Timeout was not enforced' }
+          New-Item -ItemType Directory -Force 'runner-fixture/space path' | Out-Null
+          Copy-Item runner-fixture/fixture.exe 'runner-fixture/space path/fixture.exe'
+          & runner-fixture/runner.exe exec 'runner-fixture/space path/fixture.exe'
+          if ($LASTEXITCODE -ne 0) { throw 'Executable path with spaces failed' }
+          & runner-fixture/runner.exe exec 'runner-fixture/does-not-exist.exe'
+          if ($LASTEXITCODE -ne 127) { throw 'Missing executable was not rejected' }
           & runner-fixture/runner.exe --timeout-ms invalid exec cmd.exe
           if ($LASTEXITCODE -ne 2) { throw 'Invalid timeout was not rejected' }
