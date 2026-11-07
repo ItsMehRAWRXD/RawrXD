@@ -10,6 +10,7 @@ on:
     paths:
       - 'tests/headless/**'
       - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
       - '.github/workflows/headless-extension-sim.yml'
   workflow_dispatch:
 
@@ -24,6 +25,19 @@ jobs:
           python-version: '3.12'
       - name: Run deterministic extension simulator assertions
         run: python -m unittest discover -s tests/headless -p 'test_extension_lifecycle_sim.py' -v
+
+  production-command-bridge-sanitizers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production bridge with address and undefined behavior sanitizers
+        run: g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic -pthread -fsanitize=address,undefined -fno-omit-frame-pointer tests/headless/test_extension_command_bridge.cpp -o /tmp/rawrxd-extension-asan
+      - name: Run production bridge under sanitizers
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: /tmp/rawrxd-extension-asan
 
   production-command-bridge:
     runs-on: ubuntu-latest
