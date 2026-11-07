@@ -1,0 +1,40 @@
+name: Compiler Builder Linker Gate
+on:
+  push:
+    paths:
+      - 'tests/headless/compiler_link_gate/**'
+      - '~dev/rawrxd/cmake/CompilerChecks.cmake'
+      - '.github/workflows/compiler-link-gate.yml'
+  pull_request:
+    paths:
+      - 'tests/headless/compiler_link_gate/**'
+      - '~dev/rawrxd/cmake/CompilerChecks.cmake'
+      - '.github/workflows/compiler-link-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure compile and link
+        run: cmake -S tests/headless/compiler_link_gate -B build/compiler-link-gate -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/compiler-link-gate --verbose
+      - name: Execute compiled binary
+        run: ctest --test-dir build/compiler-link-gate --output-on-failure
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure MSVC
+        run: cmake -S tests/headless/compiler_link_gate -B build/compiler-link-gate -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build MSVC
+        run: cmake --build build/compiler-link-gate --verbose
+      - name: Execute compiled binary
+        run: ctest --test-dir build/compiler-link-gate --output-on-failure
