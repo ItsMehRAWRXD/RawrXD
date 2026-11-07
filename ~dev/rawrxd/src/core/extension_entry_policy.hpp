@@ -26,6 +26,15 @@ inline bool validRelativeMain(std::string_view entry) noexcept {
             auto upper = [](char c) noexcept -> char {
                 return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
             };
+            // Console input/output device aliases are also reserved on Windows.
+            auto isConsoleAlias = [&](std::string_view candidate) noexcept {
+                if (stem.size() != candidate.size()) return false;
+                for (size_t j = 0; j < stem.size(); ++j) {
+                    if (upper(stem[j]) != candidate[j]) return false;
+                }
+                return true;
+            };
+            if (isConsoleAlias("CONIN$") || isConsoleAlias("CONOUT$")) return false;
             if (stem.size() == 3) {
                 const char a = upper(stem[0]), b = upper(stem[1]), c = upper(stem[2]);
                 if ((a == 'C' && b == 'O' && c == 'N') ||
