@@ -1,0 +1,48 @@
+name: Native compiler and linker pipeline (model-free)
+on:
+  push:
+    paths:
+      - 'src/agentic_executor.cpp'
+      - 'tests/native_compiler_pipeline/**'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  pull_request:
+    paths:
+      - 'src/agentic_executor.cpp'
+      - 'tests/native_compiler_pipeline/**'
+      - '.github/workflows/native-compiler-pipeline.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile object, link executable, and execute
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          $source = Join-Path $dir 'main.cpp'
+          $object = Join-Path $dir 'main.obj'
+          $exe = Join-Path $dir 'main.exe'
+          Set-Content -Encoding ascii $source 'int main() { return 42; }'
+          & cl /nologo /std:c++17 /W4 /WX /c $source "/Fo$object"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $object)) { throw 'Compile/object gate failed' }
+          & link /nologo $object "/OUT:$exe"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $exe)) { throw 'Link gate failed' }
+          & $exe
+          if ($LASTEXITCODE -ne 42) { throw "Executable gate failed: $LASTEXITCODE" }
+          Write-Host 'MSVC_COMPILE_OBJECT_LINK_RUN PASS'
+      - name: Verify compiler diagnostics fail closed
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'rawrxd-native-compiler'
+          $bad = Join-Path $dir 'bad.cpp'
+          Set-Content -Encoding ascii $bad 'int main() { return missing_symbol; }'
+          & cl /nologo /c $bad "/Fo$(Join-Path $dir 'bad.obj')"
+          if ($LASTEXITCODE -eq 0) { throw 'Invalid C++ unexpectedly compiled' }
+          Write-Host 'MSVC_COMPILER_ERROR_GATE PASS'
