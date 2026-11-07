@@ -39,8 +39,8 @@ int wmain(int argc, wchar_t** argv) {
  // Multi-unit C++ build validates symbol resolution and the C++ runtime.
  auto helper=dir/"helper.cpp",maincpp=dir/"main.cpp";
  auto helperObj=dir/"helper.obj",mainObj=dir/"main.obj",cppExe=dir/"multi.exe";
- {std::ofstream f(helper);f<<"extern \"C\" int answer(){return 42;}\\n";}
- {std::ofstream f(maincpp);f<<"#include <iostream>\\nextern \"C\" int answer();\\nint main(){std::cout<<answer()<<\"\\\\n\";return answer()==42?0:1;}\\n";}
+ {std::ofstream f(helper);f<<"extern \"C\" int answer(){return 42;}\n";}
+ {std::ofstream f(maincpp);f<<"#include <iostream>\nextern \"C\" int answer();\nint main(){std::cout<<answer()<<\"\\\n\";return answer()==42?0:1;}\n";}
  auto hc=runProcess(L"cl.exe",{L"/nologo",L"/EHsc",L"/std:c++17",L"/c",helper.wstring(),L"/Fo"+helperObj.wstring()},60000,dir.wstring());
  auto mc=runProcess(L"cl.exe",{L"/nologo",L"/EHsc",L"/std:c++17",L"/c",maincpp.wstring(),L"/Fo"+mainObj.wstring()},60000,dir.wstring());
  check(hc.launched&&hc.exitCode==0&&mc.launched&&mc.exitCode==0&&fs::exists(helperObj)&&fs::exists(mainObj),"multi-unit C++ object compilation");
