@@ -13,6 +13,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+from rawrxd_process_runner import run_process
 import sys
 import tempfile
 
@@ -110,16 +111,23 @@ def inspect(path, fmt, obj=False):
 
 
 def execute(argv, timeout, evidence):
-    # argv is always a list, never shell=True; no interpolation or shell parsing.
+    # Separate stdout/stderr are drained concurrently with bounded memory;
+    # timeout or output flooding terminates the whole process group/tree.
     try:
-        p = subprocess.run(argv, capture_output=True, text=True, errors="replace", timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
-        evidence.append({"argv": argv, "returncode": 124, "stderr": "Process timed out"})
-        raise BuildError("Compiler/linker timeout: " + Path(argv[0]).name, 4) from exc
+        p = run_process(argv, timeout)
     except OSError as exc:
         raise BuildError("Cannot launch tool: " + str(exc), 5) from exc
-    evidence.append({"argv": argv, "returncode": p.returncode,
-                     "stdout": p.stdout[-32768:], "stderr": p.stderr[-32768:]})
+    entry = {"argv": argv, "returncode": p.returncode,
+             "stdout": p.stdout, "stderr": p.stderr}
+    if p.timed_out:
+        entry["timed_out"] = True
+    if p.output_limit:
+        entry["output_limit"] = True
+    evidence.append(entry)
+    if p.timed_out:
+        raise BuildError("Compiler/linker timeout: " + Path(argv[0]).name, 4)
+    if p.output_limit:
+        raise BuildError("Compiler/linker output exceeded capture limit", 4)
     if p.returncode:
         raise BuildError("Tool failed with exit code " + str(p.returncode), 4)
 
