@@ -80,7 +80,7 @@ def run(command: Sequence[str], *, cwd: str | Path, timeout: float = 30.0,
     if any(not isinstance(arg, str) or not arg for arg in command):
         raise ValueError("command must be nonempty strings")
     start = time.monotonic()
-    creationflags = subprocess.CREATE_SUSPENDED if os.name == "nt" else 0
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
     process = subprocess.Popen(list(command), cwd=str(cwd), stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                shell=False, creationflags=creationflags,
@@ -95,12 +95,6 @@ def run(command: Sequence[str], *, cwd: str | Path, timeout: float = 30.0,
                 process.kill()
                 process.wait()
                 raise
-            import ctypes
-            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-            kernel.ResumeThread.argtypes = [ctypes.c_void_p]
-            kernel.ResumeThread.restype = ctypes.c_uint32
-            if kernel.ResumeThread(process._thread) == 0xffffffff:
-                raise ctypes.WinError(ctypes.get_last_error())
 
         buffers = [bytearray(), bytearray()]
         def drain(stream, index):
