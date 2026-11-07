@@ -148,6 +148,9 @@ ProcessResult RunProcess(const std::vector<std::wstring>& argv,
         }
     }
     GetExitCodeProcess(process.h, &result.exit_code);
+    // Kill any surviving descendants that inherited stdout/stderr handles so
+    // both drain threads receive EOF even when the direct child has exited.
+    job.reset();
     out_thread.join();
     err_thread.join();
     return result;
