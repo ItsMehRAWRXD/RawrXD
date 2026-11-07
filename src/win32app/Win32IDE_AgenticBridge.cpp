@@ -165,8 +165,11 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     // General Query
      else {
           m_nativeAgent->Ask(prompt);
-          response.content = *fullOutput;
-          if (fullOutput->find("<thinking>") != std::string::npos) {
+          response = ParseAgentResponse(*fullOutput);
+          // Tool calls take precedence over incidental thinking tags so the
+          // caller can route a structured tool request instead of dropping it.
+          if (response.type == AgentResponseType::ANSWER &&
+              fullOutput->find("<thinking>") != std::string::npos) {
               response.type = AgentResponseType::THINKING;
           }
      }
