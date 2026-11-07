@@ -215,6 +215,50 @@ class NativeToolchainAcceptance(unittest.TestCase):
                     "--approve-mutations", ok=False)
         self.assertFalse((self.root / "wrongentry.exe").exists())
 
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_27_packaged_cli_import_and_cold_start(self):
+        # Production installation must ship its sibling process runner.
+        package = self.root / "package" / "bin"
+        package.mkdir(parents=True)
+        shutil.copy2(SCRIPT, package / SCRIPT.name)
+        shutil.copy2(SCRIPT.parent / "rawrxd_process_runner.py", package / "rawrxd_process_runner.py")
+        command = [sys.executable, str(package / SCRIPT.name), "build", "--workspace", str(self.root),
+                   "--source", "a.c", "--source", "b.c", "--output", "app",
+                   "--format", "host", "--approve-mutations"]
+        proc = subprocess.run(command, capture_output=True, text=True, timeout=20)
+        self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+        self.assertTrue(json.loads(proc.stdout)["ok"])
+        self.assertEqual(subprocess.run([str(self.root / "app")]).returncode, 42)
+
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_28_compiler_output_flood_is_fatal_and_old_output_preserved(self):
+        fake = self.root / "tools" / "clang"
+        fake.parent.mkdir()
+        fake.write_text("#!/usr/bin/env python3\nimport sys\nsys.stdout.buffer.write(b'x'*(17*1024*1024))\nsys.stdout.flush()\n")
+        fake.chmod(0o755)
+        original = self.root / "out.o"
+        original.write_bytes(b"OLD_OUTPUT")
+        result = self.invoke("compile", "--source", "a.c", "--format", "host", "--output", "out.o",
+                             "--compiler", str(fake), "--approve-mutations", ok=False)
+        self.assertEqual(result["code"], 4)
+        self.assertTrue(result["commands"][0].get("output_limit"))
+        self.assertLessEqual(len(result["commands"][0]["stdout"]), 32768)
+        self.assertEqual(original.read_bytes(), b"OLD_OUTPUT")
+
+    @unittest.skipUnless(HOST_AVAILABLE, "Host ELF compiler tests require Linux")
+    def test_29_compiler_diagnostics_keep_stdout_and_stderr_separate(self):
+        fake = self.root / "tools" / "clang"
+        fake.parent.mkdir()
+        fake.write_text("#!/usr/bin/env python3\nimport sys\nprint('LOG_STDOUT')\nprint('DIAGNOSTIC_STDERR',file=sys.stderr)\nsys.exit(7)\n")
+        fake.chmod(0o755)
+        result = self.invoke("compile", "--source", "a.c", "--format", "host", "--output", "out.o",
+                             "--compiler", str(fake), "--approve-mutations", ok=False)
+        self.assertEqual(result["code"], 4)
+        self.assertIn("LOG_STDOUT", result["commands"][0]["stdout"])
+        self.assertIn("DIAGNOSTIC_STDERR", result["commands"][0]["stderr"])
+        self.assertEqual(result["commands"][0]["returncode"], 7)
+        self.assertFalse((self.root / "out.o").exists())
+
     def test_22_fake_compiler_bad_object_fails(self):
         fake = self.root / "tools" / "clang"
         fake.parent.mkdir()
