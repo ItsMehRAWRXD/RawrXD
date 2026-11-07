@@ -15,6 +15,9 @@ else()
     target_compile_options(rawrxd-extensions PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
+# The CLI is a real redistributable artifact, not just an in-tree test binary.
+install(TARGETS rawrxd-extensions RUNTIME DESTINATION bin)
+
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 enable_testing()
 add_test(NAME offline-extensions-blackbox
