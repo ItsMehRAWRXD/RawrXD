@@ -9,6 +9,7 @@
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -243,87 +244,96 @@ private:
                             DWORD timeoutMs = 30000) {
         stdoutResult.clear();
         stderrResult.clear();
-        exitCode = (DWORD)-1;
+        exitCode = static_cast<DWORD>(-1);
+        if (cmdLine.empty() || timeoutMs == 0) return false;
 
-        // Create pipes for stdout
-        SECURITY_ATTRIBUTES sa = {};
+        // Merge both streams into one pipe. This avoids the classic deadlock
+        // where the child fills stderr while the parent blocks reading stdout.
+        SECURITY_ATTRIBUTES sa{};
         sa.nLength = sizeof(sa);
         sa.bInheritHandle = TRUE;
-
-        HANDLE hStdoutRead = nullptr, hStdoutWrite = nullptr;
-        HANDLE hStderrRead = nullptr, hStderrWrite = nullptr;
-        if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0)) return false;
-        if (!CreatePipe(&hStderrRead, &hStderrWrite, &sa, 0)) {
-            CloseHandle(hStdoutRead); CloseHandle(hStdoutWrite);
+        HANDLE readPipe = nullptr, writePipe = nullptr;
+        if (!CreatePipe(&readPipe, &writePipe, &sa, 0)) return false;
+        if (!SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0)) {
+            CloseHandle(readPipe);
+            CloseHandle(writePipe);
             return false;
         }
 
-        // Ensure read ends are NOT inherited
-        SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
-        SetHandleInformation(hStderrRead, HANDLE_FLAG_INHERIT, 0);
-
-        STARTUPINFOA si = {};
+        STARTUPINFOA si{};
         si.cb = sizeof(si);
         si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-        si.hStdOutput = hStdoutWrite;
-        si.hStdError  = hStderrWrite;
+        si.hStdOutput = writePipe;
+        si.hStdError = writePipe;
+        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
         si.wShowWindow = SW_HIDE;
-
-        PROCESS_INFORMATION pi = {};
-
-        // CreateProcessA needs mutable string
-        std::vector<char> cmdBuf(cmdLine.begin(), cmdLine.end());
-        cmdBuf.push_back('\0');
-
-        BOOL created = CreateProcessA(
-            nullptr,
-            cmdBuf.data(),
-            nullptr, nullptr,
-            TRUE,           // inherit handles
-            CREATE_NO_WINDOW,
-            nullptr, nullptr,
-            &si, &pi
-        );
-
-        // Close write ends in parent immediately
-        CloseHandle(hStdoutWrite);
-        CloseHandle(hStderrWrite);
-
+        PROCESS_INFORMATION pi{};
+        std::vector<char> command(cmdLine.begin(), cmdLine.end());
+        command.push_back('\0');
+        const BOOL created = CreateProcessA(
+            nullptr, command.data(), nullptr, nullptr, TRUE,
+            CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+        CloseHandle(writePipe);
         if (!created) {
-            CloseHandle(hStdoutRead);
-            CloseHandle(hStderrRead);
+            CloseHandle(readPipe);
             return false;
         }
 
-        // Read stdout in a loop
-        {
-            char buf[4096];
-            DWORD bytesRead = 0;
-            while (ReadFile(hStdoutRead, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-                buf[bytesRead] = '\0';
-                stdoutResult += buf;
+        const ULONGLONG started = GetTickCount64();
+        bool failed = false;
+        bool timedOut = false;
+        bool exited = false;
+        char buffer[4096];
+        for (;;) {
+            DWORD available = 0;
+            if (!PeekNamedPipe(readPipe, nullptr, 0, nullptr, &available, nullptr)) {
+                // Broken pipe is expected after child closes its last writer.
+                if (GetLastError() != ERROR_BROKEN_PIPE) failed = true;
+                break;
             }
-        }
-        // Read stderr
-        {
-            char buf[4096];
-            DWORD bytesRead = 0;
-            while (ReadFile(hStderrRead, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-                buf[bytesRead] = '\0';
-                stderrResult += buf;
+            while (available) {
+                DWORD bytesRead = 0;
+                const DWORD requested = (available < sizeof(buffer))
+                    ? available : static_cast<DWORD>(sizeof(buffer));
+                if (!ReadFile(readPipe, buffer, requested, &bytesRead, nullptr)
+                    || bytesRead == 0) {
+                    failed = true;
+                    break;
+                }
+                stderrResult.append(buffer, bytesRead); // merged diagnostic stream
+                available -= bytesRead;
             }
+            if (failed) break;
+            const DWORD wait = WaitForSingleObject(pi.hProcess, 0);
+            if (wait == WAIT_OBJECT_0) {
+                exited = true;
+                if (available == 0) {
+                    // Drain remaining bytes on the next iteration; if the
+                    // pipe is empty now, no more data can arrive from child.
+                    DWORD remaining = 0;
+                    if (!PeekNamedPipe(readPipe, nullptr, 0, nullptr, &remaining, nullptr)
+                        || remaining == 0) break;
+                }
+            } else if (wait == WAIT_FAILED) {
+                failed = true;
+                break;
+            }
+            if (GetTickCount64() - started >= timeoutMs) {
+                timedOut = true;
+                break;
+            }
+            Sleep(5);
         }
-
-        CloseHandle(hStdoutRead);
-        CloseHandle(hStderrRead);
-
-        WaitForSingleObject(pi.hProcess, timeoutMs);
-        GetExitCodeProcess(pi.hProcess, &exitCode);
-
-        CloseHandle(pi.hProcess);
+        if (!exited || timedOut || failed) {
+            TerminateProcess(pi.hProcess, 1);
+            WaitForSingleObject(pi.hProcess, 5000);
+        }
+        const BOOL gotExit = GetExitCodeProcess(pi.hProcess, &exitCode);
+        CloseHandle(readPipe);
         CloseHandle(pi.hThread);
-
-        return true;
+        CloseHandle(pi.hProcess);
+        if (timedOut) stderrResult += "\\nRawrCompiler: process timed out";
+        return !failed && !timedOut && gotExit && exited;
     }
 #endif
 
