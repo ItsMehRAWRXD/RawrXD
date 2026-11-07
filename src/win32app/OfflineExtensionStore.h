@@ -239,11 +239,26 @@ class Store {
             }
         }
     }
-    static void state(const fs::path& dir, bool enabled) {
+    static bool isDisabled(const fs::path& dir) {
         const fs::path marker = dir / ".rawrxd-disabled";
         require(!fs::is_symlink(fs::symlink_status(marker)), "State marker is a symlink");
-        if (enabled) { fs::remove(marker); return; }
-        if (fs::exists(marker)) return; // Already disabled; idempotent on Windows.
+        if (!fs::exists(marker)) return false;
+        require(fs::is_regular_file(marker) && fs::file_size(marker) == 9,
+                "Invalid extension state marker");
+        std::ifstream in(marker, std::ios::binary);
+        require(static_cast<bool>(in), "Unreadable extension state marker");
+        const std::string content(std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{});
+        require(content == "disabled\n", "Corrupt extension state marker");
+        return true;
+    }
+    static void state(const fs::path& dir, bool enabled) {
+        const fs::path marker = dir / ".rawrxd-disabled";
+        const bool wasDisabled = isDisabled(dir);
+        if (enabled) {
+            if (wasDisabled) fs::remove(marker);
+            return;
+        }
+        if (wasDisabled) return; // Already disabled; idempotent on Windows.
         const fs::path temp = dir / ".rawrxd-disabled-new";
         require(!fs::exists(temp) && !fs::is_symlink(fs::symlink_status(temp)), "State transaction already exists");
         {
@@ -291,9 +306,7 @@ public:
             try {
                 Extension e = manifest(dir.path());
                 if (e.id != dir.path().filename().string()) continue;
-                const fs::path marker = dir.path() / ".rawrxd-disabled";
-                if (fs::is_symlink(fs::symlink_status(marker))) continue;
-                e.enabled = !fs::exists(marker);
+                e.enabled = !isDisabled(dir.path());
                 result.push_back(std::move(e));
             } catch (const std::exception&) { /* Corrupt packages never appear as installed. */ }
         }
@@ -305,9 +318,7 @@ public:
         require(fs::is_directory(dir), "Extension is not installed");
         Extension e = manifest(dir);
         require(e.id == id, "Installed extension ID mismatch");
-        const auto marker = dir / ".rawrxd-disabled";
-        require(!fs::is_symlink(fs::symlink_status(marker)), "State marker is a symlink");
-        e.enabled = !fs::exists(marker);
+        e.enabled = !isDisabled(dir);
         return e;
     }
     Extension install(const fs::path& source) {
