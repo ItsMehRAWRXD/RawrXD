@@ -399,8 +399,11 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
     response.type = AgentResponseType::ANSWER;
     response.content = rawOutput;
     
-    // Simple heuristic: if output starts with "TOOL:", treat as tool call
-    if (rawOutput.rfind("TOOL:", 0) == 0) {
+    // Keep detection consistent with IsToolCall; an empty tool payload is
+    // not executable and must not be dispatched as a tool call.
+    if ((rawOutput.rfind("TOOL:", 0) == 0 ||
+         rawOutput.rfind("tool:", 0) == 0) &&
+        rawOutput.find_first_not_of(" \t\r\n", 5) != std::string::npos) {
         response.type = AgentResponseType::TOOL_CALL;
         response.content = rawOutput.substr(5);
     }
