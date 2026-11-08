@@ -21,6 +21,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <cctype>
 #include <thread>
 #include <chrono>
 #include <regex>
@@ -38,6 +39,18 @@
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
+namespace {
+// Marketplace identifiers become directory/cache components. Reject separators,
+// traversal tokens, control bytes and empty values before any async work starts.
+bool isSafeMarketplaceComponent(const std::string& value) {
+    if (value.empty() || value == "." || value == ".." || value.size() > 128) return false;
+    for (unsigned char ch : value) {
+        if (!(std::isalnum(ch) || ch == '.' || ch == '_' || ch == '-')) return false;
+    }
+    return value.find("..") == std::string::npos;
+}
+}
+
 
 // ============================================================================
 // HTTP Client Implementation for Marketplace API
@@ -812,6 +825,11 @@ void ExtensionMarketplaceManager::getExtensionDetails(const std::string& extensi
 }
 
 void ExtensionMarketplaceManager::installExtension(const std::string& extensionId, const std::string& version) {
+    if (!isSafeMarketplaceComponent(extensionId) ||
+        (!version.empty() && version != "latest" && !isSafeMarketplaceComponent(version))) {
+        if (m_onInstallationError) m_onInstallationError(extensionId, "Invalid extension identifier or version");
+        return;
+    }
     if (!RawrXD::Enforce::LicenseEnforcer::Instance().allow(
             RawrXD::License::FeatureID::ExtensionInstallation, __FUNCTION__)) {
         if (m_onInstallationError) {
@@ -943,6 +961,10 @@ void ExtensionMarketplaceManager::installExtension(const std::string& extensionI
 }
 
 void ExtensionMarketplaceManager::updateExtension(const std::string& extensionId) {
+    if (!isSafeMarketplaceComponent(extensionId)) {
+        if (m_onInstallationError) m_onInstallationError(extensionId, "Invalid extension identifier");
+        return;
+    }
     // Check for updates and install if available
     std::thread([this, extensionId]() {
         // Get current installed version
@@ -972,6 +994,10 @@ void ExtensionMarketplaceManager::updateExtension(const std::string& extensionId
 }
 
 void ExtensionMarketplaceManager::uninstallExtension(const std::string& extensionId) {
+    if (!isSafeMarketplaceComponent(extensionId)) {
+        if (m_onInstallationError) m_onInstallationError(extensionId, "Invalid extension identifier");
+        return;
+    }
     if (!RawrXD::Enforce::LicenseEnforcer::Instance().allow(
             RawrXD::License::FeatureID::ExtensionManagement, __FUNCTION__)) {
         if (m_onInstallationError) {
@@ -992,6 +1018,7 @@ void ExtensionMarketplaceManager::uninstallExtension(const std::string& extensio
             
             // Remove extension files
             std::string extensionDir = getExtensionInstallDirectory(extensionId);
+            if (extensionDir.empty()) throw std::runtime_error("Unsafe extension installation path");
             if (fs::exists(extensionDir)) {
                 fs::remove_all(extensionDir);
             }
@@ -1334,5 +1361,11 @@ void ExtensionMarketplaceManager::installExtensionFromVsix(const std::string& vs
 }
 
 std::string ExtensionMarketplaceManager::getExtensionInstallDirectory(const std::string& extensionId) {
-    return "./extensions/" + extensionId;
+    if (!isSafeMarketplaceComponent(extensionId)) return {};
+    const fs::path root = fs::absolute(fs::path("./extensions")).lexically_normal();
+    const fs::path target = (root / extensionId).lexically_normal();
+    const fs::path relative = target.lexically_relative(root);
+    if (relative.empty() || relative.is_absolute() ||
+        *relative.begin() == fs::path("..")) return {};
+    return target.string();
 }

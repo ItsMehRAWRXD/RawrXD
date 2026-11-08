@@ -6,6 +6,7 @@
 // =============================================================================
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <mutex>
 
@@ -17,8 +18,8 @@ public:
     CancelToken() : flag_(nullptr), cv_(nullptr), mtx_(nullptr) {}
 
     explicit CancelToken(const std::atomic<bool>* flag,
-                         const std::condition_variable* cv,
-                         const std::mutex* mtx)
+                         std::condition_variable* cv,
+                         std::mutex* mtx)
         : flag_(flag), cv_(cv), mtx_(mtx) {}
 
     bool stopRequested() const {
@@ -35,16 +36,18 @@ public:
     bool waitFor(Predicate pred) const {
         if (!mtx_ || !cv_) return pred();
         std::unique_lock<std::mutex> lk(*mtx_);
-        cv_->wait(lk, [&]() {
-            return stopRequested() || pred();
-        });
+        // Predicate changes have no dedicated notifier. Periodically recheck
+        // them; a cancellation uses notify_all() for prompt wakeup.
+        while (!stopRequested() && !pred()) {
+            cv_->wait_for(lk, std::chrono::milliseconds(10));
+        }
         return !stopRequested() && pred();
     }
 
 private:
     const std::atomic<bool>*          flag_;
-    const std::condition_variable*    cv_;
-    const std::mutex*                 mtx_;
+    std::condition_variable*          cv_;
+    std::mutex*                       mtx_;
 };
 
 // --- CancelSource ---
@@ -63,13 +66,18 @@ public:
     CancelSource& operator=(CancelSource&&) = delete;
 
     bool requestStop() {
-        bool expected = false;
-        if (flag_.compare_exchange_strong(expected, true,
-                std::memory_order_acq_rel)) {
-            cv_.notify_all();
-            return true;
+        bool changed = false;
+        {
+            // Share the waiter's mutex when publishing the stop flag. Without
+            // this lock, notification may race a waiter between checking its
+            // predicate and sleeping, leaving cancellation stuck indefinitely.
+            std::lock_guard<std::mutex> lock(mtx_);
+            bool expected = false;
+            changed = flag_.compare_exchange_strong(expected, true,
+                          std::memory_order_acq_rel);
         }
-        return false;
+        if (changed) cv_.notify_all();
+        return changed;
     }
 
     bool stopRequested() const {
@@ -82,6 +90,6 @@ public:
 
 private:
     std::atomic<bool>           flag_;
-    std::condition_variable     cv_;
-    std::mutex                  mtx_;
+    mutable std::condition_variable cv_;
+    mutable std::mutex          mtx_;
 };

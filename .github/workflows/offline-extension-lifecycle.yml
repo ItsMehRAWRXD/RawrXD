@@ -1,0 +1,99 @@
+name: RawrXD offline extension lifecycle
+on:
+  push:
+    paths:
+      - "src/win32app/OfflineExtensionStore.h"
+      - "src/win32app/Win32IDE_Sidebar.cpp"
+      - "tools/rawrxd_extensions_cli.cpp"
+      - "tests/test_offline_extensions_cli.py"
+      - "tests/offline_extension_build/CMakeLists.txt"
+      - "tests/cancel_token_smoke.cpp"
+      - "tests/inference_cancel_smoke.cpp"
+      - "tests/motd_authorization_smoke.cpp"
+      - "src/agentic/MotdAuthorization.h"
+      - "~dev/rawrxd/src/core/inference_cancellation.h"
+      - "~dev/rawrxd/src/generation/module2_cancel.h"
+      - "tests/test_ide_extension_integration_contract.py"
+      - "~dev/rawrxd/src/core/js_extension_host.cpp"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - "~dev/rawrxd/cmake/OfflineExtensionsCli.cmake"
+      - ".github/workflows/offline-extension-lifecycle.yml"
+  pull_request:
+    paths:
+      - "src/win32app/OfflineExtensionStore.h"
+      - "src/win32app/Win32IDE_Sidebar.cpp"
+      - "tools/rawrxd_extensions_cli.cpp"
+      - "tests/test_offline_extensions_cli.py"
+      - "tests/offline_extension_build/CMakeLists.txt"
+      - "tests/cancel_token_smoke.cpp"
+      - "tests/inference_cancel_smoke.cpp"
+      - "tests/motd_authorization_smoke.cpp"
+      - "src/agentic/MotdAuthorization.h"
+      - "~dev/rawrxd/src/core/inference_cancellation.h"
+      - "~dev/rawrxd/src/generation/module2_cancel.h"
+      - "tests/test_ide_extension_integration_contract.py"
+      - "~dev/rawrxd/src/core/js_extension_host.cpp"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - "~dev/rawrxd/cmake/OfflineExtensionsCli.cmake"
+      - ".github/workflows/offline-extension-lifecycle.yml"
+  workflow_dispatch:
+
+jobs:
+  linux-offline-cli:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile exact C++ inventory CLI using standalone CMake
+        run: |
+          cmake -S tests/offline_extension_build -B .build/offline-extensions -G Ninja
+          cmake --build .build/offline-extensions --parallel
+      - name: Execute CTest black-box extension lifecycle acceptance
+        run: ctest --test-dir .build/offline-extensions --output-on-failure -V
+      - name: Install and cold-start test redistributable CLI
+        run: |
+          cmake --install .build/offline-extensions --prefix .build/offline-package
+          RAWRXD_EXTENSIONS_BIN="$PWD/.build/offline-package/bin/rawrxd-extensions" python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Test CLI with AddressSanitizer and UndefinedBehaviorSanitizer
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tools/rawrxd_extensions_cli.cpp -o .build/offline-cli-sanitized
+          RAWRXD_EXTENSIONS_BIN="$PWD/.build/offline-cli-sanitized" ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Execute AddressSanitizer cancellation concurrency stress
+        run: |
+          clang++ -std=c++14 -Wall -Wextra -Wpedantic -Werror -pthread -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/cancel_token_smoke.cpp -o .build/cancel-token-sanitized
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/cancel-token-sanitized
+      - name: Execute sanitized inference cancellation request stress
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -pthread -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/inference_cancel_smoke.cpp -o .build/inference-cancel-sanitized
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/inference-cancel-sanitized
+      - name: Execute sanitized MOTD agent authorization fail-closed smoke
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/motd_authorization_smoke.cpp -o .build/motd-authorize-sanitized
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/motd-authorize-sanitized
+      - name: Verify source integration contracts without claiming runtime certification
+        run: python3 -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
+
+  windows-msvc-offline-cli:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile exact C++ inventory CLI using Windows CMake
+        shell: pwsh
+        run: |
+          cmake -S tests/offline_extension_build -B .build/offline-extensions -G "Visual Studio 17 2022" -A x64
+          cmake --build .build/offline-extensions --config Release --parallel
+      - name: Execute MSVC CTest black-box extension acceptance
+        shell: pwsh
+        run: ctest --test-dir .build/offline-extensions -C Release --output-on-failure -V
+      - name: Install and cold-start test packaged Windows CLI
+        shell: pwsh
+        run: |
+          $prefix = Join-Path $PWD ".build/offline-package"
+          cmake --install .build/offline-extensions --config Release --prefix $prefix
+          $env:RAWRXD_EXTENSIONS_BIN = Join-Path $prefix "bin/rawrxd-extensions.exe"
+          python -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Verify Windows-side source integration contracts
+        shell: pwsh
+        run: python -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v

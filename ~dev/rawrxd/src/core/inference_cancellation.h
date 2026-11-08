@@ -28,6 +28,8 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -64,10 +66,9 @@ public:
         CancelReason expected = CancelReason::None;
         if (m_reason.compare_exchange_strong(expected, reason,
                 std::memory_order_acq_rel)) {
+            m_cancelTimeNs.store(clockNowNs(), std::memory_order_relaxed);
+            // A cancelled flag now implies the cancellation timestamp exists.
             m_cancelled.store(true, std::memory_order_release);
-            m_cancelTimeNs.store(
-                (uint64_t)std::chrono::steady_clock::now().time_since_epoch().count(),
-                std::memory_order_relaxed);
             // Propagate to children
             propagateToChildren();
         }
@@ -88,34 +89,42 @@ public:
 
     // Set a timeout: auto-cancel after durationMs
     void setTimeout(uint32_t durationMs) {
-        m_timeoutMs = durationMs;
-        m_startTimeNs.store(
-            (uint64_t)std::chrono::steady_clock::now().time_since_epoch().count(),
-            std::memory_order_relaxed);
+        m_startTimeNs.store(clockNowNs(), std::memory_order_relaxed);
+        m_timeoutMs.store(durationMs, std::memory_order_release);
     }
 
     // Check timeout (call periodically from checkpoint)
     bool checkTimeout() {
-        if (m_timeoutMs == 0) return false;
-        auto now = (uint64_t)std::chrono::steady_clock::now().time_since_epoch().count();
-        auto start = m_startTimeNs.load(std::memory_order_relaxed);
-        uint64_t elapsedMs = (now - start) / 1000000ULL;
-        if (elapsedMs >= m_timeoutMs) {
+        const uint32_t timeoutMs = m_timeoutMs.load(std::memory_order_acquire);
+        if (timeoutMs == 0) return false;
+        const uint64_t now = clockNowNs();
+        const uint64_t start = m_startTimeNs.load(std::memory_order_relaxed);
+        if (now >= start && now - start >= uint64_t(timeoutMs) * 1000000ULL) {
             cancel(CancelReason::Timeout);
-            return true;
+            return isCancelled();
         }
         return false;
     }
 
     // Register a child token for propagation
     void addChild(std::weak_ptr<InferenceCancelToken> child) {
-        // Simple push; no lock needed — only called during setup
-        m_children.push_back(std::move(child));
+        auto liveChild = child.lock();
+        if (!liveChild) return;
+        {
+            std::lock_guard<std::mutex> lock(m_childrenMutex);
+            m_children.push_back(std::move(child));
+        }
+        // Covers children registered after or while cancellation propagates.
+        if (isCancelled()) liveChild->cancel(CancelReason::ParentCancelled);
     }
 
 private:
+    static uint64_t clockNowNs() {
+        return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());
+    }
     void propagateToChildren() {
-        CancelReason r = m_reason.load(std::memory_order_acquire);
+        std::lock_guard<std::mutex> lock(m_childrenMutex);
         for (auto& weakChild : m_children) {
             if (auto child = weakChild.lock()) {
                 child->cancel(CancelReason::ParentCancelled);
@@ -127,7 +136,8 @@ private:
     std::atomic<CancelReason> m_reason;
     std::atomic<uint64_t>     m_cancelTimeNs;
     std::atomic<uint64_t>     m_startTimeNs{0};
-    uint32_t                  m_timeoutMs = 0;
+    std::atomic<uint32_t>     m_timeoutMs{0};
+    std::mutex                m_childrenMutex;
     std::vector<std::weak_ptr<InferenceCancelToken>> m_children;
 };
 
@@ -170,18 +180,18 @@ struct CancelCheckpoint {
 
     // Returns true if cancelled. Call in tight loops.
     bool check(const InferenceCancelToken& token) {
-        if (++counter < checkInterval) return false;
-        counter = 0;
+        // Never defer explicit cancellation until the Nth layer/token.
         if (token.isCancelled()) return true;
-        // Also check timeout
+        if (checkInterval <= 1 || ++counter >= checkInterval) counter = 0;
         return false;
     }
 
     // Version that also checks timeout
     bool checkWithTimeout(InferenceCancelToken& token) {
-        if (++counter < checkInterval) return false;
-        counter = 0;
         if (token.isCancelled()) return true;
+        // Timeout checks may be amortized; explicit stops must not be.
+        if (checkInterval > 1 && ++counter < checkInterval) return false;
+        counter = 0;
         return token.checkTimeout();
     }
 };
@@ -227,6 +237,10 @@ public:
         CancelableResult<uint32_t> result;
         result.status = CancelableStatus::Completed;
         result.value = 0;
+        if (!m_token) {
+            result.status = CancelableStatus::Error;
+            return result;
+        }
 
         for (uint32_t i = 0; i < numLayers; ++i) {
             // Cancellation check between layers
@@ -252,11 +266,14 @@ public:
 
     // Check cancellation (for use in generation loops)
     bool shouldStop() {
-        return m_checkpoint.checkWithTimeout(*m_token);
+        return !m_token || m_checkpoint.checkWithTimeout(*m_token);
     }
 
     // Access the underlying token
-    InferenceCancelToken& token() { return *m_token; }
+    InferenceCancelToken& token() {
+        if (!m_token) throw std::logic_error("Missing inference cancellation token");
+        return *m_token;
+    }
 
 private:
     std::shared_ptr<InferenceCancelToken> m_token;
