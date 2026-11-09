@@ -1,0 +1,4 @@
+LOG=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\build_integ_006_full_20261109-082801.log
+BAT=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\build_tip_final_integ_006_full_20261109-082801.bat
+SHAOUT=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\build_integ_006_SHA256_20261109-082801.txt
+STARTED=2026-11-09T08:28:01.5776693-05:00

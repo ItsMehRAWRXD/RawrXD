@@ -1,0 +1,4 @@
+ninja: Entering directory `F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\logs\build_pipeline\cmake build with spaces'
+[1/2] Building C object CMakeFiles\probe.dir\hello_gate.c.obj
+[2/2] Linking C executable probe.exe
+BUILD_PIPELINE_HELLO_OK

@@ -1,0 +1,3 @@
+﻿[2026-11-03 09:57:40] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-03 09:57:40] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+

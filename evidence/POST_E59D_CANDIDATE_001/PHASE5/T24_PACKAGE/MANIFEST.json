@@ -1,0 +1,29 @@
+﻿{
+  "schema": "RAWRXD_T24_PACKAGE_CANDIDATE_001",
+  "asof_utc": "2026-11-08T22:41:00Z",
+  "package_kind": "CANDIDATE_PAYLOAD_ZIP_NOT_INSTALLER",
+  "invent_installer": 0,
+  "cert_exe": "F:\\rawrxd\\build_post_e59d_candidate\\bin\\RawrXD-Win32IDE-Native.exe",
+  "cert_exe_sha": "3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F",
+  "expect_sha": "3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F",
+  "sha_match": 1,
+  "zip_path": "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\PHASE5\\T24_PACKAGE\\RawrXD-Win32IDE-Native-3B720981-candidate.zip",
+  "zip_sha256": "551E6344EFE0FDC4CF3EE8A995508DBE0F697C0CF126F384926C18102CCF0317",
+  "files": [
+    {
+      "path": "RawrXD-Win32IDE-Native.exe",
+      "sha256": "3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F"
+    }
+  ],
+  "extract_sha_match": 1,
+  "cold_launch_alive_at_5s": 1,
+  "deployment_script_present": 1,
+  "deployment_script": "F:\\rawrxd\\tools\\T24_Deployment_Verification.ps1",
+  "gaps": [
+    "NO_PRODUCT_INSTALLER_ARTIFACT",
+    "NO_OFFICIAL_DIST_CHANNEL_PACKAGE_BOUND_TO_3B720981"
+  ],
+  "t24_result": "CANDIDATE_PACKAGE_PASS_INSTALLER_GAP",
+  "promote": 0,
+  "certified": 0
+}

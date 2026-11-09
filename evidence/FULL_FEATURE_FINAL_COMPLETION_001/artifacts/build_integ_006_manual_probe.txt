@@ -1,0 +1,5 @@
+PROBE_START 
+AFTER_CD=G:\~dev 
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\ninja.exe
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Links\ninja.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
