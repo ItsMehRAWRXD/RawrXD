@@ -25,8 +25,13 @@ struct ExtRecord {
 struct HostState {
     DWORD hostPid = 0;
     HANDLE hostProcess = nullptr;
+    HANDLE readyEvent = nullptr;
+    HANDLE stopEvent = nullptr;
     ULONGLONG startTick = 0;
     int extensionsLoaded = 0;
+    DWORD lastLaunchError = ERROR_SUCCESS;
+    std::string readyEventName;
+    std::string stopEventName;
 };
 
 void SetRoots(const std::string& projectRoot, const std::string& exeDir);

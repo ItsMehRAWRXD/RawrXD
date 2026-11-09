@@ -5644,6 +5644,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/gguf_masm_weight_bridge.cpp
         src/codec/brutal_gzip.cpp
         src/codec/gzip_brutal_inflate.cpp
+        src/win32app/ProductExtensionRuntime_State.cpp
+        src/win32app/ProductExtensionRuntime_Util.cpp
+        src/win32app/ProductExtensionRuntime_Scan.cpp
+        src/win32app/ProductExtensionRuntime_Manifest.cpp
+        src/win32app/ProductExtensionRuntime_Host.cpp
+        src/win32app/ProductExtensionRuntime_Toggles.cpp
+        src/win32app/ProductExtensionRuntime_Activate.cpp
+        src/win32app/ProductExtensionRuntime_Api.cpp
     )
 
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
@@ -5712,6 +5720,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Themes.cpp
         src/win32app/Win32IDE_StreamingUX.cpp
         src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_SidebarRuntime.cpp
+        src/win32app/Win32IDE_ChatWindowUI.cpp
+        src/win32app/Win32IDE_ChatWindow.cpp
+        src/ollama_client.cpp
+        src/win32app/Win32IDE_TasksDebugUI.cpp
+        src/win32app/Win32IDE_PathBCmdDiagSwarm.cpp
         src/win32app/Win32IDE_Debugger.cpp
         src/win32app/Win32IDE_AutonomousDebugger.cpp
         src/win32app/Win32IDE_Annotations.cpp
@@ -6341,6 +6355,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Tier3Polish.cpp
         src/win32app/Win32IDE_Tier3Cosmetics.cpp
         src/win32app/Win32IDE_Tier5Cosmetics.cpp
+        src/win32app/Win32IDE_CallStackSymbols.cpp
         src/win32app/Win32IDE_CrashReporter.cpp
         src/win32app/Win32IDE_ColorPicker.cpp
         src/win32app/Win32IDE_EmojiSupport.cpp
@@ -7527,7 +7542,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     )
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
 
+    add_executable(RawrXD-ExtensionHost src/win32app/ExtensionHostWorker_main.cpp)
+    set_target_properties(RawrXD-ExtensionHost PROPERTIES
+        OUTPUT_NAME "RawrXD-ExtensionHost"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    target_link_libraries(RawrXD-ExtensionHost PRIVATE kernel32)
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
+    add_dependencies(RawrXD-Win32IDE RawrXD-ExtensionHost)
+    add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:RawrXD-ExtensionHost>"
+            "$<TARGET_FILE_DIR:RawrXD-Win32IDE>/RawrXD-ExtensionHost.exe"
+        COMMENT "Deploying ExtensionHost beside candidate Win32IDE"
+    )
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
