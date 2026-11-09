@@ -2076,6 +2076,8 @@ void Win32IDE::createStatusBar(HWND hwnd)
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
     SendMessageW(m_hwndStatusBar, SB_SETTIPTEXTW, 3,
                  (LPARAM)L"MoE grouped pack cache: hits/misses, async prepack queue, row-eviction invalidations.");
+    extern void AgentSessionAttachBar(void*);
+    AgentSessionAttachBar(hwnd);
 }
 
 void Win32IDE::createSidebar(HWND hwnd)
