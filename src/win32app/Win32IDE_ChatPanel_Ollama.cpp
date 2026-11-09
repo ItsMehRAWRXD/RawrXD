@@ -391,18 +391,24 @@ void Win32IDE::HandleCopilotSend_Ollama()
                        OutputSeverity::Info);
         generateResponseAsync(userMessage,
             [this](const std::string& token, bool complete) {
-                if (!m_hwndCopilotChatOutput) return;
+                // Runs on UI thread via WM_INFERENCE_UI — still fail-closed on HWND.
+                HWND out = (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+                               ? m_hwndCopilotChatOutput
+                               : (m_hwndSecondarySidebar
+                                      ? GetDlgItem(m_hwndSecondarySidebar, 1203)
+                                      : nullptr);
+                if (!out) return;
+                m_hwndCopilotChatOutput = out;
                 if (!token.empty()) {
-                    int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                    int len = GetWindowTextLengthW(out);
+                    SendMessage(out, EM_SETSEL, len, len);
+                    SendMessageW(out, EM_REPLACESEL, FALSE,
                         (LPARAM)utf8ToWide(token).c_str());
                 }
                 if (complete) {
-                    int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                        (LPARAM)L"\n\n");
+                    int len = GetWindowTextLengthW(out);
+                    SendMessage(out, EM_SETSEL, len, len);
+                    SendMessageW(out, EM_REPLACESEL, FALSE, (LPARAM)L"\n\n");
                 }
             });
         return;

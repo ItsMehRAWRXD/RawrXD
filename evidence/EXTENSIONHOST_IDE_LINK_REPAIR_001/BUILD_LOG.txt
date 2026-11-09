@@ -1,0 +1,50 @@
+[1/6] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SidebarRuntime.cpp.obj
+[2/6] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatWindowUI.cpp.obj
+[3/6] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TasksDebugUI.cpp.obj
+[4/6] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PathBCmdDiagSwarm.cpp.obj
+[5/6] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CallStackSymbols.cpp.obj
+[6/6] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe; Deploying ExtensionHost beside candidate Win32IDE
+FAILED: [code=4294967295] bin/RawrXD-Win32IDE.exe 
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001 && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-Win32IDE.exe G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-Win32IDE.pdb && cd G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 && C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001 && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-ExtensionHost.exe G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-ExtensionHost.exe && cd /D G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001 && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-Win32IDE.map G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/RawrXD-Win32IDE.map""
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:G:/~dev/rawrxd-ext-candidate-clean/build_ext_host_001/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304" failed (exit code 1120) with the following output:
+RawrXD_AgenticOrchestrator.obj : warning LNK4006: asm_orchestrator_shutdown already defined in ASM_Bridge_Implementation.cpp.obj; second definition ignored
+
+RawrXD_AgenticOrchestrator.obj : warning LNK4006: asm_orchestrator_init already defined in ASM_Bridge_Implementation.cpp.obj; second definition ignored
+
+RawrXD_Watchdog.obj : warning LNK4006: asm_watchdog_init already defined in win32ide_watchdog_init.cpp.obj; second definition ignored
+
+RawrXD_Watchdog.obj : warning LNK4006: asm_watchdog_verify already defined in unlinked_symbols_batch_005.cpp.obj; second definition ignored
+
+RawrXD_Watchdog.obj : warning LNK4006: asm_watchdog_get_baseline already defined in unlinked_symbols_batch_005.cpp.obj; second definition ignored
+
+RawrXD_Watchdog.obj : warning LNK4006: asm_watchdog_get_status already defined in unlinked_symbols_batch_005.cpp.obj; second definition ignored
+
+RawrXD_Watchdog.obj : warning LNK4006: asm_watchdog_shutdown already defined in unlinked_symbols_batch_001.cpp.obj; second definition ignored
+
+RawrXD_SelfHost_Engine.obj : warning LNK4006: asm_selfhost_init already defined in ASM_Bridge_Implementation.cpp.obj; second definition ignored
+
+RawrXD_SelfHost_Engine.obj : warning LNK4006: asm_selfhost_get_stats already defined in ASM_Bridge_Implementation.cpp.obj; second definition ignored
+
+RawrXD_SelfHost_Engine.obj : warning LNK4006: asm_selfhost_shutdown already defined in ASM_Bridge_Implementation.cpp.obj; second definition ignored
+
+InferenceEngine.lib(r25_productopen_masm.asm.obj) : warning LNK4006: SkipValue already defined in MASMKernelStubs.cpp.obj; second definition ignored
+
+   Creating library RawrXD-Win32IDE.lib and object RawrXD-Win32IDE.exp
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_Create
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_Destroy
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_Show
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_Hide
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_SendMessage
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_Cancel
+
+Win32IDE_ChatWindowUI.cpp.obj : error LNK2001: unresolved external symbol RawrXDChatWindow_GetHwnd
+
+bin\RawrXD-Win32IDE.exe : fatal error LNK1120: 7 unresolved externals
+
+ninja: build stopped: subcommand failed.

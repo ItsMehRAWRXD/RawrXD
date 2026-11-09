@@ -1,0 +1,12 @@
+TERMINAL_GATE harness v4 PROMOTE=0
+PASS echo capture marker_in_pipe
+PASS compile+run via ConPTY
+PASS interrupt issued
+PASS resize
+PASS restart
+FAIL capture after restart
+PASS no orphan after stop
+PASS PowerShell capture
+TERMINAL_GATE fail_count=1
+TERMINAL=FAIL_CLOSED
+PROMOTE=0 TIP_CLIMB=HOLD

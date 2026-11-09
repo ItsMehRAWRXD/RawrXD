@@ -1,0 +1,12 @@
+TERMINAL_GATE harness v2 PROMOTE=0
+FAIL echo capture
+DUMP_LEN=0 DUMP_TAIL=
+FAIL compile+run via ConPTY
+PASS interrupt issued
+PASS resize
+PASS restart
+PASS no orphan after stop
+FAIL PowerShell capture
+TERMINAL_GATE fail_count=3
+TERMINAL=FAIL_CLOSED
+PROMOTE=0 TIP_CLIMB=HOLD

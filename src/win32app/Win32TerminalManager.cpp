@@ -6,25 +6,31 @@
 #define PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE 0x00020016
 #endif
 
-using FnCreatePseudoConsole = HRESULT(WINAPI*)(COORD, HANDLE, HANDLE, DWORD,
-                                               HPCON*);
+using FnCreatePseudoConsole = HRESULT(WINAPI*)(COORD, HANDLE, HANDLE, DWORD, HPCON*);
 using FnClosePseudoConsole = VOID(WINAPI*)(HPCON);
+using FnResizePseudoConsole = HRESULT(WINAPI*)(HPCON, COORD);
 
 static FnCreatePseudoConsole g_CreatePseudoConsole = nullptr;
 static FnClosePseudoConsole g_ClosePseudoConsole = nullptr;
+static FnResizePseudoConsole g_ResizePseudoConsole = nullptr;
 static bool g_ConPtyResolved = false;
 static bool g_ConPtyPresent = false;
 
 Win32TerminalManager::Win32TerminalManager()
-    : m_hProcess(nullptr), m_hThread(nullptr), m_processId(0),
-      m_hPC(nullptr), m_hStdInWrite(nullptr), m_hStdOutRead(nullptr),
-      m_running(false)
+    : m_hProcess(nullptr), m_hThread(nullptr), m_hJob(nullptr),
+      m_processId(0), m_hPC(nullptr), m_hStdInWrite(nullptr),
+      m_hStdOutRead(nullptr), m_running(false), m_cols(80), m_rows(25)
 {
 }
 
 Win32TerminalManager::~Win32TerminalManager()
 {
     stop();
+}
+
+void Win32TerminalManager::setWorkingDirectory(const std::wstring& cwd)
+{
+    m_workingDir = cwd;
 }
 
 bool Win32TerminalManager::ResolveConPtyApis()
@@ -39,6 +45,8 @@ bool Win32TerminalManager::ResolveConPtyApis()
         GetProcAddress(k32, "CreatePseudoConsole"));
     g_ClosePseudoConsole = reinterpret_cast<FnClosePseudoConsole>(
         GetProcAddress(k32, "ClosePseudoConsole"));
+    g_ResizePseudoConsole = reinterpret_cast<FnResizePseudoConsole>(
+        GetProcAddress(k32, "ResizePseudoConsole"));
     g_ConPtyPresent = (g_CreatePseudoConsole && g_ClosePseudoConsole);
     return g_ConPtyPresent;
 }
@@ -55,8 +63,7 @@ void Win32TerminalManager::GateConPtyStream(const char* reason)
     CreateDirectoryA("evidence\\CONPTY_STREAM_OWNER_001", nullptr);
     FILE* f = nullptr;
     if (fopen_s(&f, "evidence\\CONPTY_STREAM_OWNER_001\\GATE_STREAM.txt",
-                "wb") == 0 &&
-        f) {
+                "wb") == 0 && f) {
         std::fprintf(f,
                      "GATE_STREAM\nFAIL_CLOSED=1\nREASON=%s\n"
                      "OWNER=Win32TerminalManager\n"
@@ -64,6 +71,32 @@ void Win32TerminalManager::GateConPtyStream(const char* reason)
                      reason ? reason : "?");
         std::fclose(f);
     }
+}
+
+bool Win32TerminalManager::assignJobObject()
+{
+    if (m_hJob)
+        return true;
+    m_hJob = CreateJobObjectW(nullptr, nullptr);
+    if (!m_hJob)
+        return false;
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info{};
+    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (!SetInformationJobObject(m_hJob, JobObjectExtendedLimitInformation,
+                                 &info, sizeof(info))) {
+        CloseHandle(m_hJob);
+        m_hJob = nullptr;
+        return false;
+    }
+    if (m_hProcess && !AssignProcessToJobObject(m_hJob, m_hProcess)) {
+        DWORD err = GetLastError();
+        if (err != ERROR_ACCESS_DENIED) {
+            CloseHandle(m_hJob);
+            m_hJob = nullptr;
+            return false;
+        }
+    }
+    return true;
 }
 
 bool Win32TerminalManager::start(ShellType shell)
@@ -94,7 +127,7 @@ bool Win32TerminalManager::start(ShellType shell)
     SetHandleInformation(hInOurWrite, HANDLE_FLAG_INHERIT, 0);
     SetHandleInformation(hOutOurRead, HANDLE_FLAG_INHERIT, 0);
 
-    COORD size = {80, 25};
+    COORD size = {m_cols, m_rows};
     HRESULT hr =
         g_CreatePseudoConsole(size, hInConRead, hOutConWrite, 0, &m_hPC);
     if (FAILED(hr) || !m_hPC) {
@@ -111,6 +144,7 @@ bool Win32TerminalManager::start(ShellType shell)
     InitializeProcThreadAttributeList(nullptr, 1, 0, &attrBytes);
     auto* attrs = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
         HeapAlloc(GetProcessHeap(), 0, attrBytes));
+    // FOUR_PANEL: pass HPCON by value (MSDN sample) — &hPC failed capture on 26300
     if (!attrs ||
         !InitializeProcThreadAttributeList(attrs, 1, 0, &attrBytes) ||
         !UpdateProcThreadAttribute(attrs, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
@@ -140,17 +174,40 @@ bool Win32TerminalManager::start(ShellType shell)
         wcscpy_s(cmd, L"cmd.exe");
     }
 
+    wchar_t cwdBuf[MAX_PATH];
+    const wchar_t* cwdPtr = nullptr;
+    if (!m_workingDir.empty()) {
+        cwdPtr = m_workingDir.c_str();
+    } else if (GetCurrentDirectoryW(MAX_PATH, cwdBuf)) {
+        cwdPtr = cwdBuf;
+    }
+
     STARTUPINFOEXW si{};
-    si.StartupInfo.cb = sizeof(si);
+    si.StartupInfo.cb = sizeof(STARTUPINFOEXW);
     si.lpAttributeList = attrs;
+    // Critical on OS 26300: clear STD handles so child cannot attach parent console.
+    // Do NOT claim interactive from redirected pipes — ConPTY remains the console.
+    si.StartupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+    si.StartupInfo.wShowWindow = SW_HIDE;
+    si.StartupInfo.hStdInput = nullptr;
+    si.StartupInfo.hStdOutput = nullptr;
+    si.StartupInfo.hStdError = nullptr;
+
     PROCESS_INFORMATION pi{};
-    BOOL ok = CreateProcessW(nullptr, cmd, nullptr, nullptr, FALSE,
-                             EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr,
-                             &si.StartupInfo, &pi);
+    // CREATE_SUSPENDED: close PTY-side pipe ends before the child runs (winner matrix).
+    BOOL ok = CreateProcessW(
+        nullptr, cmd, nullptr, nullptr, FALSE,
+        EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT |
+            CREATE_SUSPENDED,
+        nullptr, cwdPtr, &si.StartupInfo, &pi);
     DeleteProcThreadAttributeList(attrs);
     HeapFree(GetProcessHeap(), 0, attrs);
+
+    // Close handles given to CreatePseudoConsole BEFORE ResumeThread
     CloseHandle(hInConRead);
     CloseHandle(hOutConWrite);
+    hInConRead = nullptr;
+    hOutConWrite = nullptr;
 
     if (!ok) {
         GateConPtyStream("CreateProcessW_failed");
@@ -167,10 +224,14 @@ bool Win32TerminalManager::start(ShellType shell)
     m_hStdInWrite = hInOurWrite;
     m_hStdOutRead = hOutOurRead;
     m_running = true;
+    assignJobObject();
 
+    // Start reader before resume so we do not miss early output
     m_outputThread = std::thread(&Win32TerminalManager::readOutputThread, this);
     m_monitorThread =
         std::thread(&Win32TerminalManager::monitorProcessThread, this);
+
+    ResumeThread(pi.hThread);
 
     if (onStarted)
         onStarted();
@@ -191,6 +252,10 @@ void Win32TerminalManager::stop()
     if (m_hStdInWrite) {
         CloseHandle(m_hStdInWrite);
         m_hStdInWrite = nullptr;
+    }
+    if (m_hJob) {
+        CloseHandle(m_hJob);
+        m_hJob = nullptr;
     }
     if (m_hProcess) {
         TerminateProcess(m_hProcess, 0);
@@ -217,6 +282,41 @@ void Win32TerminalManager::stop()
         CloseHandle(m_hThread);
         m_hThread = nullptr;
     }
+    m_processId = 0;
+}
+
+bool Win32TerminalManager::resize(short cols, short rows)
+{
+    if (cols < 1 || rows < 1)
+        return false;
+    m_cols = cols;
+    m_rows = rows;
+    if (!m_hPC || !g_ResizePseudoConsole)
+        return false;
+    COORD size = {cols, rows};
+    return SUCCEEDED(g_ResizePseudoConsole(m_hPC, size));
+}
+
+void Win32TerminalManager::interrupt()
+{
+    writeInput("\x03");
+}
+
+bool Win32TerminalManager::restart()
+{
+    ShellType shell = m_shellType;
+    // Preserve callbacks across stop/start (stop clears them for dtor safety).
+    auto out = onOutput;
+    auto err = onError;
+    auto started = onStarted;
+    auto finished = onFinished;
+    stop();
+    onOutput = out;
+    onError = err;
+    onStarted = started;
+    onFinished = finished;
+    Sleep(200);
+    return start(shell);
 }
 
 DWORD Win32TerminalManager::pid() const
@@ -244,13 +344,29 @@ void Win32TerminalManager::readOutputThread()
     DWORD bytesRead = 0;
     constexpr DWORD kMaxChunk = static_cast<DWORD>(sizeof(buffer) - 1);
     while (m_running) {
-        if (ReadFile(m_hStdOutRead, buffer, kMaxChunk, &bytesRead, nullptr) &&
+        // Peek first so stop() can interrupt without indefinite block after close
+        DWORD avail = 0;
+        if (!PeekNamedPipe(m_hStdOutRead, nullptr, 0, nullptr, &avail, nullptr)) {
+            // Fall back to blocking ReadFile when peek unsupported
+            if (ReadFile(m_hStdOutRead, buffer, kMaxChunk, &bytesRead, nullptr) &&
+                bytesRead > 0) {
+                if (onOutput)
+                    onOutput(std::string(buffer, bytesRead));
+                continue;
+            }
+            break;
+        }
+        if (avail == 0) {
+            Sleep(10);
+            continue;
+        }
+        DWORD toRead = avail;
+        if (toRead > kMaxChunk)
+            toRead = kMaxChunk;
+        if (ReadFile(m_hStdOutRead, buffer, toRead, &bytesRead, nullptr) &&
             bytesRead > 0) {
-            const size_t n = (bytesRead <= kMaxChunk)
-                                 ? static_cast<size_t>(bytesRead)
-                                 : static_cast<size_t>(kMaxChunk);
             if (onOutput)
-                onOutput(std::string(buffer, n));
+                onOutput(std::string(buffer, bytesRead));
         } else {
             break;
         }

@@ -1,0 +1,9 @@
+PROBLEMS_GATE harness PROMOTE=0
+DIAG sev=1 line=8 col=10 code=C2143 path=g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001\fixtures\path with spaces\broken file.cpp msg=syntax error: missing ';' before '}'
+DIAG sev=2 line=7 col=7 code=C4101 path=g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001\fixtures\path with spaces\broken file.cpp msg='unused': unreferenced local variable
+PASS dedupe count=2
+PASS warn_vs_error
+PASS path_with_spaces
+PASS stale_removal_after_clear
+PROBLEMS_PANEL=PASS
+PROMOTE=0 TIP_CLIMB=HOLD

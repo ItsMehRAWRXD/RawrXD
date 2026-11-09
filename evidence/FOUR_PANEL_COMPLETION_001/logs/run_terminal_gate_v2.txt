@@ -1,0 +1,18 @@
+TERMINAL_GATE harness v2 PROMOTE=0
+Microsoft Windows [Version 10.0.26300.9818]
+(c) Microsoft Corporation. All rights reserved.
+
+g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001>Microsoft Windows [Version 10.0.26300.9818]
+(c) Microsoft Corporation. All rights reserved.
+
+g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001>PS G:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001> FAIL echo capture
+DUMP_LEN=0 DUMP_TAIL=
+FAIL compile+run via ConPTY
+PASS interrupt issued
+PASS resize
+PASS restart
+PASS no orphan after stop
+FAIL PowerShell capture
+TERMINAL_GATE fail_count=3
+TERMINAL=FAIL_CLOSED
+PROMOTE=0 TIP_CLIMB=HOLD

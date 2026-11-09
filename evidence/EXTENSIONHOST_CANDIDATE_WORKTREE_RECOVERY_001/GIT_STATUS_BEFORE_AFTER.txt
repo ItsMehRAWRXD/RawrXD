@@ -1,0 +1,9 @@
+PRIMARY_BEFORE=tracked_changes_2
+EXISTING_CANDIDATE_BEFORE=locked_initializing;~301819_tracked_changes;untouched
+NEW_DESTINATION_BEFORE=absent
+NEW_CANDIDATE_AFTER=locked_initializing;~301819_tracked_changes;11_runtime_files_absent
+PRIMARY_AFTER=not_modified_by_recovery
+SOURCE_PATCH=not_applied
+BUILD=NOT_RUN
+RUNTIME=NOT_RUN
+

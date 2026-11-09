@@ -1,4 +1,4 @@
-// problems_aggregator.cpp — Unified Problems (LSP, SAST, SCA, Secrets, Build)
+// problems_aggregator.cpp â€” Unified Problems (LSP, SAST, SCA, Secrets, Build)
 #include "problems_aggregator.hpp"
 #include <algorithm>
 
@@ -6,6 +6,14 @@ namespace RawrXD {
 
 void ProblemsAggregator::add(ProblemEntry p) {
     std::lock_guard<std::mutex> lock(m_mutex);
+    // FOUR_PANEL_COMPLETION_001 Track I — dedupe identical diagnostics
+    for (const auto& e : m_problems) {
+        if (e.source == p.source && e.path == p.path && e.line == p.line &&
+            e.column == p.column && e.severity == p.severity &&
+            e.code == p.code && e.message == p.message) {
+            return;
+        }
+    }
     m_problems.push_back(std::move(p));
 }
 

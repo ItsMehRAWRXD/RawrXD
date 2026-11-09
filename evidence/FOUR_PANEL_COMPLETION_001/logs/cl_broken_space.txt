@@ -1,0 +1,2 @@
+broken file.cpp
+fixtures\path with spaces\broken file.cpp(9): error C2143: syntax error: missing ';' before '}'

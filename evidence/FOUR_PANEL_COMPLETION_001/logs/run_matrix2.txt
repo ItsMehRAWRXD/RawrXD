@@ -1,0 +1,10 @@
+MATRIX_V2
+CONPTY_MARK_A7F3
+hPC hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+amp hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+amp_stdnull hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+amp_sus_close hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+amp_stdnull_sus_close hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+amp_stdnull_sus_close_app hit=0 seed_len=0 seed=[] pipe_len=0 pipe=[]
+hPC_stdnull_sus_close hit=1 seed_len=0 seed=[] pipe_len=0 pipe=[]
+WINS=1

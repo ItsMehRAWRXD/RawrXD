@@ -1758,6 +1758,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 RawrXD_FinishHexMagCopilotDone(this, lParam);
                 return 0;
             }
+            // Async infer UI marshal (worker → UI thread). Epoch-gated; owns lParam.
+            if (uMsg == WM_INFERENCE_UI)
+            {
+                deliverInferenceUi(wParam, lParam);
+                return 0;
+            }
             // Handle Ollama model list update from background thread
             // NOTE: Using WM_APP + 310 to avoid collision with WM_MODEL_PROGRESS_UPDATE (WM_APP + 300)
             // HEAP_7BB71: sole owner of heap vector. Null-guard; clear wParam ownership before
@@ -2080,11 +2086,19 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (uMsg == WM_IDE_OUTPUT_APPEND_SAFE)
             {
-                const char* text = reinterpret_cast<const char*>(lParam);
-                if (text)
+                char* payload = reinterpret_cast<char*>(lParam);
+                if (payload)
                 {
-                    appendToOutput(std::string(text), "Output", OutputSeverity::Info);
-                    free(const_cast<char*>(text));
+                    // WPARAM = channel length; payload = channel\0text
+                    const size_t chLen = static_cast<size_t>(wParam);
+                    std::string channel = "Output";
+                    const char* text = payload;
+                    if (chLen > 0 && payload[chLen] == '\0') {
+                        channel.assign(payload, chLen);
+                        text = payload + chLen + 1;
+                    }
+                    appendToOutput(std::string(text), channel, OutputSeverity::Info);
+                    free(payload);
                 }
                 return 0;
             }

@@ -1,0 +1,218 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4b3d08859c..82bea9e7bb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5644,6 +5644,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
+         src/gguf_masm_weight_bridge.cpp
+         src/codec/brutal_gzip.cpp
+         src/codec/gzip_brutal_inflate.cpp
++        src/win32app/ProductExtensionRuntime_State.cpp
++        src/win32app/ProductExtensionRuntime_Util.cpp
++        src/win32app/ProductExtensionRuntime_Scan.cpp
++        src/win32app/ProductExtensionRuntime_Manifest.cpp
++        src/win32app/ProductExtensionRuntime_Host.cpp
++        src/win32app/ProductExtensionRuntime_Toggles.cpp
++        src/win32app/ProductExtensionRuntime_Activate.cpp
++        src/win32app/ProductExtensionRuntime_Api.cpp
+     )
+ 
+     # AUTO provider: auto_feature_registry.cpp provides the real handlers
+@@ -7527,7 +7535,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
+     )
+     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
+ 
++    add_executable(RawrXD-ExtensionHost src/win32app/ExtensionHostWorker_main.cpp)
++    set_target_properties(RawrXD-ExtensionHost PROPERTIES
++        OUTPUT_NAME "RawrXD-ExtensionHost"
++        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
++        CXX_STANDARD 20
++        CXX_STANDARD_REQUIRED ON
++    )
++    target_link_libraries(RawrXD-ExtensionHost PRIVATE kernel32)
++
+     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
++    add_dependencies(RawrXD-Win32IDE RawrXD-ExtensionHost)
++    add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
++        COMMAND ${CMAKE_COMMAND} -E copy_if_different
++            "$<TARGET_FILE:RawrXD-ExtensionHost>"
++            "$<TARGET_FILE_DIR:RawrXD-Win32IDE>/RawrXD-ExtensionHost.exe"
++        COMMENT "Deploying ExtensionHost beside candidate Win32IDE"
++    )
+     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
+ 
+     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
+diff --git a/src/win32app/ExtensionHostWorker_main.cpp b/src/win32app/ExtensionHostWorker_main.cpp
+index d3284a1759..55fa9408f9 100644
+--- a/src/win32app/ExtensionHostWorker_main.cpp
++++ b/src/win32app/ExtensionHostWorker_main.cpp
+@@ -1,13 +1,27 @@
+ ﻿// RawrXD-ExtensionHost.exe — real child process for host_pid.
+ #include <windows.h>
++#include <string>
+ 
+-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+-    HANDLE stop = CreateEventW(nullptr, TRUE, FALSE, L"Local\\RawrXD_ExtensionHost_Stop");
+-    if (!stop) {
+-        for (;;) Sleep(60000);
+-        return 0;
++static std::string Arg(int argc, char** argv, const char* name) {
++    for (int i = 1; i + 1 < argc; ++i)
++        if (lstrcmpiA(argv[i], name) == 0) return argv[i + 1];
++    return {};
++}
++
++int main(int argc, char** argv) {
++    const std::string readyName = Arg(argc, argv, "--ready-event");
++    const std::string stopName = Arg(argc, argv, "--stop-event");
++    if (readyName.empty() || stopName.empty()) return 2;
++    HANDLE ready = OpenEventA(EVENT_MODIFY_STATE, FALSE, readyName.c_str());
++    HANDLE stop = OpenEventA(SYNCHRONIZE, FALSE, stopName.c_str());
++    if (!ready || !stop) {
++        if (ready) CloseHandle(ready);
++        if (stop) CloseHandle(stop);
++        return 3;
+     }
++    SetEvent(ready);
+     WaitForSingleObject(stop, INFINITE);
++    CloseHandle(ready);
+     CloseHandle(stop);
+     return 0;
+ }
+diff --git a/src/win32app/ProductExtensionRuntime.hpp b/src/win32app/ProductExtensionRuntime.hpp
+index 7f784cc46b..932511d8ac 100644
+--- a/src/win32app/ProductExtensionRuntime.hpp
++++ b/src/win32app/ProductExtensionRuntime.hpp
+@@ -25,8 +25,13 @@ struct ExtRecord {
+ struct HostState {
+     DWORD hostPid = 0;
+     HANDLE hostProcess = nullptr;
++    HANDLE readyEvent = nullptr;
++    HANDLE stopEvent = nullptr;
+     ULONGLONG startTick = 0;
+     int extensionsLoaded = 0;
++    DWORD lastLaunchError = ERROR_SUCCESS;
++    std::string readyEventName;
++    std::string stopEventName;
+ };
+ 
+ void SetRoots(const std::string& projectRoot, const std::string& exeDir);
+diff --git a/src/win32app/ProductExtensionRuntime_Host.cpp b/src/win32app/ProductExtensionRuntime_Host.cpp
+index f8afec08a6..d9a8eea64a 100644
+--- a/src/win32app/ProductExtensionRuntime_Host.cpp
++++ b/src/win32app/ProductExtensionRuntime_Host.cpp
+@@ -1,17 +1,43 @@
+ ﻿// ProductExtensionRuntime_Host.cpp — real ExtensionHost child spawn.
+ // Fail-closed: missing host EXE ⇒ host_pid stays 0 (never invent PID).
+ #include "ProductExtensionRuntime_Internal.hpp"
++#include <system_error>
+ 
+ namespace ProductExtensionRuntime {
+ 
++namespace {
++std::string QuoteWindowsArg(const std::string& value) {
++    std::string out = "\"";
++    unsigned slashes = 0;
++    for (char c : value) {
++        if (c == '\\') { ++slashes; continue; }
++        if (c == '"') out.append(slashes * 2 + 1, '\\');
++        else out.append(slashes, '\\');
++        out.push_back(c);
++        slashes = 0;
++    }
++    out.append(slashes * 2, '\\');
++    out.push_back('"');
++    return out;
++}
++}
++
+ void CloseHostUnlocked() {
+     HostState& h = Host();
++    if (h.stopEvent) {
++        SetEvent(h.stopEvent);
++    }
+     if (h.hostProcess) {
+-        TerminateProcess(h.hostProcess, 0);
++        DWORD wait = WaitForSingleObject(h.hostProcess, 2000);
++        if (wait == WAIT_TIMEOUT) TerminateProcess(h.hostProcess, 0);
+         CloseHandle(h.hostProcess);
+         h.hostProcess = nullptr;
+     }
++    if (h.readyEvent) { CloseHandle(h.readyEvent); h.readyEvent = nullptr; }
++    if (h.stopEvent) { CloseHandle(h.stopEvent); h.stopEvent = nullptr; }
+     h.hostPid = 0;
++    h.readyEventName.clear();
++    h.stopEventName.clear();
+     for (auto& [_, e] : Exts()) {
+         e.active = false;
+         e.processId = 0;
+@@ -33,24 +59,58 @@ bool SpawnHostUnlocked(ExtRecord& rec) {
+     }
+     std::string hostExe = (std::filesystem::path(ExeDir()) /
+                            "RawrXD-ExtensionHost.exe").string();
+-    if (!std::filesystem::exists(hostExe)) {
++    std::error_code ec;
++    auto canonicalExe = std::filesystem::weakly_canonical(hostExe, ec);
++    if (ec || !std::filesystem::is_regular_file(canonicalExe, ec) || ec) {
++        return false;
++    }
++    hostExe = canonicalExe.string();
++    const std::string token = std::to_string(GetCurrentProcessId()) + "_" +
++                              std::to_string(GetTickCount64());
++    h.readyEventName = "Local\\RawrXD_ExtensionHost_Ready_" + token;
++    h.stopEventName = "Local\\RawrXD_ExtensionHost_Stop_" + token;
++    h.readyEvent = CreateEventA(nullptr, TRUE, FALSE, h.readyEventName.c_str());
++    h.stopEvent = CreateEventA(nullptr, TRUE, FALSE, h.stopEventName.c_str());
++    if (!h.readyEvent || !h.stopEvent) {
++        if (h.readyEvent) CloseHandle(h.readyEvent);
++        if (h.stopEvent) CloseHandle(h.stopEvent);
++        h.readyEvent = nullptr; h.stopEvent = nullptr;
+         return false;
+     }
+     STARTUPINFOA si{};
+     si.cb = sizeof(si);
+     PROCESS_INFORMATION pi{};
+-    std::string cmd = "\"" + hostExe + "\" --extension-id " + rec.id +
+-                      " --extension-path \"" + rec.path + "\"";
++    std::string cmd = QuoteWindowsArg(hostExe) + " --extension-id " +
++                      QuoteWindowsArg(rec.id) + " --extension-path " +
++                      QuoteWindowsArg(rec.path) + " --ready-event " +
++                      QuoteWindowsArg(h.readyEventName) + " --stop-event " +
++                      QuoteWindowsArg(h.stopEventName);
+     std::vector<char> buf(cmd.begin(), cmd.end());
+     buf.push_back('\0');
+     BOOL ok = CreateProcessA(hostExe.c_str(), buf.data(), nullptr, nullptr,
+                              FALSE, CREATE_NO_WINDOW, nullptr,
+                              ExeDir().empty() ? nullptr : ExeDir().c_str(),
+                              &si, &pi);
+-    if (!ok) return false;
++    if (!ok) {
++        h.lastLaunchError = GetLastError();
++        CloseHandle(h.readyEvent); h.readyEvent = nullptr;
++        CloseHandle(h.stopEvent); h.stopEvent = nullptr;
++        h.readyEventName.clear(); h.stopEventName.clear();
++        return false;
++    }
+     CloseHandle(pi.hThread);
++    if (WaitForSingleObject(h.readyEvent, 5000) != WAIT_OBJECT_0) {
++        TerminateProcess(pi.hProcess, 0);
++        CloseHandle(pi.hProcess);
++        h.hostProcess = nullptr; h.hostPid = 0;
++        CloseHandle(h.readyEvent); h.readyEvent = nullptr;
++        CloseHandle(h.stopEvent); h.stopEvent = nullptr;
++        h.readyEventName.clear(); h.stopEventName.clear();
++        return false;
++    }
+     h.hostProcess = pi.hProcess;
+     h.hostPid = pi.dwProcessId;
++    h.lastLaunchError = ERROR_SUCCESS;
+     h.startTick = GetTickCount64();
+     rec.active = true;
+     rec.processId = h.hostPid;
+@@ -77,6 +137,7 @@ std::string HostStatusJson() {
+            ",\"host_pid\":" + std::to_string(h.hostPid) +
+            ",\"extensions_loaded\":" + std::to_string(h.extensionsLoaded) +
+            ",\"uptime_seconds\":" + std::to_string(up) +
++           ",\"last_launch_error\":" + std::to_string(h.lastLaunchError) +
+            ",\"adapter\":\"product_extension_runtime\"}";
+ }
+ 

@@ -1,7 +1,7 @@
-#pragma once
+﻿#pragma once
 
 // Windows / Winsock include order (required for MSVC + MinGW):
-//   winsock2.h → ws2tcpip.h → windows.h → commctrl.h → commdlg.h
+//   winsock2.h â†’ ws2tcpip.h â†’ windows.h â†’ commctrl.h â†’ commdlg.h
 // winsock2 MUST come before windows.h to avoid winsock1 vs winsock2 conflicts.
 // commctrl.h and commdlg.h MUST come after windows.h for CALLBACK, HWND etc.
 #ifndef WIN32_LEAN_AND_MEAN
@@ -124,7 +124,7 @@ using json = nlohmann::json;
 
 
 #include "Win32IDE_Fwd.h"
-// Tier 3: File Watcher — full type needed for unique_ptr destructor
+// Tier 3: File Watcher â€” full type needed for unique_ptr destructor
 
 // Global trace function for debugging (defined in Win32IDE_Core.cpp)
 void fileTrace(const char* msg);
@@ -316,7 +316,7 @@ class Win32IDE
     {
         m_engineManager = mgr;
         // P0: do NOT PostMessage(WM_APP+201) here. Flushing model-load during
-        // post_create_2 pump dispatches 0x80c9 → loadGGUFModel → uncaught SEH
+        // post_create_2 pump dispatches 0x80c9 â†’ loadGGUFModel â†’ uncaught SEH
         // 0xE06D7363 and kills startup. Keep pending; flush only after
         // markStartupPumpsComplete() (or explicit user model open).
         if (mgr && m_pendingApp201ModelLoad)
@@ -330,7 +330,7 @@ class Win32IDE
     bool createWindow();
     void showWindow();
     int runMessageLoop();
-    // ── Parity-audit: Visibility Watchdog ──────────────────────────────────
+    // â”€â”€ Parity-audit: Visibility Watchdog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     void startVisibilityWatchdog();
     void stopVisibilityWatchdog();
     static DWORD WINAPI VisibilityWatchdogThread(LPVOID param);
@@ -355,7 +355,7 @@ class Win32IDE
     bool isCommandHomeShell() const { return m_shellMode == AppShellMode::Command; }
     void applyShellModeChrome();
 
-    // Agentic Framework — Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
+    // Agentic Framework â€” Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
     AgenticBridge* m_agenticBridge = nullptr;  // Non-owning; set from m_fullAgenticIDE->getBridge()
     bool m_multiAgentEnabled = false;          // Multi-agent orchestration toggle
@@ -387,9 +387,9 @@ class Win32IDE
     void onPipelineAutonomyStart();
     void onPipelineAutonomyStop();
 
-    // ── Omega Orchestrator — Phase Ω: The Last Tool ──────────────────────
-    // Full autonomous software development pipeline with PERCEIVE→PLAN→ARCHITECT→
-    // IMPLEMENT→VERIFY→DEPLOY→OBSERVE→EVOLVE capability
+    // â”€â”€ Omega Orchestrator â€” Phase Î©: The Last Tool â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Full autonomous software development pipeline with PERCEIVEâ†’PLANâ†’ARCHITECTâ†’
+    // IMPLEMENTâ†’VERIFYâ†’DEPLOYâ†’OBSERVEâ†’EVOLVE capability
     rawrxd::OmegaOrchestrator* m_omegaOrchestrator = nullptr;
     bool m_omegaActive = false;
     void initializeOmegaOrchestrator();
@@ -406,7 +406,7 @@ class Win32IDE
     void onOmegaExportStats();
     void onOmegaDiagnostics();
 
-    // ── Agentic Planning Orchestrator — Full Approval Gates ──────────────
+    // â”€â”€ Agentic Planning Orchestrator â€” Full Approval Gates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     void onPlanningStart();
     void onPlanningShowQueue();
     void onPlanningApproveStep();
@@ -434,7 +434,7 @@ class Win32IDE
 
 
     // ========================================================================
-    // AGENT MEMORY — Persistent observation store for agentic iterations
+    // AGENT MEMORY â€” Persistent observation store for agentic iterations
     // Phase 19B: Lets agents/models/swarms/end-users store & recall context
     // ========================================================================
     struct AgentMemoryEntry
@@ -454,7 +454,7 @@ class Win32IDE
     std::string agentMemoryGet(const std::string& key) const;
 
     // ========================================================================
-    // SUBAGENT WIN32 COMMAND HANDLERS — Wire SubAgentManager to Win32IDE
+    // SUBAGENT WIN32 COMMAND HANDLERS â€” Wire SubAgentManager to Win32IDE
     // Phase 19B: Expose chain/swarm/todo via menu & command palette
     // ========================================================================
     void onSubAgentChain();
@@ -464,7 +464,7 @@ class Win32IDE
     void onSubAgentStatus();
 
     // ========================================================================
-    // TOKEN-BY-TOKEN STREAMING — Live output to editor/output panel
+    // TOKEN-BY-TOKEN STREAMING â€” Live output to editor/output panel
     // Phase 19B: appendStreamingToken writes tokens as they arrive
     // ========================================================================
     void appendStreamingToken(const std::string& token);
@@ -472,7 +472,7 @@ class Win32IDE
     std::string getStreamingOutput() const;
 
     // ========================================================================
-    // KILL TERMINAL — Force-kill stuck/frozen terminals with timeout
+    // KILL TERMINAL â€” Force-kill stuck/frozen terminals with timeout
     // Phase 19B: Configurable time limiter, used by agents/models/end-users
     // ========================================================================
     void killTerminal(int paneId = -1);
@@ -481,7 +481,7 @@ class Win32IDE
     int getTerminalKillTimeout() const;
 
     // ========================================================================
-    // SPLIT CODE VIEWER — Split editor into two side-by-side code panes
+    // SPLIT CODE VIEWER â€” Split editor into two side-by-side code panes
     // Phase 19B: Independent of terminal split
     // ========================================================================
     void splitCodeViewerHorizontal();
@@ -496,14 +496,14 @@ class Win32IDE
     bool testFindPatternRVAParity(const std::string& binaryPath, const std::string& pattern, uint64_t& outRVA);
 
     // ========================================================================
-    // LICENSE → MANIFEST WIRING
+    // LICENSE â†’ MANIFEST WIRING
     // Phase 19B: Connect RawrLicense_CheckFeature (Phase 17) to FeatureManifest
     // ========================================================================
     bool checkFeatureLicense(const std::string& featureId) const;
     void syncLicenseWithManifest();
 
     // ========================================================================
-    // TRANSCENDENCE ARCHITECTURE PANEL (E → Ω)
+    // TRANSCENDENCE ARCHITECTURE PANEL (E â†’ Î©)
     // ========================================================================
     void initTranscendence();
     void shutdownTranscendence();
@@ -644,7 +644,7 @@ class Win32IDE
     void openModelUnified();
     bool resolveAndLoadModel(const std::string& input);
 
-    // Streaming / Model UX — progress, cancellation, status feedback
+    // Streaming / Model UX â€” progress, cancellation, status feedback
     void showModelProgressBar(const std::string& operation);
     void updateModelProgress(float percent, const std::string& statusText);
     void hideModelProgressBar();
@@ -654,13 +654,13 @@ class Win32IDE
     void showModelLoadError(const std::string& detail);
     static LRESULT CALLBACK ModelProgressProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    // SubAgent / Swarm UX — progress, status display
+    // SubAgent / Swarm UX â€” progress, status display
     void showSubAgentProgress(const std::string& operation, int totalTasks);
     void updateSubAgentProgress(int completedTasks, int totalTasks, const std::string& currentTask);
     void hideSubAgentProgress();
     void showSwarmStatus();
 
-    // (AI Backend Abstraction — Phase 8B: see full declaration block below Settings section)
+    // (AI Backend Abstraction â€” Phase 8B: see full declaration block below Settings section)
 
     // AI Inference Engine - Local GGUF Model Chat
     struct InferenceConfig
@@ -675,7 +675,7 @@ class Win32IDE
         bool streamOutput = true;
     };
 
-    // ── Context Window Token Usage Tracking ──
+    // â”€â”€ Context Window Token Usage Tracking â”€â”€
     struct ContextWindowUsage
     {
         int maxTokens = 128000;
@@ -712,8 +712,11 @@ class Win32IDE
     std::string buildChatPrompt(const std::string& userMessage);
     void onInferenceToken(const std::string& token);
     void onInferenceComplete(const std::string& fullResponse);
+    /// UI-thread delivery for async infer tokens (epoch-gated; no worker HWND use).
+    void deliverInferenceUi(WPARAM wParam, LPARAM lParam);
+    void postInferenceUi(uint64_t epoch, const std::string& token, bool complete);
 
-    // ── Native Inference Pipeline (zero-dependency local AI) ──
+    // â”€â”€ Native Inference Pipeline (zero-dependency local AI) â”€â”€
     bool initNativePipeline();
     void shutdownNativePipeline();
     bool loadNativeModel(const std::string& ggufPath);
@@ -1028,10 +1031,10 @@ class Win32IDE
     HMENU createReverseEngineeringMenu();  // Helper to add the menu
 
     // ========================================================================
-    // DECOMPILER VIEW — Direct2D Split View (Phase 18B)
+    // DECOMPILER VIEW â€” Direct2D Split View (Phase 18B)
     // Direct2D-rendered decompiler (left) + disassembly (right) with:
     //   1. Syntax coloring via tokenizeLine() / getTokenColor()
-    //   2. Bidirectional synchronized selection (click ↔ highlight)
+    //   2. Bidirectional synchronized selection (click â†” highlight)
     //   3. Right-click variable rename with SSA graph propagation
     // ========================================================================
     void initDecompilerView();
@@ -1074,7 +1077,7 @@ class Win32IDE
     void resetToDefaultTheme();
     void populateBuiltinThemes();                                         // Register all 16 built-in themes
     IDETheme getBuiltinTheme(int themeId) const;                          // Factory method
-    void applyThemeById(int themeId);                                     // IDM_THEME_xxx → apply
+    void applyThemeById(int themeId);                                     // IDM_THEME_xxx â†’ apply
     void setWindowTransparency(BYTE alpha);                               // WS_EX_LAYERED alpha
     void showTransparencySlider();                                        // Custom slider dialog
     void buildThemeMenu(HMENU hParentMenu);                               // Build Appearance submenu
@@ -1128,7 +1131,7 @@ class Win32IDE
     void searchHelp(const std::string& query);
 
   public:
-    // Enhanced output panel (public — accessed by BuildRunner, AgentStreamingBridge, AuditDashboard, etc.)
+    // Enhanced output panel (public â€” accessed by BuildRunner, AgentStreamingBridge, AuditDashboard, etc.)
     void createOutputTabs();
     void addOutputTab(const std::string& name);
     void appendToOutput(const std::string& text, const std::string& tabName = "General",
@@ -1191,7 +1194,7 @@ class Win32IDE
     void initSyntaxColorizer();
     void applySyntaxColoring();
     void applySyntaxColoringForRange(int startChar, int endChar);
-    void applySyntaxColoringForVisibleRange();        // Named wrapper — colors only the visible range
+    void applySyntaxColoringForVisibleRange();        // Named wrapper â€” colors only the visible range
     VisibleLineRange getVisibleEditorLines() const;   // Accessor for the visible line range
     SyntaxLanguage getCurrentSyntaxLanguage() const;  // Accessor for the detected language enum
     std::vector<SyntaxToken> tokenizeLine(const std::string& line, int lineStartOffset, SyntaxLanguage lang);
@@ -1263,7 +1266,7 @@ class Win32IDE
         Error = 3,
         Suggestion = 4
     };
-    // Annotation Action Types — what happens when the user clicks an annotation
+    // Annotation Action Types â€” what happens when the user clicks an annotation
     enum class AnnotationActionType
     {
         None = 0,    // No action (display only)
@@ -1275,7 +1278,7 @@ class Win32IDE
         Suppress     // Dismiss/suppress the annotation permanently
     };
 
-    // Annotation Action — attached to an annotation for click-to-act
+    // Annotation Action â€” attached to an annotation for click-to-act
     struct AnnotationAction
     {
         AnnotationActionType type;
@@ -1317,12 +1320,12 @@ class Win32IDE
     static LRESULT CALLBACK AnnotationOverlayProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void createAnnotationOverlay(HWND hwndParent);
 
-    // Annotation lifecycle — tab switch / file close
+    // Annotation lifecycle â€” tab switch / file close
     void clearAnnotationsForCurrentFile();  // Clear annotations when closing a tab
     void storeAnnotationsForTab();          // Stash annotations before tab switch
     void restoreAnnotationsForTab();        // Restore stashed annotations on tab switch
 
-    // Annotation → Action Bridge
+    // Annotation â†’ Action Bridge
     void executeAnnotationAction(const InlineAnnotation& annotation);
     void onAnnotationClicked(int line, int clickX, int clickY);
     void showAnnotationActionMenu(HWND hwndParent, int x, int y, const std::vector<InlineAnnotation>& annotations);
@@ -1419,7 +1422,7 @@ class Win32IDE
     void toggleFloatingPanel();
     /// Neural diagnostics: floating swarm expert heatmap + congestion HUD.
     void toggleExpertHeatmapPanel();
-    /// Compiler output / dumpbin — fail-closed adapt to CompilerIntegration
+    /// Compiler output / dumpbin â€” fail-closed adapt to CompilerIntegration
     /// (CppCompilerImpl + m_hwndTerminal ABSENT; INVENT_COMPILER_PASS=0).
     void ShowCompilerOutput();
     void ShowDumpbinOutput();
@@ -1471,7 +1474,7 @@ class Win32IDE
     static LRESULT CALLBACK SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static WNDPROC s_sidebarContentOldProc;
 
-    // SidebarRuntime views (Win32IDE_SidebarRuntime.cpp) — SOURCE_WIRED; INVENT_SIDEBAR_PASS=0
+    // SidebarRuntime views (Win32IDE_SidebarRuntime.cpp) â€” SOURCE_WIRED; INVENT_SIDEBAR_PASS=0
     void destroySidebarRuntimeChildren(HWND hwndParent);
     void createGitHubView(HWND hwndParent);
     void createGitHubPullReleaseView(HWND hwndParent);
@@ -1703,6 +1706,9 @@ class Win32IDE
     InferenceConfig m_inferenceConfig;
     std::atomic<bool> m_inferenceRunning;
     bool m_inferenceStopRequested;
+    /// Bumped on each new Request and on Stop â€” stale A callbacks must not touch UI/B.
+    std::atomic<uint64_t> m_inferenceEpoch{0};
+    static const UINT WM_INFERENCE_UI = WM_APP + 112;
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
@@ -1713,7 +1719,7 @@ class Win32IDE
     /// Status bar part 3: MoE mixture pack + async prepack counters (UI thread).
     void refreshMoEPackHudStatusBarPart();
 
-    // (AI Backend state — Phase 8B: see full block near Settings section)
+    // (AI Backend state â€” Phase 8B: see full block near Settings section)
 
     // Native Agent Integration
     std::unique_ptr<RawrXD::NativeAgent> m_agent;
@@ -1721,7 +1727,7 @@ class Win32IDE
     bool m_nativeEngineLoaded = false;
     std::mutex m_outputMutex;
 
-    // Native Inference Pipeline — zero-dependency local AI core
+    // Native Inference Pipeline â€” zero-dependency local AI core
     std::unique_ptr<RawrXD::NativeInferencePipeline> m_nativePipeline;
     bool m_nativePipelineReady = false;
 
@@ -1748,7 +1754,7 @@ class Win32IDE
     void showExtensionHelp(const std::string& name);
 
     // ========================================================================
-    // PLUGIN SYSTEM — Phase 43: Native Win32 plugin loading (C ABI)
+    // PLUGIN SYSTEM â€” Phase 43: Native Win32 plugin loading (C ABI)
     // Hot-load DLLs with plugin_init/plugin_cleanup lifecycle.
     // Hooks: onFileSave, onChatMessage, onCommand, onModelLoad.
     // Config-gated hot-loading via IDM_PLUGIN_TOGGLE_HOTLOAD.
@@ -1800,7 +1806,7 @@ class Win32IDE
     int m_windowHeight = 720;
     bool m_windowMaximized = false;
 
-    // ── Parity-audit: Visibility Watchdog members ──────────────────────────
+    // â”€â”€ Parity-audit: Visibility Watchdog members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     HANDLE m_watchdogThread = nullptr;
     volatile LONG m_watchdogRunning = 0;  // 1 = active, 0 = stop requested
     HWND m_hwndEditor;
@@ -1971,7 +1977,7 @@ class Win32IDE
     HFONT m_minimapFont = nullptr;
     RECT m_minimapViewRect = {};
 
-    // (Syntax coloring state declared inline with methods above — lines 641-645)
+    // (Syntax coloring state declared inline with methods above â€” lines 641-645)
 
     // Profiling
     bool m_profilingActive;
@@ -2516,7 +2522,7 @@ class Win32IDE
     // ========================================================================
     // AI CHAT PANEL IMPLEMENTATION
     // ========================================================================
-    // P1_UI_WINDOW_OWNERSHIP_001 — EnumWindows + dock-root asserts (debug + stderr)
+    // P1_UI_WINDOW_OWNERSHIP_001 â€” EnumWindows + dock-root asserts (debug + stderr)
     void dumpUiWindowOwnership(const char* phaseTag);
     void HandleCopilotSend();
     void HandleCopilotClear();
@@ -2532,10 +2538,10 @@ class Win32IDE
     void initializeChatPanelOllama();
 
   public:
-    // AI Chat Panel — public for HandleChatPanel free-function adapter
+    // AI Chat Panel â€” public for HandleChatPanel free-function adapter
     void createChatPanel();
     // HexMag control-plane dependency (not HexMag UI):
-    // HandleCopilotSend → RuntimeController → FinalizePolicy → Copilot chat
+    // HandleCopilotSend â†’ RuntimeController â†’ FinalizePolicy â†’ Copilot chat
     bool tryHexMagControllerCopilotSend(const std::string& userMessage);
     void finishHexMagCopilotDone(LPARAM lParam);
     void appendCopilotChatUtf8(const std::string& utf8);
@@ -2635,7 +2641,7 @@ class Win32IDE
     void onAgentOutput(const char* text);
     void postAgentOutputSafe(const std::string& text);
     /** Thread-safe: appends to Output tab on the UI thread (inference may run on workers). */
-    void postOutputPanelSafe(const std::string& text);
+    void postOutputPanelSafe(const std::string& text, const std::string& tabName = "Output");
 
     // ========================================================================
     // Ghost Text / Inline Completions (Win32IDE_GhostText.cpp)
@@ -2689,7 +2695,7 @@ class Win32IDE
     GhostTextMetrics m_ghostTextMetrics = {};
 
     // ========================================================================
-    // Peek Overlay — Definition/References Overlay (Win32IDE_PeekOverlay.cpp)
+    // Peek Overlay â€” Definition/References Overlay (Win32IDE_PeekOverlay.cpp)
     // ========================================================================
     struct LSPLocation;
 
@@ -2706,7 +2712,7 @@ class Win32IDE
     std::vector<PeekItem> findReferencesAt(int line, int col);
     void handlePeekOverlayKey(UINT vk, bool ctrl, bool alt, bool shift);
     bool isPeekOverlayActive() const;
-    /// Deferred dismiss / navigate — safe from peek overlay WndProc (posts to main HWND).
+    /// Deferred dismiss / navigate â€” safe from peek overlay WndProc (posts to main HWND).
     void postPeekFinishFromOverlay(bool navigate, const std::string& filePath, uint32_t line1Based);
 
     // Peek overlay state
@@ -2718,7 +2724,7 @@ class Win32IDE
     uint32_t m_peekDeferredLine = 1;
 
     // ========================================================================
-    // Agent Panel — Multi-File Edit Session (Win32IDE_AgentPanel.cpp)
+    // Agent Panel â€” Multi-File Edit Session (Win32IDE_AgentPanel.cpp)
     // ========================================================================
     void initAgentPanel();
     void startAgentSession(const std::string& userGoal);
@@ -2737,8 +2743,8 @@ class Win32IDE
     HWND m_hwndAgentAcceptAllBtn = nullptr;
     HWND m_hwndAgentRejectAllBtn = nullptr;
     HWND m_hwndAgentNewSessionBtn = nullptr;
-    void onBoundedAgentLoop();  // Ctrl+Shift+I → Bounded Agent (FIM tools)
-    void toggleAgentPanel();    // View > Agent Panel — show/hide agent chat panel
+    void onBoundedAgentLoop();  // Ctrl+Shift+I â†’ Bounded Agent (FIM tools)
+    void toggleAgentPanel();    // View > Agent Panel â€” show/hide agent chat panel
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;
@@ -2751,7 +2757,7 @@ class Win32IDE
     void clearLoadedModelPath();
 
   private:
-    // Agentic mode (Ask/Plan/Agent/Debug) — agentic_mode_switcher.hpp
+    // Agentic mode (Ask/Plan/Agent/Debug) â€” agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);
     void onAgenticModeChanged(RawrXD::AgenticMode mode);
     void onAgenticModeAsk();
@@ -2765,7 +2771,7 @@ class Win32IDE
     HWND m_hwndAgenticModeDebug = nullptr;
 
     // ========================================================================
-    // Security Scans (Win32IDE_SecurityScans.cpp) — Top-50 P0
+    // Security Scans (Win32IDE_SecurityScans.cpp) â€” Top-50 P0
     // (declarations in earlier section ~line 1264)
     // ========================================================================
 
@@ -2787,7 +2793,7 @@ class Win32IDE
     void handleRecoveryCommand(int commandId);
 
     // ========================================================================
-    // Plan Executor — Plan → Approve → Execute (Win32IDE_PlanExecutor.cpp)
+    // Plan Executor â€” Plan â†’ Approve â†’ Execute (Win32IDE_PlanExecutor.cpp)
     // ========================================================================
     void generateAgentPlan(const std::string& goal);
     void onPlanReady(int stepCount, PlanStep* steps);
@@ -2802,7 +2808,7 @@ class Win32IDE
     std::vector<PlanStep> parsePlanSteps(const std::string& agentOutput);
     std::string planStepTypeString(PlanStepType type) const;
 
-    // Plan Approval Dialog — custom UI
+    // Plan Approval Dialog â€” custom UI
     void populatePlanListView();
     void onPlanListSelChanged();
     void onPlanDialogCommand(int controlId);
@@ -2813,7 +2819,7 @@ class Win32IDE
     void syncActiveAgenticPlanApprovalsFromUi();
     void rejectPendingStepsInActiveAgenticPlan();
 
-    /// E05 — AgenticPlanningOrchestrator tool lane (JSON payloads from ExecutionPlan::actions).
+    /// E05 â€” AgenticPlanningOrchestrator tool lane (JSON payloads from ExecutionPlan::actions).
     std::string executeAgentPlanStepViaBridge(const PlanStep& step);
     void wireAgenticOrchestratorIntegration();
 
@@ -2827,7 +2833,7 @@ class Win32IDE
     static const size_t MAX_PLAN_HISTORY = 50;
 
     // ========================================================================
-    // AGENT ENHANCEMENTS — 7 autonomous-agent capabilities
+    // AGENT ENHANCEMENTS â€” 7 autonomous-agent capabilities
     // (Win32IDE_AgentEnhancements.cpp + Win32IDE_AgentEnhancements.h)
     // ========================================================================
 #include "Win32IDE_AgentEnhancements.h"
@@ -2912,7 +2918,7 @@ class Win32IDE
     std::vector<FailureClassification> classifyAllFailures(const std::string& response,
                                                            const std::string& originalPrompt);
 
-    // Phase 4B: Detection hooks — wired at exact choke points only
+    // Phase 4B: Detection hooks â€” wired at exact choke points only
     //   1. Post-generation validation
     //   2. Tool invocation result parsing
     //   3. Plan step output verification
@@ -2937,9 +2943,9 @@ class Win32IDE
     FailureStats m_failureStats;
 
     // ========================================================================
-    // Failure Intelligence — Phase 6 (Win32IDE_FailureIntelligence.cpp)
+    // Failure Intelligence â€” Phase 6 (Win32IDE_FailureIntelligence.cpp)
     // ========================================================================
-    // Phase 6.1 — Granular Classification
+    // Phase 6.1 â€” Granular Classification
     FailureReason classifyFailureReason(AgentFailureType type, const std::string& response, const std::string& prompt);
     FailureReason classifyRefusalReason(const std::string& response);
     FailureReason classifyHallucinationReason(const std::string& response);
@@ -2949,7 +2955,7 @@ class Win32IDE
     std::string failureReasonString(FailureReason reason) const;
     std::string computePromptHash(const std::string& prompt) const;
 
-    // Phase 6.2 — Bounded Retry Strategies
+    // Phase 6.2 â€” Bounded Retry Strategies
     void initFailureIntelligence();
     RetryStrategy getRetryStrategyForReason(FailureReason reason) const;
     std::string applyRetryStrategy(const RetryStrategy& strategy, const std::string& originalPrompt);
@@ -2958,7 +2964,7 @@ class Win32IDE
     void loadFailureIntelligenceHistory();
     void flushFailureIntelligence();
 
-    // Phase 6.3 — History-Aware Suggestion UI
+    // Phase 6.3 â€” History-Aware Suggestion UI
     bool hasMatchingPreviousFailure(const std::string& prompt) const;
     std::vector<FailureIntelligenceRecord> getMatchingFailures(const std::string& prompt) const;
     void showFailureSuggestionDialog(const std::string& prompt, const std::vector<FailureIntelligenceRecord>& matches);
@@ -2983,7 +2989,7 @@ class Win32IDE
     HWND m_hwndFailureSuggestionDlg = nullptr;
 
     // ========================================================================
-    // AI Backend Switcher — Phase 8B (Win32IDE_BackendSwitcher.cpp)
+    // AI Backend Switcher â€” Phase 8B (Win32IDE_BackendSwitcher.cpp)
     // ========================================================================
     enum class AIBackendType
     {
@@ -3025,7 +3031,7 @@ class Win32IDE
         uint64_t lastUsedEpochMs = 0;  // Epoch ms of last use
     };
 
-    // Backend Manager — initialization & lifecycle
+    // Backend Manager â€” initialization & lifecycle
     void initBackendManager();
     void shutdownBackendManager();
     void loadBackendConfigs();
@@ -3088,7 +3094,7 @@ class Win32IDE
     AIBackendType backendTypeFromString(const std::string& name) const;
     std::string getBackendConfigFilePath() const;
 
-    // Streaming Engine Selection — Phase 9
+    // Streaming Engine Selection â€” Phase 9
     // Auto-selects the optimal ASM streaming engine for a given model file
     std::string selectStreamingEngine(const std::string& modelPath);
     // Get full diagnostics from the streaming engine registry
@@ -3106,7 +3112,7 @@ class Win32IDE
     std::mutex m_backendMutex;
 
     // ========================================================================
-    // LLM Router — Phase 8C (Win32IDE_LLMRouter.cpp)
+    // LLM Router â€” Phase 8C (Win32IDE_LLMRouter.cpp)
     // ========================================================================
     // Task-based routing: classifies prompts by intent, selects the optimal
     // backend based on capabilities, failure history, and policy constraints.
@@ -3122,7 +3128,7 @@ class Win32IDE
         Planning = 4,        // Multi-step plan generation
         ToolExecution = 5,   // Tool-call / function-calling tasks
         Research = 6,        // Summarization / information retrieval
-        General = 7,         // Unclassified — default bucket
+        General = 7,         // Unclassified â€” default bucket
         Count = 8
     };
 
@@ -3136,7 +3142,7 @@ class Win32IDE
         bool supportsFunctionCalling = false;
         bool supportsJsonMode = false;
         int costTier = 0;           // 0 = free/local, 1 = cheap, 2 = moderate, 3 = expensive
-        float qualityScore = 0.5f;  // 0.0–1.0 subjective quality rating
+        float qualityScore = 0.5f;  // 0.0â€“1.0 subjective quality rating
         std::string notes;          // Human-readable notes
     };
 
@@ -3146,7 +3152,7 @@ class Win32IDE
         AIBackendType selectedBackend = AIBackendType::LocalGGUF;
         AIBackendType fallbackBackend = AIBackendType::Count;  // Count = no fallback
         LLMTaskType classifiedTask = LLMTaskType::General;
-        float confidence = 0.0f;       // 0.0–1.0 classification confidence
+        float confidence = 0.0f;       // 0.0â€“1.0 classification confidence
         std::string reason;            // Human-readable routing rationale
         bool policyOverride = false;   // true if policy engine redirected
         bool fallbackUsed = false;     // true if primary failed and fallback served
@@ -3259,7 +3265,7 @@ class Win32IDE
         std::string summaryText;
     };
 
-    // Router — initialization & lifecycle
+    // Router â€” initialization & lifecycle
     void initLLMRouter();
     void shutdownLLMRouter();
     void loadRouterConfig();
@@ -3281,7 +3287,7 @@ class Win32IDE
     std::string handleRoutingFallback(AIBackendType primary, AIBackendType fallback, const std::string& prompt,
                                       RoutingDecision& decision);
 
-    // Policy integration — failure-informed routing
+    // Policy integration â€” failure-informed routing
     AIBackendType getFailureAdjustedBackend(AIBackendType preferred, LLMTaskType task) const;
     bool isBackendViableForTask(AIBackendType type, LLMTaskType task) const;
     int getConsecutiveFailures(AIBackendType type) const;
@@ -3350,24 +3356,24 @@ class Win32IDE
     RoutingDecision m_lastRoutingDecision = {};
     std::mutex m_routerMutex;
 
-    // UX Enhancement state — per-task pinning
+    // UX Enhancement state â€” per-task pinning
     std::array<TaskBackendPin, (size_t)LLMTaskType::Count> m_taskPins = {};
 
-    // UX Enhancement state — cost / latency heatmap
+    // UX Enhancement state â€” cost / latency heatmap
     // Indexed as [taskType][backendType]
     std::array<std::array<HeatmapCell, (size_t)AIBackendType::Count>, (size_t)LLMTaskType::Count> m_heatmap = {};
     std::vector<CostLatencyRecord> m_costLatencyLog;
     static const size_t MAX_COST_LATENCY_LOG = 2000;
 
-    // Research state — ensemble routing
+    // Research state â€” ensemble routing
     bool m_ensembleEnabled = false;
     EnsembleDecision m_lastEnsembleDecision = {};
 
-    // Research state — last simulation result
+    // Research state â€” last simulation result
     SimulationResult m_lastSimulationResult = {};
 
     // ========================================================================
-    // LSP Client Bridge — Phase 9A (Win32IDE_LSPClient.cpp)
+    // LSP Client Bridge â€” Phase 9A (Win32IDE_LSPClient.cpp)
     // ========================================================================
     // Minimal LSP integration for C/C++ (clangd), Python (pyright), and
     // TypeScript (typescript-language-server). Provides go-to-definition,
@@ -3496,7 +3502,7 @@ class Win32IDE
 
     struct LSPWorkspaceEdit
     {
-        // uri → list of {range, newText}
+        // uri â†’ list of {range, newText}
         struct TextEdit
         {
             LSPRange range;
@@ -3518,7 +3524,7 @@ class Win32IDE
         uint64_t totalServerRestarts = 0;
     };
 
-    // LSP Client — lifecycle
+    // LSP Client â€” lifecycle
     void initLSPClient();
     void shutdownLSPClient();
     void loadLSPConfig();
@@ -3559,7 +3565,7 @@ class Win32IDE
     std::vector<LSPCompletionItem> lspCompletion(const std::string& uri, int line, int character);
     LSPSignatureHelpInfo lspSignatureHelp(const std::string& uri, int line, int character, int triggerKind = 1);
     std::vector<SemanticToken> lspSemanticTokensFull(const std::string& uri);
-    // Diagnostics arrive as notifications — handled in lspReaderThread
+    // Diagnostics arrive as notifications â€” handled in lspReaderThread
 
     // Apply edits from LSP
     bool applyWorkspaceEdit(const LSPWorkspaceEdit& edit);
@@ -3602,8 +3608,8 @@ class Win32IDE
     bool m_lspInitialized = false;
     std::array<LSPServerConfig, (size_t)LSPLanguage::Count> m_lspConfigs;
     std::array<LSPServerStatus, (size_t)LSPLanguage::Count> m_lspStatuses;
-    std::map<std::string, std::vector<LSPDiagnostic>> m_lspDiagnostics;  // uri → diagnostics
-    std::map<int, nlohmann::json> m_lspPendingResponses;                 // requestId → response
+    std::map<std::string, std::vector<LSPDiagnostic>> m_lspDiagnostics;  // uri â†’ diagnostics
+    std::map<int, nlohmann::json> m_lspPendingResponses;                 // requestId â†’ response
     LSPStats m_lspStats = {};
     std::mutex m_lspMutex;
     std::mutex m_lspDiagnosticsMutex;
@@ -3626,11 +3632,11 @@ class Win32IDE
 
   public:
     // ========================================================================
-    // Task Runner (Win32IDE_TaskRunner.cpp) — Phase7 U-BG menu wire
+    // Task Runner (Win32IDE_TaskRunner.cpp) â€” Phase7 U-BG menu wire
     // Dialog WndProc is a free function; keep entry points public.
     // Menu IDs IDM_TOOLS_TASK_RUNNER/SETTINGS/SETTINGS_DIALOG live as #defines
-    // in Win32IDE_Commands.h + ide_constants.h (no static constexpr here —
-    // macro expand would yield `int 502 = 502` → C2059).
+    // in Win32IDE_Commands.h + ide_constants.h (no static constexpr here â€”
+    // macro expand would yield `int 502 = 502` â†’ C2059).
     // ========================================================================
     struct TaskRunnerEntry
     {
@@ -3711,13 +3717,13 @@ class Win32IDE
     void toggleLocalServer();
     std::string getLocalServerStatus() const;
 
-    // Global shutdown flag — checked by detached threads before accessing members
+    // Global shutdown flag â€” checked by detached threads before accessing members
     std::atomic<bool> m_shuttingDown{false};
     bool isShuttingDown() const { return m_shuttingDown.load(std::memory_order_acquire); }
-    // onDestroy idempotency — WM_DESTROY / duplicate paths must not re-enter teardown
+    // onDestroy idempotency â€” WM_DESTROY / duplicate paths must not re-enter teardown
     std::atomic<bool> m_destroyCompleted{false};
 
-    // Active detached-thread counter — destructor waits for this to reach 0
+    // Active detached-thread counter â€” destructor waits for this to reach 0
     std::atomic<int> m_activeDetachedThreads{0};
 
     // RAII guard: increments on construction, decrements on destruction.
@@ -3793,7 +3799,7 @@ class Win32IDE
     // ASM Semantic Support (Win32IDE_AsmSemantic.cpp)
     // ========================================================================
 
-    // ---- IDM defines for ASM commands (5082–5093) ----
+    // ---- IDM defines for ASM commands (5082â€“5093) ----
 #define IDM_ASM_PARSE_SYMBOLS 5082
 #define IDM_ASM_GOTO_LABEL 5083
 #define IDM_ASM_FIND_LABEL_REFS 5084
@@ -3927,18 +3933,18 @@ class Win32IDE
         uint64_t analyzeBlockRequests = 0;
     };
 
-    // ASM Semantic — lifecycle
+    // ASM Semantic â€” lifecycle
     void initAsmSemantic();
     void shutdownAsmSemantic();
 
-    // Symbol table — parsing
+    // Symbol table â€” parsing
     void parseAsmFile(const std::string& filePath);
     void parseAsmDirectory(const std::string& dirPath, bool recursive = true);
     void reparseCurrentAsmFile();
     void clearAsmSymbols();
     void clearAsmSymbolsForFile(const std::string& filePath);
 
-    // Symbol table — queries
+    // Symbol table â€” queries
     const AsmSymbol* findAsmSymbol(const std::string& name) const;
     std::vector<const AsmSymbol*> findAsmSymbolsByKind(AsmSymbolKind kind) const;
     std::vector<const AsmSymbol*> findAsmSymbolsInFile(const std::string& filePath) const;
@@ -4015,7 +4021,7 @@ class Win32IDE
     // (Win32IDE_LSP_AI_Bridge.cpp)
     // ========================================================================
 
-    // ---- IDM defines for Hybrid commands (5094–5109) ----
+    // ---- IDM defines for Hybrid commands (5094â€“5109) ----
 #define IDM_HYBRID_COMPLETE 5094
 #define IDM_HYBRID_DIAGNOSTICS 5095
 #define IDM_HYBRID_SMART_RENAME 5096
@@ -4102,7 +4108,7 @@ class Win32IDE
         double totalBridgeTimeMs = 0.0;
     };
 
-    // Phase 9B — lifecycle
+    // Phase 9B â€” lifecycle
     void initLSPAIBridge();
     void shutdownLSPAIBridge();
 
@@ -4130,11 +4136,11 @@ class Win32IDE
     // Semantic prefetching (pre-warm LSP + ASM caches for open files)
     void semanticPrefetch(const std::string& filePath);
 
-    // Agent-LSP correction loop (detect bad output → re-query with LSP context)
+    // Agent-LSP correction loop (detect bad output â†’ re-query with LSP context)
     std::string agentCorrectionLoop(const std::string& prompt, const std::string& badOutput,
                                     const std::string& filePath);
 
-    // Diagnostic annotation overlay (merge diagnostics → IDE annotations)
+    // Diagnostic annotation overlay (merge diagnostics â†’ IDE annotations)
     void annotateDiagnostics(const std::string& filePath);
 
     // Bridge status & statistics
@@ -4173,7 +4179,7 @@ class Win32IDE
     // (Win32IDE_MultiResponse.cpp)
     // ========================================================================
 
-    // ---- IDM defines for MultiResponse commands (5106–5117) ----
+    // ---- IDM defines for MultiResponse commands (5106â€“5117) ----
 #define IDM_MULTI_RESP_GENERATE 5106
 #define IDM_MULTI_RESP_SET_MAX 5107
 #define IDM_MULTI_RESP_SELECT_PREFERRED 5108
@@ -4218,11 +4224,11 @@ class Win32IDE
     bool m_multiResponseInitialized = false;
     std::unique_ptr<MultiResponseEngine> m_multiResponseEngine;
 
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // Phase 10: Autonomous Execution & Trust Hardening
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ---- IDM defines for Phase 10 commands (5118–5131) ----
+    // ---- IDM defines for Phase 10 commands (5118â€“5131) ----
 #define IDM_GOV_STATUS 5118
 #define IDM_GOV_SUBMIT_COMMAND 5119
 #define IDM_GOV_KILL_ALL 5120
@@ -4238,7 +4244,7 @@ class Win32IDE
 #define IDM_CONFIDENCE_STATUS 5130
 #define IDM_CONFIDENCE_SET_POLICY 5131
 
-    // ---- IDM defines for Phase 11 commands (5132–5155) ----
+    // ---- IDM defines for Phase 11 commands (5132â€“5155) ----
     // Swarm Control
 #define IDM_SWARM_STATUS 5132
 #define IDM_SWARM_START_LEADER 5133
@@ -4392,14 +4398,14 @@ class Win32IDE
     // Phase 11 state
     bool m_phase11Initialized = false;
 
-    // Model bridge (GUI / ide_chatbot_engine.js) — profiles, load/unload, caps
+    // Model bridge (GUI / ide_chatbot_engine.js) â€” profiles, load/unload, caps
     void handleModelBridgeProfilesEndpoint(SOCKET client);
     void handleModelBridgeLoadEndpoint(SOCKET client, const std::string& body);
     void handleModelBridgeUnloadEndpoint(SOCKET client);
     void handleEngineCapabilitiesEndpoint(SOCKET client);
 
     // =========================================================================
-    //         PHASE 41 — Dual-Agent Orchestrator (Architect + Coder)
+    //         PHASE 41 â€” Dual-Agent Orchestrator (Architect + Coder)
     // =========================================================================
     // HTTP endpoint handlers for dual-agent swarm backed by MASM bridge.
     void handleDualAgentInitEndpoint(SOCKET client, const std::string& body);
@@ -4413,10 +4419,10 @@ class Win32IDE
     bool m_dualAgentInitialized = false;
 
     // =========================================================================
-    //              PHASE 12 — Native Debugger Engine
+    //              PHASE 12 â€” Native Debugger Engine
     // =========================================================================
     // DbgEng COM interop + MASM64 breakpoint injection kernel.
-    // IDM range: 5157 – 5184
+    // IDM range: 5157 â€“ 5184
 
     // ---- IDM defines for Native Debugger commands ----
     // Session Control (12A)
@@ -4515,10 +4521,10 @@ class Win32IDE
     bool m_phase12Initialized = false;
 
     // =========================================================================
-    //              PHASE 14.2 — Hotpatch UI Integration
+    //              PHASE 14.2 â€” Hotpatch UI Integration
     // =========================================================================
     // Wires the three-layer hotpatch system into the Win32IDE command palette
-    // and menu bar. IDM range: 9001 – 9030
+    // and menu bar. IDM range: 9001 â€“ 9030
 
 #define IDM_HOTPATCH_SHOW_STATUS 9001
 #define IDM_HOTPATCH_MEMORY_APPLY 9002
@@ -4540,7 +4546,7 @@ class Win32IDE
 #define IDM_HOTPATCH_SET_TARGET_TPS 9018
 
 // ========================================================================
-// WEBVIEW2 + MONACO EDITOR COMMANDS — Phase 26 (9100 range)
+// WEBVIEW2 + MONACO EDITOR COMMANDS â€” Phase 26 (9100 range)
 // ========================================================================
 #define IDM_VIEW_TOGGLE_MONACO 9100
 #define IDM_VIEW_MONACO_DEVTOOLS 9101
@@ -4550,7 +4556,7 @@ class Win32IDE
 #define IDM_VIEW_MONACO_SYNC_THEME 9105
 
 // ========================================================================
-// LSP SERVER COMMANDS — Phase 27 (9200 range)
+// LSP SERVER COMMANDS â€” Phase 27 (9200 range)
 // ========================================================================
 #define IDM_LSP_SERVER_START 9200
 #define IDM_LSP_SERVER_STOP 9201
@@ -4563,7 +4569,7 @@ class Win32IDE
 #define IDM_LSP_SERVER_LAUNCH_STDIO 9208
 
 // ========================================================================
-// EDITOR ENGINE COMMANDS — Phase 28 (9300 range)
+// EDITOR ENGINE COMMANDS â€” Phase 28 (9300 range)
 // ========================================================================
 #define IDM_EDITOR_ENGINE_RICHEDIT_CMD 9300
 #define IDM_EDITOR_ENGINE_WEBVIEW2_CMD 9301
@@ -4572,7 +4578,7 @@ class Win32IDE
 #define IDM_EDITOR_ENGINE_STATUS_CMD 9304
 
 // ========================================================================
-// PDB SYMBOL SERVER COMMANDS — Phase 29 (9400 range)
+// PDB SYMBOL SERVER COMMANDS â€” Phase 29 (9400 range)
 // ========================================================================
 #define IDM_PDB_LOAD 9400
 #define IDM_PDB_FETCH 9401
@@ -4587,7 +4593,7 @@ class Win32IDE
 #define IDM_PDB_IAT_STATUS 9412
 
 // ============================================================================
-// PHASE 34: TELEMETRY EXPORT — Privacy-respecting IDE metrics (9900 range)
+// PHASE 34: TELEMETRY EXPORT â€” Privacy-respecting IDE metrics (9900 range)
 // ============================================================================
 #define IDM_TELEMETRY_TOGGLE 9900
 #define IDM_TELEMETRY_EXPORT_JSON 9901
@@ -4597,7 +4603,7 @@ class Win32IDE
 #define IDM_TELEMETRY_SNAPSHOT 9905
 
 // ============================================================================
-// IDE SELF-AUDIT & VERIFICATION COMMANDS — Phase 31 (9500 range)
+// IDE SELF-AUDIT & VERIFICATION COMMANDS â€” Phase 31 (9500 range)
 // ============================================================================
 #define IDM_AUDIT_SHOW_DASHBOARD 9500
 #define IDM_AUDIT_RUN_FULL 9501
@@ -4608,18 +4614,18 @@ class Win32IDE
 #define IDM_AUDIT_QUICK_STATS 9506
 
 // ============================================================================
-// PHASE 32: FINAL GAUNTLET — Pre-Packaging Runtime Verification (9600 range)
+// PHASE 32: FINAL GAUNTLET â€” Pre-Packaging Runtime Verification (9600 range)
 // ============================================================================
 #define IDM_GAUNTLET_RUN 9600
 #define IDM_GAUNTLET_EXPORT 9601
 
 // ============================================================================
-// BUILD COMMANDS — Unified Build Pipeline (9602+)
+// BUILD COMMANDS â€” Unified Build Pipeline (9602+)
 // ============================================================================
 // IDM_BUILD_SOLUTION already defined as 10400 above
 
 // ============================================================================
-// PHASE 33: VOICE CHAT — Native Win32 Audio Engine (9700 range)
+// PHASE 33: VOICE CHAT â€” Native Win32 Audio Engine (9700 range)
 // ============================================================================
 #define IDM_VOICE_RECORD 9700
 #define IDM_VOICE_PTT 9701
@@ -4633,7 +4639,7 @@ class Win32IDE
 #define IDM_VOICE_MODE_DISABLED 9709
 
 // ============================================================================
-// PHASE 33: QUICK-WIN PORTS — Shortcut, Backup, Alerts (9800 range)
+// PHASE 33: QUICK-WIN PORTS â€” Shortcut, Backup, Alerts (9800 range)
 // ============================================================================
 #define IDM_QW_SHORTCUT_EDITOR 9800
 #define IDM_QW_SHORTCUT_RESET 9801
@@ -4676,7 +4682,7 @@ class Win32IDE
     double m_hotpatchSavedTargetTps = 0.0;
 
     // ========================================================================
-    // PDB SYMBOL SERVER — Phase 29: Native PDB Symbol Server
+    // PDB SYMBOL SERVER â€” Phase 29: Native PDB Symbol Server
     // Lifecycle, command routing, status, cache management
     // ========================================================================
     void initPDBSymbols();
@@ -4698,7 +4704,7 @@ class Win32IDE
     bool m_pdbEnabled = true;
 
     // ========================================================================
-    // DECOMPILER VIEW STATE — Direct2D Split View (Phase 18B)
+    // DECOMPILER VIEW STATE â€” Direct2D Split View (Phase 18B)
     // ========================================================================
     HWND m_hwndDecompView = nullptr;  // Split-view container
     HWND m_hwndDecompPane = nullptr;  // Left pane: decompiler (Direct2D)
@@ -4706,38 +4712,38 @@ class Win32IDE
     bool m_decompViewActive = false;  // True when decompiler view is showing
 
     // ========================================================================
-    // AGENT MEMORY STATE — Phase 19B
+    // AGENT MEMORY STATE â€” Phase 19B
     // ========================================================================
     std::vector<AgentMemoryEntry> m_agentMemory;
     mutable std::mutex m_agentMemoryMutex;
     static const size_t MAX_AGENT_MEMORY_ENTRIES = 2000;
 
     // ========================================================================
-    // TOKEN STREAMING STATE — Phase 19B
+    // TOKEN STREAMING STATE â€” Phase 19B
     // ========================================================================
     std::string m_streamingOutput;
     mutable std::mutex m_streamingOutputMutex;
     bool m_streamingActive = false;
 
     // ========================================================================
-    // TERMINAL KILL TIMEOUT STATE — Phase 19B
+    // TERMINAL KILL TIMEOUT STATE â€” Phase 19B
     // ========================================================================
     int m_terminalKillTimeoutMs = 5000;  // Default 5s, user-configurable
 
     // ========================================================================
-    // SPLIT CODE VIEWER STATE — Phase 19B
+    // SPLIT CODE VIEWER STATE â€” Phase 19B
     // ========================================================================
     HWND m_hwndSplitCodeViewer = nullptr;
     HWND m_hwndSplitCodeEditor = nullptr;
     bool m_codeViewerSplit = false;
 
     // ========================================================================
-    // SUBAGENT MANAGER INSTANCE — Phase 19B (owned, used by chain/swarm/todo)
+    // SUBAGENT MANAGER INSTANCE â€” Phase 19B (owned, used by chain/swarm/todo)
     // ========================================================================
     std::unique_ptr<SubAgentManager> m_subAgentManager;
 
     // ========================================================================
-    // WEBVIEW2 + MONACO EDITOR STATE — Phase 26
+    // WEBVIEW2 + MONACO EDITOR STATE â€” Phase 26
     // ========================================================================
     HWND m_hwndMonacoContainer = nullptr;
     WebView2Container* m_webView2 = nullptr;
@@ -4746,7 +4752,7 @@ class Win32IDE
     float m_monacoZoomLevel = 1.0f;
 
     // ========================================================================
-    // LSP SERVER — Phase 27 (Embedded Language Server)
+    // LSP SERVER â€” Phase 27 (Embedded Language Server)
     // ========================================================================
     // Lifecycle
     void initLSPServer();
@@ -4766,7 +4772,7 @@ class Win32IDE
     // Command router
     bool handleLSPServerCommand(int commandId);
 
-    // In-process message forwarding (Win32IDE → LSP Server)
+    // In-process message forwarding (Win32IDE â†’ LSP Server)
     void forwardToLSPServer(const std::string& method, const nlohmann::json& params);
     void notifyLSPServerDidOpen(const std::string& uri, const std::string& languageId, const std::string& content);
     void notifyLSPServerDidChange(const std::string& uri, const std::string& content, int version);
@@ -4779,7 +4785,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::LSPServer::RawrXDLSPServer> m_lspServer;
 
     // ========================================================================
-    // EDITOR ENGINE SYSTEM — Phase 28 (MonacoCore / WebView2 / RichEdit Toggle)
+    // EDITOR ENGINE SYSTEM â€” Phase 28 (MonacoCore / WebView2 / RichEdit Toggle)
     // ========================================================================
     // Lifecycle
     void initEditorEngines();
@@ -4799,7 +4805,7 @@ class Win32IDE
     bool m_editorEnginesInitialized = false;
 
     // ========================================================================
-    // VS CODE EXTENSION API COMPATIBILITY — Phase 29
+    // VS CODE EXTENSION API COMPATIBILITY â€” Phase 29
     // ========================================================================
     // Lifecycle
     void initVSCodeExtensionAPI();
@@ -4829,7 +4835,7 @@ class Win32IDE
     bool m_vscExtAPIInitialized = false;
 
     // ========================================================================
-    // IDE SELF-AUDIT & VERIFICATION — Phase 31: CT Scanner / Compliance Auditor
+    // IDE SELF-AUDIT & VERIFICATION â€” Phase 31: CT Scanner / Compliance Auditor
     // ========================================================================
     struct RuntimeValidationCheck
     {
@@ -4860,7 +4866,7 @@ class Win32IDE
     HWND m_hwndAuditDashboard = nullptr;
 
     // ========================================================================
-    // PHASE 32: FINAL GAUNTLET — Pre-Packaging Runtime Verification
+    // PHASE 32: FINAL GAUNTLET â€” Pre-Packaging Runtime Verification
     // ========================================================================
     // Command handlers (IDM_GAUNTLET_* range, 9600)
     void cmdGauntletRun();
@@ -4874,7 +4880,7 @@ class Win32IDE
     HWND m_hwndGauntletWindow = nullptr;
 
     // ========================================================================
-    // PHASE 33: VOICE CHAT — Native Win32 Audio Engine
+    // PHASE 33: VOICE CHAT â€” Native Win32 Audio Engine
     // ========================================================================
     // Lifecycle
     void initVoiceChat();
@@ -4907,7 +4913,7 @@ class Win32IDE
     bool m_voiceChatInitialized = false;
 
     // ========================================================================
-    // PHASE 33: QUICK-WIN PORTS — Shortcuts, Backups, Alerts, SLO
+    // PHASE 33: QUICK-WIN PORTS â€” Shortcuts, Backups, Alerts, SLO
     // ========================================================================
     // Lifecycle
     void initQuickWinSystems();
@@ -4943,7 +4949,7 @@ class Win32IDE
     bool m_quickWinInitialized = false;
 
     // ========================================================================
-    // PHASE 34: TELEMETRY EXPORT — Privacy-respecting IDE Metrics
+    // PHASE 34: TELEMETRY EXPORT â€” Privacy-respecting IDE Metrics
     // Non-Qt, Win32-native, GDPR/CCPA compliant, opt-in only
     // ========================================================================
     void initTelemetry();
@@ -4971,7 +4977,7 @@ class Win32IDE
     bool m_telemetryEnabled = false;
 
     // ========================================================================
-    // PHASE 33 VOICE UX POLISH — Hotkey, status bar, device hot-swap
+    // PHASE 33 VOICE UX POLISH â€” Hotkey, status bar, device hot-swap
     // ========================================================================
     void registerVoiceHotkeys();
     void unregisterVoiceHotkeys();
@@ -4980,12 +4986,12 @@ class Win32IDE
     void voiceLoadPreferences();
 
     // ========================================================================
-    // PHASE 44: VOICE AUTOMATION — TTS for AI Responses (Production Wiring)
+    // PHASE 44: VOICE AUTOMATION â€” TTS for AI Responses (Production Wiring)
     // ========================================================================
     bool m_voiceAutomationInitialized = false;
 
     // ========================================================================
-    // PHASE 36: MCP INTEGRATION — Model Context Protocol Server + Client
+    // PHASE 36: MCP INTEGRATION â€” Model Context Protocol Server + Client
     // JSON-RPC 2.0 based tool/resource/prompt hosting for agent interactions
     // ========================================================================
     void initMCP();
@@ -4997,7 +5003,7 @@ class Win32IDE
     bool m_mcpInitialized = false;
 
     // ========================================================================
-    // PHASE 36: FLIGHT RECORDER — Memory-mapped binary ring-buffer logger
+    // PHASE 36: FLIGHT RECORDER â€” Memory-mapped binary ring-buffer logger
     // Persistent binary flight recorder at %LOCALAPPDATA%\RawrXD\flight_recorder.bin
     // ========================================================================
     static constexpr int IDM_FR_EXPORT_JSON = 10100;
@@ -5024,7 +5030,7 @@ class Win32IDE
 
     // ========================================================================
     // PHASE 34: INSTRUCTIONS CONTEXT PROVIDER
-    // Read tools.instructions.md (all lines) → context for HTTP/CLI/GUI
+    // Read tools.instructions.md (all lines) â†’ context for HTTP/CLI/GUI
     // ========================================================================
     void initInstructionsProvider();
     void handleInstructionsEndpoint(SOCKET client, const std::string& mode);
@@ -5088,7 +5094,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::GameEngine::GameEngineManager> m_gameEngineManager;
     bool m_gameEnginesInitialized = false;
 
-    // ── Phase 48: The Final Crucible ──
+    // â”€â”€ Phase 48: The Final Crucible â”€â”€
     void initCrucible();
     void handleCrucibleCommand(int commandId);
     void createCrucibleMenu(HMENU parentMenu);
@@ -5108,7 +5114,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::Crucible::CrucibleEngine> m_crucibleEngine;
     bool m_crucibleInitialized = false;
 
-    // ── Crucible Command IDs ──
+    // â”€â”€ Crucible Command IDs â”€â”€
     static constexpr int IDM_CRUCIBLE_RUN_ALL = 10700;
     static constexpr int IDM_CRUCIBLE_RUN_SHADOW = 10701;
     static constexpr int IDM_CRUCIBLE_RUN_CLUSTER = 10702;
@@ -5120,7 +5126,7 @@ class Win32IDE
     static constexpr int IDM_CRUCIBLE_CONFIG = 10708;
     static constexpr int IDM_CRUCIBLE_HELP = 10709;
 
-    // ── Game Engine Command IDs ──
+    // â”€â”€ Game Engine Command IDs â”€â”€
     static constexpr int IDM_GAME_ENGINE_DETECT = 10600;
     static constexpr int IDM_GAME_ENGINE_OPEN = 10601;
     static constexpr int IDM_GAME_ENGINE_CLOSE = 10602;
@@ -5271,7 +5277,7 @@ class Win32IDE
     void navigateToFileLine(const std::string& filePath, uint32_t line1Based);
 
   public:
-    // Unified Problems Panel (P0) — accessed by ProblemsListSubclassProc
+    // Unified Problems Panel (P0) â€” accessed by ProblemsListSubclassProc
     void initProblemsPanel();
     void refreshProblemsView();
     void onProblemsItemActivate(int index);
@@ -5357,9 +5363,9 @@ class Win32IDE
     static constexpr int IDM_TEL_SET_LEVEL = 11414;
     static constexpr int IDM_TEL_STATS = 11415;
 
-    // ════════════════════════════════════════════════════════════════════════
-    // Phase 49: Copilot Gap Closer (10800–10899)
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // Phase 49: Copilot Gap Closer (10800â€“10899)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     void initCopilotGap();
     void handleCopilotGapCommand(int commandId);
@@ -5398,7 +5404,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::CopilotGapCloser> m_copilotGap;
     bool m_copilotGapInitialized = false;
 
-    // ── Copilot Gap Closer Command IDs ──
+    // â”€â”€ Copilot Gap Closer Command IDs â”€â”€
     // General
     static constexpr int IDM_GAPCLOSE_INIT = 10800;
     static constexpr int IDM_GAPCLOSE_STATUS = 10801;
@@ -5425,11 +5431,11 @@ class Win32IDE
     static constexpr int IDM_GAPCLOSE_GIT_CONTEXT = 10840;
     static constexpr int IDM_GAPCLOSE_GIT_BRANCH = 10841;
 
-    // ════════════════════════════════════════════════════════════════════════
-    // CURSOR/JB-PARITY FEATURE MODULES — Pluginable subsystems (11500–11599)
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // CURSOR/JB-PARITY FEATURE MODULES â€” Pluginable subsystems (11500â€“11599)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ── Telemetry Export (multi-format, audit chain, OTLP) ──
+    // â”€â”€ Telemetry Export (multi-format, audit chain, OTLP) â”€â”€
     void initTelemetryExport();
     void shutdownTelemetryExport();
     bool handleTelemetryExportCommand(int commandId);
@@ -5452,7 +5458,7 @@ class Win32IDE
     static constexpr int IDM_TELEXPORT_AUTO_START = 11506;
     static constexpr int IDM_TELEXPORT_AUTO_STOP = 11507;
 
-    // ── Agentic Composer UX (session lifecycle, thinking, file changes) ──
+    // â”€â”€ Agentic Composer UX (session lifecycle, thinking, file changes) â”€â”€
     void initAgenticComposerUX();
     bool handleComposerUXCommand(int commandId);
     void cmdComposerNewSession();
@@ -5471,7 +5477,7 @@ class Win32IDE
     static constexpr int IDM_COMPOSER_SHOW_TRANSCRIPT = 11514;
     static constexpr int IDM_COMPOSER_SHOW_METRICS = 11515;
 
-    // ── @-Mention Context Parser (inline context assembly) ──
+    // â”€â”€ @-Mention Context Parser (inline context assembly) â”€â”€
     void initContextMentionParser();
     bool handleMentionParserCommand(int commandId);
     void cmdMentionParse();
@@ -5485,7 +5491,7 @@ class Win32IDE
     static constexpr int IDM_MENTION_ASSEMBLE_CTX = 11522;
     static constexpr int IDM_MENTION_REGISTER_CUSTOM = 11523;
 
-    // ── Vision Encoder (image input, clipboard paste, drag-drop) ──
+    // â”€â”€ Vision Encoder (image input, clipboard paste, drag-drop) â”€â”€
     void initVisionEncoderUI();
     bool handleVisionEncoderCommand(int commandId);
     void cmdVisionLoadFile();
@@ -5499,7 +5505,7 @@ class Win32IDE
     void initVisionEncoder();
     void shutdownVisionEncoder();
 
-    // ── Semantic Index (code intelligence, cross-referencing) ──
+    // â”€â”€ Semantic Index (code intelligence, cross-referencing) â”€â”€
     void showSemanticIndex();
     void hideSemanticIndex();
     void shutdownSemanticIndex();
@@ -5514,7 +5520,7 @@ class Win32IDE
     static constexpr int IDM_VISION_BUILD_PAYLOAD = 11533;
     static constexpr int IDM_VISION_VIEW_GUI_HOTPATCH = 11534;
 
-    // ── Refactoring Engine (200+ pluginable refactorings) ──
+    // â”€â”€ Refactoring Engine (200+ pluginable refactorings) â”€â”€
     void initRefactoringEngine();
     bool handleRefactoringCommand(int commandId);
     void cmdRefactorExtractMethod();
@@ -5536,7 +5542,7 @@ class Win32IDE
     static constexpr int IDM_REFACTOR_SHOW_ALL = 11546;
     static constexpr int IDM_REFACTOR_LOAD_PLUGIN = 11547;
 
-    // ── Language Plugin (60+ language descriptors, DLL extensible) ──
+    // â”€â”€ Language Plugin (60+ language descriptors, DLL extensible) â”€â”€
     void initLanguageRegistry();
     bool handleLanguageCommand(int commandId);
     void cmdLanguageDetect();
@@ -5550,7 +5556,7 @@ class Win32IDE
     static constexpr int IDM_LANG_LOAD_PLUGIN = 11552;
     static constexpr int IDM_LANG_SET_FOR_FILE = 11553;
 
-    // ── Semantic Index (cross-language, dependency graph, type hierarchy) ──
+    // â”€â”€ Semantic Index (cross-language, dependency graph, type hierarchy) â”€â”€
     void initSemanticIndex();
     bool handleSemanticIndexCommand(int commandId);
     void cmdSemanticBuildIndex();
@@ -5572,7 +5578,7 @@ class Win32IDE
     static constexpr int IDM_SEMANTIC_FIND_CYCLES = 11566;
     static constexpr int IDM_SEMANTIC_LOAD_PLUGIN = 11567;
 
-    // ── Resource Generator (Docker, K8s, Terraform, CI/CD, config) ──
+    // â”€â”€ Resource Generator (Docker, K8s, Terraform, CI/CD, config) â”€â”€
     void initResourceGenerator();
     bool handleResourceGenCommand(int commandId);
     void cmdResourceGenerate();
@@ -5588,20 +5594,20 @@ class Win32IDE
     static constexpr int IDM_RESOURCE_SEARCH = 11573;
     static constexpr int IDM_RESOURCE_LOAD_PLUGIN = 11574;
 
-    // ── Enterprise Stress Tests (load testing, stability, perf validation) ──
+    // â”€â”€ Enterprise Stress Tests (load testing, stability, perf validation) â”€â”€
     static constexpr int IDM_ENTERPRISE_STRESS_RUN = 11575;
     static constexpr int IDM_ENTERPRISE_STRESS_STOP = 11576;
     static constexpr int IDM_ENTERPRISE_STRESS_SHOW = 11577;
 
-    // ── Cursor/JB-Parity Menu Builder ──
+    // â”€â”€ Cursor/JB-Parity Menu Builder â”€â”€
     void createFeaturesMenu(HMENU parentMenu);
     bool handleFeaturesCommand(int commandId);
     bool verifyFeatureRoutingCoverageAtStartup(std::string* report = nullptr);
     void initAllFeatureModules();
 
-    // ════════════════════════════════════════════════════════════════════
-    // TIER 2: HIGH VISIBILITY (Daily Friction) — Features 11–19
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // TIER 2: HIGH VISIBILITY (Daily Friction) â€” Features 11â€“19
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Master lifecycle
     void initTier2Cosmetics();
@@ -5610,7 +5616,7 @@ class Win32IDE
     void renderTier2Overlays(HDC hdc);
 
   public:
-    // ── LSP Symbol Kinds (used by Outline, CodeLens, Inlay) ──
+    // â”€â”€ LSP Symbol Kinds (used by Outline, CodeLens, Inlay) â”€â”€
     enum LSPSymbolKind
     {
         SK_File = 1,
@@ -5642,7 +5648,7 @@ class Win32IDE
     };
 
   private:
-    // ── OutlineSymbol (enhanced outline model) ──
+    // â”€â”€ OutlineSymbol (enhanced outline model) â”€â”€
     struct OutlineSymbol
     {
         int kind = 0;  // LSPSymbolKind
@@ -5671,7 +5677,7 @@ class Win32IDE
     std::string outlineKindToString(int kind) const;
     COLORREF outlineKindColor(int kind) const;
 
-    // ── DiffLine / DiffHunk (Git Diff Side-by-Side) ──
+    // â”€â”€ DiffLine / DiffHunk (Git Diff Side-by-Side) â”€â”€
     enum class DiffLineType
     {
         Context,
@@ -5716,7 +5722,7 @@ class Win32IDE
     std::vector<DiffHunk> m_gitDiffHunks;
     int m_gitDiffCurrentHunk = -1;
 
-    // ── Inline Diff Viewer (Side-by-Side + Inline mode) ──
+    // â”€â”€ Inline Diff Viewer (Side-by-Side + Inline mode) â”€â”€
     struct DiffViewHunk
     {
         enum HunkType
@@ -5770,7 +5776,7 @@ class Win32IDE
     static constexpr int IDC_DIFF_INLINE_BTN = 10806;
     static constexpr int IDC_DIFF_CLOSE_BTN = 10807;
 
-    // ── TerminalProfile / TerminalTabInfo (Terminal Tabs) ──
+    // â”€â”€ TerminalProfile / TerminalTabInfo (Terminal Tabs) â”€â”€
     struct TerminalProfile
     {
         std::string name;
@@ -5861,7 +5867,7 @@ class Win32IDE
     int m_signatureParamCount = 0;
     HFONT m_signatureFont = nullptr;
 
-    // ── ReferenceResult (Find All References UI — Tier2Cosmetics path) ──
+    // â”€â”€ ReferenceResult (Find All References UI â€” Tier2Cosmetics path) â”€â”€
     struct ReferenceResult
     {
         std::string filePath;
@@ -5870,7 +5876,7 @@ class Win32IDE
         std::string contextLine;
     };
 
-    // ── RenameChange / RenamePreviewState (Rename Refactoring Preview) ──
+    // â”€â”€ RenameChange / RenamePreviewState (Rename Refactoring Preview) â”€â”€
     struct RenameChange
     {
         std::string filePath;
@@ -5912,7 +5918,7 @@ class Win32IDE
     static constexpr int IDC_RENAME_APPLY_BTN = 11283;
     static constexpr int IDC_RENAME_CANCEL_BTN = 11284;
 
-    // 16. Find All References UI (Tier2Cosmetics — keep; ≠ orphan)
+    // 16. Find All References UI (Tier2Cosmetics â€” keep; â‰  orphan)
     void initReferencePanel();
     void shutdownReferencePanel();
     void showFindAllReferences(const std::string& symbol, const std::vector<ReferenceResult>& results);
@@ -5977,7 +5983,7 @@ class Win32IDE
 
   private:
 
-    // ── CodeLensEntry ──
+    // â”€â”€ CodeLensEntry â”€â”€
     struct CodeLensEntry
     {
         int line = 0;
@@ -6003,7 +6009,7 @@ class Win32IDE
     std::vector<CodeLensEntry> m_codeLensEntries;
     HFONT m_codeLensFont = nullptr;
 
-    // ── InlayHintEntry ──
+    // â”€â”€ InlayHintEntry â”€â”€
     enum class InlayHintKind
     {
         Type,
@@ -6034,7 +6040,7 @@ class Win32IDE
     std::vector<InlayHintEntry> m_inlayHintEntries;
     HFONT m_inlayHintFont = nullptr;
 
-    // ── Tier 2 Command IDs (11700–11799) ──
+    // â”€â”€ Tier 2 Command IDs (11700â€“11799) â”€â”€
     static constexpr int IDM_TIER2_GITDIFF = 11700;
     static constexpr int IDM_TIER2_GITDIFF_CLOSE = 11701;
     static constexpr int IDM_TIER2_GITDIFF_PREV = 11702;
@@ -6053,9 +6059,9 @@ class Win32IDE
     static constexpr int IDM_TIER2_INLAY_TOGGLE = 11770;
     static constexpr int IDM_TIER2_INLAY_REFRESH = 11771;
 
-    // ════════════════════════════════════════════════════════════════════
-    // TIER 3: POLISH (Quality of Life) — Features 31–39
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // TIER 3: POLISH (Quality of Life) â€” Features 31â€“39
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Master init/shutdown
     void initTier3Polish();
@@ -6151,9 +6157,9 @@ class Win32IDE
     // Tier 3: Status bar click routing
     void handleStatusBarClick(int partIndex);
 
-    // ════════════════════════════════════════════════════════════════════
-    // TIER 3: COSMETICS — Features 20–30
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // TIER 3: COSMETICS â€” Features 20â€“30
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Master lifecycle
     void initTier3Cosmetics();
@@ -6281,9 +6287,9 @@ class Win32IDE
     void foldRegion(FoldRegion& region);
     void unfoldRegion(FoldRegion& region);
 
-    // ════════════════════════════════════════════════════════════════════
-    // TIER 1: CRITICAL COSMETIC (Mainstream Adoption) — Features 1–10
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // TIER 1: CRITICAL COSMETIC (Mainstream Adoption) â€” Features 1â€“10
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Master init/shutdown/dispatch
     void initTier1Cosmetics();
@@ -6292,7 +6298,7 @@ class Win32IDE
     bool handleTier1Timer(UINT_PTR timerId);
     bool handleTier1MouseWheel(WPARAM wParam, LPARAM lParam);
 
-    // Tier 1 Command IDs (12000–12099)
+    // Tier 1 Command IDs (12000â€“12099)
     static constexpr int IDM_T1_SMOOTH_SCROLL_TOGGLE = 12000;
     static constexpr int IDM_T1_SMOOTH_SCROLL_SPEED = 12001;
     static constexpr int IDM_T1_MINIMAP_TOGGLE = 12010;
@@ -6478,42 +6484,42 @@ class Win32IDE
     std::string m_updateUrl;
     NOTIFYICONDATAA m_trayIconData = {};
 
-    // ════════════════════════════════════════════════════════════════════════
-    // FLAGSHIP FEATURES — Product Pillars (13000–13299)
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // FLAGSHIP FEATURES â€” Product Pillars (13000â€“13299)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // Three flagship product pillars that unify existing subsystems into
     // coherent, auditable, enterprise-grade capabilities:
-    //   1. Provable AI Coding Agent   — cryptographic proof + chain-of-custody
-    //   2. AI-Native Reverse Eng IDE  — AI-powered binary analysis + vuln scan
-    //   3. Airgapped Enterprise Env   — offline licensing + compliance + DLP
-    // ════════════════════════════════════════════════════════════════════════
+    //   1. Provable AI Coding Agent   â€” cryptographic proof + chain-of-custody
+    //   2. AI-Native Reverse Eng IDE  â€” AI-powered binary analysis + vuln scan
+    //   3. Airgapped Enterprise Env   â€” offline licensing + compliance + DLP
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ── Phase Ω: OmegaOrchestrator — Autonomous SDLC (12400–12450) ──
+    // â”€â”€ Phase Î©: OmegaOrchestrator â€” Autonomous SDLC (12400â€“12450) â”€â”€
     bool handleOmegaOrchestratorCommand(int commandId);
 
-    // ── Agentic Planning Orchestrator — Multi-step planning with approval gates (4261–4270) ──
+    // â”€â”€ Agentic Planning Orchestrator â€” Multi-step planning with approval gates (4261â€“4270) â”€â”€
     bool handleAgenticPlanningCommand(int commandId);
 
-    // ── FailureIntelligence Orchestrator — Autonomous recovery & root cause analysis (4281–4299) ──
+    // â”€â”€ FailureIntelligence Orchestrator â€” Autonomous recovery & root cause analysis (4281â€“4299) â”€â”€
     bool handleFailureIntelligenceCommand(int commandId);
 
-    // ── KnowledgeGraphCore — Cross-session learning + decision archaeology (4271–4280) ──
+    // â”€â”€ KnowledgeGraphCore â€” Cross-session learning + decision archaeology (4271â€“4280) â”€â”€
     bool handleKnowledgeGraphCommand(int commandId);
 
-    // ── Change Impact Analyzer — Pre-commit ripple effect prediction (4350–4370) ──
+    // â”€â”€ Change Impact Analyzer â€” Pre-commit ripple effect prediction (4350â€“4370) â”€â”€
     bool handleChangeImpactCommand(int commandId);
 
-    // ── Flagship Lifecycle ──
+    // â”€â”€ Flagship Lifecycle â”€â”€
     void initFlagshipFeatures();
     void shutdownFlagshipFeatures();
     bool handleFlagshipCommand(int commandId);
 
-    // ────────────────────────────────────────────────────────────────────────
-    // 1. Provable AI Coding Agent (13000–13019)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // 1. Provable AI Coding Agent (13000â€“13019)
     //    Cryptographic attestation chain, Merkle-rooted proof bundles,
     //    replay-deterministic verification, pre/post + invariant obligations.
     //    Wires: DeterministicReplayEngine, AgentTranscript, BoundedAgentLoop.
-    // ────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     void initProvableAgent();
     bool handleProvableAgentCommand(int commandId);
     void cmdProvableShow();
@@ -6537,12 +6543,12 @@ class Win32IDE
     static constexpr int IDM_PROVABLE_STATS = 13007;
 
   private:
-    // ────────────────────────────────────────────────────────────────────────
-    // 2. AI-Native Reverse Engineering IDE (13020–13039)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // 2. AI-Native Reverse Engineering IDE (13020â€“13039)
     //    AI-powered symbol renaming, vulnerability scanning, call-graph
     //    analysis, binary diffing, AI annotation with confidence scores.
     //    Wires: RawrCodex, RawrReverseEngine, PDB native parser.
-    // ────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     void initAIReverseEngineering();
     bool handleAIReverseEngCommand(int commandId);
     void cmdAIREShow();
@@ -6568,13 +6574,13 @@ class Win32IDE
     static constexpr int IDM_AIRE_STATS = 13028;
 
   private:
-    // ────────────────────────────────────────────────────────────────────────
-    // 3. Airgapped Enterprise AI Dev Environment (13040–13059)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // 3. Airgapped Enterprise AI Dev Environment (13040â€“13059)
     //    Offline model vault, HWID-locked license validation, 9-framework
     //    compliance (GDPR/SOX/HIPAA/PCI/ISO27001/FedRAMP/ITAR/EAR/NIST),
     //    DLP scanning, network firewall verification, workspace encryption.
     //    Wires: EnterpriseLicense, License_Shield, TelemetryCompliance.
-    // ────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     void initAirgappedEnterprise();
     bool handleAirgappedCommand(int commandId);
     void cmdAirgapShow();
@@ -6602,11 +6608,11 @@ class Win32IDE
     static constexpr int IDM_AIRGAP_STATS = 13049;
 
   private:
-    // ════════════════════════════════════════════════════════════════════
-    // TIER 5: COSMETIC FEATURES (#40-#50) — Line Ending, Network, Test
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // TIER 5: COSMETIC FEATURES (#40-#50) â€” Line Ending, Network, Test
     //         Explorer, Debug Watch, Call Stack, Marketplace, Telemetry
     //         Dashboard, Shortcut Editor, Color Picker, Emoji, Crash
-    // ════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Master lifecycle
     void initTier5Cosmetics();
@@ -6656,7 +6662,7 @@ class Win32IDE
     void cmdMarketplaceList();
     void cmdMarketplaceStatus();
 
-    // Collaboration (View > Collaboration) — CRDT/WebSocket live session panel
+    // Collaboration (View > Collaboration) â€” CRDT/WebSocket live session panel
     void showCollabPanel();
 
     // 46. Telemetry Dashboard
@@ -6723,7 +6729,7 @@ class Win32IDE
     bool saveAgentState(const std::string& agentId, const std::string& stateData);
     std::string loadAgentState(const std::string& agentId);
     std::vector<std::vector<std::string>> executeDatabaseQuery(const std::string& sql);
-    /// E07 — Append-only agentic approval / execution audit (SQLite `agentic_approval_audit`).
+    /// E07 â€” Append-only agentic approval / execution audit (SQLite `agentic_approval_audit`).
     bool recordAgenticApprovalAudit(const std::string& eventKind, const std::string& jsonPayload);
 
     // Telemetry Export
@@ -6795,9 +6801,9 @@ class Win32IDE
                             const std::string& replyTarget, bool isDirectMessage);
 
   public:
-    // Tier 5 Command IDs (12200–12314) — MUST NOT overlap feature-module band 11500–11599 (handleFeaturesCommand).
-    // Line ending band (12200–12203) must stay in lockstep with the T5_LINEENDING_*
-    // entries in src/core/command_registry.hpp — the SSOT table routes these IDs here.
+    // Tier 5 Command IDs (12200â€“12314) â€” MUST NOT overlap feature-module band 11500â€“11599 (handleFeaturesCommand).
+    // Line ending band (12200â€“12203) must stay in lockstep with the T5_LINEENDING_*
+    // entries in src/core/command_registry.hpp â€” the SSOT table routes these IDs here.
     static constexpr int IDM_LINEENDING_DETECT = 12200;
     static constexpr int IDM_LINEENDING_TO_CRLF = 12201;
     static constexpr int IDM_LINEENDING_TO_LF = 12202;

@@ -1,0 +1,6 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@
+         src/win32app/Win32IDE_ChatWindow.cpp
++        src/ollama_client.cpp
+         src/win32app/Win32IDE_TasksDebugUI.cpp

@@ -1,0 +1,10 @@
+Candidate build outputs
+
+RawrXD-ExtensionHost.exe
+Path: G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001\bin\RawrXD-ExtensionHost.exe
+Size: 122368 bytes
+SHA256: 8A169B3DE8996BE6CC2C191D5D4445E3A7E09F0E67ECF7B4899C636B7AFE0212
+
+RawrXD-Win32IDE.exe
+Path: G:\~dev\rawrxd-ext-candidate-clean\build_ext_host_001\bin\RawrXD-Win32IDE.exe
+Status: NOT PRODUCED; final link failed with LNK1120 (18 unresolved externals)

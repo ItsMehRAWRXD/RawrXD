@@ -1,0 +1,8 @@
+execute_process(COMMAND "${EXE}" evaluate "${ROOT}/tests/full.txt" "${BINARY}/full.json" RESULT_VARIABLE ret)
+if(NOT ret EQUAL 0)
+ message(FATAL_ERROR "positive synthetic fixture should pass")
+endif()
+file(READ "${BINARY}/full.json" data)
+if(NOT data MATCHES "FULL_PASS")
+ message(FATAL_ERROR "full state missing")
+endif()

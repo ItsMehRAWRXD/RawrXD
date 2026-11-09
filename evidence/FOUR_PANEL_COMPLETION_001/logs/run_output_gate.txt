@@ -1,0 +1,8 @@
+OUTPUT_GATE harness PROMOTE=0
+PASS no_cross_channel_corruption
+PASS build_channel
+PASS deep2_channel
+PASS channel_switch_keeps_buffers
+OUTPUT_PANEL=PASS
+NOTE=Logic harness; HWND product path requires candidate EXE
+PROMOTE=0 TIP_CLIMB=HOLD

@@ -1,0 +1,5 @@
+DIAG_MARK_99 
+hr=0x00000000 hPC=00000243F1EAACE0
+CreateProcess=1 err=0
+ReadFile=1 n=16 err=0
+OUT=[?9001h[?1004h

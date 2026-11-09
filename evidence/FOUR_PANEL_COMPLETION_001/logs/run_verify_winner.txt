@@ -1,0 +1,4 @@
+VERIFY hit=1 pipe_len=88
+PIPE=[[?9001h[?1004h[?25l[2J[m[HCONPTY_MARK_A7F3
+]0;C:\WINDOWS\SYSTEM32\cmd.exe[?25h]
+MARKER_IN_PIPE=1

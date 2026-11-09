@@ -2,6 +2,7 @@
 // Activity Bar, Secondary Sidebar, Panel (Terminal/Output/Problems/Debug Console), Enhanced Status Bar
 
 #include "Win32IDE.h"
+#include "core/problems_aggregator.hpp"
 #include "Win32Utf8.hpp"
 #include "../ui/tool_action_status.h"
 #include <commctrl.h>
@@ -11,19 +12,19 @@
 #include <fstream>
 #include <map>
 
-// Status bar and Copilot status — Phase 33 implementation complete
+// Status bar and Copilot status â€” Phase 33 implementation complete
 
 
-// Problems list and go-to-problem — Phase 33 implementation complete
+// Problems list and go-to-problem â€” Phase 33 implementation complete
 
 
-// Panel container (Terminal, Output, Problems) — Phase 33 complete
+// Panel container (Terminal, Output, Problems) â€” Phase 33 complete
 
 
-// Secondary sidebar (Copilot chat) creation — Phase 33 complete
+// Secondary sidebar (Copilot chat) creation â€” Phase 33 complete
 
 
-// Activity bar and primary sidebar layout — Phase 33 complete
+// Activity bar and primary sidebar layout â€” Phase 33 complete
 
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
@@ -243,7 +244,7 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
     // Prefer createChatPanel() as the sole docked Chat host. Do not orphan a second pane.
     if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
     {
-        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createSecondarySidebar IDEMPOTENT — reuse chat host\n");
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createSecondarySidebar IDEMPOTENT â€” reuse chat host\n");
         return;
     }
     
@@ -289,7 +290,7 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         90, 555, 80, 28,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
 
-    // Agentic mode switcher (Ask/Plan/Agent/Debug) — HWND-backed radios
+    // Agentic mode switcher (Ask/Plan/Agent/Debug) â€” HWND-backed radios
     m_hwndAgenticModeAsk = CreateWindowExA(
         0, "BUTTON", "Ask",
         WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
@@ -384,20 +385,20 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     } else {
         // No model loaded - prompt user to load one
         RAWRXD_LOG_WARNING("Win32IDE_VSCodeUI") << "[sendCopilotMessage] No model loaded!";
-        response = "⚠️ No AI model loaded.\r\n\r\n"
+        response = "âš ï¸ No AI model loaded.\r\n\r\n"
                    "To use AI assistance, please load a GGUF model:\r\n"
-                   "1. Open the File Explorer (Activity Bar → Explorer icon)\r\n"
+                   "1. Open the File Explorer (Activity Bar â†’ Explorer icon)\r\n"
                    "2. Navigate to a folder containing .gguf files\r\n"
                    "3. Double-click a model file to load it\r\n\r\n"
                    "Supported models: LLaMA, Mistral, Phi, Qwen, and other GGUF-compatible models.\r\n\r\n"
                    "Once loaded, I can help with:\r\n"
-                   "• Code explanation and analysis\r\n"
-                   "• Bug fixing suggestions\r\n"
-                   "• Code generation\r\n"
-                   "• Programming questions";
+                   "â€¢ Code explanation and analysis\r\n"
+                   "â€¢ Bug fixing suggestions\r\n"
+                   "â€¢ Code generation\r\n"
+                   "â€¢ Programming questions";
     }
 
-    // SOURCE: funnel model tool calls → m_currentToolActions (DispatchModelToolCalls).
+    // SOURCE: funnel model tool calls â†’ m_currentToolActions (DispatchModelToolCalls).
     // Admit loop below stays unreachable until producer fills; tip still RELINK_REQUIRED.
     if (m_agenticBridge) {
         std::string toolResult;
@@ -408,7 +409,7 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     
     m_chatHistory.push_back({"assistant", response});
 
-    // Store accumulated tool actions — admit-gate only (A05: no invent Finished toast).
+    // Store accumulated tool actions â€” admit-gate only (A05: no invent Finished toast).
     if (m_currentToolActions.totalActions() > 0) {
         size_t msgIdx = m_chatHistory.size() - 1;
         std::vector<RawrXD::UI::ToolActionStatus> admitted;
@@ -680,6 +681,8 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
     problem.message = msg;
     problem.severity = severity;
     m_problems.push_back(problem);
+    const int aggSev = (severity == 0) ? 1 : (severity == 1) ? 2 : 3;
+    RawrXD::ProblemsAggregator::instance().add("IDE", file, line, col, aggSev, "", msg, "");
     
     // Update counts
     if (severity == 0) m_errorCount++;
@@ -861,7 +864,7 @@ void Win32IDE::updateEnhancedStatusBar()
     // Part 10: Language Mode
     setPart(10, m_statusBarInfo.languageMode);
     
-    // Part 11: Backend / AI status — initial render (IDT_GPU_TELEMETRY refreshes live counters)
+    // Part 11: Backend / AI status â€” initial render (IDT_GPU_TELEMETRY refreshes live counters)
     {
         std::string backendText = getActiveBackendName();
         if (!m_statusBarInfo.copilotActive)

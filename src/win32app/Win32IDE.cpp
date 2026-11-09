@@ -102,7 +102,7 @@ Win32IDE* g_pMainIDE = nullptr;
 
 static std::wstring utf8ToWide(const std::string& utf8);
 
-// Provided by model_streamer_x64.asm (ASM_KERNEL_SOURCES). Do not define here — LNK2005.
+// Provided by model_streamer_x64.asm (ASM_KERNEL_SOURCES). Do not define here Ã¢â‚¬â€ LNK2005.
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError);
 
@@ -402,110 +402,110 @@ static HICON getVmmLedIcon(VmmRibbonTier tier)
 }
 
 // ============================================================================
-// FEATURE IMPLEMENTATION INDEX — RawrXD Win32 IDE
+// FEATURE IMPLEMENTATION INDEX Ã¢â‚¬â€ RawrXD Win32 IDE
 // ============================================================================
 // Core Window & Layout:
-//   Main window / message loop      → Win32IDE_Main.cpp, Win32IDE_Window.cpp
-//   Activity bar / primary sidebar   → Win32IDE_Sidebar.cpp, Win32IDE_SidebarPanels.cpp
-//   Secondary sidebar (Copilot chat) → Win32IDE_VSCodeUI.cpp
-//   Panel container (term/output)    → Win32IDE_VSCodeUI.cpp
-//   Tab bar / document switching     → Win32IDE_DragDropTabs.cpp
-//   Status bar / parts layout        → Win32IDE_VSCodeUI.cpp
+//   Main window / message loop      Ã¢â€ â€™ Win32IDE_Main.cpp, Win32IDE_Window.cpp
+//   Activity bar / primary sidebar   Ã¢â€ â€™ Win32IDE_Sidebar.cpp, Win32IDE_SidebarPanels.cpp
+//   Secondary sidebar (Copilot chat) Ã¢â€ â€™ Win32IDE_VSCodeUI.cpp
+//   Panel container (term/output)    Ã¢â€ â€™ Win32IDE_VSCodeUI.cpp
+//   Tab bar / document switching     Ã¢â€ â€™ Win32IDE_DragDropTabs.cpp
+//   Status bar / parts layout        Ã¢â€ â€™ Win32IDE_VSCodeUI.cpp
 //
 // Editor Engine:
-//   RichEdit integration / caret     → Win32IDE_EditorEngine.cpp
-//   Syntax highlighting by language  → Win32IDE_SyntaxHighlight.cpp, Win32IDE_AsmSemantic.cpp
-//   Line numbers / minimap           → Win32IDE_Minimap.cpp
-//   Code folding                     → Win32IDE_EditorEngine.cpp
-//   Split code viewer                → Win32IDE_EditorEngine.cpp
-//   Undo/redo stack                  → Win32IDE_EditorEngine.cpp
-//   Selection / clipboard            → Win32IDE_EditorEngine.cpp
-//   Indentation / tab-space          → Win32IDE_EditorEngine.cpp
-//   EOL / encoding detection         → Win32IDE_EditorEngine.cpp
-//   Language mode from extension     → Win32IDE_EditorEngine.cpp
-//   Font / DPI scaling               → Win32IDE_Tier1Cosmetics.cpp
-//   Breadcrumbs / navigation         → Win32IDE_Breadcrumbs.cpp
+//   RichEdit integration / caret     Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Syntax highlighting by language  Ã¢â€ â€™ Win32IDE_SyntaxHighlight.cpp, Win32IDE_AsmSemantic.cpp
+//   Line numbers / minimap           Ã¢â€ â€™ Win32IDE_Minimap.cpp
+//   Code folding                     Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Split code viewer                Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Undo/redo stack                  Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Selection / clipboard            Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Indentation / tab-space          Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   EOL / encoding detection         Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Language mode from extension     Ã¢â€ â€™ Win32IDE_EditorEngine.cpp
+//   Font / DPI scaling               Ã¢â€ â€™ Win32IDE_Tier1Cosmetics.cpp
+//   Breadcrumbs / navigation         Ã¢â€ â€™ Win32IDE_Breadcrumbs.cpp
 //
 // Find & Navigation:
-//   Find/Replace dialog              → Win32IDE_Commands.cpp
-//   Search panel (find-in-files)     → Win32IDE_SearchPanel.cpp
-//   Go to line dialog                → Win32IDE_Commands.cpp
-//   Command palette / filtering      → Win32IDE_Commands.cpp
-//   Fuzzy search                     → Win32IDE_FuzzySearch.cpp
+//   Find/Replace dialog              Ã¢â€ â€™ Win32IDE_Commands.cpp
+//   Search panel (find-in-files)     Ã¢â€ â€™ Win32IDE_SearchPanel.cpp
+//   Go to line dialog                Ã¢â€ â€™ Win32IDE_Commands.cpp
+//   Command palette / filtering      Ã¢â€ â€™ Win32IDE_Commands.cpp
+//   Fuzzy search                     Ã¢â€ â€™ Win32IDE_FuzzySearch.cpp
 //
 // File Explorer & Operations:
-//   File explorer tree / refresh     → Win32IDE_Sidebar.cpp
-//   New file / default content       → Win32IDE_FileOps.cpp
-//   Save / Save As / modified flag   → Win32IDE_FileOps.cpp
-//   File icons                       → Win32IDE_FileIcons.cpp
+//   File explorer tree / refresh     Ã¢â€ â€™ Win32IDE_Sidebar.cpp
+//   New file / default content       Ã¢â€ â€™ Win32IDE_FileOps.cpp
+//   Save / Save As / modified flag   Ã¢â€ â€™ Win32IDE_FileOps.cpp
+//   File icons                       Ã¢â€ â€™ Win32IDE_FileIcons.cpp
 //
 // LSP & Intelligence:
-//   Go-to-definition / references    → Win32IDE_LSPClient.cpp
-//   Completion / signature help      → Win32IDE_LSPClient.cpp
-//   Semantic tokens (23-type)        → Win32IDE_LSPClient.cpp::lspSemanticTokensFull()
-//   Hover tooltips                   → Win32IDE_HoverTooltips.cpp
-//   Inlay hints                      → Win32IDE_InlayHints.cpp
-//   Code lens                        → Win32IDE_CodeLens.cpp
-//   Signature help                   → Win32IDE_SignatureHelp.cpp
-//   Rename preview                   → Win32IDE_RenamePreview.cpp
-//   Refactoring                      → Win32IDE_Refactor.cpp
+//   Go-to-definition / references    Ã¢â€ â€™ Win32IDE_LSPClient.cpp
+//   Completion / signature help      Ã¢â€ â€™ Win32IDE_LSPClient.cpp
+//   Semantic tokens (23-type)        Ã¢â€ â€™ Win32IDE_LSPClient.cpp::lspSemanticTokensFull()
+//   Hover tooltips                   Ã¢â€ â€™ Win32IDE_HoverTooltips.cpp
+//   Inlay hints                      Ã¢â€ â€™ Win32IDE_InlayHints.cpp
+//   Code lens                        Ã¢â€ â€™ Win32IDE_CodeLens.cpp
+//   Signature help                   Ã¢â€ â€™ Win32IDE_SignatureHelp.cpp
+//   Rename preview                   Ã¢â€ â€™ Win32IDE_RenamePreview.cpp
+//   Refactoring                      Ã¢â€ â€™ Win32IDE_Refactor.cpp
 //
 // AI / Copilot / Ghost Text:
-//   Ghost text (3-provider cascade)  → Win32IDE_GhostText.cpp
-//   Copilot send/clear handlers      → Win32IDE_CursorParity.cpp
-//   Ollama model override            → Win32IDE_BackendSwitcher.cpp
-//   generateResponse sync/async      → Win32IDE_AIBackend.cpp
-//   Inline AI suggestion overlay     → Win32IDE_GhostText.cpp
-//   LLM Router                       → Win32IDE_LLMRouter.cpp
+//   Ghost text (3-provider cascade)  Ã¢â€ â€™ Win32IDE_GhostText.cpp
+//   Copilot send/clear handlers      Ã¢â€ â€™ Win32IDE_CursorParity.cpp
+//   Ollama model override            Ã¢â€ â€™ Win32IDE_BackendSwitcher.cpp
+//   generateResponse sync/async      Ã¢â€ â€™ Win32IDE_AIBackend.cpp
+//   Inline AI suggestion overlay     Ã¢â€ â€™ Win32IDE_GhostText.cpp
+//   LLM Router                       Ã¢â€ â€™ Win32IDE_LLMRouter.cpp
 //
 // Agent System:
-//   Agentic bridge / dispatch        → Win32IDE_AgenticBridge.cpp
-//   Agent history / replay           → Win32IDE_AgentHistory.cpp
-//   Agent memory store/recall        → Win32IDE_AgentPanel.cpp
-//   Sub-agent / swarm execution      → Win32IDE_SubAgent.cpp
-//   Autonomy manager / goal loop     → Win32IDE_Autonomy.cpp
-//   Plan executor / rollback         → Win32IDE_PlanExecutor.cpp
+//   Agentic bridge / dispatch        Ã¢â€ â€™ Win32IDE_AgenticBridge.cpp
+//   Agent history / replay           Ã¢â€ â€™ Win32IDE_AgentHistory.cpp
+//   Agent memory store/recall        Ã¢â€ â€™ Win32IDE_AgentPanel.cpp
+//   Sub-agent / swarm execution      Ã¢â€ â€™ Win32IDE_SubAgent.cpp
+//   Autonomy manager / goal loop     Ã¢â€ â€™ Win32IDE_Autonomy.cpp
+//   Plan executor / rollback         Ã¢â€ â€™ Win32IDE_PlanExecutor.cpp
 //
 // Terminal & Tasks:
-//   Terminal pane / split / profiles  → Win32IDE_TerminalTabs.cpp, Win32IDE_TerminalProfiles.cpp
-//   Task runner (stdout pipe capture) → Win32IDE_TaskRunner.cpp
-//   Tasks/launch.json UI             → Win32IDE_Tasks.cpp, Win32IDE_TasksDebugUI.cpp
-//   PowerShell output panel           → Win32IDE_PowerShellPanel.cpp
-//   Output panel / severity tabs      → Win32IDE_ProblemsPanel.cpp
+//   Terminal pane / split / profiles  Ã¢â€ â€™ Win32IDE_TerminalTabs.cpp, Win32IDE_TerminalProfiles.cpp
+//   Task runner (stdout pipe capture) Ã¢â€ â€™ Win32IDE_TaskRunner.cpp
+//   Tasks/launch.json UI             Ã¢â€ â€™ Win32IDE_Tasks.cpp, Win32IDE_TasksDebugUI.cpp
+//   PowerShell output panel           Ã¢â€ â€™ Win32IDE_PowerShellPanel.cpp
+//   Output panel / severity tabs      Ã¢â€ â€™ Win32IDE_ProblemsPanel.cpp
 //
 // Git & VCS:
-//   Git panel (stage/commit/push)     → Win32IDE_GitPanel.cpp
-//   Git repository (14 methods)       → Win32IDE_Git.cpp
-//   Diff viewer (LCS-based)           → Win32IDE_DiffView.cpp
-//   Diff inline/side-by-side          → Win32IDE_Tier2Cosmetics.cpp
+//   Git panel (stage/commit/push)     Ã¢â€ â€™ Win32IDE_GitPanel.cpp
+//   Git repository (14 methods)       Ã¢â€ â€™ Win32IDE_Git.cpp
+//   Diff viewer (LCS-based)           Ã¢â€ â€™ Win32IDE_DiffView.cpp
+//   Diff inline/side-by-side          Ã¢â€ â€™ Win32IDE_Tier2Cosmetics.cpp
 //
 // Debugger:
-//   DbgEng COM debugger               → Win32IDE_Debugger.cpp
-//   Watch format / variables           → Win32IDE_DebugWatchFormat.cpp
-//   Call stack symbols                 → Win32IDE_CallStackSymbols.cpp
-//   Memory view                        → Win32IDE_MemoryView.cpp
-//   PDB symbols                        → Win32IDE_PDBSymbols.cpp
-//   Native debug panel                 → Win32IDE_NativeDebugPanel.cpp
+//   DbgEng COM debugger               Ã¢â€ â€™ Win32IDE_Debugger.cpp
+//   Watch format / variables           Ã¢â€ â€™ Win32IDE_DebugWatchFormat.cpp
+//   Call stack symbols                 Ã¢â€ â€™ Win32IDE_CallStackSymbols.cpp
+//   Memory view                        Ã¢â€ â€™ Win32IDE_MemoryView.cpp
+//   PDB symbols                        Ã¢â€ â€™ Win32IDE_PDBSymbols.cpp
+//   Native debug panel                 Ã¢â€ â€™ Win32IDE_NativeDebugPanel.cpp
 //
 // Extensions & Marketplace:
-//   Extensions panel (GUI)             → Win32IDE_ExtensionsPanel.cpp
-//   Extension marketplace backend      → Win32IDE_ExtensionMarketplace.cpp
-//   Marketplace panel                  → Win32IDE_MarketplacePanel.cpp
-//   VSIX installer                     → VSIXInstaller.hpp
+//   Extensions panel (GUI)             Ã¢â€ â€™ Win32IDE_ExtensionsPanel.cpp
+//   Extension marketplace backend      Ã¢â€ â€™ Win32IDE_ExtensionMarketplace.cpp
+//   Marketplace panel                  Ã¢â€ â€™ Win32IDE_MarketplacePanel.cpp
+//   VSIX installer                     Ã¢â€ â€™ VSIXInstaller.hpp
 //
 // Misc Panels:
-//   Snippet list / insertion           → Win32IDE_Commands.cpp
-//   Clipboard history panel            → Win32IDE_Commands.cpp
-//   License dialogs                    → Win32IDE_LicenseCreator.cpp
-//   Telemetry dashboard                → Win32IDE_TelemetryDashboard.cpp
-//   Test explorer tree                 → Win32IDE_TestExplorerTree.cpp
-//   Themes / color picker              → Win32IDE_Themes.cpp, Win32IDE_ColorPicker.cpp
-//   Voice chat / automation            → Win32IDE_VoiceChat.cpp, Win32IDE_VoiceAutomation.cpp
-//   Transcendence panel                → Win32IDE_TranscendencePanel.cpp
-//   Checkpoint manager                 → Win32IDE_Session.cpp
-//   Error/warning counts               → Win32IDE_ProblemsPanel.cpp
-//   Decompiler view                    → Win32IDE_DecompilerView.cpp
-//   Outline panel                      → Win32IDE_OutlinePanel.cpp
+//   Snippet list / insertion           Ã¢â€ â€™ Win32IDE_Commands.cpp
+//   Clipboard history panel            Ã¢â€ â€™ Win32IDE_Commands.cpp
+//   License dialogs                    Ã¢â€ â€™ Win32IDE_LicenseCreator.cpp
+//   Telemetry dashboard                Ã¢â€ â€™ Win32IDE_TelemetryDashboard.cpp
+//   Test explorer tree                 Ã¢â€ â€™ Win32IDE_TestExplorerTree.cpp
+//   Themes / color picker              Ã¢â€ â€™ Win32IDE_Themes.cpp, Win32IDE_ColorPicker.cpp
+//   Voice chat / automation            Ã¢â€ â€™ Win32IDE_VoiceChat.cpp, Win32IDE_VoiceAutomation.cpp
+//   Transcendence panel                Ã¢â€ â€™ Win32IDE_TranscendencePanel.cpp
+//   Checkpoint manager                 Ã¢â€ â€™ Win32IDE_Session.cpp
+//   Error/warning counts               Ã¢â€ â€™ Win32IDE_ProblemsPanel.cpp
+//   Decompiler view                    Ã¢â€ â€™ Win32IDE_DecompilerView.cpp
+//   Outline panel                      Ã¢â€ â€™ Win32IDE_OutlinePanel.cpp
 // ============================================================================
 
 
@@ -680,7 +680,7 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDC_STATUS_COPILOT 1410
 #define IDC_STATUS_NOTIFICATIONS 1411
 
-/* File menu IDs — COMMAND_TABLE SSOT (1001-1099); never 2001-2005 (edit band) */
+/* File menu IDs Ã¢â‚¬â€ COMMAND_TABLE SSOT (1001-1099); never 2001-2005 (edit band) */
 #define IDM_FILE_NEW 1001
 #define IDM_FILE_OPEN 1002
 #define IDM_FILE_SAVE 1003
@@ -688,7 +688,7 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_FILE_LOAD_MODEL 1030
 #define IDM_FILE_EXIT 1099
 
-/* Voice Automation (Tools > Voice Automation) — Phase 44 TTS; dispatched in Win32IDE_Commands 10200–10300 */
+/* Voice Automation (Tools > Voice Automation) Ã¢â‚¬â€ Phase 44 TTS; dispatched in Win32IDE_Commands 10200Ã¢â‚¬â€œ10300 */
 #define IDM_VOICE_AUTO_TOGGLE 10200
 #define IDM_VOICE_AUTO_STOP 10206
 #define IDM_VOICE_AUTO_NEXT 10202
@@ -840,12 +840,12 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_inferenceRunning{false}, m_inferenceStopRequested(false)
 {
     // ============================================================
-    // MINIMAL CONSTRUCTOR — all heavy init deferred to onCreate()
+    // MINIMAL CONSTRUCTOR Ã¢â‚¬â€ all heavy init deferred to onCreate()
     // C++ try/catch does NOT catch SEH (access violations) on MinGW,
     // so we keep the constructor as lightweight as possible.
     // ============================================================
 
-    // Initialize profiling frequency (safe — kernel call)
+    // Initialize profiling frequency (safe Ã¢â‚¬â€ kernel call)
     QueryPerformanceFrequency(&m_profilingFreq);
 
     // Initialize clipboard history
@@ -871,7 +871,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     // Initialize Governor/Throttling
     m_governorThrottling = std::make_unique<RawrXD::GovernorThrottling>();
 
-    // Product singleton for remote/agent bridges (was ProblemsPanel-only — headless null).
+    // Product singleton for remote/agent bridges (was ProblemsPanel-only Ã¢â‚¬â€ headless null).
     g_pMainIDE = this;
 }
 
@@ -915,7 +915,7 @@ static void buildCommandsMenuFromCommandTable(HMENU mainMenu)
     AppendMenuW(mainMenu, MF_POPUP, (UINT_PTR)hCommands, L"&Commands");
 }
 
-// ESP:m_hMenu — Main menu bar; submenus File/Edit/View/Terminal/Tools/Modules/Help/Audit/Git/Agent (see
+// ESP:m_hMenu Ã¢â‚¬â€ Main menu bar; submenus File/Edit/View/Terminal/Tools/Modules/Help/Audit/Git/Agent (see
 // Win32IDE_IELabels.h)
 void Win32IDE::createMenuBar(HWND hwnd)
 {
@@ -1046,7 +1046,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_INLAY_REFRESH, L"&Refresh Inlay Hints");
     AppendMenuW(hToolsMenu, MF_POPUP, (UINT_PTR)hTier2Menu, L"&Editor Enhancements");
 
-    // Voice Chat submenu (Unicode — Qt removal / pure Win32)
+    // Voice Chat submenu (Unicode Ã¢â‚¬â€ Qt removal / pure Win32)
     HMENU hVoiceMenu = CreatePopupMenu();
     AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_TOGGLE_PANEL, L"Show/Hide &Voice Panel\tCtrl+Shift+U");
     AppendMenuW(hVoiceMenu, MF_SEPARATOR, 0, nullptr);
@@ -1108,7 +1108,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
 
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hToolsMenu, L"&Tools");
 
-    // Build menu (extended — added after initial build menu at line ~577)
+    // Build menu (extended Ã¢â‚¬â€ added after initial build menu at line ~577)
     {
         HMENU hBuildMenu2 = CreatePopupMenu();
         AppendMenuW(hBuildMenu2, MF_STRING, IDM_BUILD_SOLUTION, L"Build &Solution\tCtrl+Shift+B");
@@ -1117,7 +1117,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
         (void)hBuildMenu2;  // menu already attached at line ~577
     }
 
-    // Security menu (Top-50 P0 — SAST, Secrets, SCA)
+    // Security menu (Top-50 P0 Ã¢â‚¬â€ SAST, Secrets, SCA)
     HMENU hSecurityMenu = CreatePopupMenu();
     AppendMenuW(hSecurityMenu, MF_STRING, IDM_SECURITY_SCAN_SECRETS, L"Scan for &Secrets");
     AppendMenuW(hSecurityMenu, MF_STRING, IDM_SECURITY_SCAN_SAST, L"Run &SAST Scan");
@@ -1141,7 +1141,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hHelpMenu, MF_STRING, IDM_HELP_ABOUT, L"&About");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, L"&Help");
 
-    // Audit menu (Phase 31 — Unicode)
+    // Audit menu (Phase 31 Ã¢â‚¬â€ Unicode)
     HMENU hAuditMenu = CreatePopupMenu();
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_SHOW_DASHBOARD, L"Show &Dashboard\tCtrl+Shift+A");
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_RUN_FULL, L"&Run Full Audit");
@@ -1186,7 +1186,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hGitMenu, MF_STRING, IDM_TIER2_GITDIFF_CLOSE, L"&Close Diff");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hGitMenu, L"&Git");
 
-    // Agent menu (Unicode — Qt removal / pure Win32)
+    // Agent menu (Unicode Ã¢â‚¬â€ Qt removal / pure Win32)
     HMENU hAgentMenu = CreatePopupMenu();
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_START_LOOP, L"Start &Agent Loop");
     AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
@@ -1274,7 +1274,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hTelemetryMenu, MF_STRING, IDM_TELEMETRY_UNIFIED_CORE, L"&Unified Telemetry Core");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hTelemetryMenu, L"&Telemetry");
 
-    // Hotpatch menu (Unicode — Qt removal)
+    // Hotpatch menu (Unicode Ã¢â‚¬â€ Qt removal)
     {
         HMENU hHotpatchMenu = CreatePopupMenu();
         AppendMenuW(hHotpatchMenu, MF_STRING, IDM_HOTPATCH_SHOW_STATUS, L"&Show Hotpatch Status");
@@ -1350,16 +1350,16 @@ void Win32IDE::createMenuBar(HWND hwnd)
     // Cursor/JB-Parity Feature Modules
     createFeaturesMenu(m_hMenu);
 
-    // Commands menu from COMMAND_TABLE (single source of truth — no menu-only drift)
+    // Commands menu from COMMAND_TABLE (single source of truth Ã¢â‚¬â€ no menu-only drift)
     buildCommandsMenuFromCommandTable(m_hMenu);
 
     // Enterprise / Professional feature menu
-    // Professional tier (12330–12341) routed by routeCommand's IDM_ENT_MODEL_COMPARE..IDM_ENT_CUSTOM_QUANT branch.
-    // GPU/Performance tier (3042–3047) routed via the 3000–3999 → handleViewCommand path.
+    // Professional tier (12330Ã¢â‚¬â€œ12341) routed by routeCommand's IDM_ENT_MODEL_COMPARE..IDM_ENT_CUSTOM_QUANT branch.
+    // GPU/Performance tier (3042Ã¢â‚¬â€œ3047) routed via the 3000Ã¢â‚¬â€œ3999 Ã¢â€ â€™ handleViewCommand path.
     {
         HMENU hEntMenu = CreatePopupMenu();
 
-        // Professional: inference quality & session features (IDM_ENT_MODEL_COMPARE…IDM_ENT_CUSTOM_QUANT)
+        // Professional: inference quality & session features (IDM_ENT_MODEL_COMPAREÃ¢â‚¬Â¦IDM_ENT_CUSTOM_QUANT)
         HMENU hEntProfMenu = CreatePopupMenu();
         AppendMenuW(hEntProfMenu, MF_STRING, 12330, L"&Model Comparison");             // IDM_ENT_MODEL_COMPARE
         AppendMenuW(hEntProfMenu, MF_STRING, 12331, L"&Batch Processing");             // IDM_ENT_BATCH_PROCESS
@@ -1375,7 +1375,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
         AppendMenuW(hEntProfMenu, MF_STRING, 12341, L"Custom &Quantization Schemes");  // IDM_ENT_CUSTOM_QUANT
         AppendMenuW(hEntMenu, MF_POPUP, (UINT_PTR)hEntProfMenu, L"&Professional");
 
-        // GPU / Performance tier (IDM_ENT_MULTI_GPU_BALANCE…IDM_ENT_DUAL_ENGINE = 3042–3047)
+        // GPU / Performance tier (IDM_ENT_MULTI_GPU_BALANCEÃ¢â‚¬Â¦IDM_ENT_DUAL_ENGINE = 3042Ã¢â‚¬â€œ3047)
         AppendMenuW(hEntMenu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(hEntMenu, MF_STRING, 3042, L"Multi-&GPU Load Balance");  // IDM_ENT_MULTI_GPU_BALANCE
         AppendMenuW(hEntMenu, MF_STRING, 3043, L"&Dynamic Batch Sizing");    // IDM_ENT_DYNAMIC_BATCH
@@ -1548,7 +1548,7 @@ void Win32IDE::updateTitleBarText()
         projectFolder = "Workspace";
     }
 
-    std::string composed = fileName + "  •  " + projectFolder;
+    std::string composed = fileName + "  Ã¢â‚¬Â¢  " + projectFolder;
     if (composed != m_lastTitleBarText)
     {
         SetWindowTextW(m_hwndTitleLabel, utf8ToWide(composed).c_str());
@@ -1608,7 +1608,7 @@ void Win32IDE::recreateFonts()
 {
     m_currentDpi = getDpi();
 
-    // Editor font — monospace
+    // Editor font Ã¢â‚¬â€ monospace
     if (m_editorFont)
     {
         DeleteObject(m_editorFont);
@@ -1617,7 +1617,7 @@ void Win32IDE::recreateFonts()
     m_editorFont = CreateFontA(-dpiScale(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
                                CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
 
-    // UI font — proportional
+    // UI font Ã¢â‚¬â€ proportional
     if (m_hFontUI)
     {
         DeleteObject(m_hFontUI);
@@ -1626,7 +1626,7 @@ void Win32IDE::recreateFonts()
     m_hFontUI = CreateFontA(-dpiScale(14), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
                             CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
-    // Ghost text font — italic monospace
+    // Ghost text font Ã¢â‚¬â€ italic monospace
     if (m_ghostTextFont)
     {
         DeleteObject(m_ghostTextFont);
@@ -1732,7 +1732,7 @@ void Win32IDE::recreateFonts()
 void Win32IDE::createEditor(HWND hwnd)
 {
     // Prefer MsftEdit; fall back to RichEdit20. Avoid WS_EX_COMPOSITED on the
-    // first attempt — it can fail CreateWindowEx on some hosts.
+    // first attempt Ã¢â‚¬â€ it can fail CreateWindowEx on some hosts.
     LoadLibraryW(L"msftedit.dll");
     LoadLibraryW(L"riched20.dll");
 
@@ -1750,7 +1750,7 @@ void Win32IDE::createEditor(HWND hwnd)
     if (!m_hwndEditor)
         m_hwndEditor = tryCreate(RICHEDIT_CLASSW, WS_EX_CLIENTEDGE | WS_EX_COMPOSITED);
     if (!m_hwndEditor) {
-        OutputDebugStringA("[createEditor] FAILED — no RichEdit HWND\n");
+        OutputDebugStringA("[createEditor] FAILED Ã¢â‚¬â€ no RichEdit HWND\n");
         return;
     }
     SetWindowLongPtrW(m_hwndEditor, GWLP_ID, (LONG_PTR)IDC_EDITOR);
@@ -1959,7 +1959,7 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
     if (width <= 0 || height <= 0 || m_terminalPanes.empty())
         return;
 
-    // Calculate correct left offset — terminal panes are children of m_hwndMain,
+    // Calculate correct left offset Ã¢â‚¬â€ terminal panes are children of m_hwndMain,
     // so we must offset past activity bar + sidebar to avoid overlapping them
     const int ACTIVITY_BAR_WIDTH = dpiScale(48);
     int sidebarWidth = m_sidebarVisible ? m_sidebarWidth : 0;
@@ -2092,7 +2092,7 @@ void Win32IDE::createStatusBar(HWND hwnd)
     if (HICON ico = getVmmLedIcon(VmmRibbonTier::Red))
         SendMessageW(m_hwndStatusBar, SB_SETICON, 2, (LPARAM)ico);
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 4, (LPARAM)L"Ctx: 0/128K  0%");
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: Ã¢â‚¬â€");
     SendMessageW(m_hwndStatusBar, SB_SETTIPTEXTW, 3,
                  (LPARAM)L"MoE grouped pack cache: hits/misses, async prepack queue, row-eviction invalidations.");
     extern void AgentSessionAttachBar(void*);
@@ -2652,7 +2652,7 @@ void Win32IDE::appendText(HWND hwnd, const std::string& text)
 
     SendMessageW(hwnd, EM_SETSEL, length, length);
 
-    // EM_REPLACESEL W — same Unicode append path as PowerShell probe (avoid
+    // EM_REPLACESEL W Ã¢â‚¬â€ same Unicode append path as PowerShell probe (avoid
     // EM_SETTEXTEX+1200 Latin drop seen on P1_UI_ENCODING_002).
     std::wstring wtext = utf8ToWide(text);
     SendMessageW(hwnd, EM_REPLACESEL, FALSE, (LPARAM)wtext.c_str());
@@ -2714,9 +2714,9 @@ void Win32IDE::saveTheme(const std::string& themeName)
 void Win32IDE::applyTheme()
 {
     // ----------------------------------------------------------------
-    // applyTheme() is idempotent — safe to call on startup, on theme
+    // applyTheme() is idempotent Ã¢â‚¬â€ safe to call on startup, on theme
     // switch, on DPI change, and on transparency change.
-    // Theme is pure data (IDETheme) — no GDI handles stored in it.
+    // Theme is pure data (IDETheme) Ã¢â‚¬â€ no GDI handles stored in it.
     // ----------------------------------------------------------------
 
     LOG_DEBUG("applyTheme(): \"" + m_currentTheme.name + "\"");
@@ -2763,7 +2763,7 @@ void Win32IDE::applyTheme()
     // 4. Deep apply to all surfaces (sidebar, activity bar, tabs, status bar, panels)
     applyThemeToAllControls();
 
-    // 5. Transparency — only touch the top-level window when glass is intentional.
+    // 5. Transparency Ã¢â‚¬â€ only touch the top-level window when glass is intentional.
     // Never apply windowAlpha==0 (invisible). Opaque is default.
     if (m_currentTheme.windowAlpha > 0 && m_currentTheme.windowAlpha < 255)
     {
@@ -2826,14 +2826,14 @@ void Win32IDE::updateMenuEnableStates()
     // Vulkan renderer menu state
     CheckMenuItem(m_hMenu, IDM_VIEW_USE_VULKAN_RENDERER,
                   MF_BYCOMMAND | (m_useVulkanRenderer ? MF_CHECKED : MF_UNCHECKED));
-    // Breadcrumbs (View) — sync check with m_settings.breadcrumbsEnabled
+    // Breadcrumbs (View) Ã¢â‚¬â€ sync check with m_settings.breadcrumbsEnabled
     CheckMenuItem(m_hMenu, IDM_T1_BREADCRUMBS_TOGGLE,
                   MF_BYCOMMAND | (m_settings.breadcrumbsEnabled ? MF_CHECKED : MF_UNCHECKED));
-    // Syntax highlighting — sync check with m_syntaxColoringEnabled
+    // Syntax highlighting Ã¢â‚¬â€ sync check with m_syntaxColoringEnabled
     CheckMenuItem(m_hMenu, ID_VIEW_SYNTAX_HIGHLIGHTING_TOGGLE,
                   MF_BYCOMMAND | (m_syntaxColoringEnabled ? MF_CHECKED : MF_UNCHECKED));
 
-    // Tier 5 cosmetic features — enable when corresponding module is initialized (after deferredHeavyInit)
+    // Tier 5 cosmetic features Ã¢â‚¬â€ enable when corresponding module is initialized (after deferredHeavyInit)
     EnableMenuItem(m_hMenu, IDM_TELDASH_SHOW,
                    (m_telemetryDashboardInitialized ? MF_BYCOMMAND | MF_ENABLED : MF_BYCOMMAND | MF_GRAYED));
     EnableMenuItem(m_hMenu, IDM_EMOJI_PICKER,
@@ -2947,6 +2947,7 @@ void Win32IDE::createOutputTabs()
     SendMessageW(m_hwndSeverityFilter, CB_ADDSTRING, 0, (LPARAM)L"Errors Only");
     SendMessage(m_hwndSeverityFilter, CB_SETCURSEL, m_severityFilterLevel, 0);
 
+    // FOUR_PANEL_COMPLETION_001 Track H â€” required channels (dynamic tabs also OK)
     static const struct
     {
         const wchar_t* text;
@@ -2955,9 +2956,15 @@ void Win32IDE::createOutputTabs()
     } defs[] = {{L"Output", IDC_OUTPUT_EDIT_GENERAL, "Output"},
                 {L"Errors", IDC_OUTPUT_EDIT_ERRORS, "Errors"},
                 {L"Debug", IDC_OUTPUT_EDIT_DEBUG, "Debug"},
-                {L"Find Results", IDC_OUTPUT_EDIT_FIND, "Find Results"}};
+                {L"Find Results", IDC_OUTPUT_EDIT_FIND, "Find Results"},
+                {L"Build", IDC_OUTPUT_EDIT_GENERAL + 40, "Build"},
+                {L"Tasks", IDC_OUTPUT_EDIT_GENERAL + 41, "Tasks"},
+                {L"ExtensionHost", IDC_OUTPUT_EDIT_GENERAL + 42, "ExtensionHost"},
+                {L"Ollama", IDC_OUTPUT_EDIT_GENERAL + 43, "Ollama"},
+                {L"Deep2", IDC_OUTPUT_EDIT_GENERAL + 44, "Deep2"},
+                {L"Diagnostics", IDC_OUTPUT_EDIT_GENERAL + 45, "Diagnostics"}};
 
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < (int)(sizeof(defs)/sizeof(defs[0])); ++i)
     {
         TCITEMW tie{};
         tie.mask = TCIF_TEXT;
@@ -2985,7 +2992,7 @@ void Win32IDE::createOutputTabs()
     // Restore persisted tab selection
     if (m_selectedOutputTab >= 0 && m_selectedOutputTab < 4)
     {
-        const char* keys[] = {"Output", "Errors", "Debug", "Find Results"};
+        const char* keys[] = {"Output", "Errors", "Debug", "Find Results", "Build", "Tasks", "ExtensionHost", "Ollama", "Deep2", "Diagnostics"};
         m_activeOutputTab = keys[m_selectedOutputTab];
         TabCtrl_SetCurSel(m_hwndOutputTabs, m_selectedOutputTab);
     }
@@ -3030,7 +3037,7 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
 
     // Add timestamp for Errors and Debug tabs
     std::string timestampedText = text;
-    if (target == "Errors" || target == "Debug")
+    if (target == "Errors" || target == "Debug" || target == "Build" || target == "Diagnostics")
     {
         time_t now = time(nullptr);
         struct tm timeinfo;
@@ -3573,7 +3580,7 @@ void Win32IDE::analyzeScript()
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             if (_guard.cancelled)
                 return;
-            // ProductRun only — no CPUInferenceEngine token-id path.
+            // ProductRun only Ã¢â‚¬â€ no CPUInferenceEngine token-id path.
             std::string prompt =
                 "Analyze the following script and report potential bugs, security issues, and improvements:\n\n" +
                 script;
@@ -5043,7 +5050,7 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
         appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output", OutputSeverity::Info);
     if (ggufOk || bridgeOk)
     {
-        std::string msg = "✅ Model loaded and ready for inference!\r\n\r\n"
+        std::string msg = "Ã¢Å“â€¦ Model loaded and ready for inference!\r\n\r\n"
                           "You can now ask questions and use agentic tasks in the chat panel.\r\n"
                           "Try: 'hello', 'model info', or request a task (Agent mode allows tool execution).";
         appendCopilotResponse(msg);
@@ -5076,7 +5083,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         appendToOutput("[1/5] Opening file...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->Open(filepath))
         {
-            std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
+            std::string error = "Ã¢ÂÅ’ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             RawrXD::P1GgufCert::emit("MODEL_FILE_OPEN", "FAIL", filepath.c_str());
@@ -5088,7 +5095,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseHeader())
         {
             std::string error =
-                "❌ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
+                "Ã¢ÂÅ’ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5100,7 +5107,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseMetadata())
         {
             std::string error =
-                "❌ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
+                "Ã¢ÂÅ’ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5114,7 +5121,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->BuildTensorIndex())
         {
             std::string error =
-                "❌ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
+                "Ã¢ÂÅ’ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5127,13 +5134,13 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         appendToOutput("[5/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->LoadZone("embedding"))
         {
-            std::string warning = "⚠️  Warning: Could not pre-load embedding zone (non-critical)";
+            std::string warning = "Ã¢Å¡Â Ã¯Â¸Â  Warning: Could not pre-load embedding zone (non-critical)";
             appendToOutput(warning, "Output", OutputSeverity::Warning);
         }
     }
     catch (const std::exception& e)
     {
-        std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
+        std::string error = "Ã¢ÂÅ’ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", e.what());
@@ -5141,7 +5148,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
     catch (...)
     {
-        std::string error = "❌ Unknown exception loading GGUF file: " + filepath;
+        std::string error = "Ã¢ÂÅ’ Unknown exception loading GGUF file: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", "unknown_exception");
@@ -5166,7 +5173,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
     // Log success with memory savings information
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
-    std::string info = "✅ Model loaded successfully (STREAMING MODE)!\n";
+    std::string info = "Ã¢Å“â€¦ Model loaded successfully (STREAMING MODE)!\n";
     info += "File: " + filepath + "\n";
     info += "Tensors: " + std::to_string(m_modelTensors.size()) + "\n";
     info += "Layers: " + std::to_string(m_currentModelMetadata.layer_count) + "\n";
@@ -5216,13 +5223,13 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         ShowWindow(m_hwndSecondarySidebar, SW_SHOW);
 
         // Send agentic welcome message to Copilot
-        std::string welcomeMsg = "🤖 AI Model Loaded!\r\n\r\n";
+        std::string welcomeMsg = "Ã°Å¸Â¤â€“ AI Model Loaded!\r\n\r\n";
         welcomeMsg += "I'm now ready to assist you with:\r\n";
-        welcomeMsg += "• Code analysis and review\r\n";
-        welcomeMsg += "• GGUF model exploration\r\n";
-        welcomeMsg += "• Tensor inspection and debugging\r\n";
-        welcomeMsg += "• PowerShell automation\r\n";
-        welcomeMsg += "• File operations\r\n\r\n";
+        welcomeMsg += "Ã¢â‚¬Â¢ Code analysis and review\r\n";
+        welcomeMsg += "Ã¢â‚¬Â¢ GGUF model exploration\r\n";
+        welcomeMsg += "Ã¢â‚¬Â¢ Tensor inspection and debugging\r\n";
+        welcomeMsg += "Ã¢â‚¬Â¢ PowerShell automation\r\n";
+        welcomeMsg += "Ã¢â‚¬Â¢ File operations\r\n\r\n";
         welcomeMsg += "Model: " + filepath + "\r\n";
         welcomeMsg += "Tensors: " + std::to_string(m_modelTensors.size()) + "\r\n";
         welcomeMsg += "Memory: " + std::to_string(currentMemory / 1024 / 1024) + " MB\r\n\r\n";
@@ -5241,9 +5248,9 @@ std::string Win32IDE::getModelInfo() const
         return "No model loaded";
     }
 
-    std::string info = "═══════════════════════════════════════════\n";
+    std::string info = "Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â\n";
     info += "GGUF Model Information (STREAMING MODE)\n";
-    info += "═══════════════════════════════════════════\n\n";
+    info += "Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â\n\n";
 
     info += "File: " + m_loadedModelPath + "\n";
     info += "Tensors: " + std::to_string(m_modelTensors.size()) + "\n";
@@ -5257,7 +5264,7 @@ std::string Win32IDE::getModelInfo() const
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
     auto loadedZones = m_ggufLoader->GetLoadedZones();
 
-    info += "📊 Memory Status:\n";
+    info += "Ã°Å¸â€œÅ  Memory Status:\n";
     info += "  Current RAM: " + std::to_string(currentMemory / 1024 / 1024) + " MB\n";
     info += "  Max Per Zone: ~400 MB\n";
     
@@ -5281,16 +5288,16 @@ std::string Win32IDE::getModelInfo() const
 
     if (!loadedZones.empty())
     {
-        info += "🎯 Active Zones:\n";
+        info += "Ã°Å¸Å½Â¯ Active Zones:\n";
         for (const auto& zone : loadedZones)
         {
-            info += "   ✓ " + zone + "\n";
+            info += "   Ã¢Å“â€œ " + zone + "\n";
         }
         info += "\n";
     }
 
     info += "Tensor Details (first 10):\n";
-    info += "──────────────────────────────────────────\n";
+    info += "Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬\n";
 
     for (size_t i = 0; i < m_modelTensors.size() && i < 10; ++i)
     {
@@ -5305,7 +5312,7 @@ std::string Win32IDE::getModelInfo() const
         info += "... and " + std::to_string(m_modelTensors.size() - 10) + " more tensors\n";
     }
 
-    info += "\n💡 Tip: Zones load on-demand during inference for optimal performance!\n";
+    info += "\nÃ°Å¸â€™Â¡ Tip: Zones load on-demand during inference for optimal performance!\n";
 
     return info;
 }
@@ -5638,7 +5645,7 @@ void Win32IDE::loadModelFromExplorer(const std::string& filePath)
     bool bridgeOk = loadModelForInference(filePath);
     if (ggufOk)
     {
-        std::string message = "✅ Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
+        std::string message = "Ã¢Å“â€¦ Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
         appendToOutput(message, "Output", OutputSeverity::Info);
     }
     if (bridgeOk)
@@ -5653,7 +5660,7 @@ void Win32IDE::loadModelFromExplorer(const std::string& filePath)
     }
     if (!ggufOk && !bridgeOk)
     {
-        appendToOutput("❌ Failed to load model: " + filePath + " (not a valid GGUF and native load failed).", "Errors",
+        appendToOutput("Ã¢ÂÅ’ Failed to load model: " + filePath + " (not a valid GGUF and native load failed).", "Errors",
                        OutputSeverity::Error);
     }
 }
@@ -5853,7 +5860,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     bool canChat = isModelLoaded() || (m_agenticBridge && m_agenticBridge->IsInitialized());
     if (!canChat)
     {
-        return "LOCAL_ONLY_001: FAIL_CLOSED — No GGUF loaded. Load a local model (File > Open / Load Model). "
+        return "LOCAL_ONLY_001: FAIL_CLOSED Ã¢â‚¬â€ No GGUF loaded. Load a local model (File > Open / Load Model). "
                "Ollama/HTTP backends are forbidden.";
     }
 
@@ -5870,7 +5877,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
 
     // LOCAL_ONLY_001: Ollama/HTTP path removed (NETWORK_FALLBACK=FORBIDDEN)
 
-    // ProductRun path (same as rawr run) — never CPUInferenceEngine Generate(ids).
+    // ProductRun path (same as rawr run) Ã¢â‚¬â€ never CPUInferenceEngine Generate(ids).
     if (!m_loadedModelPath.empty()) {
 #ifdef _WIN32
         _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
@@ -5917,7 +5924,7 @@ void Win32IDE::toggleChatMode()
                 "NOT_PRODUCT_PATH=1 Chat mode refused: no GGUF loaded (ProductRun requires model).\n",
                 "Output", OutputSeverity::Warning);
             appendChatMessage("System",
-                              "NOT_PRODUCT_PATH=1 Chat mode refused — load a GGUF first.");
+                              "NOT_PRODUCT_PATH=1 Chat mode refused Ã¢â‚¬â€ load a GGUF first.");
             return;
         }
         m_chatMode = true;
@@ -5929,7 +5936,7 @@ void Win32IDE::toggleChatMode()
         appendToOutput("Type messages in command input. /exit-chat returns to terminal.", "Output",
                        OutputSeverity::Info);
         SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Chat Mode");
-        appendChatMessage("System", "Chat mode ON — ProductRun path (loaded model).");
+        appendChatMessage("System", "Chat mode ON Ã¢â‚¬â€ ProductRun path (loaded model).");
         appendChatMessage("System", "Commands: /exit-chat to return to terminal mode");
         return;
     }
@@ -5937,7 +5944,7 @@ void Win32IDE::toggleChatMode()
     m_chatMode = false;
     appendToOutput("Chat Mode OFF - Returned to terminal mode", "Output", OutputSeverity::Info);
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Terminal Mode");
-    appendChatMessage("System", "Chat mode OFF — terminal mode.");
+    appendChatMessage("System", "Chat mode OFF Ã¢â‚¬â€ terminal mode.");
 }
 
 void Win32IDE::appendChatMessage(const std::string& user, const std::string& message)
@@ -6508,11 +6515,11 @@ bool Win32IDE::initializeInference()
             if (engine->LoadModel(m_loadedModelPath))
             {
                 m_nativeEngineLoaded = true;
-                appendToOutput("[AUDIT] ✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
+                appendToOutput("[AUDIT] Ã¢Å“â€¦ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
                 OutputDebugStringA("[AUDIT] m_nativeEngineLoaded = TRUE\n");
                 
                 // Wire completion system to native engine (VAL-063)
-                // SetCompletionBackendNative stores ptr only — GhostText ABSORB=NOT_AUTHORIZED.
+                // SetCompletionBackendNative stores ptr only Ã¢â‚¬â€ GhostText ABSORB=NOT_AUTHORIZED.
                 InitAICompletion();
                 if (SetCompletionBackendNative(static_cast<void*>(engine))) {
                     appendToOutput("[AUDIT] AI Completion backend ptr SOURCE_WIRED (absorb NOT_AUTHORIZED).", "Output", OutputSeverity::Info);
@@ -6524,7 +6531,7 @@ bool Win32IDE::initializeInference()
             }
             else
             {
-                appendToOutput("[AUDIT] ❌ Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
+                appendToOutput("[AUDIT] Ã¢ÂÅ’ Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
                 OutputDebugStringA("[AUDIT] Model load FAILED\n");
                 // Don't fail completely if we have Ollama fallback, but for "no simulation" we adhere to native.
             }
@@ -6560,7 +6567,7 @@ bool Win32IDE::initializeInference()
         m_inferenceConfig.maxTokens = std::min(512, (int)m_currentModelMetadata.context_length / 4);
     }
 
-    appendToOutput("✅ Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
+    appendToOutput("Ã¢Å“â€¦ Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
     wireLayerProgressToOutputPanel();
     return true;
 }
@@ -6569,9 +6576,11 @@ void Win32IDE::shutdownInference()
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
+    (void)m_inferenceEpoch.fetch_add(1, std::memory_order_acq_rel);
     if (m_inferenceRunning)
     {
         m_inferenceStopRequested = true;
+        rawr::ProductRequestCancel();
         if (m_inferenceThread.joinable())
         {
             m_inferenceThread.join();
@@ -6580,6 +6589,7 @@ void Win32IDE::shutdownInference()
 
     m_inferenceRunning = false;
     m_inferenceStopRequested = false;
+    m_inferenceCallback = nullptr;
     m_currentInferencePrompt.clear();
     m_currentInferenceResponse.clear();
 
@@ -6648,7 +6658,7 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         return routeWithIntelligence(prompt);
     }
 
-    // Product path: Deep2 ProductRun (same as rawr run) — not CPUInferenceEngine.
+    // Product path: Deep2 ProductRun (same as rawr run) Ã¢â‚¬â€ not CPUInferenceEngine.
     {
         if (!m_loadedModelPath.empty()) {
 #ifdef _WIN32
@@ -6663,7 +6673,50 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     std::string modelName =
         m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
 
-    return std::string("LOCAL_ONLY_001: FAIL_CLOSED — ProductRun/Deep2 not ready.\nModel: ") + modelName;
+    return std::string("LOCAL_ONLY_001: FAIL_CLOSED Ã¢â‚¬â€ ProductRun/Deep2 not ready.\nModel: ") + modelName;
+}
+
+namespace {
+struct InferenceUiPayload {
+    uint64_t epoch = 0;
+    bool complete = false;
+    std::string text;
+};
+}  // namespace
+
+void Win32IDE::postInferenceUi(uint64_t epoch, const std::string& token, bool complete)
+{
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+    if (epoch != m_inferenceEpoch.load(std::memory_order_acquire))
+        return;
+    auto* payload = new (std::nothrow) InferenceUiPayload{epoch, complete, token};
+    if (!payload)
+        return;
+    if (!PostMessageW(m_hwndMain, WM_INFERENCE_UI, 0, reinterpret_cast<LPARAM>(payload)))
+        delete payload;
+}
+
+void Win32IDE::deliverInferenceUi(WPARAM, LPARAM lParam)
+{
+    std::unique_ptr<InferenceUiPayload> payload(
+        reinterpret_cast<InferenceUiPayload*>(lParam));
+    if (!payload)
+        return;
+    if (payload->epoch != m_inferenceEpoch.load(std::memory_order_acquire))
+        return;
+    if (isShuttingDown() || m_inferenceStopRequested)
+        return;
+    HWND out = (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+                   ? m_hwndCopilotChatOutput
+                   : (m_hwndSecondarySidebar
+                          ? GetDlgItem(m_hwndSecondarySidebar, IDC_COPILOT_CHAT_OUTPUT)
+                          : nullptr);
+    if (out)
+        m_hwndCopilotChatOutput = out;
+    if (!m_inferenceCallback)
+        return;
+    m_inferenceCallback(payload->text, payload->complete);
 }
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
@@ -6674,11 +6727,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     OutputDebugStringA("[AUDIT] generateResponseAsync() called\n");
 
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-    // #region agent log
     P1PRA_AgentDbg("H6", "generateResponseAsync", "entry",
                    m_inferenceRunning.load(std::memory_order_acquire) ? 1u : 0u,
                    static_cast<unsigned long>(GetCurrentThreadId()), 0);
-    // #endregion agent log
 #endif
 
     if (m_inferenceRunning.load(std::memory_order_acquire))
@@ -6695,19 +6746,20 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
         return;
     }
 
+    const uint64_t epoch =
+        m_inferenceEpoch.fetch_add(1, std::memory_order_acq_rel) + 1;
     m_inferenceRunning.store(true, std::memory_order_release);
     m_inferenceStopRequested = false;
     m_currentInferencePrompt = prompt;
-    m_inferenceCallback = callback;
+    m_inferenceCallback = std::move(callback);
 
     OutputDebugStringA("[AUDIT] Starting inference thread\n");
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_Witness("P1PRA_INFERENCE", "worker_spawn");
 #endif
 
-    // Batch 004: ProductRun only — AgenticBridge is not an alternate generator.
     m_inferenceThread = std::thread(
-        [this, prompt]()
+        [this, prompt, epoch]()
         {
             struct InferenceRunningGuard {
                 Win32IDE* ide;
@@ -6717,6 +6769,10 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         ide->m_inferenceRunning = false;
                 }
             } runningGuard(this);
+
+            auto emit = [this, epoch](const std::string& token, bool complete) {
+                postInferenceUi(epoch, token, complete);
+            };
 
             OutputDebugStringA("[AUDIT] Inference worker: ProductRun path\n");
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
@@ -6729,37 +6785,41 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             P1PRA_ThreadWitness("inference_worker_enter");
 #endif
             if (m_loadedModelPath.empty()) {
-                if (m_inferenceCallback) {
-                    m_inferenceCallback(
-                        "FAILED_STAGE=RESOLVE FAILED_OWNER=MODEL_ALIAS "
-                        "Load a .gguf before async generate.",
-                        false);
-                    m_inferenceCallback("", true);
-                }
+                emit("FAILED_STAGE=RESOLVE FAILED_OWNER=MODEL_ALIAS "
+                     "Load a .gguf before async generate.",
+                     false);
+                emit("", true);
                 return;
             }
 #ifdef _WIN32
             _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
 #endif
             (void)rawr::ProductOpenSession(m_loadedModelPath.c_str());
+            if (m_inferenceStopRequested ||
+                epoch != m_inferenceEpoch.load(std::memory_order_acquire)) {
+                emit("", true);
+                return;
+            }
 
-            // Slash agent commands: bridge adapts tools; model turns still ProductRun.
             if (!prompt.empty() && prompt[0] == '/' && m_agenticBridge) {
                 auto streamed = std::make_shared<std::atomic<bool>>(false);
                 m_agenticBridge->SetOutputCallback(
-                    [this, streamed](const std::string&, const std::string& msg) {
+                    [this, epoch, streamed](const std::string&, const std::string& msg) {
                         if (m_inferenceStopRequested || isShuttingDown()) return;
-                        if (m_inferenceCallback && !msg.empty()) {
+                        if (epoch != m_inferenceEpoch.load(std::memory_order_acquire))
+                            return;
+                        if (!msg.empty()) {
                             streamed->store(true, std::memory_order_relaxed);
-                            m_inferenceCallback(msg, false);
+                            postInferenceUi(epoch, msg, false);
                         }
                     });
                 const AgentResponse resp = m_agenticBridge->ExecuteAgentCommand(prompt);
                 m_currentInferenceResponse = resp.content;
-                if (m_inferenceCallback && !isShuttingDown()) {
+                if (!isShuttingDown() &&
+                    epoch == m_inferenceEpoch.load(std::memory_order_acquire)) {
                     if (!streamed->load(std::memory_order_relaxed) && !resp.content.empty())
-                        m_inferenceCallback(resp.content, false);
-                    m_inferenceCallback("", true);
+                        emit(resp.content, false);
+                    emit("", true);
                 }
                 return;
             }
@@ -6772,18 +6832,21 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             int firstTok = 0;
             const bool ok = rawr::ProductDeep2InferStream(
                 prompt.c_str(), 256,
-                [this, streamed](const std::string& piece) -> bool {
+                [this, epoch, streamed](const std::string& piece) -> bool {
                     if (m_inferenceStopRequested || isShuttingDown())
                         return false;
-                    if (m_inferenceCallback && !piece.empty()) {
+                    if (epoch != m_inferenceEpoch.load(std::memory_order_acquire))
+                        return false;
+                    if (!piece.empty()) {
                         streamed->store(true, std::memory_order_relaxed);
-                        m_inferenceCallback(piece, false);
+                        postInferenceUi(epoch, piece, false);
                     }
                     return true;
                 },
                 &acc, &failStage, &failOwner, &exitReason, &firstTok);
             m_currentInferenceResponse = acc;
-            if (m_inferenceCallback && !isShuttingDown()) {
+            if (!isShuttingDown() &&
+                epoch == m_inferenceEpoch.load(std::memory_order_acquire)) {
                 if (!ok && acc.empty()) {
                     std::string err = "FAILED_STAGE=";
                     err += failStage ? failStage : "GENERATE_STREAM";
@@ -6791,12 +6854,12 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     err += failOwner ? failOwner : "FIRST_OWNER_RUNTIME";
                     err += " EXIT_REASON=";
                     err += exitReason ? exitReason : "FAIL";
-                    m_inferenceCallback(err, false);
+                    emit(err, false);
                 } else if (!streamed->load(std::memory_order_relaxed) && !acc.empty()) {
-                    m_inferenceCallback(acc, false);
+                    emit(acc, false);
                 }
                 (void)firstTok;
-                m_inferenceCallback("", true);
+                emit("", true);
             }
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
             P1PRA_ThreadWitness("inference_worker_exit");
@@ -6808,9 +6871,11 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
 void Win32IDE::stopInference()
 {
+    // Invalidate Request A BEFORE cancel Ã¢â‚¬â€ no stale AÃ¢â€ â€™B UI / HWND-after-destroy.
+    (void)m_inferenceEpoch.fetch_add(1, std::memory_order_acq_rel);
     m_inferenceStopRequested = true;
     rawr::ProductRequestCancel();
-    m_inferenceRunning = false;
+    // Keep callback + request-owned state until the worker guard drains.
 }
 
 void Win32IDE::setInferenceConfig(const InferenceConfig& config)
@@ -6971,15 +7036,15 @@ void Win32IDE::showAbout()
                             std::to_string(RAWRXD_MASM_KERNELS) +
                             " ASM kernels\n\n"
                             "Engine:\n"
-                            "• Native Win32 C++20 (no Qt, no Electron)\n"
-                            "• GGUF Model Loader + AVX-512 Inference\n"
-                            "• Chain-of-Thought Multi-Model Review\n"
-                            "• Native PDB Symbol Server (MSF v7.00)\n"
-                            "• Three-Layer Hotpatch System\n"
-                            "• Voice Chat (waveIn/Out + VAD + STT/TTS)\n"
-                            "• Unified GPU Accelerator Router\n"
-                            "• Embedded LSP Server (JSON-RPC 2.0)\n"
-                            "• Distributed Swarm Inference\n\n" RAWRXD_COPYRIGHT "\n" RAWRXD_LICENSE "\n" RAWRXD_GITHUB;
+                            "Ã¢â‚¬Â¢ Native Win32 C++20 (no Qt, no Electron)\n"
+                            "Ã¢â‚¬Â¢ GGUF Model Loader + AVX-512 Inference\n"
+                            "Ã¢â‚¬Â¢ Chain-of-Thought Multi-Model Review\n"
+                            "Ã¢â‚¬Â¢ Native PDB Symbol Server (MSF v7.00)\n"
+                            "Ã¢â‚¬Â¢ Three-Layer Hotpatch System\n"
+                            "Ã¢â‚¬Â¢ Voice Chat (waveIn/Out + VAD + STT/TTS)\n"
+                            "Ã¢â‚¬Â¢ Unified GPU Accelerator Router\n"
+                            "Ã¢â‚¬Â¢ Embedded LSP Server (JSON-RPC 2.0)\n"
+                            "Ã¢â‚¬Â¢ Distributed Swarm Inference\n\n" RAWRXD_COPYRIGHT "\n" RAWRXD_LICENSE "\n" RAWRXD_GITHUB;
 
     MessageBoxW(m_hwndMain, utf8ToWide(aboutText).c_str(), L"About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
 }
@@ -7074,7 +7139,7 @@ void Win32IDE::createChatPanel()
 
     if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
     {
-        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createChatPanel IDEMPOTENT — reuse sidebar\n");
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createChatPanel IDEMPOTENT Ã¢â‚¬â€ reuse sidebar\n");
         return;
     }
 
@@ -7088,7 +7153,7 @@ void Win32IDE::createChatPanel()
         return;
     }
     SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_USERDATA, (LONG_PTR)this);
-    // Must use SidebarProcImpl (AI panel) — SidebarProc is the LEFT explorer and
+    // Must use SidebarProcImpl (AI panel) Ã¢â‚¬â€ SidebarProc is the LEFT explorer and
     // DefWindowProc on STATIC swallows child BN_CLICKED (Send never reaches onCommand).
     m_oldSidebarProc = (WNDPROC)SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_WNDPROC,
                                                  (LONG_PTR)SidebarProcImpl);
@@ -7211,7 +7276,7 @@ void Win32IDE::createChatPanel()
     if (m_hwndChkNoRefusal)
         SendMessage(m_hwndChkNoRefusal, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    // Agentic mode switcher (Ask/Plan/Agent/Debug) — IDs 5005–5008
+    // Agentic mode switcher (Ask/Plan/Agent/Debug) Ã¢â‚¬â€ IDs 5005Ã¢â‚¬â€œ5008
     toggleY += 25;
     CreateWindowExW(0, L"STATIC", L"Mode:", WS_CHILD | WS_VISIBLE | SS_LEFT, toggleX, toggleY, 44, 20,
                     m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
@@ -7336,7 +7401,7 @@ void Win32IDE::populateModelSelector()
     }
 
     // Product path: SwarmModelSelector (GGUF roots + local Ollama /api/tags when up).
-    // Fail-closed: empty inventory stays empty — never invent models.
+    // Fail-closed: empty inventory stays empty Ã¢â‚¬â€ never invent models.
     {
         const auto swarmCandidates =
             RawrXD::Win32App::enumerateSwarmModelCandidates(512);
@@ -7395,7 +7460,7 @@ std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& dir
         if (!display.empty()) models.push_back(display);
     };
 
-    // Filesystem scan — no list-server required. Top-level + one subdir level
+    // Filesystem scan Ã¢â‚¬â€ no list-server required. Top-level + one subdir level
     // (avoids walking huge trees like F:\~dev\rawrxd).
     try
     {
@@ -7571,7 +7636,7 @@ void Win32IDE::HandleCopilotSend()
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
-    // Prefer live child HWNDs — member pointers can go stale after layout recreate.
+    // Prefer live child HWNDs Ã¢â‚¬â€ member pointers can go stale after layout recreate.
     HWND input = (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
                      ? m_hwndCopilotChatInput
                      : (m_hwndSecondarySidebar ? GetDlgItem(m_hwndSecondarySidebar, IDC_COPILOT_CHAT_INPUT)
@@ -7593,7 +7658,7 @@ void Win32IDE::HandleCopilotSend()
     const std::string userMessage = wideToUtf8(inputBuffer);
     if (userMessage.empty())
     {
-        OutputDebugStringA("[HandleCopilotSend] empty input — ignore\n");
+        OutputDebugStringA("[HandleCopilotSend] empty input Ã¢â‚¬â€ ignore\n");
         return;
     }
 
@@ -8347,7 +8412,7 @@ void Win32IDE::drawTabItem(DRAWITEMSTRUCT* dis)
 
     // Close button
     RECT closeRc = {textRc.right + 4, rc.top + 3, textRc.right + 16, rc.bottom - 3};
-    DrawTextW(hdc, L"×", 1, &closeRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW(hdc, L"Ãƒâ€”", 1, &closeRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdc, hOldFont);
     DeleteObject(hTabFont);
@@ -8398,7 +8463,7 @@ LRESULT CALLBACK Win32IDE::CommandInputProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
     if (uMsg == WM_KEYDOWN && wParam == VK_RETURN)
     {
-        // Execute command on Enter — route through executeCommand()
+        // Execute command on Enter Ã¢â‚¬â€ route through executeCommand()
         if (ide)
         {
             ide->executeCommand();
@@ -8406,7 +8471,7 @@ LRESULT CALLBACK Win32IDE::CommandInputProc(HWND hwnd, UINT uMsg, WPARAM wParam,
         return 0;
     }
 
-    // Up arrow — command history navigation (previous) — uses PowerShell history
+    // Up arrow Ã¢â‚¬â€ command history navigation (previous) Ã¢â‚¬â€ uses PowerShell history
     if (uMsg == WM_KEYDOWN && wParam == VK_UP)
     {
         if (ide)
@@ -8424,7 +8489,7 @@ LRESULT CALLBACK Win32IDE::CommandInputProc(HWND hwnd, UINT uMsg, WPARAM wParam,
         return 0;
     }
 
-    // Down arrow — command history navigation (next) — uses PowerShell history
+    // Down arrow Ã¢â‚¬â€ command history navigation (next) Ã¢â‚¬â€ uses PowerShell history
     if (uMsg == WM_KEYDOWN && wParam == VK_DOWN)
     {
         if (ide)
@@ -8473,17 +8538,30 @@ void Win32IDE::postAgentOutputSafe(const std::string& text)
     }
 }
 
-void Win32IDE::postOutputPanelSafe(const std::string& text)
+
+void Win32IDE::postOutputPanelSafe(const std::string& text, const std::string& tabName)
 {
     if (isShuttingDown())
         return;
-    char* copy = _strdup(text.c_str());
+    const std::string channel = tabName.empty() ? "Output" : tabName;
+    std::string payload;
+    payload.reserve(channel.size() + 1 + text.size());
+    payload.append(channel);
+    payload.push_back('\0');
+    payload.append(text);
+    char* copy = static_cast<char*>(malloc(payload.size() + 1));
     if (copy && m_hwndMain)
     {
-        PostMessage(m_hwndMain, WM_IDE_OUTPUT_APPEND_SAFE, 0, (LPARAM)copy);
+        memcpy(copy, payload.data(), payload.size());
+        copy[payload.size()] = '\0';
+        PostMessage(m_hwndMain, WM_IDE_OUTPUT_APPEND_SAFE,
+                    static_cast<WPARAM>(channel.size()), (LPARAM)copy);
+    }
+    else if (copy)
+    {
+        free(copy);
     }
 }
-
 void Win32IDE::wireLayerProgressToOutputPanel()
 {
     auto cb = [this](const std::string& line)
@@ -8510,13 +8588,13 @@ void Win32IDE::refreshMoEPackHudStatusBarPart()
         return;
     if (!m_nativeEngine || !m_nativeEngine->IsModelLoaded())
     {
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: Ã¢â‚¬â€");
         return;
     }
     const std::string u8 = m_nativeEngine->MoEPackHudStatusLineUtf8();
     if (u8.empty())
     {
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: Ã¢â‚¬â€");
         return;
     }
     const int wlen = MultiByteToWideChar(CP_UTF8, 0, u8.c_str(), -1, nullptr, 0);
@@ -8541,7 +8619,7 @@ void Win32IDE::clearInferenceLayerProgressCallback()
         m_agenticBridge->SetCpuEngineSwarmTelemetryOutputCallback({});
     }
     if (m_hwndStatusBar)
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: Ã¢â‚¬â€");
 }
 
 // --- Quick GGUF Model Loader (delegates to unified model dialog) ---
@@ -8559,7 +8637,7 @@ void Win32IDE::quickLoadGGUFModel()
 // ============================================================================
 
 // ---------------------------------------------------------------------------
-// resolveAndLoadModel — Resolve any model source input to a local path, then
+// resolveAndLoadModel Ã¢â‚¬â€ Resolve any model source input to a local path, then
 // load it through the streaming GGUF pipeline. This is the common path for
 // all source types.
 // ---------------------------------------------------------------------------
@@ -8621,17 +8699,17 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
             appendToOutput("Download complete: " + prog.local_path + "\n", "Output", OutputSeverity::Info);
             return;
         }
-        // Progress update — update status bar with percentage
+        // Progress update Ã¢â‚¬â€ update status bar with percentage
         char buf[256];
         if (prog.total_bytes > 0)
         {
-            snprintf(buf, sizeof(buf), "Downloading: %.1f%% (%llu / %llu MB) — %s", prog.progress_percent,
+            snprintf(buf, sizeof(buf), "Downloading: %.1f%% (%llu / %llu MB) Ã¢â‚¬â€ %s", prog.progress_percent,
                      (unsigned long long)(prog.downloaded_bytes / (1024 * 1024)),
                      (unsigned long long)(prog.total_bytes / (1024 * 1024)), prog.filename.c_str());
         }
         else
         {
-            snprintf(buf, sizeof(buf), "Downloading: %llu MB — %s",
+            snprintf(buf, sizeof(buf), "Downloading: %llu MB Ã¢â‚¬â€ %s",
                      (unsigned long long)(prog.downloaded_bytes / (1024 * 1024)), prog.filename.c_str());
         }
         if (m_hwndStatusBar)
@@ -8693,7 +8771,7 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
         return true;
     }
 
-    // No local GGUF path or load failed — still feed Ollama model name to bridge so chat and agentic use it (local
+    // No local GGUF path or load failed Ã¢â‚¬â€ still feed Ollama model name to bridge so chat and agentic use it (local
     // definitions vary)
     if (!resolved.ollama_model_name.empty())
     {
@@ -8716,7 +8794,7 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
 }
 
 // ---------------------------------------------------------------------------
-// openModelFromHuggingFace — Dialog: enter HuggingFace repo ID, browse GGUF
+// openModelFromHuggingFace Ã¢â‚¬â€ Dialog: enter HuggingFace repo ID, browse GGUF
 // files in the repo, select a quant, download and load.
 // ---------------------------------------------------------------------------
 void Win32IDE::openModelFromHuggingFace()
@@ -8855,7 +8933,7 @@ void Win32IDE::openModelFromHuggingFace()
 
                         if (state.ggufFiles.empty())
                         {
-                            // Maybe it's a search query, not a repo ID — try search
+                            // Maybe it's a search query, not a repo ID Ã¢â‚¬â€ try search
                             auto searchResults = m_modelResolver->SearchHuggingFace(input, 10);
                             if (!searchResults.empty())
                             {
@@ -8929,7 +9007,7 @@ void Win32IDE::openModelFromHuggingFace()
                 }
                 else if (sel >= 0)
                 {
-                    // Might be a search result — get the text and use it as repo ID
+                    // Might be a search result Ã¢â‚¬â€ get the text and use it as repo ID
                     char selText[512] = {0};
                     SendMessageA(hList, LB_GETTEXT, sel, (LPARAM)selText);
                     std::string selStr(selText);
@@ -9051,7 +9129,7 @@ void Win32IDE::openModelFromHuggingFace()
 }
 
 // ---------------------------------------------------------------------------
-// openModelFromOllama — Scan for Ollama blobs, show a selection list,
+// openModelFromOllama Ã¢â‚¬â€ Scan for Ollama blobs, show a selection list,
 // validate GGUF magic, and load the selected blob.
 // ---------------------------------------------------------------------------
 void Win32IDE::openModelFromOllama()
@@ -9134,12 +9212,12 @@ void Win32IDE::openModelFromOllama()
         double sizeMB = blob.size_bytes / (1024.0 * 1024.0);
         if (sizeGB >= 1.0)
         {
-            snprintf(line, sizeof(line), "%s — %.1f GB %s", blob.model_name.c_str(), sizeGB,
+            snprintf(line, sizeof(line), "%s Ã¢â‚¬â€ %.1f GB %s", blob.model_name.c_str(), sizeGB,
                      blob.is_valid_gguf ? "[GGUF OK]" : "[INVALID]");
         }
         else
         {
-            snprintf(line, sizeof(line), "%s — %.0f MB %s", blob.model_name.c_str(), sizeMB,
+            snprintf(line, sizeof(line), "%s Ã¢â‚¬â€ %.0f MB %s", blob.model_name.c_str(), sizeMB,
                      blob.is_valid_gguf ? "[GGUF OK]" : "[INVALID]");
         }
         SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)line);
@@ -9229,7 +9307,7 @@ void Win32IDE::openModelFromOllama()
 }
 
 // ---------------------------------------------------------------------------
-// openModelFromURL — Dialog: enter HTTP/HTTPS URL to a GGUF file,
+// openModelFromURL Ã¢â‚¬â€ Dialog: enter HTTP/HTTPS URL to a GGUF file,
 // download with progress, and load through the streaming pipeline.
 // ---------------------------------------------------------------------------
 void Win32IDE::openModelFromURL()
@@ -9418,7 +9496,7 @@ void Win32IDE::openModelFromURL()
 }
 
 // ---------------------------------------------------------------------------
-// openModelUnified — Smart model open dialog: user types any model identifier
+// openModelUnified Ã¢â‚¬â€ Smart model open dialog: user types any model identifier
 // and it auto-detects the source type (local path, HF repo, Ollama name, URL)
 // and routes to the appropriate loader.
 // ---------------------------------------------------------------------------
@@ -9427,7 +9505,7 @@ void Win32IDE::openModelUnified()
     SCOPED_METRIC("model.open_unified");
 
     // Create the unified input dialog
-    HWND hDlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "STATIC", "RawrXD — Smart Model Loader",
+    HWND hDlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "STATIC", "RawrXD Ã¢â‚¬â€ Smart Model Loader",
                                 WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 580, 260,
                                 m_hwndMain, nullptr, m_hInstance, nullptr);
 
@@ -9438,7 +9516,7 @@ void Win32IDE::openModelUnified()
 
     // Title label
     HWND hTitle = CreateWindowExA(
-        0, "STATIC", "Enter any model identifier — the source will be auto-detected:", WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, "STATIC", "Enter any model identifier Ã¢â‚¬â€ the source will be auto-detected:", WS_CHILD | WS_VISIBLE | SS_LEFT,
         16, 16, 540, 22, hDlg, nullptr, m_hInstance, nullptr);
     SendMessage(hTitle, WM_SETFONT, (WPARAM)m_hFontUI, TRUE);
 
@@ -9557,7 +9635,7 @@ void Win32IDE::openModelUnified()
 }
 
 // ============================================================================
-// EditorSubclassProc — Editor RichEdit subclass window procedure
+// EditorSubclassProc Ã¢â‚¬â€ Editor RichEdit subclass window procedure
 // Routes editor-specific messages (scroll sync, key interception) while
 // forwarding everything else to the original EDIT wndproc.
 // ============================================================================
@@ -9589,24 +9667,24 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 break;
 
             case WM_KEYDOWN:
-                // Ghost text key handling — Tab accepts, Esc dismisses, other keys dismiss
+                // Ghost text key handling Ã¢â‚¬â€ Tab accepts, Esc dismisses, other keys dismiss
                 if (pThis->handleGhostTextKey((UINT)wParam))
                 {
                     return 0;  // Ghost text consumed the key
                 }
-                // Ctrl+Space → code completion popup
+                // Ctrl+Space Ã¢â€ â€™ code completion popup
                 if (wParam == VK_SPACE && (GetKeyState(VK_CONTROL) & 0x8000))
                 {
                     pThis->triggerCodeCompletion();
                     return 0;
                 }
-                // Ctrl+Shift+P → command palette
+                // Ctrl+Shift+P Ã¢â€ â€™ command palette
                 if (wParam == 'P' && (GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))
                 {
                     pThis->showCommandPalette();
                     return 0;
                 }
-                // F9 → toggle breakpoint at current line
+                // F9 Ã¢â€ â€™ toggle breakpoint at current line
                 if (wParam == VK_F9)
                 {
                     CHARRANGE sel;
@@ -9683,7 +9761,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 }
 
 // ============================================================================
-// SidebarProcImpl — Secondary sidebar (AI Chat panel) window procedure
+// SidebarProcImpl Ã¢â‚¬â€ Secondary sidebar (AI Chat panel) window procedure
 // Handles paint, sizing, and command routing for the right-side AI panel.
 // Distinct from SidebarProc which handles the primary (left) sidebar.
 // ============================================================================
@@ -9720,7 +9798,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
             if (!pThis)
                 return 0;
 
-            // BN_CLICKED is 0 — treat notifyCode 0 as click for pushbuttons
+            // BN_CLICKED is 0 Ã¢â‚¬â€ treat notifyCode 0 as click for pushbuttons
             const bool clicked = (notifyCode == BN_CLICKED || notifyCode == 0);
 
             if (controlId == IDC_COPILOT_SEND_BTN && clicked)
@@ -9784,7 +9862,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 }
 
 // ============================================================================
-// getCurrentGitBranch — Returns the current git branch name
+// getCurrentGitBranch Ã¢â‚¬â€ Returns the current git branch name
 // ============================================================================
 std::string Win32IDE::getCurrentGitBranch() const
 {
@@ -9900,7 +9978,7 @@ void Win32IDE::refreshExtensions()
     }
     else
     {
-        appendToOutput("⚠️ Extension loader not initialized\n", "Output", OutputSeverity::Warning);
+        appendToOutput("Ã¢Å¡Â Ã¯Â¸Â Extension loader not initialized\n", "Output", OutputSeverity::Warning);
     }
 }
 
@@ -9912,11 +9990,11 @@ void Win32IDE::loadExtension(const std::string& name)
         // Re-scan to ensure extension list is current, then load native modules
         m_extensionLoader->Scan();
         m_extensionLoader->LoadNativeModules();
-        appendToOutput("✅ Extension loaded: " + name + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("Ã¢Å“â€¦ Extension loaded: " + name + "\n", "Output", OutputSeverity::Info);
     }
     else
     {
-        appendToOutput("⚠️ Extension loader not initialized\n", "Output", OutputSeverity::Warning);
+        appendToOutput("Ã¢Å¡Â Ã¯Â¸Â Extension loader not initialized\n", "Output", OutputSeverity::Warning);
     }
 }
 
@@ -9928,17 +10006,17 @@ void Win32IDE::unloadExtension(const std::string& name)
         bool unloaded = m_extensionLoader->UnloadExtension(name);
         if (unloaded)
         {
-            appendToOutput("✅ Extension unloaded: " + name + "\n", "Output", OutputSeverity::Info);
+            appendToOutput("Ã¢Å“â€¦ Extension unloaded: " + name + "\n", "Output", OutputSeverity::Info);
         }
         else
         {
-            appendToOutput("⚠️ Failed to unload extension: " + name + " (not found or not loaded)\n", "Output",
+            appendToOutput("Ã¢Å¡Â Ã¯Â¸Â Failed to unload extension: " + name + " (not found or not loaded)\n", "Output",
                            OutputSeverity::Warning);
         }
     }
     else
     {
-        appendToOutput("⚠️ Extension loader not initialized\n", "Output", OutputSeverity::Warning);
+        appendToOutput("Ã¢Å¡Â Ã¯Â¸Â Extension loader not initialized\n", "Output", OutputSeverity::Warning);
     }
 }
 
@@ -9952,12 +10030,12 @@ void Win32IDE::showExtensionHelp(const std::string& name)
     }
     else
     {
-        appendToOutput("⚠️ Extension loader not initialized\n", "Output", OutputSeverity::Warning);
+        appendToOutput("Ã¢Å¡Â Ã¯Â¸Â Extension loader not initialized\n", "Output", OutputSeverity::Warning);
     }
 }
 
 // ============================================================================
-// DEFERRED IMPLEMENTATIONS — PowerShell Panel Dock/Float
+// DEFERRED IMPLEMENTATIONS Ã¢â‚¬â€ PowerShell Panel Dock/Float
 // ============================================================================
 
 void Win32IDE::dockPowerShellPanel()
@@ -9967,7 +10045,7 @@ void Win32IDE::dockPowerShellPanel()
 
     if (m_hwndPowerShellPanel && IsWindow(m_hwndPowerShellPanel))
     {
-        // Remove WS_POPUP, add WS_CHILD — reparent to main window
+        // Remove WS_POPUP, add WS_CHILD Ã¢â‚¬â€ reparent to main window
         LONG style = GetWindowLong(m_hwndPowerShellPanel, GWL_STYLE);
         style = (style & ~WS_POPUP) | WS_CHILD;
         SetWindowLong(m_hwndPowerShellPanel, GWL_STYLE, style);
@@ -9989,7 +10067,7 @@ void Win32IDE::floatPowerShellPanel()
 
     if (m_hwndPowerShellPanel && IsWindow(m_hwndPowerShellPanel))
     {
-        // Remove WS_CHILD, add WS_POPUP — detach from main window
+        // Remove WS_CHILD, add WS_POPUP Ã¢â‚¬â€ detach from main window
         LONG style = GetWindowLong(m_hwndPowerShellPanel, GWL_STYLE);
         style = (style & ~WS_CHILD) | WS_POPUP | WS_CAPTION | WS_THICKFRAME;
         SetWindowLong(m_hwndPowerShellPanel, GWL_STYLE, style);
@@ -10005,7 +10083,7 @@ void Win32IDE::floatPowerShellPanel()
     appendToOutput("PowerShell panel floating\n", "Output", OutputSeverity::Info);
 }
 
-// Helper for input dialog — Win32 modal dialog without .rc template
+// Helper for input dialog Ã¢â‚¬â€ Win32 modal dialog without .rc template
 namespace
 {
 struct InputDialogParams

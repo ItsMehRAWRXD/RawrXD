@@ -1,0 +1,7 @@
+DEBUG_CONSOLE_GATE probe PROMOTE=0
+DBGENG_DLL=1
+SOURCE_BACKEND=NativeDebuggerEngine(DbgEng)
+PRODUCT_UI=Win32IDE_NativeDebugPanel.cpp + Win32IDE_Debugger*.cpp
+NOTE=Harness confirms dbgeng presence; HWND BP/step E2E requires candidate IDE EXE relink+run
+DEBUG_CONSOLE=RUNTIME_PARTIAL
+PROMOTE=0 TIP_CLIMB=HOLD NOT_RUN!=PASS

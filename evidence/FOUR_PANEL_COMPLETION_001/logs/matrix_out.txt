@@ -1,0 +1,14 @@
+CONPTY_MARK_A7F3
+CONPTY_MARK_A7F3
+CONPTY_MARK_A7F3
+CONPTY_CAPTURE_MATRIX OS
+anon_hPC_nosus hit=0 pipe_len=0 pipe=[]
+anon_amp_nosus hit=0 pipe_len=0 pipe=[]
+anon_hPC_sus hit=0 pipe_len=0 pipe=[]
+anon_amp_sus hit=0 pipe_len=0 pipe=[]
+named_hPC_nosus hit=0 pipe_len=0 pipe=[]
+named_amp_nosus PIPE_FAIL
+named_hPC_sus PIPE_FAIL
+named_amp_sus PIPE_FAIL
+WINS=0
+BEST_MARK_IN_PIPE=0

@@ -1,0 +1,13 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@
+         src/win32app/Win32IDE_Sidebar.cpp
++        src/win32app/Win32IDE_SidebarRuntime.cpp
++        src/win32app/Win32IDE_ChatWindowUI.cpp
++        src/win32app/Win32IDE_TasksDebugUI.cpp
++        src/win32app/Win32IDE_PathBCmdDiagSwarm.cpp
+         src/win32app/Win32IDE_Debugger.cpp
+@@
+         src/win32app/Win32IDE_Tier5Cosmetics.cpp
++        src/win32app/Win32IDE_CallStackSymbols.cpp
+         src/win32app/Win32IDE_CrashReporter.cpp

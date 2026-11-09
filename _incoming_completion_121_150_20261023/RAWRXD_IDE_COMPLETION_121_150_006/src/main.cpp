@@ -1,0 +1,3 @@
+#include "rawr_ide_gates.hpp"
+#include <iostream>
+int main(int argc,char**argv){if(argc<3||argc>4){std::cerr<<"Usage: rawr-ide-gates init <receipt.json> | apply <results.txt> <receipt.json>\n";return 2;}auto gates=rawr::default_gates();std::string err;std::string cmd=argv[1];if(cmd=="init"&&argc==3){if(!rawr::write_receipt_atomic(argv[2],gates,err)){std::cerr<<err<<'\n';return 1;}return 0;}if(cmd=="apply"&&argc==4){if(!rawr::apply_results(argv[2],gates,err)||!rawr::write_receipt_atomic(argv[3],gates,err)){std::cerr<<err<<'\n';return 1;}std::cout<<"Receipt written; untested gates remain NOT_RUN\n";return 0;}std::cerr<<"Invalid arguments\n";return 2;}

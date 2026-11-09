@@ -1,0 +1,17 @@
+Microsoft Windows [Version 10.0.26300.9818]
+(c) Microsoft Corporation. All rights reserved.
+
+g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001>Microsoft Windows [Version 10.0.26300.9818]
+(c) Microsoft Corporation. All rights reserved.
+
+g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001>PS G:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001> TERMINAL_GATE harness start PROMOTE=0
+FAIL echo capture
+FAIL compile+run via ConPTY (see logs)
+PASS interrupt issued (Ctrl+C \x03)
+PASS resize
+PASS restart
+PASS no orphan after stop (pid 31216)
+FAIL PowerShell unicode
+TERMINAL_GATE fail_count=3
+TERMINAL=FAIL_CLOSED
+PROMOTE=0 TIP_CLIMB=HOLD NOT_RUN!=PASS

@@ -1,0 +1,8 @@
+# No source patch generated.
+# Reason: the required 11-file closure is already present in candidate HEAD
+# 273924f9f4b0d75ed770559da448164ec632ce00 according to Git tree inspection.
+# The candidate filesystem is sparse/materialization-conflicted and reports
+# approximately 301,819 tracked changes. A patch would incorrectly encode
+# worktree restoration as source recovery and could absorb unrelated changes.
+# Recreate/repair the candidate worktree, then regenerate a zero-ambiguity diff.
+

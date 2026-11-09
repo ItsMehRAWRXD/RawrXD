@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(RawrXDEvidence013 LANGUAGES CXX)
+add_executable(rawr-evidence src/main.cpp)
+target_compile_features(rawr-evidence PRIVATE cxx_std_20)
+enable_testing()
+add_test(NAME partial_must_not_certify COMMAND ${CMAKE_COMMAND} -DEXE=$<TARGET_FILE:rawr-evidence> -DROOT=${CMAKE_CURRENT_SOURCE_DIR} -DBINARY=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/partial.cmake)
+add_test(NAME full_positive_fixture COMMAND ${CMAKE_COMMAND} -DEXE=$<TARGET_FILE:rawr-evidence> -DROOT=${CMAKE_CURRENT_SOURCE_DIR} -DBINARY=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/full.cmake)

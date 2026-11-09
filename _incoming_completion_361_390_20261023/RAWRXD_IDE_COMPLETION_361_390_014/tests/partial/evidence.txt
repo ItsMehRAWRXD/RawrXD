@@ -1,0 +1,4 @@
+win32_build=PASS
+generation_completed=PASS
+generated_tokens=0
+decode_tps=NaN

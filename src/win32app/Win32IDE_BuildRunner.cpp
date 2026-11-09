@@ -1,4 +1,4 @@
-// Win32IDE_BuildRunner.cpp — Unified Build Pipeline (P0)
+// Win32IDE_BuildRunner.cpp â€” Unified Build Pipeline (P0)
 // Runs CMake/Ninja build, parses output, pushes errors to ProblemsAggregator.
 #include "Win32IDE.h"
 #include "core/problems_aggregator.hpp"
@@ -14,7 +14,7 @@ namespace {
 // Avoid clashing with Win32IDE::appendToOutput (member) inside lambdas that capture `this`.
 static void appendBuildOutput(Win32IDE* ide, const std::string& line) {
     if (ide && line.size())
-        ide->appendToOutput(line + "\n");
+        ide->postOutputPanelSafe(line + "\n", "Build");
 }
 
 void parseAndReport(const std::string& line, Win32IDE* ide) {

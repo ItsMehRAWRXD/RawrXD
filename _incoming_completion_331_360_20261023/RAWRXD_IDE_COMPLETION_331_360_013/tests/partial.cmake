@@ -1,0 +1,8 @@
+execute_process(COMMAND "${EXE}" evaluate "${ROOT}/tests/partial.txt" "${BINARY}/partial.json" RESULT_VARIABLE ret)
+if(NOT ret EQUAL 1)
+ message(FATAL_ERROR "partial fixture must exit 1, got ${ret}")
+endif()
+file(READ "${BINARY}/partial.json" data)
+if(NOT data MATCHES "NOT_CERTIFIED")
+ message(FATAL_ERROR "partial state not retained")
+endif()
