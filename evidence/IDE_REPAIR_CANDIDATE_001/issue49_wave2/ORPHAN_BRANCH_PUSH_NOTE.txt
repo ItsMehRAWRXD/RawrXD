@@ -1,0 +1,17 @@
+﻿issue49_wave2 / ORPHAN_BRANCH_PUSH
+ASOF_UTC=2026-11-10T09:56:49Z
+TARGET_BRANCH=upload/issue49-wave2-20261110-absorb
+REMOTE=origin
+ORIGIN=https://github.com/ItsMehRAWRXD/RawrXD.git
+COMMIT=90ae421471ea7135b9be5c71bdc80ca4ca3831c1
+PUSH=OK
+PUSH_EXIT=0
+GIT_LFS_SKIP_PUSH=1
+WORKTREE=C:\Users\Garrett\AppData\Local\Temp\issue49_wave2_orphan
+SCOPE=issue49_wave2 receipts+harness + ToolCallBridge.h absorb + ToolCallExactlyOnceGuard.hpp + tools/issue49_wave2
+EXCLUDE=*.exe *.obj *.pdb *.ilk *.recipe
+NO_PRODUCT_EDIT=1
+NO_WIN32IDE_COMPUTERUSE=1
+NO_AGENTICLOOPBRIDGE=1
+PROMOTE=0
+PR_HINT=https://github.com/ItsMehRAWRXD/RawrXD/pull/new/upload/issue49-wave2-20261110-absorb
