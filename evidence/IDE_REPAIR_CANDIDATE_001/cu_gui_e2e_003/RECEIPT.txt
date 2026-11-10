@@ -1,0 +1,32 @@
+IDE_REPAIR_CANDIDATE_001 / cu_gui_e2e_003
+ASOF_UTC=2026-11-10T08:10:00Z
+OWNER=p0-screenshot-own-window-gui
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD MATURITY=82%
+NO_RC4_MUTATION=1
+RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+
+LAW=
+  CU_REGISTRY_CONTROLS=PASS != CU_GUI_E2E
+  orphan ide_verify PASS != live agent tool_result+BMP
+
+WAVE1_CREDIT_REJECTED=
+  WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS cited cu_dispatch_002 orphan verify only.
+  P0 does NOT accept that as CU_GUI_E2E.
+
+SOURCE_WIRED=1
+  ComputerUseBridge::AllowOwnAndConfiguredParents + AllowProcessId
+  AgenticLoopBridge exports RAWRXD_PARENT_PID/RAWRXD_CU_ALLOW_PIDS pre-CreateProcess
+  CLI RegisterComputerUseToolsIfLinked uses AllowOwnAndConfiguredParents
+  Root cause: CLI child PID cannot capture IDE HWND without parent allowlist
+
+RUNTIME=
+  FIRST_FAILURE_CLASS=RUNTIME_SHELL_HOST_WEDGED
+  DETAIL=Host Shell tool cannot execute (even echo); F: cwd shells hung.
+  BUILD=NOT_RUN (script: p0_cu_gui_build_and_prove.cmd)
+  LIVE_AGENT_TOOL_RESULT_BMP=NOT_RUN
+
+SHA_TESTED=
+  Ext 089B9C72… (user tip) / Wave1 6E59E91A… rc5b — CU_GUI not re-proven on either
+  NEW candidate rebuild pending
+
+PROMOTE=0

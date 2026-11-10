@@ -440,6 +440,15 @@ void AgenticLoopBridge::WorkerThread()
         std::wstring cmdMutable = utf8ToWide(commandLine); // CreateProcess modifies the buffer
         std::wstring workDirWide = utf8ToWide(m_currentConfig.workDir);
 
+        // Child CLI inherits this so computer_use can allowlist the IDE HWND
+        // (CLI PID alone cannot capture the parent window).
+        {
+            const std::string pidBuf =
+                std::to_string(static_cast<unsigned long>(GetCurrentProcessId()));
+            SetEnvironmentVariableA("RAWRXD_PARENT_PID", pidBuf.c_str());
+            SetEnvironmentVariableA("RAWRXD_CU_ALLOW_PIDS", pidBuf.c_str());
+        }
+
         // Supervise before the child runs so deep2 cannot self-job away from
         // parent kill-on-close (Map9 orphan class).
         EnsureChildJob();

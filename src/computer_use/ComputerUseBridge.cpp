@@ -1,4 +1,6 @@
 #include "ComputerUseBridge.h"
+#include <algorithm>
+#include <cstdlib>
 #include <sstream>
 
 namespace rawrxd::computer_use {
@@ -33,6 +35,52 @@ void ComputerUseBridge::AllowOwnProcess() {
     EnsureInitialized();
     std::lock_guard<std::mutex> lock(mutex_);
     policy_.allowedProcessIds = {GetCurrentProcessId()};
+    engine_ = std::make_unique<ComputerUseEngine>(policy_);
+}
+
+void ComputerUseBridge::AllowProcessId(DWORD pid) {
+    if (!pid) return;
+    EnsureInitialized();
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (std::find(policy_.allowedProcessIds.begin(),
+                  policy_.allowedProcessIds.end(),
+                  pid) == policy_.allowedProcessIds.end()) {
+        policy_.allowedProcessIds.push_back(pid);
+    }
+    engine_ = std::make_unique<ComputerUseEngine>(policy_);
+}
+
+void ComputerUseBridge::AllowOwnAndConfiguredParents() {
+    EnsureInitialized();
+    std::vector<DWORD> extra;
+    if (const char* parent = std::getenv("RAWRXD_PARENT_PID")) {
+        char* end = nullptr;
+        const unsigned long v = std::strtoul(parent, &end, 10);
+        if (end != parent && v != 0ul && v <= 0xFFFFFFFFul)
+            extra.push_back(static_cast<DWORD>(v));
+    }
+    if (const char* list = std::getenv("RAWRXD_CU_ALLOW_PIDS")) {
+        const char* p = list;
+        while (*p) {
+            while (*p == ',' || *p == ' ' || *p == ';') ++p;
+            if (!*p) break;
+            char* end = nullptr;
+            const unsigned long v = std::strtoul(p, &end, 10);
+            if (end == p) break;
+            if (v != 0ul && v <= 0xFFFFFFFFul)
+                extra.push_back(static_cast<DWORD>(v));
+            p = end;
+        }
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    policy_.allowedProcessIds = {GetCurrentProcessId()};
+    for (DWORD pid : extra) {
+        if (std::find(policy_.allowedProcessIds.begin(),
+                      policy_.allowedProcessIds.end(),
+                      pid) == policy_.allowedProcessIds.end()) {
+            policy_.allowedProcessIds.push_back(pid);
+        }
+    }
     engine_ = std::make_unique<ComputerUseEngine>(policy_);
 }
 

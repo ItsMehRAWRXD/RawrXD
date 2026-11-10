@@ -21,6 +21,10 @@ public:
     void Cancel() noexcept;
     void ResetCancel() noexcept;
     void AllowOwnProcess();
+    // Add an extra allowlisted PID (e.g. parent IDE when CLI is the agent child).
+    void AllowProcessId(DWORD pid);
+    // Allow own PID plus optional RAWRXD_PARENT_PID / RAWRXD_CU_ALLOW_PIDS.
+    void AllowOwnAndConfiguredParents();
     void SetMouseAllowed(bool v);
     void SetTypingAllowed(bool v);
     void SetKeyboardAllowed(bool v);

@@ -54,7 +54,7 @@ void Win32IDE::ensureComputerUseReady() {
 #if defined(RAWRXD_HAS_COMPUTER_USE)
     auto& cu = rawrxd::computer_use::ComputerUseBridge::Instance();
     cu.EnsureInitialized();
-    cu.AllowOwnProcess();
+    cu.AllowOwnAndConfiguredParents();
     cu.ResetCancel();
 
     if (!m_agentToolsRegistry) {
