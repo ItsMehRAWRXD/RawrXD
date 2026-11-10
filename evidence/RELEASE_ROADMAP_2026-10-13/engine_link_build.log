@@ -1,0 +1,332 @@
+Change Dir: 'F:/rawrxd/build_gate_recovery_20261013'
+
+Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" rawrxd_deep2_engine.vcxproj /p:Configuration=Release /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+MSBuild version 17.14.51+25f168cee for .NET Framework
+Build started 10/13/2026 8:53:09 PM.
+
+Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" on node 1 (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" (1) is building "F:\rawrxd\build_gate_recovery_20261013\ZERO_CHECK.vcxproj" (2) on node 1 (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+PreBuildEvent:
+  Checking File Globs
+  setlocal
+  "C:\Program Files\CMake\bin\cmake.exe" -P F:/rawrxd/build_gate_recovery_20261013/CMakeFiles/VerifyGlobs.cmake
+  if %errorlevel% neq 0 goto :cmEnd
+  :cmEnd
+  endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+  :cmErrorLevel
+  exit /b %1
+  :cmDone
+  if %errorlevel% neq 0 goto :VCEnd
+  :VCEnd
+CustomBuild:
+  All outputs are up-to-date.
+FinalizeBuildStatus:
+  Deleting file "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+  Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\ZERO_CHECK.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\ZERO_CHECK.vcxproj" (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" (1) is building "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml.vcxproj" (3) on node 1 (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml.vcxproj" (3) is building "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-base.vcxproj" (4) on node 1 (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  ggml-base.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\Release\ggml-base.lib
+FinalizeBuildStatus:
+  Deleting file "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+  Touching "ggml-base.dir\Release\ggml-base.tlog\ggml-base.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-base.vcxproj" (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml.vcxproj" (3) is building "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-cpu.vcxproj" (5) on node 1 (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  ggml-cpu.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\Release\ggml-cpu.lib
+FinalizeBuildStatus:
+  Deleting file "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+  Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\ggml-cpu.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-cpu.vcxproj" (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml.vcxproj" (3) is building "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (6) on node 1 (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (6) is building "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen.vcxproj" (7) on node 1 (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "x64\Release\vulkan-shaders-gen\vulkan-s.353400E5.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "x64\Release\vulkan-shaders-gen\vulkan-s.353400E5.tlog\unsuccessfulbuild".
+CustomBuild:
+  "The build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\2edc617fb0ae25d5097baca056dd966e\vulkan-shaders-gen-install.rule' depends on 'F:\RAWRXD\BUILD_GATE_RECOVERY_20261013\3RDPARTY\GGML\SRC\GGML-VULKAN\VULKAN-SHADERS-GEN-PREFIX\SRC\VULKAN-SHADERS-GEN-STAMP\RELEASE\VULKAN-SHADERS-GEN-BUILD' which is produced by the build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\2edc617fb0ae25d5097baca056dd966e\vulkan-shaders-gen-build.rule'. The items cannot be built in parallel."
+  "The build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\edc2debf15241c52c88a5733cc8f4c0c\vulkan-shaders-gen-complete.rule' depends on 'F:\RAWRXD\BUILD_GATE_RECOVERY_20261013\3RDPARTY\GGML\SRC\GGML-VULKAN\VULKAN-SHADERS-GEN-PREFIX\SRC\VULKAN-SHADERS-GEN-STAMP\RELEASE\VULKAN-SHADERS-GEN-INSTALL' which is produced by the build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\2edc617fb0ae25d5097baca056dd966e\vulkan-shaders-gen-install.rule'. The items cannot be built in parallel."
+  "The build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\d91070fd30e42ac14e3bdda9406ca63a\vulkan-shaders-gen.rule' depends on 'F:\RAWRXD\BUILD_GATE_RECOVERY_20261013\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKEFILES\RELEASE\VULKAN-SHADERS-GEN-COMPLETE' which is produced by the build of 'F:\rawrxd\build_gate_recovery_20261013\CMakeFiles\edc2debf15241c52c88a5733cc8f4c0c\vulkan-shaders-gen-complete.rule'. The items cannot be built in parallel."
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_gate_recovery_20261013/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+FinalizeBuildStatus:
+  Deleting file "x64\Release\vulkan-shaders-gen\vulkan-s.353400E5.tlog\unsuccessfulbuild".
+  Touching "x64\Release\vulkan-shaders-gen\vulkan-s.353400E5.tlog\vulkan-shaders-gen.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen.vcxproj" (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+FinalizeBuildStatus:
+  Deleting file "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild".
+  Touching "ggml-vulkan.dir\Release\ggml-vulkan.tlog\ggml-vulkan.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "ggml.dir\Release\ggml.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  ggml.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\Release\ggml.lib
+FinalizeBuildStatus:
+  Deleting file "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+  Touching "ggml.dir\Release\ggml.tlog\ggml.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\3rdparty\ggml\src\ggml.vcxproj" (default targets).
+Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" (1) is building "F:\rawrxd\build_gate_recovery_20261013\rawrxd_gpu_compute.vcxproj" (8) on node 1 (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Creating "rawrxd_gpu_compute.dir\Release\rawrxd_g.B52AD6DE.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.B52AD6DE.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  rawrxd_gpu_compute.vcxproj -> F:\rawrxd\build_gate_recovery_20261013\Release\rawrxd_gpu_compute.lib
+FinalizeBuildStatus:
+  Deleting file "rawrxd_gpu_compute.dir\Release\rawrxd_g.B52AD6DE.tlog\unsuccessfulbuild".
+  Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.B52AD6DE.tlog\rawrxd_gpu_compute.lastbuildstate".
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_gpu_compute.vcxproj" (default targets).
+PrepareForBuild:
+  Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+InitializeBuildStatus:
+  Touching "rawrxd_deep2_engine.dir\Release\rawrxd_d.3C22C87E.tlog\unsuccessfulbuild".
+CustomBuild:
+  All outputs are up-to-date.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe /c /IF:\rawrxd\src /IF:\rawrxd\src\deep2 /IF:\rawrxd\3rdparty\ggml\include /IF:\rawrxd\3rdparty\ggml\src /IF:\rawrxd\3rdparty\ggml\src\..\include /nologo /W1 /WX- /diagnostics:column /O2 /Ob2 /D _MBCS /D WIN32 /D _WINDOWS /D NDEBUG /D NOMINMAX /D _CRT_SECURE_NO_WARNINGS /D "DEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\"" /D _WIN32_WINNT=0x0A00 /D HAVE_VULKAN=1 /D "RAWXRD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\"" /D GGML_USE_CPU /D GGML_USE_VULKAN /D "CMAKE_INTDIR=\"Release\"" /EHsc /MD /std:c++20 /Fo"rawrxd_deep2_engine.dir\Release\\" /Fd"rawrxd_deep2_engine.dir\Release\vc143.pdb" /external:W0 /TP /errorReport:queue  /external:I "C:/VulkanSDK/1.4.357.0/include" /external:I "F:/rawrxd/include" F:\rawrxd\src\deep2\K2GpuStreamCopy_Overlap.cpp
+  K2GpuStreamCopy_Overlap.cpp
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\link.exe /OUT:"F:\rawrxd\build_gate_recovery_20261013\bin\Release\rawrxd_deep2_engine.exe" /INCREMENTAL:NO /NOLOGO Release\rawrxd_gpu_compute.lib 3rdparty\ggml\src\Release\ggml.lib "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" 3rdparty\ggml\src\Release\ggml.lib "3rdparty\ggml\src\Release\ggml-cpu.lib" "3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib" "3rdparty\ggml\src\Release\ggml-base.lib" "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"F:/rawrxd/build_gate_recovery_20261013/bin/Release/rawrxd_deep2_engine.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"F:/rawrxd/build_gate_recovery_20261013/Release/rawrxd_deep2_engine.lib" /MACHINE:X64  /machine:x64 rawrxd_deep2_engine.dir\Release\Deep2Engine.obj
+  rawrxd_deep2_engine.dir\Release\ChatTemplate.obj
+  rawrxd_deep2_engine.dir\Release\vulkan_compute_engine_adapter.obj
+  rawrxd_deep2_engine.dir\Release\engine_subsystems.obj
+  rawrxd_deep2_engine.dir\Release\KVCache.obj
+  rawrxd_deep2_engine.dir\Release\CompressedKVCache.obj
+  rawrxd_deep2_engine.dir\Release\NVMeStream.obj
+  rawrxd_deep2_engine.dir\Release\ResidencyManager.obj
+  rawrxd_deep2_engine.dir\Release\CycloneScheduler.obj
+  rawrxd_deep2_engine.dir\Release\SlidingWindowEngine.obj
+  rawrxd_deep2_engine.dir\Release\WarmupScheduler.obj
+  rawrxd_deep2_engine.dir\Release\MARS.obj
+  rawrxd_deep2_engine.dir\Release\QuantKernelRegistry.obj
+  rawrxd_deep2_engine.dir\Release\MoEWeightsLoader.obj
+  rawrxd_deep2_engine.dir\Release\MoERouter.obj
+  rawrxd_deep2_engine.dir\Release\MoEWeightProxy.obj
+  rawrxd_deep2_engine.dir\Release\NUFusedPacker.obj
+  rawrxd_deep2_engine.dir\Release\RouterPrefetchTelemetry.obj
+  rawrxd_deep2_engine.dir\Release\HotPatcher.obj
+  rawrxd_deep2_engine.dir\Release\ReverseHotpatchEngine.obj
+  rawrxd_deep2_engine.dir\Release\BP16Streamer.obj
+  rawrxd_deep2_engine.dir\Release\SovereignOutOfCoreRuntime.obj
+  rawrxd_deep2_engine.dir\Release\Chamber.obj
+  rawrxd_deep2_engine.dir\Release\PlasmaGovernor.obj
+  rawrxd_deep2_engine.dir\Release\K2GlobalTensorIndex.obj
+  rawrxd_deep2_engine.dir\Release\K2GpuStreamCopy.obj
+  rawrxd_deep2_engine.dir\Release\K2MLA_GpuGemv.obj
+  rawrxd_deep2_engine.dir\Release\K2ShardIo.obj
+  rawrxd_deep2_engine.dir\Release\AttnCertProbe.obj
+  rawrxd_deep2_engine.dir\Release\SsmCertProbe.obj
+  rawrxd_deep2_engine.dir\Release\MlaCertProbe.obj
+  rawrxd_deep2_engine.dir\Release\Deep2DeviceManager.obj
+  rawrxd_deep2_engine.dir\Release\Deep2MultiGpuLayerPlan.obj
+  rawrxd_deep2_engine.dir\Release\ElasticDynamicBudget.obj
+  rawrxd_deep2_engine.dir\Release\ElasticResidencyManager.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath.obj
+  rawrxd_deep2_engine.dir\Release\FusedLiveController.obj
+  rawrxd_deep2_engine.dir\Release\K2LivePolicy.obj
+  rawrxd_deep2_engine.dir\Release\DualGPUHook.obj
+  rawrxd_deep2_engine.dir\Release\GhostCache.obj
+  rawrxd_deep2_engine.dir\Release\TrailBrake.obj
+  rawrxd_deep2_engine.dir\Release\FreeTokenMicroZone.obj
+  rawrxd_deep2_engine.dir\Release\FutureConsumerSpace.obj
+  rawrxd_deep2_engine.dir\Release\ExecutionPolicy.obj
+  rawrxd_deep2_engine.dir\Release\ExecutionPolicyApply.obj
+  rawrxd_deep2_engine.dir\Release\ExecutionPolicyStore.obj
+  rawrxd_deep2_engine.dir\Release\ollama_blob_parser.obj
+  rawrxd_deep2_engine.dir\Release\Deep2Engine_missing_members.obj
+  rawrxd_deep2_engine.dir\Release\advanced_sampler.obj
+  rawrxd_deep2_engine.dir\Release\KimiK2Config.obj
+  rawrxd_deep2_engine.dir\Release\ReverseTensorRecovery.obj
+  rawrxd_deep2_engine.dir\Release\VRAMManager.obj
+  rawrxd_deep2_engine.dir\Release\K2MLA_FusedQ4KT.obj
+  rawrxd_deep2_engine.dir\Release\K2MLA_QaCritical.obj
+  rawrxd_deep2_engine.dir\Release\K2MLA_QPathDevice.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath_Gate.obj
+  rawrxd_deep2_engine.dir\Release\K2BraidExecutionPolicy.obj
+  rawrxd_deep2_engine.dir\Release\asm_stubs.obj
+  rawrxd_deep2_engine.dir\Release\K2LogitsLineage.obj
+  rawrxd_deep2_engine.dir\Release\GpuTransfer_Emit.obj
+  rawrxd_deep2_engine.dir\Release\MoEEliminate.obj
+  rawrxd_deep2_engine.dir\Release\engine_link_supplement.obj
+  rawrxd_deep2_engine.dir\Release\DualStickStreamWindow.obj
+  rawrxd_deep2_engine.dir\Release\DualStickStreamWindow_Acquire.obj
+  rawrxd_deep2_engine.dir\Release\DualStickStreamWindow_Emit.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath_Mech.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath_Pinball.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath_Thermal.obj
+  rawrxd_deep2_engine.dir\Release\Deep2LivePath_MechEnd.obj
+  rawrxd_deep2_engine.dir\Release\K2LivePolicy_Apply.obj
+  rawrxd_deep2_engine.dir\Release\Deep2MultiGpu_CostCut.obj
+  rawrxd_deep2_engine.dir\Release\K2GpuStreamCopy_Overlap.obj
+  rawrxd_deep2_engine.dir\Release\K2C1C9.obj
+  rawrxd_deep2_engine.dir\Release\StreamerParity_Post.obj
+  rawrxd_deep2_engine.dir\Release\StreamEngine.obj
+  rawrxd_deep2_engine.dir\Release\vulkan_compute_adapter_fused.obj
+  rawrxd_deep2_engine.dir\Release\HotPatcherSafety.obj
+  rawrxd_deep2_engine.dir\Release\FreeTokenFutureCompletion.obj
+Deep2Engine.obj : error LNK2019: unresolved external symbol "public: struct Deep2::MARS::VRAMLease * __cdecl Deep2::MARS::MARSController::PlaceTensor(unsigned __int64,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,unsigned __int64,float,bool,int,bool)" (?PlaceTensor@MARSController@MARS@Deep2@@QEAAPEAUVRAMLease@23@_KAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0M_NH2@Z) referenced in function "public: __cdecl `public: struct Deep2::Deep2Engine::MARSPlacementReport __cdecl Deep2::Deep2Engine::placeAllModelTensorsMARS(void)'::`2'::<lambda_1>::operator()(struct Deep2::WeightTensor const &,float,bool,int)const " (??R<lambda_1>@?1??placeAllModelTensorsMARS@Deep2Engine@Deep2@@QEAA?AUMARSPlacementReport@23@XZ@QEBA@AEBUWeightTensor@3@M_NH@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2Engine.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::LivePath_Emit(struct _iobuf *)" (?LivePath_Emit@Deep2@@YAXPEAU_iobuf@@@Z) referenced in function "public: __cdecl `public: unsigned __int64 __cdecl Deep2::Deep2Engine::generate(int const *,unsigned __int64,int *,unsigned __int64,struct Deep2::InferenceStats *,class std::function<bool __cdecl(int)>)'::`2'::LivePathScope::~LivePathScope(void)" (??1LivePathScope@?1??generate@Deep2Engine@Deep2@@QEAA_KPEBH_KPEAH1PEAUInferenceStats@3@V?$function@$$A6A_NH@Z@std@@@Z@QEAA@XZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2Engine.obj : error LNK2019: unresolved external symbol "bool __cdecl Deep2::LivePath_FusedWarmupEnabled(void)" (?LivePath_FusedWarmupEnabled@Deep2@@YA_NXZ) referenced in function "private: void __cdecl Deep2::Deep2Engine::computeMoEFFN(unsigned __int64,float const *,float *)" (?computeMoEFFN@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2Engine.obj : error LNK2019: unresolved external symbol "int __cdecl Deep2::Exec::DeviceKindToGpuIndex(enum Deep2::Exec::DeviceKind)" (?DeviceKindToGpuIndex@Exec@Deep2@@YAHW4DeviceKind@12@@Z) referenced in function "public: __cdecl `public: struct Deep2::Deep2Engine::MARSPlacementReport __cdecl Deep2::Deep2Engine::placeAllModelTensorsMARS(void)'::`2'::<lambda_1>::operator()(struct Deep2::WeightTensor const &,float,bool,int)const " (??R<lambda_1>@?1??placeAllModelTensorsMARS@Deep2Engine@Deep2@@QEAA?AUMARSPlacementReport@23@XZ@QEBA@AEBUWeightTensor@3@M_NH@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2001: unresolved external symbol "int __cdecl Deep2::Exec::DeviceKindToGpuIndex(enum Deep2::Exec::DeviceKind)" (?DeviceKindToGpuIndex@Exec@Deep2@@YAHW4DeviceKind@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+QuantKernelRegistry.obj : error LNK2019: unresolved external symbol Deep2_FP16_GEMV referenced in function "void __cdecl Deep2::gemv_f16_masm(unsigned char const * __restrict,float const * __restrict,float * __restrict,unsigned __int64,unsigned __int64)" (?gemv_f16_masm@Deep2@@YAXPEIBEPEIBMPEIAM_K3@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2MLA_GpuGemv.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_Emit(struct _iobuf *)" (?MLA_QPathDevice_Emit@Deep2@@YAXPEAU_iobuf@@@Z) referenced in function "void __cdecl Deep2::MLA_GpuGemv_Emit(struct _iobuf *)" (?MLA_GpuGemv_Emit@Deep2@@YAXPEAU_iobuf@@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2DeviceManager.obj : error LNK2019: unresolved external symbol Deep2Device_ScoreAdapter referenced in function "bool __cdecl Deep2::Deep2Device_Enumerate(struct Deep2::DeviceManagerSnapshot &)" (?Deep2Device_Enumerate@Deep2@@YA_NAEAUDeviceManagerSnapshot@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2DeviceManager.obj : error LNK2019: unresolved external symbol Deep2Device_PickBestIndex referenced in function "bool __cdecl Deep2::Deep2Device_ApplyPolicy(struct Deep2::DeviceManagerSnapshot &)" (?Deep2Device_ApplyPolicy@Deep2@@YA_NAEAUDeviceManagerSnapshot@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceBegin referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceSetDestination referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceComplete referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ElasticResidencyManager.obj : error LNK2019: unresolved external symbol VwaResolveBlocks referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2LivePath.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::LivePath_FusedTick(void)" (?LivePath_FusedTick@Deep2@@YAXXZ) referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2LivePath.obj : error LNK2019: unresolved external symbol "bool __cdecl Deep2::LivePath_FusedSpeculativeEnabled(void)" (?LivePath_FusedSpeculativeEnabled@Deep2@@YA_NXZ) referenced in function "void __cdecl Deep2::LivePath_OnLayerStart(class Deep2::CycloneScheduler *,unsigned int,unsigned __int64)" (?LivePath_OnLayerStart@Deep2@@YAXPEAVCycloneScheduler@1@I_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2LivePath.obj : error LNK2019: unresolved external symbol AssertHardThreadAffinity referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Deep2LivePath.obj : error LNK2019: unresolved external symbol RestrictOsBackgroundTasks referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+FusedLiveController.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::Fused_LawResetDepth(void)" (?Fused_LawResetDepth@Deep2@@YAXXZ) referenced in function "void __cdecl Deep2::Fused_Reset(void)" (?Fused_Reset@Deep2@@YAXXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2LivePolicy.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::K2LivePolicy_SetStickyArm(enum Deep2::K2LivePolicyMode,char const *)" (?K2LivePolicy_SetStickyArm@Deep2@@YAXW4K2LivePolicyMode@1@PEBD@Z) referenced in function "void __cdecl Deep2::K2LivePolicy_ApplyMode(enum Deep2::K2LivePolicyMode,bool)" (?K2LivePolicy_ApplyMode@Deep2@@YAXW4K2LivePolicyMode@1@_N@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2LivePolicy_Apply.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::K2LivePolicy_SetStickyArm(enum Deep2::K2LivePolicyMode,char const *)" (?K2LivePolicy_SetStickyArm@Deep2@@YAXW4K2LivePolicyMode@1@PEBD@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "enum Deep2::Exec::TensorClass __cdecl Deep2::Exec::ClassifyTensorName(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ClassifyTensorName@Exec@Deep2@@YA?AW4TensorClass@12@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) referenced in function "bool __cdecl Deep2::Exec::ApplyPlacementToElastic(class Deep2::ElasticResidencyManager &,int,struct Deep2::Exec::PlacementApplyReport &)" (?ApplyPlacementToElastic@Exec@Deep2@@YA_NAEAVElasticResidencyManager@2@HAEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "struct Deep2::Exec::PlacementPlan __cdecl Deep2::Exec::DerivePlacementPlan(struct Deep2::Exec::ExecutionPolicy const &,int)" (?DerivePlacementPlan@Exec@Deep2@@YA?AUPlacementPlan@12@AEBUExecutionPolicy@12@H@Z) referenced in function "struct Deep2::Exec::PlacementApplyReport __cdecl Deep2::Exec::ApplyExecutionPolicyToEngine(class Deep2::Deep2Engine &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ApplyExecutionPolicyToEngine@Exec@Deep2@@YA?AUPlacementApplyReport@12@AEAVDeep2Engine@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@1@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::Exec::BindModelToPolicy(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?BindModelToPolicy@Exec@Deep2@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z) referenced in function "struct Deep2::Exec::PlacementApplyReport __cdecl Deep2::Exec::ApplyExecutionPolicyToEngine(class Deep2::Deep2Engine &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ApplyExecutionPolicyToEngine@Exec@Deep2@@YA?AUPlacementApplyReport@12@AEAVDeep2Engine@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@1@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: unsigned __int64 __cdecl Deep2::MARS::TensorGraph::GetNodeCount(void)const " (?GetNodeCount@TensorGraph@MARS@Deep2@@QEBA_KXZ) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: class std::vector<struct Deep2::MARS::TensorGraphNode *,class std::allocator<struct Deep2::MARS::TensorGraphNode *> > __cdecl Deep2::MARS::TensorGraph::GetNodesOnGPU(int)" (?GetNodesOnGPU@TensorGraph@MARS@Deep2@@QEAA?AV?$vector@PEAUTensorGraphNode@MARS@Deep2@@V?$allocator@PEAUTensorGraphNode@MARS@Deep2@@@std@@@std@@H@Z) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: class std::vector<struct Deep2::MARS::TensorGraphNode *,class std::allocator<struct Deep2::MARS::TensorGraphNode *> > __cdecl Deep2::MARS::TensorGraph::GetNodesByLayer(int)" (?GetNodesByLayer@TensorGraph@MARS@Deep2@@QEAA?AV?$vector@PEAUTensorGraphNode@MARS@Deep2@@V?$allocator@PEAUTensorGraphNode@MARS@Deep2@@@std@@@std@@H@Z) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2MLA_QPathDevice.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteOk(void)" (?MLA_QPathDevice_NoteOk@Deep2@@YAXXZ) referenced in function "bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)" (?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2MLA_QPathDevice.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteFail(void)" (?MLA_QPathDevice_NoteFail@Deep2@@YAXXZ) referenced in function "public: bool __cdecl `bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)'::`2'::<lambda_1>::operator()(void)const " (??R<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEBA_NXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2LivePolicy_Apply.obj : error LNK2019: unresolved external symbol "struct Deep2::K2LivePolicyDecision __cdecl Deep2::K2LivePolicy_Decide(unsigned int,unsigned int)" (?K2LivePolicy_Decide@Deep2@@YA?AUK2LivePolicyDecision@1@II@Z) referenced in function "struct Deep2::K2LivePolicyDecision __cdecl Deep2::K2LivePolicy_Apply(unsigned int,unsigned int)" (?K2LivePolicy_Apply@Deep2@@YA?AUK2LivePolicyDecision@1@II@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: struct CPUInference::VulkanCompute::DeviceBuf & __cdecl CPUInference::VulkanCompute::ArenaHidden(void)" (?ArenaHidden@VulkanCompute@CPUInference@@QEAAAEAUDeviceBuf@12@XZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: struct CPUInference::VulkanCompute::DeviceBuf & __cdecl CPUInference::VulkanCompute::ArenaNormed(void)" (?ArenaNormed@VulkanCompute@CPUInference@@QEAAAEAUDeviceBuf@12@XZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::UploadHidden(float const *,unsigned int)" (?UploadHidden@VulkanCompute@CPUInference@@QEAA_NPEBMI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::PrefetchWeight(void const *,unsigned __int64,unsigned int &)" (?PrefetchWeight@VulkanCompute@CPUInference@@QEAA_NPEBX_KAEAI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::WaitWeightUpload(unsigned int)" (?WaitWeightUpload@VulkanCompute@CPUInference@@QEAA_NI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::FlushWeightComputes(void)" (?FlushWeightComputes@VulkanCompute@CPUInference@@QEAA_NXZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::SubmitGemvPrefetch(unsigned int,struct CPUInference::VulkanCompute::DeviceBuf &,struct CPUInference::VulkanCompute::DeviceBuf &,unsigned int,unsigned int,unsigned __int64,int)" (?SubmitGemvPrefetch@VulkanCompute@CPUInference@@QEAA_NIAEAUDeviceBuf@12@0II_KH@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetHash64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetSumBytes64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetEqual64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+StreamerParity_Post.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::future::EmitExec(struct _iobuf *,unsigned int,int)" (?EmitExec@future@Deep2@@YAXPEAU_iobuf@@IH@Z) referenced in function "void __cdecl StreamerEmitPostGenerate(struct Deep2::Deep2StreamParityObs const &,char const *,unsigned int)" (?StreamerEmitPostGenerate@@YAXAEBUDeep2StreamParityObs@Deep2@@PEBDI@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+HotPatcherSafety.obj : error LNK2019: unresolved external symbol "private: static class std::function<void __cdecl(struct Deep2::CrashRecovery::CrashContext const &)> Deep2::CrashRecovery::userHandler_" (?userHandler_@CrashRecovery@Deep2@@0V?$function@$$A6AXAEBUCrashContext@CrashRecovery@Deep2@@@Z@std@@A) referenced in function "bool __cdecl Deep2::`anonymous namespace'::InvokeCrashHandler(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?InvokeCrashHandler@?A0xefa31a8f@Deep2@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+MSVCRT.lib(exe_main.obj) : error LNK2019: unresolved external symbol main referenced in function "int __cdecl __scrt_common_main_seh(void)" (?__scrt_common_main_seh@@YAHXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+F:\rawrxd\build_gate_recovery_20261013\bin\Release\rawrxd_deep2_engine.exe : fatal error LNK1120: 40 unresolved externals [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+Done Building Project "F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj" (default target) (1) ->
+(Link target) -> 
+  Deep2Engine.obj : error LNK2019: unresolved external symbol "public: struct Deep2::MARS::VRAMLease * __cdecl Deep2::MARS::MARSController::PlaceTensor(unsigned __int64,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,unsigned __int64,float,bool,int,bool)" (?PlaceTensor@MARSController@MARS@Deep2@@QEAAPEAUVRAMLease@23@_KAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0M_NH2@Z) referenced in function "public: __cdecl `public: struct Deep2::Deep2Engine::MARSPlacementReport __cdecl Deep2::Deep2Engine::placeAllModelTensorsMARS(void)'::`2'::<lambda_1>::operator()(struct Deep2::WeightTensor const &,float,bool,int)const " (??R<lambda_1>@?1??placeAllModelTensorsMARS@Deep2Engine@Deep2@@QEAA?AUMARSPlacementReport@23@XZ@QEBA@AEBUWeightTensor@3@M_NH@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2Engine.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::LivePath_Emit(struct _iobuf *)" (?LivePath_Emit@Deep2@@YAXPEAU_iobuf@@@Z) referenced in function "public: __cdecl `public: unsigned __int64 __cdecl Deep2::Deep2Engine::generate(int const *,unsigned __int64,int *,unsigned __int64,struct Deep2::InferenceStats *,class std::function<bool __cdecl(int)>)'::`2'::LivePathScope::~LivePathScope(void)" (??1LivePathScope@?1??generate@Deep2Engine@Deep2@@QEAA_KPEBH_KPEAH1PEAUInferenceStats@3@V?$function@$$A6A_NH@Z@std@@@Z@QEAA@XZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2Engine.obj : error LNK2019: unresolved external symbol "bool __cdecl Deep2::LivePath_FusedWarmupEnabled(void)" (?LivePath_FusedWarmupEnabled@Deep2@@YA_NXZ) referenced in function "private: void __cdecl Deep2::Deep2Engine::computeMoEFFN(unsigned __int64,float const *,float *)" (?computeMoEFFN@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2Engine.obj : error LNK2019: unresolved external symbol "int __cdecl Deep2::Exec::DeviceKindToGpuIndex(enum Deep2::Exec::DeviceKind)" (?DeviceKindToGpuIndex@Exec@Deep2@@YAHW4DeviceKind@12@@Z) referenced in function "public: __cdecl `public: struct Deep2::Deep2Engine::MARSPlacementReport __cdecl Deep2::Deep2Engine::placeAllModelTensorsMARS(void)'::`2'::<lambda_1>::operator()(struct Deep2::WeightTensor const &,float,bool,int)const " (??R<lambda_1>@?1??placeAllModelTensorsMARS@Deep2Engine@Deep2@@QEAA?AUMARSPlacementReport@23@XZ@QEBA@AEBUWeightTensor@3@M_NH@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2001: unresolved external symbol "int __cdecl Deep2::Exec::DeviceKindToGpuIndex(enum Deep2::Exec::DeviceKind)" (?DeviceKindToGpuIndex@Exec@Deep2@@YAHW4DeviceKind@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  QuantKernelRegistry.obj : error LNK2019: unresolved external symbol Deep2_FP16_GEMV referenced in function "void __cdecl Deep2::gemv_f16_masm(unsigned char const * __restrict,float const * __restrict,float * __restrict,unsigned __int64,unsigned __int64)" (?gemv_f16_masm@Deep2@@YAXPEIBEPEIBMPEIAM_K3@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2MLA_GpuGemv.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_Emit(struct _iobuf *)" (?MLA_QPathDevice_Emit@Deep2@@YAXPEAU_iobuf@@@Z) referenced in function "void __cdecl Deep2::MLA_GpuGemv_Emit(struct _iobuf *)" (?MLA_GpuGemv_Emit@Deep2@@YAXPEAU_iobuf@@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2DeviceManager.obj : error LNK2019: unresolved external symbol Deep2Device_ScoreAdapter referenced in function "bool __cdecl Deep2::Deep2Device_Enumerate(struct Deep2::DeviceManagerSnapshot &)" (?Deep2Device_Enumerate@Deep2@@YA_NAEAUDeviceManagerSnapshot@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2DeviceManager.obj : error LNK2019: unresolved external symbol Deep2Device_PickBestIndex referenced in function "bool __cdecl Deep2::Deep2Device_ApplyPolicy(struct Deep2::DeviceManagerSnapshot &)" (?Deep2Device_ApplyPolicy@Deep2@@YA_NAEAUDeviceManagerSnapshot@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceBegin referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceSetDestination referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ElasticResidencyManager.obj : error LNK2019: unresolved external symbol TraceComplete referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ElasticResidencyManager.obj : error LNK2019: unresolved external symbol VwaResolveBlocks referenced in function "private: void __cdecl Deep2::ElasticResidencyManager::ExecuteNvmeToRam(struct Deep2::ElasticResidentTensor &)" (?ExecuteNvmeToRam@ElasticResidencyManager@Deep2@@AEAAXAEAUElasticResidentTensor@2@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2LivePath.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::LivePath_FusedTick(void)" (?LivePath_FusedTick@Deep2@@YAXXZ) referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2LivePath.obj : error LNK2019: unresolved external symbol "bool __cdecl Deep2::LivePath_FusedSpeculativeEnabled(void)" (?LivePath_FusedSpeculativeEnabled@Deep2@@YA_NXZ) referenced in function "void __cdecl Deep2::LivePath_OnLayerStart(class Deep2::CycloneScheduler *,unsigned int,unsigned __int64)" (?LivePath_OnLayerStart@Deep2@@YAXPEAVCycloneScheduler@1@I_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2LivePath.obj : error LNK2019: unresolved external symbol AssertHardThreadAffinity referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  Deep2LivePath.obj : error LNK2019: unresolved external symbol RestrictOsBackgroundTasks referenced in function "void __cdecl Deep2::LivePath_BeginGenerate(unsigned __int64,class Deep2::ElasticResidencyManager *,class Deep2::CycloneScheduler * *)" (?LivePath_BeginGenerate@Deep2@@YAX_KPEAVElasticResidencyManager@1@PEAPEAVCycloneScheduler@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  FusedLiveController.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::Fused_LawResetDepth(void)" (?Fused_LawResetDepth@Deep2@@YAXXZ) referenced in function "void __cdecl Deep2::Fused_Reset(void)" (?Fused_Reset@Deep2@@YAXXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2LivePolicy.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::K2LivePolicy_SetStickyArm(enum Deep2::K2LivePolicyMode,char const *)" (?K2LivePolicy_SetStickyArm@Deep2@@YAXW4K2LivePolicyMode@1@PEBD@Z) referenced in function "void __cdecl Deep2::K2LivePolicy_ApplyMode(enum Deep2::K2LivePolicyMode,bool)" (?K2LivePolicy_ApplyMode@Deep2@@YAXW4K2LivePolicyMode@1@_N@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2LivePolicy_Apply.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::K2LivePolicy_SetStickyArm(enum Deep2::K2LivePolicyMode,char const *)" (?K2LivePolicy_SetStickyArm@Deep2@@YAXW4K2LivePolicyMode@1@PEBD@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "enum Deep2::Exec::TensorClass __cdecl Deep2::Exec::ClassifyTensorName(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ClassifyTensorName@Exec@Deep2@@YA?AW4TensorClass@12@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) referenced in function "bool __cdecl Deep2::Exec::ApplyPlacementToElastic(class Deep2::ElasticResidencyManager &,int,struct Deep2::Exec::PlacementApplyReport &)" (?ApplyPlacementToElastic@Exec@Deep2@@YA_NAEAVElasticResidencyManager@2@HAEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "struct Deep2::Exec::PlacementPlan __cdecl Deep2::Exec::DerivePlacementPlan(struct Deep2::Exec::ExecutionPolicy const &,int)" (?DerivePlacementPlan@Exec@Deep2@@YA?AUPlacementPlan@12@AEBUExecutionPolicy@12@H@Z) referenced in function "struct Deep2::Exec::PlacementApplyReport __cdecl Deep2::Exec::ApplyExecutionPolicyToEngine(class Deep2::Deep2Engine &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ApplyExecutionPolicyToEngine@Exec@Deep2@@YA?AUPlacementApplyReport@12@AEAVDeep2Engine@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@1@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::Exec::BindModelToPolicy(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?BindModelToPolicy@Exec@Deep2@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z) referenced in function "struct Deep2::Exec::PlacementApplyReport __cdecl Deep2::Exec::ApplyExecutionPolicyToEngine(class Deep2::Deep2Engine &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?ApplyExecutionPolicyToEngine@Exec@Deep2@@YA?AUPlacementApplyReport@12@AEAVDeep2Engine@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@1@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: unsigned __int64 __cdecl Deep2::MARS::TensorGraph::GetNodeCount(void)const " (?GetNodeCount@TensorGraph@MARS@Deep2@@QEBA_KXZ) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: class std::vector<struct Deep2::MARS::TensorGraphNode *,class std::allocator<struct Deep2::MARS::TensorGraphNode *> > __cdecl Deep2::MARS::TensorGraph::GetNodesOnGPU(int)" (?GetNodesOnGPU@TensorGraph@MARS@Deep2@@QEAA?AV?$vector@PEAUTensorGraphNode@MARS@Deep2@@V?$allocator@PEAUTensorGraphNode@MARS@Deep2@@@std@@@std@@H@Z) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  ExecutionPolicyApply.obj : error LNK2019: unresolved external symbol "public: class std::vector<struct Deep2::MARS::TensorGraphNode *,class std::allocator<struct Deep2::MARS::TensorGraphNode *> > __cdecl Deep2::MARS::TensorGraph::GetNodesByLayer(int)" (?GetNodesByLayer@TensorGraph@MARS@Deep2@@QEAA?AV?$vector@PEAUTensorGraphNode@MARS@Deep2@@V?$allocator@PEAUTensorGraphNode@MARS@Deep2@@@std@@@std@@H@Z) referenced in function "bool __cdecl Deep2::Exec::ObserveMatchesPlan(class Deep2::MARS::MARSController &,struct Deep2::Exec::PlacementPlan const &,struct Deep2::Exec::PlacementApplyReport &)" (?ObserveMatchesPlan@Exec@Deep2@@YA_NAEAVMARSController@MARS@2@AEBUPlacementPlan@12@AEAUPlacementApplyReport@12@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2MLA_QPathDevice.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteOk(void)" (?MLA_QPathDevice_NoteOk@Deep2@@YAXXZ) referenced in function "bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)" (?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2MLA_QPathDevice.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteFail(void)" (?MLA_QPathDevice_NoteFail@Deep2@@YAXXZ) referenced in function "public: bool __cdecl `bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)'::`2'::<lambda_1>::operator()(void)const " (??R<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEBA_NXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2LivePolicy_Apply.obj : error LNK2019: unresolved external symbol "struct Deep2::K2LivePolicyDecision __cdecl Deep2::K2LivePolicy_Decide(unsigned int,unsigned int)" (?K2LivePolicy_Decide@Deep2@@YA?AUK2LivePolicyDecision@1@II@Z) referenced in function "struct Deep2::K2LivePolicyDecision __cdecl Deep2::K2LivePolicy_Apply(unsigned int,unsigned int)" (?K2LivePolicy_Apply@Deep2@@YA?AUK2LivePolicyDecision@1@II@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: struct CPUInference::VulkanCompute::DeviceBuf & __cdecl CPUInference::VulkanCompute::ArenaHidden(void)" (?ArenaHidden@VulkanCompute@CPUInference@@QEAAAEAUDeviceBuf@12@XZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: struct CPUInference::VulkanCompute::DeviceBuf & __cdecl CPUInference::VulkanCompute::ArenaNormed(void)" (?ArenaNormed@VulkanCompute@CPUInference@@QEAAAEAUDeviceBuf@12@XZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::UploadHidden(float const *,unsigned int)" (?UploadHidden@VulkanCompute@CPUInference@@QEAA_NPEBMI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::PrefetchWeight(void const *,unsigned __int64,unsigned int &)" (?PrefetchWeight@VulkanCompute@CPUInference@@QEAA_NPEBX_KAEAI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::WaitWeightUpload(unsigned int)" (?WaitWeightUpload@VulkanCompute@CPUInference@@QEAA_NI@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::FlushWeightComputes(void)" (?FlushWeightComputes@VulkanCompute@CPUInference@@QEAA_NXZ) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2GpuStreamCopy_Overlap.obj : error LNK2019: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::SubmitGemvPrefetch(unsigned int,struct CPUInference::VulkanCompute::DeviceBuf &,struct CPUInference::VulkanCompute::DeviceBuf &,unsigned int,unsigned int,unsigned __int64,int)" (?SubmitGemvPrefetch@VulkanCompute@CPUInference@@QEAA_NIAEAUDeviceBuf@12@0II_KH@Z) referenced in function "bool __cdecl Deep2::K2GpuStreamCopy_UploadOverlap(class std::vector<unsigned char,class std::allocator<unsigned char> > const *,unsigned __int64)" (?K2GpuStreamCopy_UploadOverlap@Deep2@@YA_NPEBV?$vector@EV?$allocator@E@std@@@std@@_K@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetHash64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetSumBytes64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  K2C1C9.obj : error LNK2019: unresolved external symbol VwaRangeSetEqual64 referenced in function "enum Deep2::K2CStatus __cdecl Deep2::K2ValidateLineage(struct VwaLineageRange const *,unsigned __int64,struct VwaLineageRange const *,unsigned __int64,unsigned int,struct Deep2::K2LineageVerdict *)" (?K2ValidateLineage@Deep2@@YA?AW4K2CStatus@1@PEBUVwaLineageRange@@_K01IPEAUK2LineageVerdict@1@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  StreamerParity_Post.obj : error LNK2019: unresolved external symbol "void __cdecl Deep2::future::EmitExec(struct _iobuf *,unsigned int,int)" (?EmitExec@future@Deep2@@YAXPEAU_iobuf@@IH@Z) referenced in function "void __cdecl StreamerEmitPostGenerate(struct Deep2::Deep2StreamParityObs const &,char const *,unsigned int)" (?StreamerEmitPostGenerate@@YAXAEBUDeep2StreamParityObs@Deep2@@PEBDI@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  HotPatcherSafety.obj : error LNK2019: unresolved external symbol "private: static class std::function<void __cdecl(struct Deep2::CrashRecovery::CrashContext const &)> Deep2::CrashRecovery::userHandler_" (?userHandler_@CrashRecovery@Deep2@@0V?$function@$$A6AXAEBUCrashContext@CrashRecovery@Deep2@@@Z@std@@A) referenced in function "bool __cdecl Deep2::`anonymous namespace'::InvokeCrashHandler(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?InvokeCrashHandler@?A0xefa31a8f@Deep2@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  MSVCRT.lib(exe_main.obj) : error LNK2019: unresolved external symbol main referenced in function "int __cdecl __scrt_common_main_seh(void)" (?__scrt_common_main_seh@@YAHXZ) [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+  F:\rawrxd\build_gate_recovery_20261013\bin\Release\rawrxd_deep2_engine.exe : fatal error LNK1120: 40 unresolved externals [F:\rawrxd\build_gate_recovery_20261013\rawrxd_deep2_engine.vcxproj]
+
+    0 Warning(s)
+    43 Error(s)
+
+Time Elapsed 00:00:02.32
+

@@ -1,0 +1,38 @@
+28692 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+13884 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+13884 [PS_TRACE] readOutputThread() EXITING
+
+8816 [PS_TRACE] monitorProcessThread() process exited code=0
+
+8816 [PS_TRACE] monitorProcessThread() calling onFinished() exitCode=0
+
+8816 [PS_TRACE] monitorProcessThread() EXITING
+
+13076 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+1236 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+1236 [PS_TRACE] readOutputThread() EXITING
+
+30380 [PS_TRACE] monitorProcessThread() process exited code=0
+
+30380 [PS_TRACE] monitorProcessThread() calling onFinished() exitCode=0
+
+30380 [PS_TRACE] monitorProcessThread() EXITING
+
+27956 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+30344 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+27956 [PS_TRACE] readErrorThread() EXITING
+
+30344 [PS_TRACE] readOutputThread() EXITING
+
+27616 [PS_TRACE] monitorProcessThread() process exited code=0
+
+27616 [PS_TRACE] monitorProcessThread() calling onFinished() exitCode=0
+
+27616 [PS_TRACE] monitorProcessThread() EXITING
+

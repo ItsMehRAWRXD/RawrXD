@@ -1,0 +1,19 @@
+﻿Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI: I don't know what you mean. If you have any questions, please ask me directly and I will try my best to help.
+
+
+AI: I don't know who specifically you mean. We should respect the facts and not spread unconfirmed information about the person.
+
+
+AI: It seems like your message might be incomplete or unclear. If you're trying to send a command, a key press sequence, or have a question, could you clarify what you'd like help with? For example:
+
+- Are you asking about a specific command or function?
+- Did you mean to send a message using "freeze-eo-ctrl-enter"? (Note: this looks like a keyboard shortcut or code.)
+- Could you explain what you're trying to achieve?
+
+Let me know so I can assist!
+
+

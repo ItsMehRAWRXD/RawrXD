@@ -1,0 +1,19 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build\Release\rawrxd_security.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  Win32TerminalManager.cpp
+  Generating code
+  Finished generating code
+  RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\build\bin\Release\RawrXD-Win32IDE-Native.exe

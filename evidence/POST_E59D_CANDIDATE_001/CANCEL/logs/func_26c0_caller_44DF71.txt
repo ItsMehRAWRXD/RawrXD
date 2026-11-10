@@ -1,0 +1,78 @@
+﻿
+F:\rawrxd\build_post_e59d_candidate\bin\RawrXD-Win32IDE-Native.exe:	file format coff-x86-64
+
+Disassembly of section .text:
+
+0000000140001000 <.text>:
+14044df40: 14 48                       	adc	al, 0x48
+14044df42: 8b c8                       	mov	ecx, eax
+14044df44: e8 db f4 ff ff              	call	0x14044d424 <.text+0x44c424>
+14044df49: 84 c0                       	test	al, al
+14044df4b: 74 08                       	je	0x14044df55 <.text+0x44cf55>
+14044df4d: 48 8b 0b                    	mov	rcx, qword ptr [rbx]
+14044df50: e8 8b 09 00 00              	call	0x14044e8e0 <.text+0x44d8e0>
+14044df55: e8 c6 05 00 00              	call	0x14044e520 <.text+0x44d520>
+14044df5a: 0f b7 d8                    	movzx	ebx, ax
+14044df5d: e8 54 09 00 00              	call	0x14044e8b6 <.text+0x44d8b6>
+14044df62: 44 8b cb                    	mov	r9d, ebx
+14044df65: 4c 8b c0                    	mov	r8, rax
+14044df68: 33 d2                       	xor	edx, edx
+14044df6a: 48 8d 0d 8f 20 bb ff        	lea	rcx, [rip - 0x44df71]   # 0x140000000
+14044df71: e8 4a 47 bb ff              	call	0x1400026c0 <.text+0x16c0>
+14044df76: 8b d8                       	mov	ebx, eax
+14044df78: e8 e7 05 00 00              	call	0x14044e564 <.text+0x44d564>
+14044df7d: 84 c0                       	test	al, al
+14044df7f: 74 50                       	je	0x14044dfd1 <.text+0x44cfd1>
+14044df81: 40 84 ff                    	test	dil, dil
+14044df84: 75 05                       	jne	0x14044df8b <.text+0x44cf8b>
+14044df86: e8 13 09 00 00              	call	0x14044e89e <.text+0x44d89e>
+14044df8b: 33 d2                       	xor	edx, edx
+14044df8d: b1 01                       	mov	cl, 0x1
+14044df8f: e8 4c f5 ff ff              	call	0x14044d4e0 <.text+0x44c4e0>
+14044df94: 8b c3                       	mov	eax, ebx
+14044df96: eb 19                       	jmp	0x14044dfb1 <.text+0x44cfb1>
+14044df98: 8b d8                       	mov	ebx, eax
+14044df9a: e8 c5 05 00 00              	call	0x14044e564 <.text+0x44d564>
+14044df9f: 84 c0                       	test	al, al
+14044dfa1: 74 36                       	je	0x14044dfd9 <.text+0x44cfd9>
+14044dfa3: 80 7c 24 20 00              	cmp	byte ptr [rsp + 0x20], 0x0
+14044dfa8: 75 05                       	jne	0x14044dfaf <.text+0x44cfaf>
+14044dfaa: e8 2b 09 00 00              	call	0x14044e8da <.text+0x44d8da>
+14044dfaf: 8b c3                       	mov	eax, ebx
+14044dfb1: 48 8b 5c 24 40              	mov	rbx, qword ptr [rsp + 0x40]
+14044dfb6: 48 83 c4 30                 	add	rsp, 0x30
+14044dfba: 5f                          	pop	rdi
+14044dfbb: c3                          	ret
+14044dfbc: b9 07 00 00 00              	mov	ecx, 0x7
+14044dfc1: e8 0e 04 00 00              	call	0x14044e3d4 <.text+0x44d3d4>
+14044dfc6: 90                          	nop
+14044dfc7: b9 07 00 00 00              	mov	ecx, 0x7
+14044dfcc: e8 03 04 00 00              	call	0x14044e3d4 <.text+0x44d3d4>
+14044dfd1: 8b cb                       	mov	ecx, ebx
+14044dfd3: e8 f0 08 00 00              	call	0x14044e8c8 <.text+0x44d8c8>
+14044dfd8: 90                          	nop
+14044dfd9: 8b cb                       	mov	ecx, ebx
+14044dfdb: e8 ee 08 00 00              	call	0x14044e8ce <.text+0x44d8ce>
+14044dfe0: 90                          	nop
+14044dfe1: cc                          	int3
+14044dfe2: cc                          	int3
+14044dfe3: cc                          	int3
+14044dfe4: 48 83 ec 28                 	sub	rsp, 0x28
+14044dfe8: e8 3f 06 00 00              	call	0x14044e62c <.text+0x44d62c>
+14044dfed: 48 83 c4 28                 	add	rsp, 0x28
+14044dff1: e9 7a fe ff ff              	jmp	0x14044de70 <.text+0x44ce70>
+14044dff6: cc                          	int3
+14044dff7: cc                          	int3
+14044dff8: 48 89 5c 24 08              	mov	qword ptr [rsp + 0x8], rbx
+14044dffd: 57                          	push	rdi
+14044dffe: 48 83 ec 20                 	sub	rsp, 0x20
+14044e002: 48 8b fa                    	mov	rdi, rdx
+14044e005: 48 8b d9                    	mov	rbx, rcx
+14044e008: eb 12                       	jmp	0x14044e01c <.text+0x44d01c>
+14044e00a: 48 8b cb                    	mov	rcx, rbx
+14044e00d: e8 68 08 00 00              	call	0x14044e87a <.text+0x44d87a>
+14044e012: 85 c0                       	test	eax, eax
+14044e014: 74 1b                       	je	0x14044e031 <.text+0x44d031>
+14044e016: 48 8b d7                    	mov	rdx, rdi
+14044e019: 48 8b cb                    	mov	rcx, rbx
+14044e01c: e8 47 08 00 00              	call	0x14044e868 <.text+0x44d868>

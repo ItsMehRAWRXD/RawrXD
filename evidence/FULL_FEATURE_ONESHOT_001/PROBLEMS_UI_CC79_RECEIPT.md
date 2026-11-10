@@ -1,0 +1,76 @@
+# PROBLEMS_UI — CC79 preserved + integ_004 measure
+
+ASOF_UTC=2026-11-09T11:38:00Z
+MOTD_ACK=1
+
+```
+CONTROLLING_TIP=CC79
+CONTROLLING_TIP_LABEL=tip_final_integ_002
+CONTROLLING_EXE_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+CC79_PROBLEMS_UI=FAIL
+CC79_PROBLEMS_ITEMS=0
+CC79_CLICK_TO_LINE=NOT_RUN
+CC79_FIXTURE_IN_BINARY=0
+NO_RETEST_UNCHANGED_CC79=1
+CC79_UNRELATED_PASSES=VALID_FOR_CC79_SHA_ONLY
+A4F_UNTOUCHED=1
+PRODUCT_PASS=0
+CERTIFIED=0
+PROMOTE=0
+LINEAGE_RECONCILIATION=PENDING
+```
+
+## New candidate measure (tip_final_integ_004 only — not controlling tip)
+
+```
+MEASURE_TIP=tip_final_integ_004
+EXE_PATH=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_004\RawrXD-Win32IDE-Native-Ext.exe
+EXE_SHA256=47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F
+FIXTURE_VIA_CMD=1
+FIXTURE_VIA=cmd_s_pipe_scrub
+FIXTURE_IN_BINARY=1
+VS_UNICODE_OUTPUT_SCRUB=1
+OFFLINE_CL_ERROR_C=1
+PROBLEMS_UI=PASS
+PROBLEMS_ITEMS=3
+CLICK_TO_LINE=POSTED_NM_DBLCLK
+REBUILD_CLEARS_STALE=PASS
+GUI_PROBLEMS_PANEL_E2E=PASS
+MAIN_HWND=0x3F0D68
+ROOT_CAUSE_FIXED=1
+ROOT_CAUSE=inherited VS_UNICODE_OUTPUT made cl hang after /nologo filename under pipe; scrub + FORCE_PIPE + drain-to-EOF delivers error C* into onTerminalOutput → parseCompilerDiagnostic → addProblem → ID1312
+```
+
+## Evidence paths
+
+| Fact | Value | Path |
+|------|-------|------|
+| CC79 image | PRESERVED CC79F6CD… | `FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_002\` |
+| integ_004 SHA | 47451F24… | `...\tip_final_integ_004\SHA256.txt` |
+| HWND receipt | ITEMS=3 CLICK=POSTED_NM_DBLCLK | `artifacts\IDE_PANELS_GUI_RECEIPT.txt` |
+| Console | PROBLEMS_POPULATED t=28 items=3 | `artifacts\problems_ui_integ_004_console.txt` |
+| Dispatch | via=cmd_s_pipe_scrub | `F:\rawrxd\build_dispatch_trace.log` |
+| ConPTY/pipe out | error C2065/C2660/C2440 + FIXTURE_RESULT DONE | `F:\rawrxd\evidence\RAWRXD_BUILD_OUTPUT_latest.log` |
+| Offline cl | error C* present | `artifacts\offline_cl_broken_multi_integ004.txt` |
+| Build log | rebuild staged | `FULL_FEATURE_FINAL_COMPLETION_001\artifacts\build_integ_004_bounded.log` |
+
+## NEEDS_REVERIFY (new SHA ≠ CC79)
+
+```
+EXTENSIONHOST=NEEDS_REVERIFY
+CHAT_AIM=NEEDS_REVERIFY
+TERMINAL=NEEDS_REVERIFY
+OUTPUT_GUI=NEEDS_REVERIFY
+DEBUG_HEADLESS=NEEDS_REVERIFY
+```
+
+Do not invent re-PASS. Do not move CONTROLLING_TIP off CC79 until EA5D↔CC79↔integ_004 reconciliation receipt says otherwise.
+
+## Gate
+
+```
+NEXT_GATE=EA5D_CC79_INTEG004_LINEAGE_RECONCILE_THEN_NEEDS_REVERIFY
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+```

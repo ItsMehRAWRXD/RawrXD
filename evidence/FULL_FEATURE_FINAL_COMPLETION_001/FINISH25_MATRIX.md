@@ -1,0 +1,50 @@
+# FINISH25_MATRIX — FULL_FEATURE_FINAL_COMPLETION_001
+
+ASOF_UTC=2026-11-09T10:19:30Z
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+FINAL_CANDIDATE_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+
+## Authority separation
+
+| Layer | Status | Authority |
+|-------|--------|-----------|
+| HISTORICAL | **19/25** (unchanged) | `POST_E59D_CANDIDATE_001\FINISH_25_BACKLOG.md` |
+| CURRENT on CC79 | fail-closed below | this file |
+| Peer specialty tips | SHA-scoped only | D28128AE / 7F8EB407 / EA5D / BD529691 |
+
+```
+SLIM_PASS ≠ FINISH25_CURRENT ≠ CERTIFIED ≠ PROMOTE
+NOT_RUN ≠ PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+HISTORICAL_NOT_MUTATED=1
+```
+
+## Historical remaining six (unchanged)
+
+T05 · T07 · T08 · T18 · T19 · T25
+
+## CURRENT on tip_final_integ_002 (CC79) — measured only
+
+| Gate | CURRENT | Evidence |
+|------|---------|----------|
+| T01–T09 | NOT_RUN / T08 SEALED | TIP_FIX=0 |
+| T10 | **PASS** | freeze 9C910599 |
+| T11–T15 | NOT_RUN | |
+| T16 EXT | **PASS** | EXT smoke tip_final_integ_002 |
+| T17 Terminal | **PASS** | term_smoke_receipt_CC79 (`--term-smoke`) |
+| T18/T19 | NOT_RUN | |
+| T20 Chat Ctrl+Enter | **PASS** 7/7 | CHAT_CTRL_ENTER_RECEIPT CC79 |
+| T21–T23 | NOT_RUN (debug headless PASS ≠ Finish25 auto-credit) | DEBUG_BACKEND_VERIFY_RECEIPT |
+| T24 packaging | PARTIAL_STAGE_ONLY | ≠ PASS |
+| T25 | CERTIFIED=0 | held |
+
+```
+FINISH25_HISTORICAL=19/25
+FINISH25_CURRENT=4/25
+FINISH25_CURRENT_PASS_COUNT=4
+FINISH25_CURRENT_PASS_LIST=T10,T16,T17,T20
+CONTROLLING_TIP=CC79
+SUPERSEDES_EA5D_CURRENT_COUNT=1
+```

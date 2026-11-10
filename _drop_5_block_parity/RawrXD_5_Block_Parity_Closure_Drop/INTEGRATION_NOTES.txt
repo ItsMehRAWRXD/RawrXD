@@ -1,0 +1,81 @@
+INTEGRATION NOTES
+=================
+
+BLOCK 1
+-------
+Copy:
+  cmake/P1Closure.cmake
+into:
+  <repo>/cmake/P1Closure.cmake
+
+Apply PATCH_CMAKE_SNIPPET.txt immediately before canonical
+add_executable(RawrXD-Win32IDE ...).
+
+The filter is intentionally not global. It only cleans lists you explicitly
+pass to it.
+
+BLOCK 2
+-------
+Close-2-P1Product.ps1 refuses to certify merely because an EXE exists.
+It requires:
+  - frozen HexMag runtime authority
+  - a Win32IDE .map
+  - HexMag symbols in the map
+  - a real runtime smoke script returning exit 0
+
+This prevents another false aggregate.
+
+BLOCK 3
+-------
+The promote-tree RawrXDTokenizer currently encodes one byte per token after
+BOS. Do not certify that implementation as llama-compatible.
+
+GgufParityTokenizer is a dependency-free GGUF metadata reader +
+special-token/metaspace/score-aware tokenizer intended as:
+  (a) a parity cert oracle for RawrXD, and
+  (b) source to transplant into the active tokenizer path once its exact
+      runtime API is selected.
+
+Reference IDs must be frozen text containing whitespace-separated token IDs.
+Example:
+  1 529 29989 1792 ...
+
+Do not generate the reference IDs from Deep2 itself.
+
+BLOCK 4
+-------
+deep2_parity_ladder does not alter arithmetic. It reads existing f32 dumps,
+scores them in order, and exits on first divergence.
+
+Expected dump filename substrings:
+  FFN_INP_10
+  FFN_NORM_10
+  FFN_GATE_10
+  FFN_UP_10
+  FFN_ACT_10
+  FFN_DOWN_10
+  LAYER_OUT_10
+  LAYER_OUT_12
+  LAYER_OUT_16
+  LAYER_OUT_21
+  FINAL_NORM
+  LOGITS
+
+It recursively searches each dump root and picks the lexically first matching
+.bin. If your evidence tree contains multiple generations, point the tool at
+one frozen run directory, not an umbrella directory.
+
+BLOCK 5
+-------
+Final token IDs are exact, not tolerance-based.
+
+Agent smoke is intentionally supplied as a script path because the canonical
+RawrXD agent/IDE invocation contract lives in the repository and should not be
+duplicated into a separate fake harness. The script must itself be fail-closed.
+
+Suggested final evidence:
+  TOKENIZER_PARITY=PASS
+  BLOCK4_DEEP2_PARITY=PASS
+  MULTITOKEN_PARITY=PASS
+  AGENTIC_PRODUCT=PASS
+  ALL_5_PARITY_CLOSURE_BLOCKS=PASS

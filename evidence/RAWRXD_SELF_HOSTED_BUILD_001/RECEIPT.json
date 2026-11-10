@@ -1,0 +1,29 @@
+{
+  "id": "RAWRXD_SELF_HOSTED_BUILD_001",
+  "recorded": "2026-10-26",
+  "F_SOURCE_COMMIT": "e303f447553d223764d77d5729ad7e0a101edd40",
+  "F_SOURCE_BRANCH": "fix/deep2-multimodel-safety-20261025",
+  "F_SOURCE_DIRTY": true,
+  "F_DIRTY_LINES": 290,
+  "G_SOURCE_COMMIT": "183c313d4c1ec0e1cba69897b97fbca8444da7f3",
+  "G_CORRECTED_COMMIT": "d719787b14be54c7606e477fcd5edbe90506ebc0",
+  "CMAKE_CLEAN_CONFIGURE": "FAIL",
+  "BLOCKER": "MISSING_TRACKED_SRC_VOXEL",
+  "CORRECTED_CMAKE_CONFIGURE": "PASS",
+  "CORRECTED_CMAKE_NOTE": "d719787b14 configures with RAWRXD_BUILD_SUNSHINE_VOXEL=OFF and no src/voxel. This is the MSVC CMake reference ladder, not a from-scratch link.",
+  "NATIVE_ASSEMBLER": "INCOMPLETE",
+  "NATIVE_LINKER": "INCOMPLETE",
+  "NATIVE_COMPILER_PRODUCT_PARITY": "NOT_RUN",
+  "NATIVE_IDE_BUILD": "NOT_RUN",
+  "NATIVE_IDE_RUNTIME": "NOT_RUN",
+  "IDE_SHA256": null,
+  "QWEN_6_TOKEN_PROBE": "PREVIOUS_EVIDENCE",
+  "QWEN_REFERENCE_PARITY": "NOT_RUN",
+  "REAP_REFERENCE_PARITY": "NOT_RUN",
+  "AGENTIC_GUI_SELF_AUDIT": "NOT_RUN",
+  "ladders": {
+    "A": "MSVC product reference. Not self-hosted certification.",
+    "B": "From-scratch assembler and linker. Not yet able to link the IDE."
+  },
+  "PROMOTE": 0
+}

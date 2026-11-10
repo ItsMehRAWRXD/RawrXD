@@ -1,0 +1,93 @@
+
+===== MODEL =====
+path=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+architecture=llama
+block_count=22
+vocab=32000
+seed_tokens=12
+ingest_ms=2821.1
+bind_ms=0.2
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=311 ops_bound=311 ops_unbound=0
+weights_resolved=201 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+prefill_mode=PrefillBatch
+input_tokens=128
+layer_count=22
+total_op_executions=0
+op_executions_per_token=0.00
+op_executions_per_token_per_layer=0.0000
+prefill_shape=NO_EXECUTION_OBSERVED (no receipts emitted)
+prefill_ms=25718.9
+prefill_tps=4.98
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=0
+vulkan_tensor_ops=0
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=0
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=0.0 steady_kernel_ms=0.000 dispatch_ms=0.000
+n===== KV_CACHE =====
+position_counter=128 (not a cache witness)
+kv_blocks=22
+kv_rows_block0=128
+kv_rows_max_over_blocks=128
+kv_resident_bytes=5767168
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+decode_tokens=8
+decode_ms=1922.1
+decode_tps=4.162
+gpu_dispatches_delta=20953
+cpu_operations_delta=0
+matrix_rows_delta=0
+gpu_dispatches_per_token=2619.1
+gpu_dispatches_per_graph_op=8.42
+ms_per_gpu_dispatch=0.0917
+sample=; ++i) x  +=
+
+===== RESULT =====
+actual_backend=vulkan-gpu
+slowest_operations (by reported tensor size):
+        up: x176 size_total=991232
+        swiglu: x176 size_total=991232
+        gate: x176 size_total=991232
+        resid_in: x176 size_total=360448
+        resid2: x176 size_total=360448
+        resid1: x176 size_total=360448
+        q: x176 size_total=360448
+        ffn_out: x176 size_total=360448
+task_tps=4.465
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=PASS
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

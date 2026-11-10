@@ -1,0 +1,48 @@
+[0/2] Re-checking globbed directories...
+[1/6] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/6] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_ide/Release/vulkan-shaders-gen.exe
+[3/6] Completed 'vulkan-shaders-gen'
+[4/6] Building CXX object CMakeFiles\deep2_agentic_loop.dir\tools\deep2_agentic_loop.cpp.obj
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_agentic_loop.cpp(261): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(270): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(284): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(483): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(485): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1845): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3012): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3862): warning C4456: declaration of 'next' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3844): note: see declaration of 'next'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3887): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4040): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4040): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4040): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4047): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4047): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4047): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4095): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3805): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4247): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3805): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3424): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3429): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3844): warning C4189: 'next': local variable is initialized but not referenced
+F:\rawrxd\tools\deep2_agentic_loop.cpp(569): warning C4505: '`anonymous-namespace'::ByteToSymbol': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(930): warning C4505: '`anonymous-namespace'::FindMerge': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1943): warning C4505: '`anonymous-namespace'::DiffRun': unreferenced function with internal linkage has been removed
+[5/6] Linking CXX executable bin\deep2_agentic_loop.exe

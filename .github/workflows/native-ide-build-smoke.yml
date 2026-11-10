@@ -1,0 +1,86 @@
+name: Native Win32IDE Build Smoke (non-certifying)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/win32app/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/native-ide-build-smoke.yml'
+  pull_request:
+    paths:
+      - 'src/win32app/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/native-ide-build-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native-build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Configure native IDE with MSVC (no Vulkan requirement)
+        shell: pwsh
+        run: |
+          cmake -S . -B build-native-smoke -G "Visual Studio 17 2022" -A x64 -DENABLE_VULKAN=OFF -DBUILD_TESTS=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build actual native IDE target
+        shell: pwsh
+        run: |
+          cmake --build build-native-smoke --config Release --target RawrXD-Win32IDE-Native --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify executable exists and record SHA-256
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path build-native-smoke -Filter RawrXD-Win32IDE-Native.exe -Recurse -File | Select-Object -First 1
+          if (-not $exe) { throw "NATIVE_IDE_BINARY_NOT_FOUND" }
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $exe.FullName).Hash
+          "SOURCE_SHA=$env:GITHUB_SHA" | Out-File -Encoding ascii native-build-receipt.txt
+          "NATIVE_BUILD=PASS" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          "SHA256=$hash" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          "SIZE=$($exe.Length)" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          "CERTIFIED=0" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          Get-Content native-build-receipt.txt
+      - name: Native process launch smoke (no model, no GUI certification)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path build-native-smoke -Filter RawrXD-Win32IDE-Native.exe -Recurse -File | Select-Object -First 1
+          if (-not $exe) { throw "NATIVE_IDE_BINARY_NOT_FOUND" }
+          $p = $null
+          try {
+            $p = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru -ErrorAction Stop
+            Start-Sleep -Seconds 4
+            $p.Refresh()
+            if ($p.HasExited) {
+              "NATIVE_LAUNCH=FAIL_EARLY_EXIT" | Out-File -Encoding ascii -Append native-build-receipt.txt
+              "EXIT_CODE=$($p.ExitCode)" | Out-File -Encoding ascii -Append native-build-receipt.txt
+              throw "NATIVE_IDE_EARLY_EXIT_$($p.ExitCode)"
+            }
+            "NATIVE_LAUNCH=PASS_PROCESS_ALIVE_4S" | Out-File -Encoding ascii -Append native-build-receipt.txt
+            "GUI_INTERACTION=NOT_TESTED" | Out-File -Encoding ascii -Append native-build-receipt.txt
+          } finally {
+            if ($p) {
+              $p.Refresh()
+              if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+            }
+          }
+      - name: Upload native IDE executable for independent acceptance
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ide-executable-UNVERIFIED-GUI
+          path: build-native-smoke/**/RawrXD-Win32IDE-Native.exe
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload native build evidence (not GUI certification)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ide-build-smoke-NOT-GUI-CERTIFIED
+          path: native-build-receipt.txt
+          if-no-files-found: ignore

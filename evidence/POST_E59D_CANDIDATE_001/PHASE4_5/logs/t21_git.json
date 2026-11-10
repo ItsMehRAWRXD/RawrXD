@@ -1,0 +1,10 @@
+﻿{
+    "F_RAWRXD_HEAD":  "70fe7cdaf73996ee03ecae2db78837cde7b8baf7",
+    "F_RAWRXD_TIP":  "70fe7cdaf7 Seal POST_E59D cert evidence and tip Win32IDE editor/chat path updates.",
+    "DIRTY_PORCELAIN":  262,
+    "WORKTREE_E59D_HEAD":  "57f4dd1f056959ad541db626d3684152b17fd9fb",
+    "BINARY_AUTHORITY_SOURCE_COMMIT":  "57f4dd1f056959ad541db626d3684152b17fd9fb",
+    "DISPOSITION_GITHUB_COMMIT_PREFIX":  "70fe7cdaf7",
+    "HEAD_STARTS_DISP":  true,
+    "WT_MATCHES_BINAUTH":  true
+}

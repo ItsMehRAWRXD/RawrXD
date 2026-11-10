@@ -1,0 +1,15 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794283635270}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794283639459}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"write","target":"bug.cpp","observation_bytes":137,"exit_code":1,"valid":true,"timestamp":1794283650585}}
+{"type":"TOOL_CALL","entry":4,"payload":{"step":4,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794283655987}}
+{"type":"RETRY","entry":5,"payload":{"attempt":5,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794283665353}}
+{"type":"TOOL_CALL","entry":6,"payload":{"step":6,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794283674100}}
+{"type":"TOOL_CALL","entry":7,"payload":{"step":7,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794283678151}}
+{"type":"TOOL_CALL","entry":8,"payload":{"step":8,"tool":"write","target":"bug.cpp","observation_bytes":72,"exit_code":1,"valid":true,"timestamp":1794283685191}}
+{"type":"TOOL_CALL","entry":9,"payload":{"step":9,"tool":"write","target":"bug.cpp","observation_bytes":72,"exit_code":1,"valid":true,"timestamp":1794283691865}}
+{"type":"TOOL_CALL","entry":10,"payload":{"step":10,"tool":"write","target":"bug.cpp","observation_bytes":137,"exit_code":1,"valid":true,"timestamp":1794283704585}}
+{"type":"TOOL_CALL","entry":11,"payload":{"step":11,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794283713335}}
+{"type":"RETRY","entry":12,"payload":{"attempt":12,"reason":"invalid_tool_format","can_continue":false,"timestamp":1794283722290}}
+{"type":"VERIFICATION","entry":13,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794283722291}}
+{"type":"LEDGER_END","entry":14,"payload":{"total_entries":14}}

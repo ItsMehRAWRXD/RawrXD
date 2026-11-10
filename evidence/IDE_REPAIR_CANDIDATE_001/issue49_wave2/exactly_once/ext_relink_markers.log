@@ -1,0 +1,20 @@
+﻿ASOF_UTC=2026-11-10T10:04:38Z
+ACTION=MARKER_ANCHOR_RELINK
+VCVARS_OK
+[0/2] Re-checking globbed directories...
+[1/8] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/8] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/8] Completed 'vulkan-shaders-gen'
+[4/8] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ComputerUse.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(97): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic/ToolCallBridge.h(58): warning C4100: 'registry': unreferenced parameter
+[5/8] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\SelfRepairLoop.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(97): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\ToolCallBridge.h(58): warning C4100: 'registry': unreferenced parameter
+F:\rawrxd\src\agentic\SelfRepairLoop.cpp(793): warning C4100: 'keep_last_n': unreferenced parameter
+[6/8] Linking CXX static library rawrxd_agentic_backend.lib
+[7/8] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

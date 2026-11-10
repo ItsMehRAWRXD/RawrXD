@@ -1,0 +1,17 @@
+SESSION_OPEN session_id=sid_00001A6C_000000000399544A run_id=chin_smoke_826172B3 pid=6764
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000015B10B2 session=1 pane=copilot_sidebar session_id=sid_00001A6C_000000000399544A run_id=chin_smoke_826172B3
+SESSION_OPEN session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3 pid=6764
+DISPATCH_ID id=1 bytes=63 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=63 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=kilo-auto/free session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+request_started request_id=1 model=kilo-auto/free session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000015B10B2 session=1 pane=copilot_sidebar session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+BACKEND_REQUEST_END request_id=1 success=0 stop=0 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+callback request_id=1 complete=1 response_bytes=108 stop=0 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+ui_update request_id=1 rendered=1 complete=1 response_bytes=108 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3
+RESPONSE_END request_id=1 session=1 bytes=108 session_id=sid_00001A6C_000000000399545A run_id=chin_smoke_826172B3

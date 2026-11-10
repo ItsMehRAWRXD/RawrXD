@@ -1,0 +1,4 @@
+An error occurred while creating the pipeline.
+    + CategoryInfo          : NotSpecified: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : RuntimeException
+ 

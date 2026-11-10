@@ -1,0 +1,24 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=45668 request_generation=1 prompt_fnv1a=20D0358E7D5856A7 model='bigdaddyg-productivity-local:latest' prompt_len=8 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=45668 REQUEST_GENERATION=1 MODEL=bigdaddyg-productivity-local:latest MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=142
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] generateOllamaModel: pid=45668 request_generation=2 prompt_fnv1a=CEE0BE4FC509AA36 model='bigdaddyg-productivity-local:latest' prompt_len=10 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=45668 REQUEST_GENERATION=2 MODEL=bigdaddyg-productivity-local:latest MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=144
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] generateOllamaModel: pid=45668 request_generation=3 prompt_fnv1a=400160B0F8D69220 model='bigdaddyg-productivity-local:latest' prompt_len=14 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=45668 REQUEST_GENERATION=3 MODEL=bigdaddyg-productivity-local:latest MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=148
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending

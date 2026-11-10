@@ -1,0 +1,36 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=172
+[ollama step 1] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 2] response_bytes=105
+[ollama step 2] TOOL=write exit=1 valid=1 observation=246
+[ollama step 2] result=write rolled back: test failed (exit 0): Microsoft Windows [Version 10.0.26300.9818]\n(c) Microsoft Corporation. All rights reserved.\n\nF:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\s11_agent_owned_20261109-221425>
+[ollama step 3] response_bytes=77
+[ollama step 3] TOOL=read exit=0 valid=1 observation=14
+[ollama step 3] result=file not found
+[ollama step 4] response_bytes=77
+[ollama step 4] TOOL=read exit=0 valid=1 observation=14
+[ollama step 4] result=file not found
+[ollama step 5] response_bytes=67
+[ollama step 5] TOOL=read exit=0 valid=1 observation=14
+[ollama step 5] result=file not found
+[ollama step 6] response_bytes=68
+[ollama step 7] response_bytes=67
+[ollama step 7] TOOL=read exit=0 valid=1 observation=14
+[ollama step 7] result=file not found
+[ollama step 8] response_bytes=17
+[ollama step 8] TOOL=read exit=0 valid=1 observation=172
+[ollama step 8] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 9] response_bytes=151
+[ollama step 9] TOOL=write exit=1 valid=1 observation=246
+[ollama step 9] result=write rolled back: test failed (exit 0): Microsoft Windows [Version 10.0.26300.9818]\n(c) Microsoft Corporation. All rights reserved.\n\nF:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\s11_agent_owned_20261109-221425>
+[ollama step 10] response_bytes=74
+[ollama step 10] TOOL=read exit=0 valid=1 observation=14
+[ollama step 10] result=file not found
+OLLAMA_AGENT_MODEL llama3.1:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT FAIL
+OLLAMA_AGENT_BUILD_TEST FAIL
+OLLAMA_AGENT_BEFORE_SHA256 1429c3cbd630ab69bf17fd97533f4bb2c629c5a373d513ef2e3cb365f1b9a250
+OLLAMA_AGENT_AFTER_SHA256 1429c3cbd630ab69bf17fd97533f4bb2c629c5a373d513ef2e3cb365f1b9a250
+OLLAMA_AGENT_VERDICT FAIL

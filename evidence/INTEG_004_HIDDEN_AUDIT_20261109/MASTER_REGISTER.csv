@@ -1,0 +1,118 @@
+ID,Category,Title,Status,Overlaps,RequiredProof,ReleaseScope,NextAction
+B01,Problems/UI,CC79 Problems UI remains FAIL (items=0; fixture absent),CONFIRMED,"H27,H28,H32,H34-H37;C1;PR77;I57-A",Problems items>0 + click-to-line navigation on controlling SHA,MANDATORY_WIN32_DAILY,Do not inherit INTEG_004 Problems PASS; close via authorized tip after B02
+B02,INTEG_004,INTEG_004 cross-subsystem acceptance incomplete (NEEDS_REVERIFY; sealed 47451 exe ABSENT; live tip_final_integ_004=69FE3D92≠47451),CONFIRMED,H118;K1;LINEAGE;LOCAL_INTEG004_FINISH25,SHA-specific matrix: EXT/Chat/Term/Output/Debug-headless + Problems nav on one candidate image,MANDATORY_WIN32_DAILY,IMMEDIATE: locate/rebuild sealed image OR reverify live 69FE; no tip move; no cross-SHA inherit
+B20,ExtensionHost,Extension process/thread/handle cleanup FAIL (EXT_CLEANUP=FAIL FORCE_KILL=1 on 47451),CONFIRMED,H51;C2;PR79;T16;I57-A09,Clean --ext-quit without FORCE_KILL; ORPHANS=0; HARNESS_EXIT=0 on same SHA,MANDATORY_WIN32_DAILY,Repair quit path on chosen INTEG candidate; re-run ext_smoke
+B39,Debugger,Native debugger UI controls not wired / IDE_DEBUG_UI=FAIL on CC79 (headless≠UI),CONFIRMED,H13;C3;T21-T23;I57-A14;PR77,Debugger UI E2E launch/BP/step/inspect/stop on controlling SHA,MANDATORY_WIN32_DAILY,After B02/tip auth: wire UI to backend; prove on same SHA
+F25-T07,Finish-25,T07 FAIL — PRODUCT_DEFECT proven (binary rejection),CONFIRMED,B75;FINISH_25_BACKLOG;REMAINING_9,T07 PASS receipt on controlling release SHA,MANDATORY_WIN32_DAILY,Deferred until single controlling SHA selected; do not mutate historical 19/25 arithmetic
+F25-T08,Finish-25,T08 FAIL — PRODUCT_DEFECT proven (multi-tab); TIP_FIX=0 sealed,CONFIRMED,B75;T08_SEALED,T08 PASS or explicit disposition on controlling SHA,MANDATORY_WIN32_DAILY,Held TIP_FIX=0; reconcile only on final SHA
+B03,Authority,Candidate-to-controlling-tip transition held (TIP_MOVE_AUTHORIZED=0),CONFIRMED,"B01,B02;LINEAGE",Explicit owner tip-move authorization after B02 matrix,MANDATORY_WIN32_DAILY,HELD until B02 complete
+B05,Authority,Product promotion prohibited (PROMOTE=0),CONFIRMED,B77;Deep2ProductGate;PERF_CONTRACT,PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS,MANDATORY_WIN32_DAILY,Keep PROMOTE=0
+B78,Certification,Independent final product certification HELD (CERTIFIED=0),CONFIRMED,"B04,B76,H106,H120;T25;I49",Independent cert on single controlling SHA,MANDATORY_WIN32_DAILY,After Finish-25 25/25 + #49
+B04,Certification,Final certification incomplete,UNVERIFIED,"B75,B76,B78;T25",Finish-25 complete + integrated acceptance on one SHA,MANDATORY_WIN32_DAILY,After #49 E2E + Finish-25
+B06,Release,Full-feature release artifact not established,UNVERIFIED,B71-B73;H98-H105;I57-C15,One reproducible full-feature release package SHA,MANDATORY_WIN32_DAILY,After tip auth + gates
+B07,Compiler,cl launch without VS_UNICODE_OUTPUT / env contamination,UNVERIFIED,"H08,H27;K1",Regression: clean cl + Problems on controlling SHA,MANDATORY_WIN32_DAILY,Include in B02/Problems reverify
+B08,Compiler,Simultaneous compiler stdout/stderr without deadlock,UNVERIFIED,H28;I57,Concurrent pipe stress receipt,MANDATORY_WIN32_DAILY,VERIFY on final SHA
+B09,Compiler,Compiler timeout + process-tree termination,UNVERIFIED,"H29,H30",Timeout kills descendants; no orphans,MANDATORY_WIN32_DAILY,VERIFY
+B10,Compiler,Real C/C++ compile→object→link→executable,UNVERIFIED,H40;PR75;I57-B,Artifact exists + runs; SHA-bound,MANDATORY_WIN32_DAILY,VERIFY on final SHA
+B11,Problems,Warnings/errors populate Problems correctly,UNVERIFIED,H31-H35;B01,Items match compiler output,MANDATORY_WIN32_DAILY,Partial on candidate only; reverify
+B12,Problems,Problems double-click opens correct file/line/caret,UNVERIFIED,"H36,H37;K1",Editor navigation after NM_DBLCLK (not event-only),MANDATORY_WIN32_DAILY,VERIFY navigation not just POSTED_NM_DBLCLK
+B13,Problems,Stale diagnostics clear/refresh after rebuild,UNVERIFIED,H35,Rebuild clears stale; fresh set only,MANDATORY_WIN32_DAILY,VERIFY
+B14,Problems,Missing compiler/linker/invalid paths fail visibly,UNVERIFIED,"H39,H40",Visible FAIL paths,MANDATORY_WIN32_DAILY,VERIFY
+B15,ExtensionHost,Extension discovery and manifest validation,UNVERIFIED,H43;PR79,Discover+validate on SHA,MANDATORY_WIN32_DAILY,REVERIFY with B20 fix
+B16,ExtensionHost,Extension activation and API registration,UNVERIFIED,"H43,H44;PR79",Activate+API register,MANDATORY_WIN32_DAILY,REVERIFY
+B17,ExtensionHost,Extension command execution and event dispatch,UNVERIFIED,H46;PR79,Real command execute,MANDATORY_WIN32_DAILY,REVERIFY
+B18,ExtensionHost,Extension unload/reload/deactivation,UNVERIFIED,"H49,H50;PR79",Unload/reload clean,MANDATORY_WIN32_DAILY,REVERIFY
+B19,ExtensionHost,Extension failure isolation and crash recovery,UNVERIFIED,"H48,H52;PR79",Crash isolated; restart clean,MANDATORY_WIN32_DAILY,VERIFY
+B21,ExtensionHost,Extension and IDE integration regression,UNVERIFIED,H56;PR79,No regress vs panels,MANDATORY_WIN32_DAILY,REVERIFY
+B22,Chat,Real Ollama/local streamed responses in native chat,UNVERIFIED,H74;PR77,Stream tokens in HWND,MANDATORY_WIN32_DAILY,REVERIFY on candidate
+B23,Chat,Repeated requests without stale response contamination,UNVERIFIED,H59,No cross-talk,MANDATORY_WIN32_DAILY,REVERIFY
+B24,Chat,Stop/Clear/cancellation correctness,UNVERIFIED,H75;PR77,Cancel stops work,MANDATORY_WIN32_DAILY,REVERIFY
+B25,Chat,Chat session switching and transcript isolation,UNVERIFIED,H57,Session isolation,MANDATORY_WIN32_DAILY,VERIFY
+B26,Chat,Model/backend switching without corrupting sessions,UNVERIFIED,"H73,H86",Switch safe,MANDATORY_WIN32_DAILY,VERIFY
+B27,Chat,Network/API errors timeouts malformed JSON,UNVERIFIED,H74,Fault injection,MANDATORY_WIN32_DAILY,VERIFY
+B28,Chat,Empty responses and disconnected backend recovery,UNVERIFIED,H28,Recovery receipt,MANDATORY_WIN32_DAILY,VERIFY
+B29,Chat,Chat save/reopen and persistent state,UNVERIFIED,H69,Persist+restore,MANDATORY_WIN32_DAILY,VERIFY
+B30,Chat,Local-only operation without cloud dependencies,UNVERIFIED,H90;I49,Offline receipt,MANDATORY_WIN32_DAILY,VERIFY
+B31,Terminal,Terminal subprocess creation and restart,UNVERIFIED,H;PR77;T17,ConPTY create/restart,MANDATORY_WIN32_DAILY,REVERIFY on candidate
+B32,Terminal,Concurrent output capture without pipe deadlocks,UNVERIFIED,H28,Concurrent stress,MANDATORY_WIN32_DAILY,REVERIFY
+B33,Terminal,Correct exit status and termination reporting,UNVERIFIED,H,Exit codes correct,MANDATORY_WIN32_DAILY,VERIFY
+B34,Terminal,Terminal cancellation and child-process cleanup,UNVERIFIED,"H29,H34",No orphans,MANDATORY_WIN32_DAILY,VERIFY
+B35,Output,Output panel rendering and diagnostic routing,UNVERIFIED,H;PR77,Build lines in HWND,MANDATORY_WIN32_DAILY,REVERIFY (CC79 sealed PASS ≠ candidate)
+B36,Output,Output isolation between builds/terminal/debugger,UNVERIFIED,H,Channel isolation,MANDATORY_WIN32_DAILY,VERIFY
+B37,Output,Repeated terminal/build ops without resource leaks,UNVERIFIED,H68;H76,Handle/memory trend,MANDATORY_WIN32_DAILY,VERIFY
+B38,Debugger,Debug-headless functionality on INTEG_004,UNVERIFIED,H;B39,Headless BP/step on candidate SHA,MANDATORY_WIN32_DAILY,REVERIFY on candidate
+B40,Debugger,Breakpoint create/hit/remove,UNVERIFIED,H,BP E2E,MANDATORY_WIN32_DAILY,VERIFY after B39
+B41,Debugger,Continue/pause/step-over/in/out,UNVERIFIED,H,Step E2E,MANDATORY_WIN32_DAILY,VERIFY
+B42,Debugger,Debug process launch/attach/stop,UNVERIFIED,H,Launch/attach/stop,MANDATORY_WIN32_DAILY,VERIFY
+B43,Debugger,Call stack/variables/inspection in release scope,UNVERIFIED,H,Inspect E2E,MANDATORY_WIN32_DAILY,VERIFY
+B44,Debugger,Debugger failure and terminated-process recovery,UNVERIFIED,H,Recovery E2E,MANDATORY_WIN32_DAILY,VERIFY
+B45,FourPanel,Chat+Terminal+Output+Debug simultaneous operation,UNVERIFIED,H118;C4;PR77;I49,Four-panel scenarios on one SHA,MANDATORY_WIN32_DAILY,After debugger+Problems closed
+B46,FourPanel,Panel resize/visibility/focus/event routing,UNVERIFIED,H20-H22,Focus/resize receipt,MANDATORY_WIN32_DAILY,VERIFY
+B47,FourPanel,Four-panel shutdown/restart without stale HWND/callbacks,UNVERIFIED,"H16,H18,H47",No stale callbacks,MANDATORY_WIN32_DAILY,VERIFY
+B48,Editor,Multi-file open/edit/save/reopen without data loss,UNVERIFIED,H26;I57-A08,SHA roundtrip,MANDATORY_WIN32_DAILY,VERIFY
+B49,Editor,File encoding/Unicode/line-ending handling,UNVERIFIED,H32,Unicode roundtrip,MANDATORY_WIN32_DAILY,VERIFY
+B50,Editor,Undo/redo dirty-state unsaved-change protection,UNVERIFIED,H50,Dirty protect,MANDATORY_WIN32_DAILY,VERIFY
+B51,Agent,Agent tool execution and permission enforcement,UNVERIFIED,"H61,H91-H93;PR78;I49",TOOL_AUTHORITY receipt,MANDATORY_WIN32_DAILY,VERIFY
+B52,Agent,Agent read→edit→build→diagnose→repair workflow,UNVERIFIED,"H62-H65,H120;I49;I43",Broken→fixed E2E,MANDATORY_WIN32_DAILY,Issue#49 path
+B53,Agent,Accurate per-file change tracking and diff application,UNVERIFIED,H53,Diff receipt,MANDATORY_WIN32_DAILY,VERIFY
+B54,Agent,Rollback after failed/cancelled agent ops,UNVERIFIED,H64;I57-A15,Rollback receipt,MANDATORY_WIN32_DAILY,VERIFY
+B55,Agent,Tool-call timeout/cancellation/stale-result rejection,UNVERIFIED,"H58,H59,H55",Cancel+stale reject,MANDATORY_WIN32_DAILY,VERIFY
+B56,Agent,Non-tool-model orchestration where in release scope,UNVERIFIED,H,Orchestration receipt or OUT_OF_SCOPE note,MANDATORY_WIN32_DAILY,VERIFY if in scope
+B57,Agent,Multi-agent isolation and concurrency acceptance,UNVERIFIED,"H68,H70;I44;I49",Multi-agent if HW; else document HELD,OPTIONAL_UNLESS_SPEC,HELD unless dual-GPU in product-final contract
+B58,Deep2,Deep2 backend routing through native IDE,UNVERIFIED,H73;PR76;I50-L1,Routing receipt,MANDATORY_WIN32_DAILY,VERIFY
+B59,Deep2,Vulkan R9700/RX7800XT inference integration,UNVERIFIED,H77-H79;I41;I57-C,GPU_FORWARD+FINITE_LOGITS,MANDATORY_WIN32_DAILY,VERIFY (RX7800XT PASS_OR_NOT_PRESENT)
+B60,Deep2,GPU init/teardown/recovery,UNVERIFIED,"H75,H76,H87",Lifecycle receipt,MANDATORY_WIN32_DAILY,VERIFY
+B61,Deep2,Model load/unload and invalid-model handling,UNVERIFIED,"H61,H77",Invalid-model FAIL visible,MANDATORY_WIN32_DAILY,VERIFY
+B62,Deep2,KV-cache cancellation and rollback correctness,UNVERIFIED,H80,KV rollback receipt,MANDATORY_WIN32_DAILY,VERIFY
+B63,Deep2,Quantization/model-format correctness for supported formats,UNVERIFIED,"H79,H89;I57-C",Oracle receipts,MANDATORY_WIN32_DAILY,VERIFY
+B64,Deep2,GPU/CPU fallback where supported,UNVERIFIED,H84,No silent CPU fallback vs claim,MANDATORY_WIN32_DAILY,VERIFY
+B65,Deep2,Memory/VRAM exhaustion recovery,UNVERIFIED,H81,OOM fail-closed,MANDATORY_WIN32_DAILY,VERIFY
+B66,Deep2,Long-context and concurrency performance targets,UNVERIFIED,"H81,H88;I48",Perf gate may FAIL without invalidating correctness,OPTIONAL_UNLESS_SPEC,NOT CERTIFIED; TIP_CLIMB=HOLD
+B67,Stability,Repeated start/stop/clear/restart stress,UNVERIFIED,H118,Stress receipt,MANDATORY_WIN32_DAILY,VERIFY
+B68,Stability,Handle/thread/memory/process leak testing,UNVERIFIED,H76,Trend receipt,MANDATORY_WIN32_DAILY,VERIFY
+B69,Stability,Crash recovery and unsaved-work protection,UNVERIFIED,"H69,H101",Recovery receipt,MANDATORY_WIN32_DAILY,VERIFY
+B70,Stability,Long-duration endurance testing,UNVERIFIED,H,Endurance receipt,OPTIONAL_UNLESS_SPEC,After core E2E
+B71,Deployment,Deterministic Windows release build,UNVERIFIED,"H12,H01-H11;I46",Repro build SHA,MANDATORY_WIN32_DAILY,VERIFY
+B72,Deployment,Clean-machine installation and dependency validation,UNVERIFIED,H98-H100;I49,Fresh install smoke,MANDATORY_WIN32_DAILY,After packaging
+B73,Deployment,Release executable hash and artifact provenance,UNVERIFIED,"H102,H105",Provenance= tested SHA,MANDATORY_WIN32_DAILY,REQUIRED before cert
+B74,Release,Git evidence publication and LFS/remote reconciliation,UNVERIFIED,H104,LFS/remote complete,MANDATORY_WIN32_DAILY,UNCONFIRMED
+B75,Finish-25,Complete Finish-25 evidence reconciliation,UNVERIFIED,"F25-T05,T07,T08,T18,T19,T25",25/25 on controlling SHA,MANDATORY_WIN32_DAILY,Historical 19/25; CURRENT 4/25
+B76,Certification,Final controlling-SHA acceptance matrix,UNVERIFIED,"B02,B45,I49",Single-SHA matrix,MANDATORY_WIN32_DAILY,REQUIRED
+B77,Authority,Explicit promotion authorization,UNVERIFIED,B05;PERF,Owner auth after conjunction,MANDATORY_WIN32_DAILY,HELD
+F25-T05,Finish-25,T05 Cancel Request A survivability NOT_RUN,UNVERIFIED,"B75;T18,T19",T05 PASS on controlling SHA,MANDATORY_WIN32_DAILY,Blocked chain with T18/T19
+F25-T18,Finish-25,T18 BLOCKED (cancel survivability prerequisite),UNVERIFIED,T05;B75,Unblock after T05,MANDATORY_WIN32_DAILY,Blocked
+F25-T19,Finish-25,T19 BLOCKED (cancel survivability prerequisite),UNVERIFIED,T05;B75,Unblock after T05,MANDATORY_WIN32_DAILY,Blocked
+F25-T25,Finish-25,T25 CERTIFIED=0 held,UNVERIFIED,B78;I49,Cert conjunction,MANDATORY_WIN32_DAILY,Held
+I49,ProductFinal,Issue #49 product-final single-SHA autonomous E2E (decisive maturity milestone),UNVERIFIED,H120;B52;B76;I50-L10,Full #49 receipt field set on one EXE SHA,MANDATORY_WIN32_DAILY,Execute after debugger/four-panel on authorized tip
+PR75,CompilerPR,PR#75 native compiler/linker: 16 COFF→PE unexecuted; Windows PE not certified,UNVERIFIED,"B10;H41,H42;I57-B",Execute 16 linker tests + PE smoke,MANDATORY_WIN32_DAILY,OPEN DRAFT MERGEABLE≠auth
+PR76,Deep2PR,PR#76 Deep2 consolidation HELD (CONFLICTING; DO NOT MERGE),UNVERIFIED,B58-B66;H73-H90;I50,Conflict+CI+Deep2 certify on candidate,MANDATORY_WIN32_DAILY,HELD
+PR77,ProductPathPR,PR#77 IDE product path OPEN CONFLICTING; test plan unchecked,UNVERIFIED,B31-B47;B01;PR77_ACCEPTANCE,SHA-specific ConPTY/Problems/Output/four-panel,MANDATORY_WIN32_DAILY,Resolve conflicts after local tip authority
+PR78,AgentPR,PR#78 AgentSession GUI OPEN CONFLICTING; runtime NOT_RUN,UNVERIFIED,B51-B57;H57-H72,Lifecycle/cancel/restore E2E,MANDATORY_WIN32_DAILY,After #77 path stable
+PR79,ExtPR,PR#79 ExtensionHost OPEN CONFLICTING; real execute required,UNVERIFIED,B15-B21;H43-H56;B20,Load/execute/shutdown/crash recovery,MANDATORY_WIN32_DAILY,Includes B20 cleanup fix
+H01,BuildIntegrity,Implemented source excluded from production CMake target,INVESTIGATE,B71;I57-A03,Source-to-target linkage audit,MANDATORY_WIN32_DAILY,Investigate before release build seal
+H02,BuildIntegrity,Duplicate implementations; older version linked,INVESTIGATE,B71,Symbol/dispatch audit,MANDATORY_WIN32_DAILY,Investigate
+H03,BuildIntegrity,Stub silently replacing production functionality,INVESTIGATE,H97;I49,Stub scan=0 on release SHA,MANDATORY_WIN32_DAILY,Investigate
+H13,GUI,Menu commands point to missing/incorrect handlers,INVESTIGATE,B39;B45,Invoke every release-scope command,MANDATORY_WIN32_DAILY,Investigate
+H16,GUI,HWND references survive after window destruction,INVESTIGATE,B47,Stale-event tests,MANDATORY_WIN32_DAILY,Investigate
+H17,GUI,Worker threads modify Win32 controls directly,INVESTIGATE,B35,Cross-thread dispatch audit,MANDATORY_WIN32_DAILY,Investigate
+H41,Linker,Native PE/COFF linker accepts malformed relocations,INVESTIGATE,PR75;B10,Negative mutation tests,MANDATORY_WIN32_DAILY,Investigate
+H45,ExtIPC,IPC messages lack framing or size validation,INVESTIGATE,PR79;B19,Framing audit,MANDATORY_WIN32_DAILY,Investigate
+H91,Security,Workspace path traversal via agent/extension tools,INVESTIGATE,B51;I49,Traversal negative tests,MANDATORY_WIN32_DAILY,Investigate
+H97,Security,Security-sensitive paths use placeholder cryptography,INVESTIGATE,H03,Camellia/real crypto bind audit,MANDATORY_WIN32_DAILY,Investigate
+H102,Release,Build artifacts/test receipts accepted without provenance,INVESTIGATE,B73;H106,Provenance gate,MANDATORY_WIN32_DAILY,Investigate
+H106,Release,Final release certified using evidence from multiple SHAs,INVESTIGATE,"B78;B01,B02",Single-SHA evidence only,MANDATORY_WIN32_DAILY,Investigate until closed
+H107,IDE,LSP handshake without diagnostics/completion,INVESTIGATE,I57-A11,LSP E2E,MANDATORY_WIN32_DAILY,Investigate
+H108,IDE,GhostText accept/cancel wrong range,INVESTIGATE,I57-A12,GhostText E2E,MANDATORY_WIN32_DAILY,Investigate
+H109,IDE,Native browser lacks origin/navigation isolation,INVESTIGATE,I57-A13,Browser isolation E2E,MANDATORY_WIN32_DAILY,Investigate
+H113,IDE,Feature registry advertises commands with no backend,INVESTIGATE,H13,Registry↔handler audit,MANDATORY_WIN32_DAILY,Investigate
+H118,Integration,Multiple passing components fail when operated simultaneously,INVESTIGATE,B45;B67;I49,Simultaneous ops E2E,MANDATORY_WIN32_DAILY,Investigate
+H120,ProductFinal,Final product acceptance omits complete autonomous coding loop,INVESTIGATE,I49;B52,#49 full loop on one SHA,MANDATORY_WIN32_DAILY,Primary milestone
+I57-B13,CompilerMulti,Issue#57 B13 ELF/Linux host contracts,OPTIONAL_UNLESS_SPEC,H114,Real Linux runner evidence,OPTIONAL_UNLESS_SPEC,Track under #57; not daily-driver blocker
+I57-B14,CompilerMulti,Issue#57 B14 Mach-O/macOS/iOS contracts,OPTIONAL_UNLESS_SPEC,H114,Real macOS runner evidence,OPTIONAL_UNLESS_SPEC,Out of daily-driver scope
+I57-B15,CompilerMulti,Issue#57 B15 Android ABI/APK contracts,OPTIONAL_UNLESS_SPEC,H114,Real Android evidence,OPTIONAL_UNLESS_SPEC,Out of daily-driver scope
+I57-C08,GPUMulti,Issue#57 C08 dual-GPU synchronization mandatory,OPTIONAL_UNLESS_SPEC,H82,Dual-GPU receipt,OPTIONAL_UNLESS_SPEC,N_A until enterprise spec
+I57-C09,GPUMulti,Issue#57 C09 multi-GPU parallel sync mandatory,OPTIONAL_UNLESS_SPEC,H83,Multi-GPU receipt,OPTIONAL_UNLESS_SPEC,N_A until enterprise spec
+I57-C14,Matrix,Issue#57 500-cell feature matrix,OPTIONAL_UNLESS_SPEC,H89,500-cell receipt,OPTIONAL_UNLESS_SPEC,Not mandatory for Windows daily-driver #49
+H82,GPUMulti,Multi-GPU partitioning incorrect tensor placement,OPTIONAL_UNLESS_SPEC,I57-C08,Dual-GPU proof,OPTIONAL_UNLESS_SPEC,Carve-out
+H83,GPUMulti,GPU sync serializes supposedly parallel execution,OPTIONAL_UNLESS_SPEC,I57-C09,Multi-device sync proof,OPTIONAL_UNLESS_SPEC,Carve-out
+H114,CompilerMulti,Cross-platform functionality claimed without native execution,OPTIONAL_UNLESS_SPEC,I57-B13-15,Per-OS native proof or drop claim,OPTIONAL_UNLESS_SPEC,Carve-out

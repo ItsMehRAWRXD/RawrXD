@@ -1,0 +1,17 @@
+﻿{
+    "tested_utc":  "2026-11-10T11:59:01.3275403Z",
+    "scope":  "Deterministic mock protocol regression; not real model inference.",
+    "ide_sha256":  "FCE20F43D94FC060879999B5F362EDFEF3DF62907E48F2A0CE61CF349E1A9DE9",
+    "agent_sha256":  "3919991D4D13A7C6190750121F47FDA58C5510ECA20994481742853910E064BE",
+    "model":  "llama3.1:8b",
+    "process_id":  39132,
+    "process_exit":  0,
+    "timed_out":  false,
+    "source_changed":  true,
+    "source_after_sha256":  "EFF63EF0D19E70B29C6A17B972009055DAAF4B5E88329820C4E1EC97F05551E2",
+    "independent_run_exit":  0,
+    "independent_run_output":  "AGENT_RESULT=5",
+    "verdict":  "PASS",
+    "stdout":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\protocol_fixture_0920\\agent.stdout.log",
+    "stderr":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\protocol_fixture_0920\\agent.stderr.log"
+}

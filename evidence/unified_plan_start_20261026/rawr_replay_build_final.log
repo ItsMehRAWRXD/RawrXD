@@ -1,0 +1,7 @@
+[0/2] Re-checking globbed directories...
+[1/5] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/5] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_reap/Release/vulkan-shaders-gen.exe
+[3/5] Completed 'vulkan-shaders-gen'
+[4/5] Linking CXX executable bin-msvc\rawr-reap-replay.exe

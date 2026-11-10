@@ -1,0 +1,37 @@
+﻿STRATA_IDE_ADAPTER_PLAN
+ASOF_UTC=2026-11-10T15:21:34Z
+IMPLEMENT_NOW=0
+REASON=NOT_SAFE_SMALL
+IDE_WIRED=0
+
+# Inventory (observed)
+NO_FILE_NAMED_ToolCallBridge=1
+NEAREST_TOOL_RESULT_HEADER=rawrxd/src/agentic/ToolCallResult.h
+AGENT_SESSION_PRODUCT_PATH=rawrxd/src/win32app/Win32IDE_AgentCommands.cpp::ensureProductAgentSession + AgentSession
+AGENTIC_HTTP_NATIVECHAT=rawrxd/src/agentic/BoundedAgentLoop.cpp::NativeChat
+AGENT_OLLAMA_CLIENT=rawrxd/src/agentic/AgentOllamaClient.cpp::ChatSync -> BackendOrchestrator::Enqueue (NOT OpenAI HTTP)
+BACKEND_SWITCHER_OPENAI_HTTP=rawrxd/src/win32app/Win32IDE_BackendSwitcher.cpp::routeToOpenAI (cloud OpenAI; chat-only; no tool_calls/reinject)
+LOCAL_ONLY_001_BLOCKS_11434=1
+CHAT_MODEL_SOURCES=Ollama|LocalFile|KiloFree (no Strata)
+
+# Minimal adapter (proposed; do not apply in this pilot)
+1. Add ChatModelEntry::Source::Strata (or AIBackendType::Strata) WITHOUT removing Ollama.
+2. Config keys: strata.baseUrl default http://127.0.0.1:8080 ; strata.model=qwen3.6-35b-a3b-ud-q4_k_xl ; strata.reasoning_budget_tokens=256.
+3. New OpenAI-compat HTTP client path (WinHTTP) posting to {baseUrl}/v1/chat/completions with tools[] + tool role reinjection; DO NOT reuse AgentOllamaClient BackendOrchestrator path.
+4. Gate: if source==Strata, route agent loop to this client; keep Ollama CLI / ollama-cli and LocalGGUF paths intact.
+5. LOCAL_ONLY_001 remains for 11434 resurrection; Strata :8080 is allowlisted only when explicitly selected.
+6. Pass reasoning_budget_tokens on every Strata request (verified required for non-null content).
+7. Wire only after this pilot receipts stay PASS; still PROMOTE=0 until IDE E2E.
+
+FILES_TO_TOUCH_ESTIMATE=
+  rawrxd/src/win32app/Win32IDE.h (enum Source / AIBackendType)
+  rawrxd/src/win32app/Win32IDE_AgentCommands.cpp (selector routing)
+  rawrxd/src/agentic/BoundedAgentLoop.cpp|.h (optional provider branch)
+  new: rawrxd/src/agentic/StrataOpenAiClient.{h,cpp} (HTTP OpenAI tools+reinject)
+  rawrxd/src/win32app/Win32IDE_BackendSwitcher.cpp (optional chat-only backend entry)
+
+LAW=ADAPTER_PLAN != IDE_WIRED
+LAW=TOOL_CALL_PASS != AUTONOMOUS_CODING_PASS
+LAW=DO_NOT_RUN_ISSUE49_S13_UNTIL_TOOL_REINJECT_PASS (this pilot has reinject PASS; S13 still NOT_RUN by instruction)
+PROMOTE=0
+CERTIFIED=0

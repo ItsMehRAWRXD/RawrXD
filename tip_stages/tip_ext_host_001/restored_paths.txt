@@ -1,0 +1,12 @@
+﻿src\modules\quickjs_extension_host.cpp
+src\modules\quickjs_vscode_bindings.cpp
+src\modules\vscode_extension_api.cpp
+src\modules\vscode_extension_api.h
+src\modules\ExtensionLoader.hpp
+src\core\js_extension_host.cpp
+src\core\js_extension_host.hpp
+src\core\js_extension_host_production.cpp
+src\core\js_extension_host_headless_impl.cpp
+src\core\extension_polyfill_engine.cpp
+include\quickjs_extension_host.h
+include\plugin_signature.h

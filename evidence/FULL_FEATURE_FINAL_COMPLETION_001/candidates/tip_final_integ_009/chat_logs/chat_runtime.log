@@ -1,0 +1,41 @@
+SESSION_OPEN session_id=sid_0000AD58_00000000044D8AEF run_id=run_unset pid=44376
+INPUT_EVENT kind=ENTER_NEWLINE path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D8AEF run_id=run_unset
+INPUT_EVENT kind=ENTER_NEWLINE path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D8DFC run_id=run_unset
+INPUT_EVENT kind=ENTER_NEWLINE path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D90CB run_id=run_unset
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000AD58_00000000044D92FD run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000007AE05C0 session=1 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+SESSION_OPEN session_id=sid_0000AD58_00000000044D932C run_id=run_unset pid=44376
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000AD58_00000000044D95AD run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000007AE05C0 session=1 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D95DC run_id=run_unset
+DISPATCH_ID id=2 bytes=16 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=16 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=2 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+BACKEND_REQUEST_START request_id=1 dispatch_id=2 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=1 session=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+cancel_requested request_id=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+BACKEND_REQUEST_END request_id=1 cancel=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000AD58_00000000044D9B3B run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000007AE05C0 session=1 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D9B5A run_id=run_unset
+DISPATCH_ID id=3 bytes=10 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=3 send_seq=3 bytes=10 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=3 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+BACKEND_REQUEST_START request_id=2 dispatch_id=3 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+request_started request_id=2 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=3 send_seq=3 request_id=2 session=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=HELD_KEY_REPEAT_SUPPRESSED path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D9B79 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=HELD_KEY_REPEAT_SUPPRESSED path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D9B98 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=HELD_KEY_REPEAT_SUPPRESSED path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D9BB8 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=HELD_KEY_REPEAT_SUPPRESSED path=AIM_GETMESSAGE_WM_KEYDOWN session_id=sid_0000AD58_00000000044D9BD7 run_id=run_unset
+cancel_requested request_id=2 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+BACKEND_REQUEST_END request_id=2 cancel=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+cancel_acknowledged request_id=2 active_after=0 worker_joinable=0 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001800EEA session=1 pane=copilot_sidebar session_id=sid_0000AD58_00000000044DA00D run_id=run_unset
+DISPATCH_ID id=4 bytes=12 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=12 session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=4 pane=copilot_sidebar session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+BACKEND_REQUEST_START request_id=3 dispatch_id=4 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+request_started request_id=3 model=bigdaddyg-productivity-local:latest session_id=sid_0000AD58_00000000044D932C run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=3 session=1 session_id=sid_0000AD58_00000000044D932C run_id=run_unset

@@ -1,0 +1,55 @@
+{
+  "id": "RAWRXD_CANONICAL_INTEGRATION_001",
+  "recorded": "2026-10-26",
+  "SOURCE_COMMIT": "e303f447553d223764d77d5729ad7e0a101edd40",
+  "SOURCE_BRANCH": "fix/deep2-multimodel-safety-20261025",
+  "SOURCE_DIR": "F:\\rawrxd",
+  "SOURCE_DIRTY": true,
+  "SOURCE_TREE_FINGERPRINT": "STATUS_PORCELAIN_SHA256=9DC4B10A82F2C4072C787CF0DBBBA9FE880C47BDD984463C100B3433BBD97897",
+  "SOURCE_DIRTY_STATUS_LINES": 290,
+  "BUILD_CONFIG": "NOT_RUN. Required backend is the in-tree from-scratch assembler and PE writer. Existing IDE executables were produced by MSVC through CMake. The IDE toolchain bridge falls back to ml64.exe and link.exe. No canonical executable was linked for this receipt.",
+  "TOOLCHAIN": {
+    "required": "from_scratch_no_external_deps",
+    "location": "G:\\~dev\\rawrxd\\toolchain\\from_scratch",
+    "toolchain_tree_commit": "183c313d4c1ec0e1cba69897b97fbca8444da7f3",
+    "toolchain_tree_branch": "feature/ide-agentic-product-path-20261026",
+    "present_in_F_source": false,
+    "pe_writer": "phase2_linker/pe_writer.c emits one PE image with one imported function, kernel32.dll!ExitProcess",
+    "bridge_assembleCustom": "parser incomplete; falls back to ml64.exe",
+    "bridge_linkCustom": "compiled only when RAWRXD_FROM_SCRATCH_TOOLCHAIN is set; merge context is passed as null",
+    "agents_and_models_linked_by_from_scratch": "NOT_RUN"
+  },
+  "PRIOR_BINARIES": {
+    "crashfix_ide": {
+      "path": "F:\\rawrxd\\build_crashfix_verify\\bin\\RawrXD-Win32IDE-Native.exe",
+      "sha256": "8DE8EC7E172FE30A2785F54075EC0CC8BA8EA9705B62BAD015866F3B44FA8710",
+      "bytes": 5609984,
+      "written": "2026-10-25T14:27:07-04:00",
+      "built_from": "04fafaa56d"
+    },
+    "build_ide": {
+      "path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+      "sha256": "0AE84A16263ABCD69DCD423BA53BB4A2AA97B5A7D4B1EFD4512FC2BD52F3ABCE",
+      "bytes": 1491968,
+      "written": "2026-10-26T02:24:00-04:00"
+    },
+    "qwen_receipt_ide_sha256": "9CB5DA9A145F9D3C302B100C46DCBAD0BADF576C359BF3316B429C9665F1A53A",
+    "qwen_receipt_ide_matches_current_files": false
+  },
+  "IDE_SHA256": null,
+  "REAP_ADMISSION_NEGATIVE": "NOT_RUN",
+  "REAP_REFERENCE_PARITY": "NOT_RUN",
+  "REAP_WRITER_ROUNDTRIP": "NOT_RUN",
+  "QWEN_6_TOKEN_PROBE": "PREVIOUS_EVIDENCE",
+  "QWEN_6_TOKEN_PROBE_BINARIES": {
+    "qwen_cpu_probe_sha256": "090E828AFD4FCA7554FD9786AC16B13DAB8774C6755723CB438E3032EF14D537",
+    "qwen_generate_probe_sha256": "C8CCB8A367A6AF53451D3348C8CCAF2C6B097672EDF13945FEB48688D7923D59",
+    "note": "Separate probe executables. Not either IDE executable."
+  },
+  "QWEN_REFERENCE_PARITY": "NOT_RUN",
+  "QWEN_SUSTAINED_DECODE": "NOT_RUN",
+  "QWEN_IDE_INTEGRATION": "NOT_RUN",
+  "MULTISHARD_STREAM_GUARD": "NOT_RUN",
+  "STREAM_TOKEN_CALLBACKS": "NOT_RUN",
+  "PROMOTE": 0
+}

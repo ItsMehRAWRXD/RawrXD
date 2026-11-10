@@ -1,0 +1,14 @@
+
+RawrXD Local Agent
+Model:   flint:latest
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+Source contents:
+
+```cpp
+int main(){return 0;}
+```
+
+RAWRXD_AGENT_READ_PASS=1

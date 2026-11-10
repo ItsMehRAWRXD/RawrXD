@@ -1,0 +1,7 @@
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=12
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=8
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=12
+CHAT_SEND_BUSY dispatch_id=2 send_seq=2 dispatched=0
+CHAT_SEND_ATTEMPT dispatch_id=3 send_seq=3 bytes=12
+CHAT_SEND_BUSY dispatch_id=3 send_seq=3 dispatched=0

@@ -1,0 +1,65 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt
+  audit_probe.cpp
+  QuantParityRegistry.cpp
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(25,16): error C2065: 'Primitive': undeclared identifier [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(25,10): error C2923: 'std::array': 'Primitive' is not a valid template type argument for parameter '_Ty' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(25,16):
+      see declaration of 'Primitive'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(25,31): error C2955: 'std::array': use of class template requires template argument list [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\array(402,7):
+      see declaration of 'std::array'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(27,16): error C2065: 'Primitive': undeclared identifier [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(27,10): error C2923: 'std::array': 'Primitive' is not a valid template type argument for parameter '_Ty' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(27,16):
+      see declaration of 'Primitive'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(27,30): error C2955: 'std::array': use of class template requires template argument list [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\array(402,7):
+      see declaration of 'std::array'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(29,16): error C2065: 'Primitive': undeclared identifier [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(29,10): error C2923: 'std::array': 'Primitive' is not a valid template type argument for parameter '_Ty' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(29,16):
+      see declaration of 'Primitive'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(29,30): error C2955: 'std::array': use of class template requires template argument list [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\array(402,7):
+      see declaration of 'std::array'
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(31,15): error C3646: 'firstUnimplementedPrimitive': unknown override specifier [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(31,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(41,5): error C7560: 'unimplementedPrimitives': designators must appear in member declaration order of class 'RawrXD::Deep2::Generated::CapabilityManifest' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(43,5): error C7559: 'firstUnimplementedPrimitive': designator does not name a direct non-static data member of type 'const RawrXD::Deep2::Generated::CapabilityManifest' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(40,5): error C2078: too many initializers [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+  
+F:\rawrxd\evidence\FULL_IDE\gate2_provenance\audit_probe.cpp(15,169): error C2039: 'firstUnimplementedPrimitive': is not a member of 'RawrXD::Deep2::Generated::CapabilityManifest' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+      F:\rawrxd\src\deep2\modelgenie\CapabilityManifest.generated.hpp(24,8):
+      see declaration of 'RawrXD::Deep2::Generated::CapabilityManifest'
+  
+  Generating Code...

@@ -1,0 +1,55 @@
+LIFECYCLE_PHASE=construct
+LIFECYCLE_PHASE=initialize_begin
+[DEBUG] Key[0] start_pos=24
+[DEBUG] Key[0]=general.architecture key_start=24 key_end=52
+[DEBUG] Metadata key[0]=general.architecture
+[DEBUG] Key[0] value_type=8 pos=56
+[DEBUG] Key[0] value=llama val_start=56 val_end=69
+[DEBUG] Key[1] start_pos=69
+[DEBUG] Key[1]=general.file_type key_start=69 key_end=94
+[DEBUG] Metadata key[1]=general.file_type
+[DEBUG] Key[1] value_type=4 pos=98
+[DEBUG] Key[2] start_pos=102
+[DEBUG] Key[2]=tokenizer.ggml.tokens key_start=102 key_end=131
+[DEBUG] Metadata key[2]=tokenizer.ggml.tokens
+[DEBUG] Key[2] value_type=9 pos=135
+[DEBUG] Key[3] start_pos=1161
+[DEBUG] Key[3]=tokenizer.ggml.token_type key_start=1161 key_end=1194
+[DEBUG] Metadata key[3]=tokenizer.ggml.token_type
+[DEBUG] Key[3] value_type=9 pos=1198
+[DEBUG] Key[4] start_pos=1466
+[DEBUG] Key[4]=llama.context_length key_start=1466 key_end=1494
+[DEBUG] Metadata key[4]=llama.context_length
+[DEBUG] Key[4] value_type=4 pos=1498
+[DEBUG] Key[5] start_pos=1502
+[DEBUG] Key[5]=llama.embedding_length key_start=1502 key_end=1532
+[DEBUG] Metadata key[5]=llama.embedding_length
+[DEBUG] Key[5] value_type=4 pos=1536
+[DEBUG] Key[6] start_pos=1540
+[DEBUG] Key[6]=llama.block_count key_start=1540 key_end=1565
+[DEBUG] Metadata key[6]=llama.block_count
+[DEBUG] Key[6] value_type=4 pos=1569
+[DEBUG] Key[7] start_pos=1573
+[DEBUG] Key[7]=llama.feed_forward_length key_start=1573 key_end=1606
+[DEBUG] Metadata key[7]=llama.feed_forward_length
+[DEBUG] Key[7] value_type=4 pos=1610
+[DEBUG] Key[8] start_pos=1614
+[DEBUG] Key[8]=llama.attention.head_count key_start=1614 key_end=1648
+[DEBUG] Metadata key[8]=llama.attention.head_count
+[DEBUG] Key[8] value_type=4 pos=1652
+[DEBUG] Key[9] start_pos=1656
+[DEBUG] Key[9]=llama.attention.head_count_kv key_start=1656 key_end=1693
+[DEBUG] Metadata key[9]=llama.attention.head_count_kv
+[DEBUG] Key[9] value_type=4 pos=1697
+[DEBUG] Key[10] start_pos=1701
+[DEBUG] Key[10]=llama.attention.layer_norm_rms_epsilon key_start=1701 key_end=1747
+[DEBUG] Key[10] value_type=6 pos=1751
+[DEBUG] Key[11] start_pos=1755
+[DEBUG] Key[11]=llama.attention.rotary_embedding_scale key_start=1755 key_end=1801
+[DEBUG] Key[11] value_type=6 pos=1805
+[DEBUG] Key[12] start_pos=1809
+[DEBUG] Key[12]= key_start=1809 key_end=1817
+[DEBUG] Metadata key[12]=
+[DEBUG] Key[12] value_type=0 pos=1821
+[GGUF] metadata string extends beyond file
+❌ Failed to read tensor name at index 0 in shard 0

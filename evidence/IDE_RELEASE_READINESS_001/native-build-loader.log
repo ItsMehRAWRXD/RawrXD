@@ -1,0 +1,10 @@
+[0/2] Re-checking globbed directories...
+[1/6] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/6] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_chat_ctrl_enter_002/Release/vulkan-shaders-gen.exe
+[3/6] Completed 'vulkan-shaders-gen'
+[4/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/6] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

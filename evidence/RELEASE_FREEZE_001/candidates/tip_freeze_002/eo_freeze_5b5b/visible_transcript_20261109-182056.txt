@@ -1,0 +1,30 @@
+﻿> User: [dispatch_id=1] MAP7_CHAT_MARKER_20261109-164545 Reply with exactly one word: ok
+
+AI: ok
+
+> User: [dispatch_id=1] CHAT_E2E_20261109-165053 Reply with exactly three words: hello native chat
+
+AI: hello native chat
+
+> User: freeze-eo-send-1
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+> User: freeze-eo-busy-should-reject
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+> User: freeze-eo-send-2
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+
+AI: It looks like your message might be incomplete or unclear. Could you please clarify what you're asking for? Whether it's a technical issue, a question, or something else, I'm here to help!
+
+
+AI: It looks like you're referencing a phrase or code "freeze-eo-send-2". Could you please clarify what you're asking for? Are you looking for help with a programming concept, a meme, a command, or something else? Let me know so I can assist better!
+
+
+AI: I don't understand your input. Could you please clarify your question or provide more information? I'm here to help!
+
+

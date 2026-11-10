@@ -1,0 +1,135 @@
+ninja: Entering directory `F:\rawrxd\build_reap_corpus5'
+[1/3] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\../telemetry/DoubleBufferedHistogram.hpp(130): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\Deep2Telemetry.hpp(60): note: see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(101): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\Deep2Engine.cpp(918): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(919): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1810): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1813): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1817): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1845): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1814): warning C4189: 'kvHeads': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2270): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3291): warning C4456: declaration of 'attnLayers' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2845): note: see declaration of 'attnLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3754): warning C4458: declaration of 'weightSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1003): note: see declaration of 'Deep2::Deep2Engine::weightSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3864): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3877): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3913): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3945): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4466): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4679): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4678): warning C4189: 'diff': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4985): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5312): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6208): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6208): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6256): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6256): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6326): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6443): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6443): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6536): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6205): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6253): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6394): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6440): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7164): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7175): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7493): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7512): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7513): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7514): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7515): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7539): warning C4456: declaration of 'headDim' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7515): note: see declaration of 'headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7540): warning C4456: declaration of 'numHeads' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7513): note: see declaration of 'numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8194): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7603): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7601): warning C4189: 'attnOutSize': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7648): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7655): warning C4189: 'K_t': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7703): warning C4189: 'V_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7702): warning C4189: 'K_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7701): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7780): warning C4189: 'q': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8411): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8441): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8530): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8607): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8606): warning C4189: 'headsPerGroup': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8888): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9051): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9063): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9088): warning C4189: 'rowBytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9111): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9138): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9232): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9276): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10131): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10132): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10133): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10394): warning C4100: 'outDim': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11205): warning C4100: 'seqLen': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(666): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(711): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(835): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(866): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1105): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1193): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1257): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1323): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1390): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1449): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1496): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4594): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4617): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5554): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5559): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10618): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed
+[2/3] Linking CXX static library deep2_engine_lib.lib
+[3/3] Linking CXX executable bin-msvc\rawr-reap-replay.exe

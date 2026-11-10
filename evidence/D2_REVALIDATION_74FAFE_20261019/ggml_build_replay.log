@@ -1,0 +1,6 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  ggml-base.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-base.dll
+  ggml-cpu.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-cpu.dll
+  ggml.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml.dll

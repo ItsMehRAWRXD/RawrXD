@@ -1,0 +1,14 @@
+WAVE4_COORDINATION
+ASOF_UTC=2026-11-10T09:45:44.2905573Z
+OWNER=lifecycle_wave4
+CONTROLLING_EXT_SHA=6E59E91A2D23A3BC666345DF5168F66DDCAC1FD1C25F46A64E33773EC78A4C4C
+PACKAGE_COPY=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package\RawrXD-Win32IDE-Native-Ext.exe
+SOURCE_PACKAGE=F:\rawrxd\release\RawrXD-readiness-rc5b
+LIVE_EXT_PID_OBSERVED=15820
+POLICY=Use package copy for E2E; do not Stop-Process Wave1/CU-owned Ext unless orphan after harness
+AVOID_EDIT=Win32IDE_ComputerUse.cpp Win32IDE_AgentCommands.cpp
+EDIT_OK=ExtHostWire FileOps lifecycle NativeProfilePath agent session persistence
+NO_RC4_MUTATION=1
+PROMOTE=0
+WAVE1_PUBLISH_SHA=ABSENT
+PIN=6E59E91A successor-or-lane

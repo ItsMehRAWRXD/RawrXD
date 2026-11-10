@@ -1,0 +1,12 @@
+layer,issue,gh_state,closed_at,title,criteria_source,local_evidence_paths,local_sha_if_any,fail_closed_note
+0,39,CLOSED,2026-09-24T06:20:55Z,Deep2 GPU Engine Integration & Runtime Residency Closure,issue_39_body_DEEP2_LAYER0_FINAL_001,evidence/DEEP2_LAYER0_QUANT_FFN_RECOVERY_001; #50 isolated commits 75a302ad/1ee4a755/faac5d52/de4de28a/06d76700,provider_commits_in_issue50_body,CLOSED but #50 says integration seal pending; isolated PASS != seal
+1,40,OPEN,,Deep2 Integration & Runtime Closure,issue_40_body_acceptance_list,evidence/RAWRXD_DEEP2_RUNTIME_*; RAWRXD_DEEP2_FULL_FORWARD_001; DEEP2_ONE_TOKEN_PONG,,OPEN; no RC4 same-SHA credit
+2,41,OPEN,,GPU/Runtime Execution Closure,issue_41_body_verbatim_criteria,evidence/RAWRXD_VULKAN_*; DEEP2_GPU_*; DUAL_GPU_FORWARD_*,RC4_G08=NOT_RUN_on_78E187,OPEN; criteria from body only
+3,42,OPEN,,Agent Reasoning + Tool Authority,issue_42_body_verbatim_criteria,evidence/AGENT_TOOL_*; T15_DIRECT_TOOL_*; RAWRXD_NATIVE_AGENT_COMPAT_001; rc4_runtime_001 CU+agent FAIL,RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596,Wave1 primary; STANDALONE_BRIDGE_CREDIT=0
+4,43,OPEN,,Autonomous Edit/Build/Test Loop,issue_43_body,evidence/rawr_autonomous_repair; deep2_autonomous_repair; AGENT_E2E_*; RELEASE_FREEZE_001 Issue49,35C22E8AAFC1E9B30E40C2505AF7B4DEB66BDFB73D56B75D31C937D8C70D8563_historical,Historical 35C22 != RC4
+5,44,OPEN,,Multi-Agent / Dual-GPU Orchestration,issue_44_body,evidence/DUAL_GPU_FORWARD_*; RAWRXD_MULTI_MODEL_AGENTIC_001,,OPEN; no RC4 multi-agent
+6,45,OPEN,,IDE Surface Completion,issue_45_body,evidence/FULL_FEATURE_*; FULL_IDE; IDE_RELEASE_READINESS_001,RC4_G02_PASS_78E187,Partial RC4 UI/chat only
+7,46,OPEN,,Product/Repository Convergence,issue_46_body,evidence/SOURCE_AUTHORITY_RECONCILIATION_001; RAWRXD_CANONICAL_INTEGRATION_*,,OPEN
+8,47,OPEN,,CI/Release Authority,issue_47_body,evidence/RELEASE_FREEZE_001; PRODUCT_BINARY_SEAL_001; IDE_RELEASE_READINESS_001 G13,RC4_package_integrity_PASS,OPEN; I57 A01 runner obligation
+9,48,OPEN,,Performance Closure,issue_48_body,evidence/S07_*; DEEP2_STRATA_TPS_PARITY_001; gpu_recovery_perf_20261020,,OPEN; RC4 G08 NOT_RUN
+10,49,OPEN,,Product-Final Acceptance,issue_49_body_final_receipt,evidence/RELEASE_FREEZE_001; IDE_RELEASE_READINESS_001/rc4_runtime_001,RC4_SHA=78E187...; 35C22 historical,Product-final NOT established on RC4

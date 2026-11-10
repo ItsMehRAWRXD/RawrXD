@@ -1,0 +1,167 @@
+LIFECYCLE_PHASE=construct
+LIFECYCLE_PHASE=initialize_begin
+[DEBUG] Key[0] start_pos=24
+[DEBUG] Key[0]=general.architecture key_start=24 key_end=52
+[DEBUG] Metadata key[0]=general.architecture
+[DEBUG] Key[0] value_type=8 pos=56
+[DEBUG] Key[0] value=qwen2 val_start=56 val_end=69
+[DEBUG] Key[1] start_pos=69
+[DEBUG] Key[1]=general.type key_start=69 key_end=89
+[DEBUG] Metadata key[1]=general.type
+[DEBUG] Key[1] value_type=8 pos=93
+[DEBUG] Key[1] value=model val_start=93 val_end=106
+[DEBUG] Key[2] start_pos=106
+[DEBUG] Key[2]=general.name key_start=106 key_end=126
+[DEBUG] Metadata key[2]=general.name
+[DEBUG] Key[2] value_type=8 pos=130
+[DEBUG] Key[2] value=Qwen2.5 Coder 1.5B val_start=130 val_end=156
+[DEBUG] Key[3] start_pos=156
+[DEBUG] Key[3]=general.basename key_start=156 key_end=180
+[DEBUG] Metadata key[3]=general.basename
+[DEBUG] Key[3] value_type=8 pos=184
+[DEBUG] Key[3] value=Qwen2.5-Coder val_start=184 val_end=205
+[DEBUG] Key[4] start_pos=205
+[DEBUG] Key[4]=general.size_label key_start=205 key_end=231
+[DEBUG] Metadata key[4]=general.size_label
+[DEBUG] Key[4] value_type=8 pos=235
+[DEBUG] Key[4] value=1.5B val_start=235 val_end=247
+[DEBUG] Key[5] start_pos=247
+[DEBUG] Key[5]=general.license key_start=247 key_end=270
+[DEBUG] Metadata key[5]=general.license
+[DEBUG] Key[5] value_type=8 pos=274
+[DEBUG] Key[5] value=apache-2.0 val_start=274 val_end=292
+[DEBUG] Key[6] start_pos=292
+[DEBUG] Key[6]=general.license.link key_start=292 key_end=320
+[DEBUG] Metadata key[6]=general.license.link
+[DEBUG] Key[6] value_type=8 pos=324
+[DEBUG] Key[6] value=https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B/blo val_start=324 val_end=396
+[DEBUG] Key[7] start_pos=396
+[DEBUG] Key[7]=general.base_model.count key_start=396 key_end=428
+[DEBUG] Metadata key[7]=general.base_model.count
+[DEBUG] Key[7] value_type=4 pos=432
+[DEBUG] Key[8] start_pos=436
+[DEBUG] Key[8]=general.base_model.0.name key_start=436 key_end=469
+[DEBUG] Metadata key[8]=general.base_model.0.name
+[DEBUG] Key[8] value_type=8 pos=473
+[DEBUG] Key[8] value=Qwen2.5 1.5B val_start=473 val_end=493
+[DEBUG] Key[9] start_pos=493
+[DEBUG] Key[9]=general.base_model.0.organization key_start=493 key_end=534
+[DEBUG] Metadata key[9]=general.base_model.0.organization
+[DEBUG] Key[9] value_type=8 pos=538
+[DEBUG] Key[9] value=Qwen val_start=538 val_end=550
+[DEBUG] Key[10] start_pos=550
+[DEBUG] Key[10]=general.base_model.0.repo_url key_start=550 key_end=587
+[DEBUG] Key[10] value_type=8 pos=591
+[DEBUG] Key[10] value=https://huggingface.co/Qwen/Qwen2.5-1.5B val_start=591 val_end=639
+[DEBUG] Key[11] start_pos=639
+[DEBUG] Key[11]=general.tags key_start=639 key_end=659
+[DEBUG] Key[11] value_type=9 pos=663
+[DEBUG] Key[12] start_pos=756
+[DEBUG] Key[12]=general.languages key_start=756 key_end=781
+[DEBUG] Key[12] value_type=9 pos=785
+[DEBUG] Key[13] start_pos=807
+[DEBUG] Key[13]=qwen2.block_count key_start=807 key_end=832
+[DEBUG] Key[13] value_type=4 pos=836
+[DEBUG] Key[14] start_pos=840
+[DEBUG] Key[14]=qwen2.context_length key_start=840 key_end=868
+[DEBUG] Key[14] value_type=4 pos=872
+[DEBUG] Key[15] start_pos=876
+[DEBUG] Key[15]=qwen2.embedding_length key_start=876 key_end=906
+[DEBUG] Key[15] value_type=4 pos=910
+[DEBUG] Key[16] start_pos=914
+[DEBUG] Key[16]=qwen2.feed_forward_length key_start=914 key_end=947
+[DEBUG] Key[16] value_type=4 pos=951
+[DEBUG] Key[17] start_pos=955
+[DEBUG] Key[17]=qwen2.attention.head_count key_start=955 key_end=989
+[DEBUG] Key[17] value_type=4 pos=993
+[DEBUG] Key[18] start_pos=997
+[DEBUG] Key[18]=qwen2.attention.head_count_kv key_start=997 key_end=1034
+[DEBUG] Key[18] value_type=4 pos=1038
+[DEBUG] Key[19] start_pos=1042
+[DEBUG] Key[19]=qwen2.rope.freq_base key_start=1042 key_end=1070
+[DEBUG] Key[19] value_type=6 pos=1074
+[DEBUG] Key[20] start_pos=1078
+[DEBUG] Key[20]=qwen2.attention.layer_norm_rms_epsilon key_start=1078 key_end=1124
+[DEBUG] Key[20] value_type=6 pos=1128
+[DEBUG] Key[21] start_pos=1132
+[DEBUG] Key[21]=general.file_type key_start=1132 key_end=1157
+[DEBUG] Key[21] value_type=4 pos=1161
+[DEBUG] Key[22] start_pos=1165
+[DEBUG] Key[22]=tokenizer.ggml.model key_start=1165 key_end=1193
+[DEBUG] Key[22] value_type=8 pos=1197
+[DEBUG] Key[22] value=gpt2 val_start=1197 val_end=1209
+[DEBUG] Key[23] start_pos=1209
+[DEBUG] Key[23]=tokenizer.ggml.pre key_start=1209 key_end=1235
+[DEBUG] Key[23] value_type=8 pos=1239
+[DEBUG] Key[23] value=qwen2 val_start=1239 val_end=1252
+[DEBUG] Key[24] start_pos=1252
+[DEBUG] Key[24]=tokenizer.ggml.tokens key_start=1252 key_end=1281
+[DEBUG] Key[24] value_type=9 pos=1285
+[DEBUG] Key[25] start_pos=2589543
+[DEBUG] Key[25]=tokenizer.ggml.token_type key_start=2589543 key_end=2589576
+[DEBUG] Key[25] value_type=9 pos=2589580
+[DEBUG] Key[26] start_pos=3197336
+[DEBUG] Key[26]=tokenizer.ggml.merges key_start=3197336 key_end=3197365
+[DEBUG] Key[26] value_type=9 pos=3197369
+[DEBUG] Key[27] start_pos=5928929
+[DEBUG] Key[27]=tokenizer.ggml.eos_token_id key_start=5928929 key_end=5928964
+[DEBUG] Key[27] value_type=4 pos=5928968
+[DEBUG] Key[28] start_pos=5928972
+[DEBUG] Key[28]=tokenizer.ggml.padding_token_id key_start=5928972 key_end=5929011
+[DEBUG] Key[28] value_type=4 pos=5929015
+[DEBUG] Key[29] start_pos=5929019
+[DEBUG] Key[29]=tokenizer.ggml.bos_token_id key_start=5929019 key_end=5929054
+[DEBUG] Key[29] value_type=4 pos=5929058
+[DEBUG] Key[30] start_pos=5929062
+[DEBUG] Key[30]=tokenizer.ggml.add_bos_token key_start=5929062 key_end=5929098
+[DEBUG] Key[30] value_type=7 pos=5929102
+[DEBUG] Key[31] start_pos=5929103
+[DEBUG] Key[31]=tokenizer.chat_template key_start=5929103 key_end=5929134
+[DEBUG] Key[31] value_type=8 pos=5929138
+[DEBUG] Key[31] value={%- if tools %}
+    {{- '<|im_start|>system\n' }}
+ val_start=5929138 val_end=5931653
+[DEBUG] Key[32] start_pos=5931653
+[DEBUG] Key[32]=general.quantization_version key_start=5931653 key_end=5931689
+[DEBUG] Metadata key[32]=general.quantization_version
+[DEBUG] Key[32] value_type=4 pos=5931693
+[GGUF] shard 0 tensors=338 data_start=5950976 file_size=986048512
+[ZONE_ASSIGN_START] tensor_index_size=338
+[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: 'layers_0'
+MULTISHARD_SHARDS_INDEXED=1/1
+MULTISHARD_TENSORS_INDEXED=338
+MULTISHARD_DUPLICATES=0
+[LOAD] index_size=338
+[TENSOR_LOOKUP_FAIL] name=output.weight len=13 index_size=338 loader=000001C615752200
+[INDEX_CANDIDATE] name=blk.0.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.1.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.10.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.11.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.12.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.13.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.14.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.15.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.16.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.17.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.18.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.19.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.2.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.20.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.21.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.22.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.23.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.24.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.25.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.26.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.27.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.3.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.4.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.5.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.6.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.7.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.8.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.9.attn_norm.weight len=22
+[GGUF] GetTensorInfo not found: output.weight (index size=338)
+[CPUInferenceEngine] using tied token_embd.weight as output projection
+LIFECYCLE_PHASE=initialize_complete
+LIFECYCLE_PHASE=request_0_begin

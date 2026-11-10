@@ -1,0 +1,122 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml-base.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml.lib
+  Win32IDE.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(5247,31): error C2679: binary '=': no operator found which takes a right-hand operand of type 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' (or there is no acceptable conversion) [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3476,17):
+      could be 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &)'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5247,31):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &)': cannot convert argument 2 from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+              Reason: cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3362,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::nullptr_t) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5247,31):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::nullptr_t) noexcept': cannot convert argument 2 from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::nullptr_t'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3413,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &&) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+          'initializing': cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &&'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+              Reason: cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5247,83):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3406,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5247,31):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3403,9):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      F:\rawrxd\src\win32app\Win32IDE.cpp(5247,31):
+      while trying to match the argument list '(std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>, std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>)'
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(5248,10): error C2679: binary '=': no operator found which takes a right-hand operand of type 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' (or there is no acceptable conversion) [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3476,17):
+      could be 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &)'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5248,10):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &)': cannot convert argument 2 from 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' to 'const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+              Reason: cannot convert from 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' to 'const std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3362,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::nullptr_t) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5248,10):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::nullptr_t) noexcept': cannot convert argument 2 from 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' to 'std::nullptr_t'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3413,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &&) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+          'initializing': cannot convert from 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' to 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &&'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+              Reason: cannot convert from 'std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>' to 'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>'
+              F:\rawrxd\src\win32app\Win32IDE.cpp(5248,61):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3406,30):
+      or       'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept'
+          F:\rawrxd\src\win32app\Win32IDE.cpp(5248,10):
+          'std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>> &std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3403,9):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      F:\rawrxd\src\win32app\Win32IDE.cpp(5248,10):
+      while trying to match the argument list '(std::unique_ptr<IGGUFLoader,std::default_delete<IGGUFLoader>>, std::unique_ptr<RawrXD::GGUFLoader,std::default_delete<RawrXD::GGUFLoader>>)'
+  
+  Win32IDE_AgentCommands.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+  Win32IDE_AgenticBridge.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgenticBridge.cpp')
+  
+  Win32IDE_Commands.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Commands.cpp')
+  
+  Win32IDE_Debugger.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Debugger.cpp')
+  
+  Win32IDE_FileOps.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_FileOps.cpp')
+  
+  Win32IDE_Logger.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Logger.cpp')
+  
+  Win32IDE_PowerShell.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_PowerShell.cpp')
+  
+  Win32IDE_PowerShellPanel.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+  Win32IDE_Sidebar.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Sidebar.cpp')
+  
+  Win32IDE_VSCodeUI.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+  Win32IDE_lifecycle.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_lifecycle.cpp')
+  
+  main_win32.cpp
+F:\rawrxd\src\win32app\Win32IDE.h(1,1): warning C4335: Mac file format detected: please convert the source file to either DOS or UNIX format [F:\rawrxd\evidence\FULL_IDE\production_build\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/main_win32.cpp')
+  
+  Generating Code...

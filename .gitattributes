@@ -1,0 +1,3 @@
+
+# Source snapshot: payloads are regular Git blobs, not LFS dependencies.
+* -filter

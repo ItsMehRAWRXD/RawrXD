@@ -1,0 +1,150 @@
+[DEBUG] Key[0] start_pos=24
+[DEBUG] Key[0]=general.architecture key_start=24 key_end=52
+[DEBUG] Metadata key[0]=general.architecture
+[DEBUG] Key[0] value_type=8 pos=56
+[DEBUG] Key[0] value=qwen2 val_start=56 val_end=69
+[DEBUG] Key[1] start_pos=69
+[DEBUG] Key[1]=general.type key_start=69 key_end=89
+[DEBUG] Metadata key[1]=general.type
+[DEBUG] Key[1] value_type=8 pos=93
+[DEBUG] Key[1] value=model val_start=93 val_end=106
+[DEBUG] Key[2] start_pos=106
+[DEBUG] Key[2]=general.name key_start=106 key_end=126
+[DEBUG] Metadata key[2]=general.name
+[DEBUG] Key[2] value_type=8 pos=130
+[DEBUG] Key[2] value=Qwen2.5 Coder 7B Instruct val_start=130 val_end=163
+[DEBUG] Key[3] start_pos=163
+[DEBUG] Key[3]=general.finetune key_start=163 key_end=187
+[DEBUG] Metadata key[3]=general.finetune
+[DEBUG] Key[3] value_type=8 pos=191
+[DEBUG] Key[3] value=Instruct val_start=191 val_end=207
+[DEBUG] Key[4] start_pos=207
+[DEBUG] Key[4]=general.basename key_start=207 key_end=231
+[DEBUG] Metadata key[4]=general.basename
+[DEBUG] Key[4] value_type=8 pos=235
+[DEBUG] Key[4] value=Qwen2.5-Coder val_start=235 val_end=256
+[DEBUG] Key[5] start_pos=256
+[DEBUG] Key[5]=general.size_label key_start=256 key_end=282
+[DEBUG] Metadata key[5]=general.size_label
+[DEBUG] Key[5] value_type=8 pos=286
+[DEBUG] Key[5] value=7B val_start=286 val_end=296
+[DEBUG] Key[6] start_pos=296
+[DEBUG] Key[6]=general.license key_start=296 key_end=319
+[DEBUG] Metadata key[6]=general.license
+[DEBUG] Key[6] value_type=8 pos=323
+[DEBUG] Key[6] value=apache-2.0 val_start=323 val_end=341
+[DEBUG] Key[7] start_pos=341
+[DEBUG] Key[7]=general.license.link key_start=341 key_end=369
+[DEBUG] Metadata key[7]=general.license.link
+[DEBUG] Key[7] value_type=8 pos=373
+[DEBUG] Key[7] value=https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instr val_start=373 val_end=452
+[DEBUG] Key[8] start_pos=452
+[DEBUG] Key[8]=general.base_model.count key_start=452 key_end=484
+[DEBUG] Metadata key[8]=general.base_model.count
+[DEBUG] Key[8] value_type=4 pos=488
+[DEBUG] Key[9] start_pos=492
+[DEBUG] Key[9]=general.base_model.0.name key_start=492 key_end=525
+[DEBUG] Metadata key[9]=general.base_model.0.name
+[DEBUG] Key[9] value_type=8 pos=529
+[DEBUG] Key[9] value=Qwen2.5 Coder 7B val_start=529 val_end=553
+[DEBUG] Key[10] start_pos=553
+[DEBUG] Key[10]=general.base_model.0.organization key_start=553 key_end=594
+[DEBUG] Key[10] value_type=8 pos=598
+[DEBUG] Key[10] value=Qwen val_start=598 val_end=610
+[DEBUG] Key[11] start_pos=610
+[DEBUG] Key[11]=general.base_model.0.repo_url key_start=610 key_end=647
+[DEBUG] Key[11] value_type=8 pos=651
+[DEBUG] Key[11] value=https://huggingface.co/Qwen/Qwen2.5-Coder-7B val_start=651 val_end=703
+[DEBUG] Key[12] start_pos=703
+[DEBUG] Key[12]=general.tags key_start=703 key_end=723
+[DEBUG] Key[12] value_type=9 pos=727
+[DEBUG] Key[13] start_pos=832
+[DEBUG] Key[13]=general.languages key_start=832 key_end=857
+[DEBUG] Key[13] value_type=9 pos=861
+[DEBUG] Key[14] start_pos=883
+[DEBUG] Key[14]=qwen2.block_count key_start=883 key_end=908
+[DEBUG] Key[14] value_type=4 pos=912
+[DEBUG] Key[15] start_pos=916
+[DEBUG] Key[15]=qwen2.context_length key_start=916 key_end=944
+[DEBUG] Key[15] value_type=4 pos=948
+[DEBUG] Key[16] start_pos=952
+[DEBUG] Key[16]=qwen2.embedding_length key_start=952 key_end=982
+[DEBUG] Key[16] value_type=4 pos=986
+[DEBUG] Key[17] start_pos=990
+[DEBUG] Key[17]=qwen2.feed_forward_length key_start=990 key_end=1023
+[DEBUG] Key[17] value_type=4 pos=1027
+[DEBUG] Key[18] start_pos=1031
+[DEBUG] Key[18]=qwen2.attention.head_count key_start=1031 key_end=1065
+[DEBUG] Key[18] value_type=4 pos=1069
+[DEBUG] Key[19] start_pos=1073
+[DEBUG] Key[19]=qwen2.attention.head_count_kv key_start=1073 key_end=1110
+[DEBUG] Key[19] value_type=4 pos=1114
+[DEBUG] Key[20] start_pos=1118
+[DEBUG] Key[20]=qwen2.rope.freq_base key_start=1118 key_end=1146
+[DEBUG] Key[20] value_type=6 pos=1150
+[DEBUG] Key[21] start_pos=1154
+[DEBUG] Key[21]=qwen2.attention.layer_norm_rms_epsilon key_start=1154 key_end=1200
+[DEBUG] Key[21] value_type=6 pos=1204
+[DEBUG] Key[22] start_pos=1208
+[DEBUG] Key[22]=general.file_type key_start=1208 key_end=1233
+[DEBUG] Key[22] value_type=4 pos=1237
+[DEBUG] Key[23] start_pos=1241
+[DEBUG] Key[23]=tokenizer.ggml.model key_start=1241 key_end=1269
+[DEBUG] Key[23] value_type=8 pos=1273
+[DEBUG] Key[23] value=gpt2 val_start=1273 val_end=1285
+[DEBUG] Key[24] start_pos=1285
+[DEBUG] Key[24]=tokenizer.ggml.pre key_start=1285 key_end=1311
+[DEBUG] Key[24] value_type=8 pos=1315
+[DEBUG] Key[24] value=qwen2 val_start=1315 val_end=1328
+[DEBUG] Key[25] start_pos=1328
+[DEBUG] Key[25]=tokenizer.ggml.tokens key_start=1328 key_end=1357
+[DEBUG] Key[25] value_type=9 pos=1361
+[DEBUG] Key[26] start_pos=2592051
+[DEBUG] Key[26]=tokenizer.ggml.token_type key_start=2592051 key_end=2592084
+[DEBUG] Key[26] value_type=9 pos=2592088
+[DEBUG] Key[27] start_pos=3200356
+[DEBUG] Key[27]=tokenizer.ggml.merges key_start=3200356 key_end=3200385
+[DEBUG] Key[27] value_type=9 pos=3200389
+[DEBUG] Key[28] start_pos=5931949
+[DEBUG] Key[28]=tokenizer.ggml.eos_token_id key_start=5931949 key_end=5931984
+[DEBUG] Key[28] value_type=4 pos=5931988
+[DEBUG] Key[29] start_pos=5931992
+[DEBUG] Key[29]=tokenizer.ggml.padding_token_id key_start=5931992 key_end=5932031
+[DEBUG] Key[29] value_type=4 pos=5932035
+[DEBUG] Key[30] start_pos=5932039
+[DEBUG] Key[30]=tokenizer.ggml.bos_token_id key_start=5932039 key_end=5932074
+[DEBUG] Key[30] value_type=4 pos=5932078
+[DEBUG] Key[31] start_pos=5932082
+[DEBUG] Key[31]=tokenizer.ggml.add_bos_token key_start=5932082 key_end=5932118
+[DEBUG] Key[31] value_type=7 pos=5932122
+[DEBUG] Key[32] start_pos=5932123
+[DEBUG] Key[32]=tokenizer.chat_template key_start=5932123 key_end=5932154
+[DEBUG] Key[32] value_type=8 pos=5932158
+[DEBUG] Key[32] value={%- if tools %}
+    {{- '<|im_start|>system\n' }}
+ val_start=5932158 val_end=5934673
+[DEBUG] Key[33] start_pos=5934673
+[DEBUG] Key[33]=general.quantization_version key_start=5934673 key_end=5934709
+[DEBUG] Key[33] value_type=4 pos=5934713
+[DEBUG] Key[34] start_pos=5934717
+[DEBUG] Key[34]=quantize.imatrix.file key_start=5934717 key_end=5934746
+[DEBUG] Key[34] value_type=8 pos=5934750
+[DEBUG] Key[34] value=/models_out/Qwen2.5-Coder-7B-Instruct-GGUF/Qwen2.5 val_start=5934750 val_end=5934834
+[DEBUG] Key[35] start_pos=5934834
+[DEBUG] Key[35]=quantize.imatrix.dataset key_start=5934834 key_end=5934866
+[DEBUG] Key[35] value_type=8 pos=5934870
+[DEBUG] Key[35] value=/training_dir/calibration_datav3.txt val_start=5934870 val_end=5934914
+[DEBUG] Key[36] start_pos=5934914
+[DEBUG] Key[36]=quantize.imatrix.entries_count key_start=5934914 key_end=5934952
+[DEBUG] Key[36] value_type=5 pos=5934956
+[DEBUG] Key[37] start_pos=5934960
+[DEBUG] Key[37]=quantize.imatrix.chunks_count key_start=5934960 key_end=5934997
+[DEBUG] Metadata key[37]=quantize.imatrix.chunks_count
+[DEBUG] Key[37] value_type=5 pos=5935001
+[GGUF] shard 0 tensors=339 data_start=5954336 file_size=4683074336
+[ZONE_ASSIGN_START] tensor_index_size=339
+[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: 'layers_0'
+MULTISHARD_SHARDS_INDEXED=1/1
+MULTISHARD_TENSORS_INDEXED=339
+MULTISHARD_DUPLICATES=0
+[LOAD] index_size=339

@@ -1,0 +1,46 @@
+SESSION_OPEN session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636 pid=24292
+cancel_requested request_id=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+cancel_acknowledged request_id=0 active_after=0 worker_joinable=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=llama3.1:8b workspace=F:\rawrxd
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=111
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-2 session_identity=2 model=llama3.1:8b workspace=F:\rawrxd
+REQUEST_DISPATCH_CORRELATED dispatch_id=2 session_identity=2 request_id=2 agentic_chat_session=1 task_bytes=90
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-170636 run_id=integ_session_loop_run_20261109-170636

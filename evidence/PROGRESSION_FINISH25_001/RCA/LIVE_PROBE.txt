@@ -1,0 +1,13 @@
+PID=12452
+MAIN=0x5409BC
+CHILD_ID1030 hwnd=0x3E07E8 class=SysTabControl32 count1304=12 rowcount132C=1
+TABCTRL hwnd=0x3E07E8 id=1030 class=SysTabControl32 count1304=12 rowcount132C=1 prop=True
+TABCTRL hwnd=0x390AA8 id=1005 class=SysTabControl32 count1304=5 rowcount132C=1 prop=False
+TABCTRL hwnd=0x17057C id=1301 class=SysTabControl32 count1304=4 rowcount132C=1 prop=False
+TABCTRL hwnd=0x4608BE id=1208 class=SysTabControl32 count1304=5 rowcount132C=1 prop=False
+EDITOR=0x0 class=none
+TABS_PROP=0x3E07E8
+TABS_ID=0x3E07E8
+PROP_MATCH_ID=True
+PROP_count1304=12
+PROP_rowcount132C=1

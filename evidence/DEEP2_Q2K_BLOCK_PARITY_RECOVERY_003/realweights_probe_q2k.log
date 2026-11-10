@@ -1,0 +1,31 @@
+=== RAWRXD_DEEP2_GPU_QUANT_DOT_002 (REAL GGUF WEIGHTS) ===
+model: F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+  mmap ok, 255 tensors, 1363935456 bytes
+  weights : blk.0.ffn_up.weight  Q2_K  ne=[3072,8192] block_bytes=84 row_stride=1008 rows=4
+  activation: token_embd.weight row 0 (q6_K)  (first 4: 0.0112152 0.00971985 0.0142059 0.0239258)
+  ggml_quantize_chunk(Q8_0) -> 3264 bytes (expected 3264)
+  q8 cross-check (ours vs ggml Q8_0, dequantised): max_abs=4.767e-04 rel_l2=8.826e-03  block_amax_max=0.0927734
+  (difference vs ggml Q8_0 is the expected cost of one scale
+   per 256 values instead of one fp16 scale per 32.)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+VULKAN_DEVICE=AMD Radeon AI PRO R9700
+Quant-dot pipeline initialized: quantdot
+
+Q2_K   vs A(ggml dequant + float dot): cos=+1.0000000000 rel=1.584e-07 max=1.164e-09 finite=1 PASS
+Q2_K   vs B(cpu integer-lane)      : cos=+0.0387515952 rel=1.000e+00 max=3.497e+07 finite=1 FAIL
+  first 3 gpu: 0.00367023 -0.00675001 -0.00597174
+  first 3 refA: 0.00367023 -0.00675001 -0.00597174
+VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

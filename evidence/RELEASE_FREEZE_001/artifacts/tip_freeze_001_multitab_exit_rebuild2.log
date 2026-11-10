@@ -1,0 +1,13 @@
+[0/2] Re-checking globbed directories...
+[1/6] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/6] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/.worktrees/release-freeze-001/build_release_freeze_001/Release/vulkan-shaders-gen.exe
+[3/6] Completed 'vulkan-shaders-gen'
+[4/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\.worktrees\release-freeze-001\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\.worktrees\release-freeze-001\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\.worktrees\release-freeze-001\src\agentic\tool_core.hpp(97): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[5/6] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

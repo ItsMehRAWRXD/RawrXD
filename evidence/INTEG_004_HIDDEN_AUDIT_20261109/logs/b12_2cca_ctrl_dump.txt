@@ -1,0 +1,12 @@
+id=1030 cls=SysTabControl32 vis=1 items=-999 len=0 hwnd=0x2A6082C
+id=6030 cls=SysListView32 vis=0 items=0 len=0 hwnd=0xEA0E66
+id=6043 cls=SysListView32 vis=0 items=0 len=0 hwnd=0x6890DD2
+id=6051 cls=SysListView32 vis=0 items=0 len=0 hwnd=0x2140A1E
+id=1005 cls=SysTabControl32 vis=0 items=-999 len=0 hwnd=0x6B5092C
+id=1012 cls=Edit vis=0 items=-999 len=114 hwnd=0x2160B4C
+id=1301 cls=SysTabControl32 vis=1 items=-999 len=0 hwnd=0x1ED09DA
+id=1312 cls=SysListView32 vis=1 items=3 len=0 hwnd=0xC80D80
+id=1208 cls=SysTabControl32 vis=1 items=-999 len=0 hwnd=0xCB0D36
+id=5001 cls=RichEdit20A vis=0 items=-999 len=342 hwnd=0x5390940
+id=1001 cls=RICHEDIT50W vis=1 items=-999 len=110 hwnd=0x19C0A7C
+id=0 cls=RichEdit20A vis=0 items=-999 len=886 hwnd=0x1820E26

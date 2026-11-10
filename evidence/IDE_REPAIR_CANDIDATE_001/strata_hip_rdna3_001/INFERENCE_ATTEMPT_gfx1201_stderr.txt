@@ -1,0 +1,19 @@
+﻿strata.exe : strata: gfx12 (RDNA4): exact extra switches on by default (STRATA_GFX12_DEFAULTS=0 turns them off; a 
+switch you set is kept): HEAD_MIX_MULTI
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-31caf316-dd0c-41fc-8a2d-52ff63c64628.ps1:95 char:12
++ $gen1201 = & "$eng\strata.exe" --pack "$evdir\missing_pack" --tokens  ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (strata: gfx12 (... HEAD_MIX_MULTI:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+strata: gfx12 (RDNA4): the matrix-core QSA block scorer is on once a prompt is past 28,672 tokens (+5.7% prompt speed 
+at 98K on an R9700, shorter prompts unchanged; the first-token KL against the warp kernel is 0.002 on average above 
+30K; STRATA_SELECT_WMMA=0 or STRATA_GFX12_DEFAULTS=0 turns it off)
+strata: RDNA4 (gfx12): prompt chunks of 30,000+ tokens use the chunked GDN scan (STRATA_GDN_CHUNKED=0 turns it off)
+strata: gfx12 (RDNA4): 12 exact speed switches on by default (STRATA_GFX12_DEFAULTS=0 turns them off; a switch you set 
+is kept): GDN_HEAD GDN_PP GDN_CONVL2 GDN_NOY CVEC_FUSE ATTN_LANECELL ATTN_MERGE_V2 TSUM EXPDEC SMALL_UNR GR_Q32_G 
+GR_Q8_PFS
+strata generate: GPU 0 (AMD Radeon AI PRO R9700, gfx1201) is not an architecture this Strata engine was compiled for 
+(gfx1100,gfx1101,gfx1102,gfx1151); compile it for this card (./setup.sh --backend hip, or 
+-DCMAKE_HIP_ARCHITECTURES=gfx1201, docs/AMD_HIP.md) or choose another GPU with HIP_VISIBLE_DEVICES
+

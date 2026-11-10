@@ -1,0 +1,167 @@
+I026_GETMESSAGE_MINUS1_HYPOTHESIS_001
+ASOF_UTC=2026-11-10T16:55:00Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+TIP_EXE=bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_SHA256=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+PRIOR=I026_WM_QUIT_AND_TIPEXE_DELTA_001
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+T05_LANE_SEPARATE=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_BLIND_027=1
+NO_PASS_INHERIT_FROM_H=1
+D015_SUPERSEDED=0
+TRACE_REBUILD=N
+FIX_APPLIED=N
+SEAL_J=N
+UNDEBUGGED_746_TRACE=N
+
+========================================================================
+HYPOTHESIS
+========================================================================
+H: TipExe ExitCode=-1 is caused by while(GetMessage(...)) treating
+   GetMessage==-1 as true; later exit returns msg.wParam as -1/garbage;
+   main returns (int)wParam.
+
+========================================================================
+RESULT (FAIL-CLOSED)
+========================================================================
+HYPOTHESIS=REJECTED
+SCOPE=TipExe-linked Native-Ext main message loop path
+REASON=
+  1) TipExe binds Win32IDE_lifecycle.cpp::runMessageLoop (NOT Core).
+  2) Lifecycle already fail-closes GetMessage==-1: MSG={} zero-init,
+     gm<0 -> breadcrumb "GetMessage.error", msg.wParam=0, break,
+     return static_cast<int>(msg.wParam) => 0 (NOT -1).
+  3) Product PostQuitMessage all use nExitCode=0 (I026 prior seal).
+  4) Therefore GetMessage==-1 footgun cannot produce TipExe IDE_EXIT=-1
+     on the currently linked TipExe loop.
+
+GENERAL_WIN32_FOOTGUN=REAL (historical; mitigated on TipExe path)
+TIP_EXE_VULNERABLE_NOW=0
+EXIT_MINUS1_ATTRIBUTED_TO_GETMESSAGE=0
+
+========================================================================
+1) TipExe-linked runMessageLoop (Win32IDE_lifecycle.cpp ~1356)
+========================================================================
+SOURCE: F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp
+
+Exact handling (read full function):
+  MSG msg = {};                    // zero-init; GetMessage==-1 leaves MSG
+                                   // undefined unless zeroed (comment
+                                   // documents prior EXIT=-1 observation)
+  for (;;) {
+    const BOOL gm = GetMessageA(&msg, nullptr, 0, 0);
+    if (gm == 0) break;            // WM_QUIT; wParam = intended exit
+    if (gm < 0) {
+      onCreateBreadcrumb("GetMessage.error");
+      msg.wParam = 0;              // fail-closed clean exit (NOT garbage -1)
+      break;
+    }
+    // TranslateAccelerator / chat Ctrl+Enter / IsDialogMessage /
+    // TranslateMessage / DispatchMessageA ...
+  }
+  DestroyAcceleratorTable if present;
+  onCreateBreadcrumb(msg.message == WM_QUIT
+                     ? "messageLoop.WM_QUIT" : "messageLoop.exit");
+  return static_cast<int>(msg.wParam);
+
+main_win32.cpp:
+  int rc = ide.runMessageLoop();
+  if (extQuit) ExitProcess(rc == 0 ? 0 : UINT(rc));
+  return rc;
+
+WM_QUIT(0) only path => return 0.
+GetMessage error path => return 0 (wParam forced).
+Proposed minimal fix while((bRet=GetMessage)!=0){ if(bRet==-1) return 1; }
+  is ALREADY semantically covered (return 0 vs proposed return 1);
+  TipExe path does NOT use bare while(GetMessage).
+
+========================================================================
+2) Which runMessageLoop.obj links into Tip Ext
+========================================================================
+STRING_VERIFY on TipExe AC7DC1D4 (this turn):
+  PRESENT=1  "runMessageLoop entered"     (lifecycle)
+  PRESENT=1  "GetMessage.error"           (lifecycle fail-closed)
+  PRESENT=1  "CHAT_CTRL_LATCH_V1"         (lifecycle)
+  PRESENT=1  "messageLoop.WM_QUIT"        (lifecycle)
+  PRESENT=1  "messageLoop.exit"           (lifecycle)
+  PRESENT=0  "Message loop starting"      (Core)
+  PRESENT=0  "MESSAGE_LOOP_WM_QUIT"       (Core)
+
+BIND=Win32IDE_lifecycle.cpp::runMessageLoop
+NOT_LINKED=Win32IDE_Core.cpp::runMessageLoop (~2664 PeekMessage/MsgWait)
+  Core uses PeekMessage + explicit WM_QUIT break; different TU; absent
+  from TipExe Native-Ext binary.
+
+========================================================================
+3) How ExitCode=-1 can still occur (GetMessage path ruled out)
+========================================================================
+Harness IDE_EXIT meaning:
+  Capture scripts read System.Diagnostics.Process.ExitCode after
+  HasExited (wraps GetExitCodeProcess). Signed display of DWORD
+  0xFFFFFFFF => -1. IDE_EXIT_C0000409=0 on remasure 026.
+  Class (I026_ALIVE_FAIL_DIAG / EARLY_DEATH): ABNORMAL_EARLY_PROCESS_DEATH
+  WITHOUT_DUMP — NOT harness AgentWait kill (deadline +600s; death ~27s).
+
+Ruled out for TipExe -1 by this seal:
+  - GetMessage==-1 garbage wParam on lifecycle loop (mitigated)
+  - PostQuitMessage(-1) (absent; all product posters use 0)
+
+Still open (UNCONFIRMED; prior I026_EXIT_CALLSITE):
+  A) CRT exit of main returning -1 from a NON-loop path
+     (only explicit return -1 in main_win32 is stopTerminalSeh SEH —
+      ConPTY --term-smoke; not agent session host)
+  B) External TerminateProcess / debugger / tool with exit 0xFFFFFFFF
+  C) Undocumented abort / CRT / runtime path without WER dump
+  D) Dialog-local bare GetMessage loops (below) — can spin/mis-handle
+     dialogs but do NOT feed main return / process ExitCode
+
+Child agent CreateProcess death is separate (harness polled loopChild=1
+until IDE itself exited).
+
+========================================================================
+4) Other known GetMessage sites (not TipExe process-exit owners)
+========================================================================
+Win32IDE_AgentCommands.cpp:399
+  while (... && GetMessage(...) > 0)   // GOOD: rejects -1
+Win32IDE_AgentCommands.cpp:1054
+  while (... && GetMessage(...))       // SUSPECT dialog-local footgun
+Win32IDE.cpp:5890
+  while (running && GetMessage(...))   // SUSPECT dialog-local footgun
+
+These do not return msg.wParam to main; TipExe exit owner remains
+lifecycle runMessageLoop + main return rc.
+
+========================================================================
+5) Fix / rebuild decision
+========================================================================
+FIX_APPLIED=N
+REASON=TipExe-linked loop already implements fail-closed GetMessage==-1
+  handling. Evidence does not support attributing IDE_EXIT=-1 to this
+  footgun on TipExe. No seal-J rebuild; no undebugged 746 TRACE this turn.
+
+DIAG_ONLY=1
+OPTIONAL_NEXT (NOT done; do not invent PASS):
+  1) File breadcrumb of final rc / WM_QUIT wParam at loop exit
+     (non-Heisenberg; no debugger attach)
+  2) Discriminate CRT-main-return vs external TerminateProcess
+  3) Optional hygiene: AgentCommands:1054 / Win32IDE.cpp:5890 -> > 0
+     (dialog-local; NOT TipExe exit owner)
+
+========================================================================
+DISPOSITION
+========================================================================
+HYPOTHESIS=REJECTED
+FIX_APPLIED=N
+SEAL_J=N
+CONTROLLING=D015
+D015_SUPERSEDED=0
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_BLIND_027=1
+NEXT_GATE=NON_GETMESSAGE_EXIT_MINUS1_DISCRIMINATION

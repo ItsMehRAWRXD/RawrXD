@@ -1,0 +1,67 @@
+CHEAP_GATES ASOF_UTC=2026-11-10T15:13:27Z
+PROMOTE=0 CERTIFIED=0 NO_INVENT_PASS=1
+RELEASE_DIR=RawrXD-4DE06F9F-rc1
+RELEASE_DIR=RawrXD-Hotpatch-12Phase-v1.0.0
+RELEASE_DIR=RawrXD-OMEGA1-v1.0.0-20260728_232635
+RELEASE_DIR=RawrXD-OMEGA1-v1.0.0-20260728_232759
+RELEASE_DIR=RawrXD-readiness-rc2
+RELEASE_DIR=RawrXD-readiness-rc3
+RELEASE_DIR=RawrXD-readiness-rc4
+RELEASE_DIR=RawrXD-readiness-rc5
+RELEASE_DIR=RawrXD-readiness-rc5b
+RELEASE_DIR=RawrXD-readiness-rc5e
+RELEASE_DIR=RawrXD-readiness-wave4-lifecycle
+RELEASE_DIR=RawrXD-tip_repair-20261110
+RELEASE_DIR=RawrXD-v1.0.0-Windows
+RELEASE_DIR=RawrXD-v15.0.0
+RELEASE_DIR=RawrXD-v15.0.4
+CAND=issue49_candidate_D56FE6DD_928A90F0_001 mtime=11/10/2026 10:12:43
+CAND=issue49_candidate_96B6D9F4_928a90f0_001 mtime=11/10/2026 09:47:02
+CAND=issue49_candidate_4e840e66_928a90f0_001 mtime=11/10/2026 09:00:51
+CAND=issue49_candidate_401071_5bac_001 mtime=11/10/2026 08:52:20
+EXE_PRESENT path=F:\rawrxd\release\RawrXD-readiness-rc5b\RawrXD-Win32IDE-Native-Ext.exe sha256=4B6C8A5F89678AAEFD31A9C15361CF570C0168E7566DAB02511FD416F725A38C size=11169280
+EXE_PRESENT path=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\RawrXD-Win32IDE-Native-Ext.exe sha256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635 size=6679552
+EXE_ABSENT path=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\RawrXD-Win32IDE-Native-Ext.exe
+FOUND_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\RawrXD-Win32IDE-Native-Ext.exe len=6679552 mtime=11/10/2026 09:47:38
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\SHA_FREEZE.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\SHA_FREEZE.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_4e840e66_928a90f0_001\SHA_FREEZE.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_401071_5bac_001\SHA_FREEZE.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\_strata_rx9070_stage\SHA256SUMS.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\loop_placeholder_fix_001\SHA_FREEZE.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_items710\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_nomirror_1B26A506\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_dockfix\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_chatgate_779A6A96\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_nofocus_E89004D9\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\candidates\tip_daily_4b6c_001\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_dock160\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_84fe\SHA256.txt
+SHAFILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\live_84fe\package\SHA256.txt
+TERMINAL_PING_LOCALHOST=True
+POWERSHELL_VERSION=5.1.26100.9818
+POWERSHELL_SMOKE_OUT=TERM_SMOKE_OK EXIT=7
+GIT_STATUS_F:\rawrxd=## upload/repair-candidate-20261110 |  M evidence/FULL_FEATURE_FINAL_COMPLETION_001/artifacts/COMPILER_CAPTURE_RECEIPT.txt |  D evidence/FULL_FEATURE_ONESHOT_001/artifacts/ext_runtime_receipt.txt |  M evidence/FULL_FEATURE_ONESHOT_001/harness/four_panel_1_17_measure.ps1 |  M evidence/IDE_REPAIR_CANDIDATE_001/cu_gui_e2e_003/RECEIPT.txt
+GIT_HEAD_F:\rawrxd=509573dd7e
+GIT_STATUS_g:\~dev=fatal: detected dubious ownership in repository at 'G:/~dev' | 'G:/~dev' is owned by: | 	(inconvertible) (S-1-5-21-3680470143-4246833852-2777844683-1001) | but the current user is: | 	RAWRXD/Garrett (S-1-5-21-2823367490-1169396657-3022294767-1001)
+GIT_HEAD_g:\~dev=fatal: detected dubious ownership in repository at 'G:/~dev' 'G:/~dev' is owned by: 	(inconvertible) (S-1-5-21-3680470143-4246833852-2777844683-1001) but the current user is: 	RAWRXD/Garrett (S-1-5-21-2823367490-1169396657-3022294767-1001) To add an exception for this directory, call: System.Management.Automation.RemoteException 	git config --global --add safe.directory 'G:/~dev'
+ML64_PRESENT=True
+OLLAMA_TAGS_HTTP=200 bytes=20578
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_currentpair_005
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_currentpair_006
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_currentpair_007
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_currentpair_008
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_phase_011
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\bridge_lifecycle_smallmodel_009
+LIFECYCLE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:19:# Post-fix measured (do not regress to CPU_LIFECYCLE=FAIL)
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:21:CPU_LIFECYCLE_ACCEPTANCE=PASS
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:22:LIFECYCLE_MARKER=BRIDGE_LIFECYCLE_TEST PASS requests=3
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:25:REPEATED_REQUESTS=3
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\CONTROLLING_DISPOSITION_001.txt:24:CPU_LIFECYCLE=SEPARATE_FAIL
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:19:# Post-fix measured (do not regress to CPU_LIFECYCLE=FAIL)
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:21:CPU_LIFECYCLE_ACCEPTANCE=PASS
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:22:LIFECYCLE_MARKER=BRIDGE_LIFECYCLE_TEST PASS requests=3
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt:25:REPEATED_REQUESTS=3
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\DIAGNOSIS_RECONCILE_001.txt:3:INCOMING_CLAIM=CPU_LIFECYCLE=FAIL ROOT_CAUSE_ARGUMENT=NOT_YET_IDENTIFIED
+CPU_EVIDENCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\DIAGNOSIS_RECONCILE_001.txt:14:CPU_LIFECYCLE=PASS requests=3

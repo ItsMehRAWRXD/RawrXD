@@ -1,0 +1,7 @@
+[0/2] Re-checking globbed directories...
+[1/173] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/173] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/173] Completed 'vulkan-shaders-gen'
+[4/173] Generate vulkan shaders for mul_mm_cm2.comp

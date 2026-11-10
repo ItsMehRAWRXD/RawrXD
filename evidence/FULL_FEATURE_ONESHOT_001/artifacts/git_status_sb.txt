@@ -1,0 +1,1026 @@
+## repair/menu-handler-defects
+ M CMakeLists.txt
+ M build_ide/.ninja_deps
+ M build_ide/.ninja_log
+ M build_ide/3rdparty/ggml/ggml-config.cmake
+ M build_ide/3rdparty/ggml/src/CTestTestfile.cmake
+ M build_ide/CTestTestfile.cmake
+ M build_ide/build.ninja
+ M evidence/DAILY_DRIVER_CLOSE_001/EDITOR/T08_NEG1_DUMP_PARSE.md
+ M evidence/DAILY_DRIVER_CLOSE_001/EDITOR/T08_NEG1_EXC_CAPTURE_SEAL.md
+ M evidence/DAILY_DRIVER_CLOSE_001/EDITOR/TASK10.md
+ M evidence/DAILY_DRIVER_CLOSE_001/EDITOR/TIP_FIX_NOT_APPLIED_T08.md
+ M evidence/DAILY_DRIVER_CLOSE_001/EDITOR/ide_session_t10_after_kill.json
+ M evidence/DAILY_DRIVER_CLOSE_001/FULL_FEATURE_NEXT_TRACK.md
+ M evidence/FULL_FEATURE_EXTENSIONHOST_001/GATE.md
+ M evidence/POST_E59D_CANDIDATE_001/NEXT_ACTION.md
+ M evidence/PROGRESSION_FINISH25_001/BINARY_HASH.txt
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/RETEST_T17_T07_T08_T10_SUMMARY.md
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/RUNLOG_T17_T07_T08_T10.txt
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/T17_FILE_OPEN_ISOLATION.md
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/TASK07.md
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/TASK08.md
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/TASK10.md
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/finish25_t17_t07_t08_t10.ps1
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/ide_session_t10_after_kill.json
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/t07_wide_trace.txt
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/t08_tab_trace.txt
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/workdir_retest/t17_open_fixture.txt
+ M evidence/PROGRESSION_FINISH25_001/EDITOR/workdir_retest/t17_roundtrip_out.txt
+ M evidence/PROGRESSION_FINISH25_001/RCA/T07_UNICODE/boundary_trace.txt
+ M evidence/REPAIR_FINISH25_001/BINARY_HASH.txt
+ M src/native_agent.hpp
+ M src/win32app/Win32IDE.cpp
+ M src/win32app/Win32IDE.h
+ M src/win32app/Win32IDE_Sidebar.cpp
+ M src/win32app/Win32IDE_lifecycle.cpp
+ M src/win32app/Win32TerminalManager.cpp
+ M src/win32app/Win32TerminalManager.h
+ M src/win32app/main_win32.cpp
+ M tools/uia/RawrXD.UIA.psm1
+ M tools/uia/T05_Cancellation_Recovery.ps1
+ M web-test/node_modules/escape-string-regexp/package.json
+ M web-test/node_modules/eslint-plugin-react-hooks/package.json
+ M web-test/node_modules/eslint-plugin-react-refresh/package.json
+ M web-test/node_modules/eslint-scope/package.json
+ M web-test/node_modules/eslint-visitor-keys/package.json
+ M web-test/node_modules/eslint/conf/replacements.json
+ M web-test/node_modules/eslint/conf/rule-type-list.json
+ M web-test/node_modules/eslint/lib/cli-engine/formatters/formatters-meta.json
+ M web-test/node_modules/eslint/package.json
+ M web-test/node_modules/espree/package.json
+ M web-test/node_modules/esquery/package.json
+ M web-test/node_modules/esrecurse/package.json
+ M web-test/node_modules/estraverse/package.json
+ M web-test/node_modules/esutils/package.json
+ M web-test/node_modules/fast-deep-equal/package.json
+ M web-test/node_modules/fast-json-stable-stringify/benchmark/test.json
+ M web-test/node_modules/fast-json-stable-stringify/package.json
+ M web-test/node_modules/fast-levenshtein/package.json
+ M web-test/node_modules/fdir/package.json
+ M web-test/node_modules/file-entry-cache/package.json
+ M web-test/node_modules/find-up/package.json
+ M web-test/node_modules/flat-cache/package.json
+ M web-test/node_modules/flatted/cjs/package.json
+ M web-test/node_modules/flatted/package.json
+ M web-test/node_modules/gensync/package.json
+ M web-test/node_modules/glob-parent/package.json
+ M web-test/node_modules/globals/globals.json
+ M web-test/node_modules/globals/package.json
+ M web-test/node_modules/has-flag/package.json
+ M web-test/node_modules/hermes-estree/package.json
+ M web-test/node_modules/hermes-parser/package.json
+ M web-test/node_modules/ignore/package.json
+ M web-test/node_modules/import-fresh/package.json
+ M web-test/node_modules/imurmurhash/package.json
+ M web-test/node_modules/is-extglob/package.json
+ M web-test/node_modules/is-glob/package.json
+ M web-test/node_modules/isexe/package.json
+ M web-test/node_modules/js-tokens/package.json
+ M web-test/node_modules/js-yaml/package.json
+ M web-test/node_modules/jsesc/package.json
+ M web-test/node_modules/json-buffer/package.json
+ M web-test/node_modules/json-schema-traverse/package.json
+ M web-test/node_modules/json-stable-stringify-without-jsonify/package.json
+ M web-test/node_modules/json5/package.json
+ M web-test/node_modules/keyv/package.json
+ M web-test/node_modules/levn/package.json
+ M web-test/node_modules/lightningcss-win32-x64-msvc/package.json
+ M web-test/node_modules/lightningcss/package.json
+ M web-test/node_modules/locate-path/package.json
+ M web-test/node_modules/lodash.merge/package.json
+ M web-test/node_modules/lru-cache/package.json
+ M web-test/node_modules/minimatch/package.json
+ M web-test/node_modules/ms/package.json
+ M web-test/node_modules/nanoid/async/package.json
+ M web-test/node_modules/nanoid/non-secure/package.json
+ M web-test/node_modules/nanoid/package.json
+ M web-test/node_modules/nanoid/url-alphabet/package.json
+ M web-test/node_modules/natural-compare/package.json
+ M web-test/node_modules/node-releases/data/processed/envs.json
+ M web-test/node_modules/node-releases/data/release-schedule/release-schedule.json
+ M web-test/node_modules/node-releases/package.json
+ M web-test/node_modules/optionator/package.json
+ M web-test/node_modules/p-limit/package.json
+ M web-test/node_modules/p-locate/package.json
+ M web-test/node_modules/parent-module/package.json
+ M web-test/node_modules/path-exists/package.json
+ M web-test/node_modules/path-key/package.json
+ M web-test/node_modules/picocolors/package.json
+ M web-test/node_modules/picomatch/package.json
+ M web-test/node_modules/postcss/package.json
+ M web-test/node_modules/prelude-ls/package.json
+ M web-test/node_modules/punycode/package.json
+ M web-test/node_modules/react-dom/package.json
+ M web-test/node_modules/react/package.json
+ M web-test/node_modules/resolve-from/package.json
+ M web-test/node_modules/rolldown/node_modules/@rolldown/pluginutils/package.json
+ M web-test/node_modules/rolldown/package.json
+ M web-test/node_modules/scheduler/package.json
+ M web-test/node_modules/semver/package.json
+ M web-test/node_modules/shebang-command/package.json
+ M web-test/node_modules/shebang-regex/package.json
+ M web-test/node_modules/source-map-js/package.json
+ M web-test/node_modules/strip-json-comments/package.json
+ M web-test/node_modules/supports-color/package.json
+ M web-test/node_modules/tinyglobby/package.json
+ M web-test/node_modules/ts-api-utils/package.json
+ M web-test/node_modules/type-check/package.json
+ M web-test/node_modules/typescript-eslint/package.json
+ M web-test/node_modules/typescript/lib/cs/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/de/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/es/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/fr/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/it/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/ja/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/ko/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/pl/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/pt-br/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/ru/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/tr/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/typesMap.json
+ M web-test/node_modules/typescript/lib/zh-cn/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/lib/zh-tw/diagnosticMessages.generated.json
+ M web-test/node_modules/typescript/package.json
+ M web-test/node_modules/undici-types/package.json
+ M web-test/node_modules/update-browserslist-db/package.json
+ M web-test/node_modules/uri-js/package.json
+ M web-test/node_modules/vite/package.json
+ M web-test/node_modules/which/package.json
+ M web-test/node_modules/word-wrap/package.json
+ M web-test/node_modules/yallist/package.json
+ M web-test/node_modules/yocto-queue/package.json
+ M web-test/node_modules/zod-validation-error/package.json
+ M web-test/node_modules/zod/locales/package.json
+ M web-test/node_modules/zod/mini/package.json
+ M web-test/node_modules/zod/package.json
+ M web-test/node_modules/zod/v3/package.json
+ M web-test/node_modules/zod/v4-mini/package.json
+ M web-test/node_modules/zod/v4/classic/package.json
+ M web-test/node_modules/zod/v4/core/package.json
+ M web-test/node_modules/zod/v4/locales/package.json
+ M web-test/node_modules/zod/v4/mini/package.json
+ M web-test/node_modules/zod/v4/package.json
+?? .codex/
+?? .codex_batch2_smoke.txt
+?? .codex_final_ghosttext_smoke.cpp
+?? .codex_final_unicode_smoke.txt
+?? .cursor/skills/rawrxd-computer-use-hotpatch/
+?? .cursorrules
+?? .gitattributes
+?? .github/workflows/agent-registry-portable.yml
+?? .github/workflows/cert-preflight.yml
+?? .github/workflows/extension-bridge-native.yml
+?? .github/workflows/extension-bridge-smoke.yml
+?? .github/workflows/extension-headless-contract.yml
+?? .github/workflows/extension-policy-gates.yml
+?? .github/workflows/extension-policy-smoke.yml
+?? .github/workflows/headless-extension-policy.yml
+?? .github/workflows/headless-extension-sim.yml
+?? .github/workflows/native-ide-build-smoke.yml
+?? .github/workflows/thermal-ci.yml
+?? .github/workflows/wiring-digest.yml
+?? .rawrxd/ledger/tool_receipts.jsonl
+?? .rawrxd_agent_config.json
+?? .wiringdigestignore
+?? .wiringdigestrules.json
+?? 3rdparty/quickjs/LICENSE
+?? 3rdparty/quickjs/VERSION
+?? 3rdparty/quickjs/cutils.c
+?? 3rdparty/quickjs/cutils.h
+?? 3rdparty/quickjs/dtoa.c
+?? 3rdparty/quickjs/dtoa.h
+?? 3rdparty/quickjs/libregexp-opcode.h
+?? 3rdparty/quickjs/libregexp.c
+?? 3rdparty/quickjs/libregexp.h
+?? 3rdparty/quickjs/libunicode-table.h
+?? 3rdparty/quickjs/libunicode.c
+?? 3rdparty/quickjs/libunicode.h
+?? 3rdparty/quickjs/list.h
+?? 3rdparty/quickjs/quickjs-atom.h
+?? 3rdparty/quickjs/quickjs-libc.c
+?? 3rdparty/quickjs/quickjs-libc.h
+?? 3rdparty/quickjs/quickjs-opcode.h
+?? 3rdparty/quickjs/quickjs.c
+?? 3rdparty/quickjs/quickjs.h
+?? 3rdparty/quickjs_ng/CMakeLists.txt
+?? 3rdparty/quickjs_ng/LICENSE
+?? 3rdparty/quickjs_ng/api-test.c
+?? 3rdparty/quickjs_ng/builtin-array-fromasync.h
+?? 3rdparty/quickjs_ng/builtin-iterator-zip-keyed.h
+?? 3rdparty/quickjs_ng/builtin-iterator-zip.h
+?? 3rdparty/quickjs_ng/ctest.c
+?? 3rdparty/quickjs_ng/cutils.h
+?? 3rdparty/quickjs_ng/dtoa.c
+?? 3rdparty/quickjs_ng/dtoa.h
+?? 3rdparty/quickjs_ng/fuzz.c
+?? 3rdparty/quickjs_ng/libregexp-opcode.h
+?? 3rdparty/quickjs_ng/libregexp.c
+?? 3rdparty/quickjs_ng/libregexp.h
+?? 3rdparty/quickjs_ng/libunicode-table.h
+?? 3rdparty/quickjs_ng/libunicode.c
+?? 3rdparty/quickjs_ng/libunicode.h
+?? 3rdparty/quickjs_ng/list.h
+?? 3rdparty/quickjs_ng/qjs-wasi-reactor.c
+?? 3rdparty/quickjs_ng/qjs.c
+?? 3rdparty/quickjs_ng/qjsc.c
+?? 3rdparty/quickjs_ng/quickjs-atom.h
+?? 3rdparty/quickjs_ng/quickjs-c-atomics.h
+?? 3rdparty/quickjs_ng/quickjs-libc.c
+?? 3rdparty/quickjs_ng/quickjs-libc.h
+?? 3rdparty/quickjs_ng/quickjs-opcode.h
+?? 3rdparty/quickjs_ng/quickjs.c
+?? 3rdparty/quickjs_ng/quickjs.h
+?? 3rdparty/quickjs_ng/run-test262.c
+?? 3rdparty/quickjs_ng/unicode_gen.c
+?? 3rdparty/quickjs_ng/unicode_gen_def.h
+?? 47_CRITICAL_ISSUES_INTEGRATION_SUMMARY.md
+?? ACHIEVEMENTS_SUMMARY.md
+?? ACTION_REPORT.md
+?? ADVANCED_MODEL_OPERATIONS_COMPLETE.md
+?? ADVANCED_OPERATIONS_FINAL_STATUS.md
+?? ADVANCED_REFACTORING_ENGINE_FINAL_STATUS.md
+?? ADVANCED_REFACTORING_ENHANCEMENTS.md
+?? AGENTIC_FRAMEWORK_IMPLEMENTATION_COMPLETE.md
+?? AGENTIC_IDE_BUILD_SUCCESS.md
+?? AGENTIC_LAZY_INIT_COMPLETION_REPORT.md
+?? AGENTIC_LAZY_INIT_QUICK_REFERENCE.md
+?? AGENTIC_MENU_IMPLEMENTATION_COMPLETE.md
+?? AGENTIC_MENU_QUICK_REFERENCE.md
+?? AGENT_INFERENCE_AUDIT.md
+?? AGENT_LOGIC_AUDIT_COMPLETE.md
+?? AGENT_TOOL_REGISTRY_IMPLEMENTATION_COMPLETE.md
+?? AI_COMPLETION_MEMORY_CONVERSION_PLAN.md
+?? ANALYSIS_NEXT_STEPS.md
+?? AUDITS/
+?? AUDIT_47_ISSUES_RESOLUTION_COMPLETE.md
+?? AUDIT_DETAILED_FILE_LINE_REFERENCES.md
+?? AUDIT_DETAILED_LINE_REFERENCES.md
+?? AUDIT_DETAILED_TECHNICAL_BREAKDOWN.md
+?? AUDIT_FINAL_CONCLUSIONS.md
+?? AUDIT_FINDINGS_COMPLETE_REPORT.md
+?? AUDIT_FINDINGS_PRODUCTION_READINESS.md
+?? AUDIT_QUICK_REFERENCE_ONE_PAGE.md
+?? AUDIT_REPORT_INDEX.md
+?? AUDIT_REPORT_INDEX_MASTER.md
+?? AUTONOMOUS_AGENT_IMPLEMENTATION_COMPLETE.md
+?? AUTONOMOUS_AGENT_SUMMARY.md
+?? AUTONOMOUS_IDE_HEALER_COMPLETE.md
+?? AUTONOMOUS_IDE_HEALER_FINAL_DELIVERY.md
+?? AUTONOMOUS_IDE_HEALER_QUICK_START.md
+?? AUTONOMOUS_IDE_HEALER_REFERENCE_CARD.md
+?? Advanced_Reverse_Engineered/
+?? Analyze-Extracted-Source.ps1
+?? Analyze-Modules.ps1
+?? ArchitecturalEnhancementGenerator.ps1
+?? ArchitectureEnhancementEngine.psm1
+?? BRUTAL_COMPRESSION_COMPLETE_INDEX.md
+?? BRUTAL_COMPRESSION_DELIVERY_SUMMARY.md
+?? BRUTAL_COMPRESSION_ENHANCEMENT_ANALYSIS.md
+?? BRUTAL_COMPRESSION_EXECUTIVE_SUMMARY.md
+?? BRUTAL_COMPRESSION_IMPLEMENTATION_CHECKLIST.md
+?? BRUTAL_COMPRESSION_PACKAGE_CONTENTS.md
+?? BRUTAL_COMPRESSION_QUICK_REFERENCE.md
+?? BRUTAL_COMPRESSION_VISUAL_COMPARISON.md
+?? BUILD_GUIDE_NO_SCAFFOLDING.md
+?? BUILD_IDE_EXECUTOR.ps1
+?? BUILD_IDE_FAST.ps1
+?? BUILD_IDE_PRODUCTION.ps1
+?? BUILD_ORCHESTRATOR.ps1
+?? BUILD_QUICK_REFERENCE.txt
+?? BUILD_STATUS_REPORT.md
+?? BUILD_SYSTEM_COMPLETE.md
+?? BUILD_VERIFICATION_GUIDE.md
+?? BUILD_WEEK1.ps1
+?? BUILD_WEEK4.ps1
+?? Build-Clean.ps1
+?? Build-CodexReverse.ps1
+?? Build-Cursor-Complete.ps1
+?? Build-CursorFeatures-CLI.ps1
+?? Build-CursorFeatures.ps1
+?? Build-Protected-Reverser.ps1
+?? Build_Release.ps1
+?? Build_Release_Fixed.ps1
+?? CLI_Reverse_Engineering_Integration.ps1
+?? CMakeLists.txt.backup_20260127_050034
+?? CMakeLists_Phase1.txt
+?? CMakeLists_noqt.txt
+?? CMakeLists_old.txt
+?? CODEX-MASTER-GUIDE.md
+?? CODEX_ULTIMATE_BUILD_GUIDE.md
+?? CODEX_ULTIMATE_EDITION_v7_CODE_STRUCTURE.md
+?? CODEX_ULTIMATE_EDITION_v7_COMPLETION_CHECKLIST.md
+?? CODEX_ULTIMATE_EDITION_v7_DELIVERY_MANIFEST.md
+?? CODEX_ULTIMATE_EDITION_v7_FUNCTION_REFERENCE.md
+?? CODEX_ULTIMATE_EDITION_v7_IMPLEMENTATION_SUMMARY.md
+?? CODEX_ULTIMATE_EDITION_v7_MASTER_INDEX.md
+?? CODEX_ULTIMATE_EDITION_v7_QUICK_START_GUIDE.md
+?? COMPILER_INTEGRATION_COMPLETE.md
+?? COMPLETE-SYSTEM-INTEGRATION.md
+?? COMPLETE_IMPLICIT_LOGIC_IMPLEMENTATION.md
+?? COMPLETE_INTEGRATION_GUIDE.md
+?? COMPLETE_PRODUCTION_IMPLEMENTATION.md
+?? COMPLETE_QT_REMOVAL_REPORT.md
+?? COMPLETE_REVERSE_ENGINEERED_IMPLEMENTATION.md
+?? COMPLETE_SYSTEM_DELIVERY_SUMMARY.md
+?? COMPLETION_REPORT.md
+?? COMPLETION_REPORT_FINAL.md
+?? COMPREHENSIVE_AUDIT_REPORT.md
+?? COMPREHENSIVE_CODEBASE_AUDIT_REPORT.md
+?? COMPREHENSIVE_DEPENDENCY_AUDIT.md
+?? COMPUTE_KERNEL_DMA_IMPLEMENTATION.md
+?? CONTEXT_DRAWING_ENGINE_ARCHITECTURE.md
+?? CONTEXT_DRAWING_ENGINE_DELIVERY_COMPLETE.md
+?? CONTEXT_DRAWING_ENGINE_DELIVERY_SUMMARY.md
+?? CONTEXT_DRAWING_ENGINE_GUIDE.md
+?? CONTEXT_DRAWING_ENGINE_INTEGRATION_GUIDE.md
+?? CONTEXT_DRAWING_INDEX.md
+?? CONTEXT_DRAWING_QUICK_REFERENCE.md
+?? CONTEXT_DRAWING_VISUAL_SUMMARY.md
+?? CodexAIReverseEngine.asm
+?? CodexPro.asm
+?? CodexProfessional.asm
+?? CodexReverse.asm
+?? CodexUltimate.asm
+?? CodexUltra.asm
+?? Compute_Kernel_DMA_Complete.asm
+?? Consolidate-RequiredModules.ps1
+?? Consolidated_Modules_20260124_064313/
+?? Consolidated_Modules_20260124_064319/
+?? Consolidated_Modules_20260124_064807/
+?? Cursor_Features_Accurate.json
+?? Cursor_Source_Extracted/electron_source_app/LICENSE.txt
+?? Cursor_Source_Extracted/electron_source_app/ThirdPartyNotices.txt
+?? Cursor_Source_Extracted/electron_source_app/bin/
+?? Cursor_Source_Extracted/electron_source_app/codeBin/
+?? Cursor_Source_Extracted/electron_source_app/extensions/bat/
+?? Cursor_Source_Extracted/electron_source_app/extensions/clojure/
+?? Cursor_Source_Extracted/electron_source_app/extensions/coffeescript/
+?? Cursor_Source_Extracted/electron_source_app/extensions/configuration-editing/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cpp/
+?? Cursor_Source_Extracted/electron_source_app/extensions/csharp/
+?? Cursor_Source_Extracted/electron_source_app/extensions/css-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/css/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-agent-exec/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-agent/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-always-local/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-android-emulator-connect/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-browser-automation/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-browser-extension/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-commits/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-deeplink/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-file-service/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-ios-simulator-connect/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-mcp/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-ndjson-ingest/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-polyfills-remote/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-retrieval/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-shadow-workspace/
+?? Cursor_Source_Extracted/electron_source_app/extensions/cursor-worktree-textmate/
+?? Cursor_Source_Extracted/electron_source_app/extensions/dart/
+?? Cursor_Source_Extracted/electron_source_app/extensions/debug-auto-launch/
+?? Cursor_Source_Extracted/electron_source_app/extensions/debug-server-ready/
+?? Cursor_Source_Extracted/electron_source_app/extensions/diff/
+?? Cursor_Source_Extracted/electron_source_app/extensions/docker/
+?? Cursor_Source_Extracted/electron_source_app/extensions/emmet/
+?? Cursor_Source_Extracted/electron_source_app/extensions/extension-editing/
+?? Cursor_Source_Extracted/electron_source_app/extensions/fsharp/
+?? Cursor_Source_Extracted/electron_source_app/extensions/git-base/
+?? Cursor_Source_Extracted/electron_source_app/extensions/git/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github-authentication/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/README.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/dist/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/images/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/markdown.css
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/package.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/package.nls.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE/
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/some-markdown.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/github/testWorkspace/x.txt
+?? Cursor_Source_Extracted/electron_source_app/extensions/go/
+?? Cursor_Source_Extracted/electron_source_app/extensions/groovy/
+?? Cursor_Source_Extracted/electron_source_app/extensions/grunt/
+?? Cursor_Source_Extracted/electron_source_app/extensions/gulp/
+?? Cursor_Source_Extracted/electron_source_app/extensions/handlebars/
+?? Cursor_Source_Extracted/electron_source_app/extensions/hlsl/
+?? Cursor_Source_Extracted/electron_source_app/extensions/html-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/html/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ini/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ipynb/
+?? Cursor_Source_Extracted/electron_source_app/extensions/jake/
+?? Cursor_Source_Extracted/electron_source_app/extensions/java/
+?? Cursor_Source_Extracted/electron_source_app/extensions/javascript/
+?? Cursor_Source_Extracted/electron_source_app/extensions/json-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/json/
+?? Cursor_Source_Extracted/electron_source_app/extensions/julia/
+?? Cursor_Source_Extracted/electron_source_app/extensions/latex/
+?? Cursor_Source_Extracted/electron_source_app/extensions/less/
+?? Cursor_Source_Extracted/electron_source_app/extensions/log/
+?? Cursor_Source_Extracted/electron_source_app/extensions/lua/
+?? Cursor_Source_Extracted/electron_source_app/extensions/make/
+?? Cursor_Source_Extracted/electron_source_app/extensions/markdown-basics/
+?? Cursor_Source_Extracted/electron_source_app/extensions/markdown-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/markdown-math/
+?? Cursor_Source_Extracted/electron_source_app/extensions/media-preview/
+?? Cursor_Source_Extracted/electron_source_app/extensions/merge-conflict/
+?? Cursor_Source_Extracted/electron_source_app/extensions/microsoft-authentication/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ms-vscode.js-debug-companion/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ms-vscode.js-debug/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ms-vscode.vscode-js-profile-table/
+?? Cursor_Source_Extracted/electron_source_app/extensions/node_modules/
+?? Cursor_Source_Extracted/electron_source_app/extensions/notebook-renderers/
+?? Cursor_Source_Extracted/electron_source_app/extensions/npm/
+?? Cursor_Source_Extracted/electron_source_app/extensions/objective-c/language-configuration.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/objective-c/package.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/objective-c/package.nls.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/objective-c/syntaxes/objective-c++.tmLanguage.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/objective-c/syntaxes/objective-c.tmLanguage.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/ocaml/
+?? Cursor_Source_Extracted/electron_source_app/extensions/perl/
+?? Cursor_Source_Extracted/electron_source_app/extensions/php-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/php/
+?? Cursor_Source_Extracted/electron_source_app/extensions/powershell/
+?? Cursor_Source_Extracted/electron_source_app/extensions/pug/
+?? Cursor_Source_Extracted/electron_source_app/extensions/python/
+?? Cursor_Source_Extracted/electron_source_app/extensions/r/
+?? Cursor_Source_Extracted/electron_source_app/extensions/razor/
+?? Cursor_Source_Extracted/electron_source_app/extensions/references-view/
+?? Cursor_Source_Extracted/electron_source_app/extensions/restructuredtext/
+?? Cursor_Source_Extracted/electron_source_app/extensions/ruby/
+?? Cursor_Source_Extracted/electron_source_app/extensions/rust/
+?? Cursor_Source_Extracted/electron_source_app/extensions/scss/
+?? Cursor_Source_Extracted/electron_source_app/extensions/search-result/
+?? Cursor_Source_Extracted/electron_source_app/extensions/shaderlab/
+?? Cursor_Source_Extracted/electron_source_app/extensions/shellscript/
+?? Cursor_Source_Extracted/electron_source_app/extensions/simple-browser/
+?? Cursor_Source_Extracted/electron_source_app/extensions/sql/
+?? Cursor_Source_Extracted/electron_source_app/extensions/swift/
+?? Cursor_Source_Extracted/electron_source_app/extensions/terminal-suggest/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-abyss/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/CHANGELOG.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/README.md
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/package.json
+?? "Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/themes/Cursor Dark High Contrast-color-theme.json"
+?? "Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/themes/Cursor Dark Midnight-color-theme.json"
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/themes/cursor-dark-color-theme.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-cursor/themes/cursor-light-color-theme.json
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-defaults/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-kimbie-dark/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-monokai-dimmed/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-monokai/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-quietlight/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-red/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-seti/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-solarized-dark/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-solarized-light/
+?? Cursor_Source_Extracted/electron_source_app/extensions/theme-tomorrow-night-blue/
+?? Cursor_Source_Extracted/electron_source_app/extensions/tunnel-forwarding/
+?? Cursor_Source_Extracted/electron_source_app/extensions/typescript-basics/
+?? Cursor_Source_Extracted/electron_source_app/extensions/typescript-language-features/
+?? Cursor_Source_Extracted/electron_source_app/extensions/vb/
+?? Cursor_Source_Extracted/electron_source_app/extensions/vscode-jupyter-keymap/
+?? Cursor_Source_Extracted/electron_source_app/extensions/xml/
+?? Cursor_Source_Extracted/electron_source_app/extensions/yaml/
+?? Cursor_Source_Extracted/electron_source_app/node_modules.asar
+?? Cursor_Source_Extracted/electron_source_app/node_modules/
+?? Cursor_Source_Extracted/electron_source_app/package.json
+?? Cursor_Source_Extracted/electron_source_app/product.json
+?? Cursor_Source_Extracted/electron_source_app/resources/
+?? Cursor_Source_Extracted/pe_analysis.json
+?? Cursor_Source_Extracted/reverse_engineering_report.json
+?? Cursor_Source_Extracted/reverse_engineering_summary.txt
+?? CustomVSToolchain.cmake
+?? DELIVERABLES_LIST.md
+?? DELIVERY_INDEX_COMPLETE.md
+?? DELIVERY_QUICK_VIEW.txt
+?? DELIVERY_SUMMARY_COMPLETE.md
+?? DEPENDENCY_REMOVAL_PHASE1_PLAN.md
+?? DEPLOYMENT_GUIDE.md
+?? DEPLOYMENT_SUMMARY.md
+?? DE_SIMULATION_REPORT.md
+?? DIGESTION_DEBUG_STATUS.md
+?? DIGESTION_TESTING_GUIDE.md
+?? DOCUMENTATION_INDEX_MASTER.md
+?? DeploymentAuditEngine.ps1
+?? Detect-Scaffolding.ps1
+?? Dockerfile
+?? Dump-Complete-Source.ps1
+?? ENHANCED_STREAMING_GGUF_LOADER_DELIVERABLES.md
+?? ENHANCED_STREAMING_GGUF_LOADER_GUIDE.md
+?? ENHANCED_STREAMING_LOADER_IMPLEMENTATION_SUMMARY.md
+?? ENHANCEMENTS_COMPLETE.md
+?? ENTERPRISE_COMPLETION_REPORT.md
+?? ETHICAL_IMPLEMENTATION_REPORT.md
+?? EXTRACTED_FEATURES_GUIDE.md
+?? Execute-AutonomousAgent-Direct.ps1
+?? Execute-AutonomousAgent-Final.ps1
+?? Execute-AutonomousAgent.ps1
+?? Execute-Complete-System.ps1
+?? Execute-ProductionOrchestration.ps1
+?? Export-ModuleAnalysis.ps1
+?? ExtensionManager.ps1
+?? Extract-Chat-Agent-Features.ps1
+?? Extract-Cursor-Complete.ps1
+?? Extract-Protected-Files.ps1
+?? Extracted_Chat_Agent_Features/agent_features/
+?? Extracted_Chat_Agent_Features/ai_services/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/bat/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/clojure/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/coffeescript/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/configuration-editing/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cpp/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/csharp/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/css-language-features/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/css/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-agent-exec/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-agent/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-always-local/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-android-emulator-connect/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-browser-automation/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-browser-extension/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-commits/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-deeplink/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-file-service/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-ios-simulator-connect/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-mcp/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-ndjson-ingest/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-polyfills-remote/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-retrieval/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-shadow-workspace/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/cursor-worktree-textmate/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/dart/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/debug-auto-launch/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/debug-server-ready/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/diff/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/docker/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/emmet/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/extension-editing/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/fsharp/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/git-base/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/git/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github-authentication/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/README.md
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/dist/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/images/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/markdown.css
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/package.json
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/package.nls.json
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE.md
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE.md
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/some-markdown.md
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/github/testWorkspace/x.txt
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/go/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/groovy/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/grunt/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/gulp/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/handlebars/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/hlsl/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/html-language-features/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/html/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/ini/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/ipynb/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/jake/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/java/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/javascript/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/json-language-features/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/json/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/julia/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/latex/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/less/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/log/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/lua/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/make/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/markdown-basics/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/markdown-language-features/
+?? Extracted_Chat_Agent_Features/extension_system/all_extensions/markdown-math/
+?? T080_test_bad.cpp
+?? _hotpatch_incoming/
+?? build_daily_candidate_20261108/
+?? build_daily_use_candidate/
+?? build_modelroute/3rdparty/ggml/src/ggml-base.dir/Release/ggml-base.vcxproj.FileListAbsolute.txt
+?? build_modelroute/3rdparty/ggml/src/ggml-cpu.dir/Release/ggml-cpu.vcxproj.FileListAbsolute.txt
+?? build_modelroute/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan.dir/Release/ggml-vulkan.tlog/CL.12592.write.1.tlog
+?? build_modelroute/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan.dir/Release/ggml-vulkan.vcxproj.FileListAbsolute.txt
+?? build_modelroute/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
+?? build_modelroute/3rdparty/ggml/src/ggml-vulkan/x64/Release/vulkan-shaders-gen/vulkan-shaders-gen.vcxproj.FileListAbsolute.txt
+?? build_modelroute/3rdparty/ggml/src/ggml.dir/Release/ggml.vcxproj.FileListAbsolute.txt
+?? build_modelroute/RawrXD-CLI-V2.dir/
+?? build_modelroute/RawrXD-Chromatic.dir/
+?? build_modelroute/RawrXD-Win32IDE-Native.dir/Release/RawrXD-Win32IDE-Native.vcxproj.FileListAbsolute.txt
+?? build_modelroute/agentic_loop_bridge_recovery_smoke.dir/
+?? build_modelroute/agentic_loop_timeout_helper.dir/
+?? build_modelroute/cpu_engine_e2e.dir/
+?? build_modelroute/cursor_parity_registry_smoke.dir/
+?? build_modelroute/deep2_agentic_loop.dir/
+?? build_modelroute/deep2_agentic_repair.dir/
+?? build_modelroute/deep2_bench_tps.dir/
+?? build_modelroute/deep2_context_scaling.dir/
+?? build_modelroute/deep2_d1_prefill_parity.dir/
+?? build_modelroute/deep2_dualgpu_forward.dir/
+?? build_modelroute/deep2_dynamic_interceptor.dir/
+?? build_modelroute/deep2_engine_lib.dir/Release/deep2_engine_lib.vcxproj.FileListAbsolute.txt
+?? build_modelroute/deep2_enterprise_manifest.dir/
+?? build_modelroute/deep2_fused_lmhead_verify.dir/
+?? build_modelroute/deep2_gdn_parity_harness.dir/
+?? build_modelroute/deep2_gguf_lifecycle.dir/
+?? build_modelroute/deep2_gpu_certify.dir/
+?? build_modelroute/deep2_gpu_code31_pnp_probe.dir/
+?? build_modelroute/deep2_gpu_code31_reset_smoke.dir/
+?? build_modelroute/deep2_gpu_decode_roofline.dir/
+?? build_modelroute/deep2_h11_prefill_parity.dir/
+?? build_modelroute/deep2_mla_lifecycle_test.dir/
+?? build_modelroute/deep2_parity_trace.dir/
+?? build_modelroute/deep2_prefill_parity.dir/
+?? build_modelroute/deep2_qwen4exp_gdn_probe.dir/
+?? build_modelroute/deep2_qwen4exp_operator_harness.dir/
+?? build_modelroute/deep2_qwen4exp_pipeline_probe.dir/
+?? build_modelroute/deep2_reverse_engineer.dir/
+?? build_modelroute/deep2_spec_bench.dir/
+?? build_modelroute/deep2_token_profiler.dir/
+?? build_modelroute/deep2_uneven_tp_gemv.dir/
+?? build_modelroute/deep2_vulkan_gdn_dispatch_probe.dir/
+?? build_modelroute/gguf_universal_probe.dir/
+?? build_modelroute/gpu_quant_dot_realweights.dir/
+?? build_modelroute/gpu_quant_dot_verify.dir/
+?? build_modelroute/hexmag-reap-live-test.dir/
+?? build_modelroute/hexmag-reap-live.dir/
+?? build_modelroute/kquant_dot_parity.dir/
+?? build_modelroute/mamba2_ref_probe.dir/
+?? build_modelroute/native_tool_protocol_smoke.dir/
+?? build_modelroute/q6k_row_differential_test.dir/
+?? build_modelroute/q8k_edge_tests.dir/
+?? build_modelroute/q8k_parity_tool.dir/
+?? build_modelroute/quant_parity_cert.dir/
+?? build_modelroute/quant_scalar_smoke.dir/
+?? build_modelroute/rawr-reap-cli-contract-test.dir/
+?? build_modelroute/rawr-reap-corpus.dir/
+?? build_modelroute/rawr-reap-expert-layout-test.dir/
+?? build_modelroute/rawr-reap-mask.dir/
+?? build_modelroute/rawr-reap-replay.dir/
+?? build_modelroute/rawr-reap-runtime-plan-test.dir/
+?? build_modelroute/rawr-reap-writer.dir/
+?? build_modelroute/rawr-reap.dir/
+?? build_modelroute/rawr-tensor-residency-budget-test.dir/
+?? build_modelroute/rawrxd_agentic_backend.dir/
+?? build_modelroute/rawrxd_check.dir/
+?? build_modelroute/rawrxd_deep2_engine.dir/
+?? build_modelroute/rawrxd_gpu_compute.dir/Release/rawrxd_gpu_compute.vcxproj.FileListAbsolute.txt
+?? build_modelroute/rawrxd_link.dir/
+?? build_modelroute/rawrxd_security.dir/Release/rawrxd_security.vcxproj.FileListAbsolute.txt
+?? build_modelroute/reap-cert-parity.dir/
+?? build_modelroute/reap-floor-audit.dir/
+?? build_modelroute/reap-moe-transform-test.dir/
+?? build_modelroute/reap-publish-admission.dir/
+?? build_modelroute/reap-ref-extract.dir/
+?? build_modelroute/reap-reference-receipt.dir/
+?? build_modelroute/reap-tensor-enum.dir/
+?? build_modelroute/reap-tok-inspect.dir/
+?? build_modelroute/sovereign_emit_formats.dir/
+?? build_modelroute/sovereign_lab_blob_io.dir/
+?? build_modelroute/src/production/rawrxd_health_probe.dir/
+?? build_modelroute/src/production/rawrxd_production_hardening.dir/Release/rawrxd_production_hardening.vcxproj.FileListAbsolute.txt
+?? build_modelroute/src/production/rawrxd_production_tests.dir/
+?? build_modelroute/src/workflow/rawrxd_workflow.dir/
+?? build_modelroute/stub_test.dir/
+?? build_modelroute/test_deep2_inference.dir/
+?? build_modelroute/test_kv_cache.dir/
+?? build_modelroute/test_sovereign_compose_lab.dir/
+?? build_modelroute/tools/agent_esp/rawrxd_agent_esp/agent_esp_demo.dir/
+?? build_modelroute/tools/agent_esp/rawrxd_agent_esp/agent_esp_test.dir/
+?? build_modelroute/tools/deep2_autotune/deep2_autotune.dir/
+?? build_modelroute/tools/deep2_debugger/flight_recorder_smoke.dir/
+?? build_modelroute/tools/deep2_snap/deep2_snap/deep2_snap_test.dir/
+?? build_modelroute/tools/rawrxd_parity_final/rawr_fuzz_parsers.dir/
+?? build_modelroute/tools/rawrxd_parity_final/rawr_run.dir/
+?? build_modelroute/tools/snap_process_guard/snap_process_guard.dir/
+?? build_modelroute/tools/snap_process_guard/snap_process_guard_cli.dir/
+?? build_modelroute/workspace_path_policy_smoke.dir/
+?? build_modelroute/x64/Release/ALL_BUILD/
+?? build_modelroute/x64/Release/ZERO_CHECK/ZERO_CHECK.vcxproj.FileListAbsolute.txt
+?? build_modelroute/x64/Release/deep2_quant_specialized_shaders/
+?? build_modelroute/x64/Release/deep2_qwen4exp_gdn_shader/
+?? build_modelroute/x64/Release/deep2_qwen4exp_operator_shaders/
+?? build_modelroute/x64/Release/deep2_resident_qgemv_shader/deep2_resident_qgemv_shader.vcxproj.FileListAbsolute.txt
+?? build_modelroute/x64/Release/deep2_spec_ops_shader/deep2_spec_ops_shader.vcxproj.FileListAbsolute.txt
+?? build_modelroute/x64/Release/rawrxd_certification_harnesses/
+?? build_modelroute/x64/Release/rawrxd_chat_route_menu/rawrxd_chat_route_menu.vcxproj.FileListAbsolute.txt
+?? build_post_e59d_candidate/
+?? build_progression_finish25/
+?? build_real_edit7_rc/
+?? build_repair_candidate/
+?? build_t080/
+?? build_tip_ext_host_001/
+?? evidence/BUILD_IDE_0F054F01_T05_001/
+?? evidence/BUILD_IDE_0F054F01_T05_002/
+?? evidence/BUILD_IDE_0F054F01_T05_003/
+?? evidence/BUILD_IDE_0F054F01_T05_004/
+?? evidence/BUILD_IDE_0F054F01_T05_005/
+?? evidence/BUILD_IDE_0F054F01_T05_006/
+?? evidence/CURRENT_RUNTIME_2FB9E1B7_20261104/
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/RUNLOG_T10_VERIFIED_RESTORE.txt
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/T10_BOARD_RETURN.md
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/T10_VERIFIED_RESTORE_SEAL.md
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/_patch_t10_harness.py
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/_patch_t10_harness2.py
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/ide_session_t10_before_clear.json
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/ide_session_t10_before_kill.json
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/t10_verified_restore_freeze.ps1
+?? evidence/DAILY_DRIVER_CLOSE_001/EDITOR/workdir_t10_verified/
+?? evidence/DAILY_DRIVER_CLOSE_001/package/RawrXD-Win32IDE-Native.exe.9C910599.bak
+?? evidence/DAILY_DRIVER_CLOSE_001/package/RawrXD-Win32IDE-Native.exe.A4F083DF.bak
+?? evidence/DAILY_DRIVER_CLOSE_001/package/tip_chat_ctrl_enter_001/
+?? evidence/DAILY_DRIVER_CLOSE_001/package/tip_ext_host_001/
+?? evidence/DAILY_DRIVER_CLOSE_001/package/tip_ext_host_002/
+?? evidence/DAILY_DRIVER_CLOSE_001/package/tip_ext_host_003/
+?? evidence/DAILY_USE_CANDIDATE_20261108/
+?? evidence/DAILY_USE_OLLAMA_001/
+?? evidence/E59D_SAMEHASH_CERT_001/PRESERVED_LIVE_2DBC0030/RawrXD-Win32IDE-Native.exe.DRIFTED_2DBC0030
+?? evidence/FULL_FEATURE_EXTENSIONHOST_001/EXT_LOAD_001.md
+?? evidence/FULL_FEATURE_EXTENSIONHOST_001/EXT_SMOKE_RECEIPT.md
+?? evidence/FULL_FEATURE_EXTENSIONHOST_001/TIP_BUILD_RECEIPT.md
+?? evidence/FULL_FEATURE_EXTENSIONHOST_001/logs/
+?? evidence/FULL_FEATURE_FINAL_COMPLETION_001/
+?? evidence/FULL_FEATURE_ONESHOT_001/
+?? evidence/POST_E59D_CANDIDATE_001/BINARY_PROVENANCE_RECONCILED.md
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/T05_A_STOP_B_RESULT_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/T05_A_STOP_B_RUNLOG_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/harness_t05_a_stop_b_repaired.ps1
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/logs/t05_console_live.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/logs/t05_output_after_b_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/logs/t05_output_before_b_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/logs/t05_output_late_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL/logs/t05_status_after_stop_20261109-013624.txt
+?? evidence/POST_E59D_CANDIDATE_001/CANCEL_RECOVERY_MARKER_OBSERVED.md
+?? evidence/POST_E59D_CANDIDATE_001/COMPILE_EXT_SMOKE_71D14597.md
+?? evidence/POST_E59D_CANDIDATE_001/DAILY_DRIVER_CLOSE_001_ASSESSMENT.md
+?? evidence/POST_E59D_CANDIDATE_001/DAILY_DRIVER_PACKAGE_71D14597/
+?? evidence/POST_E59D_CANDIDATE_001/GITHUB_EVIDENCE_BRANCH_SEAL.md
+?? evidence/POST_E59D_CANDIDATE_001/IDE_REMAINING_AUDIT_20261109.md
+?? evidence/POST_E59D_CANDIDATE_001/LFS_BILLING_PROBE_20261109.md
+?? evidence/POST_E59D_CANDIDATE_001/MARKER_SHA_0F054F01.md
+?? evidence/POST_E59D_CANDIDATE_001/PHASE5/T24_PACKAGE/
+?? evidence/POST_E59D_CANDIDATE_001/T05_FORMAL_PASS_0F054F01.md
+?? evidence/POST_E59D_CANDIDATE_001/T08_TERMINATE_DUMP_RECONCILED.md
+?? evidence/POST_E59D_CANDIDATE_001/T10_BOARD_RETURN.md
+?? evidence/POST_E59D_CANDIDATE_001/T10_VERIFIED_RESTORE_SEAL.md
+?? evidence/POST_E59D_CANDIDATE_001/_push_lfs_excluded.tmp.txt
+?? evidence/POST_E59D_CANDIDATE_001/_push_progression_evidence.ps1
+?? evidence/POST_E59D_CANDIDATE_001/_push_staged_list.tmp.txt
+?? evidence/PROD_AUDIT_75_DISPATCH_001/
+?? evidence/PROD_AUDIT_BATCH2_001/
+?? evidence/PROD_AUDIT_BATCH3_001/
+?? evidence/PROD_AUDIT_BATCH3_001_brief_extract.txt
+?? evidence/PROD_AUDIT_BATCH4_001/
+?? evidence/PROD_AUDIT_BATCH5_001/
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/CRASH_ORIGIN_28836.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/CRASH_STACK_4ED342CE.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/CRASH_STACK_F41BAFB8.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/HANDOFF_HWND_TRACK_STOPPED.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/MESSAGE_PUMP_SOURCE_MAP_4ED342CE.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/ORIGIN_ASSESSMENT_4ED342CE.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_DIAG_RETURN_BOARD_7EEE4427.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_STACK_FIRST_DISPOSITION.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-213605.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-213915.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-214423.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-221114.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-225439.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-225515.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-225538.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-225635.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RESULT_20261108-225712.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-213605.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-213915.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-214423.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-221114.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-225439.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-225515.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-225538.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-225635.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_SURVIVAL_RUNLOG_20261108-225712.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_A_TIP_RETEST_DISPOSITION.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/REQUEST_B_ORIGIN_20261109.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_HOLD.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RESULT_20261109-013742.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RESULT_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RESULT_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RUNLOG_20261109-013742.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RUNLOG_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T05_A_STOP_B_RUNLOG_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/T18_T19_BLOCKED.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/TIP_FIX_NOT_APPLIED_4ED342CE.md
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/force_rebuild_tip.ps1
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/harness_request_a_diag_4ed.ps1
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/harness_t05_a_stop_b_repaired.ps1
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/RawrXD-Win32IDE-Native.exe.18FA04F9.bak
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/WER_3A8EE73D/
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/WER_F41BAFB8/
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/deepen_4ed_exception_context.py
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/deterministic_ninja_stderr.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/deterministic_ninja_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/deterministic_rebuild_F41.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_exe_sha.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_harness_invoke.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_harness_invoke2.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_ninja_stderr.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_ninja_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/diag_rebuild_4ed.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/disasm_around_119DF0.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/disasm_around_119EB0.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/disasm_around_1275BF.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/disasm_tip18FA_127820.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/disasm_tip18FA_127820_llvm.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/exception_context_4ED342CE_deepened.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/force_ninja_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/force_rebuild_tip.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/git_status_tip.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/harness_reqa_3A8EE73D.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/harness_reqa_4ED342CE.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/harness_reqa_4ED342CE_err.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/harness_reqa_F41BAFB8.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/harness_reqa_dumpcap.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/map_rvas_3976.py
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/map_rvas_pdata.py
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/map_rvas_pdata_35440.py
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/prove_rebuild_20261108.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/rebuild_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/rebuild_tip_reqa_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/restore_4ed_ninja.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/rva_pdata_map_28836.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/rva_pdata_map_35440.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/rva_pdata_map_3976.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_28836.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_28836_alt.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_35440.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_35440_alt.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_3976.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/stack_parse_3976_alt.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_console_71D1.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_console_live.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_after_b_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_after_b_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_before_b_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_before_b_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_late_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_output_late_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_status_after_stop_20261109-013745.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/t05_status_after_stop_20261109-015722.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/logs/unwindinfo_323A38A0.txt
+?? evidence/PROGRESSION_FINISH25_001/CANCEL/prove_dump_and_rebuild.ps1
+?? evidence/PROGRESSION_FINISH25_001/DAILY_DRIVER_CLOSE_001_SEAL.md
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/CONSOLE_RETEST_18FA_LIVE.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/CONSOLE_RETEST_71D1_LIVE.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/CONSOLE_RETEST_9C91_LIVE.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/CONSOLE_T10_ISOLATED.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/DAILY_DRIVER_9C91_RETEST_SUMMARY.md
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/DOC_TAB_MAX1000_STUCK_TAB_FIX.md
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/RUNLOG_T10_ISOLATED.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/SMOKE_DOC_TAB_MAX1000_STUCK_TAB.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/T08_MAIN_LOST_ISOLATION.md
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/T10_MULTIDOC_PROBE.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/T10_PROBE_RESULT.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/T10_REBUILD_RECEIPT.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/TASK10_ISOLATED.md
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/_freeze_sha.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/_freeze_size.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/ide_session_t10_after_kill_18FA_live.json
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/ide_session_t10_isolated_after_kill.json
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/rebuild_t10_fix_stdout.txt
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/smoke_stuck_tab_demote.ps1
+?? evidence/PROGRESSION_FINISH25_001/EDITOR/workdir_retest/t10_probe.txt
+?? evidence/RAWRXD_OLLAMA_DAILY_USE_001.md
+?? evidence/RAWRXD_ROUTING_HOTPATCH_001/
+?? evidence/REPAIR_FINISH25_001/AGENT/T15_ARG_CONTRACT/.rawrxd/
+?? evidence/REPAIR_FINISH25_001/AGENT/T15_ARG_CONTRACT/DIRECT_ARGS.json
+?? evidence/REPAIR_FINISH25_001/EDITOR/ide_session_t10_after_kill.json
+?? evidence/REQUEST_A_DIAG_001/
+?? evidence/T015_CLI_TOOL/current_hash_agent_fixture.txt
+?? evidence/T026_T035_BATCH_001/
+?? evidence/T041_T055_BATCH_002/
+?? evidence/T05_INPUT_MATRIX_D9BC_20261104/
+?? evidence/T05_INPUT_MATRIX_D9BC_20261104_B/
+?? evidence/T05_RUNTIME_CURRENT_2FB9E1B7_20261104/
+?? evidence/T05_RUNTIME_CURRENT_D7101D09_20261104/
+?? evidence/T05_RUN_AFTER_FIX_1/
+?? evidence/T05_RUN_AFTER_FIX_2/
+?? evidence/T05_RUN_AFTER_FIX_3/
+?? evidence/T05_RUN_AFTER_FIX_4/
+?? evidence/T05_RUN_AFTER_FIX_5/
+?? evidence/T05_RUN_CLEAN_1/
+?? evidence/T05_STRICT_1946_20261104/
+?? evidence/T05_STRICT_B544_20261104/
+?? evidence/T05_STRICT_B544_20261104_R2/
+?? evidence/T05_STRICT_B544_20261104_R3/
+?? evidence/T05_STRICT_B544_20261104_R4/
+?? evidence/T05_STRICT_B544_20261104_R5/
+?? evidence/T05_STRICT_D9BC_20261104/
+?? evidence/T05_UIA_A559_20261104/
+?? evidence/T05_UIA_A559_20261104_REPLAY/
+?? evidence/T05_UIA_D9BC_20261104/
+?? evidence/T05_UIA_D9BC_20261104_B/
+?? evidence/T05_UIA_D9BC_20261104_C/
+?? "evidence/T080_CLICK_TO_LINE_20261108_$(Get-Date -Format HHmmss)/"
+?? evidence/T080_CLICK_TO_LINE_20261108_054035/
+?? evidence/T080_CLICK_TO_LINE_20261108_054119/
+?? evidence/T080_CLICK_TO_LINE_20261108_054134/
+?? evidence/T080_CLICK_TO_LINE_20261108_054216/
+?? evidence/T080_CLICK_TO_LINE_20261108_054258/
+?? evidence/T080_CLICK_TO_LINE_20261108_054343/
+?? evidence/T080_CLICK_TO_LINE_20261108_054456/
+?? evidence/T080_CLICK_TO_LINE_20261108_054544/
+?? evidence/T080_CLICK_TO_LINE_20261108_054857/
+?? evidence/T080_CLICK_TO_LINE_20261108_055009/
+?? evidence/T080_CLICK_TO_LINE_20261108_073447/
+?? evidence/T080_CLICK_TO_LINE_20261108_073608/
+?? evidence/T080_CLICK_TO_LINE_20261108_073642/
+?? evidence/T080_CLICK_TO_LINE_E198_20261108/
+?? evidence/T080_CLICK_TO_LINE_E198_20261108_V2/
+?? evidence/T080_CLICK_TO_LINE_E198_20261108_V3/
+?? evidence/T080_CLICK_TO_LINE_E198_COMMAND_LINE/
+?? evidence/T080_CLICK_TO_LINE_E198_FINAL/
+?? evidence/T080_CLICK_TO_LINE_E198_FINAL_V3/
+?? evidence/T080_COMPILER_DIAG_001/
+?? evidence/T080_CURRENT_20261108/
+?? evidence/T080_CURRENT_20261108_V2/
+?? evidence/T080_DIAGNOSTIC_NAVIGATION_20261104/bad.cpp
+?? evidence/T080_RUNTIME_E198_1/
+?? evidence/T080_RUNTIME_E198_2/
+?? evidence/T10_RECOVERY_20261108_073719/
+?? evidence/T10_RECOVERY_20261108_073741/t10-before-kill.json
+?? evidence/T10_RUNTIME_CURRENT_2FB9E1B7_20261104/
+?? evidence/T10_UIA_A559_20261104/
+?? evidence/T10_UIA_B544_20261104/
+?? evidence/T10_UIA_D9BC_20261104/
+?? evidence/T10_UIA_D9BC_REPAIRED_20261104/
+?? evidence/T15_DIRECT_TOOL_001/
+?? evidence/T15_DIRECT_TOOL_002/
+?? evidence/T15_MODEL_EDIT_20261104/
+?? evidence/T24_B544_20261104/
+?? evidence/T25_B544_CERTIFICATION_RECONCILIATION_20261104.md
+?? evidence/UIA_DISCOVERY_A559_20261104/
+?? evidence/benchmarks/baseline_20261108_042720.txt
+?? evidence/benchmarks/cmake_missing_authoritative.txt
+?? evidence/benchmarks/deep2_qwen2.5_1.5b_cpu.txt
+?? evidence/benchmarks/deep2_qwen2.5_1.5b_vulkan_r9700.txt
+?? evidence/benchmarks/deep2_qwen2.5_1.5b_vulkan_r9700_rebuilt.txt
+?? evidence/benchmarks/deep2_qwen2.5_1.5b_vulkan_rx7800xt.txt
+?? evidence/benchmarks/deep2_qwen2.5_1.5b_vulkan_rx7800xt_rebuilt.txt
+?? evidence/benchmarks/missing_unique_headers.txt
+?? evidence/benchmarks/ollama_cancel_recovery_20261108_042754.jsonl
+?? evidence/benchmarks/ollama_context_qwen3_20261108_042842.jsonl
+?? evidence/benchmarks/ollama_qwen3_8b_20261108_042731.jsonl
+?? evidence/benchmarks/ollama_stream_cancel_20261108_042741.jsonl
+?? include/Win32IDE_ExtHostWire.h
+?? include/plugin_signature.h
+?? include/quickjs_extension_host.h
+?? package_t24/
+?? src/core/extension_polyfill_engine.cpp
+?? src/core/js_extension_host.cpp
+?? src/core/js_extension_host.hpp
+?? src/core/js_extension_host_headless_impl.cpp
+?? src/core/js_extension_host_production.cpp
+?? src/core/model_memory_hotpatch.hpp
+?? src/core/patch_result.hpp
+?? src/core/plugin_signature.cpp
+?? src/modules/ExtensionLoader.hpp
+?? src/modules/quickjs_extension_host.cpp
+?? src/modules/quickjs_vscode_bindings.cpp
+?? src/modules/vscode_extension_api.cpp
+?? src/modules/vscode_extension_api.h
+?? src/tests/fixtures/quickjs_ext_smoke/extension.js
+?? src/win32app/RequestACtrlDiag.hpp
+?? src/win32app/Win32IDE_ChatPanel_Ollama.cpp
+?? src/win32app/Win32IDE_Core.cpp
+?? src/win32app/Win32IDE_ExtHostWire.cpp
+?? src/win32app/Win32IDE_ExtHostWire.h
+?? src/win32app/Win32IDE_Types.h
+?? t08_file1.txt
+?? t08_file2.txt
+?? t08_file3.txt
+?? t10_test.txt
+?? t15_stdin.txt
+?? t15_stdin2.txt
+?? t15_stdout.txt
+?? t15_stdout2.txt
+?? t15_test.txt
+?? t17_exit_code.txt
+?? t17_stdout.txt
+?? t17_test.txt
+?? test_t15.ps1
+?? test_t15_proper.ps1
+?? test_t15_proper2.ps1
+?? test_t15_ps.ps1
+?? tip_stages/
+?? tmp_build/ghosttext_e2e_20261030/ide_session.ini
+?? tmp_build/ghosttext_e2e_20261030/save
+?? tools/Start-OllamaVulkan.ps1
+?? tools/T18_T19_GUI_Endurance_Soak.ps1
+?? tools/T24_Deployment_Verification.ps1
+?? tools/uia/debug_dupes.ps1
+?? tools/validate_candidate_identity.ps1
+?? verify_temp/

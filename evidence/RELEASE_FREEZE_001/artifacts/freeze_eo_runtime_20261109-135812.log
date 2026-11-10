@@ -1,0 +1,28 @@
+SESSION_OPEN session_id=pin_eo_20261109-135812 run_id=pin_eorun_20261109-135812 pid=26360
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000000C0A02 session=1 pane=copilot_sidebar session_id=pin_eo_20261109-135812 run_id=pin_eorun_20261109-135812
+DISPATCH_ID id=1 bytes=20
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=20
+request_started request_id=1 model=nemotron-3-nano:4b
+exactly_once_submit session=1 request_id=1 model=nemotron-3-nano:4b
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000000C0A02 session=1 pane=copilot_sidebar session_id=pin_eo_20261109-135812 run_id=pin_eorun_20261109-135812
+exactly_once_reject session=1 active_request_id=1 reason=inference_already_running
+CHAT_SEND_BUSY dispatched=0
+callback request_id=1 complete=0 response_bytes=2 stop=0
+callback request_id=1 complete=0 response_bytes=1 stop=0
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1
+callback request_id=1 complete=1 response_bytes=0 stop=0
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000000C0A02 session=1 pane=copilot_sidebar session_id=pin_eo_20261109-135812 run_id=pin_eorun_20261109-135812
+DISPATCH_ID id=2 bytes=20
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=20
+request_started request_id=2 model=nemotron-3-nano:4b
+exactly_once_submit session=1 request_id=2 model=nemotron-3-nano:4b
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1
+callback request_id=2 complete=0 response_bytes=2 stop=0
+callback request_id=2 complete=0 response_bytes=1 stop=0
+s=2
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=1 response_bytes=0 stop=0
+ui_update request_id=2 rendered=1 complete=1 response_bytes=0

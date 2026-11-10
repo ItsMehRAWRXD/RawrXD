@@ -1,0 +1,54 @@
+# AGENT_SESSION_RECEIPT — Issue #49 remediation
+
+```text
+ASOF_UTC=2026-11-09T18:16:23Z
+MOTD_ACK=1
+GATE=AGENT_SESSION_H57
+TIP=tip_rc_issue49_001
+CANDIDATE_SHA256=F87B4EE0035DD136FB1C1A2FC2DC6578AD95491FAA007F67F2512EE5B6BE9547
+GIT_HEAD=23ca021d68062539ddb72b7c8e6ff42194780b84
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+E6CF_RESTORE=HELD
+NO_CROSS_SHA_PASS_INHERITANCE=1
+INVENT_PASS=0
+```
+
+## Prior measured failure
+
+| Field | Value |
+|-------|-------|
+| Prior SHA | `E6CF5BD2…` |
+| `AgentSession_IN_EXE` | `0` |
+| Step | `S_H57_AGENTSESSION=BLOCKED_NOT_LINKED_IN_NATIVE_EXT` |
+
+## Source fix landed
+
+| Change | Path |
+|--------|------|
+| `#include agentic/AgentSession.h` + `ensureProductAgentSession` | `Win32IDE_AgentCommands.cpp` |
+| Construct ledger on `onAgenticLoopRunTask` before `StartTask` | same |
+| CMake Ext POST-link `rawrxd_agentic_backend` + `RAWRXD_HAS_AGENT_SESSION=1` | `CMakeLists.txt` |
+
+## Runtime disposition (SHA-bound)
+
+```text
+AGENT_SESSION=DEMONSTRATED
+AgentSession_IN_EXE=1
+AgentSession_bound_IN_EXE=1
+AGENT_SESSION_RUNTIME=1
+H57_AGENTSESSION=PASS_SESSION_SPAWNED_RUNTIME
+REQUEST_DISPATCH_CORRELATED=1
+LEDGER_FLUSH_PROVED=0
+REASON=RUNTIME_SESSION_HIT_ON_TIP_RC_ISSUE49_001
+```
+
+## Law
+
+```text
+LINKED_IN_CMAKE != PRESENT_IN_EXE != RUNTIME_INITIALIZED != LEDGER_FLUSHED
+LEDGER_FLUSH_PROVED=0
+NOT_RUN != PASS
+PROMOTE=0
+```

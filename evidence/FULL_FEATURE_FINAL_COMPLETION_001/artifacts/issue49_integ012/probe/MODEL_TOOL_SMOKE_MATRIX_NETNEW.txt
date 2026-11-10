@@ -1,0 +1,63 @@
+ASOF_UTC=2026-11-09T22:42:29Z
+LANE=NETNEW_ONLY_NOT_IN_PRIOR_MATRIX
+LOOP=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_012\deep2_agentic_loop.exe
+HOST_SEED=OFF
+OPAQUE_FIXTURE=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+
+CANDIDATE=phi3_mini_4k_instruct_Q4
+PATH=G:\~dev\models\phi-3-mini-4k-instruct.Q4_K_M.gguf
+EXISTS=1 SIZE_MB=2282.4
+EXIT=
+LOG=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\probe\netnew_phi3_mini_4k_instruct_Q4_tool_smoke.log
+DISPOSITION=EOS_EMPTY_SNAP_EXPECTED_TOOL | ingest done in 6623.0 ms: arch=phi3 blocks=32 vocab=32064 bos=1 eos=32000
+HIT=[stage] ingest done in 6623.0 ms: arch=phi3 blocks=32 vocab=32064 bos=1 eos=32000
+HIT=[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+HIT=[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_5716900478500
+HIT=[step 1] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+HIT=[step 1] generated 1 tokens / 0 chars in 11 ms (93.536 tok/s) snap=5
+HIT=[step 1] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+HIT=[step 2] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+HIT=[step 2] generated 1 tokens / 0 chars in 9 ms (109.947 tok/s) snap=5
+HIT=[step 2] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+HIT=[verification] running build command: cl /nologo /EHsc /std:c++20 /Fe:"F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.exe" "F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp"
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): error C2660: 'undeclared_fn': function does not take 2 arguments
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(4): note: see declaration of 'undeclared_fn'
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): note: while trying to match the argument list '(int, int)'
+HIT=MODEL_REQUESTED_TOOL   NO (tool_calls=0)
+HIT=FINAL_VERDICT          FAIL
+HIT=[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+HIT=[SNAP OUT RAW] bytes=0 text=""
+HIT=[SNAP OUT META] eos_id=32000
+HIT=[ESP] seq=34 req=1 agent=0 kind=snap_stop value=0 message=expected TOOL protocol prefix
+HIT=[ESP] seq=36 req=1 agent=0 kind=error value=0 message=model_output_invalid
+
+CANDIDATE=llama32_3b_Q2
+PATH=F:\rawrxd\llama3.2-3b-Q2_K.gguf
+EXISTS=1 SIZE_MB=1300.8
+EXIT=
+LOG=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\probe\netnew_llama32_3b_Q2_tool_smoke.log
+DISPOSITION=EOS_EMPTY_SNAP_EXPECTED_TOOL | ingest done in 3333.6 ms: arch=llama blocks=28 vocab=128256 bos=128000 eos=128009
+HIT=[stage] ingest done in 3333.6 ms: arch=llama blocks=28 vocab=128256 bos=128000 eos=128009
+HIT=[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+HIT=[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_13941672675800
+HIT=[step 1] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+HIT=[step 1] generated 1 tokens / 0 chars in 10 ms (98.512 tok/s) snap=5
+HIT=[step 1] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+HIT=[step 2] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+HIT=[step 2] generated 1 tokens / 0 chars in 11 ms (88.499 tok/s) snap=5
+HIT=[step 2] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+HIT=[verification] running build command: cl /nologo /EHsc /std:c++20 /Fe:"F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.exe" "F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp"
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): error C2660: 'undeclared_fn': function does not take 2 arguments
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(4): note: see declaration of 'undeclared_fn'
+HIT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): note: while trying to match the argument list '(int, int)'
+HIT=MODEL_REQUESTED_TOOL   NO (tool_calls=0)
+HIT=FINAL_VERDICT          FAIL
+HIT=[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+HIT=[SNAP OUT RAW] bytes=0 text=""
+HIT=[SNAP OUT META] eos_id=128009
+HIT=[ESP] seq=15 req=1 agent=0 kind=snap_stop value=0 message=expected TOOL protocol prefix
+HIT=[ESP] seq=17 req=1 agent=0 kind=error value=0 message=model_output_invalid
+
+ANY_TOOL_PREFIX=0
+MATRIX_NETNEW_COMPLETE=1
+

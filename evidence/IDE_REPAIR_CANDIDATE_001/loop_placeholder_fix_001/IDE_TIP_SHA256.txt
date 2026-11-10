@@ -1,0 +1,3 @@
+SHA256 hash of F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_issue49_stable_628BC8F5\RawrXD-Win32IDE-Native-Ext.exe:
+628bc8f598304cadc62bd7c1dd1526b0e06f344223b5a14f85826a787c934d9c
+CertUtil: -hashfile command completed successfully.

@@ -1,0 +1,561 @@
+[1/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_engine_adapter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_GpuGemv.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightProxy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Place.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_Place.cpp(87): warning C4244: '=': conversion from 'uint32_t' to 'uint8_t', possible loss of data
+[6/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Expert.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[7/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_ModelFit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(573): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(574): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(575): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(896): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(926): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+[8/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2CLIBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(38): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(58): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(63): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+[9/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): warning C4244: 'argument': conversion from 'uint64_t' to 'int', possible loss of data
+[11/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\runtime\QbHostReadbackWindow.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpu.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[13/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpuLayerPlan.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[14/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\AgentOrchestrator.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(159): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(186): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(210): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(233): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(221): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(256): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(244): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(406): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(414): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(424): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(442): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(458): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+[15/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2QbHostShrinkD2h.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[16/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB_Attn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[17/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\FusedLiveController.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[18/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\../telemetry/DoubleBufferedHistogram.hpp(130): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\Deep2Telemetry.hpp(60): note: see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(101): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\Deep2Engine.cpp(919): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(920): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1811): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1814): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1818): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1846): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1815): warning C4189: 'kvHeads': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2279): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3308): warning C4456: declaration of 'attnLayers' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2862): note: see declaration of 'attnLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3837): warning C4458: declaration of 'weightSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1003): note: see declaration of 'Deep2::Deep2Engine::weightSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3965): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3978): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4014): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4046): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4485): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4486): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4567): warning C4477: 'fprintf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4567): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4989): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4988): warning C4189: 'diff': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5295): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5636): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6532): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6532): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6580): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6580): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6650): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6757): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6757): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6850): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6529): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6577): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6708): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6754): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7478): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7489): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7807): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7826): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7827): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7828): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7829): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7853): warning C4456: declaration of 'headDim' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7829): note: see declaration of 'headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7854): warning C4456: declaration of 'numHeads' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7827): note: see declaration of 'numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8508): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7917): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7915): warning C4189: 'attnOutSize': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7962): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7969): warning C4189: 'K_t': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8017): warning C4189: 'V_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8016): warning C4189: 'K_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8015): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8094): warning C4189: 'q': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8725): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8772): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8861): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8938): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8937): warning C4189: 'headsPerGroup': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9219): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9385): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9397): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9422): warning C4189: 'rowBytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9445): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9472): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9566): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9610): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10465): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10466): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10467): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10728): warning C4100: 'outDim': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11539): warning C4100: 'seqLen': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(667): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(712): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(836): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(867): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1106): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1194): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1258): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1324): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1391): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1450): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1497): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4904): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4927): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5878): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5883): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10952): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed
+[19/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeStreamGate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\K2NativeStreamGate.cpp(381): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+[20/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[21/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEPlaceLiveCounters.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[22/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenMicroZone.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[23/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticDynamicBudget.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[24/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\DualGPUHook.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[25/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GhostCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\GhostCache.cpp(93): warning C4100: 'layerIndex': unreferenced parameter
+[26/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[27/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticResidencyManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[28/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAWeights.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(755): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(572): warning C4505: 'Deep2::gemvDispatch': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(603): warning C4505: 'Deep2::rmsNorm': unreferenced function with internal linkage has been removed
+[29/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumerSpace.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[30/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\TrailBrake.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[31/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[32/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\KimiK2Config.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[33/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\sampling\advanced_sampler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\sampling\advanced_sampler.cpp(240): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\src\sampling\advanced_sampler.cpp(271): warning C4100: 'context': unreferenced parameter
+F:\rawrxd\src\sampling\advanced_sampler.cpp(419): warning C4100: 'context': unreferenced parameter
+[34/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyStore.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[35/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QaCritical.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[36/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\mars\VRAMManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\mars\VRAMManager.cpp(394): warning C4100: 'priority': unreferenced parameter
+[37/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ReverseTensorRecovery.cpp(59): warning C4100: 'graph': unreferenced parameter
+F:\rawrxd\src\deep2\ReverseTensorRecovery.cpp(90): warning C4100: 'graph': unreferenced parameter
+[38/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ollama_blob_parser_impl.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(41): warning C4189: 'file_size': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(97): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\deep2\ollama_blob_parser_impl.cpp(353): warning C4389: '==': signed/unsigned mismatch
+[39/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\PlacementPlan.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[40/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Gate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[41/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_FusedQ4KT.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[42/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\asm_stubs.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed
+[43/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2BraidExecutionPolicy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[44/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsLineage.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[45/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[46/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GpuTransfer_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[47/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEEliminate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[48/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Pinball.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[49/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[50/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[51/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[52/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpu_CostCut.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[53/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_missing_members.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[54/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2C1C9.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[55/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy_Apply.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[56/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[57/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_link_supplement.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[58/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Thermal.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[59/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy_Overlap.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[60/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Mech.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[61/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_adapter_fused.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(252): warning C4100: 'cacheKey': unreferenced parameter
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(751): warning C4100: 'cacheKey': unreferenced parameter
+[62/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenFutureCompletion.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[63/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_MechEnd.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[64/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamerParity_Post.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[65/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\StreamEngine.cpp(83): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(207): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(354): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(445): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(454): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(478): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(579): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(626): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(628): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(629): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(630): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(631): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(632): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(633): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(634): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(635): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(636): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(637): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(638): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(639): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(640): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252)
+[66/69] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HotPatcherSafety.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[67/69] Linking CXX static library deep2_engine_lib.lib
+[68/69] Building CXX object CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(29): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[69/69] Linking CXX executable bin-msvc\rawr-reap-replay.exe
+FAILED: [code=4294967295] bin-msvc/rawr-reap-replay.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawr-reap-replay.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj  /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  deep2_engine_lib.lib  rawrxd_gpu_compute.lib  3rdparty\ggml\src\ggml.lib  3rdparty\ggml\src\ggml-cpu.lib  3rdparty\ggml\src\ggml-base.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont deep2_engine_lib.lib rawrxd_gpu_compute.lib 3rdparty\ggml\src\ggml.lib 3rdparty\ggml\src\ggml-cpu.lib 3rdparty\ggml\src\ggml-base.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceInit512
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitWallNs
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitValid
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitLogitsEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTokenizeComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitLogitsComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitFirstTokenBoundary
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickSyncQuotaLiveCounters(void)" (?DualStickSyncQuotaLiveCounters@Deep2@@YAXXZ)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::SetStep(unsigned int,unsigned int)" (?SetStep@ed3@Deep2@@YAXII@Z)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::~LayerEdge(void)" (??1LayerEdge@hostfc@Deep2@@QEAA@XZ)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::LayerEdge(unsigned int,unsigned int)" (??0LayerEdge@hostfc@Deep2@@QEAA@II@Z)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickExpertResidencyReset(void)" (?DualStickExpertResidencyReset@Deep2@@YAXXZ)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitSampleComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitParity
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitHiddenLast
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitPrefillEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDeviceSelected
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamError
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitPrefillComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownFault
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitBounds
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitForwardComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDecodeTpsQ32_32
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitKVHotsetReady
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamAbort
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitWeightRangeReady
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDeviceExecution
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitHiddenProbe
+deep2_engine_lib.lib(K2LogitsSplit.cpp.obj) : error LNK2001: unresolved external symbol K2RowsToBlockRangeX64_Fixed
+deep2_engine_lib.lib(K2MLA_PathB.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::HostXchg_Note(char const *,enum Deep2::HostXchgRole,unsigned __int64,unsigned __int64,int,char const *)" (?HostXchg_Note@Deep2@@YAXPEBDW4HostXchgRole@1@_K2H0@Z)
+deep2_engine_lib.lib(K2MLAWeights.cpp.obj) : error LNK2001: unresolved external symbol "public: void __cdecl CPUInference::VulkanCompute::GemvFuseResidualNext(float const *)" (?GemvFuseResidualNext@VulkanCompute@CPUInference@@QEAAXPEBM@Z)
+deep2_engine_lib.lib(K2MLAWeights.cpp.obj) : error LNK2001: unresolved external symbol "public: void __cdecl CPUInference::VulkanCompute::GemvReuseInputNext(void)" (?GemvReuseInputNext@VulkanCompute@CPUInference@@QEAAXXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "unsigned int __cdecl Deep2::DualStickImbalanceAssign(int,int,int,unsigned __int64,int)" (?DualStickImbalanceAssign@Deep2@@YAIHHH_KH@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceObserve(unsigned __int64,unsigned __int64,unsigned int,unsigned int,unsigned __int64,unsigned __int64)" (?DualStickImbalanceObserve@Deep2@@YAX_K0II00@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceBeginLayer(void)" (?DualStickImbalanceBeginLayer@Deep2@@YAXXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "int __cdecl Deep2::DualStickExpertStickOf(int,int)" (?DualStickExpertStickOf@Deep2@@YAHHH@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "int __cdecl Deep2::DualStickBundlePinsReady(unsigned int,int,int,unsigned __int64,unsigned __int64)" (?DualStickBundlePinsReady@Deep2@@YAHIHH_K0@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::KimiK2Router::SetRouterWeights(class RawrXD::TensorView const &,class RawrXD::TensorView const &)" (?SetRouterWeights@KimiK2Router@Deep2@@QEAAXAEBVTensorView@RawrXD@@0@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::KimiK2Router::Route(float const *,struct Deep2::MoERoutingResult &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &)" (?Route@KimiK2Router@Deep2@@QEAA_NPEBMAEAUMoERoutingResult@2@AEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::KimiK2Router::Initialize(struct Deep2::KimiK2Config const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &)" (?Initialize@KimiK2Router@Deep2@@QEAA_NAEBUKimiK2Config@2@AEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceObserveExpert(int,int,unsigned int,int,unsigned __int64,unsigned __int64)" (?DualStickImbalanceObserveExpert@Deep2@@YAXHHIH_K0@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::DualStickExpertBytesOf(int,int)" (?DualStickExpertBytesOf@Deep2@@YA_KHH@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceSetShape(unsigned int,unsigned int,unsigned int)" (?DualStickImbalanceSetShape@Deep2@@YAXIII@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::ds_imb::TransferExecNs(unsigned int,unsigned __int64)" (?TransferExecNs@ds_imb@Deep2@@YA_KI_K@Z)
+deep2_engine_lib.lib(K2MLA_QPathDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteOk(void)" (?MLA_QPathDevice_NoteOk@Deep2@@YAXXZ)
+deep2_engine_lib.lib(K2MLA_QPathDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::MLA_QPathDevice_NoteFail(void)" (?MLA_QPathDevice_NoteFail@Deep2@@YAXXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::NoteExperts(int const *,unsigned int)" (?NoteExperts@ed3@Deep2@@YAXPEBHI@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::BeginStick(unsigned int,unsigned int,float const *,unsigned __int64)" (?BeginStick@ed3@Deep2@@YAXIIPEBM_K@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::NoteFused(int)" (?NoteFused@ed3@Deep2@@YAXH@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::EmitBoundary(char const *)" (?EmitBoundary@ed3@Deep2@@YAXPEBD@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickBundleTouchPins(unsigned int,int,int,unsigned __int64,unsigned __int64)" (?DualStickBundleTouchPins@Deep2@@YAXIHH_K0@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "int __cdecl Deep2::DualStickBundleLookup(int,int,struct Deep2::DualStickBundleMeta *)" (?DualStickBundleLookup@Deep2@@YAHHHPEAUDualStickBundleMeta@1@@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpu.cpp.obj) : error LNK2001: unresolved external symbol "class CPUInference::VulkanCompute * __cdecl Deep2::DualStickVc(unsigned int)" (?DualStickVc@Deep2@@YAPEAVVulkanCompute@CPUInference@@I@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl CPUInference::VulkanCompute::WeightPinClock(void)const " (?WeightPinClock@VulkanCompute@CPUInference@@QEBA_KXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl CPUInference::VulkanCompute::WeightPinResidentBytes(void)const " (?WeightPinResidentBytes@VulkanCompute@CPUInference@@QEBA_KXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickNoteExpertBundle(int,int,unsigned int,unsigned __int64,unsigned __int64,unsigned __int64,int,int,int)" (?DualStickNoteExpertBundle@Deep2@@YAXHHI_K00HHH@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickNoteExpertGpu(unsigned int,unsigned __int64)" (?DualStickNoteExpertGpu@Deep2@@YAXI_K@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::NoteD2h(int,int,char const *,float const *,unsigned __int64)" (?NoteD2h@ed3@Deep2@@YAXHHPEBDPEBM_K@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ed3::NotePins(unsigned __int64,unsigned __int64,unsigned __int64,unsigned __int64)" (?NotePins@ed3@Deep2@@YAX_K000@Z)
+bin-msvc\rawr-reap-replay.exe : fatal error LNK1120: 62 unresolved externals
+ninja: build stopped: subcommand failed.

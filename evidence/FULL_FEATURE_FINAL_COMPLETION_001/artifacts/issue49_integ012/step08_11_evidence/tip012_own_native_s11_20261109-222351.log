@@ -1,0 +1,4 @@
+MOTD_WORKSPACE F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+MOTD_STATUS TURN_START session=deep2-agent-24252-30810904063100 turn=1
+MOTD_SHA256 fec4fed595275f18fcbbcd9114a825abff0e4950dba550e63ec13c4989b9fb2e
+[stage] loading model F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf

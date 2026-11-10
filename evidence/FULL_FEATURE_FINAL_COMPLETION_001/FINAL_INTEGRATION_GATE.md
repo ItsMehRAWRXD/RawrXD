@@ -1,0 +1,44 @@
+# FINAL_INTEGRATION_GATE — FULL_FEATURE_FINAL_COMPLETION_001
+
+ASOF_UTC=2026-11-09T10:31:50Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+```
+FINAL_INTEGRATION=FAIL
+SINGLE_CANDIDATE_SHA=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+TIP_NAME=tip_final_integ_002
+TIP_CONFIG=RelWithDebInfo
+FROZEN_A4F_UNTOUCHED=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+PRIOR_BEST_EA5D=EA5D9B6979E8A60DD6899CCA23B3762CA48695234A18965534E4C1E7732442AE
+NO_TIP_003=1
+```
+
+## Conjunction for PRODUCT_PASS (not met)
+
+| Gate | Status on CC79 |
+|------|----------------|
+| T10 Recovery | PASS (freeze) |
+| ExtensionHost EXT_LOAD | **PASS** (INIT∧LOAD∧ACTIVATE∧CMD; malformed isolated) |
+| Native chat Ctrl+Enter 7/7 | **PASS** (CJK PASS) |
+| Terminal ConPTY product smoke | **PASS** (`--term-smoke` reconfirmed prior) |
+| Debug backend headless | **PASS** (SESSION_REAL=1; WaitForDebugEvent in image) |
+| Debug console IDE UI | **PARTIAL_UI_HOOKS_POSTED** (no SESSION_REAL via UI) |
+| Terminal full interactive matrix | NOT_RUN |
+| Output GUI E2E | **PASS** (visEdit=430) |
+| Problems GUI E2E | **PARTIAL** (id1312 items=0) |
+| Four-panel 1–10 | **FAIL_CLOSED_GAPS** (HWND unblocked; problems+debug UI incomplete) |
+| Deep2/Vulkan | NOT_RUN/PARTIAL absorb |
+| Packaging full RC | PARTIAL_STAGE_ONLY |
+
+```
+PRODUCT_PASS=0
+FINAL_INTEGRATION=FAIL
+NOT_RUN≠PASS
+EXT∧CHAT∧TERMINAL∧DEBUG_HEADLESS∧OUTPUT ≠ PRODUCT_PASS
+PROMOTE=0
+CERTIFIED=0
+```

@@ -1,0 +1,25 @@
+IDE_REPAIR_CANDIDATE_001 / WAVE1_INTEGRATED_STATUS
+ASOF_UTC=2026-11-10T08:05:00Z
+PROMOTE=0
+MATURITY=82%_HOLD
+
+WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS
+  CITE=../WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT.txt
+  IDE_SHA=6E59E91A… (rc5b)
+  SCOPE=READ+EDIT/BUILD_TEST markers + CU registry/orphan verify path
+
+WAVE1_INTEGRATED=NOT_SEALED
+  REQUIRED_CONJUNCTION_NOT_MET=
+    1) Same-SHA chat→AgentSession→tool loop product path (not harness-only)
+    2) Live CU_GUI_E2E on Ext agent path (tool_result + BMP) — P0 owns; orphan verify != this
+    3) ISSUE49 exactly-once chat/session tool loop (roadmap 85->88) — ISSUE49=HOLD
+    4) Explicit WAVE1_INTEGRATED=PASS receipt under IDE_REPAIR_CANDIDATE_001/
+
+LANE_NOTE=
+  LANE.txt STATUS claims WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS only.
+  CERTIFICATION_LADDER_MAP NEXT_IMMEDIATE=WAVE1_INTEGRATED_ON_NEW_SHA still open.
+  P0_CU_GUI_COORDINATION: do not inherit CU_GUI PASS from orphan verify.
+
+WAVE3_PERMISSION=
+  Edit Win32IDE_ComputerUse.cpp / AgentCommands registry bind = FORBIDDEN until WAVE1_INTEGRATED=PASS sealed.
+  Wave3 may: inventory, harness plans, wrapper scripts, fixture copies, text receipts.

@@ -1,0 +1,91 @@
+name: Extension Bridge Native Headless Acceptance
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - 'tools/test_extension_host_bridge.cpp'
+      - 'tools/test_js_extension_bridge.cpp'
+      - 'tools/test_command_registry_headless.cpp'
+      - 'tools/test_extension_central_integration.cpp'
+      - 'tools/run_headless_acceptance.py'
+      - 'tools/test_cli_numeric_policy.c'
+      - '~dev/rawrxd/src/core/cli_numeric_policy.h'
+      - '~dev/rawrxd/src/core/rawrxd_cli_main.c'
+      - '~dev/rawrxd/src/core/command_registry.cpp'
+      - '~dev/rawrxd/src/core/command_registry.h'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '.github/workflows/extension-bridge-native.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/core/extension_host_production.cpp'
+      - 'tools/test_extension_host_bridge.cpp'
+      - 'tools/test_js_extension_bridge.cpp'
+      - 'tools/test_command_registry_headless.cpp'
+      - 'tools/test_extension_central_integration.cpp'
+      - 'tools/run_headless_acceptance.py'
+      - 'tools/test_cli_numeric_policy.c'
+      - '~dev/rawrxd/src/core/cli_numeric_policy.h'
+      - '~dev/rawrxd/src/core/rawrxd_cli_main.c'
+      - '~dev/rawrxd/src/core/command_registry.cpp'
+      - '~dev/rawrxd/src/core/command_registry.h'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - '.github/workflows/extension-bridge-native.yml'
+permissions:
+  contents: read
+jobs:
+  bridge-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run production bridge, registry, integration and CLI acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_extension_host_bridge.cpp -o /tmp/rawrxd_command_bridge
+          /tmp/rawrxd_command_bridge
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_js_extension_bridge.cpp -o /tmp/rawrxd_js_bridge
+          /tmp/rawrxd_js_bridge
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_command_registry_headless.cpp -o /tmp/rawrxd_central_registry
+          /tmp/rawrxd_central_registry
+          g++ -std=c++17 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer -pthread tools/test_extension_central_integration.cpp -o /tmp/rawrxd_extension_integration
+          /tmp/rawrxd_extension_integration
+          cc -std=c11 -Wall -Wextra -Werror -fsanitize=undefined tools/test_cli_numeric_policy.c -lm -o /tmp/rawrxd_cli_numeric
+          /tmp/rawrxd_cli_numeric
+      - name: Produce hash-bound headless acceptance receipt
+        shell: bash
+        run: |
+          python3 tools/run_headless_acceptance.py --output headless-acceptance-receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: headless-acceptance-linux
+          path: headless-acceptance-receipt.json
+          if-no-files-found: warn
+  bridge-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production bridge with MSVC
+        shell: pwsh
+        run: |
+          $vs = & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -latest -products '*' -property installationPath
+          if (-not $vs) { throw "MSVC_NOT_FOUND" }
+          $bat = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_bridge_test.exe tools\test_extension_host_bridge.cpp && extension_bridge_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "EXTENSION_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:js_bridge_test.exe tools\\test_js_extension_bridge.cpp && js_bridge_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "JS_BRIDGE_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:central_registry_test.exe tools\\test_command_registry_headless.cpp && central_registry_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "CENTRAL_REGISTRY_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /std:c++17 /EHsc /W4 /WX /Fe:extension_integration_test.exe tools\\test_extension_central_integration.cpp && extension_integration_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "EXTENSION_INTEGRATION_TEST_FAILED_$LASTEXITCODE" }
+          $command = "call `"$bat`" && cl /nologo /TC /W4 /WX /Fe:cli_numeric_test.exe tools\\test_cli_numeric_policy.c && cli_numeric_test.exe"
+          cmd /d /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "CLI_NUMERIC_TEST_FAILED_$LASTEXITCODE" }

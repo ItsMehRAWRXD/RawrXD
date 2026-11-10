@@ -1,0 +1,6 @@
+#include "materials/materials.hpp"
+#include <cassert>
+#include <cmath>
+#include <iostream>
+using namespace kartgib::materials;
+int main(){assert(hash2(1,2,3)==hash2(1,2,3));assert(hash2(1,2,3)!=hash2(1,2,4));assert(std::abs(noise2(3.f,2.f,5)-noise2(3.f,2.f,5))<1e-7f);assert(fbm(.2f,.3f,1)>=0&&fbm(.2f,.3f,1)<=1);assert(voronoi(2,3,4)>=0);assert(smoothstep(0,1,.5f)==.5f);assert(preset(Surface::BareMetal).metallic==1);assert(asphalt_grain(.2f,.3f,1)>=0);assert(road_marking(.5f,.02f)>road_marking(.1f,.02f));assert(kerb_stripes(.01f,0)!=kerb_stripes(.1f,0));assert(stone_mortar(0,0)>stone_mortar(.07f,.07f));assert(terrain_blend(.9f,.8f)>terrain_blend(.1f,.1f));assert(metal_wear(.001f,.2f,1)>metal_wear(.5f,.5f,1));std::vector<float> h(9,.5f);auto n=normal_from_height(h,3,3,1,1,1);assert(std::abs(n.z-1)<1e-6);Config c;c.width=32;c.height=16;c.seed=42;auto a=bake(c),b=bake(c);assert(a.albedo.size()==512&&a.normal.size()==512&&a.orm.size()==512&&a.emissive.size()==512);for(size_t i=0;i<a.albedo.size();++i){assert(a.albedo[i].r==b.albedo[i].r);assert(std::isfinite(a.normal[i].b));}c.surface=Surface::Neon;auto neon=bake(c);assert(neon.emissive[0].b>1.f);c.width=0;bool threw=false;try{(void)bake(c);}catch(const std::invalid_argument&){threw=true;}assert(threw);std::cout<<"Drop05 procedural materials PASS\n";}

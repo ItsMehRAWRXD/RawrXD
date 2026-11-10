@@ -1,0 +1,4 @@
+cancel_requested request_id=0
+cancel_acknowledged request_id=0 active_after=0 worker_joinable=0
+cancel_requested request_id=0
+cancel_acknowledged request_id=0 active_after=0 worker_joinable=0

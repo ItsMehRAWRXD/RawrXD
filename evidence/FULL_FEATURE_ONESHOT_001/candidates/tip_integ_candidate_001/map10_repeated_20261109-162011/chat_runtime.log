@@ -1,0 +1,82 @@
+SESSION_OPEN session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011 pid=26348
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006D0BA8 session=1 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+SESSION_OPEN session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011 pid=26348
+DISPATCH_ID id=1 bytes=75 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=75 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+request_started request_id=1 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=1 complete=0 response_bytes=8 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=1 rendered=1 complete=0 response_bytes=8 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=1 complete=0 response_bytes=6 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=1 rendered=1 complete=0 response_bytes=6 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=1 complete=1 response_bytes=0 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+RESPONSE_END request_id=1 session=1 bytes=18 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006D0BA8 session=1 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+DISPATCH_ID id=2 bytes=130 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=130 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=2 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_START request_id=2 dispatch_id=2 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+request_started request_id=2 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=3 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=3 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+RESPONSE_START request_id=2 session=1 dispatch_id=2 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=8 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=8 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=3 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=3 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=9 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=9 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=7 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=7 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=1 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=2 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=14 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=14 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=2 complete=0 response_bytes=9 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=2 rendered=1 complete=0 response_bytes=9 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+cancel_requested request_id=2 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_END request_id=2 cancel=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+cancel_acknowledged request_id=2 active_after=0 worker_joinable=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006D0BA8 session=1 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+DISPATCH_ID id=3 bytes=82 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ATTEMPT dispatch_id=3 send_seq=3 bytes=82 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=3 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_START request_id=3 dispatch_id=3 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+request_started request_id=3 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ARMED dispatch_id=3 send_seq=3 request_id=3 session=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006D0BA8 session=1 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+DISPATCH_ID id=4 bytes=76 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=76 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=4 pane=copilot_sidebar session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_START request_id=4 dispatch_id=4 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+request_started request_id=4 model=llama3.2:3b session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=4 session=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=1 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+RESPONSE_START request_id=4 session=1 dispatch_id=4 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=4 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=4 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=2 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=2 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=7 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=7 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=5 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=5 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=0 response_bytes=1 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=0 response_bytes=1 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+BACKEND_REQUEST_END request_id=4 success=1 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+callback request_id=4 complete=1 response_bytes=0 stop=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+ui_update request_id=4 rendered=1 complete=1 response_bytes=0 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=4 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011
+RESPONSE_END request_id=4 session=1 bytes=20 session_id=integ_map10_20261109-162011 run_id=integ_map10_run_20261109-162011

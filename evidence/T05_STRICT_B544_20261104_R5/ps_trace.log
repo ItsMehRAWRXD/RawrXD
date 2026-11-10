@@ -1,0 +1,24 @@
+13060 [PS_TRACE] start() encoded command length=1208
+
+13060 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+13060 [PS_TRACE] CreateProcessA SUCCESS pid=20800
+
+13060 [PS_TRACE] Process started, starting output threads
+
+20220 [PS_TRACE] readOutputThread() STARTED thread=20220
+
+144 [PS_TRACE] monitorProcessThread() STARTED thread=144
+
+18084 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+20220 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+20220 [PS_TRACE] readOutputThread() EXITING
+
+144 [PS_TRACE] monitorProcessThread() process exited code=0
+
+144 [PS_TRACE] monitorProcessThread() calling onFinished() exitCode=0
+
+144 [PS_TRACE] monitorProcessThread() EXITING
+

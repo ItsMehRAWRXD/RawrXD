@@ -1,0 +1,38 @@
+STRATA_GENERATION_API_SMOKE
+ASOF_UTC=2026-11-10T13:47:10Z
+URL=http://127.0.0.1:8080/v1/chat/completions
+METHOD=POST
+MODEL=qwen3.6-35b-a3b-ud-q4_k_xl
+PROMPT=Reply with exactly: STRATA_OK
+MAX_TOKENS=64
+HTTP_STATUS=200
+ELAPSED_MS=1059
+PROMPT_TOKENS=17
+COMPLETION_TOKENS=64
+TOTAL_TOKENS=81
+STRATA_TPS=90.9
+TPS_BASIS=completion_tokens/predicted_ms=64/0.704s (timings.predicted_per_second)
+CLIENT_TPS=60.4
+CLIENT_TPS_BASIS=64/1.059s
+FINISH_REASON=length
+CONTENT=null
+REASONING_CONTENT_EXCERPT=Here's a thinking process: 1. Analyze User Input: The user says "Reply with exactly: STRATA_OK". 2. Identify Constraint: The constraint is explicit and strict: "Reply with exactly: STRATA_OK". This means the entire response must be just that string,
+RESPONSE_ID=chatcmpl-58c622c06cc64f7a89442ed2
+ENGINE=F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe
+GPU_NOTE=AMD Radeon AI PRO R9700 gfx1201; every routed expert in VRAM 18.75 GiB; Windows budget 31707/32624 MiB; context 2048 this serve
+RDNA3_PRESERVED=1
+RDNA3_PATH=%LOCALAPPDATA%\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3
+OLLAMA_UNTOUCHED=1
+ISSUE49_UNCHANGED=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+STRATA_QWEN36_MODEL_LOAD=PASS
+STRATA_GFX1201_WARMUP=PASS
+STRATA_GENERATION=PASS
+STRATA_API=PASS
+
+LAW=GENERATION_PASS != ISSUE49_PASS
+LAW=REASONING_CONTENT_POPULATED_CONTENT_NULL_NE_FAIL_WHEN_COMPLETION_TOKENS_GT_0
+RESPONSE_BODY_FILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\GENERATION_API_SMOKE_response.json

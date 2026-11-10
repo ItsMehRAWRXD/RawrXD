@@ -1,0 +1,34 @@
+START Mon 11/09/2026  8:47:28.75
+[1/3] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(115): warning C4189: 'btnStop': local variable is initialized but not referenced
+[2/3] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1640): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3398): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4763): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4970): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(4917): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5826): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5835): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5855): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5868): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(7169): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(7172): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+[3/3] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe
+        1 file(s) copied.
+        1 file(s) copied.

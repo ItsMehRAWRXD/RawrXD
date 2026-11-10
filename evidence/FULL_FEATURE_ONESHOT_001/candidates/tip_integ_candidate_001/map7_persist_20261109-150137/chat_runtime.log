@@ -1,0 +1,17 @@
+SESSION_OPEN session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137 pid=22760
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000001F0CCC session=1 pane=copilot_sidebar session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+SESSION_OPEN session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137 pid=22760
+DISPATCH_ID id=1 bytes=64 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=64 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=llama3.2:3b session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+request_started request_id=1 model=llama3.2:3b session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+callback request_id=1 complete=1 response_bytes=0 stop=0 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137
+RESPONSE_END request_id=1 session=1 bytes=2 session_id=integ_map7_20261109-150137 run_id=integ_map7_run_20261109-150137

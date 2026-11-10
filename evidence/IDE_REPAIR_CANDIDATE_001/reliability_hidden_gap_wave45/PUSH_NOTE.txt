@@ -1,0 +1,14 @@
+WAVE45_PUSH_NOTE
+ASOF_UTC=2026-11-10T08:25:00Z
+LOCAL_BRANCH=upload/repair-candidate-20261110
+LOCAL_COMMIT=b4a2231888
+PACKET=evidence/IDE_REPAIR_CANDIDATE_001/reliability_hidden_gap_wave45/
+FILES=7_text_only
+GIT_LFS_SKIP_PUSH_REQUIRED=1
+ORIGIN_PUSH_ATTEMPT=BLOCKED_LFS_BUDGET
+ERROR=This repository exceeded its LFS budget
+NEXT=Retry with GIT_LFS_SKIP_PUSH=1 onto orphan upload/computer-use-20261110 (text receipts only)
+  OR raise LFS budget; do not force-push RC4
+NO_RC4_FORCE_PUSH=1
+PROMOTE=0
+MATURITY_CHANGE=0

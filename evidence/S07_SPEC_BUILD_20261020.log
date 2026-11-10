@@ -1,0 +1,145 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml.c
+  ggml.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+  ggml-alloc.c
+  ggml-quants.c
+  ggml-backend.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+  ggml-opt.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(24,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(25,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(669,24): warning C4457: declaration of 'loss' hides function parameter [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+      F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(657,62):
+      see declaration of 'loss'
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+  ggml-threading.cpp
+  gguf.cpp
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(276,23): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(526,29): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  input_sanitizer.cpp
+  Generating code
+  Finished generating code
+  deep2_spec_bench.vcxproj -> F:\rawrxd\build\bin\Release\deep2_spec_bench.exe

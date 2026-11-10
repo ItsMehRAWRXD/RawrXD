@@ -1,0 +1,4 @@
+deep2_gpu_code31_reset_smoke.cpp
+GpuDeviceLostReset.cpp
+Generating Code...
+CL_EXIT=0 

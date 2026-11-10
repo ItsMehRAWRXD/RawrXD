@@ -1,0 +1,22 @@
+{
+  "gate": "T05",
+  "status": "PASS",
+  "candidate_sha256": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+  "pid": 5728,
+  "request_a_id": "1",
+  "stop_request_a_id": "1",
+  "cancel_acknowledged": true,
+  "request_b_id": "2",
+  "request_b_input_exact": true,
+  "request_b_exact_output": true,
+  "late_a_render_count": 0,
+  "ai_response_only": true,
+  "timestamps_utc": {
+    "receipt": "2026-11-04T14:03:05.1084148Z"
+  },
+  "evidence": {
+    "ollama_debug_sha256": "CCD8DAEF0E383AC58AEC762850FEFDEE6DD3909283F8D460461BBF1A2EA09120",
+    "test_receipt_sha256": "4C0F4FC7C0B6B7AD0236C023D6BA8917046541FEE42FAF2823FD696CA1A24631",
+    "chat_runtime_sha256": "89FCFC77817B8597E72786791E9CA9ABAB979EEB5A5FB56D9A85A62AB48C25F1"
+  }
+}

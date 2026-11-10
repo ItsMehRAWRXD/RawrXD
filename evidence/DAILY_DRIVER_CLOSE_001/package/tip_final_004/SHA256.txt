@@ -1,0 +1,3 @@
+SHA256 hash of bin\RawrXD-Win32IDE-Native-Ext.exe:
+ea5d9b6979e8a60dd6899cca23b3762ca48695234a18965534e4c1e7732442ae
+CertUtil: -hashfile command completed successfully.

@@ -1,0 +1,16 @@
+Never hyphenate TOOL. This is the SECOND edit after a prior repair. Follow exactly:
+1) TOOL read bug.cpp
+2) Emit EXACTLY:
+TOOL write bug.cpp @@/* Issue #49 second-edit fixture: repaired. */
+#include <stdio.h>
+int undeclared_fn(int a) { return a; }
+int main() {
+  int x = undeclared_fn(1);
+  char p[5]; p[0]=80; p[1]=65; p[2]=83; p[3]=83; p[4]=0; puts(p);
+  return 0;
+}
+@@
+3) TOOL build
+4) TOOL test
+5) TOOL finish
+Do not echo fake FINAL_TEST strings. bug.exe must print PASS on stdout.

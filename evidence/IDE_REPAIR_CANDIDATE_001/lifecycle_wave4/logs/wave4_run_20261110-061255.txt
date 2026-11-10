@@ -1,0 +1,8 @@
+[2026-11-10T06:12:55.6248565-05:00] WAVE4_START sha=2FFDC206859BA6DE9FF99CC3944AB89DAC62D9C4F3DC78356846EC2C970DA350 tip=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package\RawrXD-Win32IDE-Native-Ext.exe
+[2026-11-10T06:12:59.1215386-05:00] EXT-01=PASS EXT-02=PASS EXIT=0 FORCE_KILL=0 ORPHANS=0 DEACT=1
+[2026-11-10T06:13:06.0875084-05:00] CAN-01=PASS started=True req=True ack=True model=Local models / Ollama / qwen2.5-coder:1.5b-base
+[2026-11-10T06:17:44.1745979-05:00] MSW-01=FAIL selA= selB=Local models / Ollama / nemotron-3-nano:4b gotA=False gotB=False resp=False
+[2026-11-10T06:18:04.0371412-05:00] PER-01=FAIL wrote=False still=False jsonOk=False path=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\per01\ide_session.json
+[2026-11-10T06:18:13.3074349-05:00] PER-02=PASS sessOk=True canPrior=True mswPrior=False
+[2026-11-10T06:18:32.7207654-05:00] REC-01=PASS zombies_after_kill=0 reopen_alive=True zombies_final=0
+[2026-11-10T06:18:32.7530220-05:00] DONE milestone=CORE_SERIAL_INCOMPLETE maturity_earned=0 promote=0

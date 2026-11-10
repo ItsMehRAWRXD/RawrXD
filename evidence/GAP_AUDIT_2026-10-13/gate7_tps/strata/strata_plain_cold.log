@@ -1,0 +1,37 @@
+﻿STRATA_BENCH tag=gate7_run2_plain model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=gpu-native prefill=8 generate=64
+S04_TRANSFER h2d_gbps=16.62 d2h_gbps=23.24 bytes_moved=2684354560
+ingesting F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ...
+arch=llama blocks=22 embd=2048 heads=32 kv=4 experts=0 used=0 shared=0
+bound ops=311 (3560.3 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+S10_TTFT_MS 8122.7
+S10_PREFILL_TOKENS 8
+S10_PREFILL_MS 4562.3
+S10_PREFILL_TPS 1.75
+S10_DECODE_TOKENS 64
+S10_DECODE_MS 14470.9
+S10_FORWARD_ONLY_MS 14465.4
+S10_DECODE_TPS_MEAN 4.42
+S10_DECODE_TPS_MEDIAN 4.59
+S10_DECODE_P50_MS 217.72
+S10_DECODE_P95_MS 273.02
+S10_AGGREGATE_TPS 3.78
+TOKSTREAM: 29966 29989 5205 29989 29958 13 2 29871 13 29966 29989 1792 29989 29958 13 6113 263 29871 29896 29900 29899 3488 3273 5828 297 4654 2022 1298 310 1776 1048 263 2318 310 5320 7875 1058 11097 304 7232 935 373 263 18215 2578 3745 298 1657 297 278 7256 310 278 18197 29889 450 5828 881 3160 325 3640 2342 1980 310
+S02_VRAM_CACHE hits=11005 misses=155 evictions=0 prefetches=0 prefetch_hits=0 hit_rate=0.9861 device_bytes_live=629982752 device_bytes_peak=629982752
+S04_BACKEND upload_bytes=751555968 download_bytes=122757120 submits=6563 waits=6563 kernel_ms=15090.5 submit_ms=122.0 wait_ms=15090.5
+DISPATCH gpu_calls=11160 cpu_calls=0 fallback=<none> nonfinite_logits=0
+RECEIPT F:\rawrxd\evidence\GAP_AUDIT_2026-10-13\gate7_tps\strata/strata_bench_gate7_run2_plain.json
+Released all tensors
+Vulkan resources cleaned up successfully

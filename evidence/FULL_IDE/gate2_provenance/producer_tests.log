@@ -1,0 +1,60 @@
+PASS all nine audited implemented registry bindings are available
+PASS stale MLA boundary and unavailable claims cleared
+PASS implemented manifest partitions required set
+PASS complete primitive bindings permit binding-level execution
+PASS required primitives preserve first occurrence and remove duplicates
+PASS required MatMul remains unavailable
+PASS unsupported manifest partitions required set
+PASS required MatMul fails admission
+PASS unknown required primitive explicitly retained as missing
+PASS unknown required primitive fails admission
+PASS empty produced graph is not executable
+PASS frozen fixture written
+[DEBUG Reader] Opening files...
+[ABI Reader] sizeof(OperationIR)=156 sizeof(ModelGenome)=440
+[DEBUG Reader] genomePath: F:/rawrxd/evidence/FULL_IDE/gate2_provenance/fixture/genie_out/model.genome.txt
+[DEBUG Reader] physicalPath: F:/rawrxd/evidence/FULL_IDE/gate2_provenance/fixture/genie_out/model.physical.txt
+[DEBUG Reader] executionPath: F:/rawrxd/evidence/FULL_IDE/gate2_provenance/fixture/genie_out/model.execution.txt
+[DEBUG Reader] OPEN_BEGIN=model.genome.txt
+[DEBUG Reader] OPEN_END=model.genome.txt
+[DEBUG Reader] CLOSE_END=model.genome.txt
+[DEBUG Reader] OPEN_BEGIN=model.physical.txt
+[DEBUG Reader] OPEN_END=model.physical.txt
+[DEBUG Reader] CLOSE_END=model.physical.txt
+[DEBUG Reader] OPEN_BEGIN=model.execution.txt
+[DEBUG Reader] OPEN_END=model.execution.txt
+[DEBUG Reader] CLOSE_END=model.execution.txt
+[DEBUG Reader] All files exist
+[DEBUG Reader] Parsing genome file...
+[DEBUG Reader] Parsing genome line 10
+[DEBUG Reader] Genome file parsed
+[DEBUG Reader] Parsing physical file...
+[DEBUG Reader] PHYSICAL_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_END
+[DEBUG Reader] RAW_LINE1=[data_start 0]
+[DEBUG Reader] META key=[data_start] value=[0]
+[DEBUG Reader] PARSED data_start=0
+[DEBUG Reader] RAW_LINE2=[file_bytes 832]
+[DEBUG Reader] META key=[file_bytes] value=[832]
+[DEBUG Reader] RAW_LINE3=[gguf_version 3]
+[DEBUG Reader] META key=[gguf_version] value=[3]
+[DEBUG Reader] RAW_LINE4=[tensor_count 13]
+[DEBUG Reader] RAW_LINE5=[alignment 32]
+[DEBUG Reader] META key=[alignment] value=[32]
+[DEBUG Reader] RAW_LINE6=[token_embd.weight f32 [4,4] 64 0]
+[DEBUG Reader] META key=[token_embd.weight] value=[f32]
+[DEBUG Reader] RAW_LINE7=[output_norm.weight f32 [4,4] 64 64]
+[DEBUG Reader] META key=[output_norm.weight] value=[f32]
+[DEBUG Reader] RAW_LINE8=[output.weight f32 [4,4] 64 128]
+[DEBUG Reader] META key=[output.weight] value=[f32]
+[DEBUG Reader] RAW_LINE9=[blk.0.attn_norm.weight f32 [4,4] 64 192]
+[DEBUG Reader] META key=[blk.0.attn_norm.weight] value=[f32]
+[DEBUG Reader] RAW_LINE10=[blk.0.attn_q.weight f32 [4,4] 64 256]
+[DEBUG Reader] META key=[blk.0.attn_q.weight] value=[f32]
+[DEBUG Reader] Physical file parsed, tensor count: 13
+[DEBUG Reader] LoadModelGenomeFromEvidence returning true
+PASS actual frozen reader produces MLA graph
+PASS actual reader ignores stale historical MLA boundary
+PASS actual reader derives complete binding manifest
+MODELGENOME_CAPABILITIES_RESULT PASS checks=15 failures=0 scope=primitive-bindings-only

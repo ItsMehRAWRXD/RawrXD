@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "package_status": "RELEASE_CANDIDATE",
+  "created_utc": "2026-11-10T04:52:33.2363361Z",
+  "ide_sha256": "4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6",
+  "source_package": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\package\\tip_integ_candidate_001",
+  "packaging_checkout_revision": "9f90b9ea438318d52656529411c34c7784bdeee6",
+  "binary_source_revision": "NOT_ESTABLISHED_BY_PACKAGING",
+  "freeze_control": "DEFERRED_NON_BLOCKING",
+  "files": [
+    {
+      "path": "deep2_agentic_loop.exe",
+      "size_bytes": 63351808,
+      "sha256": "7109EFC429C62EB04537E818DE122014D234F392FE98736E89873993F7220B09"
+    },
+    {
+      "path": "msvcp140.dll",
+      "size_bytes": 557728,
+      "sha256": "0F885B509A685D2BBFA652FED26B5FB31D88FBDAB0A978C641D1C7B8AA460AA9"
+    },
+    {
+      "path": "RawrXD-Win32IDE-Native-Ext.exe",
+      "size_bytes": 2918400,
+      "sha256": "4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2850,
+      "sha256": "A1FBF9A4FAE0F4D6C766692A889651CA386AAC26C0A09743CA08337005E23886"
+    },
+    {
+      "path": "Start-RawrXD.ps1",
+      "size_bytes": 921,
+      "sha256": "DBDB986517C88F1E91A3931EF13A6927A252CC22BB0520BB5714B16CE30E5A98"
+    },
+    {
+      "path": "vcruntime140_1.dll",
+      "size_bytes": 49792,
+      "sha256": "1F2D41C4AA5DB0BC33EBF7B66D72943A817D7CE6CBE880502A9403823633093F"
+    },
+    {
+      "path": "vcruntime140.dll",
+      "size_bytes": 124544,
+      "sha256": "D5E4D9A3E835FA679450145D6A7D94E36573A509317111904D9B3712C30D9066"
+    },
+    {
+      "path": "Verify-PortableRelease.ps1",
+      "size_bytes": 1710,
+      "sha256": "9ED15C74555EE4AE65F8DE11829793CA425A8DDEFF803D98A1E6CB81EF5EE3BA"
+    }
+  ]
+}
+

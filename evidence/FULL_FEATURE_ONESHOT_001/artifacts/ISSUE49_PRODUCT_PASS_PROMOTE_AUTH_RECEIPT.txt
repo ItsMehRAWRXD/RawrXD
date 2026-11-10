@@ -1,0 +1,93 @@
+﻿ISSUE49_PRODUCT_PASS_PROMOTE_AUTH_RECEIPT
+ASOF_UTC=2026-11-10T02:44:17Z
+ACTIVE_TRACK=ISSUE_49
+CANDIDATE=tip_integ_candidate_001
+USER_AUTH_PROMOTE_EXPORT=1
+AUTH=USER_GRANTED
+AUTH_SOURCE=USER_MESSAGE_THIS_SESSION
+
+## AUTH quote (verbatim)
+"Authorization granted regardless of no further action without an explicit promote/export authorization."
+
+## Tip verify
+TIP_SHA=4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6
+TIP_EXE_PACKAGE=F:\rawrxd\package\tip_integ_candidate_001\RawrXD-Win32IDE-Native-Ext.exe
+TIP_EXE_EVIDENCE=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\package\tip_integ_candidate_001\RawrXD-Win32IDE-Native-Ext.exe
+SHA_VERIFY_PACKAGE=PASS
+SHA_VERIFY_EVIDENCE=PASS
+PACKAGE_RESTORED_FROM_EVIDENCE_4DE0=1
+NOTE=F:\rawrxd\package tip had drifted to 4CFB after map11 rollback exercise; restored from sealed evidence 4DE0 before promote/export (no rebuild; tip006/A4F/CC79 untouched)
+
+## Prior measured seals (unchanged content; still PASS)
+ONE_SHA_1_11=PASS
+ONE_SHA_RECEIPT=artifacts\ISSUE49_ONE_SHA_REMEASURE_4DE0_RECEIPT.txt
+ISSUE49=11/11
+MAJOR_INTEGRATED_ACCEPTANCE=DEMONSTRATED
+P3_FOUR_PANEL=PASS
+P3_PASS_COUNT=17/17
+P3_RECEIPT=artifacts\ISSUE49_P3_FOUR_PANEL_4DE0_RECEIPT.txt
+
+## Authorized ledger flips (applied this session)
+PRIOR_PRODUCT_PASS=0
+PRIOR_CERTIFIED=0
+PRIOR_PROMOTE=0
+PRIOR_TIP_MOVE_AUTHORIZED=0
+PRODUCT_PASS=1
+CERTIFIED=1
+PROMOTE=1
+TIP_MOVE_AUTHORIZED=1
+CONTROLLING_TIP=4DE0
+PRODUCT_PASS_READINESS=READY
+AUTH_NOTE=User promote/export authorization flipped held gates; engineering conjunction was already measured on 4DE0
+
+## Maturity
+ENGINEERING_MATURITY=82_PERCENT_UNCHANGED
+MATURITY_REASSESS_ALLOWED_BY_YARDSTICK=1
+POST_ACCEPTANCE_NUMERIC=NOT_SPECIFIED_IN_FREEZE_DOCS
+MATURITY_NOTE=Freeze yardstick (DECISIVE_NEXT / Issue#49) allows reassess after one-SHA 11/11 + MAJOR; no freeze post-acceptance numeric value found — AUTH did not force climb; leave 82
+CITE=evidence\HIDDEN_GAP_AUDIT_001\DECISIVE_NEXT.md §4; RELEASE_SCOPE_FREEZE.md Issue#49 yardstick
+
+## E6CF
+E6CF_RESTORE=HELD
+E6CF_NOTE=Authorization does not supply restore procedure/evidence; do not invent restore
+
+## Historical seals preserved
+TIP006_SEAL=HELD
+TIP006_SHA=B39EFDADC8A8B990B25502D5B1D81F4A1875DA9CE5BAA25E40922727D213D432
+CC79_UNREPLACED=1
+CC79_SHA=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+A4F_IMMUTABLE=1
+NO_OVERWRITE_TIP006_A4F_CC79=1
+
+## Dashboard export (measured)
+DASHBOARD=https://rawrxd-freeze-control.garrettaosborne.chatgpt.site
+DASHBOARD_EXPORT=FAIL_401
+ENDPOINTS_TRIED=GET / ; GET /api ; GET /api/register ; GET /api/import ; GET /api/export ; POST /api/import ; POST /api/register ; POST /import ; POST / ; cursor WebFetch root
+STATUS=401_UNAUTHORIZED
+AUTH_MATERIALS=NO_API_KEY_ENV; NO_REPO_.env; CF_BM_COOKIE_ONLY
+LOCAL_LEDGERS=AUTHORIZED
+DASHBOARD_PASS_CLAIMED=0
+
+## Control surfaces updated
+ACTIVE_TRACK_ISSUE49.md
+ISSUE49_STEPS.md
+ISSUE49_POST_ACCEPTANCE_DISPOSITION.txt
+ISSUE49_PRODUCT_PASS_READINESS_4DE0.txt
+FREEZE_CONTROL_AUTHORITY_POINTER.md
+ORDERED_BLOCKER_LIST.md
+HIDDEN_GAP_AUDIT_001\FREEZE_CONTROL_RECONCILE.md
+package\tip_integ_candidate_001\META.txt
+evidence\...\package\tip_integ_candidate_001\META.txt
+
+## Final machine block
+TIP_SHA=4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6
+PRODUCT_PASS=1
+CERTIFIED=1
+PROMOTE=1
+DASHBOARD_EXPORT=FAIL
+RECEIPT=artifacts\ISSUE49_PRODUCT_PASS_PROMOTE_AUTH_RECEIPT.txt
+IMPORT_BUNDLE=artifacts\freeze_control_import_4DE0_20261110
+IMPORT_MANIFEST=artifacts\freeze_control_import_4DE0_20261110\IMPORT_MANIFEST.txt
+NEXT_GAP=Freeze Control dashboard still 401_UNAUTHORIZED — provide session/API credential; local import bundle staged at artifacts\freeze_control_import_4DE0_20261110
+AUTH=USER_GRANTED
+FOLLOWUP=LOCAL_IMPORT_BUNDLE_STAGED_20261110

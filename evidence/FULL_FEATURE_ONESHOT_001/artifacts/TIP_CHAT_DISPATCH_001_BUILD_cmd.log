@@ -1,0 +1,12 @@
+START Mon 11/09/2026  8:25:30.23
+NINJA_PATH=C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Links\ninja.exe
+BEFORE_VCVARS
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+AFTER_VCVARS
+BEFORE_NINJA
+        1 file(s) copied.
+INSTRUMENT_STRINGS=PRESENT
+A4F_UNTOUCHED=
+TIP_FINAL_004_UNTOUCHED=
+TIP_FINAL_005_UNTOUCHED=
+DONE Mon 11/09/2026  8:25:46.78

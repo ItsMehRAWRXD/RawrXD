@@ -1,0 +1,516 @@
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+bridge_lifecycle_test.cpp
+Note: including file: F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.h
+Note: including file:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\windows.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\winapifamily.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\winpackagefamily.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\sdkddkver.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\excpt.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\sal.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\concurrencysal.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vadefs.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\stdarg.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\windef.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\minwindef.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\specstrings.h
+Note: including file:      F:\rawrxd\include\specstrings_strict.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\specstrings_undef.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\driverspecs.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\sdv_driverspecs.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winnt.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\ctype.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wctype.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\kernelspecs.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\basetsd.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\guiddef.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\string.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_memory.h
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_memcpy_s.h
+Note: including file:          C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\errno.h
+Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wstring.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack4.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack4.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack4.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack2.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack2.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack2.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack8.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack1.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\pshpack1.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\poppack.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\apiset.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\ktmtypes.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winbase.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\apisetcconv.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\minwinbase.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\apiquery2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\processenv.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\fileapifromapp.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\fileapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\debugapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\utilapiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\handleapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\errhandlingapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\fibersapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\namedpipeapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\profileapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\heapapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\ioapiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\synchapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\interlockedapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\processthreadsapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\sysinfoapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\memoryapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\enclaveapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\threadpoollegacyapiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\threadpoolapiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\jobapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\jobapi2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\wow64apiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\libloaderapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\securitybaseapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\namespaceapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\systemtopologyapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\processtopologyapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\securityappcontainer.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\realtimeapiset.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\winerror.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\timezoneapi.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\wingdi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack4.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack4.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winuser.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\tvout.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winnls.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\datetimeapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\stringapiset.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winnls.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\wincon.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\wincontypes.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\consoleapi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\consoleapi2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\consoleapi3.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winver.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\verrsrc.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winreg.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\reason.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winnetwk.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\wnnc.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\cderr.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\dde.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\ddeml.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\dlgs.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\lzexpand.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsystem.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mciapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmiscapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmiscapi2.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\playsoundapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmeapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\timeapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\joystickapi.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mmsyscom.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\nb30.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpc.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpcdce.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpcdcep.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\rpcnsi.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpcnterr.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpcasync.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\shellapi.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winperf.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winsock.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\inaddr.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\wincrypt.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\bcrypt.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\ncrypt.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\dpapi.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winefs.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winscard.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\wtypes.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\rpcndr.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\rpcnsip.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\rpcsal.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\wtypesbase.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\shared\guiddef.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winioctl.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack1.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\winsmcrd.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winspool.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\prsht.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\ole2.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\objbase.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\combaseapi.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\stdlib.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_malloc.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_search.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\stddef.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wstdlib.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\limits.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\unknwnbase.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\objidlbase.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\guiddef.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\cguid.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\coml2api.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\objidl.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\um\unknwn.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\propidlbase.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\um\oaidl.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\urlmon.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\um\oleidl.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\um\servprov.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\um\msxml.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\propidl.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\oleauto.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\pshpack8.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\poppack.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\commdlg.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\prsht.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared\stralign.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winsvc.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\mcx.h
+Note: including file:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\imm.h
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\ime_cmodes.h
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\string
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\yvals_core.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xkeycheck.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_sanitizer_annotate_container.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iosfwd
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\yvals.h
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\crtdbg.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_new_debug.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_new.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\crtdefs.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\use_ansi.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstdio
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\stdio.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wstdio.h
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_stdio_config.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstring
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cwchar
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\wchar.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wconio.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wdirect.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wio.h
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_share.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wprocess.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_wtime.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\sys/stat.h
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\sys/types.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\intrin.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\intrin0.inl.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\setjmp.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\immintrin.h
+Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\wmmintrin.h
+Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\nmmintrin.h
+Note: including file:            C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\smmintrin.h
+Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\tmmintrin.h
+Note: including file:              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\pmmintrin.h
+Note: including file:               C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\emmintrin.h
+Note: including file:                C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmmintrin.h
+Note: including file:                 C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mmintrin.h
+Note: including file:                 C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\malloc.h
+Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\zmmintrin.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ammintrin.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xtr1common
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_iter_core.hpp
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\utility
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\initializer_list
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\type_traits
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstdint
+Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\stdint.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\compare
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\concepts
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\climits
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstdlib
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\math.h
+Note: including file:        C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_math.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\limits
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cfloat
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\float.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\intrin0.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\new
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\exception
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_exception.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\eh.h
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_terminate.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xatomic.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\tuple
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xpolymorphic_allocator.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cctype
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_bit_utils.hpp
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\functional
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\typeinfo
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_typeinfo.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_map
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xhash
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cmath
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\list
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xbit_ops.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xnode_handle.h
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\atomic
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xatomic_wait.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xthreads.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_threads_core.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xtimec.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ctime
+Note: including file:       C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\time.h
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_chrono.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ratio
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\system_error
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_system_error_abi.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cerrno
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\stdexcept
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xcall_once.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xerrc.h
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread
+Note: including file:    C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\process.h
+Note: including file:     C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\corecrt_startup.h
+Note: including file:      C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\math.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_startup.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\stop_token
+Note: including file:  F:\rawrxd\tools\agent_esp\rawrxd_agent_esp\agent_esp.hpp
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xfilesystem_abi.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_tzdb.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\format
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_format_ucd_tables.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_formatter.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_print.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ranges_tuple_formatter.hpp
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\bit
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iterator
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocale
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xfacet
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocinfo
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_xlocinfo_types.hpp
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\clocale
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\locale.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\charconv
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xcharconv.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xcharconv_ryu.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xcharconv_ryu_tables.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xcharconv_tables.h
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\locale
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocbuf
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\streambuf
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xiosbase
+Note: including file:         C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt\share.h
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocmes
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocmon
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xlocnum
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xloctime
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\forward_list
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iomanip
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ios
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\optional
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xsmf_control.h
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\sstream
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\condition_variable
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\deque
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\fstream
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_filebuf.hpp
+Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\string_view
+Note: including file:  F:\rawrxd\src\Deep2Engine.h
+Note: including file:   F:\rawrxd\src\deep2\ReverseIntegration.hpp
+Note: including file:   F:\rawrxd\src\deep2\mars/MARSController.hpp
+Note: including file:    F:\rawrxd\src\deep2\mars\VRAMLease.hpp
+Note: including file:    F:\rawrxd\src\deep2\mars\VRAMManager.hpp
+Note: including file:    F:\rawrxd\src\deep2\mars\TensorHotpatch.hpp
+Note: including file:    F:\rawrxd\src\deep2\mars\DualGPUBackend.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\queue
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_heap_algorithms.hpp
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\future
+Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\pplwin.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\pplinterface.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltaskscheduler.h
+Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\crtdefs.h
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\pplcancellation_token.h
+Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\algorithm
+Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_minmax.hpp
+Note: including file:   F:\rawrxd\src\deep2\ThreadPool.h
+Note: including file:   F:\rawrxd\src\deep2\KVCache.h
+Note: including file:   F:\rawrxd\src\deep2\GGUFLoader.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\map
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xtree
+Note: including file:    F:\rawrxd\src\deep2\QuantTypeTable.hpp
+Note: including file:   F:\rawrxd\src\deep2\BP16Streamer.hpp
+Note: including file:   F:\rawrxd\src\deep2\Tokenizer.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\array
+Note: including file:    F:\rawrxd\src\deep2\../tokenizer/sentencepiece_encode.hpp
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+Note: including file:   F:\rawrxd\src\win32app\../sampling/advanced_sampler.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\random
+Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_int128.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_set
+Note: including file:   F:\rawrxd\src\deep2\MoERouter.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\numeric
+Note: including file:    F:\rawrxd\src\deep2\ReapRouteTracker.hpp
+Note: including file:   F:\rawrxd\src\deep2\MoEWeightProxy.hpp
+Note: including file:   F:\rawrxd\src\deep2\MedusaDecoder.hpp
+Note: including file:   F:\rawrxd\src\deep2\NUFusedPacker.hpp
+Note: including file:   F:\rawrxd\src\deep2\WarmupScheduler.hpp
+Note: including file:   F:\rawrxd\src\deep2\CompressedKVCache.h
+Note: including file:   F:\rawrxd\src\deep2\NVMeStream.h
+Note: including file:    F:\rawrxd\src\deep2\NVMeReverseBunnyHop.hpp
+Note: including file:   F:\rawrxd\src\deep2\SlidingWindowEngine.h
+Note: including file:   F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp
+Note: including file:    F:\rawrxd\src\deep2\KimiK2Config.hpp
+Note: including file:    F:\rawrxd\src\deep2\TensorView.hpp
+Note: including file:     F:\rawrxd\src\deep2\UniversalTensorDescriptor.hpp
+Note: including file:     F:\rawrxd\src\deep2\KernelRegistry.hpp
+Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\filesystem
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+Note: including file:   F:\rawrxd\src\deep2\K2NativeStreamGate.hpp
+Note: including file:    F:\rawrxd\src\deep2\K2MLAAttention.hpp
+Note: including file:    F:\rawrxd\src\deep2\K2KVCache.hpp
+Note: including file:   F:\rawrxd\src\deep2\TensorResidencyCache.hpp
+Note: including file:   F:\rawrxd\src\deep2\ResidencyManager.hpp
+Note: including file:   F:\rawrxd\src\deep2\ElasticResidencyManager.hpp
+Note: including file:    F:\rawrxd\src\deep2\GhostCache.hpp
+Note: including file:   F:\rawrxd\src\deep2\CycloneScheduler.hpp
+Note: including file:   F:\rawrxd\src\deep2\Deep2LivePath.hpp
+Note: including file:   F:\rawrxd\src\deep2\RouterPrefetchTelemetry.hpp
+Note: including file:   F:\rawrxd\src\deep2\ProductionProfiler.hpp
+Note: including file:   F:\rawrxd\src\deep2\deep2_flight_recorder.hpp
+Note: including file:   F:\rawrxd\src\deep2\Chamber.hpp
+Note: including file:   F:\rawrxd\src\deep2\ToroidalKVCache.hpp
+Note: including file:   F:\rawrxd\src\deep2\PlasmaGovernor.hpp
+Note: including file:   F:\rawrxd\src\deep2\SovereignOutOfCoreRuntime.hpp
+Note: including file:    F:\rawrxd\src\deep2\OutOfCoreRuntime.hpp
+Note: including file:   F:\rawrxd\src\deep2\lavapath/LocalModelAuthority_Bundle.hpp
+Note: including file:    F:\rawrxd\src\deep2\lavapath\LocalModelAuthority_Seal.hpp
+Note: including file:     F:\rawrxd\src\deep2\lavapath\LocalModelAuthority.hpp
+Note: including file:    F:\rawrxd\src\deep2\lavapath\TensorNameTypeBinding_Bind.hpp
+Note: including file:     F:\rawrxd\src\deep2\lavapath\TensorNameTypeBinding_One.hpp
+Note: including file:      F:\rawrxd\src\deep2\lavapath\TensorNameTypeBinding.hpp
+Note: including file:    F:\rawrxd\src\deep2\lavapath\QuantDispatch_Seal.hpp
+Note: including file:     F:\rawrxd\src\deep2\lavapath\QuantDispatch.hpp
+Note: including file:    F:\rawrxd\src\deep2\lavapath\TokenizerTemplateEog_Seal.hpp
+Note: including file:     F:\rawrxd\src\deep2\lavapath\TokenizerTemplateEog.hpp
+Note: including file:   F:\rawrxd\src\deep2\HostHardwareProbe.hpp
+Note: including file:   F:\rawrxd\src\deep2\ModelFit.hpp
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+Note: including file:   F:\rawrxd\src\deep2\ExecutionAuthority.hpp
+Note: including file:   F:\rawrxd\src\deep2\ExecutionTraceEmit.hpp
+Note: including file:   F:\rawrxd\src\deep2\BatchedPrefill.hpp
+Note: including file:   F:\rawrxd\src\deep2\vulkan_compute.h
+Note: including file:    C:\VulkanSDK\1.4.357.0\include\vulkan/vulkan.h
+Note: including file:     C:\VulkanSDK\1.4.357.0\include\vulkan\vk_platform.h
+Note: including file:     C:\VulkanSDK\1.4.357.0\include\vulkan\vulkan_core.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h264std.h
+Note: including file:       C:\VulkanSDK\1.4.357.0\include\vk_video\vulkan_video_codecs_common.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h264std_encode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h265std.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h265std_encode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h264std_decode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_h265std_decode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_av1std.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_av1std_decode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_av1std_encode.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_vp9std.h
+Note: including file:      C:\VulkanSDK\1.4.357.0\include\vk_video/vulkan_video_codec_vp9std_decode.h
+Note: including file:    F:\rawrxd\src\deep2\lavapath/GpuDeviceLostReset.hpp
+Note: including file:   F:\rawrxd\include\vulkan_compute_cpu_ns.hpp
+Note: including file:    F:\rawrxd\include\vulkan_compute.h
+Note: including file:   F:\rawrxd\src\deep2\Deep2MultiGpuLayerPlan.hpp
+Note: including file:    F:\rawrxd\src\deep2\Deep2DeviceManager.hpp
+Note: including file:   F:\rawrxd\src\deep2\Deep2GpuForward.hpp
+Note: including file:   F:\rawrxd\src\reap/ReapRuntimePlan.hpp
+Note: including file:  F:\rawrxd\src\cpu_inference_engine.h
+Note: including file:   F:\rawrxd\src\GGUFLoader.h
+Note: including file:    F:\rawrxd\src\RawrXD_Interfaces.h
+Note: including file:   F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+Note: including file:   F:\rawrxd\src\plugins/MemoryPlugin.hpp
+Note: including file:   F:\rawrxd\src\inference_engine_qtfree.h
+Note: including file: C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iostream
+Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ostream
+Generating code
+Finished generating code
+
+Name                           Value                                                                                   
+----                           -----                                                                                   
+tested_utc                     2026-11-10T05:09:29.3661754Z                                                            
+status                         FAIL                                                                                    
+process_exit                                                                                                           
+timed_out                      False                                                                                   
+model                          F:\rawrxd\tools\release\..\..\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf               
+product_ide_sha256             A53E59B5FF819E8B8A9805FB944F1C4B693F1077F40360C86A93A2E234F3F165                        
+bridge_object_sha256           6FF25FBA127ABAB2C892B92BEEF993DD07AABF69202308583DB5554A263544F7                        
+test_exe_sha256                72B403C4B8389494D5E1927E6CD4C1CAFF25BB62C1FD74078BBD6A6D2FDC52AC                        
+scope                          Three sequential real-engine generation requests using the product object files.        

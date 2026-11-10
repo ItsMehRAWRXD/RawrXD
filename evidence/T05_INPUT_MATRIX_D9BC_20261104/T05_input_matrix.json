@@ -1,0 +1,30 @@
+﻿[
+    {
+        "Phase":  "before",
+        "Hwnd":  "0x45056E",
+        "Focus":  "focus=0x1C0B30;active=0x1C0B30;capture=0x0",
+        "Text":  "",
+        "UIA":  ""
+    },
+    {
+        "Phase":  "keyboard_X",
+        "Hwnd":  "0x45056E",
+        "Focus":  "focus=0x45056E;active=0x1C0B30;capture=0x0",
+        "Text":  "",
+        "UIA":  ""
+    },
+    {
+        "Phase":  "paste_ctrlv",
+        "Hwnd":  "0x45056E",
+        "Focus":  "focus=0x45056E;active=0x1C0B30;capture=0x0",
+        "Text":  "",
+        "UIA":  ""
+    },
+    {
+        "Phase":  "wm_settext_control",
+        "Hwnd":  "0x45056E",
+        "Focus":  "focus=0x45056E;active=0x1C0B30;capture=0x0",
+        "Text":  "",
+        "UIA":  ""
+    }
+]

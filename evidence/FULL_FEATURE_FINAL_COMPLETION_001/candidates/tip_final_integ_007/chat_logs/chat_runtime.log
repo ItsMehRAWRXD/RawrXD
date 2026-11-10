@@ -1,0 +1,9 @@
+SESSION_OPEN session_id=sid_0000A120_0000000003E1802E run_id=run_unset pid=41248
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000012F0928 session=1 pane=copilot_sidebar session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+SESSION_OPEN session_id=sid_0000A120_0000000003E1802E run_id=run_unset pid=41248
+DISPATCH_ID id=1 bytes=12 session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=12 session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_0000A120_0000000003E1802E run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_0000A120_0000000003E1802E run_id=run_unset

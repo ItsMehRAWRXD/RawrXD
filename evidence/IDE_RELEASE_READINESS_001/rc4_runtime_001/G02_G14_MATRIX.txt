@@ -1,0 +1,73 @@
+GATE_BOARD=IDE_RELEASE_READINESS_G02_G14_RC4_RUNTIME
+EXE_PATH=F:\rawrxd\release\RawrXD-readiness-rc4\RawrXD-Win32IDE-Native-Ext.exe
+EXE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+ASOF_UTC=2026-11-10T06:35:00Z
+CREDIT_RULE=same-SHA only (78E187…). No A53E… / 4DE0… PASS inheritance.
+PROMOTE=0
+TIP_CLIMB=HOLD
+IDE_MATURITY=92%_PROVISIONAL (unchanged; not RC4 acceptance %)
+
+G02 Native UI
+  RESULT=PASS
+  NOTES=Live RC4 window launched; chat input/send/output controls present;
+        WM_COPYDATA stage + WM_COMMAND Send exercised; UI updates rendered=1.
+        Ctrl+S/Ctrl+O accelerator runtime: NOT_RUN (not separately timed).
+
+G03 Agent orchestration
+  RESULT=FAIL
+  NOTES=agent_repair_001 on RC4 SHA FAIL at READ transition
+        (deep2_agentic_loop + llama3.2:3b). GUI agent CU tool dispatch FAIL.
+
+G04 Code editing
+  RESULT=NOT_RUN
+  NOTES=No verified IDE editor edit/save cycle on 78E187 this run.
+
+G05 Terminal/PowerShell
+  RESULT=NOT_RUN
+
+G06 Build and diagnostics
+  RESULT=NOT_RUN
+  NOTES=Agent build/test never reached (edit never applied).
+        Problems pane not re-exercised.
+
+G07 Local model backends
+  RESULT=PASS
+  NOTES=Live IDE Ollama backend bigdaddyg-productivity-local:latest
+        BACKEND_REQUEST_END success=1 RESPONSE_END bytes=1161.
+        Packaged agent also reached Ollama llama3.2:3b (repair FAIL is model/protocol).
+        Deep2 GGUF path: NOT_RUN this run.
+
+G08 GPU execution
+  RESULT=NOT_RUN
+
+G09 Cancellation
+  RESULT=PASS
+  NOTES=chat_runtime.log: cancel_requested + cancel_acknowledged after live session.
+        Mid-flight CU cancel: NOT_RUN (no CU tool in flight).
+
+G10 Extensions
+  RESULT=NOT_RUN
+
+G11 Persistence
+  RESULT=PASS
+  NOTES=--user-data-dir isolation observed; userdata\ide_session.json written
+        with chat sessions/models under RC4 runtime evidence tree.
+
+G12 Reliability
+  RESULT=NOT_RUN
+  NOTES=No crash/recovery matrix beyond cancel ack.
+
+G13 Deployment
+  RESULT=PASS
+  NOTES=Verify-PortableRelease Integrity=PASS FilesVerified=9 on RC4 package.
+        Clean install on separate machine: NOT_RUN.
+
+G14 Evidence closure
+  RESULT=PASS
+  NOTES=rc4_runtime_001 receipts sealed with exact EXE path + SHA-256.
+        Does not imply G15 acceptance.
+
+SUMMARY_COUNTS=
+  PASS=6 (G02,G07,G09,G11,G13,G14)
+  FAIL=1 (G03)
+  NOT_RUN=6 (G04,G05,G06,G08,G10,G12)

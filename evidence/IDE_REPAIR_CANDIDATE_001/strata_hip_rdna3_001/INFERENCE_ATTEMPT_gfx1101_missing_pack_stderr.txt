@@ -1,0 +1,8 @@
+﻿strata.exe : strata generate: --ple-gguf is required; --no-ple explicitly enables a diagnostic ablation
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-31caf316-dd0c-41fc-8a2d-52ff63c64628.ps1:100 char:12
++ $gen1101 = & "$eng\strata.exe" --pack "$evdir\missing_pack" --tokens  ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (strata generate...nostic ablation:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

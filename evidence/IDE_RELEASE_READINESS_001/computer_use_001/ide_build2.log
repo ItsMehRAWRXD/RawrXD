@@ -1,0 +1,369 @@
+[0/2] Re-checking globbed directories...
+[1/39] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/39] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ComputerUseParse.cpp.obj
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[3/39] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[4/39] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ComputerUseBridge.cpp.obj
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[5/39] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\AgentMode.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\AgentMode.cpp(15): warning C4505: 'RawrXD::Agent::AuthorityForRisk': unreferenced function with internal linkage has been removed
+[6/39] Linking CXX static library src\computer_use\rawrxd_computer_use.lib
+[7/39] Completed 'vulkan-shaders-gen'
+[8/39] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\StructuredAction.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\StructuredAction.cpp(52): warning C4100: 'depth': unreferenced parameter
+F:\rawrxd\src\agentic\StructuredAction.cpp(62): warning C4100: 'depth': unreferenced parameter
+F:\rawrxd\src\agentic\StructuredAction.cpp(69): warning C4834: discarding return value of function with [[nodiscard]] attribute
+[9/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentStepTimeline.cpp.obj
+[10/39] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\WorkspaceToolHost.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\WorkspaceToolHost.cpp(107): warning C4100: 'bad_path': unreferenced parameter
+F:\rawrxd\src\agentic\WorkspaceToolHost.cpp(306): warning C4100: 'timeout_minutes': unreferenced parameter
+[11/39] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\AgentSession.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[12/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+F:\rawrxd\src\win32app\Win32IDE_GhostText.cpp(309): warning C4100: 'wParam': unreferenced parameter
+[13/39] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\SelfRepairLoop.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\ToolCallBridge.h(57): warning C4100: 'registry': unreferenced parameter
+F:\rawrxd\src\agentic\SelfRepairLoop.cpp(793): warning C4100: 'keep_last_n': unreferenced parameter
+[14/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Autonomy.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[15/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ComputerUse.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[16/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[17/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\TransparentRenderer.cpp.obj
+[18/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[19/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\GGUFLoader.cpp.obj
+[20/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(389): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(389): warning C4100: 'tokenId': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(425): warning C4100: 'maxTokens': unreferenced parameter
+[21/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\gguf_vocab_resolver.cpp.obj
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[22/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[23/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\ErrorReporter.cpp.obj
+[24/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\Diagnostics.cpp.obj
+[25/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\backend\ollama_client.cpp.obj
+F:\rawrxd\src\backend\ollama_client.cpp(512): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(511): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(510): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\backend\ollama_client.cpp(549): warning C4100: 'on_error': unreferenced parameter
+F:\rawrxd\src\backend\ollama_client.cpp(570): warning C4505: 'RawrXD::Backend::MakeOkResponse': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\backend\ollama_client.cpp(582): warning C4505: 'RawrXD::Backend::MakeErrorResponse': unreferenced function with internal linkage has been removed
+[26/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\plugin_signature.cpp.obj
+[27/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\cpu_inference_engine_impl.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(43): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(413): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(350): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(794): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(667): note: see declaration of 'v'
+[28/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\agentic\tool_core.hpp(104): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1015): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1013): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1411): warning C4456: declaration of 'forceLocalAgentic' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1218): note: see declaration of 'forceLocalAgentic'
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1692): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1725): warning C4100: 'wParam': unreferenced parameter
+[29/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\extension_polyfill_engine.cpp.obj
+[30/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\streaming_gguf_loader.cpp.obj
+[31/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\js_extension_host.cpp.obj
+F:\rawrxd\3rdparty\quickjs_ng\quickjs.h(379): warning C4244: '=': conversion from 'int64_t' to 'int32_t', possible loss of data
+F:\rawrxd\src\core\js_extension_host.cpp(460): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(474): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(488): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(502): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(519): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(535): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(551): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(561): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(776): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(833): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(869): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(924): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(963): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(977): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(991): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1054): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1108): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1122): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1100): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1182): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1182): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1204): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1204): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1216): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1216): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1159): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1256): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1405): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1453): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1544): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1853): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1876): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1908): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2362): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2362): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2381): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2381): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2412): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2412): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(713): warning C4505: 'extHostBreadcrumb': unreferenced function with internal linkage has been removed
+[32/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_vscode_bindings.cpp.obj
+[33/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\VulkanRenderer.cpp.obj
+[34/39] Linking CXX static library rawrxd_agentic_backend.lib
+[35/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\quickjs_extension_host.cpp(69): warning C4100: 'manifest': unreferenced parameter
+[36/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ExtHostWire.cpp.obj
+[37/39] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(212): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(239): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(265): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(291): warning C4100: 'placeHolder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(328): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(327): warning C4100: 'canSelectFolders': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(326): warning C4100: 'canSelectMany': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'title': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(468): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'maxTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'outTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(506): warning C4100: 'options': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'maxDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'outDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'excludePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'includePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'maxDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'outDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(758): warning C4100: 'uri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(975): warning C4100: 'folder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'maxBps': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'outBreakpoints': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1039): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'maxTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'outTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1076): warning C4100: 'rootUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'maxExts': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'outManifests': unreferenced parameter
+[38/39] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

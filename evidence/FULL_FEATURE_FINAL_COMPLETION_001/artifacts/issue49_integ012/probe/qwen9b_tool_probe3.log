@@ -1,0 +1,4 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-27328-4267465269700 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\models\pdurugyan_qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2_latest.gguf

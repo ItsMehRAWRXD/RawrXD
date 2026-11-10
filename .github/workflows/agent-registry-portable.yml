@@ -1,0 +1,190 @@
+name: Portable Agent Registry Tests
+
+on:
+  push:
+    paths:
+      - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
+      - 'tools/test_agent_registry.cpp'
+      - 'tools/test_agent_search_smoke.cpp'
+      - 'tools/test_agent_workspace_containment.cpp'
+      - 'tools/test_fake_model_registry_e2e.cpp'
+      - 'tools/test_portable_save_smoke.cpp'
+      - 'tools/test_saveall_state_model.cpp'
+      - 'tools/test_close_confirmation_model.cpp'
+      - 'tools/test_extension_entry_policy.cpp'
+      - 'tools/test_extension_manifest_policy.cpp'
+      - 'tools/test_extension_signature_policy.cpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
+      - 'src/win32app/Win32IDE.cpp'
+      - 'src/win32app/Win32IDE_FileOps.cpp'
+      - 'src/win32app/CloseConfirmationPolicy.hpp'
+      - '~dev/src/rawr_agent_dispatch.cpp'
+      - '~dev/src/rawr_agent.cpp'
+      - '~dev/src/rawr_agent.hpp'
+      - '~dev/src/rawr_agent_parse_only.cpp'
+      - '~dev/tests/rawr_agent_protocol_selftest.cpp'
+      - 'tools/check_agent_parser_parity.py'
+      - 'tools/verify_ide_e2e_receipts.py'
+      - 'tools/test_verify_ide_e2e_receipts.py'
+      - '.github/workflows/agent-registry-portable.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/deep2/AgentToolRegistry.hpp'
+      - 'tools/test_agent_registry.cpp'
+      - 'tools/test_agent_search_smoke.cpp'
+      - 'tools/test_agent_workspace_containment.cpp'
+      - 'tools/test_fake_model_registry_e2e.cpp'
+      - 'tools/test_portable_save_smoke.cpp'
+      - 'tools/test_saveall_state_model.cpp'
+      - 'tools/test_close_confirmation_model.cpp'
+      - 'tools/test_extension_entry_policy.cpp'
+      - 'tools/test_extension_manifest_policy.cpp'
+      - 'tools/test_extension_signature_policy.cpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
+      - 'src/win32app/Win32IDE.cpp'
+      - 'src/win32app/Win32IDE_FileOps.cpp'
+      - 'src/win32app/CloseConfirmationPolicy.hpp'
+      - '~dev/src/rawr_agent_dispatch.cpp'
+      - '~dev/src/rawr_agent.cpp'
+      - '~dev/src/rawr_agent.hpp'
+      - '~dev/src/rawr_agent_parse_only.cpp'
+      - '~dev/tests/rawr_agent_protocol_selftest.cpp'
+      - 'tools/check_agent_parser_parity.py'
+      - 'tools/verify_ide_e2e_receipts.py'
+      - 'tools/test_verify_ide_e2e_receipts.py'
+      - '.github/workflows/agent-registry-portable.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute C++20 registry tests
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/rawrxd/src' tools/test_agent_registry.cpp -o /tmp/rawrxd_agent_registry_test
+          /tmp/rawrxd_agent_registry_test
+      - name: Compile actual agent dispatcher translation unit
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsyntax-only -I '~dev/src' -I '~dev/rawrxd/src' '~dev/src/rawr_agent_dispatch.cpp'
+      - name: Compile and execute source search smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror tools/test_agent_search_smoke.cpp -o /tmp/rawrxd_search_smoke
+          /tmp/rawrxd_search_smoke
+      - name: Compile and execute workspace containment smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror tools/test_agent_workspace_containment.cpp -o /tmp/rawrxd_workspace_smoke
+          /tmp/rawrxd_workspace_smoke
+      - name: Compile and execute portable Save As disk smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_portable_save_roundtrip.cpp -o /tmp/rawrxd_save_smoke
+          /tmp/rawrxd_save_smoke
+      - name: Compile and execute fake-model registry-to-disk E2E smoke
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' -I '~dev/rawrxd/src' '~dev/src/rawr_agent_parse_only.cpp' tools/test_fake_model_registry_e2e.cpp -o /tmp/rawrxd_fake_model_e2e
+          set -o pipefail
+          /tmp/rawrxd_fake_model_e2e | tee fake_model_registry_smoke.log
+      - name: Upload mock-only smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fake-model-registry-smoke-NOT-PRODUCTION-CERTIFICATION
+          path: fake_model_registry_smoke.log
+          if-no-files-found: ignore
+      - name: Compile and run portable filesystem save smoke (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_portable_save_smoke.cpp -o /tmp/rawrxd_save_smoke
+          /tmp/rawrxd_save_smoke
+      - name: Compile and run Save All fail-closed state model (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_saveall_state_model.cpp -o /tmp/rawrxd_saveall_model
+          /tmp/rawrxd_saveall_model
+      - name: Compile and run close confirmation fail-closed model (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_close_confirmation_model.cpp -o /tmp/rawrxd_close_confirmation
+          /tmp/rawrxd_close_confirmation
+      - name: Compile and run VSIX signature acceptance policy (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined tools/test_extension_signature_policy.cpp -o /tmp/rawrxd_extension_signature_policy
+          /tmp/rawrxd_extension_signature_policy
+      - name: Compile and run extension manifest identity policy (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined tools/test_extension_manifest_policy.cpp -o /tmp/rawrxd_extension_manifest_policy
+          /tmp/rawrxd_extension_manifest_policy
+      - name: Compile and run production extension entry containment (15 cases)
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -fsanitize=undefined -fno-omit-frame-pointer tools/test_extension_entry_policy.cpp -o /tmp/rawrxd_extension_entry_policy
+          /tmp/rawrxd_extension_entry_policy
+      - name: Execute certification receipt verifier unit tests
+        run: python3 -m unittest discover -s tools -p 'test_verify_ide_e2e_receipts.py' -v
+      - name: Verify production and portable parser parity
+        run: python3 tools/check_agent_parser_parity.py
+      - name: Compile and execute portable agent protocol selftest
+        run: |
+          g++ -std=c++20 -Wall -Wextra -Werror -pthread -I '~dev/src' '~dev/src/rawr_agent_parse_only.cpp' '~dev/tests/rawr_agent_protocol_selftest.cpp' -o /tmp/rawrxd_agent_protocol_test
+          /tmp/rawrxd_agent_protocol_test
+
+  registry-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python certification verifier tests
+        run: python -m unittest discover -s tools -p test_verify_ide_e2e_receipts.py -v
+      - name: Production/portable parser parity
+        run: python tools/check_agent_parser_parity.py
+      - name: Compile and execute registry tests (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /I "~dev\\rawrxd\\src" "tools\\test_agent_registry.cpp" /Fe:rawrxd_registry_test.exe
+          if errorlevel 1 exit /b 1
+          rawrxd_registry_test.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and execute production close policy (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /WX "tools\\test_close_confirmation_model.cpp" /Fe:rawrxd_close_confirmation_test.exe
+          if errorlevel 1 exit /b 1
+          rawrxd_close_confirmation_test.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and execute Save All model (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /WX "tools\\test_saveall_state_model.cpp" /Fe:rawrxd_saveall_model_test.exe
+          if errorlevel 1 exit /b 1
+          rawrxd_saveall_model_test.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and execute filesystem disk smoke (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /WX "tools\\test_portable_save_smoke.cpp" /Fe:rawrxd_portable_save_test.exe
+          if errorlevel 1 exit /b 1
+          rawrxd_portable_save_test.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and execute portable agent parser (MSVC)
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%i"
+          call "%VSROOT%\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          cl /nologo /std:c++20 /EHsc /W4 /I "~dev\src" "~dev\src\rawr_agent_parse_only.cpp" "~dev\tests\rawr_agent_protocol_selftest.cpp" /Fe:rawrxd_agent_protocol_test.exe
+          if errorlevel 1 exit /b 1
+          rawrxd_agent_protocol_test.exe
+          if errorlevel 1 exit /b 1

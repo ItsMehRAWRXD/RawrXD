@@ -1,0 +1,53 @@
+﻿FILE_BYTES=255563
+NON_ASCII_BYTE_COUNT=38
+ofs=0 byte=0xEF ctx=[ï»¿// ======================================================]
+ofs=1 byte=0xBB ctx=[ï»¿// ======================================================]
+ofs=2 byte=0xBF ctx=[ï»¿// ======================================================]
+ofs=26632 byte=0xC3 ctx=[ecomes  // U+010A ("Ã„Å "), space becomes U+0120 ("Ã„Â "). T]
+ofs=26633 byte=0x84 ctx=[comes  // U+010A ("Ã„Å "), space becomes U+0120 ("Ã„Â "). Th]
+ofs=26634 byte=0xC5 ctx=[omes  // U+010A ("Ã„Å "), space becomes U+0120 ("Ã„Â "). The]
+ofs=26635 byte=0xA0 ctx=[mes  // U+010A ("Ã„Å "), space becomes U+0120 ("Ã„Â "). The ]
+ofs=26663 byte=0xC3 ctx=[ce becomes U+0120 ("Ã„Â "). The mapping is the standard  // ]
+ofs=26664 byte=0x84 ctx=[e becomes U+0120 ("Ã„Â "). The mapping is the standard  // b]
+ofs=26665 byte=0xC2 ctx=[ becomes U+0120 ("Ã„Â "). The mapping is the standard  // by]
+ofs=26666 byte=0xA0 ctx=[becomes U+0120 ("Ã„Â "). The mapping is the standard  // byt]
+ofs=45373 byte=0xC3 ctx=[   // text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly]
+ofs=45374 byte=0xAF ctx=[  // text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly,]
+ofs=45375 byte=0xC2 ctx=[ // text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly, ]
+ofs=45376 byte=0xBF ctx=[// text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly, b]
+ofs=45377 byte=0xC2 ctx=[/ text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly, by]
+ofs=45378 byte=0xBD ctx=[ text pieces ('Ã¯Â¿Â½' = C3 A9) that decode - correctly, by ]
+ofs=54170 byte=0xE2 ctx=[ with no TOOL lines â€” Issue #49 stalls at PREFILL.      if]
+ofs=54171 byte=0x80 ctx=[with no TOOL lines â€” Issue #49 stalls at PREFILL.      if ]
+ofs=54172 byte=0x94 ctx=[ith no TOOL lines â€” Issue #49 stalls at PREFILL.      if (]
+ofs=156087 byte=0xE2 ctx=[e unused parameters â€” use them or remove them.";          ]
+ofs=156088 byte=0x80 ctx=[ unused parameters â€” use them or remove them.";           ]
+ofs=156089 byte=0x94 ctx=[unused parameters â€” use them or remove them.";            ]
+ofs=156492 byte=0xE2 ctx=[no signature change â€” will not clear C2660.               ]
+ofs=156493 byte=0x80 ctx=[o signature change â€” will not clear C2660.                ]
+ofs=156494 byte=0x94 ctx=[ signature change â€” will not clear C2660.                 ]
+ofs=158502 byte=0xE2 ctx=[ment-count mismatch â€” fix the CALL "                      ]
+ofs=158503 byte=0x80 ctx=[ent-count mismatch â€” fix the CALL "                       ]
+ofs=158504 byte=0x94 ctx=[nt-count mismatch â€” fix the CALL "                        ]
+ofs=158851 byte=0xE2 ctx=[parameter under /WX â€” either use "                        ]
+ofs=158852 byte=0x80 ctx=[arameter under /WX â€” either use "                         ]
+ofs=158853 byte=0x94 ctx=[rameter under /WX â€” either use "                          ]
+ofs=182470 byte=0xE2 ctx=[_UNRELIABLE path=%s â€” "                    "Issue #49 tool]
+ofs=182471 byte=0x80 ctx=[UNRELIABLE path=%s â€” "                    "Issue #49 tool-]
+ofs=182472 byte=0x94 ctx=[NRELIABLE path=%s â€” "                    "Issue #49 tool-c]
+ofs=226091 byte=0xE2 ctx=[ after "TOOL read " â€” basenames like                      ]
+ofs=226092 byte=0x80 ctx=[after "TOOL read " â€” basenames like                      /]
+ofs=226093 byte=0x94 ctx=[fter "TOOL read " â€” basenames like                      //]
+COUNT_0x97=0
+HIT_UTF8_EMDASH_OFS=54170
+HIT_UTF8_EMDASH_OFS=156087
+HIT_UTF8_EMDASH_OFS=156492
+HIT_UTF8_EMDASH_OFS=158502
+HIT_UTF8_EMDASH_OFS=158851
+HIT_UTF8_EMDASH_OFS=182470
+HIT_UTF8_EMDASH_OFS=226091
+COUNT_UTF8_EMDASH=7
+EXE_C4100_OFS=3530583
+EXE_CTX_HEX=00 00 00 00 00 43 34 31 30 30 00 00 00 43 32 32 32 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 48 69 6E 74 3A 20 43 34 31 30 30 20 75 6E 75 73 65 64 20 70 61 72 61 6D 65 74 65 72 20 75 6E 64 65 72 20 2F 57 58 20 97 20 65 69 74 68 65 72 20 75 73 65 20 65 76 65 72 79 20 70 61 72 61 6D 65 74 65 72 20 6F 72 20 72 65 6D 6F 76 65 20 69 74 20 61 6E 64 20 75 70 64 61 74 65 20 61 6C 6C 20 63 61 6C 6C 20 73 69 74 65 73 2E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+EXE_CTX_ASC=.....C4100...C2220............... Hint: C4100 unused parameter under /WX . either use every parameter or remove it and update all call sites....................
+BYTE_BEFORE_EITHER=0x97 ofs=3530616

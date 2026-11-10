@@ -1,0 +1,18 @@
+class,id,description,controlling_sha_or_scope,owner_ws,maps,auto_defect,action_after_wave1
+CONFIRMED_BLOCKER_NEW,NONE,No new confirmed blockers invented by this W4+W5 inventory,IDE_REPAIR_CANDIDATE_001,n/a,n/a,0,Do not invent; open only with same-SHA FAIL receipt
+HISTORICAL_CONFIRMED,H-C1,Problems UI empty items=0,CC79 (prior),WS12,Finish25 Problems; W5-REG-02,0,Re-prove on post-W1 SHA; obligation until FAIL/PASS
+HISTORICAL_CONFIRMED,H-C2,EXT_CLEANUP FORCE_KILL=1,47451 INTEG_004 (prior),WS20,W4-EXT-02; A09 cleanup,0,Re-prove EXT quit FORCE_KILL=0
+HISTORICAL_CONFIRMED,H-C3,Debugger UI E2E FAIL,CC79 (prior),WS14,I57-A14,0,Re-prove A14; still obligation-only until exercised
+HISTORICAL_CONFIRMED,H-C4,Four-panel integrated OPEN,CC79 (prior),WS10-14,W5-REG-01,0,Re-prove four-panel conjunction
+HISTORICAL_CONFIRMED,H-RC4-G03,Agent orchestration FAIL READ/CU,RC4 78E187 (sealed),WS04-08,Wave1 primary,0,Wave1 owns; not W4/W5 first repair if still open
+HISTORICAL_CONFIRMED,H-RC4-G10,Extensions NOT_RUN,RC4 78E187,WS20,W4-EXT-01,0,Execute W4-EXT after W1
+HISTORICAL_CONFIRMED,H-RC4-G12,Reliability NOT_RUN,RC4 78E187,WS23,W4-REC-01,0,Execute W4-REC after W1
+OBLIGATION_ONLY,I57-A01..A15,Native IDE E2E 15 gates,Issue #57 section A,WS01/10-14/19,ISSUE57 CSV,0,Schedule; no bulk defect
+OBLIGATION_ONLY,I57-B01..B15,Slingshot/compiler/cross-platform 15 gates,Issue #57 section B,Compiler/Slingshot,ISSUE57 CSV,0,B13-B15 OOS daily-driver min; still obligations
+OBLIGATION_ONLY,I57-C01..C15,GPU/TPS/matrix/release 15 gates,Issue #57 section C,WS16-17/24/Perf,ISSUE57 CSV,0,No synthetic TPS; hardware-gated
+OBLIGATION_ONLY,W4-EXT-01..03,Extension host lifecycle,post-W1 candidate,WS20,91->94,0,Run EXT serial
+OBLIGATION_ONLY,W4-CAN-01..03,Cancellation paths,post-W1 candidate,WS09,91->94,0,Mid-CU after W1 CU attach
+OBLIGATION_ONLY,W4-MSW-01..02,Model switch,post-W1 candidate,WS15+WS03/04,91->94,0,Idle switch then tool-bound switch
+OBLIGATION_ONLY,W4-PER-01..02,Persistence,post-W1 candidate,WS21,91->94,0,Re-prove G11-class on new SHA
+OBLIGATION_ONLY,W4-REC-01..03,Recovery/reliability,post-W1 candidate,WS23,91->94,0,G12-class matrix
+OBLIGATION_ONLY,W5-REG-01..06,Full-feature hidden-gap regression pack,post-W1 candidate,WS10-14/20/25,94->97,0,After W4 core smoke

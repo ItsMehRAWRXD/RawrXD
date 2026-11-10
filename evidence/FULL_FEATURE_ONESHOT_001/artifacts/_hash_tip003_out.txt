@@ -1,0 +1,14 @@
+ASOF=Mon 11/09/2026  5:14:31.36
+SHA256 hash of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_002\RawrXD-Win32IDE-Native-Ext.exe:
+8d8999cd722b3ed46e3e74d437c6adf6ca4513e9c01128e02f9f0bf4bb579ead
+CertUtil: -hashfile command completed successfully.
+--- 
+SHA256 hash of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\RawrXD-Win32IDE-Native.exe:
+a4f083dfb9ccd1f78036e1cdcdca9af881ef10b3e34170b68c4610d51ac6ef4e
+CertUtil: -hashfile command completed successfully.
+--- 
+RawrXD-Win32IDE-Native-Ext.exe
+RawrXD-Win32IDE-Native.exe
+RawrXD-Win32IDE-Native-Ext.exe
+RawrXD-Win32IDE-Native.exe
+DONE

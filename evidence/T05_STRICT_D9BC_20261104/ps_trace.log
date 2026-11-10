@@ -1,0 +1,12 @@
+24500 [PS_TRACE] start() encoded command length=1208
+
+24500 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+24500 [PS_TRACE] CreateProcessA SUCCESS pid=12672
+
+24500 [PS_TRACE] Process started, starting output threads
+
+6480 [PS_TRACE] readOutputThread() STARTED thread=6480
+
+24420 [PS_TRACE] monitorProcessThread() STARTED thread=24420
+

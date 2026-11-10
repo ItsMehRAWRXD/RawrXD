@@ -1,0 +1,64 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[deep2-engine] loadModel failed: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+[deep2-engine] rawrxd_deep2_engine starting
+[deep2-engine] loading model: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=2 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] ERROR: GlobalTensorIndex build failed: ParseShard: GGUF load failed for F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf: MapViewOfFile failed for F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.

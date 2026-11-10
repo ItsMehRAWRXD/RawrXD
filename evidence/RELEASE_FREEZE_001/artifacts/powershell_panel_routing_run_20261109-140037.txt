@@ -1,0 +1,21 @@
+2026-11-09T14:00:37.8584880-05:00 TIP_EXE=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\RawrXD-Win32IDE-Native-Ext.exe
+2026-11-09T14:00:37.8880425-05:00 TIP_SHA256=35AF072A02ADCEF49ACE1C03904BEB0684E623DAFFEA01A4872B948BC8A6230B
+2026-11-09T14:00:37.9077557-05:00 SESSION_ID=ps_routing_20261109-140037
+2026-11-09T14:00:37.9219050-05:00 RUN_ID=ps_routing_run_20261109-140037
+2026-11-09T14:00:38.9917817-05:00 PID=8052
+2026-11-09T14:00:41.4717935-05:00 MAIN_HWND=0x220BBE
+2026-11-09T14:00:42.3176599-05:00 PS_PANEL=0x90B2E vis=1
+2026-11-09T14:00:42.3378951-05:00 PS_OUT=0x90B4A
+2026-11-09T14:00:42.3553310-05:00 PS_IN=0x90B40
+2026-11-09T14:00:42.3747435-05:00 PS_EXEC=0x90AEE
+2026-11-09T14:00:42.4115911-05:00 CHAT=0x90B0E
+2026-11-09T14:00:42.8517941-05:00 CHAT_BEFORE_LEN=0
+2026-11-09T14:00:42.8550890-05:00 PS_BEFORE_LEN=342
+2026-11-09T14:00:42.8612955-05:00 PS_BEFORE_SAMPLE=[PowerShell session started]\r\n\r\n  RawrXD Integrated PowerShell Console\r\n\r\n\r\nPowerShell Version: 5.1.26100.9818\r\n\r\nEdition: Desktop\r\n\r\n\r\nType commands below or click 'Load RawrXD' t
+2026-11-09T14:00:43.2399761-05:00 PS_INPUT_VERIFY='ls' len=2 hwnd=0x90B40
+2026-11-09T14:00:43.2528855-05:00 EXEC_PATH=SEND_WM_COPYDATA_PSCM_ls
+2026-11-09T14:00:43.6776539-05:00 PS_AFTER_LEN=4915
+2026-11-09T14:00:43.6827484-05:00 CHAT_AFTER_LEN=0
+2026-11-09T14:00:43.6881321-05:00 PS_DELTA_SAMPLE=ls\r\n\r\n\r\n    Directory: F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\r\n\r\n\r\nMode                 LastWriteTime         Length Name                                                                 \r\n----                 -------------         ------ ----                                                                 \r\nd-----         11/9/2026  12:52 PM                .rawrxd         
+2026-11-09T14:00:50.0093492-05:00 BUILD_PRODUCER_MAX_EDIT_LEN=0
+2026-11-09T14:00:50.0189954-05:00 PS_TRACE_TAIL=7940 [PS_TRACE] WM_COPYDATA cmd_len=2 cmd='ls' |  | 7940 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=2 thread=7940 |  | 7940 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=2 thread=7940 |  | 7940 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned |  | 7940 [PS_TRACE] executePowerShellPanelCommand() EXIT | 

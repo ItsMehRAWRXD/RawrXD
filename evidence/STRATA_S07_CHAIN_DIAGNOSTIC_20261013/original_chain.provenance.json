@@ -1,0 +1,37 @@
+{
+  "interference": [
+    {
+      "command": "F:\\rawrxd\\tools\\deep2_strata_bench.exe  --model D:\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf --prefill 32 --generate 12 --gpu --strata --tag moe_lru_4gib ",
+      "at": "2026-10-13T18:03:44.1226520-04:00",
+      "pid": 26020
+    }
+  ],
+  "tag": "original_chain",
+  "valid_isolation": false,
+  "binary_sha256": "3504B00F7D277FD1C06AFE0A1AAA75FF2290B9CCB2D1115982B0B5B8AEF2B1AD",
+  "exit_code": 0,
+  "process_wall_ms": 44000.3647,
+  "arguments": [
+    "--model",
+    "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "--prefill",
+    "32",
+    "--generate",
+    "128",
+    "--gpu",
+    "--int8kv",
+    "--no-calibrate",
+    "--tag",
+    "original_chain",
+    "--outdir",
+    "F:/rawrxd/evidence/STRATA_S07_CHAIN_DIAGNOSTIC_20261013",
+    "--draft-min-ngram",
+    "3",
+    "--spec-trace-chains",
+    "1",
+    "--spec",
+    "128",
+    "--baseline-tps",
+    "0"
+  ]
+}

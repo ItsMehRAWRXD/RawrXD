@@ -1,0 +1,326 @@
+<timestamp>Tuesday, Nov 3, 2026, 12:14 AM (UTC-5)</timestamp>
+<user_query>
+Please dispatch this fully to agents and yourself and get ALL of these done on this list! Make no mistakes!
+
+# RawrXD IDE â€” Production Readiness Audit
+
+Audit date: November 2, 2026 | Native Win32 IDE, Deep2, agent runtime, GPU inference, and release certification
+
+## 1. Executive assessment
+
+NOT PRODUCTION CERTIFIED
+
+The IDE has substantial implemented functionality and several demonstrated runtime successes. However, the complete product is not yet end-to-end production ready.
+
+The distinction is important:
+
+- Implemented: Code and functionality exist.
+- Component verified: A specific test or runtime path passed.
+- End-to-end verified: The complete user workflow passed on a specified executable.
+- Production ready: The workflow passed on the authoritative release binary, with its dependencies, failure recovery, and release requirements satisfied.
+
+I will not treat an isolated component PASS, successful build, or UI demonstration as full production certification.
+
+### Audit authority
+
+The repository is [ItsMehRAWRXD/RawrXD](https://github.com/ItsMehRAWRXD/RawrXD?utm_source=chatgpt.com). Its accessible `main` history currently ends with the October 18, 2026 multi-shard merge, whereas your local certification evidence extends through November 2.
+
+Consequently, this audit combines repository evidence with your reported local test receipts. I cannot directly inspect `F:\rawrxd`, `G:\~dev\rawrxd`, or execute the Windows binaries from this session. Local source and binary verification remain separate evidence requirements.
+
+The latest `648Aâ€¦` test is controlling for that candidate: successful ChatWindow rendering does not override the demonstrated cancellation-cleanup failure. Production remains unchanged, with `PROMOTE=0`.
+
+## 2. Existing completed work versus certification gaps
+
+The repository has an explicit [45-gate closure backlog in Issue #57](https://github.com/ItsMehRAWRXD/RawrXD/issues/57?utm_source=chatgpt.com), divided into three groups of 15. It labels them open acceptance gates, not 45 completed fixes. The earlier [certification ladder in Issue #50](https://github.com/ItsMehRAWRXD/RawrXD/issues/50?utm_source=chatgpt.com) also distinguishes passing provider tests from unfinished integration.
+
+### Demonstrated successes worth preserving
+
+| Functionality             | Supported achievement                                              | Production assessment              |
+| ------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| Native editor             | RichEdit focus and candidate window execution demonstrated         | Component verified                 |
+| Chat rendering            | Response rendered on `648A`                                        | Candidate component verified       |
+| Cancellation UI           | Stop enabled, clicked, UI acknowledged                             | Component verified; cleanup failed |
+| GhostText race protection | Late invalidated Request A rejected on tested diagnostic candidate | Component verified                 |
+| Qwen3:8b routing          | Explicit Ollama routing observed on earlier candidate              | Component verified                 |
+| Agent CLI                 | Six real tools succeeded in a previous Qwen2.5-Coder run           | CLI path verified                  |
+| Deep2 CPU inference       | Qwen3-8B and smaller-model generation receipts                     | Model-specific passes              |
+| Vulkan GPU execution      | R9700 GPU kernel activity, 1,271 calls, finite output              | GPU activity verified              |
+| REAP                      | Runtime injection and generation at several configurations         | Tested configurations pass         |
+| Build/tests               | Full `build_reap` pass, 26 CTest passes, one skip                  | Tested build configuration only    |
+| Source preservation       | Prior WIP preservation 37/37                                       | Preservation check passed          |
+
+These are real milestones, but they are not interchangeable. A passing CLI agent test, for example, does not prove that the native IDE can finish the same workflow.
+
+### Additional repository-level findings
+
+The October 18 `main` source still contains several areas that require particular scrutiny:
+
+- The [Win32 agent bridge](https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/win32app/Win32IDE_AgenticBridge.cpp?utm_source=chatgpt.com) has a section explicitly labeled Deprecated Stubs, including functions returning fixed success/failure values. Whether those paths are linked into the newer candidate must be established.
+- The [debugger implementation](https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/win32app/Win32IDE_Debugger.cpp?utm_source=chatgpt.com) includes simulated expression evaluation, so debugger UI construction cannot count as a verified real-debuggee implementation.
+- The [terminal manager](https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/win32app/Win32TerminalManager.cpp?utm_source=chatgpt.com) contains real Windows process and pipe operations, but cancellation and cleanup need runtime proof.
+- The repository contains duplicate Win32 IDE source trees under `src/win32app` and `RawrXD-ModelLoader/src/win32app`. Their presence does not establish which implementation the shipping binary uses.
+
+These findings reinforce the need to audit the actual linked code and its runtime behavior, not just feature names.
+
+### CI and release verification
+
+The current GitHub Actions evidence adds an important blocker. The latest inspected native no-dependency, security, and Kimi parity jobs on PR #60 failed with `runner_id=0` and `steps=[]`. The November 2 `main` Self-Release run also failed before executing a job step.
+
+This means those runs did not execute their build or test commands. Their failure does not prove the source code is broken, but it also supplies no production acceptance evidence.
+
+Sources: [Native IDE CI run](https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/41580914199?utm_source=chatgpt.com), [Security run](https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/41580914184?utm_source=chatgpt.com), [main release run](https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/41415511079?utm_source=chatgpt.com).
+
+The release audit therefore needs two independent outcomes: restored CI execution and successful product tests after CI actually starts running.
+
+## 3. Complete 75-gate audit â€” Five batches of 15
+
+Component passes
+
+# 14
+
+Partially verified
+
+# 15
+
+Unverified
+
+# 33
+
+Observed failures
+
+# 7
+
+Blocked
+
+# 4
+
+Held
+
+# 2
+
+Total assessed: 75 gates
+
+0 production-certified E2E
+
+These are evidence-classification counts, not an implementation-completion percentage. Component passes may belong to older candidates.
+
+## Batch 1 â€” ChatWindow, cancellation, GhostText and generation
+
+Gates 01â€“15 Â· Priority P0 Â· First repair target
+
+| #  | Feature                          | Audit status   |
+| -- | -------------------------------- | -------------- |
+| 01 | Binary identity and authority    | Held           |
+| 02 | Chat response rendering          | Component pass |
+| 03 | Stop button activation           | Component pass |
+| 04 | Worker cancellation signal       | Unverified     |
+| 05 | Worker cancellation cleanup      | FAIL           |
+| 06 | Inference-running flag reset     | FAIL           |
+| 07 | Request B admission after Stop   | FAIL           |
+| 08 | Request B response rendering     | FAIL           |
+| 09 | Late response invalidation       | Component pass |
+| 10 | Concurrent A/B request ordering  | Component pass |
+| 11 | Explicit Qwen3:8b routing        | Component pass |
+| 12 | Actual 64-token generation       | Unverified     |
+| 13 | GhostText inline rendering       | Unverified     |
+| 14 | GhostText accept/cancel/dismiss  | Unverified     |
+| 15 | Repeatable cancellation recovery | Unverified     |
+
+Batch exit: Stop must cancel the actual inference, free ownership, and permit Request B to generate without a restart. GhostText and committed-token evidence must then pass on the same SHA.
+
+## Batch 2 â€” Native IDE shell, editor and workspace
+
+Gates 16â€“30 Â· Priority P0/P1
+
+| #  | Feature                            | Audit status   |
+| -- | ---------------------------------- | -------------- |
+| 16 | Native Win32 launch/exit           | Component pass |
+| 17 | Explorer/workspace handling        | Partial        |
+| 18 | Native editor focus and typing     | Component pass |
+| 19 | Save/reopen SHA integrity          | Unverified     |
+| 20 | Tabs, splits, dirty-state handling | Unverified     |
+| 21 | Search/replace/navigation          | Unverified     |
+| 22 | Session/work-mode persistence      | Component pass |
+| 23 | Native IDE command shell           | Unverified     |
+| 24 | Terminal stdout/stderr/exit        | Unverified     |
+| 25 | PowerShell panel lifecycle         | Partial        |
+| 26 | Terminal cancellation and cleanup  | Unverified     |
+| 27 | IDE build integration              | Unverified     |
+| 28 | IDE test execution                 | Unverified     |
+| 29 | IDE Git diff and commit            | Unverified     |
+| 30 | Settings/model/device selection    | Partial        |
+
+Batch exit: Open a real project, modify and save files, execute shell/build/test operations, inspect Git changes, restart, and recover the workspace without data loss.
+
+The separate failed parent Agent Shell probe must not be mislabeled as a failed native IDE terminal test.
+
+## Batch 3 â€” Agent, Tool Authority and autonomous workflow
+
+Gates 31â€“45 Â· Priority P0/P1
+
+| #  | Feature                             | Audit status   |
+| -- | ----------------------------------- | -------------- |
+| 31 | Workspace/context read              | Component pass |
+| 32 | Model-originated tool calls         | Partial        |
+| 33 | Strict tool-call parsing            | Partial        |
+| 34 | Unified CPU Tool Authority          | Unverified     |
+| 35 | Sandbox and command policies        | Unverified     |
+| 36 | Real tool execution                 | Component pass |
+| 37 | Agent-authored source editing       | Partial        |
+| 38 | Same-model tool-result reinjection  | Unverified     |
+| 39 | Autonomous edit/build/test loop     | Unverified     |
+| 40 | Compiler failure recovery           | Unverified     |
+| 41 | Patch validation and rollback       | Unverified     |
+| 42 | Subprocess/idle-stop lifecycle      | Partial        |
+| 43 | Task plans, MOTD, evidence trace    | Partial        |
+| 44 | Reviewer agent critique loop        | Unverified     |
+| 45 | Dual-GPU independent agent contexts | Unverified     |
+
+Batch exit: The native IDE must take a task, inspect files, issue real tool calls, edit code, encounter a controlled build failure, repair it, pass tests, and return the evidence.
+
+The CLI's successful six-tool run is preserved as evidence, but does not close this IDE workflow.
+
+## Batch 4 â€” Deep2, GPU, numerical parity and performance
+
+Gates 46â€“60 Â· Priority P0/P1
+
+| #  | Feature                        | Audit status   |
+| -- | ------------------------------ | -------------- |
+| 46 | GGUF/multi-shard integrity     | Partial        |
+| 47 | Model load/switch/teardown     | Partial        |
+| 48 | CPU inference baseline         | Component pass |
+| 49 | R9700 Vulkan kernel activity   | Component pass |
+| 50 | Strict GPU-only inference      | Blocked        |
+| 51 | Qwen3.6 numerical parity       | FAIL           |
+| 52 | Qwen3.6 GPU GDN recurrence     | Blocked        |
+| 53 | Kimi K2 host/GPU token parity  | FAIL           |
+| 54 | K2 layer diagnostics           | Component pass |
+| 55 | Discrete GPU selection/binding | Partial        |
+| 56 | Dual-GPU transfer and overlap  | Unverified     |
+| 57 | KV/out-of-core integration     | Partial        |
+| 58 | 1,048,576-token context        | Unverified     |
+| 59 | REAP runtime overrides         | Component pass |
+| 60 | 150 TPS single-stream target   | Unverified     |
+
+Batch exit: Model-specific logit and token parity must pass before performance promotion. GPU-only certification requires no hidden CPU fallback. Throughput must come from real autoregressive decode, not synthetic kernel benchmarks.
+
+## Batch 5 â€” IDE advanced features, CI and final shipping
+
+Gates 61â€“75 Â· Priority P0/P2
+
+| #  | Feature                              | Audit status |
+| -- | ------------------------------------ | ------------ |
+| 61 | Real LSP JSON-RPC lifecycle          | Unverified   |
+| 62 | Debugger with real debuggee          | Partial      |
+| 63 | Embedded browser isolation           | Unverified   |
+| 64 | Native compiler frontends            | Unverified   |
+| 65 | Native linker/platform outputs       | Unverified   |
+| 66 | One authoritative no-Qt build graph  | Blocked      |
+| 67 | WIP/source manifest reconciliation   | Partial      |
+| 68 | Clean checkout release build         | Unverified   |
+| 69 | CI runner and job execution          | FAIL         |
+| 70 | Unit/regression/headless E2E         | Partial      |
+| 71 | Security/sandbox certification       | Unverified   |
+| 72 | AMD host stability and crash capture | Blocked      |
+| 73 | Reproducible offline packaging       | Unverified   |
+| 74 | Full autonomous product acceptance   | Unverified   |
+| 75 | Production certification/promotion   | Held         |
+
+Batch exit: A clean checkout must reproduce the native product, execute real CI tests, pass safety and stability gates, produce a verifiable release package, and complete the full autonomous engineering scenario.
+
+## 4. Execution priority
+
+The batches are grouped for tracking, not authorization to modify code. The critical sequence is:
+
+1. Repair candidate cancellation and verify Request B recovery.
+2. Certify editor, terminal, workspace and build/test integration.
+3. Prove the IDE's complete agent-to-tool-to-model continuation.
+4. Close Deep2 numerical correctness and strict GPU execution before throughput optimization.
+5. Restore CI execution, certify host stability, and complete same-binary release acceptance.
+
+## 5. Full audit report
+
+I created a detailed, reusable report containing all 75 individually numbered gates, the evidence supporting each classification, and the exact test or corrective work needed for closure.
+
+RawrXD IDE Production Audit â€” 75 Gates
+
+Markdown Â· Five batches of 15 Â· Evidence references and acceptance criteria
+
+Download full audit report
+
+### Final disposition
+
+```
+AUDIT_SCOPE=75_GATES
+BATCH_SIZE=15
+BATCH_COUNT=5
+COMPONENT_PASS=14
+PARTIAL=15
+UNVERIFIED=33
+FAIL=7
+BLOCKED=4
+HELD=2
+
+FULL_PRODUCT_E2E_CERTIFIED=0
+CANDIDATE_648A=QUARANTINED
+PRODUCTION_UNCHANGED=1
+
+SOURCE_CHANGES=0
+REBUILD=0
+PROMOTE=0
+CERTIFIED=0
+```
+
+The next engineering focus is Batch 1, gates 04â€“08. They describe the observed Stop-to-worker-cleanup failure and the inability to accept the next request. Those are the immediate product blockers.
+
+This audit is complete as an evidence-based assessment of the available repository and reported test receipts. A definitive local-source and production-binary certification still requires direct execution against the authoritative Windows build.&#x20;
+
+## Production audit â€” Batch 1 of 15
+
+| # | Requirement | Status | Evidence |
+|---:|---|---|---|
+| 1 | Candidate binary identity and hash stability | PASS | `648A0779â€¦736ED`, unchanged before/after runtime test |
+| 2 | Repository push synchronization | PASS | Remote branch now at `94ded48edb`; local branch tracks remote |
+| 3 | Reproducible clean production build | NOT_VERIFIED | Build succeeds locally, but no clean reproducibility proof |
+| 4 | ChatWindow direct text routing | PASS | Direct prompts reach Ollama instead of agent CLI |
+| 5 | ChatWindow exact-marker rendering | PASS | Same-binary marker retry succeeded |
+| 6 | ChatWindow long-response handling | PASS â€” behavioral | 100-line response and `TOKEN64_DONE` rendered |
+| 7 | ChatWindow UTF-8 correctness | FAIL | Mojibake such as `Ã°Å¸â€¦` was observed |
+| 8 | ChatWindow output capacity | PARTIAL | Explicit 1 MiB limit exists; native-control limit was not independently sealed |
+| 9 | Stop button activation | PASS | Stop becomes enabled and responds to a real click |
+| 10 | Cancellation cleanup | FAIL | After Stop, the app still reports inference running after 30 seconds |
+| 11 | Post-cancel request recovery | FAIL | Request B was rejected with â€œInference is already runningâ€ |
+| 12 | Late-response suppression | NOT_VERIFIED | UI fence exists, but worker termination was not confirmed |
+| 13 | GhostText controller implementation | PASS â€” source | Real controller, generation fence, UI dispatch, and editor attachment exist |
+| 14 | GhostText same-binary runtime certification | NOT_VERIFIED | Prior GhostText PASS belonged to `08F2â€¦`, not `648Aâ€¦` |
+| 15 | Actual product token telemetry | NOT_VERIFIED | Visible 64-line output exists, but no same-binary committed-token receipt |
+
+### Key confirmed defect
+
+The cancellation path is incomplete:
+
+```text
+Stop clicked
+â†’ UI state says stopped
+â†’ synchronous Ollama worker continues
+â†’ m_inferenceRunning remains true
+â†’ next request rejected
+```
+
+The relevant source path calls `stopInference()`, but the Ollama request itself is synchronous. The worker only clears the running state in its completion path, so UI cancellation and backend cancellation are not synchronized.
+
+### Batch 1 disposition
+
+```ini
+PASS=5
+PARTIAL=1
+FAIL=3
+NOT_VERIFIED=5
+SOURCE_CHANGES=0
+REBUILD=0
+PROMOTE=0
+CERTIFIED=0
+```
+
+The IDE is not production-ready yet. The highest-priority repair is active cancellation of the underlying HTTP operation or an equivalent worker-ownership mechanism that guarantees cleanup before accepting Request B.
+</user_query>

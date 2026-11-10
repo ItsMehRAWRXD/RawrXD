@@ -1,0 +1,3 @@
+﻿0|Local models / connecting to Ollama...
+1|Local models / Ollama / bigdaddyg-productivity-local:latest
+

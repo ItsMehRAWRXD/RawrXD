@@ -1,0 +1,241 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build\Release\rawrxd_security.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  Win32IDE.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(1486,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(3218,34): warning C4100: 'hwnd': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(4092,17): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(4551,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(4758,32): warning C4456: declaration of 'line' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\src\win32app\Win32IDE.cpp(4705,17):
+      see declaration of 'line'
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(5614,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5623,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5643,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5656,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6957,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6960,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgentCommands.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\win32app\ModelConnection.h(405,79): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(26,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(226,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(224,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(237,18): warning C4189: 'sender': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(353,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(563,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(561,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(752,52): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(762,54): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgenticBridge.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgenticBridge.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgenticBridge.cpp')
+  
+F:\rawrxd\src\win32app\IDELogger.h(121,9): warning C4005: 'LOG_INFO': macro redefinition [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgenticBridge.cpp')
+      F:\rawrxd\src\native_agent.hpp(16,9):
+      see previous definition of 'LOG_INFO'
+  
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(45,51): warning C4100: 'frameworkPath': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(186,94): warning C4100: 'arguments': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(186,63): warning C4100: 'scriptPath': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(187,66): warning C4100: 'timeoutMs': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(187,52): warning C4100: 'output': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(196,74): warning C4100: 'maxIterations': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(196,55): warning C4100: 'initialPrompt': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(226,68): warning C4100: 'rawOutput': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(227,51): warning C4100: 'line': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(228,49): warning C4100: 'line': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgenticLoopBridge.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgenticLoopBridge.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_AgenticLoopBridge.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(646,52): warning C4100: 'pid': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Commands.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Commands.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Commands.cpp')
+  
+  Win32IDE_Debugger.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Debugger.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Debugger.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75,10): warning C4189: 'btnStepOver': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(65,10): warning C4189: 'btnContinue': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85,10): warning C4189: 'btnStepInto': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95,10): warning C4189: 'btnStepOut': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105,10): warning C4189: 'btnStop': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Deep2Bridge.cpp
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372,71): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372,43): warning C4100: 'tokenId': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(408,70): warning C4100: 'maxTokens': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_FileOps.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+  Win32IDE_GhostTextIntegration.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_GhostTextIntegration.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_GhostTextIntegration.cpp')
+  
+  Win32IDE_Logger.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+  Win32IDE_MenuHandlers.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+  Win32IDE_PowerShell.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(611,60): warning C4100: 'eventName': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_PowerShellPanel.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(328,42): warning C4100: 'width': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(436,63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Sidebar.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Sidebar.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Sidebar.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(102,14): warning C4189: 'hwndBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(402,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(477,42): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(747,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(759,56): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(761,57): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(763,58): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(770,44): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(777,44): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(784,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(793,64): warning C4100: 'wholeWord': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(963,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(971,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1107,55): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1109,56): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1116,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1131,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1235,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1243,21): warning C4312: 'type cast': conversion from 'const int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_VSCodeUI.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(130,32): warning C4312: 'type cast': conversion from 'int' to 'HMENU' of greater size [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(365,15): warning C4189: 'pThis': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(660,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(783,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(784,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_lifecycle.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_lifecycle.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_lifecycle.cpp')
+  
+  Win32TerminalManager.cpp
+  main_win32.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(249,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\win32app\main_win32.cpp(15,87): warning C4100: 'nCmdShow': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\main_win32.cpp(15,51): warning C4100: 'hPrevInstance': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  Generating code
+  Finished generating code
+  RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\build\bin\Release\RawrXD-Win32IDE-Native.exe

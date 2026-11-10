@@ -1,0 +1,14 @@
+﻿=== stop stale fsck + nocg rerun 2026-10-26T19:41:34.0256298-04:00
+SEEN_PID=10832 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+SEEN_PID=9720 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+SEEN_PID=20656 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+commit-graph_exists=False
+commit-graphs_exists=False
+FSCK_PID=57068
+FSCK_NOCG_EXIT=2
+FSCK_NOCG_ELAPSED_MS=252830
+FSCK_NOCG_MISSING_UNIQUE=1126
+FSCK_NOCG_DANGLING_LINES=4424
+FSCK_NOCG_CORRUPT_HITS=0
+FSCK_NOCG_COMMIT_GRAPH_ERRS=0
+FSCK_NOCG_STDERR=

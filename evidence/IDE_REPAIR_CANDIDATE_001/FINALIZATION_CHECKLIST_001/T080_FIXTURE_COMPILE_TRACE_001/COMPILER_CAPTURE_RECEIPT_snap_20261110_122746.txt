@@ -1,0 +1,34 @@
+﻿BUILD_REQUEST fixture=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp
+PROCESS_CREATE cmdline=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605 && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"
+CWD=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605
+CL_EXE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+FORCE_PIPE=1
+SCRUB=VS_UNICODE_OUTPUT
+NO_VCVARS_IN_PIPE=1
+PROCESS_STARTED pid=29008 transport=1
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp(1): error C2059: syntax error: ';'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp line=1 sev=0 msg=C2059: syntax error: ';'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp(1): error C2143: syntax error: missing ';' before '}'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ud_item9_20261110-072605\broken_multi.cpp line=1 sev=0 msg=C2143: syntax error: missing ';' before '}'
+PROBLEM_ADDED
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=29008 exit=0 disposition=success transport=1 stdout_bytes=376 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25648 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35388 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=27828 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=44160 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=414
+BUILD_RESULT=success
+PROCESS_EXIT pid=43900 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=414
+BUILD_RESULT=success
+PROCESS_EXIT pid=7996 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=29920 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+

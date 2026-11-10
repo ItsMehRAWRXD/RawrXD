@@ -1,0 +1,49 @@
+# DECISION — HIDDEN_GAP_AUDIT_001
+
+ASOF_UTC=2026-11-09T12:45:00Z
+MOTD_ACK=1
+AUDIT_MODE=READ_ONLY
+
+## Locked decision block
+
+```
+ENGINEERING_MATURITY_ESTIMATE=82_PERCENT
+MATURITY_CHANGE_AUTHORIZED=0
+MAJOR_INTEGRATED_ACCEPTANCE=NOT_DEMONSTRATED
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+CONTROLLING_TIP=CC79
+CONTROLLING_TIP_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+FROZEN_A4F_UNTOUCHED=1
+A4F_SHA256=A4F083DFB9CCD1F78036E1CDCDCA9AF881EF10B3E34170B68C4610D51AC6EF4E
+FROZEN_9C91_UNTOUCHED=1
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+INVENT_CONFIRMED_DEFECT=0
+```
+
+## Why 82% is unchanged
+
+GitHub Issues #49/#50/#57 and PRs #75–#79 expand the **acceptance inventory**. They do not authorize raising or lowering the engineering maturity estimate. Local INTEG_004 Problems PASS on sealed `47451F24…` does not move controlling tip off CC79 and does not demonstrate Issue #49 product-final E2E.
+
+## Why MAJOR_INTEGRATED_ACCEPTANCE=NOT_DEMONSTRATED
+
+Issue #49 mandatory autonomous loop (model → diagnose → edit → fail-build → repair → test → reviewer → evidence → commit) has **no PASS receipt** on any single SHA. Four-panel on CC79 remains NOT_VERIFIED. Finish-25 current remains 4/25. Historical 19/25 is not inherited as current integrated acceptance.
+
+## Why PROMOTE=0
+
+```
+SCOREBOARD_OR_PARTIAL_PASS != PROMOTE
+INTEG_004_CANDIDATE != CONTROLLING_TIP
+NOT_RUN != PASS
+CROSS_SHA_PASS_INHERITANCE=FORBIDDEN
+```
+
+## Next decisive gate (not executed this audit)
+
+```
+NEXT_GATE=OUTPUT_PROBLEMS_GUI_E2E_OR_FOUR_PANEL_ON_CC79
+THEN=ISSUE_49_PRODUCT_FINAL_ON_ONE_SHA
+AUTHORITY=CC79_UNTIL_OWNER_TIP_MOVE
+```

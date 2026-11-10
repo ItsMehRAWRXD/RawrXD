@@ -1,0 +1,35 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] request_messages=2 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=2 payload_bytes=1222 max_tokens=512 ctx=4096
+[ollama] REQUEST_SENT elapsed_ms=27064 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=341 elapsed_ms=27103
+[ollama step 1] response_bytes=17
+[ollama step 1] response=TOOL read bug.cpp
+[ollama step 1] TOOL=read exit=0 valid=1 observation=128
+[ollama step 1] result=#include <cstdio>\nint add(int a, int b) { return a - b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n
+[ollama step 2] request_messages=4 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=4 payload_bytes=1497 max_tokens=512 ctx=4096
+[ollama] REQUEST_SENT elapsed_ms=620 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=489 elapsed_ms=634
+[ollama step 2] response_bytes=151
+[ollama step 2] response=TOOL write bug.cpp @@#include <cstdio>\nint add(int a, int b) { return a + b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n@@
+[ollama] write_body_bytes=127 preview=#include <cstdio>\nint add(int a, int b) { return a + b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }
+[ollama step 2] TOOL=write exit=0 valid=1 observation=119
+[ollama step 2] result=write committed; build and test verified; after_sha256=eff63ef0d19e70b29c6a17b972009055daaf4b5e88329820c4e1ec97f05551e2
+[ollama step 3] request_messages=6 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=6 payload_bytes=1897 max_tokens=512 ctx=4096
+[ollama] REQUEST_SENT elapsed_ms=187 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=331 elapsed_ms=206
+[ollama step 3] response_bytes=11
+[ollama step 3] response=TOOL finish
+[ollama step 3] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 3] result=verified completion
+INDEPENDENT_RUN exit=0 marker=PASS output=AGENT_RESULT=5\n
+AGENT_RESULT=5
+OLLAMA_AGENT_MODEL qwen3:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 1a43ed1e463ba61a50c0a3ceb76a3e868d3700b65c7d5202799ccb86eab0cafe
+OLLAMA_AGENT_AFTER_SHA256 eff63ef0d19e70b29c6a17b972009055daaf4b5e88329820c4e1ec97f05551e2
+OLLAMA_AGENT_VERDICT PASS
