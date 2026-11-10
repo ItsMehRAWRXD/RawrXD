@@ -1,0 +1,55 @@
+CLEAN_MACHINE_CHECKLIST=W6_RELEASE_CERT_97_TO_100
+ASOF_UTC=2026-11-10T08:15:00Z
+CANDIDATE=IDE_REPAIR_CANDIDATE_001
+PROMOTE=0
+CERTIFIED=0
+BAND_WEIGHT_PLACEHOLDER=+3
+EARNED=0_UNTIL_RECEIPTS
+
+PURPOSE=
+  Independent, reproducible package acceptance on a machine that is not the
+  developer tree that built the candidate. Completing this checklist is required
+  before any 97→100 band credit. Checklist completion alone != PROMOTE.
+
+OPERATOR_PRECONDITIONS=
+  [ ] Host is not F:\rawrxd (or equivalent) build tree
+  [ ] Fresh OS user profile OR documented clean VM snapshot
+  [ ] No RAWRXD_* credential/env shortcuts that leak from the builder host
+  [ ] No pre-seeded evidence receipts copied into the package
+  [ ] Package extracted from published artifact only (ZIP/folder with SHA ledger)
+  [ ] Independent verifier identity recorded (name/host/UTC)
+
+PACKAGE_IDENTITY=
+  [ ] SHA_LEDGER filled with expected SHA256 for every shipped member
+  [ ] Verify-PackageIntegrity.ps1 VERDICT=PASS_INTEGRITY_ONLY on this host
+  [ ] Primary EXE SHA matches ledger row (no cross-SHA inheritance from RC4/4DE0/35C22)
+  [ ] Optional satellite binaries (deep2_agentic_loop / computer_use verify) same-SHA set
+
+LAUNCH_SMOKE=
+  [ ] Invoke-CleanMachineSmoke.ps1 -LaunchProbe starts primary EXE without early exit
+  [ ] IDE main window HWND observed (screenshot or window-title receipt)
+  [ ] Clean exit / cancel path does not leave orphaned tool processes
+
+PRODUCT_PATH_SMOKE_MIN=
+  [ ] Open project / folder on clean machine
+  [ ] Chat Send reaches local model (TOKEN_SURVIVED observed) OR sealed UNSUPPORTED
+  [ ] Agent tool path: required TOOL read of a known file + reinjection (same SHA)
+  [ ] Computer-use GUI dispatch observed OR sealed first-failure class on same SHA
+  [ ] Edit→build→test path exercised OR sealed blocked gate with class
+
+ROLLBACK_AND_REPRO=
+  [ ] Uninstall / delete extract dir restores clean host (no residual services)
+  [ ] Second extract from same package bit-identical (re-hash matches ledger)
+  [ ] Receipts published under release_cert_wave6/runs/ with host+UTC+SHA
+
+FAIL_CLOSED=
+  [ ] NOT_RUN rows remain NOT_RUN (never rewritten to PASS)
+  [ ] Builder-host PASS is not copied as clean-machine PASS
+  [ ] PROMOTE remains 0; CERTIFIED remains 0 until independent conjunction closes
+
+SIGN=
+  OPERATOR=
+  HOST=
+  UTC=
+  PACKAGE_SHA_SET=
+  VERDICT=NOT_RUN
