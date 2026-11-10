@@ -1,0 +1,10 @@
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+[ESP] seq2=1 agent=0 kin=toknizer_check value=0 message=PASS
+[ESP] seq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=247 ctx=0
+[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":32,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":26788.308,"decode_ms":0.000,"task_ms":26789.437,"gpu_dispatches":19431,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}

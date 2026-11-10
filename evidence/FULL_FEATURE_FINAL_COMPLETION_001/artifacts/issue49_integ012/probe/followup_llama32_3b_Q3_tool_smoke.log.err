@@ -1,0 +1,4 @@
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\llama3.2-3b-Q3_K_S.gguf
+[ESP] seq=2 req=1 agent0 kinenizer_check value=0 mesA[ESP] seq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=275 ctx=0
+[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":32,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":18797.775,"decode_ms":0.000,"task_ms":18799.128,"gpu_dispatches":6468,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}

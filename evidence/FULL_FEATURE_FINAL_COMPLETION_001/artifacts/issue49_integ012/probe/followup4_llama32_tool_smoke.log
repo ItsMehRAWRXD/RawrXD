@@ -1,0 +1,5 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-26796-5642359634500 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\llama3.2-3b-Q3_K_S.gguf
+EXIT=-1

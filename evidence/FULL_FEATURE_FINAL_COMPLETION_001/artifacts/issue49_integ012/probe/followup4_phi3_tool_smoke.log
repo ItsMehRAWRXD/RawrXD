@@ -1,0 +1,50 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-1748-5644700592000 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\phi3-mini-Q2_K.gguf
+[stage] ingest done in 3558.1 ms: arch=phi3 blocks=32 vocab=32064 bos=1 eos=32000
+[stage] model ships a chat template (407 bytes):
+{% for message in messages %}{% if message['role'] == 'system' %}{{'<|system|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'user' %}{{'<|user|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'assistant' %}{{'<|assistant|>
+' + message['content'] + '<|end|>
+'}}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>
+' }}{% else %}{{ eos_token }}{% endif %}
+[stage] tokenizer round-trip: PASS (73 ids -> 73 chars)
+[stage] executor bound: ops=195 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+[stage] chat markers: template user='<|user|>
+' asst='<|assistant|>
+' gen='<|assistant|>
+' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_5500169206500
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\p[hstep 1] PREFILL_BATCH_BEGIN pos=0 count=64/918
+i3-mini-Q2_K.gguf
+[ESP] seq=2 req=1 agent=0 kind=tokenizer_check value=0 message=PASS
+[ESP] seq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=918 ctx=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] PREFILL_BATCH_END pos=0 count=64 ok=true ms=14272
+[st[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":64,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":14273.687,"decode_ms":0.000,"task_ms":14273.908,"gpu_dispatches":4224,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+ep 1] PREFILL_BATCH_BEGIN pos=64 count=64/918
+[step 1] PREFILL_BATCH_END pos=64 count=64 ok=true ms=13829
+[step 1] PREFILL_BATCH_BEGIN pos=128 count=64/918
+[ESP] seq=5 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":128,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":28103.282,"decode_ms":0.000,"task_ms":28103.503,"gpu_dispatches":8449,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+EXIT=-1

@@ -1,0 +1,4 @@
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+[ESPqeq=1 agent=0 kind=tokenizer_cvale=0 message=PASS
+[ESP] seq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=310 ctx=0

@@ -1,0 +1,188 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-26484-13930370285600 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model G:\~dev\models\phi-3-mini-4k-instruct.Q4_K_M.gguf
+[stage] ingest done in 6623.0 ms: arch=phi3 blocks=32 vocab=32064 bos=1 eos=32000
+[stage] model ships a chat template (279 bytes):
+{{ bos_token }}{% for message in messages %}{% if (message['role'] in ['user', 'system']) %}{{'<|user|>' + '
+' + message['content'] + '<|end|>' + '
+' + '<|assistant|>' + '
+'}}{% elif message['role'] == 'assistant' %}{{message['content'] + '<|end|>' + '
+'}}{% endif %}{% endfor %}
+[stage] tokenizer round-trip: PASS (73 ids -> 73 chars)
+[stage] executor bound: ops=195 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+[stage] chat markers: template user='User: ' asst='content' gen='Assistant:' bos_in_template=1
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_5716900478500
+[step 1] PREFILL_BATCH_BEGIN pos=0 count=32/885
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] PREFILL_BATCH_END pos=0 count=32 ok=true ms=5309
+[step 1] PREFILL_BATCH_BEGIN pos=32 count=32/885
+[step 1] PREFILL_BATCH_END pos=32 count=32 ok=true ms=4037
+[step 1] PREFILL_BATCH_BEGIN pos=64 count=32/885
+[step 1] PREFILL_BATCH_END pos=64 count=32 ok=true ms=4249
+[step 1] PREFILL_BATCH_BEGIN pos=96 count=32/885
+[step 1] PREFILL_BATCH_END pos=96 count=32 ok=true ms=4199
+[step 1] PREFILL_BATCH_BEGIN pos=128 count=32/885
+[step 1] PREFILL_BATCH_END pos=128 count=32 ok=true ms=4191
+[step 1] PREFILL_BATCH_BEGIN pos=160 count=32/885
+[step 1] PREFILL_BATCH_END pos=160 count=32 ok=true ms=4298
+[step 1] PREFILL_BATCH_BEGIN pos=192 count=32/885
+[step 1] PREFILL_BATCH_END pos=192 count=32 ok=true ms=4322
+[step 1] PREFILL_BATCH_BEGIN pos=224 count=32/885
+[step 1] PREFILL_BATCH_END pos=224 count=32 ok=true ms=4374
+[step 1] PREFILL_BATCH_BEGIN pos=256 count=32/885
+[step 1] PREFILL_BATCH_END pos=256 count=32 ok=true ms=4481
+[step 1] PREFILL_BATCH_BEGIN pos=288 count=32/885
+[step 1] PREFILL_BATCH_END pos=288 count=32 ok=true ms=4493
+[step 1] PREFILL_BATCH_BEGIN pos=320 count=32/885
+[step 1] PREFILL_BATCH_END pos=320 count=32 ok=true ms=4557
+[step 1] PREFILL_BATCH_BEGIN pos=352 count=32/885
+[step 1] PREFILL_BATCH_END pos=352 count=32 ok=true ms=4597
+[step 1] PREFILL_BATCH_BEGIN pos=384 count=32/885
+[step 1] PREFILL_BATCH_END pos=384 count=32 ok=true ms=4804
+[step 1] PREFILL_BATCH_BEGIN pos=416 count=32/885
+[step 1] PREFILL_BATCH_END pos=416 count=32 ok=true ms=4745
+[step 1] PREFILL_BATCH_BEGIN pos=448 count=32/885
+[step 1] PREFILL_BATCH_END pos=448 count=32 ok=true ms=4759
+[step 1] PREFILL_BATCH_BEGIN pos=480 count=32/885
+[step 1] PREFILL_BATCH_END pos=480 count=32 ok=true ms=4816
+[step 1] PREFILL_BATCH_BEGIN pos=512 count=32/885
+[step 1] PREFILL_BATCH_END pos=512 count=32 ok=true ms=4865
+[step 1] PREFILL_BATCH_BEGIN pos=544 count=32/885
+[step 1] PREFILL_BATCH_END pos=544 count=32 ok=true ms=4916
+[step 1] PREFILL_BATCH_BEGIN pos=576 count=32/885
+[step 1] PREFILL_BATCH_END pos=576 count=32 ok=true ms=5094
+[step 1] PREFILL_BATCH_BEGIN pos=608 count=32/885
+[step 1] PREFILL_BATCH_END pos=608 count=32 ok=true ms=5034
+[step 1] PREFILL_BATCH_BEGIN pos=640 count=32/885
+[step 1] PREFILL_BATCH_END pos=640 count=32 ok=true ms=5098
+[step 1] PREFILL_BATCH_BEGIN pos=672 count=32/885
+[step 1] PREFILL_BATCH_END pos=672 count=32 ok=true ms=5209
+[step 1] PREFILL_BATCH_BEGIN pos=704 count=32/885
+[step 1] PREFILL_BATCH_END pos=704 count=32 ok=true ms=5976
+[step 1] PREFILL_BATCH_BEGIN pos=736 count=32/885
+[step 1] PREFILL_BATCH_END pos=736 count=32 ok=true ms=5319
+[step 1] PREFILL_BATCH_BEGIN pos=768 count=32/885
+[step 1] PREFILL_BATCH_END pos=768 count=32 ok=true ms=5346
+[step 1] PREFILL_BATCH_BEGIN pos=800 count=32/885
+[step 1] PREFILL_BATCH_END pos=800 count=32 ok=true ms=5340
+[step 1] PREFILL_BATCH_BEGIN pos=832 count=32/885
+[step 1] PREFILL_BATCH_END pos=832 count=32 ok=true ms=6109
+[step 1] PREFILL_BATCH_BEGIN pos=864 count=21/885
+[step 1] PREFILL_BATCH_END pos=864 count=21 ok=true ms=3844
+[step 1] prefill +885/885 tokens (ctx=885 tokens) in 134698 ms (batched)
+[step 1] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+[step 1] generated 1 tokens / 0 chars in 11 ms (93.536 tok/s) snap=5
+[step 1] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+[step 2] PREFILL_BATCH_BEGIN pos=885 count=32/1001
+[step 2] PREFILL_BATCH_END pos=885 count=32 ok=true ms=5391
+[step 2] PREFILL_BATCH_BEGIN pos=917 count=32/1001
+[step 2] PREFILL_BATCH_END pos=917 count=32 ok=true ms=5446
+[step 2] PREFILL_BATCH_BEGIN pos=949 count=32/1001
+[step 2] PREFILL_BATCH_END pos=949 count=32 ok=true ms=5531
+[step 2] PREFILL_BATCH_BEGIN pos=981 count=20/1001
+[step 2] PREFILL_BATCH_END pos=981 count=20 ok=true ms=3599
+[step 2] prefill +116/116 tokens (ctx=1001 tokens) in 20012 ms (batched)
+[step 2] SNAP STOP: reason=5 tokens=1 after 1 host tokens
+[step 2] generated 1 tokens / 0 chars in 9 ms (109.947 tok/s) snap=5
+[step 2] INVALID OUTPUT (snap reason=5 expected TOOL protocol prefix); no complete command
+
+=== RETRY BUDGET EXHAUSTED ===
+Attempts: 2/3, Tokens: 2/8192, Time: 155s/420s, Stalled: YES
+[kv] committed KV stream DIVERGES FROM the current render (875 of 1117 ids common; incremental=1001 fresh=1117)
+[kv] FIRST DIVERGENCE at position 875: incremental=29909 ('A') fresh=29883 ('c')
+[kv] window [871..880): incremental='otd\nAssis'
+[kv] window [871..880): fresh     ='otd\nconte'
+[kv] ADMISSION GUARD: committed KV is not a prefix of the current prompt; refusing to decode
+[verification] running build command: cl /nologo /EHsc /std:c++20 /Fe:"F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.exe" "F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp"
+[verification] build failed (exit 2): bug.cpp
+F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): error C2660: 'undeclared_fn': function does not take 2 arguments
+F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(4): note: see declaration of 'undeclared_fn'
+F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project/bug.cpp(7): note: while trying to match the argument list '(int, int)'
+
+
+=== verification (harness-run, independent of the model) ===
+MODEL_SAID_FINISH      no
+SOURCE_PATCHED         FAIL (content changed from the recorded pre-image)
+BUILD_ARTIFACT         not observed (MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe))
+TEST_EXECUTION         FAIL (bug.cpp exit=-999 out=)
+TOOL_RESULT_FEEDBACK   3 steps completed
+KV_PREFIX_CONSISTENT   FAIL
+MODEL_REQUESTED_TOOL   NO (tool_calls=0)
+FINAL_VERDICT          FAIL
+
+==== STDERR ====
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=G:\~dev\models\phi-3-mini-4k-instruct.Q4_K_M.gguf
+[ESP] seq=2 req=1 agent=0 kind=tokenizer_check value=sae=PASS
+[ESP] q3 req=1 agent=0 kind=prefill_start value=0 message=tokens=885 ctx=0
+[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":32,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":5317.997,"decode_ms":0.000,"task_ms":5318.204,"gpu_dispatches":2112,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=5 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":64,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":9364.499,"decode_ms":0.000,"task_ms":9364.706,"gpu_dispatches":4225,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=6 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":96,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":13623.746,"decode_ms":0.000,"task_ms":13623.953,"gpu_dispatches":6338,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=7 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":128,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":17832.000,"decode_ms":0.000,"task_ms":17832.207,"gpu_dispatches":8451,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=8 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":160,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":22034.860,"decode_ms":0.000,"task_ms":22035.067,"gpu_dispatches":10564,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=9 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":192,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":26342.821,"decode_ms":0.000,"task_ms":26343.028,"gpu_dispatches":12677,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=10 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":224,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":30675.610,"decode_ms":0.000,"task_ms":30675.817,"gpu_dispatches":14790,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=11 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":256,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":35060.682,"decode_ms":0.000,"task_ms":35060.889,"gpu_dispatches":16903,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=12 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":288,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":39551.443,"decode_ms":0.000,"task_ms":39551.650,"gpu_dispatches":19016,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=13 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":320,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":44056.097,"decode_ms":0.000,"task_ms":44056.304,"gpu_dispatches":21129,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=14 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":352,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":48624.220,"decode_ms":0.000,"task_ms":48624.427,"gpu_dispatches":23242,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=15 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":384,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":53231.255,"decode_ms":0.000,"task_ms":53231.462,"gpu_dispatches":25355,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=16 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":416,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":58046.916,"decode_ms":0.000,"task_ms":58047.123,"gpu_dispatches":27468,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=17 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":448,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":62802.183,"decode_ms":0.000,"task_ms":62802.390,"gpu_dispatches":29581,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=18 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":480,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":67573.555,"decode_ms":0.000,"task_ms":67573.762,"gpu_dispatches":31694,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=19 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":512,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":72399.435,"decode_ms":0.000,"task_ms":72399.642,"gpu_dispatches":33807,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=20 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":544,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":77275.812,"decode_ms":0.000,"task_ms":77276.019,"gpu_dispatches":35920,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=21 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":576,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":82203.757,"decode_ms":0.000,"task_ms":82203.964,"gpu_dispatches":38033,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=22 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":608,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":87308.372,"decode_ms":0.000,"task_ms":87308.579,"gpu_dispatches":40146,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=23 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":640,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":92355.195,"decode_ms":0.000,"task_ms":92355.402,"gpu_dispatches":42259,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=24 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":672,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":97465.730,"decode_ms":0.000,"task_ms":97465.937,"gpu_dispatches":44372,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=25 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":704,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":102692.791,"decode_ms":0.000,"task_ms":102692.998,"gpu_dispatches":46485,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=26 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":736,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":108681.111,"decode_ms":0.000,"task_ms":108681.318,"gpu_dispatches":48598,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=27 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":768,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":114011.254,"decode_ms":0.000,"task_ms":114011.461,"gpu_dispatches":50711,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=28 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":800,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":119369.555,"decode_ms":0.000,"task_ms":119369.762,"gpu_dispatches":52824,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=29 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":832,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":124721.845,"decode_ms":0.000,"task_ms":124722.052,"gpu_dispatches":54937,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=30 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":864,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":130841.726,"decode_ms":0.000,"task_ms":130841.933,"gpu_dispatches":57050,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=31 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":885,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":134698.436,"decode_ms":0.000,"task_ms":134698.643,"gpu_dispatches":58459,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[SNAP OUT RAW] bytes=0 text=""
+[SNAP OUT META] eos_id=32000
+[ESP] seq=32 req=1 agent=0 kind=prefill_end value=134698 message=elapsed_ms=134698.467800 tokens=885
+[SNAP REJECT RAW] bytes=0 text=""
+[SNAP REJECT META] eos_id=32000
+[ESP] seq=33 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":885,"context":885,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.570,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":134698.468,"decode_ms":0.000,"task_ms":134712.329,"gpu_dispatches":58459,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=34 req=1 agent=0 kind=snap_stop value=0 message=expected TOOL protocol prefix
+[ESP] seq=35 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"decode","generated":0,"prefill_tokens":885,"context":885,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.570,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":134698.468,"decode_ms":10.303,"task_ms":134723.022,"gpu_dispatches":58459,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=36 req=1 agent=0 kind=error value=0 message=model_output_invalid
+[ESP] seq=37 req=1 agent=0 kind=prefill_start value=0 message=tokens=116 ctx=885
+[ESP] seq=38 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":885,"context":917,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.317,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":140100.822,"decode_ms":87.987,"task_ms":140203.061,"gpu_dispatches":60572,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[ESP] seq=39 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":885,"context":949,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.080,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":145557.685,"decode_ms":87.987,"task_ms":145659.924,"gpu_dispatches":62685,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[ESP] seq=40 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":885,"context":981,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":5.857,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":151099.746,"decode_ms":87.987,"task_ms":151201.985,"gpu_dispatches":64798,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[ESP] seq=41 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":885,"context":1001,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":5.720,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":154710.050,"decode_ms":87.987,"task_ms":154812.289,"gpu_dispatches":66143,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[SNAP OUT RAW] bytes=0 text=""
+[SNAP OUT META] eos_id=32000
+[ESP] seq=42 req=1 agent=0 kind=prefill_end value=154710 message=elapsed_ms=154710.082500 tokens=1001
+[SNAP REJECT RAW] bytes=0 text=""
+[SNAP REJECT META] eos_id=32000
+[ESP] seq=43 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":1001,"context":1001,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.470,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":154710.082,"decode_ms":87.987,"task_ms":154823.584,"gpu_dispatches":66143,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[ESP] seq=44 req=1 agent=0 kind=snap_stop value=0 message=expected TOOL protocol prefix
+[ESP] seq=45 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"decode","generated":0,"prefill_tokens":1001,"context":1001,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.470,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":154710.082,"decode_ms":97.062,"task_ms":154832.680,"gpu_dispatches":66143,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false}
+[ESP] seq=46 req=1 agent=0 kind=error value=0 message=model_output_invalid
+[ESP] seq=47 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"error","generated":0,"prefill_tokens":1001,"context":1001,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":6.470,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":154710.082,"decode_ms":2097.187,"task_ms":156832.805,"gpu_dispatches":66143,"cpu_fallbacks":0,"tool_calls":0,"failures":2,"stalled":false,"active":true,"slow":false}
+[ESP] seq=48 req=1 agent=0 kind=finished value=1 message=FAIL
+

@@ -1,0 +1,5 @@
+SOURCE_EDITED=0
+PROJECT_SHA_BEFORE=1C33CDBBA2AFFF200969D7ECBF7E23D218B004DB339D6E7032539BC2EF2A66B6
+PROJECT_SHA_AFTER=1C33CDBBA2AFFF200969D7ECBF7E23D218B004DB339D6E7032539BC2EF2A66B6
+SEMANTIC=0
+CONTENT_AFTER=/* Issue #49 product-final fixture: intentional compile bug for agent fix loop. ||  ||  ||  * Do not pre-fix - agent (or measured blocker) must own the repair. ||  ||  ||  */ ||  ||  || int undeclared_fn(int a); ||  ||  ||  ||  ||  || int main() { ||  ||  ||   int x = undeclared_fn(1, 2); /* error: too many args + may need declaration fix */ ||  ||  ||   return x; ||  ||  || }
