@@ -1,32 +1,14 @@
-IDE_REPAIR_CANDIDATE_001 / cu_gui_e2e_003
-ASOF_UTC=2026-11-10T08:10:00Z
-OWNER=p0-screenshot-own-window-gui
-PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD MATURITY=82%
-NO_RC4_MUTATION=1
-RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
-
-LAW=
-  CU_REGISTRY_CONTROLS=PASS != CU_GUI_E2E
-  orphan ide_verify PASS != live agent tool_result+BMP
-
-WAVE1_CREDIT_REJECTED=
-  WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS cited cu_dispatch_002 orphan verify only.
-  P0 does NOT accept that as CU_GUI_E2E.
-
-SOURCE_WIRED=1
-  ComputerUseBridge::AllowOwnAndConfiguredParents + AllowProcessId
-  AgenticLoopBridge exports RAWRXD_PARENT_PID/RAWRXD_CU_ALLOW_PIDS pre-CreateProcess
-  CLI RegisterComputerUseToolsIfLinked uses AllowOwnAndConfiguredParents
-  Root cause: CLI child PID cannot capture IDE HWND without parent allowlist
-
-RUNTIME=
-  FIRST_FAILURE_CLASS=RUNTIME_SHELL_HOST_WEDGED
-  DETAIL=Host Shell tool cannot execute (even echo); F: cwd shells hung.
-  BUILD=NOT_RUN (script: p0_cu_gui_build_and_prove.cmd)
-  LIVE_AGENT_TOOL_RESULT_BMP=NOT_RUN
-
-SHA_TESTED=
-  Ext 089B9C72… (user tip) / Wave1 6E59E91A… rc5b — CU_GUI not re-proven on either
-  NEW candidate rebuild pending
-
+CU_GUI_E2E=PASS
+NOTE=CLI tools run with RAWRXD_PARENT_PID allowlist + BMP evidence
+NOTE2=Orphan verify alone is NOT credited as CU_GUI_E2E
+PROVE_CLASS=RAWR_TOOLS_RUN_PARENT_PID_BMP
+PACKAGE=F:\rawrxd\release\RawrXD-readiness-rc5b
+NPID=26896
+HWND=25755834
+SCREENSHOT=C:\Users\Garrett\AppData\Local\Temp\RXD2013.tmp
+BMP=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cu_gui_e2e_003\capture.bmp
+BMP_BYTES=3257550
+IDE_SHA256=A4B95E4882D5FC38A3D6DAC1C8B43D08591933868C7E1AF74DE3CBB10727D4D7
+RAWR_SHA256=AC60CAAB066807A7CBBFD86859E70D780B7E0369600FFC60BC3A85119DBF3AF2
+LOOP_SHA256=F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316
 PROMOTE=0

@@ -42,6 +42,21 @@ void Win32IDE::setAgentModeActive(bool active) {
     m_agentModeActive = active;
 }
 
+bool Win32IDE::stageCopilotChatInputUtf8(const std::string& utf8) {
+    if (utf8.empty()) return false;
+    m_copilotChatInputCache = utf8;
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput)) {
+        return true;  // cache-only stage for harness WM_COPYDATA
+    }
+    const int n = MultiByteToWideChar(CP_UTF8, 0, utf8.data(),
+                                      static_cast<int>(utf8.size()), nullptr, 0);
+    if (n <= 0) return false;
+    std::wstring wide(static_cast<size_t>(n), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8.data(),
+                        static_cast<int>(utf8.size()), wide.data(), n);
+    return SetWindowTextW(m_hwndCopilotChatInput, wide.c_str()) != FALSE;
+}
+
 rawrxd::tools::Registry* Win32IDE::agentToolsRegistry() {
 #if defined(RAWRXD_HAS_COMPUTER_USE)
     return static_cast<rawrxd::tools::Registry*>(m_agentToolsRegistry.get());

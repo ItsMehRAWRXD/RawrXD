@@ -1,5 +1,5 @@
 IDE_REPAIR_CANDIDATE_001 / P0_CU_GUI_COORDINATION
-UTC=2026-11-10T08:12:00Z
+UTC=2026-11-10T08:02:00Z
 OWNER=p0-screenshot-own-window-gui
 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD MATURITY=82%
 
@@ -9,16 +9,21 @@ LAW=
 
 WAVE1_NOTE=
   WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT credits cu_dispatch_002 (orphan verify).
-  P0 REJECTS that as CU_GUI_E2E. Wave1 may keep READ/EDIT credit separately.
+  That is CU_REGISTRY + harness HWND only — NOT live GUI CU E2E on Ext agent path.
+  P0 owns CU_GUI_E2E disposition; Wave1 may keep READ/EDIT credit separately.
 
-SOURCE_FIX=
+SOURCE_FIX_IN_TREE=
   ComputerUseBridge::AllowOwnAndConfiguredParents + AllowProcessId
   AgenticLoopBridge sets RAWRXD_PARENT_PID / RAWRXD_CU_ALLOW_PIDS before CreateProcess
-  CLI child must allowlist parent IDE PID to screenshot IDE HWND
+  CLI RegisterComputerUseToolsIfLinked uses AllowOwnAndConfiguredParents
+  (CLI child PID alone cannot capture IDE HWND — parent allowlist required)
 
-RUNTIME=
-  FIRST_FAILURE_CLASS=RUNTIME_SHELL_HOST_WEDGED
-  LIVE_AGENT_TOOL_RESULT_BMP=NOT_RUN
-  Script staged: p0_cu_gui_build_and_prove.cmd
+TARGET=
+  Rebuild Ext+rawr+verify NEW candidate (not RC4/4DE0)
+  Prove same-session tool_result contains screenshot= path + BMP exists
+  Seal PASS or FIRST_FAILURE_CLASS
+  Push LFS-safe orphan receipts
 
-USER_TIP_EXT=089B9C72923B…14A4AB8A (or newer same-lineage rebuild)
+CONTROLLING_TIP_REF=
+  User: Ext 089B9C72… or newer same-lineage rebuild
+  Wave1 claimed 6E59E91A… rc5b — do not inherit CU_GUI PASS from orphan verify

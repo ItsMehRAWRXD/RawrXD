@@ -5827,6 +5827,13 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}"
         OUTPUT_NAME "rawr"
     )
+    if(TARGET rawrxd_computer_use)
+        target_link_libraries(RawrXD-CLI-V2 PRIVATE rawrxd_computer_use)
+        target_include_directories(RawrXD-CLI-V2 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/computer_use)
+        target_compile_definitions(RawrXD-CLI-V2 PRIVATE RAWRXD_HAS_COMPUTER_USE=1)
+        message(STATUS "RawrXD-CLI-V2: linked rawrxd_computer_use")
+    endif()
     message(STATUS "RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)")
 else()
     list(APPEND RAWRXD_QT_TARGETS RawrXD-CLI-V2)
