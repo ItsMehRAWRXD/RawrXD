@@ -1122,7 +1122,15 @@ int Win32IDE::runMessageLoop()
                             "hwnd=0x%p session=%d pane=copilot_sidebar",
                             static_cast<void*>(chatInput), sid);
                         WriteInputEventEvidence(line);
-                        HandleCopilotSend();
+                        // Issue #49: same agent routing as Send button.
+                        if (isAgentModeActive()) {
+                            WriteInputEventEvidence(
+                                "INPUT_EVENT path=AGENT_MODE_AGENTIC_LOOP "
+                                "AGENT_MODE=ACTIVE source=ctrl_enter");
+                            onAgenticLoopRunTask();
+                        } else {
+                            HandleCopilotSend();
+                        }
                     } else {
                         WriteInputEventEvidence(
                             "INPUT_EVENT source=ctrl_enter "

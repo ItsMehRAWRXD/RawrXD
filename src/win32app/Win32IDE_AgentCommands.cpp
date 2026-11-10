@@ -1183,6 +1183,23 @@ void Win32IDE::onAgenticLoopRunTask() {
         if (crumb) crumb << "enter\n";
     }
 
+    // Issue #49 exactly-once claim: reject nested chat→agent dispatch.
+    if (m_inferenceRunning.load(std::memory_order_acquire) ||
+        (m_agenticLoopBridge && m_agenticLoopBridge->IsRunning())) {
+        const char* configured = std::getenv("RAWRXD_LOG_DIR");
+        const std::string path = (configured && *configured)
+            ? std::string(configured) + "\\chat_runtime.log"
+            : std::string("chat_runtime.log");
+        std::ofstream ev(path, std::ios::app);
+        if (ev) {
+            ev << "AGENT_DISPATCH_BUSY dispatched=0 exactly_once=1" << std::endl;
+        }
+        appendToOutput("A task is already running. Cancel it first.\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+    m_inferenceRunning.store(true, std::memory_order_release);
+
     // Explicit agent/tool path (CU E2E). Not HandleCopilotSend text-only.
     setAgentModeActive(true);
     ensureComputerUseReady();
@@ -1195,6 +1212,7 @@ void Win32IDE::onAgenticLoopRunTask() {
         if (ev) {
             ev << "AGENT_MODE=ACTIVE path=AgenticLoopBridge"
                << " session_registry=" << (agentToolsRegistry() ? 1 : 0)
+               << " AGENT_DISPATCH_CLAIM=1"
                << std::endl;
         }
     }
@@ -1204,14 +1222,8 @@ void Win32IDE::onAgenticLoopRunTask() {
     }
     
     if (!m_agenticLoopBridge) {
+        m_inferenceRunning.store(false, std::memory_order_release);
         MessageBoxA(m_hwndMain, "Agentic Loop Bridge not initialized", "Agentic Loop", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    if (m_agenticLoopBridge->IsRunning()) {
-        // Non-modal: MessageBox would block WM_CLOSE (Map9 FORCE_KILL=1).
-        appendToOutput("A task is already running. Cancel it first.\n",
-                       "Output", OutputSeverity::Warning);
         return;
     }
     
@@ -1240,6 +1252,7 @@ void Win32IDE::onAgenticLoopRunTask() {
                     std::ios::app);
                 if (crumb) crumb << "empty_task\n";
             }
+            m_inferenceRunning.store(false, std::memory_order_release);
             return;
         }
 
@@ -1302,12 +1315,14 @@ void Win32IDE::onAgenticLoopRunTask() {
                 if (crumb) crumb << "model_reject useLocal=" << (useLocalFile?1:0)
                                  << " path=" << modelPath << "\n";
             }
+            m_inferenceRunning.store(false, std::memory_order_release);
             return;
         }
 
         if (m_selectedChatModel.source == ChatModelEntry::Source::KiloFree) {
             appendToOutput("Agent task rejected: KiloFree is a chat-only route; select an Ollama or local GGUF model for tools.\n",
                            "Errors", OutputSeverity::Error);
+            m_inferenceRunning.store(false, std::memory_order_release);
             return;
         }
         
@@ -1544,6 +1559,7 @@ void Win32IDE::onAgenticLoopRunTask() {
         if (!ensureProductAgentSession(modelPath, workDirStr, task)) {
             appendToOutput("AgentSession initialization failed.\n",
                            "Errors", OutputSeverity::Error);
+            m_inferenceRunning.store(false, std::memory_order_release);
             return;
         }
         
@@ -1676,6 +1692,7 @@ void Win32IDE::onAgenticLoopRunTask() {
             m_agentStepTimeline.addChip("fail", "agent task could not be started");
             if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
             appendToOutput("Agent task could not be started.\n", "Errors", OutputSeverity::Error);
+            m_inferenceRunning.store(false, std::memory_order_release);
         }
     } else {
         appendToOutput("Copilot Chat input not available\n",
@@ -1686,6 +1703,7 @@ void Win32IDE::onAgenticLoopRunTask() {
                 std::ios::app);
             if (crumb) crumb << "no_chat_input\n";
         }
+        m_inferenceRunning.store(false, std::memory_order_release);
     }
 }
 
@@ -1695,6 +1713,7 @@ void Win32IDE::onAgenticLoopCancel() {
     cancelComputerUse();
     
     if (!m_agenticLoopBridge) {
+        m_inferenceRunning.store(false, std::memory_order_release);
         return;
     }
     
@@ -1705,6 +1724,7 @@ void Win32IDE::onAgenticLoopCancel() {
     m_agentStepTimeline.closeThoughtIfOpen();
     m_agentStepTimeline.addChip("stopped", "agentic cancelled");
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
+    m_inferenceRunning.store(false, std::memory_order_release);
     appendToOutput(" Agentic task cancelled\n", "Output", OutputSeverity::Warning);
     if (m_hwndStatusBar) {
         const char* status = "Agentic task cancelled";
@@ -1820,6 +1840,7 @@ LRESULT Win32IDE::handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam) {
 // Handle agentic loop completion (WM_APP + 105)
 LRESULT Win32IDE::handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam) {
     bool success = (wParam != 0);
+    m_inferenceRunning.store(false, std::memory_order_release);
     if (lParam) {
         std::string* summary = reinterpret_cast<std::string*>(lParam);
         
