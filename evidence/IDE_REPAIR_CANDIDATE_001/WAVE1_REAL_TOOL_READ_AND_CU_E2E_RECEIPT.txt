@@ -1,0 +1,37 @@
+IDE_REPAIR_CANDIDATE_001 / WAVE1_REAL_TOOL_READ_AND_CU_E2E
+ASOF_UTC=2026-11-10T07:48:30Z
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+MATURITY=82%
+ISSUE49=HOLD
+NO_RC4_MUTATION=1
+RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+
+CANDIDATE=IDE_REPAIR_CANDIDATE_001
+PACKAGE=F:\rawrxd\release\RawrXD-readiness-rc5b
+IDE_SHA256=6E59E91A2D23A3BC666345DF5168F66DDCAC1FD1C25F46A64E33773EC78A4C4C
+LOOP_SHA256=F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316
+CU_VERIFY_SHA256=F49CF31CB1F5FBC8A5869FE8BB4495E9D6DE66D9D4F1AE09A00FFD1CBCE0EC00
+MODEL_READ=qwen3:8b
+
+SEQUENCE=
+  1) Chat/AgentSession ownership: SOURCE_WIRED via ensureProductAgentSession + session Registry bind
+  2) Agent loop: RAWRXD_AGENT_MODE -> onAgenticLoopRunTask (not HandleCopilotSend-only)
+  3) Ollama real tool call: TOOL=read emitted by qwen3:8b (not fabricated)
+  4) bug.cpp READ + reinjection + continuation: OLLAMA_AGENT_READ/EDIT/BUILD_TEST PASS; AGENT_RESULT=5
+  5) Computer-use session registry + GUI dispatch: VERIFY PASS (screenshot/find/mouse/type + agent_tools_registered)
+
+WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS
+READ_EVIDENCE=evidence/IDE_REPAIR_CANDIDATE_001/agent_read_rc5b_qwen3_same_sha/
+CU_EVIDENCE=evidence/IDE_REPAIR_CANDIDATE_001/cu_dispatch_002_stdout.txt
+HARNESS_JSON_ANOMALY=process_exit=null (PowerShell Start-Process); stdout markers govern READ verdict
+FAIL_CLOSED_NOTE=NOT_RUN!=PASS; RC4 sealed receipts unmodified; PROMOTE=0
+
+SOURCE_REPAIR=
+  Win32IDE_ComputerUse.cpp session-owned Registry+ToolCallBridge (orphan_static=0)
+  Win32IDE_lifecycle.cpp AGENT_MODE -> AgenticLoopBridge
+  Win32IDE_AgentCommands.cpp AgentSession bind + agent-mode approveMutations
+  ComputerUse.cpp/h ScreenCapture: find/screenshot PID-allowlist without FG; Input keeps FG
+  ComputerUseIdeVerify.cpp message pump + AttachThreadInput for interactive steps

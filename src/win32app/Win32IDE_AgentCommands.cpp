@@ -1413,9 +1413,9 @@ void Win32IDE::onAgenticLoopRunTask() {
             config.quiet = false;
         }
         // Ollama chat tasks use the same canonical `rawr run` path as the
-        // CLI smoke-tested backend.  Keep GUI chat read-only by default; an
-        // explicit environment opt-in is required before this UI route can
-        // authorize mutations.
+        // CLI smoke-tested backend.  Keep plain GUI chat read-only by default;
+        // agent-mode / AgenticLoop (RAWRXD_AGENT_MODE) and explicit env opt-in
+        // authorize the live tool surface (read + computer_use.* + edits).
         config.useCliAgent = useOllama;
         const char* approveGuiMutations = std::getenv("RAWRXD_GUI_APPROVE_MUTATIONS");
         config.approveMutations = approveGuiMutations &&
@@ -1423,6 +1423,12 @@ void Win32IDE::onAgenticLoopRunTask() {
         // Issue #49 FORCE_LOCAL product path must edit fixtures; do not leave
         // the deep2 loop read-only when the harness forces local agentic.
         if (forceLocal && !config.approveMutations) {
+            config.approveMutations = true;
+        }
+        // Agent-mode Send/Run Agentic Task is the structured tool loop, not
+        // HandleCopilotSend text chat — enable agent tool mode so CU/read
+        // are not clamped to --mode ask.
+        if (isAgentModeActive() && !config.approveMutations) {
             config.approveMutations = true;
         }
         config.readOnly = !config.approveMutations;

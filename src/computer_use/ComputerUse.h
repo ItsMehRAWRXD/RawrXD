@@ -43,6 +43,7 @@ class ComputerUseEngine {
 public:
     explicit ComputerUseEngine(SafetyPolicy policy);
     ActionResult Execute(const ComputerAction& action);
+    bool IsProcessAllowlisted(HWND window) const;
     bool IsTargetAllowed(HWND window) const;
     void Cancel() noexcept { cancelled_.store(true); }
     void ResetCancel() noexcept { cancelled_.store(false); }

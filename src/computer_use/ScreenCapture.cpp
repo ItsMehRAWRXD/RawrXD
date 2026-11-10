@@ -3,7 +3,8 @@
 #include <string>
 namespace rawrxd::computer_use {
 ActionResult ComputerUseEngine::Capture(HWND window) const {
-    if(!policy_.allowScreenshots || !IsTargetAllowed(window)) return {false,ERROR_ACCESS_DENIED,L"Screenshot denied by policy or window not allowed"};
+    // Screenshot of an allowlisted PID does not require foreground (Input does).
+    if(!policy_.allowScreenshots || !IsProcessAllowlisted(window)) return {false,ERROR_ACCESS_DENIED,L"Screenshot denied by policy or window not allowed"};
     RECT rect{}; if(!GetClientRect(window,&rect)) return {false,GetLastError(),L"GetClientRect failed"};
     int w=rect.right,h=rect.bottom;
     if(w<=0 || h<=0 || static_cast<uint64_t>(w)*h>16000000) return {false,ERROR_INVALID_PARAMETER,L"Invalid or excessive capture dimensions"};

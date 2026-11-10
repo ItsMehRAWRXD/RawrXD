@@ -42,6 +42,16 @@ int main() {
     HWND hwnd = CreateWindowExW(0, L"RawrXDCuVerify", L"RawrXDCuVerify",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 320, 240,
         nullptr, nullptr, wc.hInstance, nullptr);
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+    for (int i = 0; i < 8; ++i) {
+        MSG msg{};
+        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+        Sleep(10);
+    }
     SetForegroundWindow(hwnd);
     ComputerAction shot; shot.type = ActionType::Screenshot; shot.targetWindow = hwnd;
     auto shotR = bridge.DispatchApproved(shot, true);
@@ -54,7 +64,22 @@ int main() {
     // Disposable owned window: enable mouse/type for this process only.
     bridge.SetMouseAllowed(true);
     bridge.SetTypingAllowed(true);
-    SetForegroundWindow(hwnd);
+    {
+        HWND fg = GetForegroundWindow();
+        DWORD fgTid = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
+        DWORD myTid = GetCurrentThreadId();
+        if (fgTid && fgTid != myTid) AttachThreadInput(fgTid, myTid, TRUE);
+        BringWindowToTop(hwnd);
+        SetForegroundWindow(hwnd);
+        if (fgTid && fgTid != myTid) AttachThreadInput(fgTid, myTid, FALSE);
+        for (int i = 0; i < 4; ++i) {
+            MSG msg{};
+            while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+    }
     ComputerAction move; move.type = ActionType::MoveMouse;
     move.targetWindow = hwnd; move.position = {40, 40};
     expect(bridge.DispatchApproved(move, true).success, "mouse_own_window");

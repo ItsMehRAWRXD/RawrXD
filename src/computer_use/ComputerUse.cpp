@@ -21,11 +21,20 @@ INPUT Key(WORD vk, DWORD flags=0) { INPUT i{}; i.type=INPUT_KEYBOARD; i.ki.wVk=v
 INPUT Mouse(DWORD flags, DWORD data=0) { INPUT i{}; i.type=INPUT_MOUSE; i.mi.dwFlags=flags; i.mi.mouseData=data; return i; }
 }
 ComputerUseEngine::ComputerUseEngine(SafetyPolicy p):policy_(std::move(p)){}
-bool ComputerUseEngine::IsTargetAllowed(HWND window) const {
+bool ComputerUseEngine::IsProcessAllowlisted(HWND window) const {
     if(!IsAlive(window)) return false;
     DWORD pid=0; GetWindowThreadProcessId(window,&pid);
-    if(!pid || std::find(policy_.allowedProcessIds.begin(),policy_.allowedProcessIds.end(),pid)==policy_.allowedProcessIds.end()) return false;
-    return !policy_.requireForeground || GetForegroundWindow()==window || GetAncestor(GetForegroundWindow(),GA_ROOT)==window;
+    if(!pid) return false;
+    return std::find(policy_.allowedProcessIds.begin(),
+                     policy_.allowedProcessIds.end(),
+                     pid) != policy_.allowedProcessIds.end();
+}
+bool ComputerUseEngine::IsTargetAllowed(HWND window) const {
+    // Interactive input still requires allowlisted PID + optional foreground.
+    if(!IsProcessAllowlisted(window)) return false;
+    return !policy_.requireForeground ||
+           GetForegroundWindow()==window ||
+           GetAncestor(GetForegroundWindow(),GA_ROOT)==window;
 }
 ActionResult ComputerUseEngine::Find(const std::wstring& title,DWORD timeout) {
     if(title.empty()) return Fail(ERROR_INVALID_PARAMETER,L"Window title substring required");
@@ -33,7 +42,9 @@ ActionResult ComputerUseEngine::Find(const std::wstring& title,DWORD timeout) {
     do {
         if(cancelled_) return Fail(ERROR_CANCELLED,L"Cancelled");
         SearchContext ctx{&title}; EnumWindows(FindProc,reinterpret_cast<LPARAM>(&ctx));
-        if(ctx.result && IsTargetAllowed(ctx.result)) return Ok(L"Window found",ctx.result);
+        // Discovery is PID-allowlist only; foreground is enforced on Input.
+        if(ctx.result && IsProcessAllowlisted(ctx.result))
+            return Ok(L"Window found",ctx.result);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     } while(GetTickCount64()-start<timeout);
     return Fail(ERROR_NOT_FOUND,L"Allowed window not found");
