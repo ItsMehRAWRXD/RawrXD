@@ -8,6 +8,9 @@
 #include "ModelConnection.h"
 #include "IDELogger.h"
 #include "agentic/AgentSession.h"
+#if defined(RAWRXD_HAS_COMPUTER_USE)
+#include "agentic/tool_core.hpp"
+#endif
 #include <commctrl.h>
 #include <sstream>
 #include <cstdlib>
@@ -708,17 +711,24 @@ void Win32IDE::onAgentViewTools() {
     
     ensureComputerUseReady();
     std::vector<std::string> tools = m_agenticBridge->GetAvailableTools();
-    for (const auto& cu : listComputerUseTools()) tools.push_back(cu);
+    // Prefer live session registry names when bound (UI is not the only consumer).
+    if (auto* reg = agentToolsRegistry()) {
+        tools = reg->names();
+    } else {
+        for (const auto& cu : listComputerUseTools()) tools.push_back(cu);
+    }
     
     std::stringstream toolsList;
-    toolsList << "Available Agent Tools:\n\n";
+    toolsList << "Available Agent Tools (session registry):\n\n";
     
     for (const auto& tool : tools) {
         toolsList << " " << tool << "\n";
     }
     
     toolsList << "\nThese tools can be invoked by the agent to perform tasks.\n";
-    toolsList << "Example: TOOL:shell:{\"cmd\":\"Get-Process\"}";
+    toolsList << "Example: TOOL:shell:{\"cmd\":\"Get-Process\"}\n";
+    toolsList << "CU E2E: set RAWRXD_AGENT_MODE=ACTIVE and use Run Agentic Task "
+                 "(not Copilot text-only Send).\n";
     
     MessageBoxA(m_hwndMain, toolsList.str().c_str(), "Agent Tools", MB_OK | MB_ICONINFORMATION);
     
@@ -1114,6 +1124,10 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
     session->AppendUserMessage(task);
     session->RecordAgentTurn();
 
+    // Bind CU / workspace tools onto the same session-owned Registry the
+    // ToolCallBridge and agent loop consumers share (not orphan s_cuReg).
+    ensureComputerUseReady();
+
     // Keep literal contiguous in the Ext image for H57 string probes.
     static volatile const char kAgentSessionBound[] = "AgentSession bound";
     appendToOutput(
@@ -1132,7 +1146,13 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
                << " task_id=" << taskId
                << " session_identity=" << m_productAgentSessionId
                << " model=" << modelIdentity
-               << " workspace=" << workspaceRoot << std::endl;
+               << " workspace=" << workspaceRoot;
+            if (isAgentModeActive()) ev << " AGENT_MODE=ACTIVE";
+            if (agentToolsRegistry()) {
+                ev << " session_registry=1";
+                for (const auto& n : listComputerUseTools()) ev << " tool=" << n;
+            }
+            ev << std::endl;
         }
     }
     LOG_INFO(std::string("AgentSession bound task_id=") + taskId);
@@ -1161,6 +1181,22 @@ void Win32IDE::onAgenticLoopRunTask() {
             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\MAP9_AGENTIC_CRUMB.txt",
             std::ios::app);
         if (crumb) crumb << "enter\n";
+    }
+
+    // Explicit agent/tool path (CU E2E). Not HandleCopilotSend text-only.
+    setAgentModeActive(true);
+    ensureComputerUseReady();
+    {
+        const char* configured = std::getenv("RAWRXD_LOG_DIR");
+        const std::string path = (configured && *configured)
+            ? std::string(configured) + "\\chat_runtime.log"
+            : std::string("chat_runtime.log");
+        std::ofstream ev(path, std::ios::app);
+        if (ev) {
+            ev << "AGENT_MODE=ACTIVE path=AgenticLoopBridge"
+               << " session_registry=" << (agentToolsRegistry() ? 1 : 0)
+               << std::endl;
+        }
     }
     
     if (!m_agenticLoopBridge) {

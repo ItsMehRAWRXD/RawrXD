@@ -246,6 +246,12 @@ inline constexpr ULONG_PTR kRawrxdChatInputCopyDataCmd = 0x4348494Eull; // 'CHIN
 
 inline void RawrxdProductAgentSessionDeleterNoop(void*) {}
 
+namespace rawrxd {
+namespace tools {
+class Registry;
+}
+}
+
 // Legacy terminal pane callbacks originate on Win32TerminalManager reader
 // threads.  Own their payload and marshal it through the main window before
 // touching the terminal or Problems controls.
@@ -418,8 +424,17 @@ public:
     void ensureComputerUseReady();
     void cancelComputerUse();
     std::vector<std::string> listComputerUseTools() const;
+    bool isAgentModeActive() const;
+    void setAgentModeActive(bool active);
+    rawrxd::tools::Registry* agentToolsRegistry();
     bool m_computerUseToolsRegistered = false;
-    void* m_computerUseRegistry = nullptr; // rawrxd::tools::Registry* when linked
+    void* m_computerUseRegistry = nullptr; // bound to session registry (not orphan-only)
+    // Session-owned tools registry + ToolCallBridge (lifetime = IDE session).
+    std::unique_ptr<void, void(*)(void*)> m_agentToolsRegistry{
+        nullptr, &RawrxdProductAgentSessionDeleterNoop};
+    std::unique_ptr<void, void(*)(void*)> m_agentToolCallBridge{
+        nullptr, &RawrxdProductAgentSessionDeleterNoop};
+    bool m_agentModeActive = false;
 
     // Deep2 Inference Bridge (GPU-accelerated)
     Deep2Bridge* m_deep2Bridge = nullptr;
