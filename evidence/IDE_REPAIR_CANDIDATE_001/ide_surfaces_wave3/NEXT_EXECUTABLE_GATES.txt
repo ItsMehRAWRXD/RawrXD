@@ -1,0 +1,39 @@
+IDE_REPAIR_CANDIDATE_001 / ide_surfaces_wave3 / NEXT_EXECUTABLE_GATES
+ASOF_UTC=2026-11-10T08:05:00Z
+PROMOTE=0
+MATURITY=82%_HOLD
+WAVE1_INTEGRATED=NOT_SEALED
+WAVE3_SOURCE_EDIT_OF_CU_AGENTCOMMANDS=FORBIDDEN
+
+GATE_0  WAVE1_INTEGRATED_SEAL (serial owner: Wave1/P0 — not W3)
+  ACTION=Seal WAVE1_INTEGRATED=PASS or FIRST_FAILURE on controlling SHA
+  W3_DEPENDENCY=blocks product edits to ComputerUse/AgentCommands only; surface measure may proceed
+
+GATE_1  W3_HWND_SMOKE_RC5B  (NEXT for this worker when runtime allowed)
+  CMD=powershell -NoProfile -File evidence\IDE_REPAIR_CANDIDATE_001\ide_surfaces_wave3\harness\Invoke-SurfaceHwndSmoke.ps1
+  TIP_DEFAULT=F:\rawrxd\release\RawrXD-readiness-rc5b\RawrXD-Win32IDE-Native-Ext.exe
+  PASS_IF=main HWND + ctrl 1300 present after View panel cmds; SHA bound in receipt
+  STATUS=HARNESS_READY NOT_RUN
+
+GATE_2  W3_FOUR_PANEL_1_17_RC5B  (primary band measure)
+  CMD=powershell -NoProfile -File evidence\IDE_REPAIR_CANDIDATE_001\ide_surfaces_wave3\harness\Invoke-Rc5FourPanel117.ps1 -Lineage rc5b
+  PASS_IF=17/17 on SHA 6E59E91A… (or explicit successor SHA after rebuild)
+  FAIL_CLOSED=emit FIRST_FAILURE_CLASS; do not invent PASS
+  STATUS=HARNESS_READY NOT_RUN
+
+GATE_3  W3_FIRST_FAILURE_TRIAGE (conditional)
+  IF GATE_2 fails on dock VisId / Problems items / Build effect:
+    Owner=Wave3 source in VSCodeUI.cpp / lifecycle.cpp dock / Commands.cpp Build visibility
+    FORBIDDEN=Win32IDE_ComputerUse.cpp, AgentCommands registry bind
+  IF fails on debug S09-S11 only: record PARTIAL; band close still requires S01-S08+S12-S17 policy per plan
+
+GATE_4  W3_RC5_LINEAGE_DELTA (optional informational)
+  Remasure 089B9C72… with same harness; compare FIRST_FAILURE_CLASS vs rc5b
+  Does not raise maturity
+
+GATE_5  MATURITY_WEIGHT_88_91 (held)
+  Requires GATE_2 PASS AND prior roadmap weights 82->85 and 85->88 earned
+  Until then: PLANNING_WEIGHTS_NOT_EARNED; MATURITY stays 82% hold
+
+SERIAL_AFTER_W3=
+  91->94 EXTENSIONS_CANCEL_MODEL_SWITCH_PERSIST_RECOVERY (Wave4 / WS20)

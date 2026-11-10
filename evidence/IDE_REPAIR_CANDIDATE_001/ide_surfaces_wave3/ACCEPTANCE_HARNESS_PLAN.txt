@@ -1,0 +1,61 @@
+IDE_REPAIR_CANDIDATE_001 / ide_surfaces_wave3 / ACCEPTANCE_HARNESS_PLAN
+ASOF_UTC=2026-11-10T08:05:00Z
+SWARM=W3
+ROADMAP_BAND=88->91
+PROMOTE=0
+NO_INVENT_PASS=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+
+PURPOSE=
+  Acceptance plans + non-conflicting scripts to measure Native IDE four-panel /
+  Problems / Terminal / Build / lifecycle on RC5/RC5B Ext WITHOUT editing Wave1-
+  owned ComputerUse / AgentCommands TUs.
+
+HARNESS_FAMILY=
+  PRIMARY=Reuse FULL_FEATURE_ONESHOT_001\harness\four_panel_1_17_measure.ps1
+  WRAPPER=ide_surfaces_wave3\harness\Invoke-Rc5FourPanel117.ps1
+  SMOKE=ide_surfaces_wave3\harness\Invoke-SurfaceHwndSmoke.ps1
+  FIXTURES=ide_surfaces_wave3\fixtures\{broken_multi.cpp,fixed_multi.cpp}
+  AUTHORITY_RECEIPT=ide_surfaces_wave3\artifacts\FOUR_PANEL_1_17_RECEIPT_<SHA8>.txt
+
+SCENARIO MAP (1-17) → WAVE3 GATES
+  S01 LAUNCH                 → G-W3-05 lifecycle spawn
+  S02 SHOW_PANELS            → G-W3-01/06 VisId dock
+  S03 TERMINAL_BUILD 3014    → G-W3-03/04 build+terminal
+  S04 OUTPUT_ACTIVITY        → G-W3-03 output edit length
+  S05 PROBLEMS_DIAG          → G-W3-02 items>0
+  S06 CLICK_TO_LINE          → G-W3-02 navigation
+  S07 REBUILD_CLEAR          → G-W3-04 clearProblems
+  S08 REBUILD_REFILL         → G-W3-04 refill
+  S09-S11 DEBUG              → adjacent; record but do not invent Debug PASS as band close
+  S12 TERMINAL_STILL         → G-W3-03 survival
+  S13-S17 EXIT/REOPEN/...    → G-W3-05 lifecycle
+
+PASS LAW (band 88->91)
+  FOUR_PANEL_1_17=17/17 PASS on ONE measured Ext SHA
+  AND that SHA is the controlling repair-candidate Ext (rc5b LANE or explicit successor)
+  AND WAVE1_INTEGRATED may still be NOT_SEALED — maturity weight still NOT_EARNED until
+      prior bands 82->85 and 85->88 also seal (MATURITY_ROADMAP law)
+  PROMOTE remains 0 regardless of surface PASS
+
+EXECUTION ORDER (executable)
+  E0  Confirm WAVE1_INTEGRATED status (read-only) — DONE: NOT_SEALED
+  E1  HWND smoke on RC5B (no Build) — Invoke-SurfaceHwndSmoke.ps1
+  E2  four_panel_1_17 on RC5B via wrapper — seal PASS or FIRST_FAILURE_CLASS
+  E3  If FIRST_FAILURE on product bug: open Wave3 source fix ONLY in VSCodeUI /
+      lifecycle dock / Commands Build visibility paths — NEVER ComputerUse/AgentCommands
+  E4  Re-run E2 same SHA after fix; no cross-SHA inherit
+  E5  Optional: remasure RC5 089B9C72 as lineage delta (informational; LANE tip is rc5b)
+
+NON-CONFLICT RULES
+  - Do not kill Wave1 agentic_loop runs holding ISSUE49_EXCLUSIVE.lock
+    (four_panel harness already SKIP-exits on that lock)
+  - Do not overwrite FULL_FEATURE_ONESHOT artifacts; write under ide_surfaces_wave3\artifacts\
+  - Do not mutate RC4 package or sealed rc4_runtime_001
+  - Text receipts only on LFS-blocked remotes (orphan upload/* branches)
+
+OUT OF SCOPE THIS WAVE
+  Extensions cancel/model-switch (91->94)
+  CU_GUI live E2E (P0)
+  ISSUE49 product-final (Layer 10)
+  PROMOTE / TIP_CLIMB

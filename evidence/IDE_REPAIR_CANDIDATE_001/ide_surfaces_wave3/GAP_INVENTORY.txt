@@ -1,0 +1,93 @@
+IDE_REPAIR_CANDIDATE_001 / ide_surfaces_wave3 / GAP_INVENTORY
+ASOF_UTC=2026-11-10T08:05:00Z
+SWARM=W3
+ROADMAP=88->91 NATIVE_IDE_FOUR_PANEL_PROBLEMS_TERMINAL_BUILD
+PROMOTE=0 MATURITY=82%_HOLD RC4=SEALED
+CONTROLLING_MEASURE_TARGET=RC5B_Ext 6E59E91A… (LANE) — remasure required; NOT_RUN on this SHA
+ALTERNATE_LINEAGE=RC5_Ext 089B9C72… — also NOT_RUN for four-panel/problems/terminal/build lifecycle
+NO_CROSS_SHA_PASS_INHERITANCE=1
+
+========================================================================
+GAP LIST (fail-closed)
+========================================================================
+
+G-W3-01  FOUR_PANEL_1_17_ON_RC5B
+  CLASS=NOT_RUN
+  SURFACE=Problems/Output/Terminal/Debug bottom dock (IDC_PANEL_CONTAINER=1300, list=1312)
+  SOURCE_STATE=SOURCE_WIRED in Ext tree
+    - Win32IDE_VSCodeUI.cpp: createPanel / ensurePanelVisible / layoutBottomDock / switchPanelTab / addProblem
+    - Win32IDE_lifecycle.cpp: bottom dock geometry when m_panelVisible; G7 VisId notes
+    - Win32IDE_Commands.cpp: View>Panel show-only + Build(3014) ensurePanelVisible
+  RUNTIME_ON_RC5B=NOT_RUN
+  HISTORICAL=4DE0 FOUR_PANEL 17/17 PASS (FULL_FEATURE_ONESHOT_001) — no inherit
+  HISTORICAL_FAIL=35C22 FOUR_PANEL FAIL_CLOSED (RELEASE_FREEZE_001) — tip lacked WFDE/four-panel fixes
+  BLOCKER=Need same-SHA remasure via harness; Wave1 integrated not sealed but surface measure is non-mutating
+
+G-W3-02  PROBLEMS_PANEL_DIAG_PIPELINE
+  CLASS=NOT_RUN_ON_RC5B (related SOURCE_WIRED)
+  SURFACE=addProblem → ListView 1312 → PROBLEMS tab text counts → click-to-line
+  SOURCE_STATE=
+    - Dual paths: VSCodeUI listview (1312) AND Win32IDE_ProblemsPanel.cpp (m_hwndProblemsPanel)
+    - Risk: Native-Ext WindowProc is lifecycle TU; sidebar ProblemsPanel may be parallel/orphan UI
+  RC4_NOTE=G02_G14_MATRIX: Problems pane not re-exercised
+  WS_CROSSWALK=WS12 Problems panel = blocked_after Wave1 integrated
+  ACCEPTANCE=S05 items>0 after Build fixture; S06 NM_DBLCLK navigates editor line
+
+G-W3-03  TERMINAL_START_OUTPUT_EXIT_CANCEL
+  CLASS=NOT_RUN_ON_RC5B
+  SURFACE=Win32TerminalManager ConPTY panes under four-panel Terminal tab
+  SOURCE_STATE=SOURCE_WIRED (Win32TerminalManager.*; createTerminalPane; panel kill/split buttons)
+  ISSUE57=A09 related receipts exist under FULL_FEATURE_*; RC4 G05 NOT_RUN
+  WS_CROSSWALK=WS10 Integrated terminal = blocked_after
+  ACCEPTANCE=S03/S12 terminal edit length survives build; cancel/cleanup still OPEN beyond 1-17
+
+G-W3-04  BUILD_CMD_3014_TO_PROBLEMS
+  CLASS=NOT_RUN_ON_RC5B
+  SURFACE=WM_COMMAND 3014 Build → fixture cl.exe → diagnostics → clear/refill
+  SOURCE_STATE=SOURCE_WIRED Win32IDE_Commands.cpp BUILD_COMMAND_ENTRY id=3014 + RAWRXD_PROBLEMS_FIXTURE
+  NOTE=Win32IDE_BuildRunner.cpp present on g:\~dev\rawrxd mirror; F:\rawrxd Ext path uses Commands Build for fixture
+  ACCEPTANCE=S03 effect + S07 clear + S08 refill items=3
+
+G-W3-05  LIFECYCLE_REOPEN_NO_ORPHAN
+  CLASS=NOT_RUN_ON_RC5B
+  SURFACE=exit → reopen → rebuild → problems still fill; no orphan crash
+  SOURCE_STATE=lifecycle WindowProc owns Native-Ext (not Core::handleMessage alone)
+  HISTORICAL=S11/S16 fixes landed on 4DE0 lineage (WFDE + fixture env restore)
+  RISK=RC5B may lack some 4DE0 tip_integ patches; measure will expose FIRST_FAILURE_CLASS
+  ACCEPTANCE=S13–S17 on same SHA
+
+G-W3-06  PANEL_VISIBILITY_AFTER_BUILD
+  CLASS=OPEN_RISK (historical PARTIAL on B39)
+  SURFACE=ensurePanelVisible vs exclusive PowerShell dock re-hiding 1300 after Build
+  SOURCE_MARKERS=G7_ensurePanelVisible_ShowWindow_1300 / G7_layoutBottomDock_SetWindowPos_1300
+  ACCEPTANCE=VisId(1300)=1 and Problems/Terminal selectable after 3014
+
+G-W3-07  WAVE1_SERIALIZATION_GATE
+  CLASS=BLOCKED_FOR_PRODUCT_SOURCE_EDITS
+  SURFACE=ComputerUse registry + AgentCommands session bind
+  STATUS=WAVE1_INTEGRATED=NOT_SEALED
+  WAVE3_ACTION=do not edit; measure surfaces only
+
+G-W3-08  MATURITY_88_91_WEIGHT
+  CLASS=NOT_EARNED
+  LAW=Do not raise MATURITY_ESTIMATE until same-SHA integrated milestone PASS sealed
+  DEPENDS_ON=prior bands 82->85 and 85->88 still PLANNING_WEIGHTS_NOT_EARNED
+
+G-W3-09  EXT_VS_SIDEBAR_PROBLEMS_DUAL_IMPL
+  CLASS=SOURCE_GAP / AMBIGUITY
+  OBS=Win32IDE_ProblemsPanel.cpp (initProblemsPanel) vs VSCodeUI m_hwndProblemsListView (1312)
+  HARNESS_AUTHORITY=four_panel_1_17 uses ctrl id 1312 (VSCodeUI path)
+  NEXT=confirm Native-Ext product path binds 1312; treat sidebar panel as non-authority unless VisId proves otherwise
+
+G-W3-10  RC5_vs_RC5B_LINEAGE_SPLIT
+  CLASS=IDENTITY_GAP
+  OBS=LANE controlling IDE=6E59E91A (rc5b); weighted ledger still lists 089B9C72 (rc5)
+  LAW=receipts must bind measured SHA; no transfer between rc5 and rc5b
+
+========================================================================
+NON-GAPS (cite only — ≠ Wave3 PASS)
+========================================================================
+  - 4DE0 P3_FOUR_PANEL=PASS (17/17) — historical
+  - Ext tip 317D FOUR_PANEL=PASS — historical, no inherit to 35C22/RC5
+  - Source markers for G7 dock layout present in F:\rawrxd\src\win32app
+  - WAVE1_REAL_TOOL_READ_AND_CU_E2E=PASS on rc5b — agent path, not surface band
