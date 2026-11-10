@@ -1,0 +1,17 @@
+WAVE2_COORDINATION_WITH_WAVE1
+ASOF_UTC=2026-11-10T08:10:00Z
+WAVE1_OWNS=Ext ComputerUse AgentCommands lifecycle CU registry bind
+WAVE2_OWNS=issue49_wave2 evidence harnesses exactly-once guard+tests Issue49 step receipts
+P0_OWNS=CU_GUI_E2E (orphan verify != live AgentSession screenshot path)
+
+DO_NOT_EDIT_WAVE1_PATHS=1
+DO_NOT_MUTATE_RC4=1
+DO_NOT_RAISE_MATURITY=1
+
+HANDSHAKE=
+  Wave1 publishes new Ext/loop package SHA -> announce WAVE1_PUBLISH_SHA
+  Wave2 re-runs Invoke-Issue49ElevenStepPinned.ps1 -ExpectSha <that>
+  Wave2 seals step_receipts bound to that SHA only
+  Exactly-once absorb into ToolCallBridge deferred until that pin
+
+PROMOTE=0
