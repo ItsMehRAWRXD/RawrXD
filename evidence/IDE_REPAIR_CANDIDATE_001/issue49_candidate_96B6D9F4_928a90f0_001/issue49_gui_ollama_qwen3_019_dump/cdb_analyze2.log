@@ -1,0 +1,323 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\cdb_analyze2.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 46
+
+Microsoft (R) Windows Debugger Version 10.0.29680.1004 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+
+Loading Dump File [F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\dumps\RawrXD-Win32IDE-Native-Ext.exe_261110_093410.dmp]
+User Mini Dump File with Full Memory : Only application data is available
+
+Comment: '
+*** "F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\tools\procdump\procdump64.exe" -accepteula -e -ma -w RawrXD-Win32IDE-Native-Ext.exe F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\dumps 
+*** Unhandled exception: E06D7363.?AVtype_error@detail@json_abi_v3_11_3@nlohmann@@'
+Symbol search path is: srv*
+Executable search path is: 
+Windows 10 Version 26300 MP (8 procs) Free x64
+Product: WinNt, suite: SingleUserTS Personal
+Edition build lab: 26100.1.amd64fre.ge_release.240331-1435
+Debug session time: Tue Nov 10 09:34:10.000 2026 (UTC - 5:00)
+System Uptime: 0 days 19:43:49.308
+Process Uptime: 0 days 0:01:14.000
+.NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'
+...............................................................
+............
+This dump file has an exception of interest stored in it.
+The stored exception information can be accessed via .ecxr
+(a2bc.14c): C++ EH exception - code e06d7363 (first/second chance not available)
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+For analysis of this file, run !analyze -v
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+0:000> $$<F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\cdb_script2.txt
+0:000> .sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+Symbol search path is: srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+Expanded Symbol search path is: srv*c:\symbols*https://msdl.microsoft.com/download/symbols;f:\rawrxd\build_tip_ext_host_001\bin
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*C:\Symbols*https://msdl.microsoft.com/download/symbols
+OK                                             F:\rawrxd\build_tip_ext_host_001\bin
+0:000> .reload /f RawrXD-Win32IDE-Native-Ext.exe
+*** WARNING: Unable to verify checksum for RawrXD-Win32IDE-Native-Ext.exe
+0:000> .exr -1
+ExceptionAddress: 00007ffa3784569a (KERNELBASE!RaiseException+0x000000000000008a)
+   ExceptionCode: e06d7363 (C++ EH exception)
+  ExceptionFlags: 00000081
+NumberParameters: 4
+   Parameter[0]: 0000000019930520
+   Parameter[1]: 000000acc65ea9c0
+   Parameter[2]: 00007ff6a8085a90
+   Parameter[3]: 00007ff6a7a80000
+!cppexr ffffffffffffffff
+  _s_ThrowInfo    : 00007ff6a8085a90
+  pExceptionObject: 000000acc65ea9c0
+  Type            : class nlohmann::json_abi_v3_11_3::detail::type_error
+  Type            : class nlohmann::json_abi_v3_11_3::detail::exception
+  Type            : class std::exception
+0:000> .ecxr
+rax=0000000000000000 rbx=000000acc65ea958 rcx=0000000000000000
+rdx=00007ffa37d068f0 rsi=0000000000000001 rdi=00000000e06d7363
+rip=00007ffa3784569a rsp=000000acc65ea830 rbp=0000000000000004
+ r8=000000ac00000004  r9=0000027b2e599660 r10=0000000000000000
+r11=0000027b2e5996b8 r12=0000000000000000 r13=00007ff6a7a80000
+r14=0000027b33dd29f0 r15=0000000000000001
+iopl=0         nv up ei pl nz na pe nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000204
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+0:000> k 30
+Child-SP          RetAddr               Call Site
+000000ac`c65ea830 00007ff9`d4a455a9     KERNELBASE!RaiseException+0x8a
+000000ac`c65ea930 00007ff6`a7b8c5c6     VCRUNTIME140!_CxxThrowException+0x99
+000000ac`c65ea990 00007ff6`a7b8bad8     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump_escaped+0x416
+000000ac`c65eaaa0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x6a8
+000000ac`c65eab20 00007ff6`a7b8b9bb     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+000000ac`c65eaba0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x58b
+000000ac`c65eac20 00007ff6`a7b8b27f     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+000000ac`c65eaca0 00007ff6`a7ec97fe     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void>::dump+0x24f
+000000ac`c65eaff0 00007ff6`a7ec8af2     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::Flush+0x4e
+000000ac`c65eb070 00007ff6`a7cb9f60     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::AppendAssistantMessage+0x342
+000000ac`c65eb200 00007ff6`a7d20f6b     RawrXD_Win32IDE_Native_Ext!Win32IDE::handleAgenticLoopComplete+0x550
+000000ac`c65eb340 00007ffa`394252e6     RawrXD_Win32IDE_Native_Ext!Win32IDE::WindowProc+0x11cb
+000000ac`c65ed6c0 00007ffa`39425dbd     user32!UserCallWinProcCheckWow+0x356
+000000ac`c65ed820 00007ff6`a7d29b28     user32!DispatchMessageWorker+0x1dd
+000000ac`c65ed8a0 00007ff6`a7af9516     RawrXD_Win32IDE_Native_Ext!Win32IDE::runMessageLoop+0x798
+000000ac`c65edbf0 00007ff6`a7f5972e     RawrXD_Win32IDE_Native_Ext!WinMain+0xfd6
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!invoke_main+0x21
+000000ac`c65efbe0 00007ffa`388edda7     RawrXD_Win32IDE_Native_Ext!__scrt_common_main_seh+0x106
+000000ac`c65efc20 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c65efc50 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+0:000> kn 30
+ # Child-SP          RetAddr               Call Site
+00 000000ac`c65ea830 00007ff9`d4a455a9     KERNELBASE!RaiseException+0x8a
+01 000000ac`c65ea930 00007ff6`a7b8c5c6     VCRUNTIME140!_CxxThrowException+0x99
+02 000000ac`c65ea990 00007ff6`a7b8bad8     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump_escaped+0x416
+03 000000ac`c65eaaa0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x6a8
+04 000000ac`c65eab20 00007ff6`a7b8b9bb     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+05 000000ac`c65eaba0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x58b
+06 000000ac`c65eac20 00007ff6`a7b8b27f     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+07 000000ac`c65eaca0 00007ff6`a7ec97fe     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void>::dump+0x24f
+08 000000ac`c65eaff0 00007ff6`a7ec8af2     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::Flush+0x4e
+09 000000ac`c65eb070 00007ff6`a7cb9f60     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::AppendAssistantMessage+0x342
+0a 000000ac`c65eb200 00007ff6`a7d20f6b     RawrXD_Win32IDE_Native_Ext!Win32IDE::handleAgenticLoopComplete+0x550
+0b 000000ac`c65eb340 00007ffa`394252e6     RawrXD_Win32IDE_Native_Ext!Win32IDE::WindowProc+0x11cb
+0c 000000ac`c65ed6c0 00007ffa`39425dbd     user32!UserCallWinProcCheckWow+0x356
+0d 000000ac`c65ed820 00007ff6`a7d29b28     user32!DispatchMessageWorker+0x1dd
+0e 000000ac`c65ed8a0 00007ff6`a7af9516     RawrXD_Win32IDE_Native_Ext!Win32IDE::runMessageLoop+0x798
+0f 000000ac`c65edbf0 00007ff6`a7f5972e     RawrXD_Win32IDE_Native_Ext!WinMain+0xfd6
+10 (Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!invoke_main+0x21
+11 000000ac`c65efbe0 00007ffa`388edda7     RawrXD_Win32IDE_Native_Ext!__scrt_common_main_seh+0x106
+12 000000ac`c65efc20 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+13 000000ac`c65efc50 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+0:000> .frame 2
+02 000000ac`c65ea990 00007ff6`a7b8bad8     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump_escaped+0x416
+0:000> r
+Last set context:
+rax=0000000000000000 rbx=000000acc65ea958 rcx=0000000000000000
+rdx=00007ffa37d068f0 rsi=0000000000000001 rdi=00000000e06d7363
+rip=00007ffa3784569a rsp=000000acc65ea830 rbp=0000000000000004
+ r8=000000ac00000004  r9=0000027b2e599660 r10=0000000000000000
+r11=0000027b2e5996b8 r12=0000000000000000 r13=00007ff6a7a80000
+r14=0000027b33dd29f0 r15=0000000000000001
+iopl=0         nv up ei pl nz na pe nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000204
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+0:000> u .
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+00007ffa`3784569f 488b8c24c0000000 mov     rcx,qword ptr [rsp+0C0h]
+00007ffa`378456a7 4833cc          xor     rcx,rsp
+00007ffa`378456aa e861470d00      call    KERNELBASE!_security_check_cookie (00007ffa`37919e10)
+00007ffa`378456af 4881c4d8000000  add     rsp,0D8h
+00007ffa`378456b6 5f              pop     rdi
+00007ffa`378456b7 5e              pop     rsi
+00007ffa`378456b8 5d              pop     rbp
+0:000> ln
+(00007ffa`37845610)   KERNELBASE!RaiseException+0x8a   |  (00007ffa`378456d0)   KERNELBASE!LocalLock
+0:000> !cppx -e
+cppx is not extension gallery command
+No export cppx found
+0:000> dt nlohmann::json_abi_v3_11_3::detail::exception
+RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::exception
+   +0x000 __VFN_table : Ptr64 
+   +0x008 _Data            : __std_exception_data
+   +0x018 id               : Int4B
+   +0x020 m                : std::runtime_error
+0:000> ~*k 20
+
+.  0  Id: a2bc.14c Suspend: 0 Teb: 000000ac`c668a000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c65ea830 00007ff9`d4a455a9     KERNELBASE!RaiseException+0x8a
+000000ac`c65ea930 00007ff6`a7b8c5c6     VCRUNTIME140!_CxxThrowException+0x99
+000000ac`c65ea990 00007ff6`a7b8bad8     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump_escaped+0x416
+000000ac`c65eaaa0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x6a8
+000000ac`c65eab20 00007ff6`a7b8b9bb     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+000000ac`c65eaba0 00007ff6`a7b8b5ab     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x58b
+000000ac`c65eac20 00007ff6`a7b8b27f     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x17b
+000000ac`c65eaca0 00007ff6`a7ec97fe     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void>::dump+0x24f
+000000ac`c65eaff0 00007ff6`a7ec8af2     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::Flush+0x4e
+000000ac`c65eb070 00007ff6`a7cb9f60     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::AppendAssistantMessage+0x342
+000000ac`c65eb200 00007ff6`a7d20f6b     RawrXD_Win32IDE_Native_Ext!Win32IDE::handleAgenticLoopComplete+0x550
+000000ac`c65eb340 00007ffa`394252e6     RawrXD_Win32IDE_Native_Ext!Win32IDE::WindowProc+0x11cb
+000000ac`c65ed6c0 00007ffa`39425dbd     user32!UserCallWinProcCheckWow+0x356
+000000ac`c65ed820 00007ff6`a7d29b28     user32!DispatchMessageWorker+0x1dd
+000000ac`c65ed8a0 00007ff6`a7af9516     RawrXD_Win32IDE_Native_Ext!Win32IDE::runMessageLoop+0x798
+000000ac`c65edbf0 00007ff6`a7f5972e     RawrXD_Win32IDE_Native_Ext!WinMain+0xfd6
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!invoke_main+0x21
+000000ac`c65efbe0 00007ffa`388edda7     RawrXD_Win32IDE_Native_Ext!__scrt_common_main_seh+0x106
+000000ac`c65efc20 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c65efc50 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   1  Id: a2bc.aba8 Suspend: 0 Teb: 000000ac`c6694000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c6cff888 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c6cff890 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c6cffbf0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c6cffc20 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   2  Id: a2bc.42b4 Suspend: 0 Teb: 000000ac`c6696000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c6dffa88 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c6dffa90 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c6dffdf0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c6dffe20 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   3  Id: a2bc.95c4 Suspend: 0 Teb: 000000ac`c6698000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c6eff6d8 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c6eff6e0 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c6effa40 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c6effa70 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   4  Id: a2bc.2cdc Suspend: 0 Teb: 000000ac`c669a000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c6fffba8 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c6fffbb0 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c6ffff10 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c6ffff40 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   5  Id: a2bc.3ab4 Suspend: 0 Teb: 000000ac`c669c000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c70ff718 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c70ff720 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c70ffa80 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c70ffab0 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   6  Id: a2bc.7de8 Suspend: 0 Teb: 000000ac`c669e000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c71ff328 00007ffa`3779ab53     ntdll!NtWaitForMultipleObjects+0x14
+000000ac`c71ff330 00007ffa`38ad5256     KERNELBASE!WaitForMultipleObjectsEx+0x123
+000000ac`c71ff620 00007ffa`38ad5056     combase!WaitCoalesced+0xca
+000000ac`c71ff8b0 00007ffa`38ad4e9f     combase!CRpcThread::WorkerLoop+0x122
+000000ac`c71ff920 00007ffa`388edda7     combase!CRpcThreadCache::RpcWorkerThreadEntry+0x4f
+000000ac`c71ff950 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c71ff980 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   7  Id: a2bc.47e0 Suspend: 0 Teb: 000000ac`c66a2000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c72ffa28 00007ffa`3a554d0e     ntdll!NtWaitForWorkViaWorkerFactory+0x14
+000000ac`c72ffa30 00007ffa`388edda7     ntdll!TppWorkerThread+0x37e
+000000ac`c72ffd90 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c72ffdc0 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   8  Id: a2bc.a480 Suspend: 0 Teb: 000000ac`c66a4000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c73fed78 00007ffa`3779aefd     ntdll!NtReadFile+0x14
+000000ac`c73fed80 00007ff6`a7c4ba0e     KERNELBASE!ReadFile+0x8d
+000000ac`c73fedf0 00007ff6`a7c4a096     RawrXD_Win32IDE_Native_Ext!Win32TerminalManager::readOutputThread+0x7e
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!std::invoke+0xd
+000000ac`c73ffe90 00007ffa`37e5cd30     RawrXD_Win32IDE_Native_Ext!std::thread::_Invoke<std::tuple<void (__cdecl Win32TerminalManager::*)(void),Win32TerminalManager *>,0,1>+0x16
+000000ac`c73ffec0 00007ffa`388edda7     ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x30
+000000ac`c73ffef0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c73fff20 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+   9  Id: a2bc.ad1c Suspend: 0 Teb: 000000ac`c66a6000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c74fe768 00007ffa`3779aefd     ntdll!NtReadFile+0x14
+000000ac`c74fe770 00007ff6`a7c4b7ae     KERNELBASE!ReadFile+0x8d
+000000ac`c74fe7e0 00007ff6`a7c4a096     RawrXD_Win32IDE_Native_Ext!Win32TerminalManager::readErrorThread+0x6e
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!std::invoke+0xd
+000000ac`c74ff880 00007ffa`37e5cd30     RawrXD_Win32IDE_Native_Ext!std::thread::_Invoke<std::tuple<void (__cdecl Win32TerminalManager::*)(void),Win32TerminalManager *>,0,1>+0x16
+000000ac`c74ff8b0 00007ffa`388edda7     ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x30
+000000ac`c74ff8e0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c74ff910 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+  10  Id: a2bc.aed0 Suspend: 0 Teb: 000000ac`c66a8000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c75ff628 00007ffa`3779427f     ntdll!NtWaitForSingleObject+0x14
+000000ac`c75ff630 00007ff6`a7c4b060     KERNELBASE!WaitForSingleObjectEx+0xaf
+000000ac`c75ff6d0 00007ff6`a7c4a096     RawrXD_Win32IDE_Native_Ext!Win32TerminalManager::monitorProcessThread+0x50
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!std::invoke+0xd
+000000ac`c75ff980 00007ffa`37e5cd30     RawrXD_Win32IDE_Native_Ext!std::thread::_Invoke<std::tuple<void (__cdecl Win32TerminalManager::*)(void),Win32TerminalManager *>,0,1>+0x16
+000000ac`c75ff9b0 00007ffa`388edda7     ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x30
+000000ac`c75ff9e0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c75ffa10 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+
+  11  Id: a2bc.4310 Suspend: 0 Teb: 000000ac`c66b2000 Unfrozen
+Child-SP          RetAddr               Call Site
+000000ac`c79ff008 00007ffa`3779427f     ntdll!NtWaitForSingleObject+0x14
+000000ac`c79ff010 00007ffa`2b2daaf6     KERNELBASE!WaitForSingleObjectEx+0xaf
+000000ac`c79ff0b0 00007ffa`2b2dc900     winhttp!HTTP_USER_REQUEST::_HandleSyncPending+0xe2
+000000ac`c79ff120 00007ffa`2b2cbf6f     winhttp!HTTP_USER_REQUEST::SendRequest+0x2f0
+000000ac`c79ff1b0 00007ff6`a7d1c669     winhttp!WinHttpSendRequest+0x2ff
+000000ac`c79ff2e0 00007ff6`a7d1b40a     RawrXD_Win32IDE_Native_Ext!RawrXD::Backend::OllamaClient::makePostRequest+0x2e9
+000000ac`c79ff430 00007ff6`a7d0fa83     RawrXD_Win32IDE_Native_Ext!RawrXD::Backend::OllamaClient::generateSync+0x19a
+000000ac`c79ff5a0 00007ff6`a7d0d152     RawrXD_Win32IDE_Native_Ext!`Win32IDE::requestNativeGhostText'::`5'::<lambda_1>::operator()+0x633
+(Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!std::invoke+0x5
+000000ac`c79ff890 00007ffa`37e5cd30     RawrXD_Win32IDE_Native_Ext!std::thread::_Invoke<std::tuple<`Win32IDE::requestNativeGhostText'::`5'::<lambda_1> >,0>+0x12
+000000ac`c79ff8c0 00007ffa`388edda7     ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x30
+000000ac`c79ff8f0 00007ffa`3a5f9c5c     kernel32!BaseThreadInitThunk+0x17
+000000ac`c79ff920 00000000`00000000     ntdll!RtlUserThreadStart+0x2c
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'

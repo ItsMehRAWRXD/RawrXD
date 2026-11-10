@@ -1,0 +1,14 @@
+.sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+.reload /f RawrXD-Win32IDE-Native-Ext.exe
+.exr -1
+.ecxr
+k 30
+kn 30
+.frame 2
+r
+u .
+ln
+!cppx -e
+dt nlohmann::json_abi_v3_11_3::detail::exception
+~*k 20
+q

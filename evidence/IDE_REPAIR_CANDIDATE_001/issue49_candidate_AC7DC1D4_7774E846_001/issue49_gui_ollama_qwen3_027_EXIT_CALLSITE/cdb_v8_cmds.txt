@@ -1,0 +1,14 @@
+.logopen "F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_EXIT_CALLSITE\cdb_v8_20261110-114318.log"
+.sympath srv*
+.reload /f kernelbase.dll
+.reload /f ntdll.dll
+.reload /f ucrtbase.dll
+x kernel*!*ExitProcess*
+bp kernelbase!ExitProcess ".echo HIT_EXIT_CALLSITE; r rcx; kL 80; lm m RawrXD*; .echo STOP_AT_EXIT_CALLSITE; .logclose"
+bp ntdll!RtlExitUserProcess ".echo HIT_EXIT_CALLSITE; r rcx; kL 80; lm m RawrXD*; .echo STOP_AT_EXIT_CALLSITE; .logclose"
+bp ucrtbase!common_exit ".echo HIT_EXIT_CALLSITE; r rcx; kL 80; lm m RawrXD*; .echo STOP_AT_EXIT_CALLSITE; .logclose"
+bp ucrtbase!quick_exit ".echo HIT_EXIT_CALLSITE; r rcx; kL 80; lm m RawrXD*; .echo STOP_AT_EXIT_CALLSITE; .logclose"
+sxd eh
+sxi ibp
+bl
+g

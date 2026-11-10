@@ -1,0 +1,16 @@
+===== FORCE START Mon 11/09/2026  6:23:00.57 
+ERROR: The process "RawrXD-Win32IDE-Native-Ext.exe" not found.
+ERROR: The search filter cannot be recognized.
+BEFORE_HASH
+SHA256 hash of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_final_005\RawrXD-Win32IDE-Native-Ext.exe:
+cc79f6cdd08f5ecebb672290cc96f7feeea0da6ab6f8b596e5826c3ea22940c4
+CertUtil: -hashfile command completed successfully.
+SHA256 hash of F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe:
+1f6005131ba855b994c6d05009a7052781d289eff197e7f5e709c947b0f53e04
+CertUtil: -hashfile command completed successfully.
+DEL_OBJ
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'

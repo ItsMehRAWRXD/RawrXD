@@ -1,0 +1,12 @@
+tokens: 2: 1 185
+ingesting F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf ...
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[MLA_GEOMETRY] Derived MLA head dims: qkNopeHeadDim=128 (q_b_out_per_head=192 ropeDim=64)
+[MLA_GEOMETRY] Derived MLA ranks from tensor geometry: qLoraRank=1536 kvLoraRank=512 keyLengthMla=576 ropeDim=64

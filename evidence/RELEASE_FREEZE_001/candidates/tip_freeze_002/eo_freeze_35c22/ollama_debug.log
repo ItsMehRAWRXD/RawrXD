@@ -1,0 +1,45 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=34952 request_generation=1 prompt_fnv1a=0EC5BE125E066366 model='nemotron-3-nano:4b' prompt_len=16 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=34952 REQUEST_GENERATION=1 MODEL=nemotron-3-nano:4b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=133
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok
+[OLLAMA_RUNTIME] streamed_response_bytes=65 streamed_thinking_bytes=0\n[OLLAMA_DEBUG] generateOllamaModel: pid=34952 request_generation=2 prompt_fnv1a=0EC5BD125E0661B3 model='nemotron-3-nano:4b' prompt_len=16 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=34952 REQUEST_GENERATION=2 MODEL=nemotron-3-nano:4b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=133
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok
+[OLLAMA_RUNTIME] streamed_response_bytes=368 streamed_thinking_bytes=0\n[OLLAMA_DEBUG] generateOllamaModel: pid=46984 request_generation=1 prompt_fnv1a=0EC5BE125E066366 model='nemotron-3-nano:4b' prompt_len=16 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=46984 REQUEST_GENERATION=1 MODEL=nemotron-3-nano:4b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=133
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok
+[OLLAMA_RUNTIME] streamed_response_bytes=254 streamed_thinking_bytes=0\n[OLLAMA_DEBUG] generateOllamaModel: pid=46984 request_generation=2 prompt_fnv1a=0EC5BD125E0661B3 model='nemotron-3-nano:4b' prompt_len=16 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=46984 REQUEST_GENERATION=2 MODEL=nemotron-3-nano:4b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=133
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok
+[OLLAMA_RUNTIME] streamed_response_bytes=249 streamed_thinking_bytes=0\n[OLLAMA_DEBUG] generateOllamaModel: pid=46984 request_generation=3 prompt_fnv1a=2E79CA79362BE7A0 model='nemotron-3-nano:4b' prompt_len=20 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=46984 REQUEST_GENERATION=3 MODEL=nemotron-3-nano:4b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=137
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok

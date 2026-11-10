@@ -1,0 +1,9 @@
+Harness-only changes applied to `F_GUI_GHOSTTEXT_HARNESS_REPAIR_001/native_editor_harness.ps1`:
+
+```diff
+- class == RichEdit50W
++ class == RichEdit20A && GetDlgCtrlID(hwnd) == 1001
++ AttachThreadInput/current-thread focus handoff before GetFocus verification
+```
+
+No production source or executable was modified.

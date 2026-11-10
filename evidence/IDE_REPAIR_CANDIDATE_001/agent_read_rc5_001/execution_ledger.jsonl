@@ -1,0 +1,3 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794295831120}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}

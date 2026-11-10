@@ -1,0 +1,57 @@
+REMAINING_WORK_17_001
+ASOF_UTC=2026-11-10T17:50:00Z
+USER_AUTH_CONTINUE_TO_IDE_COMPLETION=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+RAWR_OLLAMA_ROUTE=SOURCE_FIXED_RUNTIME_PENDING
+FIRST_EXECUTION_TASK=P1_BUILD_REPAIRED_RAWR_CLI
+P09_P17_AUDIT_SEALED=1
+I027_11_OF_11_AUTO_TRANSFER=0
+LAW=NOT_RUN!=PASS
+LAW=I027_NEQ_AUTO_SUPERSEDE_D015
+LAW=SOURCE_FIXED!=RUNTIME_REACHED
+TIP_LIVE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_IDE_SHA256=AC9B245A1E5AC5D5FCD27E4DA4E3CF340F59AD0C732CBFD348D1D4A38DC92123
+TIP_LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+
+P01=OPEN Build repaired Rawr CLI + SHA
+P02=OPEN Verify backend routing ollama/deep2/unknown
+P03=OPEN CLI inspect-edit-build-test loop
+P04=OPEN Deep2 service availability :8080
+P05=OPEN GPU selection reconcile
+P06=OPEN Model inventory reconcile
+P07=OPEN T080 initialPath/title/Problems on tip_ext_host
+P08=OPEN GUI accept 89A5F76F or successor
+P09=PARTIAL Consolidate candidate evidence one package
+P09_EVIDENCE=FINALIZATION_CHECKLIST_001\CANDIDATE_PACKAGE_CONSOLIDATION_001.txt
+P09_NOTE=Coexistence mapped; RELEASE_PACKAGE_TIP_SHA=NOT_FROZEN (I027≠auto D015; tip AC9B≠sealed pairs)
+P09_NEXT=Explicit I027-vs-D015 supersede review + bind one IDE+loop pair into tip_ext_host + remeasure
+P10=OPEN Cancellation+lifecycle together
+P10_EVIDENCE=HIDDEN_GAP_AUDIT_001.txt Target G; DAILY_DRIVER_9FDE ITEM_7 historical; BuildRunner.detach no cancel
+P10_NEXT=Tip cancel→stop→second-request lifecycle on AC9B (or frozen successor) without Name=RawrXD-Win32IDE-Native* kills
+P11=OPEN Repair failure recovery
+P11_EVIDENCE=I027/H022 S13 recovery sealed non-superseding; D015 S13=NOT_RUN; SELF_REPAIR_ESTIMATE CERTIFIED=0
+P11_NEXT=Recovery remasure on CONTROLLING pair after supersede review OR D015 S13 second-edit recovery on 401071+5BAC
+P12=PARTIAL Broader self-repair
+P12_EVIDENCE=SELF_REPAIR_ESTIMATE_001.txt ENGINEERING=80%+ CERTIFIED_AUTONOMOUS_SELF_REPAIR=0
+P12_NEXT=Autonomous repair acceptance on tip frozen pair (not harness-only); CERTIFIED remains 0 until E2E
+P13=OPEN Deep2 correctness+performance
+P13_EVIDENCE=GPU_R9700_ADAPTER_MISMATCH_001.txt; I01_I14 I12 sustained NOT_VERIFIED; AGENTS.md PROMOTE=0
+P13_NEXT=Repeatable adapter selection + sustained IDE TPS/latency receipt on frozen tip (short-run ≠ sustained)
+P14=PARTIAL STRATA readiness audit
+P14_EVIDENCE=strata_pilot_001\CONTROLLING_DISPOSITION.txt G1 PASS; dual_engine_001 STATUS IDE_WIRED=0 PRODUCT_WIRED=0
+P14_NEXT=OPTIONAL_IDE_ADAPTER after review — IDE-to-STRATA generation on same tip SHA (standalone ≠ IDE E2E)
+P15=BLOCKED Finish-25 release suite
+P15_EVIDENCE=PROGRESSION_FINISH25_001\DISPOSITION.md FINISH_25_PASS=19 T07/T08 FAIL; SHA≠tip AC9B
+P15_NEXT=Re-run Finish-25 on RELEASE_PACKAGE_TIP after P09 freeze (no inherit 55BE19B7)
+P16=OPEN Install+daily use
+P16_EVIDENCE=DAILY_DRIVER_9FDE sealed separate; CLEAN_MACHINE HOST_NOT_INDEPENDENT; tip GUI accept unverified
+P16_NEXT=GUI accept + install smoke on frozen tip; then clean-machine product-path (not pointer)
+P17=BLOCKED Cert+publication
+P17_EVIDENCE=B07_B08_PREP B07/B08 NOT_READY; IRC_VERIFIED=0; CERTIFIED=0 RELEASE=HELD
+P17_NEXT=B07 single-SHA integrated matrix → B08 distinct-machine → only then CERTIFIED/publication review (PROMOTE stays 0 until policy conjunction)
+
+HIDDEN_GAP_AUDIT=FINALIZATION_CHECKLIST_001\HIDDEN_GAP_AUDIT_001.txt
+PACKAGE_CONSOLIDATION=FINALIZATION_CHECKLIST_001\CANDIDATE_PACKAGE_CONSOLIDATION_001.txt

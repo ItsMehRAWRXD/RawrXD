@@ -1,0 +1,84 @@
+{
+  "gate": "RAWRXD_CANONICAL_INTEGRATION_AUDIT_001",
+  "promote": 0,
+  "actions_not_taken": [
+    "reset",
+    "clean",
+    "merge",
+    "cherry-pick",
+    "push",
+    "delete",
+    "overwrite",
+    "RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK"
+  ],
+  "untracked_manifest": "INCOMPLETE",
+  "untracked_note": "git status --porcelain on F:\\rawrxd had not returned a dirty count when this receipt was written. No untracked file list is claimed.",
+  "checkouts": [
+    {
+      "path": "F:\\rawrxd",
+      "role": "canonical IDE checkout",
+      "branch": "fix/deep2-multimodel-safety-20261025",
+      "head": "a7b14a9f8c61c239c3834b1028274a1060170b92",
+      "head_subject": "Add KartGib studio hierarchy, gizmos, selection highlight, and docking.",
+      "head_time": "2026-10-26T05:13:38-04:00",
+      "origin": "https://github.com/ItsMehRAWRXD/RawrXD.git",
+      "agent_session_bar": "ABSENT",
+      "empty_target_stub": "ABSENT",
+      "agentic_branch_in_packed_refs": "ABSENT"
+    },
+    {
+      "path": "F:\\~dev\\rawrxd",
+      "role": "strict production configure tree",
+      "git_head": "NOT_FOUND",
+      "empty_target_stub": "PRESENT",
+      "stub_target": "RawrXD-Win32IDE",
+      "stub_site": "CMakeLists.txt add_executable line includes cmake/empty_target_stub.cpp"
+    },
+    {
+      "path": "G:\\~dev\\rawrxd",
+      "role": "published agentic branch checkout",
+      "branch": "feature/ide-agentic-product-path-20261026",
+      "head": "530399a834abc9794b2ef0f8a733319594204385",
+      "agent_session_bar": "src/win32app/AgentSessionBar.cpp",
+      "empty_target_stub": "ABSENT"
+    },
+    {
+      "path": "G:\\~dev\\rawrxd-cmake-clean",
+      "role": "worktree of G:\\~dev\\rawrxd",
+      "gitdir": "G:/~dev/rawrxd/.git/worktrees/rawrxd-cmake-clean",
+      "head": "fd27fd184e39c73da5a1f49cdb9bb32a5d7a44f6",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "path": "G:\\VSC0de",
+      "role": "older same-repo checkout with renderer, worldgen, and snapshot sources",
+      "head": "1c3a108b5d45cf98d301966be0dab087f41049b7",
+      "branch": "DETACHED",
+      "origin": "https://github.com/ItsMehRAWRXD/RawrXD.git",
+      "agent_http": "ABSENT",
+      "kartgib_directory": "ABSENT"
+    }
+  ],
+  "fetched_refs_on_F": {
+    "origin/ci/ide-native-build": "80dcfd1b0824a334438adfc97dcc39683b4c1164",
+    "origin/agentic-ide-production": "78b69de2ec716730ce65b8a1d39da2b72d649e52",
+    "origin/ci/win32ide-link-msbuild": "2a4c014a3463e396e943a8b67c64a282ea1ec82f"
+  },
+  "stub": {
+    "file": "F:\\~dev\\rawrxd\\cmake\\empty_target_stub.cpp",
+    "symbol": "RawrXD_EmptyTargetStub::anchor",
+    "referenced_elsewhere": false,
+    "production_target": "RawrXD-Win32IDE",
+    "inserted_by": "add_executable(RawrXD-Win32IDE ... cmake/empty_target_stub.cpp)",
+    "enforced_by": "EnforceNoStubs(RawrXD-Win32IDE) when RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK is OFF",
+    "on_agentic_checkout": "ABSENT"
+  },
+  "acceptance": {
+    "process_attribution_001": "PASS",
+    "work_mode_shell_pixels": "PASS",
+    "agentic_e2e": "NOT_RUN",
+    "ask_plan_debug": "NOT_RUN",
+    "multimodel": "NOT_RUN",
+    "strict_configure_after_stub_removal": "NOT_RUN"
+  }
+}

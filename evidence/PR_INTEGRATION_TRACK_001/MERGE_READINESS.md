@@ -1,0 +1,31 @@
+# MERGE_READINESS — PR #77 / #78 / #79
+
+ASOF_UTC=2026-11-09T11:02:00Z
+MOTD_ACK=1
+NO_ADDITIONAL_PR_CREATION=1
+MERGE_AUTHORIZED=0
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+UNIFIED_RELEASE=NOT_VERIFIED
+PRIORITY=AUTONOMOUS_CODING_WORKFLOW_NOT_FEATURE_EXPANSION
+
+| PR | State | Conflicts | Runtime acceptance | MERGE_READY |
+|----|-------|-----------|--------------------|-------------|
+| #77 | OPEN | CONFLICTING | NOT_RUN (SOURCE_WIRED partial) | **0** |
+| #78 | OPEN | CONFLICTING | NOT_RUN | **0** |
+| #79 | OPEN | CONFLICTING | NOT_RUN | **0** |
+
+```
+PR77=OPEN
+PR78=OPEN
+PR79=OPEN
+MERGE_AUTHORIZED=0
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+READY_FOR_AUTHORIZED_MERGE=NONE
+```
+
+Next milestone: independent acceptance per PR → SHA-specific evidence → merge review only after authorization.
+Authority: `CONTROL_LAW.md` · `PR77/78/79_ACCEPTANCE_001\RECEIPT.md`.

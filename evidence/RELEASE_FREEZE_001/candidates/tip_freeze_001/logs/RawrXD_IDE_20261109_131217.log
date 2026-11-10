@@ -1,0 +1,7 @@
+[2026-11-09 13:12:17] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-09 13:12:17] [SYSTEM] Log file: logs\RawrXD_IDE_20261109_131217.log
+[2026-11-09 13:12:17] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 13:12:17] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 13:12:17] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 13:12:17] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 13:12:39] [INFO] GhostText inference route: nemotron-3-nano:4b backend=ollama

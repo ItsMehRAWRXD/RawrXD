@@ -1,0 +1,25 @@
+=== Gate A reference side: llama.cpp external reference (teacher-forced logits dump) ===
+bin: evidence/deep2_gate_a/ref_bin/ref_dump_logits.exe (sha256 90CC8E30BBC31045CC2435619E25F9735D61FCF8641D8F56CD62E1E2D7E0D881)
+dll: evidence/deep2_gate_a/ref_bin/llama.dll      (sha256 1A35337BDB5EF8D656CE1CE125C31698E94E854106D5255074F2B20C0F386D37)
+model: F:\rawrxd\llama3.2-3b-Q2_K.gguf (sha256 EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2)
+n_vocab: 128256, method: one token per llama_decode, batch.pos = position, logits[0]=1, CPU only (n_gpu_layers=0)
+
+--- run 1: tokens_milestone.txt (5 tokens: 128000 791 4062 14198 39935) ---
+llama_model_loader: loaded meta data with 30 key-value pairs and 255 tensors from F:\rawrxd\llama3.2-3b-Q2_K.gguf
+Loaded 5 tokens from F:\rawrxd\evidence\deep2_gate_a\tokens_milestone.txt
+Wrote ref_logits_pos0.bin (128256 floats)
+Wrote ref_logits_pos1.bin (128256 floats)
+Wrote ref_logits_pos2.bin (128256 floats)
+Wrote ref_logits_pos3.bin (128256 floats)
+Wrote ref_logits_pos4.bin (128256 floats)
+exit=0
+
+--- run 2: tokens_extended.txt (21 tokens: 128000 791 4062 14198 39935 35308 927 279 16053 5679 13 578 4062 14198 39935 35308 927 279 16053 5679 13) ---
+llama_model_loader: loaded meta data with 30 key-value pairs and 255 tensors from F:\rawrxd\llama3.2-3b-Q2_K.gguf
+Loaded 21 tokens from F:\rawrxd\evidence\deep2_gate_a\tokens_extended.txt
+Wrote ref_logits_pos0.bin (128256 floats)
+...
+Wrote ref_logits_pos19.bin (128256 floats)
+Wrote ref_logits_pos20.bin (128256 floats)
+exit=0
+(all 21 positions written; 513024 bytes each)

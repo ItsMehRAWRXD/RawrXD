@@ -1,0 +1,23 @@
+ASOF_UTC=2026-11-10T12:10:51.8199654Z
+GATE=ITEMS_7_10_MEASURE
+IDE_SHA256=B765365BCD4525CBD0C2B96DA865FC44B264AC2285B5407117EBB46AD95AE794
+TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_daily_items710_001\RawrXD-Win32IDE-Native-Ext.exe
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+PRESENT=1
+ACCEPTED=0
+TL_t=0s alive=True exit=-
+TL_t=0.25s alive=True exit=-
+TL_t=0.5s alive=True exit=-
+TL_t=0.75s alive=True exit=-
+TL_t=1s alive=True exit=-
+TL_t=1.25s alive=True exit=-
+TL_t=1.5s alive=True exit=-
+TL_t=1.75s alive=False exit=-1
+PID=33224
+MAIN=3477686
+ALIVE_AFTER_HWND=False
+VERDICT=FAIL_NO_HWND
+EXIT=-1

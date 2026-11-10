@@ -1,0 +1,127 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\cdb_analyze3.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.031 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 46
+
+Microsoft (R) Windows Debugger Version 10.0.29680.1004 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+
+Loading Dump File [F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\dumps\RawrXD-Win32IDE-Native-Ext.exe_261110_093410.dmp]
+User Mini Dump File with Full Memory : Only application data is available
+
+Comment: '
+*** "F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\tools\procdump\procdump64.exe" -accepteula -e -ma -w RawrXD-Win32IDE-Native-Ext.exe F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\dumps 
+*** Unhandled exception: E06D7363.?AVtype_error@detail@json_abi_v3_11_3@nlohmann@@'
+Symbol search path is: srv*
+Executable search path is: 
+Windows 10 Version 26300 MP (8 procs) Free x64
+Product: WinNt, suite: SingleUserTS Personal
+Edition build lab: 26100.1.amd64fre.ge_release.240331-1435
+Debug session time: Tue Nov 10 09:34:10.000 2026 (UTC - 5:00)
+System Uptime: 0 days 19:43:49.308
+Process Uptime: 0 days 0:01:14.000
+.NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'
+...............................................................
+............
+This dump file has an exception of interest stored in it.
+The stored exception information can be accessed via .ecxr
+(a2bc.14c): C++ EH exception - code e06d7363 (first/second chance not available)
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+For analysis of this file, run !analyze -v
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+0:000> $$<F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\cdb_script3.txt
+0:000> .sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+Symbol search path is: srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+Expanded Symbol search path is: srv*c:\symbols*https://msdl.microsoft.com/download/symbols;f:\rawrxd\build_tip_ext_host_001\bin
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*C:\Symbols*https://msdl.microsoft.com/download/symbols
+OK                                             F:\rawrxd\build_tip_ext_host_001\bin
+0:000> .reload /f RawrXD-Win32IDE-Native-Ext.exe
+*** WARNING: Unable to verify checksum for RawrXD-Win32IDE-Native-Ext.exe
+0:000> .ecxr
+rax=0000000000000000 rbx=000000acc65ea958 rcx=0000000000000000
+rdx=00007ffa37d068f0 rsi=0000000000000001 rdi=00000000e06d7363
+rip=00007ffa3784569a rsp=000000acc65ea830 rbp=0000000000000004
+ r8=000000ac00000004  r9=0000027b2e599660 r10=0000000000000000
+r11=0000027b2e5996b8 r12=0000000000000000 r13=00007ff6a7a80000
+r14=0000027b33dd29f0 r15=0000000000000001
+iopl=0         nv up ei pl nz na pe nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000204
+KERNELBASE!RaiseException+0x8a:
+00007ffa`3784569a 0f1f440000      nop     dword ptr [rax+rax]
+0:000> ?? ((nlohmann::json_abi_v3_11_3::detail::exception *)0x000000acc65ea9c0)->m_id
+Type does not have given member error at 'm_id'
+0:000> ?? ((nlohmann::json_abi_v3_11_3::detail::exception *)0x000000acc65ea9c0)->what()
+Type does not have given member error at 'what()'
+0:000> dt -r1 nlohmann::json_abi_v3_11_3::detail::exception 0x000000acc65ea9c0
+RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::exception
+   +0x000 __VFN_table : 0x00007ff6`a7fa6628 
+   +0x008 _Data            : __std_exception_data
+      +0x000 _What            : (null) 
+      +0x008 _DoFree          : 0
+   +0x018 id               : 0n316
+   +0x020 m                : std::runtime_error
+      +0x000 __VFN_table : 0x00007ff6`a7fa5ec0 
+      +0x008 _Data            : __std_exception_data
+0:000> .frame 8
+08 000000ac`c65eaff0 00007ff6`a7ec8af2     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::Flush+0x4e
+0:000> lsa .
+0:000> .frame 9
+09 000000ac`c65eb070 00007ff6`a7cb9f60     RawrXD_Win32IDE_Native_Ext!RawrXD::Agent::AgentSession::AppendAssistantMessage+0x342
+0:000> lsa .
+0:000> .frame 10
+10 (Inline Function) --------`--------     RawrXD_Win32IDE_Native_Ext!invoke_main+0x21
+0:000> lsa .
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'

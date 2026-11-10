@@ -1,0 +1,47 @@
+[0/2] Re-checking globbed directories...
+[1/8] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/8] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_ide/Release/vulkan-shaders-gen.exe
+[3/8] Completed 'vulkan-shaders-gen'
+[4/8] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\AgentOrchestrator.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(159): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(186): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(210): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(233): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(221): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(256): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(244): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(406): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(414): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(424): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(442): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(458): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+[5/8] Linking CXX static library deep2_engine_lib.lib
+[6/8] Building CXX object CMakeFiles\cpu_engine_e2e.dir\cpu_engine_e2e.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+[7/8] Linking CXX executable bin-msvc\cpu_engine_e2e.exe

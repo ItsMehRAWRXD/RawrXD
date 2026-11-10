@@ -1,0 +1,715 @@
+LIFECYCLE_PHASE=construct
+LIFECYCLE_PHASE=initialize_begin
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=0 pos_after=4 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=4 pos_after=8 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=8 pos_after=16 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=16 pos_after=24 good=1
+[DEBUG] Key[0] start_pos=24
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=24 pos_after=32 good=1
+[DEBUG] ReadStringFromStream: len=20 pos_before=32
+[DEBUG] ReadStringFromStream: read 20 bytes, pos_after=52, good=1, eof=0
+[DEBUG] Key[0]=general.architecture key_start=24 key_end=52
+[DEBUG] Metadata key[0]=general.architecture
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=52 pos_after=56 good=1
+[DEBUG] Key[0] value_type=8 pos=56
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=56 pos_after=64 good=1
+[DEBUG] ReadStringFromStream: len=5 pos_before=64
+[DEBUG] ReadStringFromStream: read 5 bytes, pos_after=69, good=1, eof=0
+[DEBUG] Key[0] value=llama val_start=56 val_end=69
+[DEBUG] Key[1] start_pos=69
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=69 pos_after=77 good=1
+[DEBUG] ReadStringFromStream: len=17 pos_before=77
+[DEBUG] ReadStringFromStream: read 17 bytes, pos_after=94, good=1, eof=0
+[DEBUG] Key[1]=general.file_type key_start=69 key_end=94
+[DEBUG] Metadata key[1]=general.file_type
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=94 pos_after=98 good=1
+[DEBUG] Key[1] value_type=4 pos=98
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=98 pos_after=102 good=1
+[DEBUG] Key[2] start_pos=102
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=102 pos_after=110 good=1
+[DEBUG] ReadStringFromStream: len=21 pos_before=110
+[DEBUG] ReadStringFromStream: read 21 bytes, pos_after=131, good=1, eof=0
+[DEBUG] Key[2]=tokenizer.ggml.tokens key_start=102 key_end=131
+[DEBUG] Metadata key[2]=tokenizer.ggml.tokens
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=131 pos_after=135 good=1
+[DEBUG] Key[2] value_type=9 pos=135
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=135 pos_after=139 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=139 pos_after=147 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=147 pos_after=155 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=155
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=162, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=162 pos_after=170 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=170
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=177, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=177 pos_after=185 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=185
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=192, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=192 pos_after=200 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=200
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=207, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=207 pos_after=215 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=215
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=222, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=222 pos_after=230 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=230
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=237, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=237 pos_after=245 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=245
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=252, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=252 pos_after=260 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=260
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=267, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=267 pos_after=275 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=275
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=282, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=282 pos_after=290 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=290
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=297, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=297 pos_after=305 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=305
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=313, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=313 pos_after=321 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=321
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=329, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=329 pos_after=337 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=337
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=345, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=345 pos_after=353 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=353
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=361, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=361 pos_after=369 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=369
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=377, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=377 pos_after=385 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=385
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=393, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=393 pos_after=401 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=401
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=409, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=409 pos_after=417 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=417
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=425, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=425 pos_after=433 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=433
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=441, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=441 pos_after=449 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=449
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=457, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=457 pos_after=465 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=465
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=473, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=473 pos_after=481 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=481
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=489, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=489 pos_after=497 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=497
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=505, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=505 pos_after=513 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=513
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=521, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=521 pos_after=529 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=529
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=537, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=537 pos_after=545 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=545
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=553, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=553 pos_after=561 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=561
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=569, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=569 pos_after=577 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=577
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=585, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=585 pos_after=593 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=593
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=601, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=601 pos_after=609 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=609
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=617, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=617 pos_after=625 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=625
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=633, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=633 pos_after=641 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=641
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=649, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=649 pos_after=657 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=657
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=665, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=665 pos_after=673 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=673
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=681, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=681 pos_after=689 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=689
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=697, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=697 pos_after=705 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=705
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=713, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=713 pos_after=721 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=721
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=729, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=729 pos_after=737 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=737
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=745, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=745 pos_after=753 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=753
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=761, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=761 pos_after=769 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=769
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=777, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=777 pos_after=785 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=785
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=793, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=793 pos_after=801 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=801
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=809, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=809 pos_after=817 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=817
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=825, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=825 pos_after=833 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=833
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=841, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=841 pos_after=849 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=849
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=857, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=857 pos_after=865 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=865
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=873, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=873 pos_after=881 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=881
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=889, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=889 pos_after=897 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=897
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=905, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=905 pos_after=913 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=913
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=921, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=921 pos_after=929 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=929
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=937, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=937 pos_after=945 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=945
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=953, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=953 pos_after=961 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=961
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=969, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=969 pos_after=977 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=977
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=985, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=985 pos_after=993 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=993
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1001, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1001 pos_after=1009 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1009
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1017, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1017 pos_after=1025 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1025
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1033, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1033 pos_after=1041 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1041
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1049, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1049 pos_after=1057 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1057
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1065, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1065 pos_after=1073 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1073
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1081, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1081 pos_after=1089 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1089
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1097, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1097 pos_after=1105 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1105
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1113, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1113 pos_after=1121 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1121
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1129, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1129 pos_after=1137 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1137
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1145, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1145 pos_after=1153 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1153
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1161, good=1, eof=0
+[DEBUG] Key[3] start_pos=1161
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1161 pos_after=1169 good=1
+[DEBUG] ReadStringFromStream: len=25 pos_before=1169
+[DEBUG] ReadStringFromStream: read 25 bytes, pos_after=1194, good=1, eof=0
+[DEBUG] Key[3]=tokenizer.ggml.token_type key_start=1161 key_end=1194
+[DEBUG] Metadata key[3]=tokenizer.ggml.token_type
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1194 pos_after=1198 good=1
+[DEBUG] Key[3] value_type=9 pos=1198
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1198 pos_after=1202 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1202 pos_after=1210 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1210 pos_after=1214 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1214 pos_after=1218 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1218 pos_after=1222 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1222 pos_after=1226 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1226 pos_after=1230 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1230 pos_after=1234 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1234 pos_after=1238 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1238 pos_after=1242 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1242 pos_after=1246 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1246 pos_after=1250 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1250 pos_after=1254 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1254 pos_after=1258 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1258 pos_after=1262 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1262 pos_after=1266 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1266 pos_after=1270 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1270 pos_after=1274 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1274 pos_after=1278 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1278 pos_after=1282 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1282 pos_after=1286 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1286 pos_after=1290 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1290 pos_after=1294 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1294 pos_after=1298 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1298 pos_after=1302 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1302 pos_after=1306 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1306 pos_after=1310 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1310 pos_after=1314 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1314 pos_after=1318 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1318 pos_after=1322 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1322 pos_after=1326 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1326 pos_after=1330 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1330 pos_after=1334 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1334 pos_after=1338 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1338 pos_after=1342 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1342 pos_after=1346 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1346 pos_after=1350 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1350 pos_after=1354 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1354 pos_after=1358 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1358 pos_after=1362 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1362 pos_after=1366 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1366 pos_after=1370 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1370 pos_after=1374 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1374 pos_after=1378 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1378 pos_after=1382 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1382 pos_after=1386 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1386 pos_after=1390 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1390 pos_after=1394 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1394 pos_after=1398 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1398 pos_after=1402 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1402 pos_after=1406 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1406 pos_after=1410 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1410 pos_after=1414 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1414 pos_after=1418 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1418 pos_after=1422 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1422 pos_after=1426 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1426 pos_after=1430 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1430 pos_after=1434 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1434 pos_after=1438 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1438 pos_after=1442 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1442 pos_after=1446 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1446 pos_after=1450 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1450 pos_after=1454 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1454 pos_after=1458 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1458 pos_after=1462 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1462 pos_after=1466 good=1
+[DEBUG] Key[4] start_pos=1466
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1466 pos_after=1474 good=1
+[DEBUG] ReadStringFromStream: len=20 pos_before=1474
+[DEBUG] ReadStringFromStream: read 20 bytes, pos_after=1494, good=1, eof=0
+[DEBUG] Key[4]=llama.context_length key_start=1466 key_end=1494
+[DEBUG] Metadata key[4]=llama.context_length
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1494 pos_after=1498 good=1
+[DEBUG] Key[4] value_type=4 pos=1498
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1498 pos_after=1502 good=1
+[DEBUG] Key[5] start_pos=1502
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1502 pos_after=1510 good=1
+[DEBUG] ReadStringFromStream: len=22 pos_before=1510
+[DEBUG] ReadStringFromStream: read 22 bytes, pos_after=1532, good=1, eof=0
+[DEBUG] Key[5]=llama.embedding_length key_start=1502 key_end=1532
+[DEBUG] Metadata key[5]=llama.embedding_length
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1532 pos_after=1536 good=1
+[DEBUG] Key[5] value_type=4 pos=1536
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1536 pos_after=1540 good=1
+[DEBUG] Key[6] start_pos=1540
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1540 pos_after=1548 good=1
+[DEBUG] ReadStringFromStream: len=17 pos_before=1548
+[DEBUG] ReadStringFromStream: read 17 bytes, pos_after=1565, good=1, eof=0
+[DEBUG] Key[6]=llama.block_count key_start=1540 key_end=1565
+[DEBUG] Metadata key[6]=llama.block_count
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1565 pos_after=1569 good=1
+[DEBUG] Key[6] value_type=4 pos=1569
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1569 pos_after=1573 good=1
+[DEBUG] Key[7] start_pos=1573
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1573 pos_after=1581 good=1
+[DEBUG] ReadStringFromStream: len=25 pos_before=1581
+[DEBUG] ReadStringFromStream: read 25 bytes, pos_after=1606, good=1, eof=0
+[DEBUG] Key[7]=llama.feed_forward_length key_start=1573 key_end=1606
+[DEBUG] Metadata key[7]=llama.feed_forward_length
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1606 pos_after=1610 good=1
+[DEBUG] Key[7] value_type=4 pos=1610
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1610 pos_after=1614 good=1
+[DEBUG] Key[8] start_pos=1614
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1614 pos_after=1622 good=1
+[DEBUG] ReadStringFromStream: len=26 pos_before=1622
+[DEBUG] ReadStringFromStream: read 26 bytes, pos_after=1648, good=1, eof=0
+[DEBUG] Key[8]=llama.attention.head_count key_start=1614 key_end=1648
+[DEBUG] Metadata key[8]=llama.attention.head_count
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1648 pos_after=1652 good=1
+[DEBUG] Key[8] value_type=4 pos=1652
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1652 pos_after=1656 good=1
+[DEBUG] Key[9] start_pos=1656
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1656 pos_after=1664 good=1
+[DEBUG] ReadStringFromStream: len=29 pos_before=1664
+[DEBUG] ReadStringFromStream: read 29 bytes, pos_after=1693, good=1, eof=0
+[DEBUG] Key[9]=llama.attention.head_count_kv key_start=1656 key_end=1693
+[DEBUG] Metadata key[9]=llama.attention.head_count_kv
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1693 pos_after=1697 good=1
+[DEBUG] Key[9] value_type=4 pos=1697
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1697 pos_after=1701 good=1
+[DEBUG] Key[10] start_pos=1701
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1701 pos_after=1709 good=1
+[DEBUG] ReadStringFromStream: len=38 pos_before=1709
+[DEBUG] ReadStringFromStream: read 38 bytes, pos_after=1747, good=1, eof=0
+[DEBUG] Key[10]=llama.attention.layer_norm_rms_epsilon key_start=1701 key_end=1747
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1747 pos_after=1751 good=1
+[DEBUG] Key[10] value_type=6 pos=1751
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1751 pos_after=1755 good=1
+[DEBUG] Key[11] start_pos=1755
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1755 pos_after=1763 good=1
+[DEBUG] ReadStringFromStream: len=38 pos_before=1763
+[DEBUG] ReadStringFromStream: read 38 bytes, pos_after=1801, good=1, eof=0
+[DEBUG] Key[11]=llama.attention.rotary_embedding_scale key_start=1755 key_end=1801
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1801 pos_after=1805 good=1
+[DEBUG] Key[11] value_type=6 pos=1805
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1805 pos_after=1809 good=1
+[DEBUG] Key[12] start_pos=1809
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1809 pos_after=1817 good=1
+[DEBUG] ReadStringFromStream: len=0 pos_before=1817
+[DEBUG] ReadStringFromStream: read 0 bytes, pos_after=1817, good=1, eof=0
+[DEBUG] Key[12]= key_start=1809 key_end=1817
+[DEBUG] Metadata key[12]=
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1817 pos_after=1821 good=1
+[DEBUG] Key[12] value_type=0 pos=1821
+[DEBUG] ReadValueFromStream: type_size=1 pos_before=1821 pos_after=1822 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=0 pos_after=4 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=4 pos_after=8 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=8 pos_after=16 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=16 pos_after=24 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=24 pos_after=32 good=1
+[DEBUG] ReadStringFromStream: len=20 pos_before=32
+[DEBUG] ReadStringFromStream: read 20 bytes, pos_after=52, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=52 pos_after=56 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=56 pos_after=64 good=1
+[DEBUG] ReadStringFromStream: len=5 pos_before=64
+[DEBUG] ReadStringFromStream: read 5 bytes, pos_after=69, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=69 pos_after=77 good=1
+[DEBUG] ReadStringFromStream: len=17 pos_before=77
+[DEBUG] ReadStringFromStream: read 17 bytes, pos_after=94, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=94 pos_after=98 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=98 pos_after=102 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=102 pos_after=110 good=1
+[DEBUG] ReadStringFromStream: len=21 pos_before=110
+[DEBUG] ReadStringFromStream: read 21 bytes, pos_after=131, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=131 pos_after=135 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=135 pos_after=139 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=139 pos_after=147 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=147 pos_after=155 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=155
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=162, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=162 pos_after=170 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=170
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=177, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=177 pos_after=185 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=185
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=192, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=192 pos_after=200 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=200
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=207, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=207 pos_after=215 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=215
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=222, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=222 pos_after=230 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=230
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=237, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=237 pos_after=245 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=245
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=252, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=252 pos_after=260 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=260
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=267, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=267 pos_after=275 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=275
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=282, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=282 pos_after=290 good=1
+[DEBUG] ReadStringFromStream: len=7 pos_before=290
+[DEBUG] ReadStringFromStream: read 7 bytes, pos_after=297, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=297 pos_after=305 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=305
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=313, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=313 pos_after=321 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=321
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=329, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=329 pos_after=337 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=337
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=345, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=345 pos_after=353 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=353
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=361, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=361 pos_after=369 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=369
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=377, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=377 pos_after=385 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=385
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=393, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=393 pos_after=401 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=401
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=409, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=409 pos_after=417 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=417
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=425, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=425 pos_after=433 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=433
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=441, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=441 pos_after=449 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=449
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=457, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=457 pos_after=465 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=465
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=473, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=473 pos_after=481 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=481
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=489, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=489 pos_after=497 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=497
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=505, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=505 pos_after=513 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=513
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=521, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=521 pos_after=529 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=529
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=537, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=537 pos_after=545 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=545
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=553, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=553 pos_after=561 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=561
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=569, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=569 pos_after=577 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=577
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=585, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=585 pos_after=593 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=593
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=601, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=601 pos_after=609 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=609
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=617, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=617 pos_after=625 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=625
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=633, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=633 pos_after=641 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=641
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=649, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=649 pos_after=657 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=657
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=665, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=665 pos_after=673 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=673
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=681, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=681 pos_after=689 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=689
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=697, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=697 pos_after=705 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=705
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=713, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=713 pos_after=721 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=721
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=729, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=729 pos_after=737 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=737
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=745, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=745 pos_after=753 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=753
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=761, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=761 pos_after=769 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=769
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=777, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=777 pos_after=785 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=785
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=793, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=793 pos_after=801 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=801
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=809, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=809 pos_after=817 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=817
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=825, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=825 pos_after=833 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=833
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=841, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=841 pos_after=849 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=849
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=857, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=857 pos_after=865 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=865
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=873, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=873 pos_after=881 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=881
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=889, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=889 pos_after=897 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=897
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=905, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=905 pos_after=913 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=913
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=921, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=921 pos_after=929 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=929
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=937, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=937 pos_after=945 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=945
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=953, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=953 pos_after=961 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=961
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=969, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=969 pos_after=977 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=977
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=985, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=985 pos_after=993 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=993
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1001, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1001 pos_after=1009 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1009
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1017, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1017 pos_after=1025 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1025
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1033, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1033 pos_after=1041 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1041
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1049, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1049 pos_after=1057 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1057
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1065, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1065 pos_after=1073 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1073
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1081, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1081 pos_after=1089 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1089
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1097, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1097 pos_after=1105 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1105
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1113, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1113 pos_after=1121 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1121
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1129, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1129 pos_after=1137 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1137
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1145, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1145 pos_after=1153 good=1
+[DEBUG] ReadStringFromStream: len=8 pos_before=1153
+[DEBUG] ReadStringFromStream: read 8 bytes, pos_after=1161, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1161 pos_after=1169 good=1
+[DEBUG] ReadStringFromStream: len=25 pos_before=1169
+[DEBUG] ReadStringFromStream: read 25 bytes, pos_after=1194, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1194 pos_after=1198 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1198 pos_after=1202 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1202 pos_after=1210 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1210 pos_after=1214 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1214 pos_after=1218 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1218 pos_after=1222 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1222 pos_after=1226 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1226 pos_after=1230 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1230 pos_after=1234 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1234 pos_after=1238 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1238 pos_after=1242 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1242 pos_after=1246 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1246 pos_after=1250 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1250 pos_after=1254 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1254 pos_after=1258 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1258 pos_after=1262 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1262 pos_after=1266 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1266 pos_after=1270 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1270 pos_after=1274 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1274 pos_after=1278 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1278 pos_after=1282 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1282 pos_after=1286 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1286 pos_after=1290 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1290 pos_after=1294 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1294 pos_after=1298 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1298 pos_after=1302 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1302 pos_after=1306 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1306 pos_after=1310 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1310 pos_after=1314 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1314 pos_after=1318 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1318 pos_after=1322 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1322 pos_after=1326 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1326 pos_after=1330 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1330 pos_after=1334 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1334 pos_after=1338 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1338 pos_after=1342 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1342 pos_after=1346 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1346 pos_after=1350 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1350 pos_after=1354 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1354 pos_after=1358 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1358 pos_after=1362 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1362 pos_after=1366 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1366 pos_after=1370 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1370 pos_after=1374 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1374 pos_after=1378 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1378 pos_after=1382 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1382 pos_after=1386 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1386 pos_after=1390 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1390 pos_after=1394 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1394 pos_after=1398 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1398 pos_after=1402 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1402 pos_after=1406 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1406 pos_after=1410 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1410 pos_after=1414 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1414 pos_after=1418 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1418 pos_after=1422 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1422 pos_after=1426 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1426 pos_after=1430 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1430 pos_after=1434 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1434 pos_after=1438 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1438 pos_after=1442 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1442 pos_after=1446 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1446 pos_after=1450 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1450 pos_after=1454 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1454 pos_after=1458 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1458 pos_after=1462 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1462 pos_after=1466 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1466 pos_after=1474 good=1
+[DEBUG] ReadStringFromStream: len=20 pos_before=1474
+[DEBUG] ReadStringFromStream: read 20 bytes, pos_after=1494, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1494 pos_after=1498 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1498 pos_after=1502 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1502 pos_after=1510 good=1
+[DEBUG] ReadStringFromStream: len=22 pos_before=1510
+[DEBUG] ReadStringFromStream: read 22 bytes, pos_after=1532, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1532 pos_after=1536 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1536 pos_after=1540 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1540 pos_after=1548 good=1
+[DEBUG] ReadStringFromStream: len=17 pos_before=1548
+[DEBUG] ReadStringFromStream: read 17 bytes, pos_after=1565, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1565 pos_after=1569 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1569 pos_after=1573 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1573 pos_after=1581 good=1
+[DEBUG] ReadStringFromStream: len=25 pos_before=1581
+[DEBUG] ReadStringFromStream: read 25 bytes, pos_after=1606, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1606 pos_after=1610 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1610 pos_after=1614 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1614 pos_after=1622 good=1
+[DEBUG] ReadStringFromStream: len=26 pos_before=1622
+[DEBUG] ReadStringFromStream: read 26 bytes, pos_after=1648, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1648 pos_after=1652 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1652 pos_after=1656 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1656 pos_after=1664 good=1
+[DEBUG] ReadStringFromStream: len=29 pos_before=1664
+[DEBUG] ReadStringFromStream: read 29 bytes, pos_after=1693, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1693 pos_after=1697 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1697 pos_after=1701 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1701 pos_after=1709 good=1
+[DEBUG] ReadStringFromStream: len=38 pos_before=1709
+[DEBUG] ReadStringFromStream: read 38 bytes, pos_after=1747, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1747 pos_after=1751 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1751 pos_after=1755 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1755 pos_after=1763 good=1
+[DEBUG] ReadStringFromStream: len=38 pos_before=1763
+[DEBUG] ReadStringFromStream: read 38 bytes, pos_after=1801, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1801 pos_after=1805 good=1
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1805 pos_after=1809 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1809 pos_after=1817 good=1
+[DEBUG] ReadStringFromStream: len=0 pos_before=1817
+[DEBUG] ReadStringFromStream: read 0 bytes, pos_after=1817, good=1, eof=0
+[DEBUG] ReadValueFromStream: type_size=4 pos_before=1817 pos_after=1821 good=1
+[DEBUG] ReadValueFromStream: type_size=1 pos_before=1821 pos_after=1822 good=1
+[DEBUG] ReadValueFromStream: type_size=8 pos_before=1822 pos_after=1830 good=1
+[DEBUG] ReadStringFromStream: len=1114112 pos_before=1830
+[GGUF] metadata string extends beyond file
+❌ Failed to read tensor name at index 0 in shard 0

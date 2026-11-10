@@ -1,0 +1,32 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=172
+[ollama step 1] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 2] response_bytes=61
+[ollama step 2] TOOL=write exit=1 valid=1 observation=137
+[ollama step 2] result=write rolled back: test failed (exit 1): 'bug.exe' is not recognized as an internal or external command,\noperable program or batch file.\n
+[ollama step 3] response_bytes=10
+[ollama step 3] TOOL=build exit=0 valid=1 observation=188
+[ollama step 3] result=Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64\nCopyright (C) Microsoft Corporation.  All rights reserved.\n\nusage: cl [ option... ] filename... [ /link linkoption... ]\n
+[ollama step 4] response_bytes=134
+[ollama step 5] response_bytes=133
+[ollama step 5] TOOL=read exit=-1 valid=0 observation=29
+[ollama step 5] result=unsafe relative path rejected
+[ollama step 6] response_bytes=43
+[ollama step 6] TOOL=read exit=0 valid=1 observation=14
+[ollama step 6] result=file not found
+[ollama step 7] response_bytes=17
+[ollama step 7] TOOL=read exit=0 valid=1 observation=172
+[ollama step 7] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 8] response_bytes=104
+[ollama step 9] response_bytes=104
+[ollama step 10] response_bytes=17
+[ollama step 10] TOOL=read exit=0 valid=1 observation=172
+[ollama step 10] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+OLLAMA_AGENT_MODEL llama3.1:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT FAIL
+OLLAMA_AGENT_BUILD_TEST FAIL
+OLLAMA_AGENT_BEFORE_SHA256 1429c3cbd630ab69bf17fd97533f4bb2c629c5a373d513ef2e3cb365f1b9a250
+OLLAMA_AGENT_AFTER_SHA256 1429c3cbd630ab69bf17fd97533f4bb2c629c5a373d513ef2e3cb365f1b9a250
+OLLAMA_AGENT_VERDICT FAIL

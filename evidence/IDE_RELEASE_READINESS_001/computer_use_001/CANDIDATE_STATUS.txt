@@ -1,0 +1,44 @@
+GATE=COMPUTER_USE_IDE_CANDIDATE_001
+ASOF_UTC=2026-11-10T05:23:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+FREEZE_CONTROL=DEFERRED_NON_BLOCKING
+
+CERTIFIED_PACKAGE=F:\rawrxd\release\RawrXD-4DE06F9F-rc1
+CERTIFIED_EXE=RawrXD-Win32IDE-Native-Ext.exe
+CERTIFIED_SHA256=4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6
+CERTIFIED_IMMUTABLE=1
+CERTIFIED_MATCH_OBSERVED=1
+
+NEW_CANDIDATE=F:\rawrxd\release\RawrXD-readiness-rc4
+NEW_EXE=RawrXD-Win32IDE-Native-Ext.exe
+NEW_EXE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+NEW_LOOP_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+SOURCE_PACKAGE=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\candidate_source_004
+BUILD_TREE=F:\rawrxd\build_tip_debug_rel
+LINKED_TARGET=rawrxd_computer_use
+RAWRXD_HAS_COMPUTER_USE=1
+
+SOURCE_WIRED=1
+  - vend: F:\rawrxd\src\computer_use\
+  - cmake add_subdirectory + link Native/Native-Ext
+  - Win32IDE_ComputerUse.cpp Stop/Clear cancel + tool list
+  - AgentAdapter approval path; SafetyPolicy default-deny input/launch
+  - findstr hit computer_use.screenshot in new exe
+
+RUNTIME_REACHED=1 (standalone library+bridge verify on Windows)
+TOKEN_SURVIVED=NOT_RUN (no LLM token path claimed for Computer Use)
+
+COMPUTER_USE_GATES=
+  policy_denial=PASS
+  approval_deny=PASS
+  approval_allow_still_policy=PASS
+  cancellation=PASS
+  allowlisted_own_window=PASS
+  screenshot_capture=PASS
+  mouse_own_window=PASS
+  type_own_window=PASS
+  agent_tool_dispatch_registry=PASS
+  agent_tool_policy_deny_launch=PASS
+  IDE_GUI_tool_dispatch_E2E=NOT_RUN
+  ComputerUse_100pct=NOT_CLAIMED

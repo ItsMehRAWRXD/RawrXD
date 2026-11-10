@@ -1,0 +1,31 @@
+name: Portable Certification Preflight Tests
+
+on:
+  push:
+    paths:
+      - 'tools/cert_preflight.py'
+      - 'tools/test_cert_preflight.py'
+      - '.github/workflows/cert-preflight.yml'
+  pull_request:
+    paths:
+      - 'tools/cert_preflight.py'
+      - 'tools/test_cert_preflight.py'
+      - '.github/workflows/cert-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-preflight-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate Python syntax
+        run: python -m py_compile tools/cert_preflight.py tools/test_cert_preflight.py
+      - name: Run offline preflight unit tests
+        run: python -m unittest discover -s tools -p test_cert_preflight.py -v

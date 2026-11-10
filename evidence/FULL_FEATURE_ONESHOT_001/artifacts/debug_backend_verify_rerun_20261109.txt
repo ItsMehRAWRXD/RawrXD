@@ -1,0 +1,26 @@
+[native-debug] CREATE_PROCESS imageBase resolved exports=3
+[debuggee] DEBUGGEE:start
+[native-debug] launched pid=8460
+[state] breakpoint:break_site state=3
+[native-debug] BP hit break_site rip=0x7FF689B81000
+[state] step state=3
+[debuggee] DEBUGGEE:break_site
+[debuggee] DEBUGGEE:helper
+[state] breakpoint:break_site state=3
+[native-debug] BP hit break_site rip=0x7FF689B81000
+[debuggee] DEBUGGEE:break_site
+[debuggee] DEBUGGEE:exit
+[native-debug] EXIT_PROCESS code=7
+[state] exit_process state=5
+
+=== DEBUG_BACKEND_VERIFY ===
+BACKEND=WAITFORDEBUGEVENT
+CREATEPROCESS_DEBUG=1
+BP_HIT=1 hits=1 reason=breakpoint:break_site
+VAR_INSPECT=1 watch=42 eval=42
+STEP=1 steps=1
+CONTINUE=1
+EXIT_CODE=7 expected=7 pass=1
+SESSION_REAL=1
+PROMOTE=0 CERTIFIED=0 INVENT_PASS=0
+VERIFY_RC=0

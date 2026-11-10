@@ -1,0 +1,46 @@
+CPU_EVAL_FIRST_CALL_POST_FIX_DISPOSITION
+ASOF_UTC=2026-11-10T14:20:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+ENGINEERING_MATURITY_ESTIMATE=82%_UNCHANGED
+ISSUE49_ACCEPTANCE=UNTOUCHED
+STRATA_OLLAMA_ISSUE49_CLAIMS=UNTOUCHED
+
+ROOT_CAUSE_ONE_LINER=LoadTensorSlice used msvcp140!istream::read into a local filebuf such that CRT fread saw an invalid/null buffer (dump rdx/size-like 0x4ec) and FAST_FAIL_INVALID_ARG (0xC0000409/5) on first Eval embedding slice.
+
+FIX=Bypass istream::read; resize destination first; reject null/short buffer; fread(dst,1,n,fp) via dedicated fopen on stored shard path; keep ifstream for metadata/zones; debug entry log behind RAWRXD_GGUF_DEBUG=1.
+
+FILES_CHANGED=
+  F:\rawrxd\src\streaming_gguf_loader.cpp
+  F:\rawrxd\src\streaming_gguf_loader.h
+BACKUP=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\post_fix_001_backup\streaming_gguf_loader.cpp.bak
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\post_fix_001_backup\streaming_gguf_loader.h.bak
+
+BUILD_DIR=F:\rawrxd\build_tip_ext_host_001
+BUILD_TARGET=RawrXD-Win32IDE-Native-Ext
+BUILD_TOOL=ninja -j 2 (via vcvars64)
+BUILD_EXIT=0
+PRODUCT_IDE_SHA256=96B6D9F4F9A25C6DA164108B6BB534D521F53581E438476BA1BD61FC4EE929E0
+
+EVIDENCE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\post_fix_001
+MODEL=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+LIFECYCLE_SCRIPT=F:\rawrxd\tools\release\Test-BridgeLifecycle.ps1
+LIFECYCLE_STATUS=PASS
+LIFECYCLE_PROCESS_EXIT=0
+LIFECYCLE_MARKER=BRIDGE_LIFECYCLE_TEST PASS requests=3
+EXCEPTION_0xC0000409=ABSENT
+FIRST_TOKEN_CALLBACK=REACHED (request_0_complete tokens=1; request_1/2 likewise)
+CPU_EVAL_FIRST_CALL=PASS
+TEST_EXE_SHA256=E853DF3AD14F73BA5AD9148B651FF63F9A64AA0DC2BA844D3E47B703B53AEF35
+BRIDGE_OBJECT_SHA256=E0265BBDCFC3DEE883F8C640ADE4E4DC772D9C8D9B619E0E4373CC59906C10EE
+
+PRE_FIX_REPRO_EXE_SHA256=0C1B3B992DBEF778D9F70041F5C03AFA7B5B1F038DF0A9B6659CCCB5C64F6C08
+PRE_FIX_DUMP=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\dumps\bridge_lifecycle_test.exe_261110_085703.dmp
+
+LAW=SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+LAW=LIFECYCLE_PASS != ISSUE49_11_11
+LAW=LIFECYCLE_PASS != PROMOTE
+NEXT_GATE=POST_SCHEDULER_PROMOTION_REQUIREMENTS (unchanged; PROMOTE=0)
+TIP_CLIMB=HOLD

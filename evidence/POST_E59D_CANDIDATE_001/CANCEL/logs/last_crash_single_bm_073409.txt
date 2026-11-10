@@ -1,0 +1,7 @@
+=== unhandled exception ===
+time: 20261103-073409
+code: 0xc0000005
+address: 0x7ffc7be7bd02
+minidump: C:\Users\Garrett\AppData\Local\RawrXD\crashes\rawrxd-20261103-073409.dmp
+config fingerprint: b61a02c92fffee97
+

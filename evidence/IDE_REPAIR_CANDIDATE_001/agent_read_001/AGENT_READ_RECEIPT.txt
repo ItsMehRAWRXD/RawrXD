@@ -1,0 +1,53 @@
+﻿IDE_REPAIR_CANDIDATE_001 / agent_read_001 / AGENT_READ_RECEIPT
+ASOF_UTC=2026-11-10T07:20:30Z
+MOTD_ACK=1
+WAVE=1B_AGENT_READ
+PROMOTE=0
+MATURITY=82%
+TIP_CLIMB=HOLD
+CERTIFIED=0
+
+PACKAGE_REQUESTED=RawrXD-readiness-rc5 (NEW)
+PACKAGE_USED=F:\rawrxd\release\RawrXD-readiness-rc4 (RC4 sealed; rc5 NOT_PUBLISHED)
+RC5_STATUS=NOT_PUBLISHED
+RC5_BUILD=FAIL LNK1104 cannot open file deep2_engine_lib.lib
+NO_RC4_MUTATION=1
+NOTE=Inventory closed; no new candidate loop SHA published. Runtime exercised sealed RC4 packaged deep2_agentic_loop only as available packaged baseline.
+
+LOOP_EXE=F:\rawrxd\release\RawrXD-readiness-rc4\deep2_agentic_loop.exe
+LOOP_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+IDE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+
+MODEL_USED=qwen3:8b
+MODEL_POLICY=Prefer tool-capable after RC4 sealed llama3.2:3b MODEL_PROTOCOL_NONCOMPLIANCE
+RC4_SEALED_MODEL=llama3.2:3b CLASS=UNSUPPORTED_FOR_WORKFLOW / MODEL_PROTOCOL_NONCOMPLIANCE__REQUIRED_TOOL_READ_NEVER_EMITTED (immutable)
+
+HARNESS=F:\rawrxd\tools\release\Test-AgentWorkflow.ps1
+RUN_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\agent_read_001\run_qwen3_8b
+
+OLLAMA_AGENT_READ=PASS
+OLLAMA_AGENT_EDIT=PASS
+OLLAMA_AGENT_BUILD_TEST=PASS
+OLLAMA_AGENT_VERDICT=PASS
+FIRST_FAILURE_CLASS=NONE
+
+READ_EVIDENCE=
+  step1 TOOL=read exit=0 valid=1 observation=128
+  result contains bug.cpp contents:
+    #include <cstdio>
+    int add(int a, int b) { return a - b; }
+    int main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }
+
+REINJECTION_CONTINUATION=
+  step2 TOOL=write exit=0 valid=1 (after readback)
+  step3 TOOL=finish exit=0 valid=1
+  source_changed=true BEFORE->AFTER sha changed
+  independent_run_exit=0 independent_run_output=AGENT_RESULT=5
+
+HARNESS_JSON_VERDICT=FAIL
+HARNESS_JSON_ANOMALY=process_exit=null (Start-Process ExitCode not captured) despite agent stdout OLLAMA_AGENT_VERDICT PASS and independent_run AGENT_RESULT=5
+WORKER_ACCEPTANCE_BASIS=agent.stdout.log OLLAMA_AGENT_* markers + bug.cpp observation + independent run (not harness JSON alone)
+INVENT_PASS=0
+
+INVENTORY=OLLAMA_44_MODEL_TOOL_INVENTORY.csv (44 models)
+PREFERRED_CANDIDATES=qwen3:8b,llama3.1:8b,granite3.3:8b,gpt-oss:20b,gpt-oss:latest

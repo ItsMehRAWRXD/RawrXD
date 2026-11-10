@@ -1,0 +1,348 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ModelFit] KV budget caps context: requested=262144 fit=244682 (kv_bytes_per_token=7686)
+[MLA_ALLOC] hidden=7168 heads=64 headDim=576 qLora=1536 kv_a=576 k_scratch=40960 v_b=8192
+[deep2-engine] rawrxd_deep2_engine starting
+[deep2-engine] loading model: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=1 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=18432 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=512 qkRope=64 vHeadDim=128 headDim=576
+[Deep2Engine] MLA multi-shard production stream available; certification deferred to live MlaAttentionComplete
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=163840 bos=163584 eos=163586 (Spm::encode)
+[Deep2Engine] Layer topology: 0 attention, 0 SSM, 61 unknown of 61 total
+[Deep2Engine] KV cache sized for 0 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[Deep2Engine] ResidencyManager: this=000001378006FDB0  registered=0 tensors  bytes=0  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF636C80360 dequant=00007FF636C82FB0 GetGEMV(12)=00007FF636C80360 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=244682 heads=1 dim=576
+[KVCache] HOT_BYTES=2248704 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 61 layers x 244682 positions x 1 heads x 576 dim = 65591.02 MB
+[Deep2Engine] Model loaded successfully (1096 tensors)
+[Deep2Engine] MoE model: 384 experts, top-8, 1 shared
+[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache
+[Deep2Engine] Created 61 per-layer routers (multi-shard)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+DEEP2_DEVICE_COUNT_DETECTED=4
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000018DFE
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000018DFE
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+T
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:000000000001BE9D
+DEEP2_DEVICE_1_VRAM_BYTES=16962809856
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_DEVICE_2_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:13C0:000000000001ECB5
+DEEP2_DEVICE_2_VRAM_BYTES=2119970816
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_3_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_3_VENDOR=AMD
+DEEP2_DEVICE_3_STABLE_ID=1002:164E:0000000000000000
+DEEP2_DEVICE_3_VRAM_BYTES=0
+DEEP2_DEVICE_3_SCORE=0
+DEEP2_DEVICE_3_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_3_PROBLEM_CODE=0
+DEEP2_DEVICE_3_HEALTHY=1
+DEEP2_DEVICE_3_RESET_ATTEMPTED=0
+DEEP2_DEVICE_3_RESET_OK=0
+DEEP2_DEVICE_3_RESET_SKIPPED=0
+DEEP2_DEVICE_3_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_3_ACCESS_DENIED=0
+DEEP2_DEVICE_3_INSTANCE_ID=PCI\VEN_1002&DEV_164E&SUBSYS_364E1849&REV_CB\4&16012499&0&0041
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[deep2-engine] model loaded
+[deep2-engine] prompt: Hello
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+[K2_DBG] entry depth=61 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=61
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/1
+STREAM_HEARTBEAT STEP=0/1 TEARDOWN_WITNESS=0
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=0 nEx=8 pin_clock=24 pin_bytes=228458496 buf=000001378D553530 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b613beca179f7d08 post_hash=00eee16a93b220ac CLASS=D2H_OK ex=[0,8,62,64,127,167,324,327]
+[L1_DIAG_PROBE] layer=1 env=000001378D55105E
+[L1_DIAG] layer=1 native_vs_cpu maxDiff=2.253246494e-04 at idx=2353 nonFinite=0
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=0 nEx=8 pin_clock=48 pin_bytes=228458496 buf=00000209C2F66DD0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a56ca4c379b21a91 post_hash=7f35a2a81eed96e0 CLASS=D2H_OK ex=[19,26,73,81,85,140,197,357]
+[L1_DIAG_PROBE] layer=2 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=0 nEx=8 pin_clock=72 pin_bytes=228458496 buf=00000209C2F657D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e29f8819115a9b5c post_hash=f269400726d9d49f CLASS=D2H_OK ex=[7,119,164,209,260,268,283,315]
+[L1_DIAG_PROBE] layer=3 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=0 nEx=8 pin_clock=96 pin_bytes=228458496 buf=00000209C2F7FD10 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0fe24107ed84e3d6 post_hash=24fc5367f948febe CLASS=D2H_OK ex=[3,5,10,45,162,185,357,363]
+[L1_DIAG_PROBE] layer=4 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=0 nEx=8 pin_clock=120 pin_bytes=228458496 buf=00000209C2F665D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=90c696116c76d023 post_hash=ffab1b5a72080755 CLASS=D2H_OK ex=[39,91,125,164,224,351,362,369]
+[L1_DIAG_PROBE] layer=5 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=0 nEx=8 pin_clock=144 pin_bytes=228458496 buf=00000209C2FACFC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b615f1b2c52fed69 post_hash=cd2b5c72455206ac CLASS=D2H_OK ex=[45,85,118,131,170,172,275,313]
+[L1_DIAG_PROBE] layer=6 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=0 nEx=8 pin_clock=168 pin_bytes=198180864 buf=00000209C2FAD2C0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=42f2517c513948b6 post_hash=6785a752b5b22c37 CLASS=D2H_OK ex=[15,84,104,158,197,300,341,353]
+[L1_DIAG_PROBE] layer=7 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=0 nEx=8 pin_clock=192 pin_bytes=198180864 buf=00000209C2F9A510 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=6be711fe8e070f79 post_hash=37856a8175c90ebd CLASS=D2H_OK ex=[34,156,174,188,192,247,248,360]
+[L1_DIAG_PROBE] layer=8 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=0 nEx=8 pin_clock=216 pin_bytes=228458496 buf=00000209C2F99390 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=dae83336742c9499 post_hash=f8e2379c1b5bad47 CLASS=D2H_OK ex=[36,87,97,139,173,194,245,365]
+[L1_DIAG_PROBE] layer=9 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=0 nEx=8 pin_clock=240 pin_bytes=198180864 buf=00000209C2F97410 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4f4e27bf5b65fd21 post_hash=6990fcb1ec19b670 CLASS=D2H_OK ex=[49,127,214,215,234,330,370,377]
+[L1_DIAG_PROBE] layer=10 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=0 nEx=8 pin_clock=264 pin_bytes=198180864 buf=00000209C2F97910 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f02db2ffb18817b0 post_hash=3b829e34ffa5a1cc CLASS=D2H_OK ex=[51,62,70,86,158,216,291,309]
+[L1_DIAG_PROBE] layer=11 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=0 nEx=8 pin_clock=288 pin_bytes=228458496 buf=00000209C2F98390 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5ca568fa08c2f4b9 post_hash=88ddb2291fedb237 CLASS=D2H_OK ex=[65,105,127,137,164,224,258,304]
+[L1_DIAG_PROBE] layer=12 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=13 stick=0 nEx=8 pin_clock=312 pin_bytes=198180864 buf=00000209C3094770 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=da410471e6607ec7 post_hash=0e11f38471f3de8e CLASS=D2H_OK ex=[50,71,172,210,334,352,378,381]
+[L1_DIAG_PROBE] layer=13 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=14 stick=0 nEx=8 pin_clock=336 pin_bytes=198180864 buf=00000209C3095270 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=99bd10d46dc6fd88 post_hash=b29d1ee3e6a9f7b1 CLASS=D2H_OK ex=[104,129,174,176,210,228,242,307]
+[L1_DIAG_PROBE] layer=14 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=15 stick=0 nEx=8 pin_clock=360 pin_bytes=228458496 buf=00000209C3092AF0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=fd45245a939c4556 post_hash=468bfbd2e0181a49 CLASS=D2H_OK ex=[10,19,58,89,212,234,373,378]
+[L1_DIAG_PROBE] layer=15 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=16 stick=0 nEx=8 pin_clock=384 pin_bytes=198180864 buf=00000209C3095270 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=65b5b4b5c30ff280 post_hash=33c883bf2ac20463 CLASS=D2H_OK ex=[17,49,55,64,67,268,362,383]
+[L1_DIAG_PROBE] layer=16 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=17 stick=0 nEx=8 pin_clock=408 pin_bytes=198180864 buf=00000209C2F659D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=625bec0b0778ef35 post_hash=8cdbaee311b4bcfe CLASS=D2H_OK ex=[20,68,117,122,163,225,360,373]
+[L1_DIAG_PROBE] layer=17 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=18 stick=0 nEx=8 pin_clock=432 pin_bytes=228458496 buf=00000209C2F7EB90 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=36c00361f302ed8d post_hash=44a8e3df55c8ec3e CLASS=D2H_OK ex=[32,123,221,263,284,288,293,383]
+[L1_DIAG_PROBE] layer=18 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=19 stick=0 nEx=8 pin_clock=456 pin_bytes=198180864 buf=00000209C2F7F090 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1e3c77b6be62c5a3 post_hash=f3f92bcef984d9fe CLASS=D2H_OK ex=[91,97,117,126,134,154,281,312]
+[L1_DIAG_PROBE] layer=19 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=20 stick=0 nEx=8 pin_clock=480 pin_bytes=198180864 buf=00000209C2FABFC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=75752b168c3c87e9 post_hash=dc390e9392d74ab2 CLASS=D2H_OK ex=[36,88,183,202,229,235,282,381]
+[L1_DIAG_PROBE] layer=20 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=21 stick=0 nEx=8 pin_clock=504 pin_bytes=228458496 buf=00000209C2FABCC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=61992c11682d50f8 post_hash=4acb155f75da2fd6 CLASS=D2H_OK ex=[59,78,139,180,187,210,259,342]
+[L1_DIAG_PROBE] layer=21 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=22 stick=0 nEx=8 pin_clock=528 pin_bytes=198180864 buf=00000209C2F97290 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=00f0b41ef48af3d2 post_hash=883feafe0fc1d29f CLASS=D2H_OK ex=[26,30,95,211,259,282,334,371]
+[L1_DIAG_PROBE] layer=22 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=23 stick=0 nEx=8 pin_clock=552 pin_bytes=198180864 buf=00000209C2F9A110 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4ca39a6d0bdd2a0f post_hash=a59578fdd884fd32 CLASS=D2H_OK ex=[78,155,205,206,259,263,282,285]
+[L1_DIAG_PROBE] layer=23 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=24 stick=0 nEx=8 pin_clock=576 pin_bytes=228458496 buf=00000209C2F9A090 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1b748bd2075c0f0f post_hash=b0256a1b9c5c49a4 CLASS=D2H_OK ex=[76,166,214,241,314,323,333,365]
+[L1_DIAG_PROBE] layer=24 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=25 stick=0 nEx=8 pin_clock=600 pin_bytes=198180864 buf=00000209C2F98890 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ac7ca214bd7c882f post_hash=dec0ad4b96aebb0a CLASS=D2H_OK ex=[25,49,63,202,249,325,349,379]
+[L1_DIAG_PROBE] layer=25 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=26 stick=0 nEx=8 pin_clock=624 pin_bytes=198180864 buf=00000209C2FAC540 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a3ddd98363defaf6 post_hash=fb8dc25316d1bc00 CLASS=D2H_OK ex=[19,124,135,225,230,265,326,343]
+[L1_DIAG_PROBE] layer=26 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=27 stick=0 nEx=8 pin_clock=648 pin_bytes=228458496 buf=00000209C2F80090 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=79c0a8a13a93420f post_hash=f018b45d6ea60431 CLASS=D2H_OK ex=[59,155,179,260,292,304,319,328]
+[L1_DIAG_PROBE] layer=27 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=28 stick=0 nEx=8 pin_clock=672 pin_bytes=198180864 buf=00000209C3095B70 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=293df366bd778382 post_hash=da9c73ee91be678f CLASS=D2H_OK ex=[17,20,75,76,117,145,233,356]
+[L1_DIAG_PROBE] layer=28 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=29 stick=0 nEx=8 pin_clock=696 pin_bytes=198180864 buf=00000209C30948F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=56e45e157066aa5b post_hash=d78db346d93831dd CLASS=D2H_OK ex=[12,44,100,106,119,211,290,306]
+[L1_DIAG_PROBE] layer=29 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=30 stick=0 nEx=8 pin_clock=720 pin_bytes=228458496 buf=00000209C30945F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5dd1678595ab23b5 post_hash=a4e31e69af73f252 CLASS=D2H_OK ex=[56,112,114,144,145,206,305,338]
+[L1_DIAG_PROBE] layer=30 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=31 stick=0 nEx=8 pin_clock=744 pin_bytes=198180864 buf=00000209C2F671D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5a10575e3f41eb74 post_hash=52feb7da599fd7c9 CLASS=D2H_OK ex=[10,45,99,131,141,161,226,260]
+[L1_DIAG_PROBE] layer=31 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=32 stick=0 nEx=8 pin_clock=768 pin_bytes=198180864 buf=00000209C2F671D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8436c6b1d941233b post_hash=c6357ecc065958f0 CLASS=D2H_OK ex=[7,42,56,77,135,225,344,351]
+[L1_DIAG_PROBE] layer=32 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=33 stick=0 nEx=8 pin_clock=792 pin_bytes=228458496 buf=00000209C2F7FA10 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=14ba6e76013dad24 post_hash=fb9640fef474e8b4 CLASS=D2H_OK ex=[52,58,62,134,173,220,276,313]
+[L1_DIAG_PROBE] layer=33 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=34 stick=0 nEx=8 pin_clock=816 pin_bytes=198180864 buf=00000209C2F7FA10 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1aa5e5af0465f754 post_hash=4fd8119cf245d3c0 CLASS=D2H_OK ex=[62,212,248,256,266,286,339,344]
+[L1_DIAG_PROBE] layer=34 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=35 stick=0 nEx=8 pin_clock=840 pin_bytes=198180864 buf=00000209C2F661D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ad26ddcbe1007395 post_hash=c6faa7ea5531f044 CLASS=D2H_OK ex=[48,57,78,114,145,186,237,343]
+[L1_DIAG_PROBE] layer=35 env=000001378D55105E
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=36 stick=0 nEx=8 pin_clock=864 pin_bytes=228458496 buf=00000209C2FAD340 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=6b6909cc96baba99 post_hash=0b859eebfa9eb5d6 CLASS=D2H_OK ex=[64,73,99,217,281,296,306,323]
+[L1_DIAG_PROBE] layer=36 env=000001378D55105E
+[GPU] endSubmitWait stage=queue_submit vk=-4
+DEEP2_GPU_DEVICE_LOST mark=1 code=-4 phase=device_lost
+[GPU] downloadFromBuffer failed stage=transfer_wait bytes=28672
+DEEP2_GPU_DEVICE_RESET skipped (opt-in off)
+ENDDEVICE_STEP3 tag=END_FAIL STEP=0/1 layer=37 stick=0 nEx=8 pin_clock=888 pin_bytes=198180864 buf=00000209C30945F0 bytes=28672 fused=1 d2h=0 vk=-4 phase=device_lost in_hash=c71c708a47e3566b post_hash=0000000000000000 CLASS=DEVICE/SYNC_FAILURE ex=[10,57,189,207,240,295,334,359]
+HIDDEN_PROBE_DISPOSITION STEP=0/1 EMITTED=0 REASON=NOT_REACHED
+STEP_EXIT STEP=0/1
+STREAM_ABORT=1 STEP=0/1 OWNER=MLA_FORWARD ERR=K2MoEStickEndDevice failed TEARDOWN_WITNESS=0
+MLA_GPU_GEMV_OPS=114 MLA_GPU_GEMV_FAIL=38
+[live-path] vacuumArmed=0 trampoline=1/39 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=1 plasmaAbsence=0 enhancements=1
+[Deep2Engine] K2 generateStream: K2MoEStickEndDevice failed
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=61
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

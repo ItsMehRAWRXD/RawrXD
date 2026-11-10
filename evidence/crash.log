@@ -1,0 +1,30 @@
+[stage]   [     0.0 ms] load model | F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+[stage]   [  4180.3 ms] ingest | arch=qwen2 blocks=28
+[stage]   [  4313.6 ms] tokenizer build | vocab=151936 convention=U+0120_gpt2
+[stage]   [  4314.1 ms] G1 tokenizer: round-trip begin
+[stage]   [  4352.0 ms] G1 tokenizer: round-trip done | PASS
+GATE_RESULT G1=PASS
+[stage]   [  4363.7 ms] executor bind begin | gpu-first
+[stage]   [  4364.3 ms] executor bound | ops=395
+[stage]   [  4365.3 ms] G2 inference: batched prefill of probe prompt
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[stage]   [  9781.4 ms] G2 inference: prefill complete | tokens=11 ctx=12
+[stage]   [  9784.2 ms] G2 inference: one-token logits | n=151936 nonfinite=0 PASS
+[stage]   [  9784.5 ms] G3 generation: begin
+[stage]   [194390.9 ms] G3 generation: done | tokens=512 bytes=512
+GATE_RESULT G1=PASS G2=PASS G3=PASS
+FINAL_VERDICT=PASS (stage-limited run: inference gates only)
+Released all tensors
+Vulkan resources cleaned up successfully

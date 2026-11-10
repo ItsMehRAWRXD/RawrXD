@@ -1,0 +1,27 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_v5_20261110-112025.log'
+0:015> .sympath srv*
+Symbol search path is: srv*
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+0:015> .reload /f ntdll.dll
+0:015> bp ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd"
+0:015> bp ntdll!NtTerminateProcess ".echo ===HIT_NTTERMINATE===; r rcx; r rdx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd"
+0:015> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd" av
+0:015> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd" c0000409
+0:015> sxd eh
+0:015> sxi ibp
+0:015> bl
+ 0 e 00007ffa`3a5f9d00     0001 (0001)  0:**** ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxdevidenceIDE_REPAIR_CANDIDATE_001issue49_candidate_AC7DC1D4_7774E846_001issue49_gui_ollama_qwen3_027_STACKdumpsi026_early_death_20261110-112025.dmp; .logclose; qd"
+ 1 e 00007ffa`3a696950     0001 (0001)  0:**** ntdll!NtTerminateProcess ".echo ===HIT_NTTERMINATE===; r rcx; r rdx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxdevidenceIDE_REPAIR_CANDIDATE_001issue49_candidate_AC7DC1D4_7774E846_001issue49_gui_ollama_qwen3_027_STACKdumpsi026_early_death_20261110-112025.dmp; .logclose; qd"
+0:015> g
+[2026-11-10 11:20:35] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=0
+[2026-11-10 11:20:35] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+ModLoad: 00007ffa`35e50000 00007ffa`35f9c000   C:\WINDOWS\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffa`36740000 00007ffa`3674d000   C:\WINDOWS\SYSTEM32\DSPARSE.dll
+ModLoad: 00007ffa`26f20000 00007ffa`26f2b000   C:\Windows\System32\rasadhlp.dll
+ModLoad: 00007ffa`293a0000 00007ffa`29426000   C:\WINDOWS\System32\fwpuclnt.dll
+ntdll!NtWaitForSingleObject+0x14:
+00007ffa`3a696464 c3              ret

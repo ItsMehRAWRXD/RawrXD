@@ -1,0 +1,14 @@
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 35 MB
+   layers_0: 64 tensors, 182 MB
+   layers_1: 64 tensors, 182 MB
+   layers_2: 48 tensors, 134 MB
+   output_head: 24 tensors, 100 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+   Shards: 1
+   Tensors: 201
+   Zones: 5
+   Memory (header+index): ~0 MB

@@ -1,0 +1,20 @@
+# REMOTE_SYNC_STATUS — bounded verify
+
+ASOF_UTC=2026-11-09T10:41:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+```
+GIT_STATUS_PROBE=ABORTED
+GIT_BRANCH_PROBE=ABORTED
+REMOTE_PUSH=UNCONFIRMED
+UPSTREAM_AHEAD_BEHIND=UNVERIFIED
+PUSH_ATTEMPTED_THIS_TURN=0
+PR_77_79=SEPARATE_INTEGRATION_TRACK_NE_PUSH_VERIFY_NE_MERGE_AUTH
+ACCEPTANCE=IN_PROGRESS
+```
+
+No new evidence from aborted Git probes. Do not repeat broad git status/branch probes.
+If sync check required later: bounded read-only against exact commit + exact remote ref only.

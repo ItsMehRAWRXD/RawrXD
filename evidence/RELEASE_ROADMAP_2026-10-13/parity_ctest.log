@@ -1,0 +1,13 @@
+Test project F:/rawrxd/build_gate_recovery_20261013
+    Start 2: q8k_edge_tests
+1/4 Test #2: q8k_edge_tests ...................   Passed    0.07 sec
+    Start 3: q8k_byte_parity
+2/4 Test #3: q8k_byte_parity ..................   Passed    0.44 sec
+    Start 4: quant_parity_cert
+3/4 Test #4: quant_parity_cert ................   Passed    0.10 sec
+    Start 5: kquant_dot_parity
+4/4 Test #5: kquant_dot_parity ................   Passed    0.07 sec
+
+100% tests passed out of 4
+
+Total Test time (real) =   0.86 sec

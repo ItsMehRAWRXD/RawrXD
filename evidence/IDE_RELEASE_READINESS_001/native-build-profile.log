@@ -1,0 +1,23 @@
+[0/2] Re-checking globbed directories...
+[1/7] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/7] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_chat_ctrl_enter_002/Release/vulkan-shaders-gen.exe
+[3/7] Completed 'vulkan-shaders-gen'
+[4/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(155): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(155): warning C4100: 'hPrevInstance': unreferenced parameter
+[5/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(355): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(358): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1222): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1168): note: see declaration of 'restored'
+[6/7] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

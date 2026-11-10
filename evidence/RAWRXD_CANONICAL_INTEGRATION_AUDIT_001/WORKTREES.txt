@@ -1,0 +1,43 @@
+F:\rawrxd
+  F:/rawrxd                                                                          a7b14a9f8c [fix/deep2-multimodel-safety-20261025]
+  C:/Users/Garrett/AppData/Local/Temp/kilo/ide-recovery                              80dcfd1b08 (detached HEAD)
+  C:/Users/Garrett/AppData/Local/Temp/kilo/ide-repro                                 80dcfd1b08 (detached HEAD)
+  C:/Users/Garrett/AppData/Local/Temp/kilo/stage2_wt                                 8d4457d099 [feature/native-compiler-stage2]
+  C:/Users/Garrett/AppData/Local/Temp/kilo/stage3_wt                                 a967fd93c3 [feature/native-compiler-stage3]
+  F:/rawrxd/.kilo/worktrees/continue-ensure-qwen3-cpu-inference-006-727c442f27132bb2 033a8acb55 [continue-ensure/qwen3-cpu-inference-006]
+  F:/rawrxd/.kilo/worktrees/general-mollusk                                          18e67ac13f [general-mollusk]
+  F:/rawrxd/.kilo/worktrees/ide-closure                                              8dfeeaf0b7 (detached HEAD)
+  F:/rawrxd/.kilo/worktrees/piranha1-gate2-provenance                                a551012de3 [piranha1-gate2-provenance]
+  F:/rawrxd/.kilo/worktrees/piranha2-gate4-dispatch                                  a551012de3 [piranha2-gate4-dispatch]
+  F:/rawrxd/.kilo/worktrees/thorn-measure                                            d9c664b95b [thorn-measure]
+  F:/rawrxd/.worktrees/codex-d1-batched-prefill                                      1d756c1cc8 [codex/d1-batched-prefill]
+  F:/rawrxd/.worktrees/codex-d1-opmajor                                              c3a850c538 [codex/d1-opmajor]
+  F:/rawrxd/.worktrees/codex-d1-replay-338c7d                                        74fafe2584 [codex/d1-replay-1977e041]
+  F:/rawrxd/.worktrees/codex-d2-gpu-batching                                         bbb6712307 [codex/d2-gpu-batching]
+  F:/rawrxd/.worktrees/codex-d2-revalidate-74fafe                                    4deb5816ce [codex/d2-revalidate-74fafe]
+  F:/rawrxd/.worktrees/codex-gate16-18-audit                                         93fe08748c [codex/gate16-18-audit]
+  F:/rawrxd/.worktrees/recon-preservation                                            47af78d4a7 [recovery/unit1-build-ci]
+  F:/rawrxd-genb                                                                     8ad11f817e (detached HEAD)
+  F:/rawrxd-main-audit                                                               a0c98e7fb1 [audit/ide-authority-closure-001]
+  F:/rawrxd-pr18-audit                                                               f68bebfa24 (detached HEAD)
+  F:/rawrxd_cert                                                                     9d91af0237 [feat/hexmag-polymorphic-repeat-tuner-masm]
+  F:/rawrxd_github_latest                                                            b39ff93a59 (detached HEAD)
+  F:/rawrxd_stagea                                                                   3148121201 (detached HEAD) locked
+  F:/wt_qwen4exp                                                                     80ef16152c [feature/qwen4exp-hyperconnection-slice]
+  G:/rawrxd-push-tmp                                                                 72e1f725bb (detached HEAD) locked
+
+G:\~dev\rawrxd and G:\~dev\rawrxd-cmake-clean share one repository
+  G:/~dev/rawrxd                                         530399a834 [feature/ide-agentic-product-path-20261026]
+  C:/Users/HiH8e/AppData/Local/Temp/rawrxd_b004_isolated 29e76f01e6 [b004-validate-isolated] prunable
+  D:/rawrxd-ci-bootstrap                                 b39dcb4b84 [release/14.7.3] prunable
+  D:/rawrxd_phase7a                                      8d63f90ee4 [feature/singularity-aperture-v126-merge-phase7a] prunable
+  G:/wt_fresh                                            f3058d23d8 (detached HEAD)
+  G:/wt_voxel                                            b207870ddd [feature/sunshine-world-generator]
+  G:/~dev/rawrxd-agentic-build                           183c313d4c (detached HEAD)
+  G:/~dev/rawrxd-cmake-clean                             fd27fd184e (detached HEAD)
+
+G:\VSC0de
+  G:/VSC0de 1c3a108b5d45 (detached HEAD)
+
+F:\~dev\rawrxd
+  no .git, no worktrees

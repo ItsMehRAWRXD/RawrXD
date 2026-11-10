@@ -1,0 +1,31 @@
+ISSUE49_OUTSTANDING_GATES
+ASOF_UTC=2026-11-10T12:45:00Z
+CONTROLLING_SHA=FEF3FFD57DAF0D9892A41FE7177A9CA07B78EAEED3C039ADE169108D4C6245CF
+SOURCE_RECEIPT=issue49_gui_ollama_qwen3_008/ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+REQUIRED_PASS_HITS=6/11
+ISSUE49_AGENT_WORKFLOW=PASS
+ISSUE49_11STEP=NOT_VERIFIED
+PROMOTE=0
+CERTIFIED=0
+
+# Required 11-gate set (harness authoritative IDs)
+# PASS (6):
+#   01_LAUNCH
+#   04_OPEN_PROJECT
+#   05_AGENT_PROMPT
+#   06_AGENT_READS_PROJECT
+#   08_TOOL_AUTHORITY
+#   10_REAL_SOURCE_EDIT
+#
+# OUTSTANDING (5) — not assumed FAIL; status from receipt 008:
+GATE_11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+GATE_12_MODEL_DIAGNOSES_FAILURE=NOT_RUN
+GATE_13_SECOND_EDIT=NOT_RUN
+GATE_14_FINAL_BUILD=NOT_RUN
+GATE_15_FINAL_TESTS=NOT_RUN
+
+# Adjacent non-required but called out by acceptance objectives:
+GATE_16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER
+
+ROOT_CAUSE_NOTE=Arithmetic-only fixture allowed a clean first-shot a-b→a+b fix; recovery/second-edit gates were never exercised. Harness now uses dual-fault fixture (undeclared_fn arity + arithmetic) and credits 11/12/13 only on rollback→commit / diagnostic evidence. Independent harness compile+run added for S_16.
+NO_INVENTED_PASS=1

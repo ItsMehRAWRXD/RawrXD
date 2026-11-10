@@ -1,0 +1,10 @@
+[rawr run] MODEL_RESOLUTION: resolving 'nemotron-bolt.gguf'
+[rawr run] MODEL_RESOLUTION=PASS  path=nemotron-bolt.gguf
+[INIT] Deep2Engine::initialize hiddenDim=0 vocabSize=0 numLayers=0 numHeads=0 maxSeqLen=4096 numThreads=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[INIT] Deep2Engine::initialize SUCCESS
+[rawr run] MODEL_LOAD: loading...
+[Deep2Engine] GGUF load failed: unsupported/malformed GGML tensor type or shape: blk.0.ssm_in.weight
+[rawr run] MODEL_LOAD=FAIL  stage=LOAD_GGUF_OPEN  msg=GGUFLoader::load() failed: unsupported/malformed GGML tensor type or shape: blk.0.ssm_in.weight

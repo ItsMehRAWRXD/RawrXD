@@ -1,0 +1,150 @@
+I026_EARLY_DEATH_STACK_001
+ASOF_UTC=2026-11-10T16:32:02.2649116Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+RECEIPT_LABEL=issue49_gui_ollama_qwen3_027_STACK
+REPRO_FOR_STACK_ONLY=1
+NOT_ACCEPTANCE_REMEASURE=1
+NO_ALIVE_PASS_CLAIM=1
+NO_SOURCE_EDITED_PASS_CLAIM=1
+REPAIR_SHA=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+LOOP_SHA=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+PROMPT_LEN=746
+PROMPT_REGIME=ASCII_staged_dual_fault_STEP_A_B
+OllamaAgentModel=qwen3:8b
+STRING_VERIFY_PASS=1
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+T05_LANE_SEPARATE=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+
+========================================================================
+RESULT (FAIL-CLOSED)
+========================================================================
+GOT_STACK=0
+MISSING_STACK=1
+EXCEPTION_CODE=NONE
+PROCESS_EXIT_CODE_CLASS=-1 (0xFFFFFFFF) when death observed undebugged
+DEATH_CLASS=SILENT_EXIT_WITHOUT_EXCEPTION_DUMP
+DUMP_PATH=
+DUMP_COUNT_IN_OUTDIR_DUMPS=0
+WER_LOCALDUMPS_FOR_MINUS1=0
+
+========================================================================
+GOT
+========================================================================
+GOT: IDE_EXIT=-1 under same 746 STEP A/B regime (026 ~27s undebugged; A2 ~97s with cdb+sxe eh).
+GOT: chat_runtime ends after DEEP2_AGENTIC_LOOP_CREATEPROCESS on undebugged -1 path; tool_calls=0.
+GOT: cdbX64 attach works; A7 bl shows RtlExitUserProcess bp + forward-slash dump path armed.
+GOT: live debugger/procdump attach changes behavior (Heisenberg / alternate 0xC0000354).
+
+========================================================================
+MISSING
+========================================================================
+MISSING: faulting stack (Child-SP/RetAddr) for native undebugged -1 death.
+MISSING: minidump for -1 class (no exception => WER LocalDumps silent).
+MISSING: rcx at RtlExitUserProcess for undebugged -1 path.
+
+========================================================================
+ATTEMPT MATRIX
+========================================================================
+A1 INVALID: false HIT from bp command text; malformed .printf
+A2: cdb+sxe eh; IDE_EXIT=-1 ~97s; stall KiUserCallbackDispatch; no dump
+A3: cdb+procdump before MAIN; early EXIT_BEFORE_MAIN
+A4: procdump -t after MAIN; IDE_EXIT=-1073740972 (0xC0000354) ~1s; no dump
+A5: false HasExited=-1 while cdb broken at NtWaitForSingleObject
+A6: NtTerminateProcess bp qd on child kill; empty dump path
+A7: RtlExitUserProcess-only; NO death in 120s under debugger (Heisenberg)
+
+========================================================================
+CLASSIFICATION
+========================================================================
+IDE_EXIT=-1 = ABNORMAL_EARLY_PROCESS_DEATH_WITHOUT_DUMP / silent exit path
+NOT harness AgentWait kill; NOT clean 0; NOT 0xC0000409; NOT agent timeout
+SOURCE_EDITED=0 remains (death before TOOL write)
+Live cdb/procdump attach currently prevents faithful -1 stack capture
+
+========================================================================
+026 chat_runtime (undebugged death)
+========================================================================
+SESSION_OPEN session_id=sid_00000D1C_0000000004839875 run_id=run_unset pid=3356
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_00000D1C_0000000004839875 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x00000000052A09BA session=1 pane=copilot_sidebar session_id=sid_00000D1C_00000000048398A4 run_id=run_unset
+INPUT_EVENT path=AGENT_MODE_AGENTIC_LOOP AGENT_MODE=ACTIVE source=ctrl_enter session_id=sid_00000D1C_000000000483998E run_id=run_unset
+AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0
+TOOL_SCHEMA_READY computer_use.find_window=1 computer_use.screenshot=1
+AGENT_MODE=ACTIVE path=AgenticLoopBridge session_registry=1 AGENT_DISPATCH_CLAIM=1
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=qwen3:8b workspace=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures AGENT_MODE=ACTIVE session_registry=1 tool=computer_use.screenshot tool=computer_use.find_window tool=computer_use.inspect tool=computer_use.click tool=computer_use.type tool=computer_use.key tool=computer_use.scroll tool=computer_use.launch
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=746
+SESSION_OPEN session_id=sid_00000D1C_00000000048399AD run_id=run_unset pid=3356
+ui_update request_id=0 rendered=1 complete=0 response_bytes=135 session_id=sid_00000D1C_00000000048399AD run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_00000D1C_00000000048399AD run_id=run_unset
+DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=29924 exe=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\bin\deep2_agentic_loop.exe workdir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures
+
+========================================================================
+A7 cdb tail (bp armed; no HIT; process survived 120s)
+========================================================================
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_v7_20261110-112827.log'
+0:015> .sympath srv*
+Symbol search path is: srv*
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+0:015> .reload /f ntdll.dll
+0:015> bp ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/issue49_candidate_AC7DC1D4_7774E846_001/issue49_gui_ollama_qwen3_027_STACK/dumps/i026_early_death_20261110-112827.dmp; .logclose; qd"
+0:015> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/issue49_candidate_AC7DC1D4_7774E846_001/issue49_gui_ollama_qwen3_027_STACK/dumps/i026_early_death_20261110-112827.dmp; .logclose; qd" av
+0:015> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/issue49_candidate_AC7DC1D4_7774E846_001/issue49_gui_ollama_qwen3_027_STACK/dumps/i026_early_death_20261110-112827.dmp; .logclose; qd" c0000409
+0:015> sxd eh
+0:015> sxi ibp
+0:015> bl
+ 0 e 00007ffa`3a5f9d00     0001 (0001)  0:**** ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/issue49_candidate_AC7DC1D4_7774E846_001/issue49_gui_ollama_qwen3_027_STACK/dumps/i026_early_death_20261110-112827.dmp; .logclose; qd"
+0:015> g
+[2026-11-10 11:28:38] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=0
+[2026-11-10 11:28:38] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+ModLoad: 00007ffa`35e50000 00007ffa`35f9c000   C:\WINDOWS\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffa`36740000 00007ffa`3674d000   C:\WINDOWS\SYSTEM32\DSPARSE.dll
+ModLoad: 00007ffa`26f20000 00007ffa`26f2b000   C:\Windows\System32\rasadhlp.dll
+ModLoad: 00007ffa`293a0000 00007ffa`29426000   C:\WINDOWS\System32\fwpuclnt.dll
+
+========================================================================
+A7 chat_runtime tail
+========================================================================
+SESSION_OPEN session_id=sid_0000958C_0000000004A49BD0 run_id=run_unset pid=38284
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000958C_0000000004A49BD0 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x00000000015D13D4 session=1 pane=copilot_sidebar session_id=sid_0000958C_0000000004A49BFF run_id=run_unset
+INPUT_EVENT path=AGENT_MODE_AGENTIC_LOOP AGENT_MODE=ACTIVE source=ctrl_enter session_id=sid_0000958C_0000000004A49BFF run_id=run_unset
+AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0
+TOOL_SCHEMA_READY computer_use.find_window=1 computer_use.screenshot=1
+AGENT_MODE=ACTIVE path=AgenticLoopBridge session_registry=1 AGENT_DISPATCH_CLAIM=1
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=qwen3:8b workspace=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures AGENT_MODE=ACTIVE session_registry=1 tool=computer_use.screenshot tool=computer_use.find_window tool=computer_use.inspect tool=computer_use.click tool=computer_use.type tool=computer_use.key tool=computer_use.scroll tool=computer_use.launch
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=746
+SESSION_OPEN session_id=sid_0000958C_0000000004A49C2E run_id=run_unset pid=38284
+ui_update request_id=0 rendered=1 complete=0 response_bytes=135 session_id=sid_0000958C_0000000004A49C2E run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_0000958C_0000000004A49C2E run_id=run_unset
+DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=28464 exe=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\bin\deep2_agentic_loop.exe workdir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures
+ui_update request_id=0 rendered=1 complete=1 response_bytes=4113 session_id=sid_0000958C_0000000004A49C2E run_id=run_unset
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=0 session_id=sid_0000958C_0000000004A49C2E run_id=run_unset
+RESPONSE_END request_id=0 session=1 bytes=4248 session_id=sid_0000958C_0000000004A49C2E run_id=run_unset
+
+========================================================================
+EVIDENCE PATHS
+========================================================================
+PRIMARY=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\I026_EARLY_DEATH_STACK_001.txt
+OUTDIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK
+CDB_A7=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_v7_20261110-112827.log
+DEBUGGER=C:\Users\Garrett\AppData\Local\Microsoft\WindowsApps\cdbX64.exe
+DIAG_026=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\I026_ALIVE_FAIL_DIAG_001.txt
+
+========================================================================
+AUTHORITY
+========================================================================
+CONTROLLING=D015
+PROMOTE=0
+NO_SUPERSEDE=1
+NO_BLIND_027_ACCEPTANCE=1
+LoadTensorSlice_REOPENED=0
+T05_LANE_SEPARATE=1

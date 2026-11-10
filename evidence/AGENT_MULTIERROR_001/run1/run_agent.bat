@@ -1,0 +1,4 @@
+@echo off
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
+cd /d "C:\Users\Garrett\AppData\Local\Temp\rawrxd_agent_multierror_run1"
+"F:\~dev\rawrxd\build-ninja\bin\RawrXD-Agentic.exe" --model "F:\~dev\tinyllama_fresh.gguf" --workspace "C:\Users\Garrett\AppData\Local\Temp\rawrxd_agent_multierror_run1" --max-steps 16 --max-tokens 1024 --no-stream --task "Fix all compile and runtime defects in this workspace so that: (1) cl /nologo /EHsc /std:c++20 add.cpp mul.cpp main.cpp /Fe:calc_ok.exe succeeds (2) calc_ok.exe prints exactly: calc_ok 14 (3) calc_ok.exe exits 0. Inspect sources and build failures yourself. Use tools to read, edit, build, and run. Prefer run_command with cl, then run_command with cmd /c calc_ok.exe. When finished, briefly report what you fixed."

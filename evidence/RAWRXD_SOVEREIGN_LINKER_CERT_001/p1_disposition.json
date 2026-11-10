@@ -1,0 +1,48 @@
+﻿{
+    "schema":  "RAWRXD_SOVEREIGN_LINKER_CERT_001",
+    "CORPUS":  "19/19 PASS_REPORTED",
+    "FREESTANDING_LINKER":  "CORPUS_PASS",
+    "ENTRY_STUB":  "CLOSED",
+    "PE_STRUCTURAL_DEPTH":  "PASS",
+    "PE_STRUCT_PASS":  8,
+    "PE_STRUCT_FAIL":  0,
+    "NEGATIVE_DEPTH":  "PASS",
+    "DEEP2_REAP_REGRESSION":  "PROXY_PASS",
+    "DEEP2_REAP_NATIVE":  "NOT_AVAILABLE",
+    "BUILD_PROVENANCE":  "RECORDED",
+    "WINDOWS_RUNTIME_CERT":  0,
+    "FIVE_OS_CERTIFIED":  false,
+    "PROMOTE":  0,
+    "baseline_linker_sha256":  "37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca",
+    "current_linker_sha256":  "c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225",
+    "pe_results":  [
+                       {
+                           "file":  "01_minimal_return_zero_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "02_exit_sentinel_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "03_multi_tu_linking_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "07_relocation_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "09_global_init_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "10_bss_zero_O2.exe",
+                           "result":  "PASS"
+                       },
+                       {
+                           "file":  "17_optimization_O2.exe",
+                           "result":  "PASS"
+                       }
+                   ]
+}

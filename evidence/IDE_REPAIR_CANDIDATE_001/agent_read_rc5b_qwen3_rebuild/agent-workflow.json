@@ -1,0 +1,17 @@
+﻿{
+    "tested_utc":  "2026-11-10T09:51:20.0954421Z",
+    "scope":  "Packaged agent subprocess; GUI dispatch requires separate evidence.",
+    "ide_sha256":  "A4B95E4882D5FC38A3D6DAC1C8B43D08591933868C7E1AF74DE3CBB10727D4D7",
+    "agent_sha256":  "F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316",
+    "model":  "qwen3:8b",
+    "process_id":  41336,
+    "process_exit":  0,
+    "timed_out":  false,
+    "source_changed":  true,
+    "source_after_sha256":  "EFF63EF0D19E70B29C6A17B972009055DAAF4B5E88329820C4E1EC97F05551E2",
+    "independent_run_exit":  0,
+    "independent_run_output":  "AGENT_RESULT=5",
+    "verdict":  "PASS",
+    "stdout":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\agent_read_rc5b_qwen3_rebuild\\agent.stdout.log",
+    "stderr":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\agent_read_rc5b_qwen3_rebuild\\agent.stderr.log"
+}

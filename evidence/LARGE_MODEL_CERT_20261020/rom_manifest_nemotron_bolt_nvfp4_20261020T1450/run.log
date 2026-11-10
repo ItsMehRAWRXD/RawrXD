@@ -1,0 +1,9 @@
+FILE    F:\rawrxd\nemotron-bolt.gguf
+ARCH    nemotron_h_moe
+GGUF    version 3, 843 tensors, data start 7925248, 22018326528 bytes
+
+MANIFEST  entries=843 bound=843 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES F32=489 IQ2_XXS=160 NVFP4=80 Q8_0=114
+
+VERDICT=BOUND_ALL

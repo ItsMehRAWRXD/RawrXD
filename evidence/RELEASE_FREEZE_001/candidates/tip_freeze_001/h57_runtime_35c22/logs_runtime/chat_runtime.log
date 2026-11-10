@@ -1,0 +1,7 @@
+SESSION_OPEN session_id=h57_20261109-141743 run_id=h57run_20261109-141743 pid=7612
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000003B0994 session=1 pane=copilot_sidebar session_id=h57_20261109-141743 run_id=h57run_20261109-141743
+DISPATCH_ID id=1 bytes=16
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=16
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+exactly_once_submit session=1 request_id=1 model=bigdaddyg-productivity-local:latest
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1

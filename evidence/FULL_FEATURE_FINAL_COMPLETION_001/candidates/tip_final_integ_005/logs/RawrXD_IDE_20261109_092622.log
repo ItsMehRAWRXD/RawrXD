@@ -1,0 +1,12 @@
+[2026-11-09 09:26:22] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-09 09:26:22] [SYSTEM] Log file: logs\RawrXD_IDE_20261109_092622.log
+[2026-11-09 09:26:22] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-09 09:26:22] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-09 09:26:22] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-09 09:26:22] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-09 09:26:22] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-09 09:26:24] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1
+[2026-11-09 09:26:24] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-09 09:26:24] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 09:26:24] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=1
+[2026-11-09 09:26:24] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1

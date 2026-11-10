@@ -1,0 +1,26 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] request_messages=2 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=2 payload_bytes=1204 max_tokens=200 ctx=256
+[ollama] REQUEST_SENT elapsed_ms=432 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=351 elapsed_ms=502
+[ollama step 1] response_bytes=31
+[ollama step 1] response=I'm here. How can I assist you?
+[ollama step 2] request_messages=4 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=4 payload_bytes=1360 max_tokens=200 ctx=256
+[ollama] REQUEST_SENT elapsed_ms=555 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=421 elapsed_ms=580
+[ollama step 2] response_bytes=91
+[ollama step 2] response=```json\n{\n  "error": "Invalid command. Reply with exactly one complete TOOL command."\n}\n```
+[ollama step 3] request_messages=6 request_bytes_pending model=qwen3:8b
+[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=6 payload_bytes=1584 max_tokens=200 ctx=256
+[ollama] REQUEST_SENT elapsed_ms=382 waiting_response
+[ollama] RESPONSE_RECV http=200 body_bytes=423 elapsed_ms=424
+[ollama step 3] response_bytes=93
+[ollama step 3] response=```python\n{\n  "error": "Invalid command. Reply with exactly one complete TOOL command."\n}\n```
+OLLAMA_AGENT_MODEL qwen3:8b
+OLLAMA_AGENT_READ FAIL
+OLLAMA_AGENT_EDIT FAIL
+OLLAMA_AGENT_BUILD_TEST FAIL
+OLLAMA_AGENT_BEFORE_SHA256 af4519c6af7b603d35a55a1ee622adff8a60225a96455e92a52af051b232baa0
+OLLAMA_AGENT_AFTER_SHA256 af4519c6af7b603d35a55a1ee622adff8a60225a96455e92a52af051b232baa0
+OLLAMA_AGENT_VERDICT FAIL

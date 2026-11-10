@@ -1,0 +1,55 @@
+I026_EXIT_CALLSITE_V8_RUN
+ASOF_UTC=2026-11-10T16:38:41.8672722Z
+CANDIDATE=I
+REPAIR_SHA=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+LOOP_SHA=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+IDE_SHA_VERIFIED=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+LOOP_SHA_VERIFIED=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+PROMPT_LEN=746
+METHOD=LATE_ATTACH_AFTER_CREATEPROCESS
+CREATEPROCESS_SEEN=1
+ATTACH_AT=2026-11-10T11:38:36.6808224-05:00
+GOT_STACK=0
+CDB_MARKER=NONE
+DEATH_CLASS=NO_DEATH_IN_WINDOW
+PROCESS_EXIT_CODE=
+PROCESS_EXIT_HEX=
+CDB_RCX_AT_EXIT=
+GOT_DEATH=0
+HIT_SEEN=1
+HEISENBERG_ALIVE=0
+STDIN_G_COUNT=0
+RUNLOG=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_EXIT_CALLSITE\exit_callsite_v8_20261110-113830.txt
+CDB_LOG=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_EXIT_CALLSITE\cdb_v8_20261110-113830.log
+
+=== CDB EXCERPT ===
+Symbol search path is: srv*
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols
+0:020> bp kernel32!ExitProcess ".echo ===HIT_KERNEL32_ExitProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Couldn't resolve error at 'kernel32!ExitProcess ".echo ===HIT_KERNEL32_ExitProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ntdll!RtlExitUserProcess ".echo ===HIT_RtlExitUserProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+0:020> bp ucrtbase!exit ".echo ===HIT_ucrtbase_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Matched: 00007ffa`37ec1700 ucrtbase!exit (exit)
+Matched: 00007ffa`37ed52a0 ucrtbase!exit (_exit)
+Matched: 00007ffa`37ed52a0 ucrtbase!Exit (_Exit)
+Ambiguous symbol error at 'ucrtbase!exit ".echo ===HIT_ucrtbase_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ucrtbase!_exit ".echo ===HIT_ucrtbase__exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Couldn't resolve error at 'ucrtbase!_exit ".echo ===HIT_ucrtbase__exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ucrtbase!quick_exit ".echo ===HIT_ucrtbase_quick_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+ 0 e 00007ffa`3a5f9d00     0001 (0001)  0:**** ntdll!RtlExitUserProcess ".echo ===HIT_RtlExitUserProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+ 1 e 00007ffa`37ef3450     0001 (0001)  0:**** ucrtbase!quick_exit ".echo ===HIT_ucrtbase_quick_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+
+=== chat_runtime TAIL ===
+SESSION_OPEN session_id=sid_00004818_0000000004ADB94F run_id=run_unset pid=18456
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_00004818_0000000004ADB94F run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000001320F6E session=1 pane=copilot_sidebar session_id=sid_00004818_0000000004ADB97E run_id=run_unset
+INPUT_EVENT path=AGENT_MODE_AGENTIC_LOOP AGENT_MODE=ACTIVE source=ctrl_enter session_id=sid_00004818_0000000004ADB97E run_id=run_unset
+AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0
+TOOL_SCHEMA_READY computer_use.find_window=1 computer_use.screenshot=1
+AGENT_MODE=ACTIVE path=AgenticLoopBridge session_registry=1 AGENT_DISPATCH_CLAIM=1
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=qwen3:8b workspace=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures AGENT_MODE=ACTIVE session_registry=1 tool=computer_use.screenshot tool=computer_use.find_window tool=computer_use.inspect tool=computer_use.click tool=computer_use.type tool=computer_use.key tool=computer_use.scroll tool=computer_use.launch
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=746
+SESSION_OPEN session_id=sid_00004818_0000000004ADB99D run_id=run_unset pid=18456
+ui_update request_id=0 rendered=1 complete=0 response_bytes=135 session_id=sid_00004818_0000000004ADB99D run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_00004818_0000000004ADB99D run_id=run_unset
+DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=19260 exe=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\bin\deep2_agentic_loop.exe workdir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures

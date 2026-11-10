@@ -1,0 +1,21 @@
+﻿> User: [dispatch_id=1] MAP7_CHAT_MARKER_20261109-164545 Reply with exactly one word: ok
+
+AI: ok
+
+> User: [dispatch_id=1] CHAT_E2E_20261109-165053 Reply with exactly three words: hello native chat
+
+AI: hello native chat
+
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+
+AI: The CPU-only native build requires the Qt cloud transport for Kilo routes; use a local GGUF or Ollama route.
+
+

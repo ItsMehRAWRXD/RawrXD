@@ -1,0 +1,13 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"write","target":"bug.cpp","observation_bytes":126,"exit_code":-1,"valid":false,"timestamp":1794278016190}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"read","target":"bug.cpp","observation_bytes":226,"exit_code":0,"valid":true,"timestamp":1794278016954}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278017761}}
+{"type":"TOOL_CALL","entry":4,"payload":{"step":4,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278018424}}
+{"type":"TOOL_CALL","entry":5,"payload":{"step":5,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278019084}}
+{"type":"TOOL_CALL","entry":6,"payload":{"step":6,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278019749}}
+{"type":"TOOL_CALL","entry":7,"payload":{"step":7,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278020416}}
+{"type":"TOOL_CALL","entry":8,"payload":{"step":8,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278021136}}
+{"type":"TOOL_CALL","entry":9,"payload":{"step":9,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278021855}}
+{"type":"TOOL_CALL","entry":10,"payload":{"step":10,"tool":"write","target":"bug.cpp","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794278022528}}
+{"type":"VERIFICATION","entry":11,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794278022528}}
+{"type":"LEDGER_END","entry":12,"payload":{"total_entries":12}}

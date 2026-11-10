@@ -1,0 +1,44 @@
+T01_T12_MATRIX
+ASOF_UTC=2026-11-10T15:15:00Z
+OWNER=I_T_P_H_B07B08
+TIP_ISSUE49_IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+DAILY_DRIVER_SHA_PREFIX=9FDEBF09
+DAILY_DRIVER_SEAL=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\DAILY_DRIVER_9FDE_ITEMS_5_10.txt
+PROMOTE=0
+CERTIFIED=0
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+LAW=9FDE_PASS != TIP_ISSUE49_PASS
+LAW=HOST_POWERSHELL_SMOKE != IDE_TERMINAL_PASS
+LAW=NOT_RUN != PASS
+
+CHEAP_GATES=
+  TERMINAL_PING_LOCALHOST=True
+  POWERSHELL_VERSION=5.1.26100.9818
+  POWERSHELL_SMOKE_OUT=TERM_SMOKE_OK EXIT=7
+  PATH=_cheap_gates_20261110-101327.txt
+  CLASS=HOST_ONLY
+
+# ID | REQUIREMENT | STATUS | EVIDENCE_PATHS | NOTE
+T01 | Integrated PowerShell real commands in pane | HISTORICAL | DAILY_DRIVER_9FDE_ITEMS_5_10.txt ITEM_8_POWERSHELL_WM_COPYDATA=PASS; lifecycle_wave4\ITEMS710_PSCD_20261110-072342.txt; WORKER_RECEIPT_ITEMS_7_10.txt | PASS on 9FDE only; tip Issue49 SHA NOT re-proved
+T02 | ANSI/VT rendering no raw escapes/corruption | FAIL | DAILY_DRIVER_9FDE_ITEMS_5_10.txt ITEM_8_EDIT_SETTEXT_MARKER=FAIL; WORKER_RECEIPT_ITEMS_7_10.txt CLASS_E_PS_SETTEXT | SHA-scoped FAIL on 9FDE SetText truncation; tip re-measure NOT_RUN — do not invent tip PASS; FAIL retained as demonstrated class
+T03 | Terminal input/history keyboard behavior | NOT_VERIFIED | — | No tip receipt
+T04 | Process lifecycle no hung/orphaned children | NOT_VERIFIED | DAILY_DRIVER_9FDE_ITEMS_5_10.txt Aborted/hung shells != acceptance | Host cheap smoke != IDE child lifecycle
+T05 | Build Project compile/link/run/report | HISTORICAL | DAILY_DRIVER_9FDE_ITEMS_5_10.txt ITEM_9_SAVE_BUILD_PROBLEMS_CLICK=PASS | 9FDE only; tip Issue49 build path NOT_VERIFIED
+T06 | Build cancellation safe process-tree kill | NOT_VERIFIED | — | No tip receipt
+T07 | Problems parsing file/line/severity | HISTORICAL | DAILY_DRIVER_9FDE_ITEMS_5_10.txt ITEM_9; WORKER_RECEIPT_ITEMS_7_10.txt PROBLEMS_COUNT=2 | 9FDE only
+T08 | Click-to-line same-SHA verification | HISTORICAL | WORKER_RECEIPT_ITEMS_7_10.txt click-to-line path=proven; DAILY_DRIVER map T05/G06 | Final same-SHA on tip NOT_VERIFIED; historical 9FDE only
+T09 | Debugger launch/attach/BP/stack | NOT_VERIFIED | CERTIFICATION_LADDER_MAP.md A14 partial/related | No tip debugger E2E
+T10 | Output-pane streaming no drop/dup | NOT_VERIFIED | HIDDEN_GAP_AUDIT_001 H16 tip006 HISTORICAL lead (stale Build HWND) | Historical H16 CONFIRMED other-SHA; tip NOT_VERIFIED
+T11 | Concurrent terminal/build no deadlock/mix | NOT_VERIFIED | — | No tip stress receipt
+T12 | Exit-code propagation success/failure | NOT_VERIFIED | _cheap_gates_20261110-101327.txt EXIT=7 host-only | Host powershell exit observed; IDE pane propagation NOT_RUN
+
+SCOREBOARD_T=
+  TOTAL=12
+  PASS=0
+  FAIL=1
+  NOT_VERIFIED=7
+  SEALED_STANDALONE=0
+  HISTORICAL=4
+  CERTIFIED=0
+  PROMOTE=0

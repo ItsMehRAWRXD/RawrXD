@@ -1,0 +1,8 @@
+[recovery] RESTORED target=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp transaction=F:\rawrxd\.rawrxd\agent_transactions\txn_63142631475700
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] request_messages=2 request_bytes_pending
+[ollama step 1] response_bytes=17
+[ollama step 1] response=TOOL read bug.cpp
+[ollama step 1] TOOL=read exit=0 valid=1 observation=14
+[ollama step 1] result=file not found
+[ollama step 2] request_messages=4 request_bytes_pending

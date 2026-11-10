@@ -1,0 +1,1 @@
+strata: Windows budgets 28707 of this card's 32624 MiB for this process; free VRAM is counted within that (STRATA_WDDM_BUDGET=0: off)

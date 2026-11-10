@@ -1,0 +1,30 @@
+SESSION_OPEN session_id=sid_00006808_000000000085EA3A run_id=run_unset pid=26632
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000560C08 session=1 pane=copilot_sidebar session_id=sid_00006808_000000000085EA3A run_id=run_unset
+SESSION_OPEN session_id=sid_00006808_000000000085EA3A run_id=run_unset pid=26632
+DISPATCH_ID id=1 bytes=50 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=50 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00006808_000000000085EA3A run_id=run_unset
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=llama3.2:3b session_id=sid_00006808_000000000085EA3A run_id=run_unset
+request_started request_id=1 model=llama3.2:3b session_id=sid_00006808_000000000085EA3A run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+callback request_id=1 complete=1 response_bytes=0 stop=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+RESPONSE_END request_id=1 session=1 bytes=2 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=llama3.2:3b workspace=F:\rawrxd
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=52
+ui_update request_id=0 rendered=1 complete=0 response_bytes=49 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=1 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=44 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=63 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=45 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=52 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=48 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=43 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=123 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+cancel_requested request_id=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset
+cancel_acknowledged request_id=0 active_after=0 worker_joinable=0 session_id=sid_00006808_000000000085EA3A run_id=run_unset

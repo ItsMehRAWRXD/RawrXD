@@ -1,0 +1,32 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build_gate4\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build_gate4\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_gate4\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_gate4/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_gate4\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build_gate4\3rdparty\ggml\src\Release\ggml.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  OllamaBackend.cpp
+  Deep2Backend.cpp
+  BackendRouter.cpp
+  PersistentTaskBacklog.cpp
+  SelfRepairLoop.cpp
+  AgentMode.cpp
+  AgentSession.cpp
+  WorkspaceToolHost.cpp
+  StructuredAction.cpp
+F:\rawrxd\src\agentic\StructuredAction.cpp(69,19): warning C4834: discarding return value of function with [[nodiscard]] attribute [F:\rawrxd\build_gate4\rawrxd_agentic_backend.vcxproj]
+  RawrSwarmEvents.cpp
+  RawrLiveTools.cpp
+  ollama_client.cpp
+  Generating Code...
+  rawrxd_agentic_backend.vcxproj -> F:\rawrxd\build_gate4\Release\rawrxd_agentic_backend.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  rawrxd_cli_v2.cpp

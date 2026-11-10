@@ -1,0 +1,24 @@
+P0_CREATEWINDOW_PUSH_NOTE
+ASOF_UTC=2026-11-10T11:08:34.7783828Z
+BRANCH=orphan/p0-createwindow-348a-20261110
+PUSH_RESULT=PUSHED
+IDE_SHA256=348A963AD3F8D45AE367668C5D262D3ACB2C9C65F4A02F3F7A8579ABF5932C97
+ACCEPTED=1
+LFS_SAFE=evidence_receipts_only_no_ext_binary
+PROMOTE=0
+DETAIL<<
+git : remote: 
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-be280ca3-7ed9-447f-a2bd-f04d7aae2fff.ps1:107 char:14
++   $pushOut = git push -u origin $branch 2>&1 | Out-String
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (remote: :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+remote: Create a pull request for 'orphan/p0-createwindow-348a-20261110' on GitHub by visiting:        
+remote:      https://github.com/ItsMehRAWRXD/RawrXD/pull/new/orphan/p0-createwindow-348a-20261110        
+remote: 
+To https://github.com/ItsMehRAWRXD/RawrXD.git
+ * [new branch]            orphan/p0-createwindow-348a-20261110 -> orphan/p0-createwindow-348a-20261110
+branch 'orphan/p0-createwindow-348a-20261110' set up to track 'origin/orphan/p0-createwindow-348a-20261110'.
+
+>>

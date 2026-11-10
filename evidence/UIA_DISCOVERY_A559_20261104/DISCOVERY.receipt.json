@@ -1,0 +1,13 @@
+﻿{
+    "Gate":  "DISCOVERY",
+    "Result":  "NOT_VERIFIED",
+    "Observed":  "UIA tree captured; gate-specific acceptance not executed",
+    "CandidateSHA256":  "A559704EFE248961BDC696A46F8E49630DE5D6C814C6FC53F102EBB763935CB1",
+    "Executable":  "F:\\rawrxd\\build_repair_candidate\\bin\\RawrXD-Win32IDE-Native.exe",
+    "PID":  5900,
+    "TimestampUtc":  "2026-11-04T12:38:51.1046122Z",
+    "Artifacts":  {
+                      "Screenshot":  "F:\\rawrxd\\evidence\\UIA_DISCOVERY_A559_20261104\\initial-window.png",
+                      "ControlTree":  "controls.json"
+                  }
+}

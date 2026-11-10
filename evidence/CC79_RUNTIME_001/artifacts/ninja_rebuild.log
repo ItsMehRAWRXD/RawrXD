@@ -1,0 +1,49 @@
+[1/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/main_win32.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_GGML=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_ext_host_001\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IC:\VulkanSDK\1.4.357.0\include -IF:\rawrxd\src\production -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /O2 /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\main_win32.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(97): error C2713: Only one form of exception handling permitted per function
+F:\rawrxd\src\win32app\main_win32.cpp(22): error C2712: Cannot use __try in functions that require object unwinding
+[2/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32TerminalManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(996): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(997): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1125): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1119): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1113): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1298): warning C4100: 'wParam': unreferenced parameter
+[4/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[5/6] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1640): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3398): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4765): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4972): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(4919): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5828): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5837): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5857): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5870): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(7171): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(7174): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+ninja: build stopped: subcommand failed.

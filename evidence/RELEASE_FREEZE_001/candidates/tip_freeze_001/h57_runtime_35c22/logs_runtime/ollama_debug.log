@@ -1,0 +1,8 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=7612 request_generation=1 prompt_fnv1a=3B52B1D595AD3ACA model='bigdaddyg-productivity-local:latest' prompt_len=16 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=7612 REQUEST_GENERATION=1 MODEL=bigdaddyg-productivity-local:latest MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=150
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending

@@ -1,0 +1,156 @@
+MOTD_WORKSPACE F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+MOTD_STATUS TURN_START session=deep2-agent-34724-21465289553400 turn=1
+MOTD_SHA256 616d8914644201b84d33f03dc64517f766decc9bce960fca9ce5b41446148f57
+[stage] loading model F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+[stage] ingest done in 11014.5 ms: arch=qwen2 blocks=28 vocab=152064 bos=151643 eos=151645
+[stage] model ships a chat template (2507 bytes):
+{%- if tools %}
+    {{- '<|im_start|>system\n' }}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- messages[0]['content'] }}
+    {%- else %}
+        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}
+    {%- endif %}
+    {{- "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
+    {%- for tool in tools %}
+        {{- "\n" }}
+        {{- tool | tojson }}
+    {%- endfor %}
+    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
+{%- else %}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- '<|im_start|>system\n' + messages[0]['content'] + '<|im_end|>\n' }}
+    {%- else %}
+        {{- '<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n' }}
+    {%- endif %}
+{%- endif %}
+{%- for message in messages %}
+    {%- if (message.role == "user") or (message.role == "system" and not loop.first) or (message.role == "assistant" and not message.tool_calls) %}
+        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}
+    {%- elif message.role == "assistant" %}
+        {{- '<|im_start|>' + message.role }}
+        {%- if message.content %}
+            {{- '\n' + message.content }}
+        {%- endif %}
+        {%- for tool_call in message.tool_calls %}
+            {%- if tool_call.function is defined %}
+                {%- set tool_call = tool_call.function %}
+            {%- endif %}
+            {{- '\n<tool_call>\n{"name": "' }}
+            {{- tool_call.name }}
+            {{- '", "arguments": ' }}
+            {{- tool_call.arguments | tojson }}
+            {{- '}\n</tool_call>' }}
+        {%- endfor %}
+        {{- '<|im_end|>\n' }}
+    {%- elif message.role == "tool" %}
+        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != "tool") %}
+            {{- '<|im_start|>user' }}
+        {%- endif %}
+        {{- '\n<tool_response>\n' }}
+        {{- message.content }}
+        {{- '\n</tool_response>' }}
+        {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}
+            {{- '<|im_end|>\n' }}
+        {%- endif %}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|im_start|>assistant\n' }}
+{%- endif %}
+
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=395 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+[stage] chat markers: template user='User: ' asst='Assistant: ' gen='<|im_start|>assistant\n' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_20098345337500
+[step 1] PREFILL_BATCH_BEGIN pos=0 count=128/310
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] PREFILL_BATCH_END pos=0 count=128 ok=true ms=137119
+[step 1] PREFILL_BATCH_BEGIN pos=128 count=128/310
+[step 1] PREFILL_BATCH_END pos=128 count=128 ok=true ms=135654
+[step 1] PREFILL_BATCH_BEGIN pos=256 count=54/310
+[step 1] PREFILL_BATCH_END pos=256 count=54 ok=true ms=57670
+[step 1] prefill +310/310 tokens (ctx=310 tokens) in 330476 ms (batched)
+[step 1] tok 0/512: TO
+[step 1] SNAP protocol=legacy
+[step 1] SNAP STOP: reason=1 tokens=5 after 5 host tokens
+[step 1] generated 5 tokens / 14 chars in 4958 ms (1.009 tok/s) snap=1
+[step 1] MOTD_STATUS ACKNOWLEDGED sha256=616d8914644201b84d33f03dc64517f766decc9bce960fca9ce5b41446148f57
+[step 1] TOOL read_motd ->  ; observation 539 bytes; SNAP dispatch transition 89.2290 ms
+MOTD_ACK=1
+MOTD_SHA256=616d8914644201b84d33f03dc64517f766decc9bce960fca9ce5b41446148f57
+# PassiveRoleNotRoleplay
+
+MOTD gate for Issue #49 fixture workspace (product agentic; not roleplay).
+
+1. Each new user message: MOTD_ACK=0 until Read of this file.
+2. After successful read: MOTD_ACK=1 for this turn only.
+3. Fail-closed: SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+4. NOT_RUN != PASS. Do not invent PASS. PROMOTE=0 TIP_CLIMB=HOLD.
+5. HANDOFF_TO_AGENT != DONE. Implement, wire, build, run, verify end-to-end.
+
+RESULT_REINJECTION step=1 tool=read_motd target= observation_bytes=539 status=PASS
+[step 2] PREFILL_BATCH_BEGIN pos=314 count=128/548
+[step 2] PREFILL_BATCH_END pos=314 count=128 ok=true ms=136632
+[step 2] PREFILL_BATCH_BEGIN pos=442 count=106/548
+[step 2] PREFILL_BATCH_END pos=442 count=106 ok=true ms=114852
+[step 2] prefill +234/234 tokens (ctx=548 tokens) in 251507 ms (batched)
+[step 2] tok 0/512: TO
+[step 2] SNAP protocol=legacy
+[step 2] SNAP STOP: reason=1 tokens=5 after 5 host tokens
+[step 2] generated 5 tokens / 17 chars in 5021 ms (0.996 tok/s) snap=1
+[step 2] TOOL read -> bug.cpp ; observation 303 bytes; SNAP dispatch transition 100.6082 ms
+/* Issue #49 product-final fixture: intentional compile bug for agent fix loop.
+ * Do not pre-fix - agent (or measured blocker) must own the repair.
+ */
+int undeclared_fn(int a);
+
+int main() {
+  int x = undeclared_fn(1, 2); /* error: too many args + may need declaration fix */
+  return x;
+}
+
+
+RESULT_REINJECTION step=2 tool=read target=bug.cpp observation_bytes=303 status=PASS
+[step 3] PREFILL_BATCH_BEGIN pos=552 count=119/671
+[step 3] PREFILL_BATCH_END pos=552 count=119 ok=true ms=127789
+[step 3] prefill +119/119 tokens (ctx=671 tokens) in 127798 ms (batched)
+[step 3] tok 0/512: TO
+[step 3] SNAP protocol=legacy
+[step 3] tok 10/512: TOOL write bug.cpp @@int main(){return
+[step 3] SNAP STOP: reason=1 tokens=15 after 15 host tokens
+[step 3] generated 15 tokens / 44 chars in 17456 ms (0.859 tok/s) snap=1
+[step 3] TOOL write -> bug.cpp ; observation 24 bytes; SNAP dispatch transition 100.7100 ms
+wrote bug.cpp (21 bytes)
+[step 3] PATCH COMMITTED and verified by host force_local=1
+[kv] committed KV stream DIVERGES FROM the current render (302 of 688 ids common; incremental=685 fresh=688)
+[kv] FIRST DIVERGENCE at position 302: incremental=27 ('<') fresh=71703 ('Assistant')
+[kv] window [298..307): incremental=' not whitespace).\n<|im_start|'
+[kv] window [298..307): fresh     =' not whitespace).\nAssistant: TOOL read_mot'
+[kv] ADMISSION GUARD: committed KV is not a prefix of the current prompt; refusing to decode
+
+=== verification (harness-run, independent of the model) ===
+MODEL_SAID_FINISH      yes
+SOURCE_PATCHED         PASS (content changed from the recorded pre-image)
+BUILD_ARTIFACT         attempted (MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe))
+TEST_EXECUTION         FAIL (bug.cpp exit=0 out=)
+TOOL_RESULT_FEEDBACK   12 steps completed
+KV_PREFIX_CONSISTENT   FAIL
+MODEL_REQUESTED_TOOL   yes (tool_calls=3)
+FINAL_VERDICT          FAIL

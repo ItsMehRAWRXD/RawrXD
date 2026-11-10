@@ -1,0 +1,29 @@
+ISSUE49_P3_KEEPALIVE_SOURCE_FIX
+ASOF_UTC=2026-11-09T23:36:00Z
+ACTIVE_TRACK=ISSUE_49
+TIP_SHA=69A7654A546182F554A7975F81D347EB293C31809E7366831A116A06F170310E
+TIP_SHA_PRE_REBUILD=5A34B393ECF7380576CE718C688DC4006C0E3B01090BB4DCD8B844FB594D1619
+REBUILD_STATUS=DONE
+REMEASURE_STATUS=MEASURED
+P3_FOUR_PANEL=FAIL
+S10=PASS
+PROMOTE=0
+PRODUCT_PASS=0
+CERTIFIED=0
+MATURITY=82_UNCHANGED
+E6CF_RESTORE=HELD
+
+## Source fix (landed + rebuilt into tip EXE)
+1) Win32IDE_Commands.cpp — Help About/Shortcuts non-modal appendToOutput (no MessageBox)
+2) Win32IDE_lifecycle.cpp — Native-Ext onCommand keep-alive for debugger IDs 2100-2108 + 4010
+   (Core TU is NOT in Native-Ext; Core.cpp mirror alone was SOURCE_WIRED!=RUNTIME)
+   Under InSendMessage(): 2103-2108 no-op keep-alive (no nested debug / no PostMessage queue)
+3) Win32IDE_Debugger.cpp — InSendMessage() defers nested PeekMessage/Sleep settle after launchNativeDebuggee
+4) Win32IDE.h — m_nativeDebugSettleTicks
+5) harness four_panel_1_17_measure.ps1 — PostMessage for WM_CLOSE + reopen cmds (avoid SendMessage wedge)
+
+## Law
+SOURCE_WIRED != RUNTIME_REACHED
+NOT_RUN != PASS
+HANDOFF_TO_AGENT != DONE
+NO_INVENTED_P3_PASS=1

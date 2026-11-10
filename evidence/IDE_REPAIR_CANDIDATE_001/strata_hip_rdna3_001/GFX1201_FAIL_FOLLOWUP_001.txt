@@ -1,0 +1,32 @@
+STRATA_GFX1201_FAIL_FOLLOWUP
+ASOF_UTC=2026-11-10T13:12:30Z
+WORKER=bc977acb-dc3b-4f92-8a54-a599a00ef17e
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+OLLAMA_UNTOUCHED=1
+ISSUE49_UNTOUCHED=1
+
+HIP_ENGINE_INSTALLED=1
+ENGINE=0.1.59-windows-x86_64-hip-rdna3
+BUILD_ARCHS=gfx1100,gfx1101,gfx1102,gfx1151
+GFX1201_INFERENCE=FAIL
+EXACT_ERROR=GPU 0 (AMD Radeon AI PRO R9700, gfx1201) is not an architecture this Strata engine was compiled for (gfx1100,gfx1101,gfx1102,gfx1151)
+GFX1101_SELECTABLE=1
+STRATA_API=NOT_RUN
+MODEL_PACK=ABSENT
+
+# Critical compatibility finding (selection != kernels)
+RELEASE_ASSET_GFX1201_CLASS=strata-engine-0.1.59-windows-x86_64-hip-rx9070.tar.gz
+FEED_INSTALLED=hip-rdna3_only
+HIP_RX9070_INSTALLED=0
+ENGINE_MODIFICATION_THIS_TURN=0
+
+NEXT_GATES_ORDERED=
+1) Optionally install official hip-rx9070 engine package for gfx1201 (do not custom-compile first)
+2) Confirm strata-device accepts R9700 as gfx1201 under that engine
+3) Qwen3.6 Q4 --plan then controlled download
+4) Local API + token generation on R9700
+5) Parallel optional: gfx1101 (7800 XT) pack smoke if R9700 path remains blocked
+NEVER=Treat Strata TPS/agent claims as Issue #49 PASS
+NEVER=Replace Ollama fallback

@@ -1,0 +1,37 @@
+{
+  "schema": "DEEP2_KIMI_TYPE14_CONTRACT_001/v1",
+  "shader": "src/deep2/shaders/deep2_qgemv.comp",
+  "type": 14,
+  "qk_k": 256,
+  "q6k_block_bytes": 210,
+  "layout": {
+    "ql_bytes": 128,
+    "qh_bytes": 64,
+    "scales_bytes": 16,
+    "d_f16_bytes": 2,
+    "total": 210,
+    "inter_block_padding": 0,
+    "trailing_block_padding": 0
+  },
+  "activation": {
+    "source": "ArenaFFNAct / post_swiglu capture",
+    "quant": "per-256 Q8_K; invScale=-127/signedMaxAbs; MAGIC=12582912; clamp[-127,127]",
+    "columns_must_be_multiple_of_256": true
+  },
+  "output": {
+    "source": "ArenaDown / gpu_down capture"
+  },
+  "boundary_review": {
+    "unexpected_padding": false,
+    "unexpected_block_boundary_shift": false,
+    "notes": [
+      "blocksPerRow=(cols+255)/256; rowBytes=blocksPerRow*210 contiguous",
+      "Q6_K packed layout matches GGML (no pad between ql/qh/scales/d)",
+      "Lane fill zeros only when cols%256!=0; Kimi I=2048 => cols%256==0",
+      "Scale index mapping half*8+group*2+l//16 matches shader scIndex"
+    ]
+  },
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "TIP_CLIMB": "HOLD"
+}

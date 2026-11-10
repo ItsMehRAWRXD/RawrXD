@@ -1,0 +1,14 @@
+
+Target GPU detected:
+
+gfx1101 (RDNA3)
+	AMD Radeon PRO V710
+	AMD Radeon PRO V710 MxGPU
+	AMD Radeon PRO W7700
+	AMD Radeon RX 7700
+	AMD Radeon RX 7700 XT
+	AMD Radeon RX 7800 XT
+	AMD Radeon RX 7800M
+	AMD Radeon(TM) Graphics
+
+Building for gfx1101... succeeded.

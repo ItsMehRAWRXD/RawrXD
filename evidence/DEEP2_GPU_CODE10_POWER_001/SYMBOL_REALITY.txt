@@ -1,0 +1,10 @@
+﻿TIMESTAMP=2026-10-27T00:52:22-04:00
+SEARCH_GLOBS=*.{hpp,h,cpp,c,asm,inc} under src+tools
+ForwardLayerAsynchronous=ABSENT
+DEEP2_RING_BUFFER_SLOTS=ABSENT
+g_CommandRingBuffer=ABSENT
+ApplyHardwarePowerGate=ABSENT
+GpuDeviceLostReset.hpp=PRESENT both trees
+DEEP2_GPU_DEVICE_RESET=opt-in env (unchanged default off)
+DEEP2_GPU_POWER_KEEPALIVE=NOT_WIRED (reserved name only; no WaitIdle default)
+ApplyHardwarePowerGate_sleep_WaitIdle=REJECTED (symbols absent + destroys async)

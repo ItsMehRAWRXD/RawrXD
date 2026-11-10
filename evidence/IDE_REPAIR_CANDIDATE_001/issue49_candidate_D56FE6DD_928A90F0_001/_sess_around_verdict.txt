@@ -1,0 +1,28 @@
+﻿_bytes=376\r\n[ollama step 3] request_messages=6 request_bytes_pending model=qwen3:8b\r\n[ollama step 3] request exception=[json.exception.type_error.316] invalid UTF-8 byte at index 321: 0x97\r\nOLLAMA_AGENT_MODEL qwen3:8b\r\nOLLAMA_AGENT_READ PASS\r\nOLLAMA_AGENT_EDIT FAIL\r\nOLLAMA_AGENT_BUILD_TEST FAIL\r\nOLLAMA_AGENT_BEFORE_SHA256 af4519c6af7b603d35a55a1ee622adff8a60225a96455e92a52af051b232baa0\r\nOLLAMA_AGENT_AFTER_SHA256 af4519c6af7b603d35a55a1ee622adff8a60225a96455e92a52af051b232baa0\r\nOLLAMA_AGENT_VERDICT FAIL\r\n",
+      "role": "assistant",
+      "timestamp": 1794323125
+    }
+  ],
+  "driver_exit_code": 1,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "FAIL",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "qwen3:8b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794323120,
+  "task_id": "ide-agent-1",
+  "termination_reason": "driver_exception",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\issue49_wave2\\fixtures"
+}

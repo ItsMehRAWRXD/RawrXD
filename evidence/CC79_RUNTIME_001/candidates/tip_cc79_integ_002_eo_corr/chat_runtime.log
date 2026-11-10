@@ -1,0 +1,14 @@
+SESSION_OPEN session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556 pid=35492
+INPUT_EVENT kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+SESSION_OPEN session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556 pid=35492
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=9 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+request_started request_id=1 model=F:\models\gguf\bluehawana__deepseek-v4-flash__iq2_m-ctx128k.gguf session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+callback request_id=1 complete=1 response_bytes=91 stop=0 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+ui_update request_id=1 rendered=1 complete=1 response_bytes=91 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+INPUT_EVENT kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=9 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+request_started request_id=2 model=F:\models\gguf\bluehawana__deepseek-v4-flash__iq2_m-ctx128k.gguf session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+callback request_id=2 complete=1 response_bytes=91 stop=0 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556
+ui_update request_id=2 rendered=1 complete=1 response_bytes=91 session_id=eo_sess_20261109-100556 run_id=eo_run_20261109-100556

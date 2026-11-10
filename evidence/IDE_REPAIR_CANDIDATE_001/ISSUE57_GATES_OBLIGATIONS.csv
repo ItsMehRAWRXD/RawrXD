@@ -1,0 +1,46 @@
+section,id,obligation,local_receipt,example_path_or_note,auto_defect
+A,A01,Resolve GHA runner_id=0; successful Linux+Windows run,no,Issue body cites failed run 40089650136,0
+A,A02,Per-file SHA-256 inventory JSON on audited commit,yes_related,RAWRXD_SOVEREIGN_LINKER_CERT_001/native_object_inventory.json,0
+A,A03,CMake literal-source admission; disposition missing paths,yes_related,RAWRXD_SOVEREIGN_LINKER_CERT_001 and audit inventories,0
+A,A04,Strict no-external-deps scan; Qt/nlohmann quarantine,partial_related,Audits/plans; no sealed A04 PASS,0
+A,A05,Frozen feature to TU/call-site manifest,yes_related,deep2_enterprise_closure_manifest_20261020,0
+A,A06,Rebuild native Win32 IDE clean checkout no-Qt,yes_related,IDE build/RC4 package identity; not clean-clone A06 seal,0
+A,A07,Rebuild rawr.exe and snapshot/agent same checkout,yes_related,Agent loop packaging under readiness trees,0
+A,A08,Launch IDE save/close/reopen compare file SHA-256,no,RC4 G04 editor NOT_RUN,0
+A,A09,Terminal start/output/exit/cancel/cleanup,yes_related,FULL_FEATURE terminal gates; RC4 G05 NOT_RUN,0
+A,A10,Native PowerShell panel lifecycle,yes_related,FULL_FEATURE PowerShell panel; RC4 G05 NOT_RUN,0
+A,A11,Native LSP JSON-RPC handshake/diagnostics/completion,partial_related,Surface audits; no A11 PASS seal,0
+A,A12,GhostText display/accept/cancel + real model adapter,yes_related,F_GHOSTTEXT_* ; F_GUI_GHOSTTEXT_*,0
+A,A13,Native browser render/network isolation/lifecycle,no,No clear A13 PASS receipt,0
+A,A14,Debugger BP/step/watch/vars/stack on real debuggee,partial_related,Debugger UI audits; not A14 product seal,0
+A,A15,IDE-driven agent edit-build-test-snapshot rollback,yes_related,Issue49 on 35C22; RC4 agent repair FAIL,0
+B,B01,Recover slingshot_braid sources + hashes from legacy,no,Issue cites RawrXD-IDE-Final legacy paths,0
+B,B02,SBraid emitter/read-back roundtrip + corrupt reject,no,,0
+B,B03,Review SlingshotGuard concurrency/integrity,no,,0
+B,B04,Replace SlingshotPOC simulated VRAM if promoted,no,Issue notes simulated VRAM,0
+B,B05,Reconcile legacy vs Deep2 residency/loader,no,,0
+B,B06,Compiler/linker source inventory MASM/native/ancestry,yes_related,RAWRXD_MODEL_GENIE_COMPILER_BUILD_001; linker cert inventories,0
+B,B07,Native C frontend compiles portable C,no,,0
+B,B08,Native C++20 frontend templates/exceptions/ABI,no,,0
+B,B09,MASM x86/x64 + COFF vs independent oracle,partial_related,MASM tooling present; oracle E2E not sealed as B09,0
+B,B10,NASM x86/x64 + object oracle,no,Issue notes banner-only NASM script historically,0
+B,B11,Native linker PE32/PE32+ startup/imports/relocs/exports,yes_related,RAWRXD_SOVEREIGN_LINKER_CERT_001; RAWRXD_SOVEREIGN_PE_RUNTIME_001,0
+B,B12,Full compile-link-execute without external compiler,no,,0
+B,B13,ELF/Linux capability vs host fallback + smoke,no,,0
+B,B14,Mach-O/macOS/iOS contracts + macOS runner evidence,no,,0
+B,B15,Android ABI/ELF/APK contracts + device evidence,no,,0
+C,C01,Deterministic reference model/quant baseline archive,yes_related,deep2_*parity*; PARITY_*,0
+C,C02,Corrected ffn_gate_up multi-token GPU path,yes_related,FFN/quant recovery evidence dirs,0
+C,C03,Q4_K/Q5_K/Q6_K/F32 fused host GEMV vs oracles,yes_related,DEEP2_KIMI_GPU_DOWN_GEMV_001; QGEMV recovery; fused verify,0
+C,C04,Compare four fused GEMV paths to pre-patch queue/fence,partial_related,Fused GEMV recovery; draft PR 55 referenced,0
+C,C05,Lane-state restoration success/error/fallback/dual-GPU,yes_related,deep2_multigpu_resilience; DUAL_GPU_FORWARD_*,0
+C,C06,R9700 single-GPU TPS 32/128/256 + control,yes_related,S07_*; related≠PASS,0
+C,C07,RX7800 XT single-GPU TPS 32/128/256 + control,yes_related,Historical dual/device runs,0
+C,C08,Dual-GPU full-model TPS; no-fallback counters,yes_related,DUAL_GPU_FORWARD_*,0
+C,C09,Attribute GPU0 fences / GPU1 overlap + PCIe receipts,partial_related,S07/GPU timing traces,0
+C,C10,GGUF shard/index/quant/arch on supported matrix,yes_related,GGUF lifecycle/taxonomy evidence,0
+C,C11,Nemotron SSM Q4_K NaN + residual parity,yes_related,NEMOTRON*; RAWRXD_NEMOTRON_*,0
+C,C12,Real-model 150+ single-stream decode TPS if attainable,no,No sealed 150+ product PASS; no synthetic TPS,0
+C,C13,Identical A/B conditions for performance compares,partial_related,Many AB receipts; obligation remains,0
+C,C14,25x20=500 cell feature matrix with real evidence,yes_related,FINISH_25_* matrices; not prefilled cert,0
+C,C15,Signed/reproducible packaging + release acceptance,partial_related,RC4 portable integrity PASS; full C15 NOT_ESTABLISHED,0

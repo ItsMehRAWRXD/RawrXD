@@ -1,0 +1,15 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794285188385}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"write","target":"bug.cpp","observation_bytes":72,"exit_code":1,"valid":true,"timestamp":1794285195893}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"write","target":"bug.cpp","observation_bytes":72,"exit_code":1,"valid":true,"timestamp":1794285203558}}
+{"type":"TOOL_CALL","entry":4,"payload":{"step":4,"tool":"write","target":"bug.cpp","observation_bytes":121,"exit_code":1,"valid":true,"timestamp":1794285215624}}
+{"type":"TOOL_CALL","entry":5,"payload":{"step":5,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794285222931}}
+{"type":"RETRY","entry":6,"payload":{"attempt":6,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794285229684}}
+{"type":"TOOL_CALL","entry":7,"payload":{"step":7,"tool":"build","target":"","observation_bytes":209,"exit_code":2,"valid":true,"timestamp":1794285241464}}
+{"type":"RETRY","entry":8,"payload":{"attempt":8,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794285248195}}
+{"type":"RETRY","entry":9,"payload":{"attempt":9,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794285257806}}
+{"type":"TOOL_CALL","entry":10,"payload":{"step":10,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794285264928}}
+{"type":"RETRY","entry":11,"payload":{"attempt":11,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794285269514}}
+{"type":"RETRY","entry":12,"payload":{"attempt":12,"reason":"invalid_tool_format","can_continue":false,"timestamp":1794285279238}}
+{"type":"VERIFICATION","entry":13,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794285279238}}
+{"type":"LEDGER_END","entry":14,"payload":{"total_entries":14}}

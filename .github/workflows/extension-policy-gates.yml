@@ -1,0 +1,64 @@
+name: Extension policy gates
+on:
+  push:
+    paths:
+      - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_bridge_failclosed.cpp'
+      - 'tests/extension_extract_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_extract_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - 'tests/extension_policy/CMakeLists.txt'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '.github/workflows/extension-policy-gates.yml'
+  pull_request:
+    paths:
+      - 'tests/extension_policy_gates.cpp'
+      - 'tests/extension_bridge_failclosed.cpp'
+      - 'tests/extension_extract_policy_gates.cpp'
+      - '~dev/rawrxd/src/core/extension_extract_policy.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host.cpp'
+      - '~dev/rawrxd/src/core/js_extension_host_production.cpp'
+      - 'tests/extension_policy/CMakeLists.txt'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_signature_policy.hpp'
+      - '.github/workflows/extension-policy-gates.yml'
+  workflow_dispatch:
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile with GCC
+        run: |
+          mkdir -p build/policy
+          g++ -std=c++17 -Wall -Wextra -pedantic -I~dev/rawrxd/src/core tests/extension_policy_gates.cpp -o build/policy/extension_policy_gates
+      - name: Run policy gates
+        run: ./build/policy/extension_policy_gates
+      - name: CMake configure and CTest
+        run: |
+          cmake -S tests/extension_policy -B build/extension-policy
+          cmake --build build/extension-policy
+          ctest --test-dir build/extension-policy --output-on-failure
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile with MSVC
+        shell: cmd
+        run: |
+          if not exist build\policy mkdir build\policy
+          cl /nologo /std:c++17 /EHsc /W4 /I"~dev/rawrxd/src/core" tests\extension_policy_gates.cpp /Fe:build\policy\extension_policy_gates.exe
+      - name: Run policy gates
+        shell: cmd
+        run: build\policy\extension_policy_gates.exe
+      - name: CMake configure and CTest
+        shell: pwsh
+        run: |
+          cmake -S tests/extension_policy -B build/extension-policy
+          cmake --build build/extension-policy --config Release
+          ctest --test-dir build/extension-policy -C Release --output-on-failure

@@ -1,0 +1,214 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-24820-149373011305600 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[stage] ingest done in 23252.3 ms: arch=llama blocks=28 vocab=128256 bos=128000 eos=128009
+[stage] model ships a chat template (3827 bytes):
+{{- bos_token }}
+{%- if custom_tools is defined %}
+    {%- set tools = custom_tools %}
+{%- endif %}
+{%- if not tools_in_user_message is defined %}
+    {%- set tools_in_user_message = true %}
+{%- endif %}
+{%- if not date_string is defined %}
+    {%- if strftime_now is defined %}
+        {%- set date_string = strftime_now("%d %b %Y") %}
+    {%- else %}
+        {%- set date_string = "26 Jul 2024" %}
+    {%- endif %}
+{%- endif %}
+{%- if not tools is defined %}
+    {%- set tools = none %}
+{%- endif %}
+
+{#- This block extracts the system message, so we can slot it into the right place. #}
+{%- if messages[0]['role'] == 'system' %}
+    {%- set system_message = messages[0]['content']|trim %}
+    {%- set messages = messages[1:] %}
+{%- else %}
+    {%- set system_message = "" %}
+{%- endif %}
+
+{#- System message #}
+{{- "<|start_header_id|>system<|end_header_id|>\n\n" }}
+{%- if tools is not none %}
+    {{- "Environment: ipython\n" }}
+{%- endif %}
+{{- "Cutting Knowledge Date: December 2023\n" }}
+{{- "Today Date: " + date_string + "\n\n" }}
+{%- if tools is not none and not tools_in_user_message %}
+    {{- "You have access to the following functions. To call a function, please respond with JSON for a function call." }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+{%- endif %}
+{{- system_message }}
+{{- "<|eot_id|>" }}
+
+{#- Custom tools are passed in a user message with some extra guidance #}
+{%- if tools_in_user_message and not tools is none %}
+    {#- Extract the first user message so we can plug it in here #}
+    {%- if messages | length != 0 %}
+        {%- set first_user_message = messages[0]['content']|trim %}
+        {%- set messages = messages[1:] %}
+    {%- else %}
+        {{- raise_exception("Cannot put tools in the first user message when there's no first user message!") }}
+{%- endif %}
+    {{- '<|start_header_id|>user<|end_header_id|>\n\n' -}}
+    {{- "Given the following functions, please respond with a JSON for a function call " }}
+    {{- "with its proper arguments that best answers the given prompt.\n\n" }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+    {{- first_user_message + "<|eot_id|>"}}
+{%- endif %}
+
+{%- for message in messages %}
+    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}
+        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' }}
+    {%- elif 'tool_calls' in message %}
+        {%- if not message.tool_calls|length == 1 %}
+            {{- raise_exception("This model only supports single tool-calls at once!") }}
+        {%- endif %}
+        {%- set tool_call = message.tool_calls[0].function %}
+        {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' -}}
+        {{- '{"name": "' + tool_call.name + '", ' }}
+        {{- '"parameters": ' }}
+        {{- tool_call.arguments | tojson }}
+        {{- "}" }}
+        {{- "<|eot_id|>" }}
+    {%- elif message.role == "tool" or message.role == "ipython" %}
+        {{- "<|start_header_id|>ipython<|end_header_id|>\n\n" }}
+        {%- if message.content is mapping or message.content is iterable %}
+            {{- message.content | tojson }}
+        {%- else %}
+            {{- message.content }}
+        {%- endif %}
+        {{- "<|eot_id|>" }}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' }}
+{%- endif %}
+
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=395 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\agent_e2e_fixture
+[flight] Executor recorder started: F:\rawrxd\agent_e2e_fixture\deep2_flight.jsonl
+[stage] chat markers: template user='<|start_header_id|>user<|end_header_id|>
+
+' asst='<|start_header_id|>assistant<|end_header_id|>
+
+' gen='<|start_header_id|>assistant<|end_header_id|>
+
+' bos_in_template=1
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=calc.cpp transaction=F:\rawrxd\agent_e2e_fixture\.rawrxd\agent_transactions\txn_149138177897700
+[ESP] seq=1 req=1 agent=0 model_load        F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf value=0
+[ESP] seq=2 req=1 agent=0 tokenizer_check   PASS value=0
+[ESP] seq=3 req=1 agent=0 prefill_start     tokens=0 ctx=0 value=0
+[ESP] seq=4 req=1 agent=0 prefill_start     tokens=220 ctx=0 value=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +220 tokens (ctx=220 tokens) in 119543 ms (batched)
+[ESP] seq=5 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":220,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":119544.915,"decode_ms":0.000,"task_ms":119544.920,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=6 req=1 agent=0 prefill_end       elapsed_ms=119544.967100 value=119544
+[ESP] seq=7 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":220,"context":220,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":1.840,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":119544.967,"decode_ms":0.000,"task_ms":119545.035,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=9 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":1,"prefill_tokens":220,"context":220,"rolling_tps":1508.523,"decode_tps":1508.523,"prefill_tps":1.840,"task_tps":0.008,"ttft_ms":119545.720,"prefill_ms":119544.967,"decode_ms":0.663,"task_ms":119545.724,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 0/96: TO
+[ESP] seq=15 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":1.610,"decode_tps":1.610,"prefill_tps":1.840,"task_tps":0.049,"ttft_ms":119545.720,"prefill_ms":119544.967,"decode_ms":3726.981,"task_ms":123272.042,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] SNAP STOP: reason=5 tokens=7 after 7 host tokens
+[ESP] seq=16 req=1 agent=0 snap_stop         invalid length value=0
+[step 1] generated 7 tokens / 19 chars in 4452 ms (1.572 tok/s) snap=5
+[ESP] seq=17 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":1.348,"decode_tps":1.348,"prefill_tps":1.840,"task_tps":0.048,"ttft_ms":119545.720,"prefill_ms":119544.967,"decode_ms":4451.771,"task_ms":123996.833,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=19 text="TOOL read  calc.cpp"
+[SNAP OUT META] eos_id=128009
+[SNAP OUT TOKENS] n=6 ids=5319,1971,1373,220,10241,7356
+[ESP] seq=18 req=1 agent=0 tool_start        read calc.cpp value=0
+[step 1] TOOL read -> calc.cpp ; observation 76 bytes; SNAP dispatch transition 1.3254 ms
+#include <cstdio>
+
+int main() {
+    std::printf("FAIL\\n");
+    return 1;
+}
+
+[ESP] seq=19 req=1 agent=0 tool_result       read calc.cpp bytes=76 value=0
+[ESP] seq=20 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"tool","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":0.000,"decode_tps":1.347,"prefill_tps":1.840,"task_tps":0.048,"ttft_ms":119545.720,"prefill_ms":119544.967,"decode_ms":4453.119,"task_ms":123998.452,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=21 req=1 agent=0 prefill_start     tokens=74 ctx=226 value=0
+[step 2] prefill +74 tokens (ctx=300 tokens) in 42777 ms (batched)
+[ESP] seq=22 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":6,"prefill_tokens":220,"context":300,"rolling_tps":0.000,"decode_tps":1.347,"prefill_tps":1.355,"task_tps":0.036,"ttft_ms":119545.720,"prefill_ms":162321.632,"decode_ms":4453.119,"task_ms":166778.054,"gpu_dispatches":60683,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=23 req=1 agent=0 prefill_end       elapsed_ms=162321.679500 value=162321
+[ESP] seq=24 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":6,"prefill_tokens":294,"context":300,"rolling_tps":0.000,"decode_tps":1.347,"prefill_tps":1.811,"task_tps":0.036,"ttft_ms":119545.720,"prefill_ms":162321.680,"decode_ms":4453.119,"task_ms":166778.195,"gpu_dispatches":60683,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=26 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":7,"prefill_tokens":294,"context":300,"rolling_tps":1765.848,"decode_tps":1.572,"prefill_tps":1.811,"task_tps":0.042,"ttft_ms":119545.720,"prefill_ms":162321.680,"decode_ms":4453.686,"task_ms":166778.790,"gpu_dispatches":60683,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 2] tok 0/96: TO
+[ESP] seq=32 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":12,"prefill_tokens":294,"context":300,"rolling_tps":1.635,"decode_tps":1.477,"prefill_tps":1.811,"task_tps":0.070,"ttft_ms":119545.720,"prefill_ms":162321.680,"decode_ms":8122.035,"task_ms":170447.140,"gpu_dispatches":61669,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=38 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":17,"prefill_tokens":294,"context":300,"rolling_tps":1.400,"decode_tps":1.400,"prefill_tps":1.811,"task_tps":0.097,"ttft_ms":119545.720,"prefill_ms":162321.680,"decode_ms":12138.801,"task_ms":174463.905,"gpu_dispatches":62654,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 2] tok 10/96: TOOL write  calc.cpp  @@  #include
+[step 2] SNAP STOP: reason=5 tokens=15 after 15 host tokens
+[ESP] seq=42 req=1 agent=0 snap_stop         invalid length value=0
+[step 2] generated 15 tokens / 43 chars in 10828 ms (1.385 tok/s) snap=5
+[ESP] seq=43 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":20,"prefill_tokens":294,"context":300,"rolling_tps":1.200,"decode_tps":1.309,"prefill_tps":1.811,"task_tps":0.113,"ttft_ms":119545.720,"prefill_ms":162321.680,"decode_ms":15280.977,"task_ms":177606.082,"gpu_dispatches":63245,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=43 text="TOOL write  calc.cpp  @@  #include  <cstdio"
+[SNAP OUT META] eos_id=128009
+[SNAP OUT TOKENS] n=14 ids=5319,1971,3350,220,10241,7356,220,23107,220,674,1012,220,366,38312
+[step 2] INVALID OUTPUT (snap reason=5 invalid length); no complete command
+[SNAP REJECT RAW] bytes=43 text="TOOL write  calc.cpp  @@  #include  <cstdio"
+[SNAP REJECT META] eos_id=128009
+[SNAP REJECT TOKENS] n=14 ids=5319,1971,3350,220,10241,7356,220,23107,220,674,1012,220,366,38312
+[ESP] seq=44 req=1 agent=0 error             model_output_invalid value=0
+[ESP] seq=45 req=1 agent=0 prefill_start     tokens=66 ctx=314 value=0
+[step 3] prefill +66 tokens (ctx=380 tokens) in 40442 ms (batched)
+[ESP] seq=46 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":20,"prefill_tokens":294,"context":380,"rolling_tps":0.000,"decode_tps":1.308,"prefill_tps":1.450,"task_tps":0.092,"ttft_ms":119545.720,"prefill_ms":202763.265,"decode_ms":15285.626,"task_ms":218052.315,"gpu_dispatches":76882,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=47 req=1 agent=0 prefill_end       elapsed_ms=202763.313400 value=202763
+[ESP] seq=48 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":20,"prefill_tokens":360,"context":380,"rolling_tps":0.000,"decode_tps":1.308,"prefill_tps":1.775,"task_tps":0.092,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":15285.626,"task_ms":218052.426,"gpu_dispatches":76882,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=50 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":21,"prefill_tokens":360,"context":380,"rolling_tps":1199.472,"decode_tps":1.374,"prefill_tps":1.775,"task_tps":0.096,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":15286.459,"task_ms":218053.275,"gpu_dispatches":76882,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 3] tok 0/96: TO
+[ESP] seq=56 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":26,"prefill_tokens":360,"context":380,"rolling_tps":1.492,"decode_tps":1.347,"prefill_tps":1.775,"task_tps":0.117,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":19307.668,"task_ms":222074.484,"gpu_dispatches":77868,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=62 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":31,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.324,"prefill_tps":1.775,"task_tps":0.137,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":23411.134,"task_ms":226177.949,"gpu_dispatches":78853,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 3] tok 10/96: TOOL write  calc.cpp  @@  #include
+[ESP] seq=68 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":36,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.311,"prefill_tps":1.775,"task_tps":0.156,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":27458.676,"task_ms":230225.492,"gpu_dispatches":79838,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=74 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":41,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.305,"prefill_tps":1.775,"task_tps":0.175,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":31406.241,"task_ms":234173.056,"gpu_dispatches":80823,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 3] tok 20/96: TOOL write  calc.cpp  @@  #include  <cstdio|<|eot_id|
+[ESP] seq=80 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":46,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.294,"prefill_tps":1.775,"task_tps":0.193,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":35545.640,"task_ms":238312.456,"gpu_dispatches":81808,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=86 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":51,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.289,"prefill_tps":1.775,"task_tps":0.210,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":39575.216,"task_ms":242342.032,"gpu_dispatches":82793,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 3] tok 30/96: TOOL write  calc.cpp  @@  #include  <cstdio|<|eot_id|><|start_header_id|>assistant<
+[ESP] seq=92 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":56,"prefill_tokens":360,"context":380,"rolling_tps":1.400,"decode_tps":1.287,"prefill_tps":1.775,"task_tps":0.227,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":43526.426,"task_ms":246293.242,"gpu_dispatches":83778,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 3] SNAP STOP: reason=5 tokens=37 after 37 host tokens
+[step 3] generated 37 tokens / 98 chars in 29208 ms (1.267 tok/s) snap=5
+[ESP] seq=93 req=1 agent=0 snap_stop         invalid length value=0
+[SNAP OUT RAW] bytes=98 text="[ESP] seq=94 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":56,"prefill_tokens":360,"context":380,"rolling_tps":1.200,"decode_tps":1.259,"prefill_tps":1.775,"task_tps":0.226,"ttft_ms":119545.720,"prefill_ms":202763.313,"decode_ms":44493.685,"task_ms":247260.501,"gpu_dispatches":83778,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+TOOL write  calc.cpp  @@  #include  <cstdio|<|eot_id|><|start_header_id|>assistant<|end_header_id|"
+[SNAP OUT META] eos_id=128009
+[SNAP OUT TOKENS] n=36 ids=5319,1971,3350,220,10241,7356,220,23107,220,674,1012,220,366,38312,91,27,91,68,354,851,91,29,27,91,2527,8932,851,91,29,78191,27,91,408,8932,851,91
+[step 3] INVALID OUTPUT (snap reason=5 invalid length); no complete command
+[SNAP REJECT RAW] bytes=98 text="TOOL write  calc.cpp  @@  #include  <cstdio|<|eot_id|><|start_header_id|>assistant<|end_header_id|"
+[SNAP REJECT META] eos_id=128009
+[SNAP REJECT TOKENS] n=36 ids=5319,1971,3350,220,10241,7356,220,23107,220,674,1012,220,366,38312,91,27,91,68,354,851,91,29,27,91,2527,8932,851,91,29,78191,27,91,408,8932,851,91
+[ESP] seq=95 req=1 agent=0 error             model_output_invalid value=0
+[kv] committed KV stream DIVERGES FROM the current render (223 of 481 ids common; incremental=416 fresh=481)
+[kv] FIRST DIVERGENCE at position 223: incremental=220 (' ') fresh=256 ('  ')
+[kv] window [219..228): incremental='>\n\nTOOL read  calc.cpp<|'
+[kv] window [219..228): fresh     ='>\n\nTOOL read  calc.cpp<|'
+[kv] ADMISSION GUARD: committed KV is not a prefix of the current prompt; refusing to decode
+[verification] running build command: cl /nologo /EHsc calc.cpp /Fe:calc.exe

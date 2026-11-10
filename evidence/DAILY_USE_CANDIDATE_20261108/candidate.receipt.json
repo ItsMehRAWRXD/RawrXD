@@ -1,0 +1,12 @@
+{
+  "candidate_path": "F:\\rawrxd\\build_daily_use_candidate\\bin\\RawrXD-Win32IDE-Native.exe",
+  "candidate_sha256": "D96A25D1FFFFF3930C0D39ED5C31CC39A6C76C21F25C428297267191DA3398DD",
+  "candidate_size": 1335296,
+  "source_head": "8fd2ffd154ce1f5022eaaebb0597fceb0dac0aaf",
+  "startup_smoke": "PASS_PROCESS_ALIVE_5S",
+  "historical_b544_recorded": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+  "historical_b544_path_current_sha256": "41C20EFEBD687D28662C6638D1BF067BE031112B60C21786FAFE58E2BC1B965C",
+  "authority": "NEW_DEVELOPMENT_CANDIDATE",
+  "promotion": 0,
+  "certified": 0
+}

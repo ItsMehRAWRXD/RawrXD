@@ -1,0 +1,15 @@
+SESSION_OPEN session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623 pid=25624
+cancel_requested request_id=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+cancel_acknowledged request_id=0 active_after=0 worker_joinable=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=qwen2.5-coder:1.5b-base workspace=F:\rawrxd
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=173
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623
+stale_ui_update request_id=0 rendered=0 active=0 session_id=integ_session_loop_20261109-141623 run_id=integ_session_loop_run_20261109-141623

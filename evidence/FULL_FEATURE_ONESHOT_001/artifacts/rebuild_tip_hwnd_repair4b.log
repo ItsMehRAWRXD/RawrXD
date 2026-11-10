@@ -1,0 +1,221 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+AFTER_VCVARS
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\ninja.exe
+C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Links\ninja.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+BEFORE_NINJA
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_PowerShellPanel.cpp.obj older than most recent input F:/rawrxd/src/win32app/Win32IDE_PowerShellPanel.cpp (8159310596829439 vs 8159318775127871)
+[1/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(442): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(597): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32TerminalManager.cpp.obj older than most recent input F:/rawrxd/src/win32app/Win32TerminalManager.cpp (8159281960859115 vs 8159318231373585)
+[2/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32TerminalManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_MenuHandlers.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310540520322 vs 8159318162871180)
+[3/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/main_win32.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310528742594 vs 8159318162871180)
+[4/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(109): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(109): warning C4100: 'hPrevInstance': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Logger.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310596869002 vs 8159318162871180)
+[5/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_PowerShell.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310544006756 vs 8159318162871180)
+[6/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_VSCodeUI.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310547464224 vs 8159318162871180)
+[7/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(860): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(983): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(984): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1112): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1106): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1100): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1285): warning C4100: 'wParam': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Sidebar.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310530814550 vs 8159318162871180)
+[8/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(381): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1183): warning C4100: 'wholeWord': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_FileOps.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310557169646 vs 8159318162871180)
+[9/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(365): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(368): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1224): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1170): note: see declaration of 'restored'
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE.cpp.obj doesn't exist
+[10/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1604): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3362): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4722): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4929): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(4876): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5785): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5794): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5814): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5827): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(7128): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(7131): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Debugger.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310649871759 vs 8159318162871180)
+[11/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(115): warning C4189: 'btnStop': local variable is initialized but not referenced
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Commands.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310613061172 vs 8159318162871180)
+[12/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_AgenticBridge.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310594856785 vs 8159318162871180)
+[13/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(35): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(289): warning C4100: 'timeoutMs': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Deep2Bridge.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310672784019 vs 8159318162871180)
+[14/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'tokenId': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(408): warning C4100: 'maxTokens': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_AgenticLoopBridge.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310673114595 vs 8159318162871180)
+[15/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(646): warning C4100: 'pid': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/modules/quickjs_extension_host.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310638133246 vs 8159318162871180)
+[16/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\quickjs_extension_host.cpp(69): warning C4100: 'manifest': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_AgentCommands.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310689579888 vs 8159318162871180)
+[17/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(990): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(988): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1318): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1351): warning C4100: 'wParam': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_lifecycle.cpp.obj doesn't exist
+[18/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_ExtHostWire.cpp.obj older than most recent input F:/rawrxd/src/win32app/Win32IDE_ExtHostWire.cpp (8159215083414797 vs 8159316033153425)
+[19/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ExtHostWire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_GhostTextIntegration.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310619179553 vs 8159318162871180)
+[20/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+ninja explain: output CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/modules/vscode_extension_api.cpp.obj older than most recent input ../src/win32app/Win32TerminalManager.h (8159310676265438 vs 8159318162871180)
+[21/22] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(212): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(239): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(265): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(291): warning C4100: 'placeHolder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(328): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(327): warning C4100: 'canSelectFolders': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(326): warning C4100: 'canSelectMany': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'title': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(468): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'maxTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'outTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(506): warning C4100: 'options': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'maxDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'outDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'excludePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'includePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'maxDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'outDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(758): warning C4100: 'uri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(975): warning C4100: 'folder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'maxBps': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'outBreakpoints': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1039): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'maxTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'outTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1076): warning C4100: 'rootUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'maxExts': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'outManifests': unreferenced parameter
+NINJA_RC=-1

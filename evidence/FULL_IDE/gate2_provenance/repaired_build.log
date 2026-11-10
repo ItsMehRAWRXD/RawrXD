@@ -1,0 +1,35 @@
+CMake is re-running because F:/rawrxd/evidence/FULL_IDE/gate2_provenance/build/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt'
+  is newer than 'F:/rawrxd/evidence/FULL_IDE/gate2_provenance/build/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: F:/rawrxd/evidence/FULL_IDE/gate2_provenance/build
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt
+  QuantParityRegistry.cpp
+  gate2_admission_probe.vcxproj -> F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\Release\gate2_admission_probe.exe
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Building Custom Rule F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt
+  ModelGenomeCapabilitiesTests.cpp
+  ModelGenomeReader.cpp
+  QuantParityRegistry.cpp
+  Generating Code...
+  modelgenome_capabilities_tests.vcxproj -> F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\Release\modelgenome_capabilities_tests.exe
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Building Custom Rule F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt
+  quant_parity_cert.cpp
+  QuantParityRegistry.cpp
+  Q8KParity.cpp
+  Generating Code...
+  quant_parity_cert.vcxproj -> F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\bin-msvc\Release\quant_parity_cert.exe
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Building Custom Rule F:/rawrxd/evidence/FULL_IDE/gate2_provenance/CMakeLists.txt
+  test_kquant_dot_parity.cpp
+  kquant_dot_parity.vcxproj -> F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\bin-msvc\Release\kquant_dot_parity.exe

@@ -1,0 +1,54 @@
+ASOF_UTC=2026-11-10T12:23:43.0812607Z
+GATE=ITEMS_7_8_PSCD_MEASURE
+IDE_SHA256=9FDEBF0947AC855619E2CC0A44A40AD6590C4BD680D6FFC4B46D4EF54A266D85
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+PID=25632 MAIN=5771594 ALIVE=True
+DOCK=1260x250 PX=30,30,30
+COPYDATA_SEND=True
+PS_OUT_LEN=417
+ITEM8_PS_MARKER_FOUND=True
+PS_TAIL=ands: |  - Enter: Execute command |  - Up/Down: Navigate history |  - Ctrl+L: Clear console |  - Ctrl+`: Toggle panel | |PS> Write-Output 'RAWRXD_ITEM8_20261110-072342' |RAWRXD_ITEM8_20261110-072342 |
+COPYDATA_SLEEP=True
+ITEM7_CANCEL_ALIVE=True
+ITEM7_RESTART_MARKER_FOUND=True
+ITEM7_BOUNDARY=True
+---PS_TRACE---
+35168 [PS_TRACE] WM_COPYDATA cmd_len=43 cmd='Write-Output 'RAWRXD_ITEM8_20261110-072342''
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=43 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=43 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+35168 [PS_TRACE] WM_COPYDATA cmd_len=23 cmd='Start-Sleep -Seconds 45'
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=23 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=23 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+35168 [PS_TRACE] WM_COPYDATA cmd_len=44 cmd='Write-Output 'RAWRXD_ITEM7B_20261110-072342''
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=44 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() revive session
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=44 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+CLOSE_EXIT=0
+ITEM8_ACCEPTED=1
+ITEM7_ACCEPTED=1
+RECEIPT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\ITEMS710_PSCD_20261110-072342.txt

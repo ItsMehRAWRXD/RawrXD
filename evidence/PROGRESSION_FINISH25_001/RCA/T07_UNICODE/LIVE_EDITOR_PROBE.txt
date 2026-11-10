@@ -1,0 +1,26 @@
+PID=38128 MAIN=0x220B92
+EDIT_CAND id=6020 hwnd=0x9308B2 class=Edit vis=False len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=6026 hwnd=0xA009B4 class=Edit vis=False len=11 has4F60=False text=*.ps1,*.cpp
+  cps=002A 002E 0070 0073 0031 002C 002A 002E 0063 0070 0070 
+EDIT_CAND id=6027 hwnd=0x52091C class=Edit vis=False len=16 has4F60=False text=node_modules,bin
+  cps=006E 006F 0064 0065 005F 006D 006F 0064 0075 006C 0065 0073 002C 0062 0069 006E 
+EDIT_CAND id=6035 hwnd=0x7207B0 class=Edit vis=False len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=6050 hwnd=0x7009CE class=Edit vis=False len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=1203 hwnd=0x600ABE class=Edit vis=True len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=1202 hwnd=0x370912 class=Edit vis=True len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=5001 hwnd=0x490AE0 class=RichEdit20A vis=True len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=5002 hwnd=0x410AE2 class=Edit vis=True len=0 has4F60=False text=
+  cps=
+EDIT_CAND id=1001 hwnd=0x510AEA class=RICHEDIT50W vis=True len=0 has4F60=False text=
+  cps=
+CHOSEN_EDITOR=0x510AEA
+AFTER_CLI has4F60=False has003F=False text=
+AFTER_CLI cps=
+AFTER_SETW has4F60=False text=䕓坔㼭ⴿ䭏 cps=4553 5754 3F2D 2D3F 4B4F 
+AFTER_REPL has4F60=False text=䕓坔㼭ⴿ䭏 cps=4553 5754 3F2D 2D3F 4B4F 

@@ -1,0 +1,830 @@
+{
+    "ROOT":  "0x130A92",
+    "PID":  7700,
+    "Children":  [
+                     {
+                         "HWND":  "0x80B40",
+                         "Class":  "ToolbarWindow32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,261,1478,287",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x280BEE",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "638,263,1058,285",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x68096E",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1424,263,1472,285",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0xE0B34",
+                         "Class":  "SysTabControl32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,301,1478,327",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x230B44",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,327,266,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0xD0A64",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,327,266,375",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x30C42",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,375,266,423",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B36",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,423,266,471",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x34091A",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,471,266,519",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x260978",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,519,266,567",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x80A5C",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,630,266,678",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A60",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,678,266,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A6C",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "266,327,516,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0xB0A74",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "267,328,515,725",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x2B08E6",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "267,328,515,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A56",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,331,317,355",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x80A4E",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "317,331,362,355",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0xC09E2",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "372,331,417,355",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70A4A",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "432,331,477,355",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x1C0A46",
+                         "Class":  "SysTreeView32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "267,358,515,725",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A80",
+                         "Class":  "Edit",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,338,512,363",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A84",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,368,512,448",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A88",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "278,374,348,394",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A8C",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "353,374,423,394",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A8E",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "428,374,498,394",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A90",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "278,399,328,419",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AAC",
+                         "Class":  "Edit",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "333,397,493,417",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70AC4",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "278,424,328,444",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AC6",
+                         "Class":  "Edit",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "333,422,493,442",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AD2",
+                         "Class":  "ListBox",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,453,512,921",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AD6",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "267,328,517,363",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AEC",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,333,322,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B0A",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "322,333,372,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B10",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "382,333,432,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B14",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "442,333,492,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B16",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,368,332,388",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B1A",
+                         "Class":  "Edit",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,368,512,428",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B1C",
+                         "Class":  "SysListView32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,433,512,923",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B1E",
+                         "Class":  "SysHeader32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "274,435,274,435",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B20",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "267,328,517,363",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B22",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,333,322,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B28",
+                         "Class":  "Button",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "327,333,377,358",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B2C",
+                         "Class":  "ComboBox",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,368,512,392",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B38",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,473,372,493",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B3C",
+                         "Class":  "SysListView32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,473,512,923",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x90B42",
+                         "Class":  "SysHeader32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "274,475,274,475",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70B46",
+                         "Class":  "Edit",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,338,512,363",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70B48",
+                         "Class":  "SysListView32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "272,368,512,923",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x90B52",
+                         "Class":  "SysHeader32",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "274,370,274,370",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A94",
+                         "Class":  "msctls_statusbar32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,976,1478,998",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B0E",
+                         "Class":  "SysTabControl32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,726,1328,750",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B0C",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1333,728,1473,752",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B08",
+                         "Class":  "RichEdit20A",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,750,1478,976",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B02",
+                         "Class":  "RichEdit20A",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,750,1478,976",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A5A",
+                         "Class":  "RichEdit20A",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,750,1478,976",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B06",
+                         "Class":  "RichEdit20A",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,750,1478,976",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B12",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,722,1478,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B04",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1118,327,1478,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B00",
+                         "Class":  "SysTabControl32",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,332,1259,359",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AFC",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1263,332,1321,359",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AFA",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1325,332,1349,359",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AF8",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  false,
+                         "Rect":  "1353,332,1411,359",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AFE",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  false,
+                         "Rect":  "1415,332,1479,359",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AF6",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,363,1475,385",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AEA",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,364,1210,382",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AF4",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1215,364,1475,390",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AE6",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,391,1210,409",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AE4",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1215,391,1475,417",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ADE",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,418,1475,436",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AE0",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,439,1210,457",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AE2",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "1365,437,1415,455",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A72",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1215,457,1475,478",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A7C",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,474,1210,492",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ACE",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "1300,472,1415,490",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x809B0",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1215,492,1475,513",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B24",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,519,1210,537",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ACA",
+                         "Class":  "ComboBox",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1215,517,1475,538",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AAE",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,546,1475,564",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ABA",
+                         "Class":  "Edit",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,574,1475,608",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ADA",
+                         "Class":  "Edit",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,608,1475,688",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AB2",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1125,693,1238,723",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AB6",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1243,693,1356,723",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AB4",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  false,
+                         "Rect":  "1361,693,1474,723",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AB0",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "218,750,1478,976",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x909E6",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "226,758,316,783",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AA6",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "321,758,411,783",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ACC",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "416,758,506,783",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AAA",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "511,758,601,783",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70AC8",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "606,758,726,783",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70AC2",
+                         "Class":  "RichEdit20A",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "226,788,1476,919",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AB8",
+                         "Class":  "Edit",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "226,924,1376,949",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60ABC",
+                         "Class":  "Button",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "1381,924,1471,949",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AA8",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "226,954,1476,974",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x80AA4",
+                         "Class":  "RichEdit20A",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "516,351,1118,726",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A9C",
+                         "Class":  "Static",
+                         "Visible":  true,
+                         "Enabled":  true,
+                         "Rect":  "516,327,1118,351",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AA2",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "532,355,1134,375",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60AA0",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "1141,612,1491,632",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60A9E",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "242,928,1392,948",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x80A9A",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,261,218,281",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x60B54",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,261,218,281",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x70B5A",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,261,218,281",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x40B86",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,261,218,281",
+                         "Focus":  false
+                     },
+                     {
+                         "HWND":  "0x110B9E",
+                         "Class":  "Static",
+                         "Visible":  false,
+                         "Enabled":  true,
+                         "Rect":  "218,261,218,281",
+                         "Focus":  false
+                     }
+                 ]
+}

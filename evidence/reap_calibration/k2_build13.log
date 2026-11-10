@@ -1,0 +1,65 @@
+[1/18] Assembling KN_O3KKEN.asm with ml64
+ Assembling: F:/rawrxd/src/deep2/lavapath/KN_O3KKEN.asm
+[2/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_CostCov.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\lavapath\DualStickImbalance_CostCov.cpp(52): warning C4551: function call missing argument list
+F:\rawrxd\src\deep2\lavapath\DualStickImbalance_CostCov.cpp(53): warning C4551: function call missing argument list
+[3/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_EmitExec.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Notes.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Chair.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[7/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Register.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Advance.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_KnO3.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Seal.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[11/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Worker.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Move.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[13/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Nvme.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[14/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_link_supplement.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\k3c_token.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/lavapath/k3c_token.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\k3c_token.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\lavapath\k3c_token.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\lavapath\../RawrRunSession.hpp(138): error C2039: 'detectFromModel': is not a member of 'Deep2::ChatTemplate'
+F:\rawrxd\src\ChatTemplate.hpp(44): note: see declaration of 'Deep2::ChatTemplate'
+F:\rawrxd\src\deep2\lavapath\../RawrRunSession.hpp(138): error C3861: 'detectFromModel': identifier not found
+F:\rawrxd\src\deep2\lavapath\../RawrRunSession.hpp(140): error C2677: binary '!=': no global operator found which takes type 'Deep2::ChatTemplateType' (or there is no acceptable conversion)
+F:\rawrxd\src\deep2\lavapath\ScoreboardRing.hpp(13): warning C4324: 'Deep2::scoreboard::LockFreeRing<Deep2::scoreboard::TensorId,1024>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\lavapath\ScoreboardRing.hpp(13): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\lavapath\TensorScoreboard.hpp(17): note: see reference to class template instantiation 'Deep2::scoreboard::LockFreeRing<Deep2::scoreboard::TensorId,1024>' being compiled
+F:\rawrxd\src\deep2\lavapath\ProductScoreboardPrime.hpp(18): warning C4127: conditional expression is constant
+F:\rawrxd\src\deep2\lavapath\ProductScoreboardPrime.hpp(18): note: consider using 'if constexpr' statement instead
+[16/18] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumer_Space.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,16 @@
+agent_read_001 / ORPHAN_BRANCH_PUSH
+ASOF_UTC=2026-11-10T07:20:30Z
+TARGET_BRANCH=upload/repair-candidate-20261110
+REMOTE=origin (https://github.com/ItsMehRAWRXD/RawrXD.git)
+SCOPE=text receipts only (no LFS/binaries/exes)
+FILES=
+  AGENT_READ_RECEIPT.txt
+  DISPOSITION.txt
+  STDOUT_MARKERS.txt
+  INVENTORY_NOTE.txt
+  OLLAMA_44_MODEL_TOOL_INVENTORY.csv
+  run_qwen3_8b/agent-workflow.json
+  run_qwen3_8b/agent.stdout.log
+  run_qwen3_8b/bug.cpp
+PROMOTE=0
+MATURITY=82%

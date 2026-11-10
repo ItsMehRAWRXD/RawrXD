@@ -1,0 +1,9 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=26124 request_generation=1 prompt_fnv1a=B456ECF0D905D13B model='llama3.2:3b' prompt_len=32 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=26124 REQUEST_GENERATION=1 MODEL=llama3.2:3b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=142
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok

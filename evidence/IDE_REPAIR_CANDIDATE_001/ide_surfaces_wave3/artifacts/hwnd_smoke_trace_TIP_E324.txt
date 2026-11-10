@@ -1,0 +1,38 @@
+WinMain entered
+--user-data-dir F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\ide_surfaces_wave3\artifacts\_ud_hwnd_tip 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabs
+onCreate:panel
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:deferSize
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded

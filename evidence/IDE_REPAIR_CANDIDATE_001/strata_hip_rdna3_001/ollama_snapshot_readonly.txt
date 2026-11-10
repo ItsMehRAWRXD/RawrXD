@@ -1,0 +1,13 @@
+﻿TIMESTAMP=2026-11-10T08:11:44.8694223-05:00
+PORT_11434_LISTEN=
+OLLAMA_PROCS=
+
+
+Id          : 32984
+ProcessName : ollama
+Path        : C:\Users\Garrett\AppData\Local\Programs\Ollama\ollama.exe
+
+
+
+
+NOTE=read-only check; no ollama CLI/config/model/path changes this session

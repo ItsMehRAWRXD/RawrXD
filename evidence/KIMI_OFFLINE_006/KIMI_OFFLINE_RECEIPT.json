@@ -1,0 +1,17 @@
+﻿{
+    "schema":  "DEEP2_KIMI_OFFLINE_GATE_001/v1",
+    "started_utc":  "2026-10-27T23:21:41.4898974Z",
+    "finished_utc":  "2026-10-27T23:21:42.0490323Z",
+    "repo_commit":  "ef97b24938f81692cd5aaf305284ebd3150a6822",
+    "status":  "FAIL",
+    "certified":  false,
+    "gpu_numerical_parity":  "NOT_CERTIFIED",
+    "release_promote":  0,
+    "steps":  [
+                  {
+                      "name":  "harness_error",
+                      "exit_code":  3,
+                      "error":  "The term \u0027Get-FileHash\u0027 is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again."
+                  }
+              ]
+}

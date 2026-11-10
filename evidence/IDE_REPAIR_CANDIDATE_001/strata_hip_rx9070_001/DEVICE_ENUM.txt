@@ -1,0 +1,16 @@
+﻿STRATA_HIP_RX9070_DEVICE_ENUM
+TIMESTAMP=2026-11-10T08:46:06.9032508-05:00
+COMMAND=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rx9070\strata-device.exe
+EXIT=0
+GPU0=AMD Radeon AI PRO R9700
+HIP_ARCH=gfx1201 wave32
+COMPILED_FOR=gfx1200,gfx1201
+MULTIPROCESSORS=32
+VRAM_TOTAL_GIB=31.859
+VRAM_FREE_GIB=27.887
+DRIVER_RUNTIME=71726391 / 71726391
+HIP_DLL=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rx9070\amdhip64_7.dll
+PLAN=FITS (--max-context 20480)
+STDERR=
+strata: Windows budgets 28707 of this card's 32624 MiB for this process; free VRAM is counted within that (STRATA_WDDM_BUDGET=0: off)
+GFX1201_DEVICE_ACCEPT=PASS

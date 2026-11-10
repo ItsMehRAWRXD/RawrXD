@@ -1,0 +1,215 @@
+I026_FINISHSESSION_FORCE_KILL_001
+ASOF_UTC=2026-11-10T17:10:00Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+RECEIPT=issue49_gui_ollama_qwen3_026
+TIP_EXE=bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_SHA256=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+PRIOR=I026_GETMESSAGE_MINUS1_HYPOTHESIS_001
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+T05_LANE_SEPARATE=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_BLIND_027=1
+D015_SUPERSEDED=0
+FIX_APPLIED=N
+SEAL_J=N
+
+========================================================================
+CLASSIFICATION (fail-closed)
+========================================================================
+IDE_EXIT_MINUS1_CLASS=STILL_UNKNOWN
+
+HARNESS_FORCE_KILL_I026=0
+PRODUCT_QUIT_I026=0
+FINISHSESSION_THROW_AFTER_DONE_I026=0
+GETMESSAGE_MINUS1_I026=0   # prior seal REJECTED
+
+REASON_SUMMARY=
+  I026 died ~27s post-spawn (PID=3356) with ExitCode=-1 during AgentWait
+  (deadline +600s). Live 74aa harness did not mid-wait FORCE_KILL / WM_CLOSE.
+  Product quit breadcrumbs (WM_CLOSE / WM_DESTROY / messageLoop.*) are
+  ABSENT from startup_trace for the entire log history. finishSession.done
+  occurs early at launch; death is far after CREATEPROCESS, not immediate
+  post-.done. GetMessage/-1 already fail-closed on TipExe. Killer of -1
+  remains undetermined (external TerminateProcess(-1) OR non-loop CRT path).
+
+========================================================================
+EVIDENCE PATHS
+========================================================================
+THIS_SEAL=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\I026_FINISHSESSION_FORCE_KILL_001.txt
+PRIOR_GETMESSAGE=
+  ...\I026_GETMESSAGE_MINUS1_HYPOTHESIS_001.txt
+PRIOR_ALIVE=
+  ...\I026_ALIVE_FAIL_DIAG_001.txt
+PRIOR_EXIT_CALLSITE=
+  ...\I026_EXIT_CALLSITE_001.txt
+RUN_026=
+  ...\issue49_gui_ollama_qwen3_026\
+RUNLOG=
+  ...\issue49_gui_ollama_qwen3_026\issue49_product_final_74aa_20261110-105226.txt
+  ...\issue49_gui_ollama_qwen3_026\_launch_026.txt
+CHAT_RUNTIME=
+  ...\issue49_gui_ollama_qwen3_026\logs_live\chat_runtime.log
+USERDATA_026=
+  ...\issue49_gui_ollama_qwen3_026\userdata   (EMPTY; file_count=0)
+BREADCRUMB_SINK=
+  F:\rawrxd\startup_trace.log
+  (onCreateBreadcrumb / runMessageLoop -> append "onCreate:<step>")
+FILEOPS_ITEM10=
+  F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp:~676
+LIFECYCLE=
+  F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp
+  WM_CLOSE:~239 ; kMsgFinishSession:~332 ; runMessageLoop:~1356
+HARNESS_74AA=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+ITEM10_HIST=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\WORKER_RECEIPT_ITEMS_7_10.txt
+
+========================================================================
+1) FileOps Item10 FORCE_KILL path (source)
+========================================================================
+Win32IDE_FileOps.cpp::promptSaveAllChanges ~676:
+  // Item10 harness: modal YES/NO/CANCEL blocked WM_CLOSE → FORCE_KILL EXIT=-1.
+  // RAWRXD_SMOKE_DISCARD_UNSAVED=1 discards without UI (not a promote path).
+Then MessageBoxA(... MB_YESNOCANCEL ...); IDCANCEL returns false → WM_CLOSE
+handler refuses DestroyWindow (lifecycle.cpp ~246-249).
+
+Historical Item10 class (WORKER_RECEIPT_ITEMS_7_10):
+  CLASS_C_WMCLOSE_HANG: unsaved MessageBox blocked DestroyWindow;
+  harness FORCE_KILL -> EXIT=-1.
+  Fixed (hist): RAWRXD_SMOKE_DISCARD_UNSAVED=1.
+
+PRODUCT_MITIGATION_PRESENT=1 (env discard)
+HARNESS_74AA_SETS_SMOKE_DISCARD=0
+HARNESS_74AA_CONTAINS_FORCE_KILL_STRING=0
+HARNESS_74AA_SENDS_WM_CLOSE_OR_SC_CLOSE=0
+
+========================================================================
+2) Harness Invoke-Issue49Live74aa.ps1 kill / ExitCode=-1
+========================================================================
+Stop-Process -Force sites:
+  (a) launch-retry cleanup BEFORE Start-Process (line ~240)
+  (b) final cleanup AFTER wait/scoring (line ~697)
+
+AgentWait:
+  AGENT_WAIT_SEC=600 (I026); while now < deadline; break on $p.HasExited;
+  then IDE_EXIT=[string]$p.ExitCode.
+
+I026 timeline (_launch_026 / product_final):
+  10:52:28  PID=3356 spawn
+  10:52:35  CTRL_ENTER; CREATEPROCESS child=29924; DEADLINE=+600s
+  10:52:35..10:52:59  POLL loopChild=1
+  10:53:02  IDE_EXIT=-1   << during wait; NOT post-deadline cleanup
+
+PROBE (this turn): .NET Process.Kill() / Stop-Process -Force yields
+  KILL_EXIT=-1 (TerminateProcess uExitCode=0xFFFFFFFF).
+  Therefore ANY Stop-Process -Force on TipExe explains signed -1 —
+  but 74aa mid-wait path did not invoke it for PID=3356.
+
+HARNESS_FORCE_KILL_TRIGGER_I026=NONE
+  (no modal block observed; harness never posted WM_CLOSE; death
+   preceded final Stop-Process)
+
+========================================================================
+3) Breadcrumbs / sinks (I026 correlation)
+========================================================================
+startup_trace.log whole-file counts (fail-closed; no per-PID stamps):
+  finishSession.done     = 105
+  finishSession.exception= 0
+  WM_CLOSE               = 0
+  WM_DESTROY             = 0
+  GetMessage.error       = 0
+  messageLoop.WM_QUIT    = 0
+  messageLoop.exit       = 0
+  FORCE_KILL             = 0
+  runMessageLoop entered = 34
+
+Last onCreate:finishSession.done @ line 10786 is followed by a NEW
+WinMain (subsequent process), not by WM_CLOSE / messageLoop.*.
+
+Implication:
+  - Orderly PRODUCT_QUIT path never breadcrumbed in this sink.
+  - finishSession.done is a launch-time success marker, not death marker.
+  - I026 lived long enough for MAIN hwnd + agent CREATEPROCESS; death
+    ~27s later is NOT "immediate after finishSession.done".
+
+userdata I026: EMPTY (no onCreate sink there; product uses F:\rawrxd\
+startup_trace.log only).
+
+chat_runtime I026: stops after DEEP2_AGENTIC_LOOP_CREATEPROCESS;
+  no RESPONSE_END / TRANSCRIPT_INSERT (matches ALIVE_FAIL_DIAG).
+
+========================================================================
+4) finishSession product path — throw/abort after .done?
+========================================================================
+kMsgFinishSession try block ends with onCreateBreadcrumb("finishSession.done");
+catch (...) -> "finishSession.exception" (COUNT=0 in startup_trace).
+Nothing after .done inside the handler can throw into that catch.
+WM_CLOSE path is separate (user/harness close), breadcrumb="WM_CLOSE"
+(COUNT=0).
+
+FINISHSESSION_PRODUCT_ABORT_AFTER_DONE=UNINDICATED_FOR_I026
+  (death timing and missing quit breadcrumbs contradict Item10
+   immediate-post-.done / modal-FORCE_KILL narrative for this receipt)
+
+========================================================================
+5) Ruled out / still open
+========================================================================
+RULED_OUT_FOR_I026:
+  A) TipExe GetMessage==-1 garbage wParam     (I026_GETMESSAGE REJECTED)
+  B) 74aa harness FORCE_KILL mid-wait / modal  (no WM_CLOSE; death in wait)
+  C) Product PostQuitMessage(-1)               (prior WM_QUIT seal)
+  D) finishSession.exception after .done       (impossible by structure;
+                                                exception count=0)
+
+STILL_OPEN:
+  E) External TerminateProcess(..., -1) not owned by 74aa wait-loop
+     (other script / tool / Kill; ExitCode signature matches)
+  E2) CLASS_A sibling/cross-harness (WORKER_RECEIPT_ITEMS_7_10):
+     Stop-Process -Name 'RawrXD-Win32IDE-Native*' can kill concurrent
+     Ext and yield EXIT=-1. I026 TipExe name matches that wildcard.
+     NOT proven for the 10:52-10:53 window; remains a top external lead.
+  F) CRT / main return -1 from NON-loop path (EXIT_CALLSITE still open)
+  G) Silent abort without WER dump (ALIVE_FAIL_DIAG)
+
+========================================================================
+6) Proposed fixes (NOT applied; no blind 027)
+========================================================================
+IF_HARNESS_FORCE_KILL_WERE_THE_CAUSE (hist Item10; NOT I026):
+  - Set RAWRXD_SMOKE_DISCARD_UNSAVED=1 in smoke harnesses that close UI, OR
+  - Avoid Stop-Process -Force as primary close; prefer CloseMainWindow /
+    PostMessage WM_CLOSE + WaitForExit with discard env, OR
+  - Record FORCE_KILL=1 explicitly in receipt when Stop-Process used
+    (so -1 is not mistaken for product quit).
+
+IF_PRODUCT_QUIT_WERE_THE_CAUSE (not evidenced for I026):
+  - Trace throw after finishSession.done is N/A; focus WM_CLOSE /
+    saveIdeSession / DestroyWindow instead.
+
+FOR_I026 (actual next):
+  - Do NOT apply harness modal discard as acceptance fix (wrong owner).
+  - Do NOT blind 027 remasure.
+  - Capture dump/stack discriminating RtlExitUserProcess vs
+    NtTerminateProcess on TipExe under SAME 746 STEP A/B regime.
+
+========================================================================
+DISPOSITION
+========================================================================
+CLASSIFICATION=STILL_UNKNOWN
+HARNESS_FORCE_KILL=0
+PRODUCT_QUIT=0
+NEXT_ACTION=CAPTURE_DUMP_OR_STACK_DISCRIMINATE_EXITPROCESS_VS_TERMINATEPROCESS
+  (same 746 STEP A/B; preserve chat_runtime; NO_BLIND_027=1)
+CONTROLLING=D015
+D015_SUPERSEDED=0
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+T05_LANE_SEPARATE=1
+NO_BLIND_027=1
+FIX_APPLIED=N
+SEAL_J=N

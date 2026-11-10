@@ -1,0 +1,2 @@
+{"schema_version": 1, "event": "starting", "at": 1794318212.789671, "profile": null, "model_id": "qwen3.6-35b-a3b-ud-q4_k_xl", "pid": 34776}
+{"schema_version": 1, "event": "ready", "at": 1794318260.8944566, "instance_id": "56b7b0db71f84fe8b9b8b842df8c8829", "pid": 34776, "api_url": "http://127.0.0.1:8080", "bound_host": "127.0.0.1", "bound_port": 8080, "model_id": "qwen3.6-35b-a3b-ud-q4_k_xl", "model_state": "ready", "api_state": "ready"}

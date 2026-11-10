@@ -1,0 +1,13 @@
+.sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\build_tip_ext_host_001\bin
+.reload /f RawrXD-Win32IDE-Native-Ext.exe
+.ecxr
+?? ((nlohmann::json_abi_v3_11_3::detail::exception *)0x000000acc65ea9c0)->m_id
+?? ((nlohmann::json_abi_v3_11_3::detail::exception *)0x000000acc65ea9c0)->what()
+dt -r1 nlohmann::json_abi_v3_11_3::detail::exception 0x000000acc65ea9c0
+.frame 8
+lsa .
+.frame 9
+lsa .
+.frame 10
+lsa .
+q

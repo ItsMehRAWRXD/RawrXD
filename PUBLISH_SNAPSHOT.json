@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/upload/repair-candidate-20261110",
+  "original_commit": "509573dd7eac7425f94d5504fe7d5fdc7b3c2af1",
+  "worktree": "F:/rawrxd",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/830e37c9/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

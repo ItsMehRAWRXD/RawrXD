@@ -1,0 +1,22 @@
+Strata's Windows HIP engine ships these AMD ROCm components unmodified, from AMD's TheRock Python wheels
+(ROCm 10.2.0a20260930, https://nightly.repo.amd.com/rocm/whl-next/, built from https://github.com/ROCm/TheRock):
+
+  amd_comgr.dll
+  amdhip64_7.dll
+  hipblas.dll
+  libhipblaslt.dll
+  libtensilelite-host.dll
+  msvcp140.dll
+  msvcp140_atomic_wait.dll
+  origami.dll
+  rocblas.dll
+  rocm_kpack.dll
+  rocsolver.dll
+  vcruntime140.dll
+  vcruntime140_1.dll
+
+Licenses: rocBLAS, hipBLAS, hipBLAS-common, hipBLASLt (and its TensileLite host and origami libraries), rocm-core: MIT;
+rocSOLVER: BSD 2-clause; amd_comgr: Apache 2.0 with LLVM exceptions (files in this folder).  The HIP runtime
+(amdhip64_7.dll, https://github.com/ROCm/rocm-systems/tree/develop/projects/clr) and rocm_kpack.dll (TheRock) are MIT
+licensed; their wheels carry no license file.  The Microsoft Visual C++ runtime DLLs (msvcp140*.dll,
+vcruntime140*.dll) are redistributable under the Visual Studio license (Distributable Code).

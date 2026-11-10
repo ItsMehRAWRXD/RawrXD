@@ -1,0 +1,53 @@
+[2026-11-10 06:40:01] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 06:40:01] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_064001.log
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=-1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=1 active=0
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=1 active=1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=1
+[2026-11-10 06:40:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:06] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=1
+[2026-11-10 06:40:06] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 06:40:08] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 06:40:11] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 06:40:16] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1

@@ -1,0 +1,122 @@
+[0/2] Re-checking globbed directories...
+[1/23] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/23] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_ide/Release/vulkan-shaders-gen.exe
+[3/23] Completed 'vulkan-shaders-gen'
+[4/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\main_win32.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'lpCmdLine': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'hPrevInstance': unreferenced parameter
+[5/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(669): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(2978): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(3364): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(3571): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(3518): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(4414): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4423): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4443): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4456): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5756): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(5759): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+[6/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(300): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1095): warning C4100: 'wholeWord': unreferenced parameter
+[7/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(371): warning C4189: 'pThis': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(676): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(799): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(800): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(928): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(922): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(916): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1040): warning C4100: 'wParam': unreferenced parameter
+[8/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(403): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(552): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[9/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+[10/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Logger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[11/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[12/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Commands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[13/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(65): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105): warning C4189: 'btnStop': local variable is initialized but not referenced
+[14/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(33): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(258): warning C4100: 'timeoutMs': unreferenced parameter
+[15/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(30): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(230): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(228): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(241): warning C4189: 'sender': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(357): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(577): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(575): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(790): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(800): warning C4100: 'wParam': unreferenced parameter
+[16/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365): warning C4100: 'tokenId': unreferenced parameter
+[17/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(470): warning C4100: 'pid': unreferenced parameter
+[18/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[19/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[20/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\gguf_loader.cpp.obj
+[21/23] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cpu_inference_engine_impl.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(43): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(413): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(350): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(771): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(654): note: see declaration of 'v'
+[22/23] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe

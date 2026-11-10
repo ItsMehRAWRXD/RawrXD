@@ -1,0 +1,1 @@
+The diagnostic probe was repaired to use explicit Win32 interop structures rather than `System.Drawing`. The physical wrapper uses the same corrected structures and normal `ShowWindowAsync`/`SetForegroundWindow` calls. No production source or binary changed.

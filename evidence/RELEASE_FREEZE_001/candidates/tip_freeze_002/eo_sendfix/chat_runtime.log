@@ -1,0 +1,10 @@
+SESSION_OPEN session_id=fix35_130801 run_id=fixrun_130801 pid=30176
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000003370C2C session=1 pane=copilot_sidebar session_id=fix35_130801 run_id=fixrun_130801
+DISPATCH_ID id=1 bytes=16
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=16
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+exactly_once_submit session=1 request_id=1 model=bigdaddyg-productivity-local:latest
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000003370C2C session=1 pane=copilot_sidebar session_id=fix35_130801 run_id=fixrun_130801
+exactly_once_reject session=1 active_request_id=1 reason=inference_already_running
+CHAT_SEND_BUSY dispatched=0
