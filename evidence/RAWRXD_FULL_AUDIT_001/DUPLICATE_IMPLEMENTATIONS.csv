@@ -1,0 +1,369 @@
+basename,count,paths
+_recorder_block.h,2,src\modelgenie\_recorder_block.h | tools\_recorder_block.h
+_test_uhm_include.cpp,2,src\core\_test_uhm_include.cpp | ~dev\rawrxd\src\core\_test_uhm_include.cpp
+activate.ps1,3,tools\rawrxd_finishers\rawr_run_dropin\activate.ps1 | tools\rawrxd_paritydrop\rawrxd_parity_final\activate.ps1 | tools\rawrxd_parity_final\activate.ps1
+advanced_refactoring_enhancements.md,2,src\core\ADVANCED_REFACTORING_ENHANCEMENTS.md | ~dev\rawrxd\src\core\ADVANCED_REFACTORING_ENHANCEMENTS.md
+advanced_sampler.hpp,2,src\sampling\advanced_sampler.hpp | ~dev\rawrxd\src\sampling\advanced_sampler.hpp
+agent.stderr.log,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\agent.stderr.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\agent.stderr.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\agent.stderr.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\agent.stderr.log
+agent.stdout.log,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\agent.stdout.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\agent.stdout.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\agent.stdout.log | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\agent.stdout.log
+agent_esp.hpp,3,src\project_wizard\agent_esp.hpp | tools\agent_esp\rawrxd_agent_esp\agent_esp.hpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\agent_esp.hpp
+agent_history.h,2,src\agent_history.h | src\agentic\agent_history.h
+agent_policy.h,2,src\agent_policy.h | src\agentic\agent_policy.h
+agent_wal_cli_smoke_test.cpp,2,src\core\agent_wal_cli_smoke_test.cpp | ~dev\rawrxd\src\core\agent_wal_cli_smoke_test.cpp
+agentic_copilot_bridge.cpp,2,src\agentic_copilot_bridge.cpp | src\agent\agentic_copilot_bridge.cpp
+agentic_copilot_bridge.h,3,src\agentic_copilot_bridge.h | src\qtapp\agentic_copilot_bridge.h | include\agentic_copilot_bridge.h
+agentic_engine.h,3,src\agentic_engine.h | src\qtapp\agentic_engine.h | include\agentic_engine.h
+agentic_executor.h,4,src\agentic_executor.h | src\agentic\agentic_executor.h | src\qtapp\agentic_executor.h | include\agentic_executor.h
+agentic_failure_detector.cpp,2,src\agent\agentic_failure_detector.cpp | src\qtapp\agentic_failure_detector.cpp
+agentic_failure_detector.hpp,2,src\agent\agentic_failure_detector.hpp | src\qtapp\agentic_failure_detector.hpp
+agentic_framework_implementation_complete.md,2,src\core\AGENTIC_FRAMEWORK_IMPLEMENTATION_COMPLETE.md | ~dev\rawrxd\src\core\AGENTIC_FRAMEWORK_IMPLEMENTATION_COMPLETE.md
+agentic_ide.h,3,src\agentic_ide.h | src\qtapp\agentic_ide.h | include\agentic_ide.h
+agentic_ide_build_success.md,2,src\core\AGENTIC_IDE_BUILD_SUCCESS.md | ~dev\rawrxd\src\core\AGENTIC_IDE_BUILD_SUCCESS.md
+agentic_lazy_init_completion_report.md,2,src\core\AGENTIC_LAZY_INIT_COMPLETION_REPORT.md | ~dev\rawrxd\src\core\AGENTIC_LAZY_INIT_COMPLETION_REPORT.md
+agentic_lazy_init_quick_reference.md,2,src\core\AGENTIC_LAZY_INIT_QUICK_REFERENCE.md | ~dev\rawrxd\src\core\AGENTIC_LAZY_INIT_QUICK_REFERENCE.md
+agentic_observability.h,2,src\agentic\agentic_observability.h | include\agentic_observability.h
+agentic_puppeteer.cpp,2,src\agent\agentic_puppeteer.cpp | src\qtapp\agentic_puppeteer.cpp
+agentic_puppeteer.hpp,2,src\agent\agentic_puppeteer.hpp | src\qtapp\agentic_puppeteer.hpp
+agentic_text_edit.h,3,src\agentic_text_edit.h | src\qtapp\agentic_text_edit.h | include\agentic_text_edit.h
+agentic-fixes-success-report.md,2,src\core\AGENTIC-FIXES-SUCCESS-REPORT.md | ~dev\rawrxd\src\core\AGENTIC-FIXES-SUCCESS-REPORT.md
+agentic-test-results.md,2,src\core\AGENTIC-TEST-RESULTS.md | ~dev\rawrxd\src\core\AGENTIC-TEST-RESULTS.md
+agent-workflow.json,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\agent-workflow.json | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\agent-workflow.json | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\agent-workflow.json | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\agent-workflow.json
+amdgpupowerbackend.cpp,2,src\core\AmdGpuPowerBackend.cpp | ~dev\rawrxd\src\core\AmdGpuPowerBackend.cpp
+amdgpupowerbackend.hpp,2,src\AmdGpuPowerBackend.hpp | ~dev\rawrxd\src\core\AmdGpuPowerBackend.hpp
+aperture_q4_0_test.cpp,2,src\core\aperture_q4_0_test.cpp | ~dev\rawrxd\src\core\aperture_q4_0_test.cpp
+aperture_register_map.md,2,src\core\aperture_register_map.md | ~dev\rawrxd\src\core\aperture_register_map.md
+aperture_standalone_test.cpp,2,src\core\aperture_standalone_test.cpp | ~dev\rawrxd\src\core\aperture_standalone_test.cpp
+api_server.h,2,src\qtapp\api_server.h | include\api_server.h
+architecture_summary.md,2,src\core\execution\ARCHITECTURE_SUMMARY.md | ~dev\rawrxd\src\core\execution\ARCHITECTURE_SUMMARY.md
+backend_equivalence_test.cpp,2,src\core\backend_equivalence_test.cpp | ~dev\rawrxd\src\core\backend_equivalence_test.cpp
+backup_manager.cpp,2,src\qtapp\backup_manager.cpp | ~dev\rawrxd\src\core\backup_manager.cpp
+backup_manager.hpp,2,src\qtapp\backup_manager.hpp | ~dev\rawrxd\src\core\backup_manager.hpp
+batch_splitter_test.cpp,2,src\core\batch_splitter_test.cpp | ~dev\rawrxd\src\core\batch_splitter_test.cpp
+batchd_unifiedasyncmove.hpp,2,src\deep2\lavapath\BatchD_UnifiedAsyncMove.hpp | ~dev\rawrxd\src\deep2\lavapath\BatchD_UnifiedAsyncMove.hpp
+before.bin,7,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\.rawrxd\agent_transactions\txn_37204013783800\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37241768749100\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37247045872200\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37251551447000\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37256083474300\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37260737079500\before.bin | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37266301666600\before.bin
+bp16streamer.hpp,2,src\deep2\BP16Streamer.hpp | ~dev\rawrxd\src\deep2\BP16Streamer.hpp
+bridge.stderr.log,2,evidence\IDE_RELEASE_READINESS_001\bridge_002\bridge.stderr.log | evidence\IDE_RELEASE_READINESS_001\bridge_003\bridge.stderr.log
+bridge.stdout.log,2,evidence\IDE_RELEASE_READINESS_001\bridge_002\bridge.stdout.log | evidence\IDE_RELEASE_READINESS_001\bridge_003\bridge.stdout.log
+bridge_lifecycle_test.exe,2,evidence\IDE_RELEASE_READINESS_001\bridge_002\bridge_lifecycle_test.exe | evidence\IDE_RELEASE_READINESS_001\bridge_003\bridge_lifecycle_test.exe
+bridge_lifecycle_test.obj,3,evidence\IDE_RELEASE_READINESS_001\bridge_001\bridge_lifecycle_test.obj | evidence\IDE_RELEASE_READINESS_001\bridge_002\bridge_lifecycle_test.obj | evidence\IDE_RELEASE_READINESS_001\bridge_003\bridge_lifecycle_test.obj
+brutal_gzip.h,2,src\qtapp\brutal_gzip.h | include\brutal_gzip.h
+bug.cpp,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\bug.cpp | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\bug.cpp | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\bug.cpp | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\bug.cpp
+bug.exe,3,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\bug.exe | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\bug.exe | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\bug.exe
+bug.obj,3,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\bug.obj | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\bug.obj | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\bug.obj
+build.bat,6,src\build.bat | src\asm\build.bat | src\codex\build.bat | src\pe_backend\build.bat | src\pe_writer_production\build.bat | src\script\masm\build.bat
+build.md,2,src\core\BUILD.md | ~dev\rawrxd\src\core\BUILD.md
+build.ps1,2,src\pe_writer_production\build.ps1 | scripts\build.ps1
+byte_level_hotpatcher.cpp,2,src\qtapp\byte_level_hotpatcher.cpp | ~dev\rawrxd\src\core\byte_level_hotpatcher.cpp
+byte_level_hotpatcher.hpp,2,src\qtapp\byte_level_hotpatcher.hpp | ~dev\rawrxd\src\core\byte_level_hotpatcher.hpp
+camellia256_test.cpp,2,src\test\Camellia256_Test.cpp | src\test_harness\camellia256_test.cpp
+ceoagent.hpp,2,src\agents\CEOAgent.hpp | ~dev\rawrxd\src\ceo\CEOAgent.hpp
+chamber.hpp,2,src\deep2\Chamber.hpp | ~dev\rawrxd\src\deep2\Chamber.hpp
+chat_interface.h,3,src\chat_interface.h | src\qtapp\chat_interface.h | include\chat_interface.h
+chat_runtime.log,2,evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\test_project\chat_runtime.log | evidence\IDE_RELEASE_READINESS_001\workspace\chat_runtime.log
+chat_workspace.h,3,src\chat_workspace.h | src\qtapp\chat_workspace.h | include\chat_workspace.h
+checkpoint_manager.cpp,3,src\orchestration\checkpoint_manager.cpp | src\qtapp\checkpoint_manager.cpp | ~dev\rawrxd\src\core\checkpoint_manager.cpp
+checkpoint_manager.h,2,src\qtapp\checkpoint_manager.h | include\checkpoint_manager.h
+choreograph.hpp,2,src\deep2\Choreograph.hpp | src\deep2\lavapath\Choreograph.hpp
+ci_cd_settings.cpp,3,src\ci_cd_settings.cpp | src\orchestration\ci_cd_settings.cpp | src\qtapp\ci_cd_settings.cpp
+ci_cd_settings.h,2,src\qtapp\ci_cd_settings.h | include\ci_cd_settings.h
+cli_contract_v1.0.md,4,src\CLI_CONTRACT_v1.0.md | src\core\CLI_CONTRACT_v1.0.md | src\win32app\CLI_CONTRACT_v1.0.md | ~dev\rawrxd\src\core\CLI_CONTRACT_v1.0.md
+cmake_install.cmake,4,src\reverse_engineering\cmake_install.cmake | src\validation\build-validation\cmake_install.cmake | src\validation\build-validation\kernels\cmake_install.cmake | tools\parity_closure\build-cert-tools\cmake_install.cmake
+cmakelists.txt,49,src\CMakeLists.txt | src\ai\CMakeLists.txt | src\computer_use\CMakeLists.txt | src\ggml-blas\CMakeLists.txt | src\ggml-cann\CMakeLists.txt | src\ggml-cpu\CMakeLists.txt | src\ggml-cuda\CMakeLists.txt | src\ggml-hexagon\CMakeLists.txt | src\ggml-hexagon\htp\CMakeLists.txt | src\ggml-hip\CMakeLists.txt | src\ggml-metal\CMakeLists.txt | src\ggml-musa\CMakeLists.txt | src\ggml-opencl\CMakeLists.txt | src\ggml-rpc\CMakeLists.txt | src\ggml-sycl\CMakeLists.txt | src\ggml-vulkan\CMakeLists.txt | src\ggml-vulkan\vulkan-shaders\CMakeLists.txt | src\ggml-webgpu\CMakeLists.txt | src\ggml-zdnn\CMakeLists.txt | src\git\CMakeLists.txt | src\orchestration\CMakeLists.txt | src\production\CMakeLists.txt | src\terminal\CMakeLists.txt | src\toolchain\linker\CMakeLists.txt | src\toolchain\linker\tests\CMakeLists.txt | src\tools\CMakeLists.txt | src\workflow\CMakeLists.txt | tools\agent_esp\rawrxd_agent_esp\CMakeLists.txt | tools\agent_esp_complete\rawrxd_agent_esp_complete\CMakeLists.txt | tools\deep2_autotune\CMakeLists.txt | tools\deep2_debugger\CMakeLists.txt | tools\deep2_snap\deep2_snap\CMakeLists.txt | tools\rawrxd_finishers\rawr_run_dropin\CMakeLists.txt | tools\rawrxd_paritydrop\rawrxd_parity_final\CMakeLists.txt | tools\rawrxd_parity_final\CMakeLists.txt | tools\rawrxd_parity_final\parity_evidence_ws\CMakeLists.txt | tools\snap_process_guard\CMakeLists.txt | tools\snap_supervisor\CMakeLists.txt | tools\snap_supervisor\snap_guard_final\CMakeLists.txt | evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\test_project\CMakeLists.txt | ~dev\rawrxd\src\ceo\CMakeLists.txt | ~dev\rawrxd\src\core\CMakeLists.txt | ~dev\rawrxd\src\core\executor\CMakeLists.txt | ~dev\rawrxd\src\core\policy\CMakeLists.txt | ~dev\rawrxd\src\core\router\CMakeLists.txt | ~dev\rawrxd\src\core\scheduler\CMakeLists.txt | ~dev\rawrxd\src\generation\CMakeLists.txt | ~dev\rawrxd\src\repository\CMakeLists.txt | ~dev\rawrxd\src\reverse_engineering\CMakeLists.txt
+codec.cpp,2,src\qtapp\codec.cpp | src\utils\codec.cpp
+codec.h,2,src\qtapp\codec.h | include\codec.h
+codexpro.asm,2,~dev\rawrxd\src\reverse_engineering\omega_suite\src_variants\CodexPro.asm | ~dev\rawrxd\src\reverse_engineering\omega_suite\v7\CodexPro.asm
+codexultimate.asm,2,~dev\rawrxd\src\reverse_engineering\omega_suite\src_variants\CodexUltimate.asm | ~dev\rawrxd\src\reverse_engineering\omega_suite\v7\CodexUltimate.asm
+common.h,3,src\ggml-cann\common.h | src\ggml-cpu\common.h | src\ggml-cpu\amx\common.h
+common.hpp,2,src\ggml-sycl\common.hpp | src\ggml-zdnn\common.hpp
+completion_report.md,4,src\COMPLETION_REPORT.md | src\inference\COMPLETION_REPORT.md | src\script\docs\COMPLETION_REPORT.md | src\truth_gate_002\COMPLETION_REPORT.md
+compressedkvcache.h,2,src\deep2\CompressedKVCache.h | ~dev\rawrxd\src\deep2\CompressedKVCache.h
+compression_interface.h,2,src\qtapp\compression_interface.h | include\compression_interface.h
+compression_wrappers.h,2,src\qtapp\compression_wrappers.h | include\compression_wrappers.h
+computerusetests.cpp,2,src\computer_use\ComputerUseTests.cpp | src\computer_use\tests\ComputerUseTests.cpp
+config.h,2,src\agentic\Config.h | ~dev\rawrxd\src\core\Config.h
+cpu-feats.cpp,4,src\ggml-cpu\arch\arm\cpu-feats.cpp | src\ggml-cpu\arch\powerpc\cpu-feats.cpp | src\ggml-cpu\arch\s390\cpu-feats.cpp | src\ggml-cpu\arch\x86\cpu-feats.cpp
+cyclonescheduler.hpp,2,src\deep2\CycloneScheduler.hpp | ~dev\rawrxd\src\deep2\CycloneScheduler.hpp
+d2_decode_contract.h,2,src\deep2\d2_decode_contract.h | ~dev\rawrxd\src\deep2\d2_decode_contract.h
+d2_engine_ssvk_decode_bind.h,2,src\deep2\d2_engine_ssvk_decode_bind.h | ~dev\rawrxd\src\deep2\d2_engine_ssvk_decode_bind.h
+d3d10effect.h,2,src\qtapp\d3d10effect.h | include\d3d10effect.h
+debug_logger.h,2,src\qtapp\debug_logger.h | include\debug_logger.h
+deep2_agentic_loop.exe,6,tools\deep2_agentic_loop.exe | evidence\IDE_RELEASE_READINESS_001\candidate_source\deep2_agentic_loop.exe | evidence\IDE_RELEASE_READINESS_001\candidate_source_003\deep2_agentic_loop.exe | evidence\IDE_RELEASE_READINESS_001\candidate_source_004\deep2_agentic_loop.exe | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\deep2_agentic_loop.exe | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\deep2_agentic_loop.exe
+deep2_argmax.comp,2,src\deep2\shaders\deep2_argmax.comp | ~dev\rawrxd\src\deep2\shaders\deep2_argmax.comp
+deep2_argmax.spv,2,src\deep2\shaders\deep2_argmax.spv | ~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv
+deep2_b21_q4_swizzled_gemv.comp,2,src\deep2\shaders\deep2_b21_q4_swizzled_gemv.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b21_q4_swizzled_gemv.comp
+deep2_b22_lds_reuse_gemv.comp,2,src\deep2\shaders\deep2_b22_lds_reuse_gemv.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b22_lds_reuse_gemv.comp
+deep2_b23_persistent_queue.comp,2,src\deep2\shaders\deep2_b23_persistent_queue.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b23_persistent_queue.comp
+deep2_b24_verify_logits.comp,2,src\deep2\shaders\deep2_b24_verify_logits.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b24_verify_logits.comp
+deep2_b26_rms_qkv_rope_superkernel.comp,2,src\deep2\shaders\deep2_b26_rms_qkv_rope_superkernel.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b26_rms_qkv_rope_superkernel.comp
+deep2_b27_moe_expert_superkernel.comp,2,src\deep2\shaders\deep2_b27_moe_expert_superkernel.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b27_moe_expert_superkernel.comp
+deep2_b28_finalnorm_lmhead_argmax.comp,2,src\deep2\shaders\deep2_b28_finalnorm_lmhead_argmax.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b28_finalnorm_lmhead_argmax.comp
+deep2_b29_activation_chain.comp,2,src\deep2\shaders\deep2_b29_activation_chain.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b29_activation_chain.comp
+deep2_b31_q4k_superkernel.comp,2,src\deep2\shaders\deep2_b31_q4k_superkernel.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b31_q4k_superkernel.comp
+deep2_b32_flash_mla.comp,2,src\deep2\shaders\deep2_b32_flash_mla.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b32_flash_mla.comp
+deep2_b34_kvwrite_attention.comp,2,src\deep2\shaders\deep2_b34_kvwrite_attention.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b34_kvwrite_attention.comp
+deep2_b35_device_token_ring.comp,2,src\deep2\shaders\deep2_b35_device_token_ring.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b35_device_token_ring.comp
+deep2_b41_packed_dot.comp,2,src\deep2\shaders\deep2_b41_packed_dot.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b41_packed_dot.comp
+deep2_b42_multistage_lds.comp,2,src\deep2\shaders\deep2_b42_multistage_lds.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b42_multistage_lds.comp
+deep2_b43_moe_wave.comp,2,src\deep2\shaders\deep2_b43_moe_wave.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b43_moe_wave.comp
+deep2_b46_q4k_native.comp,2,src\deep2\shaders\deep2_b46_q4k_native.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b46_q4k_native.comp
+deep2_b47_register_expert.comp,2,src\deep2\shaders\deep2_b47_register_expert.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b47_register_expert.comp
+deep2_b52_coalesced_q4.comp,2,src\deep2\shaders\deep2_b52_coalesced_q4.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b52_coalesced_q4.comp
+deep2_b53_compute_unroll.comp,2,src\deep2\shaders\deep2_b53_compute_unroll.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b53_compute_unroll.comp
+deep2_b54_device_epoch.comp,2,src\deep2\shaders\deep2_b54_device_epoch.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b54_device_epoch.comp
+deep2_b57_context_stream.comp,2,src\deep2\shaders\deep2_b57_context_stream.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b57_context_stream.comp
+deep2_b58_route_hotset.comp,2,src\deep2\shaders\deep2_b58_route_hotset.comp | ~dev\rawrxd\src\deep2\shaders\deep2_b58_route_hotset.comp
+deep2_flight_recorder.hpp,3,src\deep2\deep2_flight_recorder.hpp | tools\deep2_debugger\deep2_flight_recorder.hpp | tools\deep2_debugger\deep2_flight_recorder\deep2_flight_recorder.hpp
+deep2_mla_fused_gather_dot.comp,2,src\deep2\shaders\deep2_mla_fused_gather_dot.comp | ~dev\rawrxd\src\deep2\shaders\deep2_mla_fused_gather_dot.comp
+deep2_moe_gate_up_fused.comp,2,src\deep2\shaders\deep2_moe_gate_up_fused.comp | ~dev\rawrxd\src\deep2\shaders\deep2_moe_gate_up_fused.comp
+deep2_ops.comp,2,src\deep2\shaders\deep2_ops.comp | ~dev\rawrxd\src\deep2\shaders\deep2_ops.comp
+deep2_ops.spv,2,src\deep2\shaders\deep2_ops.spv | ~dev\rawrxd\src\deep2\shaders\deep2_ops.spv
+deep2_perf_guard.hpp,2,src\deep2\perf_fix\deep2_perf_guard.hpp | src\deep2\perf_fix\deep2_perf_fix\deep2_perf_guard.hpp
+deep2_progress_watchdog.hpp,2,src\deep2\watchdog\deep2_progress_watchdog.hpp | src\deep2\watchdog\deep2_watchdog\deep2_progress_watchdog.hpp
+deep2_q4_gemv_roofline.comp,2,src\deep2\shaders\deep2_q4_gemv_roofline.comp | ~dev\rawrxd\src\deep2\shaders\deep2_q4_gemv_roofline.comp
+deep2_qgemv.comp,2,src\deep2\shaders\deep2_qgemv.comp | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv.comp
+deep2_qgemv.spv,2,src\deep2\shaders\deep2_qgemv.spv | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv
+deep2_qgemv_batch.comp,2,src\deep2\shaders\deep2_qgemv_batch.comp | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.comp
+deep2_qgemv_batch.spv,2,src\deep2\shaders\deep2_qgemv_batch.spv | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv
+deep2_qgemv_batch4row.comp,2,src\deep2\shaders\deep2_qgemv_batch4row.comp | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.comp
+deep2_qgemv_batch4row.spv,2,src\deep2\shaders\deep2_qgemv_batch4row.spv | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv
+deep2_qgemv_batch8row.comp,2,src\deep2\shaders\deep2_qgemv_batch8row.comp | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.comp
+deep2_qgemv_batch8row.spv,2,src\deep2\shaders\deep2_qgemv_batch8row.spv | ~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv
+deep2_sha256.hpp,2,src\deep2\deep2_sha256.hpp | ~dev\rawrxd\src\deep2\deep2_sha256.hpp
+deep2_spec_accept.comp,2,src\deep2\shaders\deep2_spec_accept.comp | ~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.comp
+deep2_spec_accept.spv,2,src\deep2\shaders\deep2_spec_accept.spv | ~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+deep2_spec_attn.comp,2,src\deep2\shaders\deep2_spec_attn.comp | ~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.comp
+deep2_spec_attn.spv,2,src\deep2\shaders\deep2_spec_attn.spv | ~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv
+deep2_spec_ops.comp,2,src\deep2\shaders\deep2_spec_ops.comp | ~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.comp
+deep2_spec_ops.spv,2,src\deep2\shaders\deep2_spec_ops.spv | ~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv
+deep2engine.cpp,2,src\deep2\Deep2Engine.cpp | ~dev\rawrxd\src\deep2\Deep2Engine.cpp
+deep2engine.h,3,src\Deep2Engine.h | src\deep2\Deep2Engine.h | ~dev\rawrxd\src\deep2\Deep2Engine.h
+deep2engine_gpuforward.cpp,2,src\deep2\Deep2Engine_GpuForward.cpp | ~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp
+deep2engine_ssvkdecodebind.hpp,2,src\deep2\Deep2Engine_SsVkDecodeBind.hpp | ~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp
+deep2gpubackend.hpp,2,src\deep2\Deep2GPUBackend.hpp | src\deep2\gpu\Deep2GPUBackend.hpp
+deep2gpuforward.hpp,2,src\deep2\Deep2GpuForward.hpp | ~dev\rawrxd\src\deep2\Deep2GpuForward.hpp
+deep2livepath.hpp,2,src\deep2\Deep2LivePath.hpp | ~dev\rawrxd\src\deep2\Deep2LivePath.hpp
+deep2multigpulayerplan.cpp,2,src\deep2\Deep2MultiGpuLayerPlan.cpp | ~dev\rawrxd\src\deep2\Deep2MultiGpuLayerPlan.cpp
+deep2multigpulayerplan.hpp,2,src\deep2\Deep2MultiGpuLayerPlan.hpp | ~dev\rawrxd\src\deep2\Deep2MultiGpuLayerPlan.hpp
+deep2productq2kpacked.hpp,2,src\deep2\Deep2ProductQ2kPacked.hpp | ~dev\rawrxd\src\deep2\Deep2ProductQ2kPacked.hpp
+deep2profiler.hpp,2,src\deep2\Deep2Profiler.hpp | src\deep2\RawrXD-Sovereign-671B-Release-001\src\Deep2Profiler.hpp
+deep2q40reference.hpp,2,src\deep2\Deep2Q40Reference.hpp | ~dev\rawrxd\src\deep2\Deep2Q40Reference.hpp
+deep2storagering.hpp,2,src\deep2\Deep2StorageRing.hpp | src\deep2\RawrXD-Sovereign-671B-Release-001\src\Deep2StorageRing.hpp
+diskrecoveryagent.h,2,src\agentic\DiskRecoveryAgent.h | ~dev\rawrxd\src\core\DiskRecoveryAgent.h
+distributed_trainer.cpp,3,src\distributed_trainer.cpp | src\orchestration\distributed_trainer.cpp | src\qtapp\distributed_trainer.cpp
+distributed_trainer.h,2,src\qtapp\distributed_trainer.h | include\distributed_trainer.h
+dualstickstreamwindow.hpp,2,src\deep2\lavapath\DualStickStreamWindow.hpp | ~dev\rawrxd\src\deep2\lavapath\DualStickStreamWindow.hpp
+elasticresidencymanager.hpp,2,src\deep2\ElasticResidencyManager.hpp | ~dev\rawrxd\src\deep2\ElasticResidencyManager.hpp
+errorhandling.h,2,src\agentic\ErrorHandling.h | ~dev\rawrxd\src\core\ErrorHandling.h
+esp_cli.hpp,2,tools\agent_esp\rawrxd_agent_esp\esp_cli.hpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\esp_cli.hpp
+esp_demo.cpp,2,tools\agent_esp\rawrxd_agent_esp\esp_demo.cpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\esp_demo.cpp
+esp_metrics.hpp,3,src\project_wizard\esp_metrics.hpp | tools\agent_esp\rawrxd_agent_esp\esp_metrics.hpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\esp_metrics.hpp
+esp_runtime.hpp,3,src\project_wizard\esp_runtime.hpp | tools\agent_esp\rawrxd_agent_esp\esp_runtime.hpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\esp_runtime.hpp
+esp_test.cpp,2,tools\agent_esp\rawrxd_agent_esp\esp_test.cpp | tools\agent_esp_complete\rawrxd_agent_esp_complete\esp_test.cpp
+execution_ledger.jsonl,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\execution_ledger.jsonl | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\execution_ledger.jsonl | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\execution_ledger.jsonl | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\execution_ledger.jsonl
+extension_polyfill_engine.cpp,2,src\core\extension_polyfill_engine.cpp | ~dev\rawrxd\src\core\extension_polyfill_engine.cpp
+file_browser.h,3,src\file_browser.h | src\qtapp\file_browser.h | include\file_browser.h
+file_manager.h,2,src\qtapp\file_manager.h | include\file_manager.h
+final_status.md,2,src\inference\FINAL_STATUS.md | src\truth_gate_002\FINAL_STATUS.md
+finalnormacquire.hpp,2,src\deep2\FinalNormAcquire.hpp | ~dev\rawrxd\src\deep2\FinalNormAcquire.hpp
+finalnormproduce.hpp,2,src\deep2\FinalNormProduce.hpp | ~dev\rawrxd\src\deep2\FinalNormProduce.hpp
+fixture.stderr.log,2,evidence\IDE_RELEASE_READINESS_001\agent_protocol_001\fixture.stderr.log | evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\fixture.stderr.log
+fixture.stdout.log,2,evidence\IDE_RELEASE_READINESS_001\agent_protocol_001\fixture.stdout.log | evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\fixture.stdout.log
+flash_attention.cpp,2,src\kernels\flash_attention.cpp | ~dev\rawrxd\src\core\flash_attention.cpp
+flash_attention.h,4,src\qtapp\flash_attention.h | include\flash_attention.h | include\kernels\flash_attention.h | ~dev\rawrxd\src\core\flash_attention.h
+flight_recorder_smoke.cpp,2,tools\deep2_debugger\flight_recorder_smoke.cpp | tools\deep2_debugger\deep2_flight_recorder\flight_recorder_smoke.cpp
+gguf.h,2,src\qtapp\gguf.h | include\gguf.h
+gguf_loader.cpp,2,src\gguf_loader.cpp | src\qtapp\gguf_loader.cpp
+gguf_loader.h,2,src\qtapp\gguf_loader.h | include\gguf_loader.h
+ggufdynamicgeometry.hpp,2,src\deep2\lavapath\GgufDynamicGeometry.hpp | ~dev\rawrxd\src\deep2\lavapath\GgufDynamicGeometry.hpp
+ggufloader.h,2,src\GGUFLoader.h | src\agentic\GGUFLoader.h
+ggufloader.hpp,2,src\deep2\GGUFLoader.hpp | ~dev\rawrxd\src\deep2\GGUFLoader.hpp
+ghost_pipeline_probe.cpp,2,src\core\ghost_pipeline_probe.cpp | ~dev\rawrxd\src\core\ghost_pipeline_probe.cpp
+ghost_text_renderer.h,3,src\ghost_text_renderer.h | src\qtapp\ghost_text_renderer.h | include\ghost_text_renderer.h
+gpudecodeefficiency.cpp,2,src\core\GpuDecodeEfficiency.cpp | ~dev\rawrxd\src\core\GpuDecodeEfficiency.cpp
+gpudecodeefficiency.hpp,2,src\core\GpuDecodeEfficiency.hpp | ~dev\rawrxd\src\core\GpuDecodeEfficiency.hpp
+gpuforwardchildignorehooks.hpp,2,src\deep2\GPUForwardChildIgnoreHooks.hpp | ~dev\rawrxd\src\deep2\GPUForwardChildIgnoreHooks.hpp
+gpuforwardchildladder.hpp,2,src\deep2\lavapath\GpuForwardChildLadder.hpp | ~dev\rawrxd\src\deep2\lavapath\GpuForwardChildLadder.hpp
+gputransfercounters.hpp,2,src\deep2\GpuTransferCounters.hpp | ~dev\rawrxd\src\deep2\GpuTransferCounters.hpp
+hardware_backend_selector.h,3,src\hardware_backend_selector.h | src\qtapp\hardware_backend_selector.h | include\hardware_backend_selector.h
+hexmag_ide_link_probe.cpp,2,src\core\hexmag_ide_link_probe.cpp | ~dev\rawrxd\src\core\hexmag_ide_link_probe.cpp
+hexmagaction.hpp,2,src\agentic\HexMagAction.hpp | ~dev\rawrxd\src\core\agentic\HexMagAction.hpp
+hotpatch_playback_readme.md,2,src\core\HOTPATCH_PLAYBACK_README.md | ~dev\rawrxd\src\core\HOTPATCH_PLAYBACK_README.md
+hotpatch_stress_test.cpp,2,src\cli\hotpatch_stress_test.cpp | src\test_harness\hotpatch_stress_test.cpp
+ide_session.json,2,evidence\IDE_RELEASE_READINESS_001\isolated profile\ide_session.json | evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\userdata\ide_session.json
+implementation_complete.md,2,src\script\IMPLEMENTATION_COMPLETE.md | src\truth_gate_003\IMPLEMENTATION_COMPLETE.md
+implementation_status.md,2,src\inference\IMPLEMENTATION_STATUS.md | src\truth_gate_002\IMPLEMENTATION_STATUS.md
+implementation_summary.md,3,src\masm\IMPLEMENTATION_SUMMARY.md | src\nevm\IMPLEMENTATION_SUMMARY.md | src\script\IMPLEMENTATION_SUMMARY.md
+inference_cli.exe,2,src\cli\inference_cli.exe | src\runtime\inference_cli.exe
+inference_pipeline_test.cpp,2,src\inference\inference_pipeline_test.cpp | src\tests\inference_pipeline_test.cpp
+inferencebackend.h,2,src\agentic\InferenceBackend.h | ~dev\rawrxd\src\core\InferenceBackend.h
+integration.md,12,src\agent_puppeteer\INTEGRATION.md | src\deep2\perf_fix\INTEGRATION.md | src\deep2\perf_fix\deep2_perf_fix\INTEGRATION.md | src\deep2\watchdog\INTEGRATION.md | src\deep2\watchdog\deep2_watchdog\INTEGRATION.md | tools\agent_esp\rawrxd_agent_esp\INTEGRATION.md | tools\agent_esp_complete\rawrxd_agent_esp_complete\INTEGRATION.md | tools\deep2_autotune\INTEGRATION.md | tools\deep2_debugger\INTEGRATION.md | tools\deep2_debugger\deep2_flight_recorder\INTEGRATION.md | tools\deep2_snap\deep2_snap\INTEGRATION.md | tools\snap_process_guard\INTEGRATION.md
+integration_guide.md,2,src\agent\telemetry\INTEGRATION_GUIDE.md | src\sovereign\INTEGRATION_GUIDE.md
+integrity-tests.json,2,evidence\IDE_RELEASE_READINESS_001\integrity_001\integrity-tests.json | evidence\IDE_RELEASE_READINESS_001\integrity_002\integrity-tests.json
+interpretability_panel.cpp,2,src\qtapp\interpretability_panel.cpp | src\ui\interpretability_panel.cpp
+interpretability_panel.h,2,src\qtapp\interpretability_panel.h | include\interpretability_panel.h
+js_extension_host.cpp,2,src\core\js_extension_host.cpp | ~dev\rawrxd\src\core\js_extension_host.cpp
+js_extension_host.hpp,2,src\core\js_extension_host.hpp | ~dev\rawrxd\src\core\js_extension_host.hpp
+js_extension_host_headless_impl.cpp,2,src\core\js_extension_host_headless_impl.cpp | ~dev\rawrxd\src\core\js_extension_host_headless_impl.cpp
+js_extension_host_production.cpp,2,src\core\js_extension_host_production.cpp | ~dev\rawrxd\src\core\js_extension_host_production.cpp
+k2globaltensorindex.hpp,2,src\deep2\K2GlobalTensorIndex.hpp | ~dev\rawrxd\src\deep2\K2GlobalTensorIndex.hpp
+k2nativestreamgate.hpp,2,src\deep2\K2NativeStreamGate.hpp | ~dev\rawrxd\src\deep2\K2NativeStreamGate.hpp
+kernelregistry.hpp,3,src\deep2\KernelRegistry.hpp | src\deep2\lavapath\KernelRegistry.hpp | ~dev\rawrxd\src\core\execution\KernelRegistry.hpp
+kimik2config.hpp,2,src\deep2\KimiK2Config.hpp | ~dev\rawrxd\src\deep2\KimiK2Config.hpp
+kvcache.h,2,src\deep2\KVCache.h | ~dev\rawrxd\src\deep2\KVCache.h
+lavapath.hpp,2,src\deep2\Lavapath.hpp | src\deep2\lavapath\Lavapath.hpp
+lavapathproductlaw.hpp,2,src\deep2\LavapathProductLaw.hpp | src\deep2\lavapath\LavapathProductLaw.hpp
+layer_quant_widget.cpp,2,src\qtapp\layer_quant_widget.cpp | src\qtapp\widgets\layer_quant_widget.cpp
+layer_quant_widget.hpp,2,src\qtapp\layer_quant_widget.hpp | src\qtapp\widgets\layer_quant_widget.hpp
+layer_witness_test.cpp,2,src\core\layer_witness_test.cpp | ~dev\rawrxd\src\core\layer_witness_test.cpp
+link.rsp,3,evidence\IDE_RELEASE_READINESS_001\bridge_001\link.rsp | evidence\IDE_RELEASE_READINESS_001\bridge_002\link.rsp | evidence\IDE_RELEASE_READINESS_001\bridge_003\link.rsp
+localmodelauthority_bundle.hpp,2,src\deep2\lavapath\LocalModelAuthority_Bundle.hpp | ~dev\rawrxd\src\deep2\lavapath\LocalModelAuthority_Bundle.hpp
+logger.h,3,src\agentic\Logger.h | include\logging\logger.h | ~dev\rawrxd\src\core\Logger.h
+lsp_client.h,3,src\lsp_client.h | src\qtapp\lsp_client.h | include\lsp_client.h
+main.c,2,src\ggml-hexagon\htp\main.c | src\toolchain\linker\main.c
+main.cpp,5,src\main.cpp | tools\expert_authority\Deep2_Batch_46_60\src\main.cpp | tools\rawrxd_parity_final\parity_evidence_ws\main.cpp | evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\test_project\main.cpp | ~dev\rawrxd\src\ceo\main.cpp
+manifest.json,4,src\core\manifest.json | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\manifest.json | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\manifest.json | ~dev\rawrxd\src\core\manifest.json
+manifest.md,2,src\full_agentic_ide\MANIFEST.md | src\sovereign\MANIFEST.md
+manifest.txt,7,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\.rawrxd\agent_transactions\txn_37204013783800\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37241768749100\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37247045872200\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37251551447000\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37256083474300\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37260737079500\manifest.txt | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.rawrxd\agent_transactions\txn_37266301666600\manifest.txt
+marscontroller.hpp,2,src\deep2\mars\MARSController.hpp | ~dev\rawrxd\src\deep2\mars\MARSController.hpp
+medusadecoder.hpp,2,src\deep2\MedusaDecoder.hpp | ~dev\rawrxd\src\deep2\MedusaDecoder.hpp
+mega_build_status.md,2,src\core\MEGA_BUILD_STATUS.md | ~dev\rawrxd\src\core\MEGA_BUILD_STATUS.md
+minimal_qt_test.cpp,2,src\minimal_qt_test.cpp | src\qtapp\minimal_qt_test.cpp
+minimal_test.cpp,2,src\minimal_test.cpp | src\qtapp\minimal_test.cpp
+mips32_standalone_test.cpp,2,src\reverse_engineering\mips32_standalone_test.cpp | ~dev\rawrxd\src\reverse_engineering\mips32_standalone_test.cpp
+missing_handler_stubs.cpp.bak,2,src\core\missing_handler_stubs.cpp.bak | ~dev\rawrxd\src\core\missing_handler_stubs.cpp.bak
+mmq.cpp,2,src\ggml-cpu\amx\mmq.cpp | src\ggml-sycl\mmq.cpp
+model_memory_hotpatch.cpp,2,src\qtapp\model_memory_hotpatch.cpp | ~dev\rawrxd\src\core\model_memory_hotpatch.cpp
+model_memory_hotpatch.hpp,3,src\core\model_memory_hotpatch.hpp | src\qtapp\model_memory_hotpatch.hpp | ~dev\rawrxd\src\core\model_memory_hotpatch.hpp
+model_registry.cpp,2,src\model_registry.cpp | ~dev\rawrxd\src\core\model_registry.cpp
+model_registry.h,3,src\model_registry.h | src\qtapp\model_registry.h | include\model_registry.h
+model_trainer.cpp,2,src\model_trainer.cpp | ~dev\rawrxd\src\core\model_trainer.cpp
+model_trainer.h,3,src\model_trainer.h | src\qtapp\model_trainer.h | include\model_trainer.h
+modelloader.hpp,2,src\deep2\ModelLoader.hpp | src\model_loader\ModelLoader.hpp
+module1_types.h,2,src\deep2\module1_types.h | ~dev\rawrxd\src\generation\module1_types.h
+module2_cancel.h,2,src\deep2\module2_cancel.h | ~dev\rawrxd\src\generation\module2_cancel.h
+module3_utf8.h,2,src\deep2\module3_utf8.h | ~dev\rawrxd\src\generation\module3_utf8.h
+module5_context.h,2,src\deep2\module5_context.h | ~dev\rawrxd\src\generation\module5_context.h
+module7_glue.h,2,src\deep2\module7_glue.h | ~dev\rawrxd\src\generation\module7_glue.h
+moerouter.hpp,2,src\deep2\MoERouter.hpp | ~dev\rawrxd\src\deep2\MoERouter.hpp
+moeweightproxy.hpp,2,src\deep2\MoEWeightProxy.hpp | ~dev\rawrxd\src\deep2\MoEWeightProxy.hpp
+msvcp140.dll,2,evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\msvcp140.dll | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\msvcp140.dll
+multi_file_search.cpp,2,src\multi_file_search.cpp | src\qtapp\widgets\multi_file_search.cpp
+multi_file_search.h,3,src\qtapp\multi_file_search.h | src\qtapp\widgets\multi_file_search.h | include\multi_file_search.h
+multi_tab_editor.h,3,src\multi_tab_editor.h | src\qtapp\multi_tab_editor.h | include\multi_tab_editor.h
+native_ide_tools_test.cpp,2,src\core\native_ide_tools_test.cpp | ~dev\rawrxd\src\core\native_ide_tools_test.cpp
+nufusedpacker.hpp,2,src\deep2\NUFusedPacker.hpp | ~dev\rawrxd\src\deep2\NUFusedPacker.hpp
+nvmestream.h,2,src\deep2\NVMeStream.h | ~dev\rawrxd\src\deep2\NVMeStream.h
+observability_dashboard.h,3,src\observability_dashboard.h | src\qtapp\observability_dashboard.h | include\observability_dashboard.h
+ollama_debug.log,2,src\ollama_debug.log | evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\test_project\ollama_debug.log
+ollama_proxy.h,2,src\qtapp\ollama_proxy.h | include\ollama_proxy.h
+ollama_runtime.log,2,evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\test_project\ollama_runtime.log | evidence\IDE_RELEASE_READINESS_001\workspace\ollama_runtime.log
+omega_compilation_fix.md,2,src\reverse_engineering\omega_suite\OMEGA_COMPILATION_FIX.md | ~dev\rawrxd\src\reverse_engineering\omega_suite\OMEGA_COMPILATION_FIX.md
+omega_pro.asm,2,~dev\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_pro.asm | ~dev\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro.asm
+omega_pro_v4.asm,2,~dev\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_pro_v4.asm | ~dev\rawrxd\src\reverse_engineering\omega_suite\v4\omega_pro_v4.asm
+omega_simple.asm,2,~dev\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_simple.asm | ~dev\rawrxd\src\reverse_engineering\omega_suite\v3\omega_simple.asm
+output.exe,2,src\output.exe | tools\output.exe
+p1_nucold_hotpatch_001.exe,2,src\deep2\P1_NUCOLD_HOTPATCH_001.exe | src\deep2\execution_policy\P1_NUCOLD_HOTPATCH_001.exe
+package.json,2,src\script\debugger\package.json | src\tests\fixtures\quickjs_ext_smoke\package.json
+parity_gate.py,2,tools\rawrxd_paritydrop\rawrxd_parity_final\parity_gate.py | tools\rawrxd_parity_final\parity_gate.py
+parsemibbudget.hpp,2,src\deep2\lavapath\ParseMibBudget.hpp | ~dev\rawrxd\src\deep2\lavapath\ParseMibBudget.hpp
+passiverolenotroleplay.mdc,4,evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\.cursor\rules\PassiveRoleNotRoleplay.mdc | evidence\IDE_RELEASE_READINESS_001\agent_workflow_001\.cursor\rules\PassiveRoleNotRoleplay.mdc | evidence\IDE_RELEASE_READINESS_001\agent_workflow_002\.cursor\rules\PassiveRoleNotRoleplay.mdc | evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\.cursor\rules\PassiveRoleNotRoleplay.mdc
+patch_result.hpp,2,src\core\patch_result.hpp | ~dev\rawrxd\src\core\patch_result.hpp
+pathresolver.h,2,src\qtapp\PathResolver.h | include\PathResolver.h
+perf_guard_test.cpp,2,src\deep2\perf_fix\perf_guard_test.cpp | src\deep2\perf_fix\deep2_perf_fix\perf_guard_test.cpp
+pipe_server_test.exe,2,src\ipc\pipe_server_test.exe | src\serve\pipe_server_test.exe
+plan_orchestrator.h,3,src\plan_orchestrator.h | src\qtapp\plan_orchestrator.h | include\plan_orchestrator.h
+planner.hpp,2,src\agent\planner.hpp | src\agents\Planner.hpp
+planning_agent.h,3,src\planning_agent.h | src\qtapp\planning_agent.h | include\planning_agent.h
+plasmagovernor.hpp,2,src\deep2\PlasmaGovernor.hpp | ~dev\rawrxd\src\deep2\PlasmaGovernor.hpp
+plugin_signature.cpp,2,src\core\plugin_signature.cpp | ~dev\rawrxd\src\core\plugin_signature.cpp
+production_finalization.md,2,tools\rawrxd_paritydrop\rawrxd_parity_final\PRODUCTION_FINALIZATION.md | tools\rawrxd_parity_final\PRODUCTION_FINALIZATION.md
+productionprofiler.hpp,2,src\deep2\ProductionProfiler.hpp | ~dev\rawrxd\src\deep2\ProductionProfiler.hpp
+productstreamer.hpp,2,src\deep2\ProductStreamer.hpp | src\deep2\lavapath\ProductStreamer.hpp
+profiler.h,3,src\profiler.h | src\qtapp\profiler.h | include\profiler.h
+proxy_hotpatcher.cpp,2,src\qtapp\proxy_hotpatcher.cpp | ~dev\rawrxd\src\core\proxy_hotpatcher.cpp
+proxy_hotpatcher.hpp,2,src\qtapp\proxy_hotpatcher.hpp | ~dev\rawrxd\src\core\proxy_hotpatcher.hpp
+quant_dot_dispatch.obj,5,tools\quant_dot_dispatch.obj | tools\obj_agentic_loop\quant_dot_dispatch.obj | tools\obj_g04_chk\quant_dot_dispatch.obj | tools\obj_residency_conc\quant_dot_dispatch.obj | tools\obj_strata_bench\quant_dot_dispatch.obj
+quantkernelregistry.cpp,2,src\deep2\QuantKernelRegistry.cpp | ~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp
+quantkernelregistry.hpp,2,src\deep2\QuantKernelRegistry.hpp | ~dev\rawrxd\src\deep2\QuantKernelRegistry.hpp
+quantkernelregistry_k.h,2,src\deep2\QuantKernelRegistry_K.h | ~dev\rawrxd\src\deep2\QuantKernelRegistry_K.h
+quants.c,8,src\ggml-cpu\quants.c | src\ggml-cpu\arch\arm\quants.c | src\ggml-cpu\arch\loongarch\quants.c | src\ggml-cpu\arch\powerpc\quants.c | src\ggml-cpu\arch\riscv\quants.c | src\ggml-cpu\arch\s390\quants.c | src\ggml-cpu\arch\wasm\quants.c | src\ggml-cpu\arch\x86\quants.c
+rawr_run.cpp,3,tools\rawrxd_finishers\rawr_run_dropin\rawr_run.cpp | tools\rawrxd_paritydrop\rawrxd_parity_final\rawr_run.cpp | tools\rawrxd_parity_final\rawr_run.cpp
+rawrstreamervocabulary.hpp,3,src\deep2\RawrStreamerVocabulary.hpp | src\deep2\lavapath\RawrStreamerVocabulary.hpp | src\deep2\streamer\RawrStreamerVocabulary.hpp
+rawrstreamervocabularyext.hpp,3,src\deep2\RawrStreamerVocabularyExt.hpp | src\deep2\lavapath\RawrStreamerVocabularyExt.hpp | src\deep2\streamer\RawrStreamerVocabularyExt.hpp
+rawrxd-win32ide-native-ext.exe,5,evidence\IDE_RELEASE_READINESS_001\candidate_source\RawrXD-Win32IDE-Native-Ext.exe | evidence\IDE_RELEASE_READINESS_001\candidate_source_003\RawrXD-Win32IDE-Native-Ext.exe | evidence\IDE_RELEASE_READINESS_001\candidate_source_004\RawrXD-Win32IDE-Native-Ext.exe | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\RawrXD-Win32IDE-Native-Ext.exe | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\RawrXD-Win32IDE-Native-Ext.exe
+re_architecture.md,2,src\reverse_engineering\RE_ARCHITECTURE.md | ~dev\rawrxd\src\reverse_engineering\RE_ARCHITECTURE.md
+readme.md,45,src\agent\telemetry\README.md | src\codex\README.md | src\computer_use\README.md | src\core\README.md | src\deep2\RawrXD-Sovereign-671B-Release-001\README.md | src\devtools\README.md | src\distributed\README.md | src\documentation\README.md | src\ecosystem\README.md | src\eval\README.md | src\executive\README.md | src\executive\backup_20260722_232424\README.md | src\federation\README.md | src\full_agentic_ide\README.md | src\intelligence\README.md | src\kernel\SovereignK\README.md | src\nevm\README.md | src\nevm\golden_samples\README.md | src\nevm\tests\README.md | src\omega1_modules\README.md | src\pe_writer_production\README.md | src\production\README.md | src\re\README.md | src\script\README.md | src\script\tests\regression\README.md | src\security\README.md | src\sovereign\README.md | src\truth_gate_002\README.md | src\truth_gate_003\README.md | src\unified\README.md | src\validation\README.md | tools\bolt_fixings\bolt_fixings\README.md | tools\deep2_bolt\README.md | tools\expert_authority\Deep2_Batch_46_60\README.md | tools\native_batches\README.md | tools\rawrxd_fastdrop\rawrxd_fastdrop\README.md | tools\rawrxd_finishers\rawr_run_dropin\README.md | tools\rawrxd_source_drop\rawrxd_source_drop\README.md | tools\release\README.md | tools\snap_supervisor\README.md | tools\snap_supervisor\snap_guard_final\README.md | tools\uia\README.md | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\README.md | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\README.md | ~dev\rawrxd\src\core\README.md
+renderer.h,2,src\qtapp\renderer.h | include\renderer.h
+repack.cpp,4,src\ggml-cpu\repack.cpp | src\ggml-cpu\arch\arm\repack.cpp | src\ggml-cpu\arch\riscv\repack.cpp | src\ggml-cpu\arch\x86\repack.cpp
+repositoryintelligence.hpp,2,~dev\rawrxd\src\repo\RepositoryIntelligence.hpp | ~dev\rawrxd\src\repository\RepositoryIntelligence.hpp
+residencymanager.hpp,2,src\deep2\ResidencyManager.hpp | ~dev\rawrxd\src\deep2\ResidencyManager.hpp
+residencyplan.generated.hpp,2,src\deep2\lavapath\ResidencyPlan.generated.hpp | src\deep2\modelgenie\ResidencyPlan.generated.hpp
+reverseintegration.hpp,2,src\deep2\ReverseIntegration.hpp | ~dev\rawrxd\src\deep2\ReverseIntegration.hpp
+reverser_test_suite.asm,2,~dev\rawrxd\src\reverse_engineering\reverser_compiler\reverser_test_suite.asm | ~dev\rawrxd\src\reverse_engineering\reverser_compiler\tests\reverser_test_suite.asm
+router_test.cpp,2,src\core\router\tests\router_test.cpp | ~dev\rawrxd\src\core\router\tests\router_test.cpp
+routerprefetchtelemetry.hpp,2,src\deep2\RouterPrefetchTelemetry.hpp | ~dev\rawrxd\src\deep2\RouterPrefetchTelemetry.hpp
+run_validation.bat,2,src\pe_backend\tests\run_validation.bat | src\validation\run_validation.bat
+runtime_graph_executor.obj,3,tools\runtime_graph_executor.obj | tools\obj_agentic_loop\runtime_graph_executor.obj | tools\obj_strata_bench\runtime_graph_executor.obj
+sampler.hpp,2,src\deep2\Sampler.hpp | ~dev\rawrxd\src\deep2\Sampler.hpp
+scalar_server.h,3,src\scalar_server.h | src\qtapp\scalar_server.h | include\scalar_server.h
+scheduler_test.cpp,2,src\core\scheduler\tests\scheduler_test.cpp | ~dev\rawrxd\src\core\scheduler\tests\scheduler_test.cpp
+security_manager.cpp,2,src\security_manager.cpp | src\qtapp\security_manager.cpp
+security_manager.h,2,src\qtapp\security_manager.h | include\security_manager.h
+self_test.cpp,2,src\agent\self_test.cpp | src\runtime\self_test.cpp
+settings.h,2,src\qtapp\settings.h | include\settings.h
+settings_dialog.cpp,2,src\qtapp\settings_dialog.cpp | src\qtapp\widgets\settings_dialog.cpp
+settings_dialog.h,3,src\qtapp\settings_dialog.h | src\qtapp\widgets\settings_dialog.h | include\settings_dialog.h
+settings_manager.cpp,2,src\qtapp\settings_manager.cpp | src\qtapp\utils\settings_manager.cpp
+settings_manager.h,2,src\qtapp\settings_manager.h | src\qtapp\utils\settings_manager.h
+shortcut_manager.cpp,2,src\qtapp\utils\shortcut_manager.cpp | ~dev\rawrxd\src\core\shortcut_manager.cpp
+simple_gpu_test.cpp,2,src\qtapp\simple_gpu_test.cpp | src\tools\simple_gpu_test.cpp
+simple_mips32_test.cpp,2,src\reverse_engineering\simple_mips32_test.cpp | ~dev\rawrxd\src\reverse_engineering\simple_mips32_test.cpp
+simple_test.cpp,2,src\simple_test.cpp | src\win32app\simple_test.cpp
+slidingwindowengine.h,2,src\deep2\SlidingWindowEngine.h | ~dev\rawrxd\src\deep2\SlidingWindowEngine.h
+smoke_test.cpp,2,src\smoke_test.cpp | src\tests\e2e\smoke_test.cpp
+snap_supervisor.cpp,2,tools\snap_supervisor\snap_supervisor.cpp | tools\snap_supervisor\snap_guard_final\snap_supervisor.cpp
+sovereignoutofcoreruntime.hpp,2,src\deep2\SovereignOutOfCoreRuntime.hpp | ~dev\rawrxd\src\deep2\SovereignOutOfCoreRuntime.hpp
+specstrings_strict.h,2,src\qtapp\specstrings_strict.h | include\specstrings_strict.h
+speculative_decoder_integration.md,2,src\core\SPECULATIVE_DECODER_INTEGRATION.md | ~dev\rawrxd\src\core\SPECULATIVE_DECODER_INTEGRATION.md
+src_rawrxd_patternbridge.asm.bak,2,src\core\src_RawrXD_PatternBridge.asm.bak | ~dev\rawrxd\src\core\src_RawrXD_PatternBridge.asm.bak
+start-rawrxd.ps1,3,tools\release\Start-RawrXD.ps1 | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\Start-RawrXD.ps1 | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\Start-RawrXD.ps1
+streaming_gguf_loader.cpp,2,src\streaming_gguf_loader.cpp | src\ai\streaming_gguf_loader.cpp
+streaming_gguf_loader.h,4,src\streaming_gguf_loader.h | src\ai\streaming_gguf_loader.h | src\qtapp\streaming_gguf_loader.h | include\streaming_gguf_loader.h
+super_node_parallel_stress_test.cpp,2,src\core\super_node_parallel_stress_test.cpp | ~dev\rawrxd\src\core\super_node_parallel_stress_test.cpp
+tasks.json,2,src\.vscode\tasks.json | tools\compiler_driver\.vscode\tasks.json
+telemetry.h,3,src\telemetry.h | src\qtapp\telemetry.h | include\telemetry.h
+tensorresidencycache.hpp,2,src\deep2\TensorResidencyCache.hpp | ~dev\rawrxd\src\deep2\TensorResidencyCache.hpp
+tensorscoreboard.hpp,2,src\deep2\TensorScoreboard.hpp | src\deep2\lavapath\TensorScoreboard.hpp
+terminal_pool.h,3,src\terminal_pool.h | src\qtapp\terminal_pool.h | include\terminal_pool.h
+test_e2e_mock.py,3,tools\rawrxd_finishers\rawr_run_dropin\test_e2e_mock.py | tools\rawrxd_paritydrop\rawrxd_parity_final\test_e2e_mock.py | tools\rawrxd_parity_final\test_e2e_mock.py
+test_kimi_k2_smoke.cpp,2,src\core\test_kimi_k2_smoke.cpp | ~dev\rawrxd\src\core\test_kimi_k2_smoke.cpp
+threadpool.h,2,src\deep2\ThreadPool.h | ~dev\rawrxd\src\deep2\ThreadPool.h
+todo_dock.h,3,src\todo_dock.h | src\qtapp\todo_dock.h | include\todo_dock.h
+todo_manager.h,3,src\todo_manager.h | src\qtapp\todo_manager.h | include\todo_manager.h
+tokenizer.hpp,2,src\deep2\Tokenizer.hpp | ~dev\rawrxd\src\deep2\Tokenizer.hpp
+tokenizer_selector.cpp,3,src\tokenizer_selector.cpp | src\qtapp\tokenizer_selector.cpp | src\ui\tokenizer_selector.cpp
+tokenizer_selector.h,2,src\qtapp\tokenizer_selector.h | include\tokenizer_selector.h
+toolregistry.h,2,src\agentic\ToolRegistry.h | ~dev\rawrxd\src\core\ToolRegistry.h
+toroidalkvcache.hpp,2,src\deep2\ToroidalKVCache.hpp | ~dev\rawrxd\src\deep2\ToroidalKVCache.hpp
+training_dialog.h,3,src\training_dialog.h | src\qtapp\training_dialog.h | include\training_dialog.h
+training_progress_dock.h,3,src\training_progress_dock.h | src\qtapp\training_progress_dock.h | include\training_progress_dock.h
+transformer_block_scalar.h,3,src\transformer_block_scalar.h | src\qtapp\transformer_block_scalar.h | include\transformer_block_scalar.h
+unified_hotpatch_manager.cpp,2,src\qtapp\unified_hotpatch_manager.cpp | ~dev\rawrxd\src\core\unified_hotpatch_manager.cpp
+unified_hotpatch_manager.hpp,2,src\qtapp\unified_hotpatch_manager.hpp | ~dev\rawrxd\src\core\unified_hotpatch_manager.hpp
+universal_gguf.obj,3,tools\universal_gguf.obj | tools\obj_agentic_loop\universal_gguf.obj | tools\obj_strata_bench\universal_gguf.obj
+universal_model_router.cpp,2,src\universal_model_router.cpp | ~dev\rawrxd\src\core\universal_model_router.cpp
+unlimitedtokengenerator.hpp,2,src\deep2\UnlimitedTokenGenerator.hpp | src\deep2\lavapath\UnlimitedTokenGenerator.hpp
+val038_benchmark_harness.exe,2,src\deep2\VAL038_Benchmark_Harness.exe | src\validation\kernels\VAL038_Benchmark_Harness.exe
+validation_framework.md,2,src\script\VALIDATION_FRAMEWORK.md | src\script\docs\VALIDATION_FRAMEWORK.md
+vcruntime140.dll,2,evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\vcruntime140.dll | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\vcruntime140.dll
+vcruntime140_1.dll,2,evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\vcruntime140_1.dll | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\vcruntime140_1.dll
+verify-portablerelease.ps1,3,tools\release\Verify-PortableRelease.ps1 | evidence\IDE_RELEASE_READINESS_001\integrity_001\tamper-fixture\Verify-PortableRelease.ps1 | evidence\IDE_RELEASE_READINESS_001\integrity_002\tamper-fixture\Verify-PortableRelease.ps1
+virtualtensordesc.hpp,2,src\deep2\VirtualTensorDesc.hpp | ~dev\rawrxd\src\deep2\VirtualTensorDesc.hpp
+vram_probe.cpp,2,src\core\vram_probe.cpp | ~dev\rawrxd\src\core\vram_probe.cpp
+vulkan_compute.cpp,3,src\vulkan_compute.cpp | src\deep2\vulkan_compute.cpp | ~dev\rawrxd\src\deep2\vulkan_compute.cpp
+vulkan_compute.h,5,src\agentic\vulkan_compute.h | src\deep2\vulkan_compute.h | src\qtapp\vulkan_compute.h | include\vulkan_compute.h | ~dev\rawrxd\src\deep2\vulkan_compute.h
+vulkan_compute.obj,5,tools\vulkan_compute.obj | tools\obj_agentic_loop\vulkan_compute.obj | tools\obj_g04_chk\vulkan_compute.obj | tools\obj_residency_conc\vulkan_compute.obj | tools\obj_strata_bench\vulkan_compute.obj
+vwatypes.hpp,2,src\deep2\VwaTypes.hpp | src\deep2\vwa\VwaTypes.hpp
+warmupscheduler.hpp,2,src\deep2\WarmupScheduler.hpp | ~dev\rawrxd\src\deep2\WarmupScheduler.hpp
+watchdog_smoke.cpp,2,src\deep2\watchdog\watchdog_smoke.cpp | src\deep2\watchdog\deep2_watchdog\watchdog_smoke.cpp
+win32ide_exthostwire.h,2,src\win32app\Win32IDE_ExtHostWire.h | include\Win32IDE_ExtHostWire.h
