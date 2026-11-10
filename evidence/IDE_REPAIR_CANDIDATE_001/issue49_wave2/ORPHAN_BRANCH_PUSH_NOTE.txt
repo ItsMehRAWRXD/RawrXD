@@ -1,0 +1,15 @@
+﻿issue49_wave2 / ORPHAN_BRANCH_PUSH
+ASOF_UTC=2026-11-10T09:55:00Z
+TARGET_BRANCH=upload/issue49-wave2-20261110-absorb
+REMOTE=https://github.com/ItsMehRAWRXD/RawrXD.git
+COMMIT=LOCAL_SEALED_PUSH_BLOCKED
+PUSH=BLOCKED_TIP_GIT_LOCK
+SCOPE=issue49_wave2 receipts+harness + ToolCallBridge.h absorb + ToolCallExactlyOnceGuard.hpp + selftest.cpp
+EXCLUDE=exe/obj/dll .gitattributes LFS
+GIT_LFS_SKIP_PUSH=1
+NO_RC4_FORCE_PUSH=1
+PROMOTE=0
+MATURITY_UNCHANGED=1
+FIRST_FAILURE_CLASS=WAVE1_PUBLISH_SEAL_ABSENT_EXT_REBUILD_SERIALIZED
+NOTE=Local ISSUE49_* receipts sealed under evidence/.../issue49_wave2/. Tip `git status`/`git remote` hung on F:\rawrxd; orphan push not completed this turn. Retry when tip lock clears.
+PR_HINT=https://github.com/ItsMehRAWRXD/RawrXD/pull/new/upload/issue49-wave2-20261110-absorb

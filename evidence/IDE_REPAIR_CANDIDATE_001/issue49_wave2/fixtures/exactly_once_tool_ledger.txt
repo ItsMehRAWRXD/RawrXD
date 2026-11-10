@@ -1,0 +1,9 @@
+# Synthetic tool-call ledger for Wave2 exactly-once harness (NOT a product PASS).
+# Format: tool_call_id|tool_name|expect_admit
+# expect_admit = FIRST | DUPLICATE | REJECT_EMPTY_ID
+tc-read-001|read|FIRST
+tc-read-001|read|DUPLICATE
+tc-write-002|write|FIRST
+|read|REJECT_EMPTY_ID
+tc-write-002|write|DUPLICATE
+tc-build-003|run_build|FIRST
