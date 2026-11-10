@@ -1,0 +1,251 @@
+HIDDEN_GAP_REGISTER ? Wave5 (W5) swarm seal
+ASOF_UTC=2026-11-10T10:10:00Z
+OWNER=swarm-w5
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+TIP_CLIMB=HOLD
+NO_RC4_MUTATION=1
+NO_INVENT_PASS=1
+INVENT_CONFIRMED_DEFECT=0
+NOT_RUN_NE_PASS=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+H01_H120_NE_AUTOMATIC_DEFECTS=1
+
+================================================================================
+SHA BIND (IRC successor rebind)
+================================================================================
+HISTORICAL_IDE_SHA256=A4B95E4882D5FC38A3D6DAC1C8B43D08591933868C7E1AF74DE3CBB10727D4D7
+HISTORICAL_CLASS=WAVE1_PUBLISH_SUPERSEDED
+HISTORICAL_BINARY_ON_DISK=ABSENT
+SUCCESSOR_IDE_SHA256=D93F861C8D324C21EC448A4DD1213125B18F549FC94BCB9B18EE32E7AFB27C9A
+IDE_SHA256=D93F861C8D324C21EC448A4DD1213125B18F549FC94BCB9B18EE32E7AFB27C9A
+REBIND_REASON=W2_EXACTLY_ONCE_ABSORB_RELINK + A4B95_HISTORICAL.txt + live package SHA256.txt
+PACKAGE=F:\rawrxd\release\RawrXD-readiness-rc5b
+TIP_EXE=F:\rawrxd\release\RawrXD-readiness-rc5b\RawrXD-Win32IDE-Native-Ext.exe
+PRIOR_SURFACE_ON_A4B95=FAIL_NO_HWND (SURFACE_AUDIT_20261110-045351.txt)
+PRIOR_PASS_ON_089B9C72=NON_INHERITABLE (wrong package RawrXD-readiness-rc5)
+
+================================================================================
+CHECKLIST 01 ? Reconcile H01?H120 as investigation targets
+================================================================================
+AUTHORITY_PRIOR=F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md
+LAW=120_INVESTIGATE_NE_120_CONFIRMED; H_ROW_NE_DEFECT_UNTIL_SHA_EVIDENCE
+THIS_WAVE=Re-open all H01?H120 against IDE_SHA256=D93F861C as TARGETS only.
+PRIOR_CONFIRMED_ON_OTHER_SHA=(H01,H04,H16,H27,H51,H57,H87,H113) remain SHA-SCOPED leads ? NOT auto-CONFIRMED on D93F.
+PRIOR_ROLLUP_CC79_ERA=CONFIRMED=8 UNVERIFIED=56 INVESTIGATE=51 OUT_OF_SCOPE=3 DEDUPE=2
+
+================================================================================
+CHECKLIST 02 ? Deduplicated defect register (measured this wave)
+================================================================================
+DEDUPE_CROSSWALK=F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\DEDUPE_CROSSWALK.md
+UNIQUE_RELEASE_BLOCKERS_THIS_SHA=1
+  RB01=CREATEWINDOW_WM_CREATE_FATAL_USER_CALLBACK_0xC000041D (LAUNCH=FAIL / HWND absent)
+CORRELATED=W2 ISSUE49 STEP01_LAUNCH same EXIT=-1073740771 / 0xC000041D
+NON_DEFECT_TARGETS=H01?H120 retained as INVESTIGATE/UNVERIFIED/OUT_OF_SCOPE/DEDUPE per prior register unless re-measured below
+
+================================================================================
+CHECKLIST 03 ? Cross-ref Finish-25, Issues #49/#50/#57, related PRs
+================================================================================
+FINISH25_HISTORICAL=19/25
+FINISH25_CURRENT_ON_CC79=4/25 (T10,T16,T17,T20) ? NOT inherited to D93F
+UNACCEPTED_SIX=T05 T07 T08 T18 T19 T25
+ISSUE_49=OPEN "[LAYER-10] Product-Final Acceptance" ? W2 ACCEPTED=0; 0/11 live on D93F (launch fatal)
+ISSUE_50=OPEN "[MASTER] RawrXD Certification Ladder ? 0-to-10 Tracking"
+ISSUE_57=OPEN "RawrXD batch 024: 45 E2E native IDE?" ? gates remain obligations; NOT_RUN!=PASS
+PR_FAMILY=PRs #75?#79 unfinished acceptance inventory (OPEN/CONFLICTING != CONFIRMED impl defect)
+
+================================================================================
+CHECKLIST 04 ? Inventory compiled IDE features + exposed UI commands
+================================================================================
+METHOD=ASCII marker scan of TIP_EXE (D93F) + harness command posts
+BINARY_SIZE=11153408
+MARK_AgentSession=5
+MARK_goToProblem=5
+MARK_navigateToFileLine=1
+MARK_G7_ensurePanelVisible_ShowWindow_1300=1
+MARK_CreateJobObject=2
+MARK_VS_UNICODE_OUTPUT=2
+MARK_Ollama=40
+MARK_Vulkan=21
+MARK_CPU_fallback=5
+MARK_ToolCallBridge=1
+MARK_exactly_once=1
+MARK_ComputerUse=8
+MARK_Win32TerminalManager=6
+MARK_Settings=2
+MARK_Source_Control=4
+MARK_Search_CtrlShiftF=1
+MARK_FEATURE_FICTION=0
+MARK_NOT_PRODUCT_PATH=0
+MARK_initProblemsPanel=0
+MARK_IsExtensionHostEnabled=0
+MARK_IDM_BUILD_STOP=0
+MARK_onBuildStop=0
+MARK_Transcendence=0
+MARK_SelfRepairLoop=0
+UI_CMDS_HARNESS_POSTED=2034,2025,2021,2029,1101,1102,1103,1106,2003,3014
+RUNTIME_CTRL_MAP_THIS_SHA=NOT_RUN (LAUNCH=FAIL before ChildMap)
+
+================================================================================
+CHECKLIST 05 ? Trace menu/toolbar ? handler ? runtime ? visible result
+================================================================================
+TRACE_STATUS=BLOCKED_BY_LAUNCH_FATAL
+SOURCE_WIRED_SIGNALS=G7 VisId(1300) markers present; dual Problems authority fixed to 1312 (initProblemsPanel ABSENT)
+RUNTIME_REACHED=0
+VISIBLE_RESULT=0
+NOTE=SOURCE_WIRED != RUNTIME_REACHED
+
+================================================================================
+CHECKLIST 06 ? Dead commands / stubs / disabled / unreachable
+================================================================================
+FEATURE_FICTION_STRINGS_IN_EXE=0
+SELFREPAIRLOOP_STRING=0
+EXTENSION_HOST_ENABLE_SYMBOL=0
+BUILD_STOP_SYMBOLS=0
+CLASS=STRING_ABSENCE_NE_PROOF_OF_LIVE_HANDLER; residual stub risk remains INVESTIGATE (H03/H113 family)
+RUNTIME_DEAD_CMD_SWEEP=NOT_RUN (no HWND)
+
+================================================================================
+CHECKLIST 07 ? Missing registration / incorrect routing / orphan subsystems
+================================================================================
+DUAL_PROBLEMS_DISPOSITION=FIXED_AUTHORITY_1312_ONLY (marker: initProblemsPanel=False)
+ORPHAN_SUBSYSTEM_RUNTIME=UNVERIFIED_THIS_SHA
+PRIOR_H01_CORE_TU_ADMISSION=INVESTIGATE_LEAD (other-SHA CONFIRMED; not re-proved on D93F)
+
+================================================================================
+CHECKLIST 08 ? Agent tools / CU / file ops / model protocols
+================================================================================
+CU_VERIFY=PASS (same package CU SHA C686FC78?; artifacts/CU_VERIFY_20261110-050808.txt)
+CU_APPROVAL_DEFAULT_DENY=PASS
+CU_POLICY_DENIES=PASS
+AGENT_TOOL_LIVE_ON_IDE=NOT_RUN (IDE launch fatal)
+WAVE1_AGENT_READ_ON_A4B95=HISTORICAL_ONLY (no inherit)
+TOOLCALLBRIDGE_MARKER=1
+EXACTLY_ONCE_MARKER=1
+OLLAMA_EDGE=SOURCE_WIRED_RUNTIME_PARTIAL (live stream matrix NOT_RUN this SHA)
+
+================================================================================
+CHECKLIST 09 ? Editor / diagnostics / terminal / extensions / config
+================================================================================
+EDITOR_TABS_RUNTIME=NOT_RUN
+PROBLEMS_POPULATE_RUNTIME=NOT_RUN
+TERMINAL_SMOKE_THIS_SHA=NOT_RUN
+EXTENSIONS_THIS_SHA=NOT_RUN
+SETTINGS_APPLY_E2E=NOT_RUN
+PRIOR_NON_INHERIT=089B9C72 surface PASS axes must not credit D93F
+
+================================================================================
+CHECKLIST 10 ? Vulkan / Ollama + CPU fallback
+================================================================================
+VULKAN_STRINGS=21
+OLLAMA_STRINGS=40
+CPU_FALLBACK_STRINGS=5
+RUNTIME_GPU_PATH=NOT_RUN
+SILENT_FALLBACK_MISREPORT=INVESTIGATE (H84 lead; not CONFIRMED this wave)
+H87_DEVICE_LOSS=PRIOR_SHA_SCOPED_SPECIALTY_LEAD (not re-CONFIRMED)
+
+================================================================================
+CHECKLIST 11 ? Multi-model switching + concurrent sessions
+================================================================================
+RUNTIME=NOT_RUN
+CLASS=UNVERIFIED
+RELATED=H73/H86 INVESTIGATE leads
+
+================================================================================
+CHECKLIST 12 ? Error paths / memory ownership / thread sync
+================================================================================
+LAUNCH_FATAL=CONFIRMED (EXIT=-1073740771 / 0xC000041D)
+THREAD_UI_RACE_FAMILY=INVESTIGATE (H17 lead; not exercised)
+DETACHED_BUILD_SHUTDOWN=INVESTIGATE (prior source lead; not exercised)
+
+================================================================================
+CHECKLIST 13 ? Security boundaries (terminal / fs / tools)
+================================================================================
+CU_POLICY_DEFAULT_DENY=PASS (measured verify harness)
+PATH_TRAVERSAL_E2E=NOT_RUN (H91 INVESTIGATE)
+SHELL_UNINTENDED_EXEC=NOT_RUN (H93 / PR77)
+SECRETS_REDACTION=NOT_RUN (H94)
+
+================================================================================
+CHECKLIST 14 ? Positive / negative / regression / stress
+================================================================================
+POSITIVE_CU_VERIFY=PASS
+NEGATIVE_LAUNCH_HWND=FAIL (expected HWND; measured absent)
+REGRESSION_SURFACE=FAIL (Invoke-Wave5SurfaceAudit.ps1 VERDICT=FAIL_NO_HWND)
+STRESS_REBUILD_RACE=NOT_RUN
+PRIOR_WRONG_SHA_SURFACE_PASS=089B9C72 NON_INHERITABLE
+
+================================================================================
+CHECKLIST 15 ? Classify blocker / nonblocking / optional / unverified
+================================================================================
+BLOCKER_RELEASE=
+  RB01 CREATEWINDOW_WM_CREATE_FATAL_USER_CALLBACK_0xC000041D on IDE_SHA256=D93F861C?
+NONBLOCKING_LIMITATIONS=
+  NB01 Freeze-control dashboard 401 AUTHORIZED_DEFER
+  NB02 Multi-file edit runtime PARTIAL when HWND exists (not exercised this SHA)
+  NB03 Ollama protocol matrix SOURCE_WIRED_RUNTIME_PARTIAL
+  NB04 Finish-25 residual six (T05/T07/T08/T18/T19/T25) ? blocked behind HWND
+OPTIONAL_UNLESS_SPEC=
+  H82/H83/H114 OUT_OF_SCOPE multi-GPU / cross-OS unless product-final contract mandates
+UNVERIFIED=
+  All H01?H120 runtime axes on D93F except RB01 launch fatal correlation
+  Issue #49 11-step, #50 ladder, #57 45 gates live on D93F
+
+================================================================================
+CHECKLIST 16 ? Close confirmed release blockers with measured evidence
+================================================================================
+RB01_STATUS=OPEN
+RB01_CLOSE_REQUIREMENT=CreateWindow/WM_CREATE path fixed; same-SHA re-launch yields HWND; re-run Invoke-Wave5SurfaceAudit.ps1 VERDICT!=FAIL
+CLOSED_BLOCKERS_THIS_WAVE=0
+NOTE=CU default-deny PASS is positive but does not close IDE HWND blocker
+
+================================================================================
+CHECKLIST 17 ? Remaining nonblocking limitations (explicit)
+================================================================================
+SEE_NB01_NB04_ABOVE=1
+PROMOTE=0 remains process hold even after HWND fix
+IRC_VERIFIED=0; SIX_RECEIPTS_ACCEPTED incomplete per COMPLETION_GATE.txt
+
+================================================================================
+CHECKLIST 18 ? Coverage completeness
+================================================================================
+COVERAGE_REGISTER_COMPLETE=1
+H01_H120_ROWS_PRESENT=1
+SHA_OVERLAY_COMPLETE=1
+REGRESSION_EXECUTED=1
+REGRESSION_PASS=0
+
+================================================================================
+H01?H120 SHA OVERLAY (D93F) ? investigation targets; not automatic defects
+================================================================================
+STATUS_VOCAB=CONFIRMED|UNVERIFIED|INVESTIGATE|OUT_OF_SCOPE|DEDUPE|BLOCKED_BY_LAUNCH
+DEFAULT_THIS_SHA=BLOCKED_BY_LAUNCH for runtime-dependent rows
+CONFIRMED_THIS_SHA=RB01_ONLY (launch fatal) ? product-gate family H118/H120 BLOCKED_BY_LAUNCH (not invented H-CONFIRMED)
+PRIOR_CONFIRMED_NOT_RECONFIRMED=H01,H04,H16,H27,H51,H57,H87,H113 ? INVESTIGATE_LEAD_OTHER_SHA
+DEDUPE_RETAIN=H08?H27, H35?H27
+OUT_OF_SCOPE_RETAIN=H82,H83,H114
+
+ID_RANGE_SUMMARY=
+  H01-H12 BuildIntegrity/admission ? INVESTIGATE_LEAD / UNVERIFIED (blocked)
+  H13-H26 UI routing/focus/DPI ? UNVERIFIED (blocked)
+  H27-H42 Compiler/Problems/PE ? INVESTIGATE_LEAD / UNVERIFIED (blocked)
+  H43-H56 Extensions ? UNVERIFIED/INVESTIGATE (blocked)
+  H57-H72 Agent/tools/git ? INVESTIGATE/UNVERIFIED (blocked)
+  H73-H90 Model/GPU/Ollama ? INVESTIGATE/UNVERIFIED/OOS (blocked)
+  H91-H106 Security/CI/provenance ? INVESTIGATE/UNVERIFIED (blocked)
+  H107-H120 Product-final surfaces ? UNVERIFIED/INVESTIGATE; H120=#49 NOT_DEMONSTRATED
+
+ROLLUP_THIS_WAVE=
+  CONFIRMED_RELEASE_BLOCKERS=1
+  H_CONFIRMED_REPROVED_ON_D93F=0
+  UNVERIFIED_OR_BLOCKED=117
+  OUT_OF_SCOPE=3
+  DEDUPE=2
+  COVERAGE_ENTRIES=120
+
+ACCEPTED_PRECONDITION_COVERAGE=1
+ACCEPTED_PRECONDITION_NO_OPEN_BLOCKERS=0
+ACCEPTED_PRECONDITION_REGRESSION_PASS=0
+REGISTER_ACCEPTED=0
