@@ -3928,6 +3928,117 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_SemanticIndex.cpp
         src/win32app/Win32IDE_SemanticPanel.cpp
         src/win32app/RawrXD_SymbolEngine.cpp
+        # Batch 3: AI/Agent Features (15 features)
+        src/win32app/Win32IDE_ChatWindow.cpp
+        src/win32app/Win32IDE_ChatWindow.h
+        src/win32app/Win32IDE_ContextMentionParser.cpp
+        src/win32app/context/context_mention_parser.cpp
+        src/win32app/context/context_mention_parser.h
+        src/win32app/Win32IDE_ConsentPrompt.cpp
+        src/win32app/ConsentPrompt.h
+        src/win32app/Win32IDE_AgentExecutor.cpp
+        src/win32app/Win32IDE_AgentExecutor.h
+        src/win32app/Win32IDE_PromptTemplates.cpp
+        src/win32app/Win32IDE_StaticAnalysisPanel.cpp
+        src/win32app/Win32IDE_AgentStepTimeline.cpp
+        src/win32app/Win32IDE_AgentStepTimeline.h
+        src/win32app/DialogBoxWithInput.cpp
+        src/win32app/DialogBoxWithInput.h
+        src/win32app/AutonomousAgent.cpp
+        src/win32app/Win32IDE_AutonomousAgent.cpp
+        src/win32app/Win32IDE_ProjectRagLite.cpp
+        src/win32app/Win32IDE_AgenticBrowser.cpp
+        src/win32app/Win32IDE_AgenticBrowser.h
+        src/win32app/Win32IDE_ModelManager.cpp
+        src/win32app/Win32IDE_ModelManager.h
+        src/win32app/Win32IDE_SecurityScans.cpp
+        src/win32app/Win32IDE_AgentHistory.cpp
+        src/win32app/ExtensionSandboxManager.cpp
+        src/win32app/ExtensionSandboxManager.h
+        src/core/prompt_template_engine.cpp
+        src/core/static_analysis_engine.cpp
+        # Batch 4: Project/Workspace/Git/Terminal/Themes (15 features)
+        src/win32app/Win32IDE_Project.cpp
+        src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_SearchPanel.cpp
+        src/win32app/Win32IDE_TaskRunner.cpp
+        src/win32app/Win32IDE_TerminalTabs.cpp
+        src/win32app/Win32IDE_ProblemsPanel.cpp
+        src/win32app/Win32IDE_CompilerPanel.cpp
+        src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_Settings.h
+        src/win32app/Win32IDE_Git.cpp
+        src/win32app/Win32IDE_Git.h
+        src/win32app/Win32IDE_Themes.cpp
+        src/win32app/Win32IDE_MonacoThemes.cpp
+        src/win32app/Win32IDE_ShortcutEditor.cpp
+        src/win32app/Win32IDE_StatusBarActions.cpp
+        src/win32app/Win32IDE_SettingsGUI.cpp
+        # Batch 5: Extensions/Inference/ModelMgmt (15 features)
+        src/win32app/Win32IDE_ExtensionMarketplace.cpp
+        src/win32app/ExtensionAPI_VSCode.cpp
+        src/win32app/ExtensionAPI_VSCode_Dispatcher.cpp
+        src/win32app/ExtensionAPI_VSCode_Internal.h
+        src/win32app/ExtensionSandboxManager.cpp
+        src/win32app/ExtensionSandboxManager.h
+        src/win32app/ExtensionHost.cpp
+        src/win32app/ExtensionHost.h
+        src/win32app/ExtensionManifestLoader.cpp
+        src/win32app/ExtensionManifestLoader.h
+        src/win32app/ExtensionSecurityCheck.cpp
+        src/win32app/ExtensionSecurityCheck.h
+        src/win32app/NativePluginManager.cpp
+        src/win32app/NativePluginManager.h
+        src/win32app/Win32IDE_ModelLab.cpp
+        src/win32app/Win32IDE_ModelDiscovery.cpp
+        src/win32app/Win32IDE_Quantum.cpp
+        src/win32app/Win32IDE_GGUFInspector.cpp
+        src/win32app/Win32IDE_GGUF_Reader.cpp
+        src/win32app/Win32IDE_BenchmarkMenu.cpp
+        src/win32app/Win32IDE_VRAM_Bridge.cpp
+        src/win32app/SpeculativeOptimizer.cpp
+        src/win32app/SpeculativeOptimizer.h
+        src/win32app/Win32IDE_KVCacheCleanup.cpp
+        src/win32app/Win32IDE_LayerEviction.cpp
+        # Batch 6: Debugger/Collab/Context/RAG (15 features)
+        src/win32app/BreakpointManagerPanel.hpp
+        src/win32app/BreakpointManagerPanel.cpp
+        src/win32app/BreakpointPropertiesDialog.cpp
+        src/win32app/Win32IDE_CallStackSymbols.cpp
+        src/win32app/Win32IDE_DebugWatchFormat.cpp
+        src/win32app/Win32IDE_DebuggerIntegration.cpp
+        src/win32app/Win32IDE_DebuggerIntegration.hpp
+        src/win32app/Win32IDE_DAPServer.cpp
+        src/win32app/Win32IDE_DAPServer.h
+        src/win32app/Win32IDE_MemoryView.cpp
+        src/win32app/Win32IDE_Collab.cpp
+        src/win32app/AnnotationOverlay.cpp
+        src/win32app/AnnotationOverlay.h
+        src/win32app/Win32IDE_AnnotationOverlay.cpp
+        src/win32app/Win32IDE_AnnotationOverlay.h
+        src/win32app/Win32IDE_VoiceAssistantPanel.cpp
+        src/win32app/ScreenPilotModelHub.cpp
+        src/win32app/ScreenPilotModelHub.h
+        src/win32app/Win32IDE_FileSystemEvents.cpp
+        src/win32app/Win32IDE_ContextGovernor.cpp
+        src/win32app/Win32IDE_ContextGovernor.h
+        # Batch 7: Performance/Security/Enterprise/Build (15 features)
+        src/win32app/Win32IDE_MemoryStats.cpp
+        src/win32app/Win32IDE_HeapHardening.cpp
+        src/win32app/Win32IDE_PerfTelemetry.cpp
+        src/win32app/Win32IDE_AuditDashboard.cpp
+        src/win32app/Win32IDE_Attestation.cpp
+        src/win32app/Win32IDE_LicenseCreator.cpp
+        src/win32app/Win32IDE_CrashReporter.cpp
+        src/win32app/Win32IDE_SecurityScans.cpp
+        src/win32app/Win32IDE_SecurityDashboard.cpp
+        src/win32app/Win32IDE_Telemetry.cpp
+        src/win32app/Win32IDE_AirgappedEnterprise.cpp
+        src/win32app/Win32IDE_DownloadsPanel.cpp
+        src/win32app/Win32IDE_EnterpriseStressTests.cpp
+        src/win32app/Win32IDE_InitSequence.cpp
+        src/win32app/Win32IDE_IOCPFileWatcher.cpp
+        src/win32app/Win32IDE_PageFaultHandler.cpp
         # AgentSession provides session lifecycle, ledger, and turn recording.
         src/agentic/AgentSession.cpp
         # Dedicated GhostText Ollama requests must use the shared WinHTTP

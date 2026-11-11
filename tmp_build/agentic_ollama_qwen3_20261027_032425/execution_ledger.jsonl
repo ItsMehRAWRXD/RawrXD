@@ -1,0 +1,6 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"calc.cpp","observation_bytes":76,"exit_code":0,"valid":true,"timestamp":1793071491472}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"write","target":"calc.cpp","observation_bytes":40,"exit_code":0,"valid":true,"timestamp":1793071492463}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"finish","target":"","observation_bytes":19,"exit_code":0,"valid":true,"timestamp":1793071492570}}
+{"type":"VERIFICATION","entry":4,"payload":{"passed":true,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1793071492572}}
+{"type":"LEDGER_END","entry":5,"payload":{"total_entries":5}}

@@ -1,0 +1,3696 @@
+RUN_CONFIG_MAX_TOKENS=240
+Loading model via Deep2 engine: gemma3-1b-Q2_K.gguf
+[Deep2Engine] Loading model from: F:\rawrxd\gemma3-1b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\gemma3-1b-Q2_K.gguf mode=GPU_MULTI devices=2 kv_per_token=8424 max_ctx_est=16836
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[Deep2Engine] GGUF architecture: 'gemma3'  hidden=1152 layers=26 heads=4 kvHeads=1 inter=6912 vocab=262144
+[Deep2Engine] Context length from metadata: 32768 tokens
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[Deep2Engine] Tokenizer loaded: vocab=262144 bos=2 eos=1 (Spm::encode)
+[Deep2Engine] Layer topology: 26 attention, 0 SSM, 0 unknown of 26 total
+[Deep2Engine] KV cache sized for 26 attention layers (SSM layers excluded)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000027EC0045F30  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=1  registeredBytes=663552  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000027EC0045F30  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=100  registeredBytes=153868032  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000027EC0045F30  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=165888  |  registry_size=200  registeredBytes=307238400  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000027EC0045F30  registered=236 tensors  bytes=682988544  max=536870912
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[ModelFit] KV budget caps context: requested=32768 fit=16836 (kv_bytes_per_token=8424)
+[Deep2Engine] ThreadPool (loadModel): 8 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6F7827C10 dequant=00007FF6F7824580 GetGEMV(12)=00007FF6F7827C10 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=26 page=8 virtualMax=16836 heads=1 dim=288
+[KVCache] HOT_BYTES=479232 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 26 layers x 16836 positions x 1 heads x 288 dim = 961.82 MB
+[Deep2Engine] Model loaded successfully (340 tensors)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018F42
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_COST_T_BEST=0.000000
+DEEP2_COST_CUT=13
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-12
+DEEP2_COST_SLOT1_LAYERS=13-25
+DEEP2_COST_VRAM_GATE=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-12 kind=GPU
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 vram=34174009344 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon(TM) Graphics layers=13-25 kind=GPU
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=1 devices=2
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=26
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-12
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=4294967295
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=13-25
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=4294967295
+DEEP2_LAYER_0_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_25_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=0
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+Deep2 model loaded: gemma3-1b-Q2_K.gguf  hidden=1152  vocab=0
+RawrXD Local Agent (Deep2 backend)
+Model:    gemma3-1b-Q2_K.gguf
+Backend:  deep2 (in-process GGUF inference)
+Mode:     code - Default agent: inspect, modify, build and test
+Root:     F:\rawrxd
+Edits:    allowed by policy
+Execute:  allowed by policy
+Tools:    9 registered
+
+Interactive session. Enter a goal and press Enter.
+Slash commands: /mode <name>  /status  /tools  /checkpoint  /exit
+
+rawr> 
+[Deep2Backend] Chat template: gemma2
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=279
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=26 tokens=240
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=6240
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=26 TOKENS=240
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1437800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 4 (patch_f7c089e352e1fdc8)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=4
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] embedToken: type=8 vocabSize=262144 hiddenDim=1152 data=0000027E80F0EF60 sizeBytes=320864256 rows=262144 cols=1152
+[DBG-FWD] enter layer=0 seqLen=1 liveSeq=0
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=1 liveSeq=0
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=1 liveSeq=0
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=1 liveSeq=0
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=1 liveSeq=0
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=1 liveSeq=0
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=1 liveSeq=0
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=1 liveSeq=0
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=1 liveSeq=0
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=1 liveSeq=0
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=1 liveSeq=0
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=1 liveSeq=0
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=1 liveSeq=0
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.612226e+02
+[L12_DIAG] layer=12 K_proj norm=5.887474e+02
+[L12_DIAG] layer=12 V_proj norm=2.870001e+02
+[L12_ROPE_DIAG] pos=0 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 4.396352e-01 -6.889687e-02 -1.044245e+00 -6.832557e-01 -6.034489e-02 -6.331289e-03 7.963450e-02 -1.074066e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=4.396352e-01 k[1]=-6.889687e-02 k[2]=-1.044245e+00 k[3]=-6.832557e-01
+[L12_ROPE_DIAG] K pair i=0: k0=4.396352e-01 k1=-6.889687e-02 cosA=1.000000e+00 sinA=0.000000e+00 before=1.980259e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=4.396352e-01 kh[i+1]=-6.889687e-02 after=1.980259e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-1.044245e+00 k1=-6.832557e-01 cosA=1.000000e+00 sinA=0.000000e+00 before=1.557285e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.044245e+00 kh[i+1]=-6.832557e-01 after=1.557285e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.898955e+01 K_postRoPE norm=2.695984e+01
+[L12_DIAG] layer=12 wo_proj norm=2.993144e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.993144e+02
+[L12_DIAG] layer=12 after residual norm=3.946204e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.946204e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=1 liveSeq=0
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=1 liveSeq=0
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=1 liveSeq=0
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=1 liveSeq=0
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=1 liveSeq=0
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=1 liveSeq=0
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=1 liveSeq=0
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=1 liveSeq=0
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=1 liveSeq=0
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=0 kvBytes=1024 kBase=0000027EC9781C40 vBase=0000027EC99B3540 currentPos=0
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=1 liveSeq=0
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=1 liveSeq=0
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=1 liveSeq=0
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=1 liveSeq=0
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=2 liveSeq=1
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=2 liveSeq=1
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=2 liveSeq=1
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=2 liveSeq=1
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=2 liveSeq=1
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=2 liveSeq=1
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=2 liveSeq=1
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=2 liveSeq=1
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=2 liveSeq=1
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=2 liveSeq=1
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=2 liveSeq=1
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=2 liveSeq=1
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=2 liveSeq=1
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.266735e+02
+[L12_DIAG] layer=12 K_proj norm=5.611741e+02
+[L12_DIAG] layer=12 V_proj norm=2.650580e+02
+[L12_ROPE_DIAG] pos=1 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.037786e-01 1.672678e+00 -4.396267e-01 -6.343926e-01 -9.218557e-01 2.503661e-03 1.860144e-01 -7.215730e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.037786e-01 k[1]=1.672678e+00 k[2]=-4.396267e-01 k[3]=-6.343926e-01
+[L12_ROPE_DIAG] K pair i=0: k0=1.037786e-01 k1=1.672678e+00 cosA=5.403023e-01 sinA=8.414710e-01 before=2.808622e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.351438e+00 kh[i+1]=9.910784e-01 after=2.808622e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-4.396267e-01 k1=-6.343926e-01 cosA=5.973753e-01 sinA=8.019618e-01 before=5.957255e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=2.461365e-01 kh[i+1]=-7.315342e-01 after=5.957255e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.802960e+01 K_postRoPE norm=2.775941e+01
+[L12_DIAG] layer=12 wo_proj norm=2.794014e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.794014e+02
+[L12_DIAG] layer=12 after residual norm=2.972792e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.972792e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=2 liveSeq=1
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=2 liveSeq=1
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=2 liveSeq=1
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=2 liveSeq=1
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=2 liveSeq=1
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=2 liveSeq=1
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=2 liveSeq=1
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=2 liveSeq=1
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=2 liveSeq=1
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=1 kvBytes=1024 kBase=0000027EC97820C0 vBase=0000027EC99B39C0 currentPos=1
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=2 liveSeq=1
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=2 liveSeq=1
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=2 liveSeq=1
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=2 liveSeq=1
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=3 liveSeq=2
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=3 liveSeq=2
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=3 liveSeq=2
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=3 liveSeq=2
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=3 liveSeq=2
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=3 liveSeq=2
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=3 liveSeq=2
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=3 liveSeq=2
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=3 liveSeq=2
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=3 liveSeq=2
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=3 liveSeq=2
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=3 liveSeq=2
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=3 liveSeq=2
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.905188e+02
+[L12_DIAG] layer=12 K_proj norm=4.768820e+02
+[L12_DIAG] layer=12 V_proj norm=2.569490e+02
+[L12_ROPE_DIAG] pos=2 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.296859e-01 1.219931e+00 -5.214303e-01 -2.849976e-01 -7.134898e-01 -3.967316e-03 2.159553e-01 -9.148914e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.296859e-01 k[1]=1.219931e+00 k[2]=-5.214303e-01 k[3]=-2.849976e-01
+[L12_ROPE_DIAG] K pair i=0: k0=1.296859e-01 k1=1.219931e+00 cosA=-4.161468e-01 sinA=9.092974e-01 before=1.505050e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.163249e+00 kh[i+1]=-3.897474e-01 after=1.505050e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-5.214303e-01 k1=-2.849976e-01 cosA=-2.862854e-01 sinA=9.581444e-01 before=3.531131e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=4.223467e-01 kh[i+1]=-4.180148e-01 after=3.531131e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.965122e+01 K_postRoPE norm=2.957411e+01
+[L12_DIAG] layer=12 wo_proj norm=2.644353e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.644353e+02
+[L12_DIAG] layer=12 after residual norm=2.858395e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.858395e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=3 liveSeq=2
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=3 liveSeq=2
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=3 liveSeq=2
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=3 liveSeq=2
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=3 liveSeq=2
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=3 liveSeq=2
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=3 liveSeq=2
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=3 liveSeq=2
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=3 liveSeq=2
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=2 kvBytes=1024 kBase=0000027EC9782540 vBase=0000027EC99B3E40 currentPos=2
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=3 liveSeq=2
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=3 liveSeq=2
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=3 liveSeq=2
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=3 liveSeq=2
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=4 liveSeq=3
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=4 liveSeq=3
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=4 liveSeq=3
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=4 liveSeq=3
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=4 liveSeq=3
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=4 liveSeq=3
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=4 liveSeq=3
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=4 liveSeq=3
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=4 liveSeq=3
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=4 liveSeq=3
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=4 liveSeq=3
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=4 liveSeq=3
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=4 liveSeq=3
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.980519e+02
+[L12_DIAG] layer=12 K_proj norm=4.476351e+02
+[L12_DIAG] layer=12 V_proj norm=2.748252e+02
+[L12_ROPE_DIAG] pos=3 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 5.189025e-01 -2.836249e-01 -4.317589e-01 -3.044772e-01 4.095505e-01 -9.045062e-04 8.570611e-02 3.731423e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=5.189025e-01 k[1]=-2.836249e-01 k[2]=-4.317589e-01 k[3]=-3.044772e-01
+[L12_ROPE_DIAG] K pair i=0: k0=5.189025e-01 k1=-2.836249e-01 cosA=-9.899925e-01 sinA=1.411200e-01 before=3.497029e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-4.736844e-01 kh[i+1]=3.540141e-01 after=3.497029e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-4.317589e-01 k1=-3.044772e-01 cosA=-9.394150e-01 sinA=3.427818e-01 before=2.791221e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=5.099700e-01 kh[i+1]=1.380313e-01 after=2.791221e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.055875e+01 K_postRoPE norm=3.110538e+01
+[L12_DIAG] layer=12 wo_proj norm=2.585917e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.585917e+02
+[L12_DIAG] layer=12 after residual norm=3.269028e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.269028e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=4 liveSeq=3
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=4 liveSeq=3
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=4 liveSeq=3
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=4 liveSeq=3
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=4 liveSeq=3
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=4 liveSeq=3
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=4 liveSeq=3
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=4 liveSeq=3
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=4 liveSeq=3
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=3 kvBytes=1024 kBase=0000027EC97829C0 vBase=0000027EC99B42C0 currentPos=3
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=4 liveSeq=3
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=4 liveSeq=3
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=4 liveSeq=3
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=4 liveSeq=3
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=5 liveSeq=4
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=5 liveSeq=4
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=5 liveSeq=4
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=5 liveSeq=4
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=5 liveSeq=4
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=5 liveSeq=4
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=5 liveSeq=4
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=5 liveSeq=4
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=5 liveSeq=4
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=5 liveSeq=4
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=5 liveSeq=4
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=5 liveSeq=4
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=5 liveSeq=4
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.723782e+02
+[L12_DIAG] layer=12 K_proj norm=4.436698e+02
+[L12_DIAG] layer=12 V_proj norm=2.530845e+02
+[L12_ROPE_DIAG] pos=4 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 2.525435e-01 1.146309e+00 -5.899978e-01 1.949156e-01 -4.583925e-01 -1.142031e-03 1.910915e-01 -1.048857e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=2.525435e-01 k[1]=1.146309e+00 k[2]=-5.899978e-01 k[3]=1.949156e-01
+[L12_ROPE_DIAG] K pair i=0: k0=2.525435e-01 k1=1.146309e+00 cosA=-6.536436e-01 sinA=-7.568025e-01 before=1.377803e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=7.024561e-01 kh[i+1]=-9.404032e-01 after=1.377803e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-5.899978e-01 k1=1.949156e-01 cosA=-8.360813e-01 sinA=-5.486056e-01 before=3.860894e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=6.002179e-01 kh[i+1]=1.607108e-01 after=3.860895e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.035601e+01 K_postRoPE norm=2.955377e+01
+[L12_DIAG] layer=12 wo_proj norm=2.500665e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.500665e+02
+[L12_DIAG] layer=12 after residual norm=3.001154e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.001154e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=5 liveSeq=4
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=5 liveSeq=4
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=5 liveSeq=4
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=5 liveSeq=4
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=5 liveSeq=4
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=5 liveSeq=4
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=5 liveSeq=4
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=5 liveSeq=4
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=5 liveSeq=4
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=4 kvBytes=1024 kBase=0000027EC9782E40 vBase=0000027EC99B4740 currentPos=4
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=5 liveSeq=4
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=5 liveSeq=4
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=5 liveSeq=4
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=5 liveSeq=4
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=6 liveSeq=5
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=6 liveSeq=5
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=6 liveSeq=5
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=6 liveSeq=5
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=6 liveSeq=5
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=6 liveSeq=5
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=6 liveSeq=5
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=6 liveSeq=5
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=6 liveSeq=5
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=6 liveSeq=5
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=6 liveSeq=5
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=6 liveSeq=5
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=6 liveSeq=5
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.618131e+02
+[L12_DIAG] layer=12 K_proj norm=3.936790e+02
+[L12_DIAG] layer=12 V_proj norm=2.549288e+02
+[L12_ROPE_DIAG] pos=5 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -1.958776e-02 6.064569e-01 1.591956e-01 2.936548e-01 -3.308019e-01 -2.490018e-03 7.390144e-02 -7.707143e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.958776e-02 k[1]=6.064569e-01 k[2]=1.591956e-01 k[3]=2.936548e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-1.958776e-02 k1=6.064569e-01 cosA=2.836622e-01 sinA=-9.589243e-01 before=3.681736e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=5.759900e-01 kh[i+1]=1.908121e-01 after=3.681737e-01
+[L12_ROPE_DIAG] K pair i=2: k0=1.591956e-01 k1=2.936548e-01 cosA=-5.949366e-02 sinA=-9.982287e-01 before=1.115764e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=2.836635e-01 kh[i+1]=-1.763842e-01 after=1.115764e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.943966e+01 K_postRoPE norm=2.848242e+01
+[L12_DIAG] layer=12 wo_proj norm=2.359103e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.359103e+02
+[L12_DIAG] layer=12 after residual norm=3.286861e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.286861e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=6 liveSeq=5
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=6 liveSeq=5
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=6 liveSeq=5
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=6 liveSeq=5
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=6 liveSeq=5
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=6 liveSeq=5
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=6 liveSeq=5
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=6 liveSeq=5
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=6 liveSeq=5
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=5 kvBytes=1024 kBase=0000027EC97832C0 vBase=0000027EC99B4BC0 currentPos=5
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=6 liveSeq=5
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=6 liveSeq=5
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=6 liveSeq=5
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=6 liveSeq=5
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=7 liveSeq=6
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=7 liveSeq=6
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=7 liveSeq=6
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=7 liveSeq=6
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=7 liveSeq=6
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=7 liveSeq=6
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=7 liveSeq=6
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=7 liveSeq=6
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=7 liveSeq=6
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=7 liveSeq=6
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=7 liveSeq=6
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=7 liveSeq=6
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=7 liveSeq=6
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.347173e+02
+[L12_DIAG] layer=12 K_proj norm=5.632422e+02
+[L12_DIAG] layer=12 V_proj norm=2.615336e+02
+[L12_ROPE_DIAG] pos=6 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 8.034704e-01 4.673729e-01 -6.877142e-01 -1.025740e-02 -3.616056e-01 -5.037156e-03 1.277397e-01 -8.052795e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=8.034704e-01 k[1]=4.673729e-01 k[2]=-6.877142e-01 k[3]=-1.025740e-02
+[L12_ROPE_DIAG] K pair i=0: k0=8.034704e-01 k1=4.673729e-01 cosA=9.601703e-01 sinA=-2.794155e-01 before=8.640021e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=9.020596e-01 kh[i+1]=2.242554e-01 after=8.640021e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-6.877142e-01 k1=-1.025740e-02 cosA=7.650012e-01 sinA=-6.440288e-01 before=4.730561e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-5.327083e-01 kh[i+1]=4.350609e-01 after=4.730561e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.649869e+01 K_postRoPE norm=2.750255e+01
+[L12_DIAG] layer=12 wo_proj norm=3.093507e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=3.093507e+02
+[L12_DIAG] layer=12 after residual norm=2.727627e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.727627e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=7 liveSeq=6
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=7 liveSeq=6
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=7 liveSeq=6
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=7 liveSeq=6
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=7 liveSeq=6
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=7 liveSeq=6
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=7 liveSeq=6
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=7 liveSeq=6
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=7 liveSeq=6
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=6 kvBytes=1024 kBase=0000027EC9783740 vBase=0000027EC99B5040 currentPos=6
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=7 liveSeq=6
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=7 liveSeq=6
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=7 liveSeq=6
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=7 liveSeq=6
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=8 liveSeq=7
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=8 liveSeq=7
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=8 liveSeq=7
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=8 liveSeq=7
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=8 liveSeq=7
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=8 liveSeq=7
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=8 liveSeq=7
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=8 liveSeq=7
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=8 liveSeq=7
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=8 liveSeq=7
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=8 liveSeq=7
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=8 liveSeq=7
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=8 liveSeq=7
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.998467e+02
+[L12_DIAG] layer=12 K_proj norm=4.815618e+02
+[L12_DIAG] layer=12 V_proj norm=2.758568e+02
+[L12_ROPE_DIAG] pos=7 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.253591e+00 4.272993e-02 -7.796563e-01 -4.969208e-01 -3.953063e-01 -7.745967e-03 1.343343e-01 -1.892634e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.253591e+00 k[1]=4.272993e-02 k[2]=-7.796563e-01 k[3]=-4.969208e-01
+[L12_ROPE_DIAG] K pair i=0: k0=1.253591e+00 k1=4.272993e-02 cosA=7.539023e-01 sinA=6.569866e-01 before=1.573316e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=9.170120e-01 kh[i+1]=8.558066e-01 after=1.573316e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-7.796563e-01 k1=-4.969208e-01 cosA=9.734794e-01 sinA=2.287748e-01 before=8.547942e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-6.452963e-01 kh[i+1]=-6.621078e-01 after=8.547941e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.100382e+01 K_postRoPE norm=2.776715e+01
+[L12_DIAG] layer=12 wo_proj norm=2.435426e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.435426e+02
+[L12_DIAG] layer=12 after residual norm=3.140866e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.140866e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=8 liveSeq=7
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=8 liveSeq=7
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=8 liveSeq=7
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=8 liveSeq=7
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=8 liveSeq=7
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=8 liveSeq=7
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=8 liveSeq=7
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=8 liveSeq=7
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=8 liveSeq=7
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=7 kvBytes=1024 kBase=0000027EC9783BC0 vBase=0000027EC99B54C0 currentPos=7
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=8 liveSeq=7
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=8 liveSeq=7
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=8 liveSeq=7
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=8 liveSeq=7
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=9 liveSeq=8
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KVCache] page grow 8 -> 16 hot (virtualMax=16836 pos=8)
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=9 liveSeq=8
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=9 liveSeq=8
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=9 liveSeq=8
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=9 liveSeq=8
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=9 liveSeq=8
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=9 liveSeq=8
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=9 liveSeq=8
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=9 liveSeq=8
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=9 liveSeq=8
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=9 liveSeq=8
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=9 liveSeq=8
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=9 liveSeq=8
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.110607e+02
+[L12_DIAG] layer=12 K_proj norm=4.751119e+02
+[L12_DIAG] layer=12 V_proj norm=2.497689e+02
+[L12_ROPE_DIAG] pos=8 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 5.249512e-01 -6.933663e-01 -3.872226e-01 -9.789709e-01 -4.483066e-01 -3.356911e-03 1.428023e-01 -3.615694e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=5.249512e-01 k[1]=-6.933663e-01 k[2]=-3.872226e-01 k[3]=-9.789709e-01
+[L12_ROPE_DIAG] K pair i=0: k0=5.249512e-01 k1=-6.933663e-01 cosA=-1.455000e-01 sinA=9.893582e-01 before=7.563307e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=6.096073e-01 kh[i+1]=6.202496e-01 after=7.563306e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-3.872226e-01 k1=-9.789709e-01 cosA=3.980639e-01 sinA=9.173577e-01 before=1.108325e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=7.439271e-01 kh[i+1]=-7.449145e-01 after=1.108325e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.110193e+01 K_postRoPE norm=2.894058e+01
+[L12_DIAG] layer=12 wo_proj norm=2.986081e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.986081e+02
+[L12_DIAG] layer=12 after residual norm=2.978145e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.978145e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=9 liveSeq=8
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=9 liveSeq=8
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=9 liveSeq=8
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=9 liveSeq=8
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=9 liveSeq=8
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=9 liveSeq=8
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=9 liveSeq=8
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=9 liveSeq=8
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=9 liveSeq=8
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=8 kvBytes=1024 kBase=0000027EE4D88620 vBase=0000027EE4DFD640 currentPos=8
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=9 liveSeq=8
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=9 liveSeq=8
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=9 liveSeq=8
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=9 liveSeq=8
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=10 liveSeq=9
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=10 liveSeq=9
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=10 liveSeq=9
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=10 liveSeq=9
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=10 liveSeq=9
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=10 liveSeq=9
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=10 liveSeq=9
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=10 liveSeq=9
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=10 liveSeq=9
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=10 liveSeq=9
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=10 liveSeq=9
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=10 liveSeq=9
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=10 liveSeq=9
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.913524e+02
+[L12_DIAG] layer=12 K_proj norm=4.553174e+02
+[L12_DIAG] layer=12 V_proj norm=2.625073e+02
+[L12_ROPE_DIAG] pos=9 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 2.735910e-01 -7.856916e-02 1.736680e-01 -2.537576e-02 1.331526e-01 -6.685361e-03 1.730410e-01 -1.040264e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=2.735910e-01 k[1]=-7.856916e-02 k[2]=1.736680e-01 k[3]=-2.537576e-02
+[L12_ROPE_DIAG] K pair i=0: k0=2.735910e-01 k1=-7.856916e-02 cosA=-9.111302e-01 sinA=4.121185e-01 before=8.102517e-02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-2.168973e-01 kh[i+1]=1.843387e-01 after=8.102516e-02
+[L12_ROPE_DIAG] K pair i=2: k0=1.736680e-01 k1=-2.537576e-02 cosA=-4.978927e-01 sinA=8.672386e-01 before=3.080449e-02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-6.446117e-02 kh[i+1]=1.632460e-01 after=3.080449e-02
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.651322e+01 K_postRoPE norm=3.034507e+01
+[L12_DIAG] layer=12 wo_proj norm=2.278684e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.278684e+02
+[L12_DIAG] layer=12 after residual norm=2.928560e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.928560e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=10 liveSeq=9
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=10 liveSeq=9
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=10 liveSeq=9
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=10 liveSeq=9
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=10 liveSeq=9
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=10 liveSeq=9
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=10 liveSeq=9
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=10 liveSeq=9
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=10 liveSeq=9
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=9 kvBytes=1024 kBase=0000027EE4D88AA0 vBase=0000027EE4DFDAC0 currentPos=9
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=10 liveSeq=9
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=10 liveSeq=9
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=10 liveSeq=9
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=10 liveSeq=9
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=11 liveSeq=10
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=11 liveSeq=10
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=11 liveSeq=10
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=11 liveSeq=10
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=11 liveSeq=10
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=11 liveSeq=10
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=11 liveSeq=10
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=11 liveSeq=10
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=11 liveSeq=10
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=11 liveSeq=10
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=11 liveSeq=10
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=11 liveSeq=10
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=11 liveSeq=10
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.707531e+02
+[L12_DIAG] layer=12 K_proj norm=5.407479e+02
+[L12_DIAG] layer=12 V_proj norm=2.985149e+02
+[L12_ROPE_DIAG] pos=10 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 5.505444e-01 -1.283056e+00 -9.895573e-01 -1.918629e+00 6.042869e-02 -9.853844e-03 6.388234e-02 3.639728e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=5.505444e-01 k[1]=-1.283056e+00 k[2]=-9.895573e-01 k[3]=-1.918629e+00
+[L12_ROPE_DIAG] K pair i=0: k0=5.505444e-01 k1=-1.283056e+00 cosA=-8.390715e-01 sinA=-5.440211e-01 before=1.949332e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.159956e+00 kh[i+1]=7.770680e-01 after=1.949332e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-9.895573e-01 k1=-1.918629e+00 cosA=-9.929210e-01 sinA=1.187766e-01 before=4.660362e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.210440e+00 kh[i+1]=1.787511e+00 after=4.660362e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.887986e+01 K_postRoPE norm=2.897166e+01
+[L12_DIAG] layer=12 wo_proj norm=2.368615e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.368615e+02
+[L12_DIAG] layer=12 after residual norm=5.443676e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.443676e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=11 liveSeq=10
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=11 liveSeq=10
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=11 liveSeq=10
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=11 liveSeq=10
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=11 liveSeq=10
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=11 liveSeq=10
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=11 liveSeq=10
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=11 liveSeq=10
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=11 liveSeq=10
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=10 kvBytes=1024 kBase=0000027EE4D88F20 vBase=0000027EE4DFDF40 currentPos=10
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=11 liveSeq=10
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=11 liveSeq=10
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=11 liveSeq=10
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=11 liveSeq=10
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=12 liveSeq=11
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=12 liveSeq=11
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=12 liveSeq=11
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=12 liveSeq=11
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=12 liveSeq=11
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=12 liveSeq=11
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=12 liveSeq=11
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=12 liveSeq=11
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=12 liveSeq=11
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=12 liveSeq=11
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=12 liveSeq=11
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=12 liveSeq=11
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=12 liveSeq=11
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.813838e+02
+[L12_DIAG] layer=12 K_proj norm=5.210709e+02
+[L12_DIAG] layer=12 V_proj norm=3.044823e+02
+[L12_ROPE_DIAG] pos=11 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.803892e-01 -8.553888e-01 -1.141229e+00 -1.065211e+00 -8.173656e-01 -6.006630e-03 -8.746551e-02 -3.357330e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.803892e-01 k[1]=-8.553888e-01 k[2]=-1.141229e+00 k[3]=-1.065211e+00
+[L12_ROPE_DIAG] K pair i=0: k0=1.803892e-01 k1=-8.553888e-01 cosA=4.425698e-03 sinA=-9.999902e-01 before=7.642302e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-8.545821e-01 kh[i+1]=-1.841731e-01 after=7.642302e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-1.141229e+00 k1=-1.065211e+00 cosA=-6.884011e-01 sinA=-7.253302e-01 before=2.437077e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.299375e-02 kh[i+1]=1.561060e+00 after=2.437077e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.748655e+01 K_postRoPE norm=2.737488e+01
+[L12_DIAG] layer=12 wo_proj norm=2.331314e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.331314e+02
+[L12_DIAG] layer=12 after residual norm=4.172292e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.172292e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=12 liveSeq=11
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=12 liveSeq=11
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=12 liveSeq=11
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=12 liveSeq=11
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=12 liveSeq=11
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=12 liveSeq=11
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=12 liveSeq=11
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=12 liveSeq=11
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=12 liveSeq=11
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=11 kvBytes=1024 kBase=0000027EE4D893A0 vBase=0000027EE4DFE3C0 currentPos=11
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=12 liveSeq=11
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=12 liveSeq=11
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=12 liveSeq=11
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=12 liveSeq=11
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=13 liveSeq=12
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=13 liveSeq=12
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=13 liveSeq=12
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=13 liveSeq=12
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=13 liveSeq=12
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=13 liveSeq=12
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=13 liveSeq=12
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=13 liveSeq=12
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=13 liveSeq=12
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=13 liveSeq=12
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=13 liveSeq=12
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=13 liveSeq=12
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=13 liveSeq=12
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.123785e+02
+[L12_DIAG] layer=12 K_proj norm=4.634455e+02
+[L12_DIAG] layer=12 V_proj norm=2.819650e+02
+[L12_ROPE_DIAG] pos=12 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 3.519567e-01 -9.013358e-01 -1.117340e+00 -1.505806e+00 -4.588227e-01 -4.572234e-03 8.414111e-02 8.734221e-02 
+[L12_ROPE_DIAG] K head=0: k[0]=3.519567e-01 k[1]=-9.013358e-01 k[2]=-1.117340e+00 k[3]=-1.505806e+00
+[L12_ROPE_DIAG] K pair i=0: k0=3.519567e-01 k1=-9.013358e-01 cosA=8.438540e-01 sinA=-5.365729e-01 before=9.362797e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.866323e-01 kh[i+1]=-9.494462e-01 after=9.362797e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-1.117340e+00 k1=-1.505806e+00 cosA=1.704537e-01 sinA=-9.853657e-01 before=3.515900e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.674224e+00 kh[i+1]=8.443180e-01 after=3.515901e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.050103e+01 K_postRoPE norm=2.556079e+01
+[L12_DIAG] layer=12 wo_proj norm=2.391983e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.391983e+02
+[L12_DIAG] layer=12 after residual norm=6.165035e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=6.165035e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=13 liveSeq=12
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=13 liveSeq=12
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=13 liveSeq=12
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=13 liveSeq=12
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=13 liveSeq=12
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=13 liveSeq=12
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=13 liveSeq=12
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=13 liveSeq=12
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=13 liveSeq=12
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=12 kvBytes=1024 kBase=0000027EE4D89820 vBase=0000027EE4DFE840 currentPos=12
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=13 liveSeq=12
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=13 liveSeq=12
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=13 liveSeq=12
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=13 liveSeq=12
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=14 liveSeq=13
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=14 liveSeq=13
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=14 liveSeq=13
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=14 liveSeq=13
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=14 liveSeq=13
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=14 liveSeq=13
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=14 liveSeq=13
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=14 liveSeq=13
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=14 liveSeq=13
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=14 liveSeq=13
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=14 liveSeq=13
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=14 liveSeq=13
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=14 liveSeq=13
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.326822e+02
+[L12_DIAG] layer=12 K_proj norm=5.392950e+02
+[L12_DIAG] layer=12 V_proj norm=2.821517e+02
+[L12_ROPE_DIAG] pos=13 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 7.724462e-01 3.141404e-01 -6.795715e-01 -6.169782e-01 -2.244886e-01 -7.004036e-03 1.163564e-01 -4.677213e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=7.724462e-01 k[1]=3.141404e-01 k[2]=-6.795715e-01 k[3]=-6.169782e-01
+[L12_ROPE_DIAG] K pair i=0: k0=7.724462e-01 k1=3.141404e-01 cosA=9.074468e-01 sinA=4.201670e-01 before=6.953573e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=5.689623e-01 kh[i+1]=6.096221e-01 after=6.953573e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-6.795715e-01 k1=-6.169782e-01 cosA=8.920507e-01 sinA=-4.519354e-01 before=8.424795e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-8.850465e-01 kh[i+1]=-2.432534e-01 after=8.424795e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.076262e+01 K_postRoPE norm=2.824047e+01
+[L12_DIAG] layer=12 wo_proj norm=2.572340e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.572340e+02
+[L12_DIAG] layer=12 after residual norm=3.420342e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.420342e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=14 liveSeq=13
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=14 liveSeq=13
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=14 liveSeq=13
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=14 liveSeq=13
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=14 liveSeq=13
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=14 liveSeq=13
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=14 liveSeq=13
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=14 liveSeq=13
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=14 liveSeq=13
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=13 kvBytes=1024 kBase=0000027EE4D89CA0 vBase=0000027EE4DFECC0 currentPos=13
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=14 liveSeq=13
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=14 liveSeq=13
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=14 liveSeq=13
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=14 liveSeq=13
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=15 liveSeq=14
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=15 liveSeq=14
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=15 liveSeq=14
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=15 liveSeq=14
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=15 liveSeq=14
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=15 liveSeq=14
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=15 liveSeq=14
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=15 liveSeq=14
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=15 liveSeq=14
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=15 liveSeq=14
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=15 liveSeq=14
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=15 liveSeq=14
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=15 liveSeq=14
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.287129e+02
+[L12_DIAG] layer=12 K_proj norm=5.546278e+02
+[L12_DIAG] layer=12 V_proj norm=2.722092e+02
+[L12_ROPE_DIAG] pos=14 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 3.582162e-01 1.731783e-02 -5.059435e-01 -1.086280e+00 -5.484983e-01 -3.301416e-03 1.427090e-01 -2.848162e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=3.582162e-01 k[1]=1.731783e-02 k[2]=-5.059435e-01 k[3]=-1.086280e+00
+[L12_ROPE_DIAG] K pair i=0: k0=3.582162e-01 k1=1.731783e-02 cosA=1.367372e-01 sinA=9.906074e-01 before=1.286188e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=3.182632e-02 kh[i+1]=3.572196e-01 after=1.286188e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-5.059435e-01 k1=-1.086280e+00 cosA=8.953242e-01 sinA=4.454151e-01 before=1.435983e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=3.086215e-02 kh[i+1]=-1.197928e+00 after=1.435983e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.887005e+01 K_postRoPE norm=2.790159e+01
+[L12_DIAG] layer=12 wo_proj norm=2.287086e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.287086e+02
+[L12_DIAG] layer=12 after residual norm=3.522663e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.522663e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=15 liveSeq=14
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=15 liveSeq=14
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=15 liveSeq=14
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=15 liveSeq=14
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=15 liveSeq=14
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=15 liveSeq=14
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=15 liveSeq=14
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=15 liveSeq=14
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=15 liveSeq=14
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=14 kvBytes=1024 kBase=0000027EE4D8A120 vBase=0000027EE4DFF140 currentPos=14
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=15 liveSeq=14
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=15 liveSeq=14
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=15 liveSeq=14
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=15 liveSeq=14
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=16 liveSeq=15
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=16 liveSeq=15
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=16 liveSeq=15
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=16 liveSeq=15
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=16 liveSeq=15
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=16 liveSeq=15
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=16 liveSeq=15
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=16 liveSeq=15
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=16 liveSeq=15
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=16 liveSeq=15
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=16 liveSeq=15
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=16 liveSeq=15
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=16 liveSeq=15
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.928615e+02
+[L12_DIAG] layer=12 K_proj norm=5.064248e+02
+[L12_DIAG] layer=12 V_proj norm=2.693991e+02
+[L12_ROPE_DIAG] pos=15 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 2.040188e-01 6.605769e-01 -3.958799e-01 -1.129761e+00 -3.483000e-01 -2.659843e-03 1.420546e-01 -6.766294e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=2.040188e-01 k[1]=6.605769e-01 k[2]=-3.958799e-01 k[3]=-1.129761e+00
+[L12_ROPE_DIAG] K pair i=0: k0=2.040188e-01 k1=6.605769e-01 cosA=-7.596879e-01 sinA=6.502879e-01 before=4.779855e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-5.845557e-01 kh[i+1]=-3.691613e-01 after=4.779855e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-3.958799e-01 k1=-1.129761e+00 cosA=1.776392e-01 sinA=9.840957e-01 before=1.433080e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.041469e+00 kh[i+1]=-5.902734e-01 after=1.433080e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.821021e+01 K_postRoPE norm=2.897603e+01
+[L12_DIAG] layer=12 wo_proj norm=2.308593e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.308593e+02
+[L12_DIAG] layer=12 after residual norm=3.339873e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.339873e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=16 liveSeq=15
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=16 liveSeq=15
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=16 liveSeq=15
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=16 liveSeq=15
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=16 liveSeq=15
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=16 liveSeq=15
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=16 liveSeq=15
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=16 liveSeq=15
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=16 liveSeq=15
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=15 kvBytes=1024 kBase=0000027EE4D8A5A0 vBase=0000027EE4DFF5C0 currentPos=15
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=16 liveSeq=15
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=16 liveSeq=15
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=16 liveSeq=15
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=16 liveSeq=15
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=17 liveSeq=16
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KVCache] page grow 16 -> 24 hot (virtualMax=16836 pos=16)
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=17 liveSeq=16
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=17 liveSeq=16
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=17 liveSeq=16
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=17 liveSeq=16
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=17 liveSeq=16
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=17 liveSeq=16
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=17 liveSeq=16
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=17 liveSeq=16
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=17 liveSeq=16
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=17 liveSeq=16
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=17 liveSeq=16
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=17 liveSeq=16
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.029367e+02
+[L12_DIAG] layer=12 K_proj norm=5.182382e+02
+[L12_DIAG] layer=12 V_proj norm=2.670883e+02
+[L12_ROPE_DIAG] pos=16 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.722039e-02 -2.364742e-01 3.000609e-01 -1.049288e+00 -4.560691e-01 -7.228623e-03 1.530747e-01 -3.640892e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.722039e-02 k[1]=-2.364742e-01 k[2]=3.000609e-01 k[3]=-1.049288e+00
+[L12_ROPE_DIAG] K pair i=0: k0=1.722039e-02 k1=-2.364742e-01 cosA=-9.576595e-01 sinA=-2.879033e-01 before=5.621660e-02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-8.457299e-02 kh[i+1]=2.215040e-01 after=5.621660e-02
+[L12_ROPE_DIAG] K pair i=2: k0=3.000609e-01 k1=-1.049288e+00 cosA=-6.830903e-01 sinA=7.303340e-01 before=1.191042e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=5.613619e-01 kh[i+1]=9.359031e-01 after=1.191042e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.007072e+01 K_postRoPE norm=2.780639e+01
+[L12_DIAG] layer=12 wo_proj norm=2.397820e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.397820e+02
+[L12_DIAG] layer=12 after residual norm=3.811044e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.811044e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=17 liveSeq=16
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=17 liveSeq=16
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=17 liveSeq=16
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=17 liveSeq=16
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=17 liveSeq=16
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=17 liveSeq=16
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=17 liveSeq=16
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=17 liveSeq=16
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=17 liveSeq=16
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=16 kvBytes=1024 kBase=000002BFF08624A0 vBase=000002BFF0911CC0 currentPos=16
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=17 liveSeq=16
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=17 liveSeq=16
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=17 liveSeq=16
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=17 liveSeq=16
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=18 liveSeq=17
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=18 liveSeq=17
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=18 liveSeq=17
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=18 liveSeq=17
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=18 liveSeq=17
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=18 liveSeq=17
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=18 liveSeq=17
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=18 liveSeq=17
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=18 liveSeq=17
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=18 liveSeq=17
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=18 liveSeq=17
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=18 liveSeq=17
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=18 liveSeq=17
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.818699e+02
+[L12_DIAG] layer=12 K_proj norm=4.954420e+02
+[L12_DIAG] layer=12 V_proj norm=2.659152e+02
+[L12_ROPE_DIAG] pos=17 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 3.978041e-01 -4.101272e-03 3.343681e-01 -9.849478e-01 -3.680907e-01 -4.816459e-03 1.004040e-01 -5.181867e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=3.978041e-01 k[1]=-4.101272e-03 k[2]=3.343681e-01 k[3]=-9.849478e-01
+[L12_ROPE_DIAG] K pair i=0: k0=3.978041e-01 k1=-4.101272e-03 cosA=-2.751634e-01 sinA=-9.613975e-01 before=1.582649e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.134041e-01 kh[i+1]=-3.813193e-01 after=1.582649e-01
+[L12_ROPE_DIAG] K pair i=2: k0=3.343681e-01 k1=-9.849478e-01 cosA=-9.937611e-01 sinA=-1.115293e-01 before=1.081924e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-4.421325e-01 kh[i+1]=9.415110e-01 after=1.081924e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.012050e+01 K_postRoPE norm=2.804423e+01
+[L12_DIAG] layer=12 wo_proj norm=2.329188e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.329188e+02
+[L12_DIAG] layer=12 after residual norm=3.886819e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.886819e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=18 liveSeq=17
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=18 liveSeq=17
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=18 liveSeq=17
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=18 liveSeq=17
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=18 liveSeq=17
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=18 liveSeq=17
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=18 liveSeq=17
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=18 liveSeq=17
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=18 liveSeq=17
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=17 kvBytes=1024 kBase=000002BFF0862920 vBase=000002BFF0912140 currentPos=17
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=18 liveSeq=17
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=18 liveSeq=17
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=18 liveSeq=17
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=18 liveSeq=17
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=19 liveSeq=18
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=19 liveSeq=18
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=19 liveSeq=18
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=19 liveSeq=18
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=19 liveSeq=18
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=19 liveSeq=18
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=19 liveSeq=18
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=19 liveSeq=18
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=19 liveSeq=18
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=19 liveSeq=18
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=19 liveSeq=18
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=19 liveSeq=18
+[DBG-FWD] layer=11 rmsnorm ok
+[ATTN_TOPOLOGY] layer=11 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=19 liveSeq=18
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.025438e+02
+[L12_DIAG] layer=12 K_proj norm=4.874039e+02
+[L12_DIAG] layer=12 V_proj norm=2.739452e+02
+[L12_ROPE_DIAG] pos=18 headDim=256 numHeads=4 numKVHeads=1 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 9.262745e-01 -3.433614e-01 -1.187736e+00 -4.893481e-01 6.253172e-02 -1.488921e-03 1.043365e-01 -7.008533e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=9.262745e-01 k[1]=-3.433614e-01 k[2]=-1.187736e+00 k[3]=-4.893481e-01
+[L12_ROPE_DIAG] K pair i=0: k0=9.262745e-01 k1=-3.433614e-01 cosA=6.603167e-01 sinA=-7.509872e-01 before=9.758816e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=3.537745e-01 kh[i+1]=-9.223477e-01 after=9.758816e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-1.187736e+00 k1=-4.893481e-01 cosA=-5.042058e-01 sinA=-8.635836e-01 before=1.650178e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.762702e-01 kh[i+1]=1.272441e+00 after=1.650178e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.057037e+01 K_postRoPE norm=2.966217e+01
+[L12_DIAG] layer=12 wo_proj norm=2.517626e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.517626e+02
+[L12_DIAG] layer=12 after residual norm=2.901463e+04
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.901463e+04
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=19 liveSeq=18
+[DBG-FWD] layer=13 rmsnorm ok
+[ATTN_TOPOLOGY] layer=13 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=19 liveSeq=18
+[DBG-FWD] layer=14 rmsnorm ok
+[ATTN_TOPOLOGY] layer=14 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=19 liveSeq=18
+[DBG-FWD] layer=15 rmsnorm ok
+[ATTN_TOPOLOGY] layer=15 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=19 liveSeq=18
+[DBG-FWD] layer=16 rmsnorm ok
+[ATTN_TOPOLOGY] layer=16 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=19 liveSeq=18
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=19 liveSeq=18
+[DBG-FWD] layer=18 rmsnorm ok
+[ATTN_TOPOLOGY] layer=18 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=19 liveSeq=18
+[DBG-FWD] layer=19 rmsnorm ok
+[ATTN_TOPOLOGY] layer=19 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=19 liveSeq=18
+[DBG-FWD] layer=20 rmsnorm ok
+[ATTN_TOPOLOGY] layer=20 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=19 liveSeq=18
+[DBG-FWD] layer=21 rmsnorm ok
+[ATTN_TOPOLOGY] layer=21 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[KV_DIAG] layer=21 writePos=18 kvBytes=1024 kBase=000002BFF0862DA0 vBase=000002BFF09125C0 currentPos=18
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=19 liveSeq=18
+[DBG-FWD] layer=22 rmsnorm ok
+[ATTN_TOPOLOGY] layer=22 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=19 liveSeq=18
+[DBG-FWD] layer=23 rmsnorm ok
+[ATTN_TOPOLOGY] layer=23 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=19 liveSeq=18
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=19 liveSeq=18
+[DBG-FWD] layer=25 rmsnorm ok
+[ATTN_TOPOLOGY] layer=25 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=0 seqLen=20 liveSeq=19
+[DBG-FWD] layer=0 rmsnorm ok
+[ATTN_TOPOLOGY] layer=0 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=20 liveSeq=19
+[DBG-FWD] layer=1 rmsnorm ok
+[ATTN_TOPOLOGY] layer=1 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=20 liveSeq=19
+[DBG-FWD] layer=2 rmsnorm ok
+[ATTN_TOPOLOGY] layer=2 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=20 liveSeq=19
+[DBG-FWD] layer=3 rmsnorm ok
+[ATTN_TOPOLOGY] layer=3 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=20 liveSeq=19
+[DBG-FWD] layer=4 rmsnorm ok
+[ATTN_TOPOLOGY] layer=4 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=20 liveSeq=19
+[DBG-FWD] layer=5 rmsnorm ok
+[ATTN_TOPOLOGY] layer=5 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=20 liveSeq=19
+[DBG-FWD] layer=6 rmsnorm ok
+[ATTN_TOPOLOGY] layer=6 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=20 liveSeq=19
+[DBG-FWD] layer=7 rmsnorm ok
+[ATTN_TOPOLOGY] layer=7 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=20 liveSeq=19
+[DBG-FWD] layer=8 rmsnorm ok
+[ATTN_TOPOLOGY] layer=8 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=20 liveSeq=19
+[DBG-FWD] layer=9 rmsnorm ok
+[ATTN_TOPOLOGY] layer=9 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=20 liveSeq=19
+[DBG-FWD] layer=10 rmsnorm ok
+[ATTN_TOPOLOGY] layer=10 metadata heads=4 kvHeads=1 headDim=288; weights heads=4 kvHeads=1 headDim=256; using weight geometry

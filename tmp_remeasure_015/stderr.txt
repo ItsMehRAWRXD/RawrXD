@@ -1,0 +1,168 @@
+RUN_CONFIG_MAX_TOKENS=32
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[ModelFit] KV budget caps context: requested=32768 fit=16836 (kv_bytes_per_token=8424)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 vram=34174009344 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+ASK_PATH=generateChat max_tokens=32
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[B3_WARN] hidden state norm explosion pos=69 norm=1.734090073e+02
+[B3_WARN] hidden state norm explosion pos=70 norm=1.569712437e+02
+[B3_WARN] hidden state norm explosion pos=71 norm=1.389298553e+02
+[B3_WARN] hidden state norm explosion pos=72 norm=1.419163290e+02
+[B3_WARN] hidden state norm explosion pos=73 norm=1.498164050e+02
+[B3_WARN] hidden state norm explosion pos=74 norm=1.454956727e+02
+[B3_WARN] hidden state norm explosion pos=75 norm=1.550124902e+02
+[B3_WARN] hidden state norm explosion pos=76 norm=1.397456388e+02
+[B3_WARN] hidden state norm explosion pos=77 norm=1.607379405e+02
+[B3_WARN] hidden state norm explosion pos=78 norm=1.359406680e+02
+[B3_WARN] hidden state norm explosion pos=79 norm=1.431388265e+02
+[B3_WARN] hidden state norm explosion pos=80 norm=1.393976012e+02
+[B3_WARN] hidden state norm explosion pos=81 norm=1.390611215e+02
+[B3_WARN] hidden state norm explosion pos=82 norm=1.506158308e+02
+[B3_WARN] hidden state norm explosion pos=83 norm=1.503962162e+02
+[B3_WARN] hidden state norm explosion pos=84 norm=1.330279037e+02
+[B3_WARN] hidden state norm explosion pos=85 norm=1.539751103e+02
+[B3_WARN] hidden state norm explosion pos=86 norm=1.473973557e+02
+[B3_WARN] hidden state norm explosion pos=87 norm=1.429550442e+02
+[B3_WARN] hidden state norm explosion pos=88 norm=1.357558697e+02
+[B3_WARN] hidden state norm explosion pos=89 norm=1.368292952e+02
+[B3_WARN] hidden state norm explosion pos=90 norm=1.479419078e+02
+[B3_WARN] hidden state norm explosion pos=91 norm=1.451931235e+02
+[B3_WARN] hidden state norm explosion pos=92 norm=1.516341637e+02
+[B3_WARN] hidden state norm explosion pos=93 norm=1.600537562e+02
+[B3_WARN] hidden state norm explosion pos=94 norm=1.499379386e+02
+[B3_WARN] hidden state norm explosion pos=95 norm=1.553829759e+02
+[B3_WARN] hidden state norm explosion pos=96 norm=1.389884651e+02
+[B3_WARN] hidden state norm explosion pos=97 norm=1.393899306e+02
+[B3_WARN] hidden state norm explosion pos=98 norm=1.440154678e+02
+[B3_WARN] hidden state norm explosion pos=99 norm=1.412221149e+02
+[B3_WARN] hidden state norm explosion pos=100 norm=1.370217299e+02
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=   10400  ms=  147873.677  MACs=   45239500800  ms/MAC=0.000003
+  Q8_0      calls=    2600  ms=    3573.732  MACs=     766771200  ms/MAC=0.000005
+  Q2_K      calls=      32  ms=     499.185  MACs=    9663676416  ms/MAC=0.000000
+  Q5_K      calls=    5200  ms=    7934.155  MACs=   23769907200  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=  159880.750  MACs=   79439855616
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  blk.12.ffn_down.weight                        100      280.445      796262400        2.804
+  blk.17.ffn_down.weight                        100      278.270      796262400        2.783
+  blk.15.ffn_down.weight                        100      268.427      796262400        2.684
+  blk.23.ffn_down.weight                        100      266.475      796262400        2.665
+  blk.24.ffn_down.weight                        100      263.700      796262400        2.637
+  blk.22.ffn_down.weight                        100      254.344      796262400        2.543
+  blk.16.ffn_down.weight                        100      231.837      796262400        2.318
+  blk.19.ffn_down.weight                        100      228.882      796262400        2.289
+  blk.6.ffn_down.weight                         100      223.937      796262400        2.239
+  blk.1.ffn_down.weight                         100      220.449      796262400        2.204
+  blk.11.ffn_down.weight                        100      209.472      796262400        2.095
+  blk.20.ffn_down.weight                        100      206.667      796262400        2.067
+  blk.0.ffn_down.weight                         100      206.624      796262400        2.066
+  blk.3.ffn_down.weight                         100      204.135      796262400        2.041
+  blk.10.ffn_down.weight                        100      202.665      796262400        2.027
+  blk.5.ffn_down.weight                         100      200.532      796262400        2.005
+  blk.13.ffn_down.weight                        100      197.941      796262400        1.979
+  blk.9.ffn_down.weight                         100      196.537      796262400        1.965
+  blk.7.ffn_down.weight                         100      194.382      796262400        1.944
+  blk.8.ffn_down.weight                         100      192.354      796262400        1.924
+============================================================
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=26
+[LIFE] unloadModel FreeTensorData ggufResult (340 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown

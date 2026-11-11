@@ -1,0 +1,3 @@
+cl : Command line warning D9024 : unrecognized source file type 'src\ChatTemplate.hpp', object file assumed
+cl : Command line warning D9027 : source file 'src\ChatTemplate.hpp' ignored
+cl : Command line warning D9021 : no action performed

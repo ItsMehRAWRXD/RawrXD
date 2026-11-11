@@ -1,0 +1,3 @@
+cl : Command line warning D9024 : unrecognized source file type 'src\deep2\GGUFLoader.hpp', object file assumed
+cl : Command line warning D9027 : source file 'src\deep2\GGUFLoader.hpp' ignored
+cl : Command line warning D9021 : no action performed

@@ -432,6 +432,42 @@ public:
         int length = 0;
         TokenType type = TokenType::Default;
     };
+
+    // Model Lab / Model Browser (Batch 5 M01)
+    struct ModelInfo {
+        std::string name;
+        std::string path;
+        std::string format;
+        size_t size = 0;
+    };
+
+    // Quantization Selector (Batch 5 M02)
+    enum class QuantizationType {
+        Q4_K_M, Q5_K_M, Q8_0, Q4_0, Q5_0, Q6_K, Unknown
+    };
+
+    // GGUF Inspector (Batch 5 M06)
+    struct GGUFInfo {
+        std::string filename;
+        std::string quantization;
+        int tensorCount = 0;
+        size_t fileSize = 0;
+    };
+
+    // Model Benchmarking (Batch 5 M05)
+    struct BenchmarkResult {
+        std::string modelName;
+        double tokensPerSecond = 0.0;
+        double memoryMB = 0.0;
+    };
+
+    // VRAM Bridge (Batch 5 M04)
+    struct VRAMInfo {
+        double totalMB = 0.0;
+        double availableMB = 0.0;
+        double usedMB = 0.0;
+    };
+
     struct BreadcrumbItem {
         std::string name;
         std::string path;
@@ -1014,6 +1050,187 @@ private:
     void copyLineNumbers();
     void showClipboardHistory();
     void clearClipboardHistory();
+
+    // Terminal output helper
+    void AppendTerminalText(const std::string& text);
+
+    // File path helper
+    std::string getCurrentFilePath() const;
+
+    // DPI scaling helper
+    int dpiScale(int value) const;
+
+    // Task Runner (Batch 4 P05)
+    void showTaskRunnerDialog();
+    std::vector<TaskRunnerEntry> getTaskRunnerTasks() const;
+    void runSelectedTask(int index);
+
+    // Model Lab / Model Browser (Batch 5 M01)
+    void initModelLab();
+    void addModel(const std::string& name, const std::string& path,
+                  const std::string& format, size_t size);
+    void removeModel(const std::string& name);
+    std::vector<ModelInfo> listModels() const;
+
+    // Model Discovery (Batch 5 M01)
+    void discoverModels(const std::string& rootPath);
+
+    // Quantization Selector (Batch 5 M02)
+    void setQuantization(QuantizationType quant);
+    QuantizationType getQuantization() const;
+
+    // GGUF Inspector (Batch 5 M06)
+    void scanGGUFModels(const std::string& rootPath);
+    std::vector<GGUFInfo> listGGUFModels() const;
+
+    // GGUF Reader (Batch 5 M06)
+    bool loadGGUFModel(const std::string& modelPath);
+    void unloadGGUFModel();
+
+    // Model Benchmarking (Batch 5 M05)
+    void runModelBenchmark(const std::string& modelName);
+    std::vector<BenchmarkResult> getBenchmarkResults() const;
+
+    // VRAM Bridge (Batch 5 M04)
+    void updateVRAMInfo();
+    VRAMInfo getVRAMInfo() const;
+    void setGPULayerOffload(int layers);
+    int getGPULayerOffload() const;
+
+    // KV-Cache Management (Batch 5 I06)
+    void initKVCache();
+    void cleanupKVCache();
+    size_t getKVCacheSize() const;
+
+    // Layer Eviction (Batch 5 M04)
+    void evictLayers(int count);
+    int getEvictedLayers() const;
+
+    // Prompt Template Library (Batch 3 AI/Agent)
+    void ShowPromptTemplateManager();
+
+    // Static Analysis Panel (Batch 3 AI/Agent)
+    void initStaticAnalysisPanel();
+    void handleStaticAnalysisCommand(int commandId);
+
+    // Agentic Browser / Terminal Command Generation (Batch 3 AI/Agent)
+    bool initAgenticBrowser();
+    void showAgenticBrowser();
+    void hideAgenticBrowser();
+    bool isAgenticBrowserVisible() const;
+
+    // Annotation Overlay (Batch 6 C02)
+    void initAnnotationOverlay();
+    void showAnnotationOverlay();
+    void hideAnnotationOverlay();
+    bool isAnnotationOverlayVisible() const;
+    void addAnnotationOverlayItem(int line, const std::string& message, OutputSeverity severity);
+
+    // Call Stack Symbols (Batch 6 D02)
+    void initCallStackSymbols();
+    bool handleCallStackCommand(int commandId);
+
+    // Debug Watch Format (Batch 6 D02)
+    void initDebugWatchFormat();
+    bool handleDebugWatchFormatCommand(int commandId);
+
+    // Call Stack command IDs
+    static constexpr int IDM_CALLSTACK_CAPTURE = 15001;
+    static constexpr int IDM_CALLSTACK_SHOW = 15002;
+    static constexpr int IDM_CALLSTACK_COPY = 15003;
+    static constexpr int IDM_CALLSTACK_RESOLVE = 15004;
+
+    // Debug Watch command IDs
+    static constexpr int IDM_DBGWATCH_SHOW = 15101;
+    static constexpr int IDM_DBGWATCH_ADD = 15102;
+    static constexpr int IDM_DBGWATCH_FORMAT_HEX = 15103;
+    static constexpr int IDM_DBGWATCH_FORMAT_DEC = 15104;
+    static constexpr int IDM_DBGWATCH_FORMAT_BIN = 15105;
+    static constexpr int IDM_DBGWATCH_FORMAT_STRUCT = 15106;
+    static constexpr int IDM_DBGWATCH_CLEAR = 15107;
+
+    // Debug state members
+    bool m_callStackSymbolsInitialized = false;
+    bool m_debugWatchFormatInitialized = false;
+
+    // Collaboration (Batch 6 C01)
+    void showCollabPanel();
+
+    // ===========================================================================
+    // Batch 7: Performance/Security/Enterprise/Build (15 features)
+    // ===========================================================================
+
+    // Performance & Resource (Batch 7 PR01, PR03, PR05, PR07)
+    void initMemoryStats();
+    void getMemoryUsage(uint64_t& total, uint64_t& used);
+
+    void initHeapHardening();
+
+    void initPerfTelemetry();
+    void showPerfTelemetryReport();
+
+    void initLazyLoading();
+    void deferModelLoading(const std::string& modelName);
+    void loadDeferredModels();
+
+    void initIOCPFileWatcher();
+    void startBackgroundIndexing(const std::string& path);
+    void stopBackgroundIndexing();
+
+    void initPageFaultHandler();
+    void handleMemoryPressure();
+    bool isMemoryPressure() const;
+
+    void runEnterpriseStressTests();
+
+    // Security & Privacy (Batch 7 SP04, SP05, SP06, SP07)
+    void runSecretScan(const std::string& path);
+    void scanForSecretsInFile(const std::string& filePath);
+
+    void showSecurityDashboard();
+
+    void initTelemetry();
+    bool isTelemetryEnabled() const;
+    void optInTelemetry();
+    void optOutTelemetry();
+    void recordTelemetryEvent(const std::string& event);
+
+    void initializeSovereignAttestation();
+    void recordModelLoadAttestation(const std::string& modelPath, const void* mappedBase, size_t size);
+    void exportAttestationReport();
+
+    void showLicenseManager();
+    void activateLicense(const std::string& key);
+    bool isLicenseValid() const;
+
+    // Data & State / Build & Distribution (Batch 7 BD04, BD05)
+    void initCrashReporter();
+    void showCrashReport(const std::string& crashFile);
+    std::string getLastCrashLog();
+
+    void initAirgappedMode();
+    void showAirgapStatus();
+    bool isAirgapped() const;
+
+    void showDownloadsPanel();
+    void downloadModel(const std::string& modelUrl);
+    void installSilent();
+    bool isPortableMode() const;
+
+    // Compliance & Enterprise (Batch 7 CE01, CE03)
+    void showAuditDashboard();
+    void recordAuditEvent(const std::string& event, const std::string& user, const std::string& details);
+
+    // Static Analysis command IDs
+    static constexpr int IDM_SA_BUILD_CFG = 14001;
+    static constexpr int IDM_SA_COMPUTE_DOMINATORS = 14002;
+    static constexpr int IDM_SA_CONVERT_SSA = 14003;
+    static constexpr int IDM_SA_DETECT_LOOPS = 14004;
+    static constexpr int IDM_SA_OPTIMIZE = 14005;
+    static constexpr int IDM_SA_FULL_ANALYSIS = 14006;
+    static constexpr int IDM_SA_EXPORT_DOT = 14007;
+    static constexpr int IDM_SA_EXPORT_JSON = 14008;
+    static constexpr int IDM_SA_STATS = 14009;
 
     // Minimap
     public:
@@ -1870,10 +2087,37 @@ private:
     std::vector<WorkspaceSymbol> m_symbolIndex;
     std::unordered_map<std::string, std::vector<size_t>> m_symbolNameIndex;
 
+    bool m_staticAnalysisPanelInitialized = false;
+
+    // AI/Agent features (Batch 3)
+    bool m_securityScansInitialized = false;
+    bool m_agentHistoryInitialized = false;
+    bool m_promptTemplatesInitialized = false;
+
 public:
     void lspDiagnosticsToAnnotations(const std::string& uri);
     std::string editorUriForCurrentFile() const;
     void applyLspRenameToEditor(const LSPWorkspaceEdit& edit);
+
+    // Security Scans / Code Review AI
+    void initSecurityScans();
+    void runSecurityScan(const std::string& filePath);
+
+    // Agent History / Undo Stack
+    void pushAgentEdit(const std::string& filePath,
+                       const std::string& oldContent,
+                       const std::string& newContent,
+                       int line, int column);
+    bool undoLastAgentEdit();
+
+    // Prompt Template Manager
+    void ShowPromptTemplateManager();
+
+    // Agentic Browser / Terminal Command Generation
+    bool initAgenticBrowser();
+    void showAgenticBrowser();
+    void hideAgenticBrowser();
+    bool isAgenticBrowserVisible() const;
 
     // Profiling
     bool m_profilingActive;
@@ -1942,8 +2186,42 @@ public:
     HWND m_hwndSearchOptions = nullptr;
     HWND m_hwndIncludePattern = nullptr;
     HWND m_hwndExcludePattern = nullptr;
+    HWND m_hwndSearchReplace = nullptr;
+    HWND m_hwndSearchInclude = nullptr;
+    HWND m_hwndSearchExclude = nullptr;
+    HWND m_hwndSearchStatus = nullptr;
     std::vector<std::string> m_searchResults;
     bool m_searchInProgress;
+
+    // Problems Panel (Batch 4 P07)
+    HWND m_hwndProblemsPanel = nullptr;
+
+    // Terminal Tabs (Batch 4 P06)
+    HWND m_hwndTermTabBar = nullptr;
+    struct TerminalTabInfo {
+        std::string profile;
+        std::string title;
+        bool active = false;
+        HWND hwndContent = nullptr;
+        HWND hwndTabButton = nullptr;
+        HWND hwndInput = nullptr;
+        HANDLE hProcess = nullptr;
+        HANDLE hWritePipe = nullptr;
+        HANDLE hReadPipe = nullptr;
+        WNDPROC origInputProc = nullptr;
+        std::vector<std::string> commandHistory;
+        int historyIndex = 0;
+    };
+    std::vector<TerminalTabInfo> m_terminalTabs;
+    int m_activeTerminalTab = -1;
+
+    // Task Runner (Batch 4 P05)
+    struct TaskRunnerEntry {
+        std::string label;
+        std::string command;
+        std::vector<std::string> args;
+    };
+    std::vector<TaskRunnerEntry> m_taskRunnerTasks;
     
     // Source Control View (extends existing Git)
     HWND m_hwndSCMFileList = nullptr;

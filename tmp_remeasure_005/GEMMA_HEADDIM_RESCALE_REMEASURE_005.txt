@@ -1,0 +1,70 @@
+GATE=GEMMA_HEADDIM_RESCALE_REMEASURE_005
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+D015=HOLD
+TIP_CLIMB=HOLD
+
+## Disposition
+STATUS=PARTIAL
+PASS_RULE=AGENT_RESULT=5 OR TOKENS_DECODED>0
+AGENT_RESULT_5=False
+TOKENS_DECODED=0
+PASS=0
+
+## Build / EXE
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+EXE_SHA=D4342A756A24FF2E4B005AB1457AF906B68C59D13CA5371B6DFAAF3B446F50CA
+TARGET=RawrXD-CLI-V2
+BUILD_EXIT=0
+BUILD_START=2026-11-10T16:58:30.6499603-05:00
+BUILD_END=2026-11-10T16:58:48.9345621-05:00
+NOTE=Rebuilt with early GGUF Q-dim sibling==hiddenDim pick (Deep2Engine.cpp)
+
+## CMD
+CMD=run "F:\rawrxd\gemma3-1b-Q2_K.gguf" ask --fresh-session --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 16
+RAWRXD_ALLOW_GPU=UNSET
+RAWRXD_DEEP2_DEBUG=UNSET
+PID=13328
+START=2026-11-10T16:58:49.0494795-05:00
+BOUND_TIMEOUT_S=1800
+WALL_S=1802.026
+KILLED=1
+EXIT=-1
+
+## HEADDIM (expect early=256 and POST_BIND=256) — MET
+HEADDIM_OVERRIDE=headDim override from Q tensor (blk.0.attn_q.weight): metadata headDim=288 -> weight headDim=256 (numHeads=4)
+HEADDIM_SYNC_EARLY=HEADDIM_SYNC config.headDim=256 modelWeights.headDim=256
+HEADDIM_SYNC_POST_BIND=HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+KV_ALLOC=KV cache: 26 layers x 16836 positions x 1 heads x 256 dim = 854.95 MB
+ATTN_TOPOLOGY_COUNT=0
+L12_DIAG_COUNT=0
+ABORT_COUNT=0
+RESCALE=
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+
+## Emission path (not PASS markers)
+PROMPT_TOKENS_FIRST=237
+PREFILL_DONE_MS=586162.364
+GENERATION_COMPLETE=240 tokens in 1016538.48 ms (E2E 0.24 TPS)
+PREFILL_TPS=0.40
+DECODE_TPS=0.56
+POST_GENERATE_generated=240
+GENERATION_RECEIPT=prompt=237 generated=240 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+NOTE=Host emission occurred (generated=240) but TOKENS_DECODED counter stayed 0 and text did not contain AGENT_RESULT=5.
+SECOND_ROUND=PREFILL_BEGIN prompt_tokens=530 (agent loop continued; killed@1800s wall mid second prefill)
+LAST_PAGE_GROW=page grow 480 -> 488 hot (virtualMax=16836 pos=480)
+
+## Reject sprawl (held closed)
+REJECT_SPRAWL=vulkan_matmul_hang + CLI q_head_dim + PWSH VSIX
+NOT_VULKAN=DEEP2_GPU_*=0 HOST prefill/decode
+SUPERSEDES=003 headdim_288 gap; 004 POST_BIND-only early=288 EXE C01B1E9C
+
+## GAP
+GAP=PASS markers unmet (AGENT_RESULT_5=False TOKENS_DECODED=0) despite early HEADDIM_SYNC=256 + generated=240; wall kill during second ask-loop prefill prompt_tokens=530
+
+## Artifacts
+CAPTURE_DIR=F:\rawrxd\tmp_remeasure_005
+RECEIPT=F:\rawrxd\tmp_remeasure_005\receipt.txt
+STDOUT=F:\rawrxd\tmp_remeasure_005\stdout.txt
+STDERR=F:\rawrxd\tmp_remeasure_005\stderr.txt

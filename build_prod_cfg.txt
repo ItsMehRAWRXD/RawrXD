@@ -1,0 +1,163 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- Î“Â£Ã´ 64-bit configuration validated: pointer size = 8, platform = x64
+-- Î“Ã¤â•£ ZLIB not found - attempting to auto-download from GitHub...
+CMake Warning (author) at C:/Program Files/CMake/share/cmake-4.4/Modules/FetchContent.cmake:1386 (message):
+  The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+  not set.  The policy's OLD behavior will be used.  When using a URL
+  download, the timestamps of extracted files should preferably be that of
+  the time of extraction, otherwise code that depends on the extracted
+  contents might not be rebuilt if the URL changes.  The OLD behavior
+  preserves the timestamps from the archive instead, but this is usually not
+  what you want.  Update your project to the NEW behavior or specify the
+  DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+  robustness issue.
+Call Stack (most recent call first):
+  CMakeLists.txt:142 (FetchContent_Declare)
+This warning is for project developers.  Use -Wno-author to suppress it.
+
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of off64_t
+-- Check size of off64_t - failed
+-- Looking for fseeko
+-- Looking for fseeko - not found
+-- Looking for unistd.h
+-- Looking for unistd.h - not found
+-- Renaming
+--     F:/rawrxd/build_prod/_deps/zlib-src/zconf.h
+-- to 'zconf.h.included' because this file is included with zlib
+-- but CMake generates it automatically in the build directory.
+-- Î“Â£Ã´ ZLIB auto-downloaded and built successfully
+CMake Warning at CMakeLists.txt:167 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:176 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- The ASM compiler identification is MSVC
+CMake Warning (policy) at C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeDetermineASMCompiler.cmake:237 (cmake_policy):
+  Policy CMP0194 is not set: MSVC is not an assembler for language ASM.  Run
+  "cmake --help-policy CMP0194" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  3rdparty/ggml/CMakeLists.txt:2 (project)
+This warning is for project developers.  Use -Wno-author or -Wno-policy to
+suppress it.
+
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: x64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- Found OpenMP_C: -openmp (found version "2.0")
+-- Found OpenMP_CXX: -openmp (found version "2.0")
+-- Found OpenMP: TRUE (found version "2.0")
+-- x86 detected
+-- Performing Test HAS_AVX_1
+-- Performing Test HAS_AVX_1 - Success
+-- Performing Test HAS_AVX2_1
+-- Performing Test HAS_AVX2_1 - Success
+-- Performing Test HAS_FMA_1
+-- Performing Test HAS_FMA_1 - Success
+-- Performing Test HAS_AVX512_1
+-- Performing Test HAS_AVX512_1 - Success
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- ggml version: 0.9.4
+-- ggml commit:  9208c12803
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+CMake Warning at CMakeLists.txt:390 (message):
+  ========================================
+
+
+CMake Warning at CMakeLists.txt:391 (message):
+  NO GPU BACKEND DETECTED
+
+
+CMake Warning at CMakeLists.txt:392 (message):
+  Application will run in CPU-only mode
+
+
+CMake Warning at CMakeLists.txt:393 (message):
+  ========================================
+
+
+CMake Warning at CMakeLists.txt:394 (message):
+  Detected GPU: Run 'Get-WmiObject Win32_VideoController | Select Name'
+
+
+CMake Warning at CMakeLists.txt:395 (message):
+  For NVIDIA: Install CUDA Toolkit from developer.nvidia.com
+
+
+CMake Warning at CMakeLists.txt:396 (message):
+  For AMD: Install ROCm for Windows from rocm.docs.amd.com
+
+
+CMake Warning at CMakeLists.txt:397 (message):
+  ========================================
+
+
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- Vulkan disabled via ENABLE_VULKAN=OFF; skipping find_package
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- Configuring done (21.5s)
+-- Generating done (0.2s)
+-- Build files have been written to: F:/rawrxd/build_prod

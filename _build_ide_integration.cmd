@@ -1,0 +1,4 @@
+@echo off
+call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+cd /d d:\rawrxd-ci-bootstrap
+"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\cl.exe" /nologo /W3 /EHsc /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" IDE_Integration.cpp /link /OUT:IDE_Integration.exe /SUBSYSTEM:WINDOWS kernel32.lib user32.lib gdi32.lib ws2_32.lib winmm.lib advapi32.lib shell32.lib ole32.lib uuid.lib /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64"

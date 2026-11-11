@@ -1,0 +1,4 @@
+{"ts_ns":1793256543550428000,"seq":1,"request":21706617788700,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793256543550434100,"seq":2,"request":21706617788700,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793256543552419400,"seq":3,"request":21706617788700,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":21706617788700,\"agent\":1,\"phase\":\"error\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":1.956,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793256543552421700,"seq":4,"request":21706617788700,"agent":1,"kind":"finished","value":1,"message":"FAIL"}

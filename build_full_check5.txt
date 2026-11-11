@@ -1,0 +1,317 @@
+[0/2] Re-checking globbed directories...
+[1/212] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/212] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[3/212] Completed 'vulkan-shaders-gen'
+[4/212] Building CXX object CMakeFiles\deep2_cpu_state_probe.dir\src\deep2\asm_stubs.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4100: 'scales': unreferenced parameter
+F:\rawrxd\src\deep2\asm_stubs.cpp(157): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\asm_stubs.cpp(194): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed
+[5/212] Building CXX object CMakeFiles\quant_scalar_smoke.dir\tests\quant_scalar_smoke.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/212] Building CXX object CMakeFiles\test_kv_cache.dir\src\test_kv_cache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[7/212] Building CXX object CMakeFiles\stub_test.dir\src\stub_main.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/212] Building CXX object CMakeFiles\RawrXD-Chromatic.dir\src\chromatic_main.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/212] Building CXX object CMakeFiles\mamba2_ref_probe.dir\tools\mamba2_ref_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\tools\mamba2_ref_probe.cpp(79): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\mamba2_ref_probe.cpp(105): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\mamba2_ref_probe.cpp(204): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[10/212] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[11/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\Deep2Log.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/212] Building CXX object CMakeFiles\RawrXD-Chromatic.dir\src\ui\chromatic_window.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[13/212] Building CXX object CMakeFiles\test_kv_cache.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(669): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(1051): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1058): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1065): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1076): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1084): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1092): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1129): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1742): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1765): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1770): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1867): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(1986): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2208): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2216): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2219): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2259): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2344): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2425): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2703): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2897): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2905): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2939): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2991): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(2998): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3001): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3182): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3254): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3255): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[14/212] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/212] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_fused_lmhead_verify.dir/tests/deep2_fused_lmhead_verify.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\tests\deep2_fused_lmhead_verify.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(121): error C2039: 'computeLogitsBatch': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(132): error C2039: 'verifySpeculativeGreedyWindow': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2039: 'speculativeCounters': is not a member of 'Deep2::Deep2Engine'
+F:\rawrxd\src\deep2\../Deep2Engine.h(351): note: see declaration of 'Deep2::Deep2Engine'
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(208): error C2530: 'counters': references must be initialized
+F:\rawrxd\tests\deep2_fused_lmhead_verify.cpp(210): error C3536: 'counters': cannot be used before it is initialized
+[16/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[17/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(94): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(93): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(92): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(91): warning C4100: 'gate': unreferenced parameter
+[18/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[19/212] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[20/212] Building CXX object CMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj
+FAILED: [code=3221225477] CMakeFiles/deep2_fused_lmhead_verify.dir/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IF:\rawrxd\tests -IF:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_fused_lmhead_verify.dir\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp.obj /FdCMakeFiles\deep2_fused_lmhead_verify.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2039: 'ISampler': is not a member of 'rawrxd::sampling'
+F:\rawrxd\src\deep2/Sampler.hpp(12): note: see declaration of 'rawrxd::sampling'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2065: 'ISampler': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2923: 'std::unique_ptr': 'ISampler' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): note: see declaration of 'ISampler'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2976: 'std::unique_ptr': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(726): error C2955: 'std::unique_ptr': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2039: 'ISampler': is not a member of 'rawrxd::sampling'
+F:\rawrxd\src\deep2/Sampler.hpp(12): note: see declaration of 'rawrxd::sampling'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2065: 'ISampler': undeclared identifier
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2923: 'std::unique_ptr': 'ISampler' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): note: see declaration of 'ISampler'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2976: 'std::unique_ptr': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.h(878): error C2955: 'std::unique_ptr': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347): note: see declaration of 'std::unique_ptr'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(57): error C2513: 'const bool': no variable declared before '='
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(59): error C2059: syntax error: ')'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(71): error C2513: 'const bool': no variable declared before '='
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(73): error C2059: syntax error: ')'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(97): warning C4456: declaration of 'guard' hides previous local declaration
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(50): note: see declaration of 'guard'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(103): warning C4456: declaration of 'guard' hides previous local declaration
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(50): note: see declaration of 'guard'
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Q4KColumnSlices.hpp(35): fatal error C1907: unable to recover from previous error(s); stopping compilation
+INTERNAL COMPILER ERROR in 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe'
+    Please choose the Technical Support command on the Visual C++
+    Help menu, or open the Technical Support help file for more information
+[21/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\tools\deep2_agentic_loop.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_agentic_loop.cpp(247): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(256): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(270): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(431): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(433): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1725): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3234): warning C4456: declaration of 'next' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3216): note: see declaration of 'next'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3259): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3412): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3412): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3412): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3419): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3419): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3419): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3467): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3177): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3611): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3177): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(2837): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(2842): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3216): warning C4189: 'next': local variable is initialized but not referenced
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(4813): warning C4244: '=': conversion from 'const wchar_t' to 'char', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(4813): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\tools\deep2_agentic_loop.cpp(2992): note: see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_const_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
+        with
+        [
+            _Elem=wchar_t,
+            _Iter=std::_String_const_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+            _Alloc=std::allocator<char>
+        ]
+F:\rawrxd\tools\deep2_agentic_loop.cpp(2992): note: see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'main'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(812): note: see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<const wchar_t*,const wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
+        with
+        [
+            _Size_type=unsigned __int64,
+            _Iter=const wchar_t *,
+            _Sent=const wchar_t *,
+            _Size=unsigned __int64
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(968): note: see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<const wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)' being compiled
+        with
+        [
+            _OutIt=char *,
+            _Size=unsigned __int64,
+            _InIt=const wchar_t *,
+            _SizeTy=unsigned __int64
+        ]
+F:\rawrxd\tools\deep2_agentic_loop.cpp(517): warning C4505: '`anonymous-namespace'::ByteToSymbol': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(878): warning C4505: '`anonymous-namespace'::FindMerge': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1823): warning C4505: '`anonymous-namespace'::DiffRun': unreferenced function with internal linkage has been removed
+[22/212] Building CXX object CMakeFiles\deep2_agentic_loop.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(79): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(972): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1200): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1225): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1304): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1317): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1368): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1413): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1432): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1467): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1490): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1518): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1567): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1600): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1696): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1699): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1724): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1959): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2045): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2127): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2161): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2164): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2207): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2257): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2318): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2413): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2538): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2639): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2691): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2826): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3189): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3458): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3923): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4366): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4042): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4053): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4117): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4118): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4119): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4120): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4164): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4223): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4232): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4264): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4294): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4361): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4385): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4408): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4417): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4418): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4426): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4495): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4500): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4561): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4565): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4607): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4619): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4623): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4690): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4693): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4725): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4731): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4759): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4778): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5021): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5108): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5152): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5298): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+ninja: build stopped: subcommand failed.
+Access violation
+CMake Error: Generator: build tool execution failed, command was: C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/ninja.exe -j 8

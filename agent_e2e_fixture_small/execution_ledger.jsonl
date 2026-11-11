@@ -1,0 +1,22 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"calc.cpp","observation_bytes":22,"exit_code":0,"valid":true,"timestamp":1792951115027}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"calc.cpp","observation_bytes":22,"exit_code":0,"valid":true,"timestamp":1792951406607}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"bash","target":"echo \"int main(){","observation_bytes":27,"exit_code":0,"valid":true,"timestamp":1792951477871}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"calc.cpp","observation_bytes":22,"exit_code":0,"valid":true,"timestamp":1792951674262}}
+{"type":"PATCH","entry":2,"payload":{"step":2,"file":"calc.cpp","before_hash":"3970d2e726f8805447972e1bc6e9159367eae806c2a7a5730cef96ca906807f5","after_hash":"84c9ca1106d7878181e95a4546fa7dfd35fc77e8784803949e3c6c47f4926395","committed":false,"rolled_back":false,"timestamp":1792951719501}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":2,"tool":"write","target":"calc.cpp","observation_bytes":25,"exit_code":0,"valid":true,"timestamp":1792951719501}}
+{"type":"PATCH","entry":4,"payload":{"step":2,"file":"calc.cpp","before_hash":"3970d2e726f8805447972e1bc6e9159367eae806c2a7a5730cef96ca906807f5","after_hash":"3970d2e726f8805447972e1bc6e9159367eae806c2a7a5730cef96ca906807f5","committed":false,"rolled_back":true,"timestamp":1792951719506}}
+{"type":"RETRY","entry":5,"payload":{"attempt":0,"reason":"patch_verification_failed: structural audit failed: empty patched file","can_continue":true,"timestamp":1792951719506}}
+{"type":"TOOL_CALL","entry":6,"payload":{"step":3,"tool":"bash","target":"calc","observation_bytes":9,"exit_code":0,"valid":true,"timestamp":1792951767780}}
+{"type":"RETRY","entry":7,"payload":{"attempt":3,"reason":"kv_prefix_mismatch@223","can_continue":false,"timestamp":1792951767785}}
+{"type":"LEDGER_END","entry":8,"payload":{"total_entries":8}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792952030215}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792952691968}}
+{"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"budget exhausted","can_continue":false,"timestamp":1792952691968}}
+{"type":"RETRY","entry":3,"payload":{"attempt":6,"reason":"kv_prefix_mismatch@218","can_continue":false,"timestamp":1792952691971}}
+{"type":"LEDGER_END","entry":4,"payload":{"total_entries":4}}

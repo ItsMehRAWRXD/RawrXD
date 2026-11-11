@@ -92,3 +92,15 @@
 {"content":"There are 7 matching source files.\n\nVerified by the host from the 'search_text' result this CLI actually executed (host receipt). The count comes from that result's own matching_files summary, not from a model recount of the file list -- a recount of a long list is exactly where it errs.","role":"assistant","type":"turn","verified":true}
 {"content":"How many files reference MlaDecompressFwd in src? Use search_text to check.","role":"user","type":"turn","verified":true}
 {"content":"There are 0 matching source files.\n\nVerified by the host from the 'search_text' result this CLI actually executed (host receipt). The count comes from that result's own matching_files summary, not from a model recount of the file list -- a recount of a long list is exactly where it errs.","role":"assistant","type":"turn","verified":true}
+{"content":"Reply with exactly: PONG","role":"user","type":"turn","verified":true}
+{"content":"PONG","role":"assistant","type":"turn","verified":false}
+{"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
+{"content":"There are 0 matching source files.","role":"assistant","type":"turn","verified":false}
+{"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
+{"content":"There are 0 matching source files.","role":"assistant","type":"turn","verified":false}
+{"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
+{"content":"ASK_OK","role":"assistant","type":"turn","verified":false}
+{"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
+{"content":"ASK_OK","role":"assistant","type":"turn","verified":false}
+{"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
+{"content":"ASK_OK","role":"assistant","type":"turn","verified":false}

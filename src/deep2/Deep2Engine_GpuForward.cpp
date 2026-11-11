@@ -58,9 +58,23 @@ uint64_t weightKey(const WeightTensor& wt) noexcept {
 bool gpuPackedType(int type) noexcept {
     // These are the quantization IDs accepted by the canonical device
     // adapter's resident DispatchGemvQuant implementation.
+    //
+    // Keep this set in lockstep with VulkanCompute::SelectPackedPipe
+    // (src/vulkan_fwd_quant_pipe.cpp). The validator was previously missing
+    // Q3_K (11) and Q5_K (13) even though SelectPackedPipe has had
+    // gemv_q3k.spv and gemv_q5k.spv pipelines for both: every layer using
+    // them was rejected before dispatch, silently forcing the whole model
+    // onto the host reference path (measured 0.16 tok/s on an R9700 for a
+    // 1B model, with every DEEP2_GPU_FORWARD_* counter left at zero).
+    //
+    // Do NOT add Q4_0 (2) or Q5_0 (6) here. SelectPackedPipe has no kernel
+    // for either, so accepting them would admit weights the device path
+    // cannot execute.
     return type == static_cast<int>(GGMLType::GGML_TYPE_Q8_0) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K) ||
+           type == static_cast<int>(GGMLType::GGML_TYPE_Q3_K) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K) ||
+           type == static_cast<int>(GGMLType::GGML_TYPE_Q5_K) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K);
 }
 
@@ -193,18 +207,30 @@ bool Deep2Engine::forwardLayerGpuResident(
     uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit) {
     (void)uploadEntry;
     (void)downloadExit;
+    // Each early return reports a distinct step so a failure names the exact
+    // call that rejected the layer instead of only the outer "device forward
+    // failed" verdict.
+    auto reject = [&](const char* step) -> bool {
+        gpuForwardTrace(step);
+        return false;
+    };
     if (!vulkanInitialized_ || !vulkanEnabled_ ||
-        layer >= modelWeights.layers.size()) return false;
+        layer >= modelWeights.layers.size())
+        return reject("reject: layer gate (vulkan unavailable or layer out of range)");
 
     Gpu* gpu = getVulkanComputeSlot(slot);
-    if (!gpu || !ensureGpuForwardArena(slot)) return false;
+    if (!gpu) return reject("reject: no gpu slot");
+    if (!ensureGpuForwardArena(slot)) return reject("reject: ensureGpuForwardArena failed");
     const LayerWeights& lw = modelWeights.layers[layer];
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
-    if (!denseLayerReady(lw) || !supportedDenseWeight(lw.wq) ||
-        !supportedDenseWeight(lw.wk) || !supportedDenseWeight(lw.wv) ||
-        !supportedDenseWeight(wo) || !supportedDenseWeight(lw.wGate) ||
-        !supportedDenseWeight(lw.wUp) || !supportedDenseWeight(lw.wDown))
-        return false;
+    if (!denseLayerReady(lw)) return reject("reject: denseLayerReady false");
+    if (!supportedDenseWeight(lw.wq)) return reject("reject: unsupported wq type");
+    if (!supportedDenseWeight(lw.wk)) return reject("reject: unsupported wk type");
+    if (!supportedDenseWeight(lw.wv)) return reject("reject: unsupported wv type");
+    if (!supportedDenseWeight(wo)) return reject("reject: unsupported wo type");
+    if (!supportedDenseWeight(lw.wGate)) return reject("reject: unsupported wGate type");
+    if (!supportedDenseWeight(lw.wUp)) return reject("reject: unsupported wUp type");
+    if (!supportedDenseWeight(lw.wDown)) return reject("reject: unsupported wDown type");
 
     const uint32_t hidden = static_cast<uint32_t>(modelWeights.hiddenDim);
     const uint32_t heads = static_cast<uint32_t>(modelWeights.numHeads);
@@ -213,21 +239,45 @@ bool Deep2Engine::forwardLayerGpuResident(
     const uint32_t headDim = static_cast<uint32_t>(modelWeights.headDim);
     const uint32_t kvDim = kvHeads * headDim;
     const uint32_t intermediate = static_cast<uint32_t>(lw.wGate.rows);
-    if (!hidden || !heads || !kvHeads || !headDim || !kvDim ||
-        !intermediate || lw.wq.rows != static_cast<size_t>(heads * headDim) ||
-        lw.wk.rows != static_cast<size_t>(kvDim) ||
-        lw.wv.rows != static_cast<size_t>(kvDim) ||
-        wo.rows != hidden || wo.cols != hidden || lw.wDown.rows != hidden ||
-        lw.wDown.cols != intermediate)
-        return false;
+    if (!hidden || !heads || !kvHeads || !headDim || !kvDim || !intermediate)
+        return reject("reject: zero geometry");
+    if (lw.wq.rows != static_cast<size_t>(heads * headDim))
+        return reject("reject: wq.rows mismatch");
+    if (lw.wk.rows != static_cast<size_t>(kvDim))
+        return reject("reject: wk.rows mismatch");
+    if (lw.wv.rows != static_cast<size_t>(kvDim))
+        return reject("reject: wv.rows mismatch");
+    if (wo.rows != hidden || wo.cols != hidden)
+        return reject("reject: wo shape mismatch");
+    if (lw.wDown.rows != hidden || lw.wDown.cols != intermediate)
+        return reject("reject: wDown shape mismatch");
 
     const float* attnNorm = ensureF32(lw.attnNorm, vulkanWeightF32_);
+    if (!attnNorm) return reject("reject: ensureF32 attnNorm failed");
     const float* ffnNorm = ensureF32(lw.ffnNorm, vulkanWeightF32_);
-    if (!attnNorm || !ffnNorm) return false;
+    if (!ffnNorm) return reject("reject: ensureF32 ffnNorm failed");
 
     auto& counters = gpuFwd_;
-    if (!gpu->BeginFusedLayer()) return false;
+    if (!gpu->BeginFusedLayer()) {
+        gpuForwardTrace("reject: BeginFusedLayer failed");
+        return false;
+    }
     auto fail = [&]() -> bool {
+        // The fused dispatch helpers return a bare bool, so without this the
+        // failing stage is invisible. Report how many ops completed first:
+        // rmsNormOps / qkvOps / ffnNormOps / ffnActOps / ffnResidualOps
+        // identify the stage that failed.
+        if (gpuForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "[GPU_FORWARD_TRACE] reject: fused dispatch failed after "
+                "rms=%llu qkv=%llu ffnNorm=%llu ffnAct=%llu ffnRes=%llu\n",
+                (unsigned long long)counters.rmsNormOps,
+                (unsigned long long)counters.qkvOps,
+                (unsigned long long)counters.ffnNormOps,
+                (unsigned long long)counters.ffnActOps,
+                (unsigned long long)counters.ffnResidualOps);
+            std::fflush(stderr);
+        }
         (void)gpu->EndFusedLayer();
         return false;
     };
@@ -340,18 +390,33 @@ bool Deep2Engine::forwardLayerGpuResident(
 bool Deep2Engine::forwardGpuContiguousRange(
     unsigned slot, uint32_t lo, uint32_t hi,
     const float* hostIn, float* hostOut) {
-    if (!hostIn || !hostOut || lo > hi || hi >= modelWeights.layers.size())
-        return false;
+    if (gpuForwardTraceEnabled()) {
+        std::fprintf(stderr,
+            "[GPU_FORWARD_TRACE] contiguousRange slot=%u lo=%u hi=%u "
+            "layers=%zu numLayers=%u hostIn=%p hostOut=%p\n",
+            slot, lo, hi, modelWeights.layers.size(),
+            modelWeights.numLayers, static_cast<const void*>(hostIn),
+            static_cast<void*>(hostOut));
+        std::fflush(stderr);
+    }
+    if (!hostIn || !hostOut) { gpuForwardTrace("reject: contiguousRange null host buffer"); return false; }
+    if (lo > hi) { gpuForwardTrace("reject: contiguousRange lo > hi"); return false; }
+    if (hi >= modelWeights.layers.size()) { gpuForwardTrace("reject: contiguousRange hi out of range"); return false; }
     Gpu* gpu = getVulkanComputeSlot(slot);
-    if (!gpu || !ensureGpuForwardArena(slot) || !gpu->UploadHidden(
-            hostIn, static_cast<uint32_t>(modelWeights.hiddenDim)))
+    if (!gpu) { gpuForwardTrace("reject: contiguousRange no gpu slot"); return false; }
+    if (!ensureGpuForwardArena(slot)) { gpuForwardTrace("reject: contiguousRange arena"); return false; }
+    if (!gpu->UploadHidden(hostIn, static_cast<uint32_t>(modelWeights.hiddenDim))) {
+        gpuForwardTrace("reject: contiguousRange UploadHidden");
         return false;
+    }
     ++gpuFwd_.hostSyncBoundaries;
     for (uint32_t layer = lo; layer <= hi; ++layer) {
         if (!forwardLayerGpuResident(layer, slot, false, false)) return false;
     }
-    if (!gpu->DownloadHidden(hostOut, static_cast<uint32_t>(modelWeights.hiddenDim)))
+    if (!gpu->DownloadHidden(hostOut, static_cast<uint32_t>(modelWeights.hiddenDim))) {
+        gpuForwardTrace("reject: contiguousRange DownloadHidden");
         return false;
+    }
     ++gpuFwd_.hostSyncBoundaries;
     return true;
 }

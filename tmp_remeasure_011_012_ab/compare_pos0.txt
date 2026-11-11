@@ -1,0 +1,65 @@
+COMPARE_POS0
+DIFF PROMPT_EMBED
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=1152 l2=3.408671671e+01 max_abs=2.519119644e+01 min=-1.276414156e+00 max=2.519119644e+01 sum=5.337299434e+01 fnv=5469f5ec4639d593 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=1152 l2=3.408671671e+01 max_abs=2.519119644e+01 min=-1.276414156e+00 max=2.519119644e+01 sum=5.337299434e+01 fnv=5469f5ec4639d593 nf=0
+DIFF ATTN_NORM_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=1152 l2=1.888435293e+02 max_abs=1.355508270e+02 min=-1.325776196e+01 max=1.355508270e+02 sum=2.956486994e+02 fnv=a862ea78c0129223 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=1152 l2=2.224747956e+02 max_abs=1.574580383e+02 min=-1.385028744e+01 max=1.574580383e+02 sum=3.487937051e+02 fnv=ccaada1df943cba7 nf=0
+DIFF Q_PRE_ROPE_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=1024 l2=3.979987637e+02 max_abs=8.828165436e+01 min=-6.810903168e+01 max=8.828165436e+01 sum=-1.044817120e+01 fnv=f7433ebf17625b20 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=1024 l2=4.697662357e+02 max_abs=1.044110184e+02 min=-8.007420349e+01 max=1.044110184e+02 sum=-1.943042190e+01 fnv=9b010975ae034428 nf=0
+DIFF K_PRE_ROPE_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=256 l2=3.351511050e+02 max_abs=8.389208221e+01 min=-5.371480942e+01 max=8.389208221e+01 sum=-6.820676202e+01 fnv=e5580ba250d07d07 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=256 l2=3.945256405e+02 max_abs=9.814447784e+01 min=-6.240736389e+01 max=9.814447784e+01 sum=-8.960118705e+01 fnv=4f5c6c733ed166bb nf=0
+DIFF V_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=256 l2=1.734911588e+02 max_abs=2.853579521e+01 min=-2.853579521e+01 max=2.724946976e+01 sum=-1.397893985e+02 fnv=bc52c68776aa06a7 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=256 l2=2.044801667e+02 max_abs=3.349648666e+01 min=-3.349648666e+01 max=3.194536781e+01 sum=-1.594315438e+02 fnv=405d89ad0e2c14ca nf=0
+DIFF Q_POST_ROPE_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=0 n=1024 l2=4.324403269e+01 max_abs=6.827860355e+00 min=-4.692387104e+00 max=6.827860355e+00 sum=4.731013533e+01 fnv=a21e5dbcd0508459 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=0 n=1024 l2=7.149858530e+01 max_abs=9.111157417e+00 min=-6.918810844e+00 max=9.111157417e+00 sum=4.736261241e+01 fnv=bbb9853ac13a2f4c nf=0
+DIFF K_POST_ROPE_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=0 n=256 l2=2.303760372e+01 max_abs=3.490706921e+00 min=-3.490706921e+00 max=3.251277208e+00 sum=-6.163142640e+00 fnv=a0d97ef2d91b1f80 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=0 n=256 l2=3.800203062e+01 max_abs=5.633314133e+00 min=-5.633314133e+00 max=5.239708900e+00 sum=-1.047451925e+01 fnv=cf252cecfb642187 nf=0
+DIFF ATTN_PRE_O_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=0 n=1024 l2=3.469823177e+02 max_abs=2.853579521e+01 min=-2.853579521e+01 max=2.724946976e+01 sum=-5.591575941e+02 fnv=82c78f29ec64c1f5 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=0 n=1024 l2=4.089603334e+02 max_abs=3.349648666e+01 min=-3.349648666e+01 max=3.194536781e+01 sum=-6.377261753e+02 fnv=c63cfd81c5b94525 nf=0
+DIFF FFN_INP_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=0 n=1152 l2=1.354159185e+02 max_abs=1.024233551e+02 min=-1.024233551e+02 max=2.980441856e+01 sum=-5.967892580e+01 fnv=9328f76c7f4cf15a nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=0 n=1152 l2=1.485621646e+02 max_abs=1.036204529e+02 min=-1.036204529e+02 max=3.175251007e+01 sum=-8.603326533e+01 fnv=f69b2faa9698115c nf=0
+DIFF FFN_NORM_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=0 n=1152 l2=7.881219756e+01 max_abs=3.899204636e+01 min=-1.785953331e+01 max=3.899204636e+01 sum=4.707810266e+01 fnv=95df1ab308954203 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=0 n=1152 l2=1.280925950e+02 max_abs=4.045125580e+01 min=-2.580332756e+01 max=4.045125580e+01 sum=-1.818086425e+01 fnv=19f1fc10727e9d83 nf=0
+DIFF FFN_GATE_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=0 n=6912 l2=5.361901124e+02 max_abs=2.661440849e+01 min=-2.661440849e+01 max=2.477205849e+01 sum=-5.169975545e+01 fnv=1e03236e0397ff26 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=0 n=6912 l2=8.452874639e+02 max_abs=4.293072128e+01 min=-4.293072128e+01 max=3.938943100e+01 sum=-9.423926100e+02 fnv=9e9438d180803d4e nf=0
+DIFF FFN_UP_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=0 n=6912 l2=5.294680838e+02 max_abs=4.252487183e+01 min=-4.252487183e+01 max=2.444925690e+01 sum=-2.605433877e+01 fnv=14b937ff9818b495 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=0 n=6912 l2=8.419475413e+02 max_abs=4.531362915e+01 min=-4.531362915e+01 max=3.932206726e+01 sum=7.803437870e+02 fnv=f877432feaf4e4d6 nf=0
+DIFF FFN_ACT_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=0 n=6912 l2=2.425582635e+03 max_abs=2.847124023e+02 min=-2.827553101e+02 max=2.847124023e+02 sum=-1.150309291e+01 fnv=87081b0f904e96f1 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=0 n=6912 l2=6.148076861e+03 max_abs=9.623158569e+02 min=-9.623158569e+02 max=8.356368408e+02 sum=4.522166788e+03 fnv=ec2f0431c7f1d774 nf=0
+DIFF FFN_DOWN_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=0 n=1152 l2=1.080210222e+03 max_abs=1.073467941e+02 min=-1.023301773e+02 max=1.073467941e+02 sum=5.036398512e+02 fnv=06eeca95127b7a9c nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=0 n=1152 l2=2.755397721e+03 max_abs=2.745740967e+02 min=-2.627459717e+02 max=2.745740967e+02 sum=3.083424847e+02 fnv=2e9761b9686a45e1 nf=0
+DIFF POST_FFN_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=0 n=1152 l2=2.124369501e+02 max_abs=1.421765900e+02 min=-1.421765900e+02 max=4.830972290e+01 sum=1.816886703e+01 fnv=ff9d8c142e28ec76 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=0 n=1152 l2=2.617673162e+02 max_abs=1.829600830e+02 min=-1.829600830e+02 max=4.107599640e+01 sum=-1.966965894e+02 fnv=e8d8e58de2d9267a nf=0
+DIFF LAYER_OUT_0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=LAYER_OUT_0 pos=0 n=1152 l2=2.124369501e+02 max_abs=1.421765900e+02 min=-1.421765900e+02 max=4.830972290e+01 sum=1.816886703e+01 fnv=ff9d8c142e28ec76 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=LAYER_OUT_0 pos=0 n=1152 l2=2.617673162e+02 max_abs=1.829600830e+02 min=-1.829600830e+02 max=4.107599640e+01 sum=-1.966965894e+02 fnv=e8d8e58de2d9267a nf=0
+DIFF ATTN_NORM_1
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=0 n=1152 l2=1.112454025e+02 max_abs=4.529419708e+01 min=-4.529419708e+01 max=3.433922195e+01 sum=1.970021763e+01 fnv=4caa293305692af0 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=0 n=1152 l2=1.852176166e+02 max_abs=4.053090286e+01 min=-4.053090286e+01 max=3.055183601e+01 sum=-1.029585180e+02 fnv=ad0fdb24ec760a15 nf=0
+DIFF LAYER_OUT_1
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=LAYER_OUT_1 pos=0 n=1152 l2=2.724864637e+02 max_abs=2.031302948e+02 min=-2.031302948e+02 max=4.722111893e+01 sum=-1.693554121e+02 fnv=d7387ee887a1eefe nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=LAYER_OUT_1 pos=0 n=1152 l2=3.353797698e+02 max_abs=2.574011230e+02 min=-2.574011230e+02 max=4.557649994e+01 sum=-3.992798674e+02 fnv=3b4b0e7a5280c346 nf=0
+DIFF FINAL_NORM
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=1152 l2=1.529587239e+02 max_abs=3.059690285e+01 min=-3.059690285e+01 max=2.948851395e+01 sum=2.507921826e+02 fnv=5b3ef4071162704c nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=1152 l2=1.815114302e+02 max_abs=4.111446381e+01 min=-4.111446381e+01 max=2.214167595e+01 sum=1.220712498e+02 fnv=b3c4a42871b14cd8 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=LOGITS pos=69 n=262144 l2=5.210844786e+03 max_abs=2.954511070e+01 min=-2.954511070e+01 max=1.992802048e+01 sum=-2.183169548e+06 fnv=4f367cbe1bd830ce nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=LOGITS pos=69 n=262144 l2=3.568870425e+03 max_abs=2.708879089e+01 min=-2.708879089e+01 max=1.979064560e+01 sum=-1.210392692e+06 fnv=09b78d0d5283b3e5 nf=0
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=ARGMAX pos=69 id=236769 logit=19.928020477
+F:\rawrxd\tmp_remeasure_011_012_ab\oneplus\stdout.txt:[STAGE_DIGEST] side=deep2 key=ARGMAX pos=69 id=129693 logit=19.790645599
+[Deep2Engine] GEMMA_RMSNORM_ONEPLUS_FORCE=0 rmsNorm=plain
+[Deep2Engine] GEMMA_RMSNORM_ONEPLUS_FORCE=1 rmsNorm=1+w
+COMPARE_DONE

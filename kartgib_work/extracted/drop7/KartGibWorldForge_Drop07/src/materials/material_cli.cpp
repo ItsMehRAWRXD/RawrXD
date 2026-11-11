@@ -1,0 +1,5 @@
+#include "materials.hpp"
+#include <iostream>
+#include <string>
+#include <cstdlib>
+int main(int argc,char** argv){using namespace kartgib::materials;if(argc<3){std::cerr<<"Usage: worldforge-material-bake <asphalt|line|kerb|stone|rock|sand|grass|snow|painted-metal|bare-metal|neon|dirt|foliage|water|glass> <output.ppm> [seed] [size]\n";return 2;}const char* names[]={"asphalt","line","kerb","stone","rock","sand","grass","snow","painted-metal","bare-metal","neon","dirt","foliage","water","glass"};int k=-1;for(int i=0;i<15;++i)if(std::string(argv[1])==names[i])k=i;if(k<0){std::cerr<<"Unknown surface\n";return 2;}try{Config c;c.surface=static_cast<Surface>(k);if(argc>3)c.seed=uint32_t(std::stoul(argv[3]));if(argc>4)c.width=c.height=std::stoi(argv[4]);auto tex=bake(c);if(!write_ppm(argv[2],tex)){std::cerr<<"Failed writing PPM\n";return 1;}std::cout<<"Baked "<<names[k]<<" "<<c.width<<"x"<<c.height<<" seed="<<c.seed<<"\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1,0 +1,107 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  chromatic_main.cpp
+  chromatic_window.cpp
+  Generating Code...
+  RawrXD-Chromatic.vcxproj -> F:\rawrxd\build_prod\bin\Release\RawrXD-Chromatic.exe
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml.c
+  ggml.cpp
+  ggml-alloc.c
+  ggml-quants.c
+  Generating Code...
+  ggml-backend.cpp
+  ggml-opt.cpp
+  ggml-threading.cpp
+  gguf.cpp
+  Generating Code...
+  ggml-base.vcxproj -> F:\rawrxd\build_prod\3rdparty\ggml\src\Release\ggml-base.lib
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml-cpu.c
+  ggml-cpu.cpp
+  repack.cpp
+  hbm.cpp
+  traits.cpp
+  amx.cpp
+  mmq.cpp
+  binary-ops.cpp
+  unary-ops.cpp
+  vec.cpp
+  ops.cpp
+  Generating Code...
+  quants.c
+  quants.c
+  repack.cpp
+  ggml-cpu.vcxproj -> F:\rawrxd\build_prod\3rdparty\ggml\src\Release\ggml-cpu.lib
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml-backend-reg.cpp
+  ggml.vcxproj -> F:\rawrxd\build_prod\3rdparty\ggml\src\Release\ggml.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  deep2_token_profiler.cpp
+  streaming_gguf_loader.cpp
+  gguf_loader.cpp
+  gguf_vocab_resolver.cpp
+  Diagnostics.cpp
+  Generating Code...
+  deep2_token_profiler.vcxproj -> F:\rawrxd\build_prod\bin\Release\deep2_token_profiler.exe
+  Building Custom Rule F:/rawrxd/build_prod/_deps/zlib-src/CMakeLists.txt
+  adler32.c
+  compress.c
+  crc32.c
+  deflate.c
+  gzclose.c
+  gzlib.c
+  gzread.c
+  gzwrite.c
+  inflate.c
+  infback.c
+  inftrees.c
+  inffast.c
+  trees.c
+  uncompr.c
+  zutil.c
+  Generating Code...
+     Creating library F:/rawrxd/build_prod/_deps/zlib-build/Release/zlib.lib and object F:/rawrxd/build_prod/_deps/zlib-build/Release/zlib.exp
+  zlib.vcxproj -> F:\rawrxd\build_prod\_deps\zlib-build\Release\zlib.dll
+  Building Custom Rule F:/rawrxd/build_prod/_deps/zlib-src/CMakeLists.txt
+  example.c
+  example.vcxproj -> F:\rawrxd\build_prod\_deps\zlib-build\Release\example.exe
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  gguf_universal_probe.cpp
+  gguf_universal_probe.vcxproj -> F:\rawrxd\build_prod\bin\Release\gguf_universal_probe.exe
+  Building Custom Rule F:/rawrxd/build_prod/_deps/zlib-src/CMakeLists.txt
+  minigzip.c
+  minigzip.vcxproj -> F:\rawrxd\build_prod\_deps\zlib-build\Release\minigzip.exe
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  quant_scalar_smoke.cpp
+  quant_scalar_smoke.vcxproj -> F:\rawrxd\build_prod\tests\Release\quant_scalar_smoke.exe
+  Building Custom Rule F:/rawrxd/src/workflow/CMakeLists.txt
+  BrowserTestEngine.cpp
+  GitHubIntegration.cpp
+  agentic_workflow_bridge.cpp
+  Generating Code...
+  rawrxd_workflow.vcxproj -> F:\rawrxd\build_prod\src\workflow\Release\rawrxd_workflow.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  stub_main.cpp
+  stub_test.vcxproj -> F:\rawrxd\build_prod\Release\stub_test.exe
+  Building Custom Rule F:/rawrxd/build_prod/_deps/zlib-src/CMakeLists.txt
+  adler32.c
+  compress.c
+  crc32.c
+  deflate.c
+  gzclose.c
+  gzlib.c
+  gzread.c
+  gzwrite.c
+  inflate.c
+  infback.c
+  inftrees.c
+  inffast.c
+  trees.c
+  uncompr.c
+  zutil.c
+  Generating Code...
+  zlibstatic.vcxproj -> F:\rawrxd\build_prod\_deps\zlib-build\Release\zlibstatic.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt

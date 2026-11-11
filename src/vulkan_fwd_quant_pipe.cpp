@@ -22,6 +22,7 @@ bool VulkanCompute::CreateGemvPipe(const char* spvName, VkPipeline& pipe) {
         "G:/~dev/rawrxd/build-ninja/bin/",
     };
     char path[512];
+    bool found = false;
     for (const char* b : bases) {
         std::snprintf(path, sizeof(path), "%s%s", b, spvName);
         std::ifstream f(path, std::ios::binary | std::ios::ate);
@@ -29,18 +30,38 @@ bool VulkanCompute::CreateGemvPipe(const char* spvName, VkPipeline& pipe) {
         size_t n = (size_t)f.tellg(); f.seekg(0);
         spirv.resize(n / 4);
         f.read(reinterpret_cast<char*>(spirv.data()), (std::streamsize)n);
-        if (!spirv.empty()) break;
+        if (!spirv.empty()) { found = true; break; }
     }
-    if (spirv.empty()) return false;
+    if (spirv.empty()) {
+        if (std::getenv("DEEP2_GPU_FORWARD_TRACE"))
+            std::fprintf(stderr,
+                "[GPU_FORWARD_TRACE] gemv shader not found: %s "
+                "(searched cwd/bin/src/backend)\n", spvName);
+        return false;
+    }
     VkShaderModuleCreateInfo si{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
     si.codeSize = spirv.size() * 4; si.pCode = spirv.data();
     VkShaderModule mod = nullptr;
-    if (vkCreateShaderModule(device_, &si, nullptr, &mod) != VK_SUCCESS) return false;
+    const VkResult mr = vkCreateShaderModule(device_, &si, nullptr, &mod);
+    if (mr != VK_SUCCESS) {
+        if (std::getenv("DEEP2_GPU_FORWARD_TRACE"))
+            std::fprintf(stderr,
+                "[GPU_FORWARD_TRACE] gemv shader module failed: %s vk=%d "
+                "(%s, %u bytes)\n", spvName, (int)mr, path,
+                (unsigned)spirv.size() * 4u);
+        return false;
+    }
     VkPipelineShaderStageCreateInfo st{VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
     st.stage = VK_SHADER_STAGE_COMPUTE_BIT; st.module = mod; st.pName = "main";
     VkComputePipelineCreateInfo pi{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
     pi.layout = gemv_pipeline_layout_; pi.stage = st;
     VkResult r = vkCreateComputePipelines(device_, nullptr, 1, &pi, nullptr, &pipe);
+    if (r != VK_SUCCESS || !pipe) {
+        if (std::getenv("DEEP2_GPU_FORWARD_TRACE"))
+            std::fprintf(stderr,
+                "[GPU_FORWARD_TRACE] gemv pipeline failed: %s vk=%d "
+                "layout=%p\n", spvName, (int)r, (void*)gemv_pipeline_layout_);
+    }
     vkDestroyShaderModule(device_, mod, nullptr);
     return r == VK_SUCCESS && pipe;
 }

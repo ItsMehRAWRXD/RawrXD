@@ -63,6 +63,16 @@ $plans = [Collections.Generic.List[object]]::new()
 $exclusions = [Collections.Generic.List[object]]::new()
 $failures = [Collections.Generic.List[object]]::new()
 $snapshots = [Collections.Generic.List[object]]::new()
+$script:excludedFileCount = 0L
+function Flush-Exclusions {
+    if (-not $exclusions.Count) { return }
+    # Each line is one complete JSON array. Flush only new entries so a large
+    # all-branch audit does not repeatedly serialize every prior checkpoint.
+    $batchJson = ConvertTo-Json -InputObject $exclusions.ToArray() -Depth 5 -Compress
+    [IO.File]::AppendAllText((Join-Path $out 'exclusions-batches.jsonl'), $batchJson + "`n", $utf8)
+    $script:excludedFileCount += $exclusions.Count
+    $exclusions.Clear()
+}
 function Exclusion-Reason([string]$Path) {
     if ($Path -match '(?i)(^|/)(\.git|node_modules|CMakeFiles|build(?:[-_][^/]*)?|_build[^/]*|\.rawr|\.rawrxd|\.swarm_runs|\.venv|ggml_env|\.cache|\.vs|\.backups)(/|$)' -or
         $Path -match '(?i)^(build[-_][^/]*|_build[^/]*|\.worktrees|\.kilo/worktrees|\.tmp_[^/]*|models|models-mnt)/' -or
@@ -265,7 +275,7 @@ try {
             original_commit = $plan.OriginalCommit; worktree = $plan.Worktree;
             publication = 'Source snapshot on a new branch; original history is preserved locally.';
             lfs_status = 'Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.';
-            exclusions_receipt = 'Local evidence/GITHUB_BRANCH_SYNC_001/' + $run + '/exclusions.json';
+            exclusions_receipt = 'Local evidence/GITHUB_BRANCH_SYNC_001/' + $run + '/exclusions-batches.jsonl';
             release_certification = 'NOT_CLAIMED'} | ConvertTo-Json -Depth 5
         $metadataBlob = Add-Blob ($utf8.GetBytes($metadataText))
         $branchName = $prefix + $plan.Label
@@ -281,7 +291,7 @@ try {
         $snapshots.Add([pscustomobject]@{OriginalBranch = $plan.Label; OriginalCommit = $plan.OriginalCommit;
             PublishedBranch = $branchName; PublishedCommit = $publishedCommit; Kind = $plan.Kind; Files = $files.Count; RemoteVerified = $false})
         $snapshots | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $out 'snapshots-before-push.json') -Encoding UTF8
-        $exclusions | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'exclusions.json') -Encoding UTF8
+        Flush-Exclusions
         Write-Output ('SNAPSHOT ' + $plan.Label + ' files=' + $files.Count)
         if ($Push) {
             $pushOutput = Invoke-Git $root @('-c', 'credential.interactive=never', 'push', '--porcelain', $Remote,
@@ -298,7 +308,7 @@ try {
     if (-not $cat.WaitForExit(5000)) { $cat.Kill() }
     if (-not $import.HasExited) { $import.StandardInput.Close(); if (-not $import.WaitForExit(5000)) { $import.Kill() } }
 }
-$exclusions | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'exclusions.json') -Encoding UTF8
+Flush-Exclusions
 $failures | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'failures.json') -Encoding UTF8
 $snapshots | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $out 'snapshots-before-push.json') -Encoding UTF8
 if ($Push) {
@@ -320,7 +330,8 @@ if ($Push) {
     }
 }
 $receipt = [ordered]@{run_id = $run; repository = $root; remote = $Remote; original_branch_count = $branches.Count;
-    snapshots = $snapshots.ToArray(); excluded_file_count = $exclusions.Count; worktree_failures = $failures.ToArray();
+    snapshots = $snapshots.ToArray(); excluded_file_count = $script:excludedFileCount;
+    exclusions_format = 'One JSON array per line in exclusions-batches.jsonl'; worktree_failures = $failures.ToArray();
     push_requested = [bool]$Push; original_history_push = 'BLOCKED_BY_GITHUB_LFS_BUDGET';
     all_created_source_branches_verified = [bool]($Push -and @($snapshots | Where-Object { -not $_.RemoteVerified }).Count -eq 0)}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $out 'publication-receipt.json') -Encoding UTF8

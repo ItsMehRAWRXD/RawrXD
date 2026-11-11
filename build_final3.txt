@@ -1,0 +1,336 @@
+[1/287] Building CXX object CMakeFiles\deep2_gdn_parity_harness.dir\tools\deep2_gdn_parity_harness.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/287] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(82): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(81): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(80): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(79): warning C4100: 'gate': unreferenced parameter
+[3/287] Building CXX object CMakeFiles\deep2_parity_trace.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(82): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(81): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(80): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(79): warning C4100: 'gate': unreferenced parameter
+[4/287] Building CXX object CMakeFiles\deep2_gdn_parity_harness.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(82): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(81): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(80): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(79): warning C4100: 'gate': unreferenced parameter
+[5/287] Building CXX object CMakeFiles\deep2_qwen4exp_gdn_probe.dir\tools\deep2_qwen4exp_gdn_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(190): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(191): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+[6/287] Building CXX object CMakeFiles\deep2_qwen4exp_gdn_probe.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(82): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(81): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(80): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(79): warning C4100: 'gate': unreferenced parameter
+[7/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[8/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[10/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[11/287] Building CXX object CMakeFiles\deep2_gpu_certify.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[12/287] Building CXX object CMakeFiles\deep2_parity_trace.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(79): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(972): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1200): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1225): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1304): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1317): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1368): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1413): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1432): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1467): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1490): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1518): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1567): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1600): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1696): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1699): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1724): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1959): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2045): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2127): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2161): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2164): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2207): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2257): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2318): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2365): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2413): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2538): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2639): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2691): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2826): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3007): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3189): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3458): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(3923): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4366): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4042): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4053): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4117): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4118): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4119): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4120): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4164): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4223): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4232): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4264): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4294): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4361): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4385): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4408): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4417): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4418): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4426): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4495): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4500): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4561): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4565): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4607): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4619): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4623): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4690): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4693): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4725): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4731): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4759): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4778): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5021): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5108): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5152): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(5298): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[13/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[14/287] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[15/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[16/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[17/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[18/287] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeStreamGate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\K2NativeStreamGate.cpp(381): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+[19/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[20/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\tools\deep2_spec_bench.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_spec_bench.cpp(484): warning C4456: declaration of 'err' hides previous local declaration
+F:\rawrxd\tools\deep2_spec_bench.cpp(448): note: see declaration of 'err'
+[21/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[22/287] Building ASM_MASM object CMakeFiles\rawrxd_hexmag_repeat.dir\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+ Assembling: F:\rawrxd\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm
+[23/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\deep2_speculative.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[24/287] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/tests/hexmag_ide_e2e_cert.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_runtime_controller.hpp(13): fatal error C1083: Cannot open include file: 'agent/hexmag_client.hpp': No such file or directory
+[25/287] Building CXX object CMakeFiles\hexmag_repeat_tuner_cert.dir\~dev\rawrxd\tests\hexmag_repeat_tuner_cert.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[26/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[27/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[28/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[29/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[30/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[31/287] Building CXX object CMakeFiles\deep2_spec_bench.dir\src\utils\input_sanitizer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,367 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[ModelFit] KV budget caps context: requested=32768 fit=16836 (kv_bytes_per_token=8424)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 vram=34174009344 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[B3_WARN] hidden state norm explosion pos=237 norm=3.263060818e+02
+[B3_WARN] hidden state norm explosion pos=238 norm=3.148956902e+02
+[B3_WARN] hidden state norm explosion pos=239 norm=3.291813264e+02
+[B3_WARN] hidden state norm explosion pos=240 norm=3.086643822e+02
+[B3_WARN] hidden state norm explosion pos=241 norm=3.317017574e+02
+[B3_WARN] hidden state norm explosion pos=242 norm=3.104101792e+02
+[B3_WARN] hidden state norm explosion pos=243 norm=3.307807046e+02
+[B3_WARN] hidden state norm explosion pos=244 norm=3.376844395e+02
+[B3_WARN] hidden state norm explosion pos=245 norm=3.279199590e+02
+[B3_WARN] hidden state norm explosion pos=246 norm=3.218732251e+02
+[B3_WARN] hidden state norm explosion pos=247 norm=3.331988125e+02
+[B3_WARN] hidden state norm explosion pos=248 norm=3.372659429e+02
+[B3_WARN] hidden state norm explosion pos=249 norm=3.108765700e+02
+[B3_WARN] hidden state norm explosion pos=250 norm=3.267424587e+02
+[B3_WARN] hidden state norm explosion pos=251 norm=3.360731840e+02
+[B3_WARN] hidden state norm explosion pos=252 norm=3.064108903e+02
+[B3_WARN] hidden state norm explosion pos=253 norm=3.085866839e+02
+[B3_WARN] hidden state norm explosion pos=254 norm=3.312142521e+02
+[B3_WARN] hidden state norm explosion pos=255 norm=3.273912721e+02
+[B3_WARN] hidden state norm explosion pos=256 norm=3.300442917e+02
+[B3_WARN] hidden state norm explosion pos=257 norm=3.153007953e+02
+[B3_WARN] hidden state norm explosion pos=258 norm=3.181772796e+02
+[B3_WARN] hidden state norm explosion pos=259 norm=3.167325622e+02
+[B3_WARN] hidden state norm explosion pos=260 norm=3.155436438e+02
+[B3_WARN] hidden state norm explosion pos=261 norm=3.097711386e+02
+[B3_WARN] hidden state norm explosion pos=262 norm=3.193332405e+02
+[B3_WARN] hidden state norm explosion pos=263 norm=3.153963820e+02
+[B3_WARN] hidden state norm explosion pos=264 norm=3.104386701e+02
+[B3_WARN] hidden state norm explosion pos=265 norm=3.083722963e+02
+[B3_WARN] hidden state norm explosion pos=266 norm=3.198641983e+02
+[B3_WARN] hidden state norm explosion pos=267 norm=3.309293363e+02
+[B3_WARN] hidden state norm explosion pos=268 norm=3.236421117e+02
+[B3_WARN] hidden state norm explosion pos=269 norm=3.156261190e+02
+[B3_WARN] hidden state norm explosion pos=270 norm=3.072988498e+02
+[B3_WARN] hidden state norm explosion pos=271 norm=3.239405107e+02
+[B3_WARN] hidden state norm explosion pos=272 norm=3.202145057e+02
+[B3_WARN] hidden state norm explosion pos=273 norm=3.151988675e+02
+[B3_WARN] hidden state norm explosion pos=274 norm=3.329117035e+02
+[B3_WARN] hidden state norm explosion pos=275 norm=3.266650166e+02
+[B3_WARN] hidden state norm explosion pos=276 norm=3.318469955e+02
+[B3_WARN] hidden state norm explosion pos=277 norm=3.385907982e+02
+[B3_WARN] hidden state norm explosion pos=278 norm=3.134485559e+02
+[B3_WARN] hidden state norm explosion pos=279 norm=3.240596422e+02
+[B3_WARN] hidden state norm explosion pos=280 norm=3.209881239e+02
+[B3_WARN] hidden state norm explosion pos=281 norm=3.302233206e+02
+[B3_WARN] hidden state norm explosion pos=282 norm=3.227147836e+02
+[B3_WARN] hidden state norm explosion pos=283 norm=3.277126939e+02
+[B3_WARN] hidden state norm explosion pos=284 norm=3.204909274e+02
+[B3_WARN] hidden state norm explosion pos=285 norm=3.183267816e+02
+[B3_WARN] hidden state norm explosion pos=286 norm=3.076333750e+02
+[B3_WARN] hidden state norm explosion pos=287 norm=3.069148002e+02
+[B3_WARN] hidden state norm explosion pos=288 norm=3.173790603e+02
+[B3_WARN] hidden state norm explosion pos=289 norm=3.363364175e+02
+[B3_WARN] hidden state norm explosion pos=290 norm=3.162725111e+02
+[B3_WARN] hidden state norm explosion pos=291 norm=3.137367758e+02
+[B3_WARN] hidden state norm explosion pos=292 norm=3.348700276e+02
+[B3_WARN] hidden state norm explosion pos=293 norm=3.335526567e+02
+[B3_WARN] hidden state norm explosion pos=294 norm=3.321784781e+02
+[B3_WARN] hidden state norm explosion pos=295 norm=3.219627749e+02
+[B3_WARN] hidden state norm explosion pos=296 norm=3.221380114e+02
+[B3_WARN] hidden state norm explosion pos=297 norm=3.208582497e+02
+[B3_WARN] hidden state norm explosion pos=298 norm=3.225550869e+02
+[B3_WARN] hidden state norm explosion pos=299 norm=3.365196040e+02
+[B3_WARN] hidden state norm explosion pos=300 norm=3.229241469e+02
+[B3_WARN] hidden state norm explosion pos=301 norm=3.210194587e+02
+[B3_WARN] hidden state norm explosion pos=302 norm=3.365043750e+02
+[B3_WARN] hidden state norm explosion pos=303 norm=3.327387964e+02
+[B3_WARN] hidden state norm explosion pos=304 norm=3.193921605e+02
+[B3_WARN] hidden state norm explosion pos=305 norm=3.377480542e+02
+[B3_WARN] hidden state norm explosion pos=306 norm=3.194051009e+02
+[B3_WARN] hidden state norm explosion pos=307 norm=3.295765179e+02
+[B3_WARN] hidden state norm explosion pos=308 norm=3.439547137e+02
+[B3_WARN] hidden state norm explosion pos=309 norm=3.353747707e+02
+[B3_WARN] hidden state norm explosion pos=310 norm=3.193071238e+02
+[B3_WARN] hidden state norm explosion pos=311 norm=3.091141848e+02
+[B3_WARN] hidden state norm explosion pos=312 norm=3.320651931e+02
+[B3_WARN] hidden state norm explosion pos=313 norm=3.341113828e+02
+[B3_WARN] hidden state norm explosion pos=314 norm=3.305609441e+02
+[B3_WARN] hidden state norm explosion pos=315 norm=3.103255511e+02
+[B3_WARN] hidden state norm explosion pos=316 norm=3.427389634e+02
+[B3_WARN] hidden state norm explosion pos=317 norm=3.208787385e+02
+[B3_WARN] hidden state norm explosion pos=318 norm=3.259759172e+02
+[B3_WARN] hidden state norm explosion pos=319 norm=3.307388433e+02
+[B3_WARN] hidden state norm explosion pos=320 norm=3.119445419e+02
+[B3_WARN] hidden state norm explosion pos=321 norm=3.375471824e+02
+[B3_WARN] hidden state norm explosion pos=322 norm=3.202012263e+02
+[B3_WARN] hidden state norm explosion pos=323 norm=3.058273007e+02
+[B3_WARN] hidden state norm explosion pos=324 norm=3.429327982e+02
+[B3_WARN] hidden state norm explosion pos=325 norm=3.524948168e+02
+[B3_WARN] hidden state norm explosion pos=326 norm=3.181475398e+02
+[B3_WARN] hidden state norm explosion pos=327 norm=3.177587213e+02
+[B3_WARN] hidden state norm explosion pos=328 norm=3.264266130e+02
+[B3_WARN] hidden state norm explosion pos=329 norm=3.145790227e+02
+[B3_WARN] hidden state norm explosion pos=330 norm=3.240264654e+02
+[B3_WARN] hidden state norm explosion pos=331 norm=3.058061325e+02
+[B3_WARN] hidden state norm explosion pos=332 norm=3.352263449e+02
+[B3_WARN] hidden state norm explosion pos=333 norm=3.189277914e+02
+[B3_WARN] hidden state norm explosion pos=334 norm=3.218404094e+02
+[B3_WARN] hidden state norm explosion pos=335 norm=3.362360944e+02
+[B3_WARN] hidden state norm explosion pos=336 norm=3.332341147e+02
+[B3_WARN] hidden state norm explosion pos=337 norm=3.390382370e+02
+[B3_WARN] hidden state norm explosion pos=338 norm=3.141848614e+02
+[B3_WARN] hidden state norm explosion pos=339 norm=3.353780023e+02
+[B3_WARN] hidden state norm explosion pos=340 norm=3.476194545e+02
+[B3_WARN] hidden state norm explosion pos=341 norm=3.073604820e+02
+[B3_WARN] hidden state norm explosion pos=342 norm=2.960474567e+02
+[B3_WARN] hidden state norm explosion pos=343 norm=3.356793150e+02
+[B3_WARN] hidden state norm explosion pos=344 norm=3.118409930e+02
+[B3_WARN] hidden state norm explosion pos=345 norm=3.363641923e+02
+[B3_WARN] hidden state norm explosion pos=346 norm=3.344212382e+02
+[B3_WARN] hidden state norm explosion pos=347 norm=3.221915676e+02
+[B3_WARN] hidden state norm explosion pos=348 norm=3.210767634e+02
+[B3_WARN] hidden state norm explosion pos=349 norm=3.319796701e+02
+[B3_WARN] hidden state norm explosion pos=350 norm=3.086231990e+02
+[B3_WARN] hidden state norm explosion pos=351 norm=3.268212799e+02
+[B3_WARN] hidden state norm explosion pos=352 norm=3.365381800e+02
+[B3_WARN] hidden state norm explosion pos=353 norm=3.198194521e+02
+[B3_WARN] hidden state norm explosion pos=354 norm=3.211008996e+02
+[B3_WARN] hidden state norm explosion pos=355 norm=3.345782067e+02
+[B3_WARN] hidden state norm explosion pos=356 norm=3.225423936e+02
+[B3_WARN] hidden state norm explosion pos=357 norm=3.155787925e+02
+[B3_WARN] hidden state norm explosion pos=358 norm=3.161127023e+02
+[B3_WARN] hidden state norm explosion pos=359 norm=3.154408059e+02
+[B3_WARN] hidden state norm explosion pos=360 norm=3.333181381e+02
+[B3_WARN] hidden state norm explosion pos=361 norm=3.260450844e+02
+[B3_WARN] hidden state norm explosion pos=362 norm=3.184076407e+02
+[B3_WARN] hidden state norm explosion pos=363 norm=3.253462597e+02
+[B3_WARN] hidden state norm explosion pos=364 norm=3.258618553e+02
+[B3_WARN] hidden state norm explosion pos=365 norm=3.173194081e+02
+[B3_WARN] hidden state norm explosion pos=366 norm=3.231722916e+02
+[B3_WARN] hidden state norm explosion pos=367 norm=3.158565275e+02
+[B3_WARN] hidden state norm explosion pos=368 norm=3.263989802e+02
+[B3_WARN] hidden state norm explosion pos=369 norm=3.129628451e+02
+[B3_WARN] hidden state norm explosion pos=370 norm=3.154580882e+02
+[B3_WARN] hidden state norm explosion pos=371 norm=3.316362251e+02
+[B3_WARN] hidden state norm explosion pos=372 norm=3.306675546e+02
+[B3_WARN] hidden state norm explosion pos=373 norm=3.284848534e+02
+[B3_WARN] hidden state norm explosion pos=374 norm=3.310444910e+02
+[B3_WARN] hidden state norm explosion pos=375 norm=3.387282786e+02
+[B3_WARN] hidden state norm explosion pos=376 norm=3.130652705e+02
+[B3_WARN] hidden state norm explosion pos=377 norm=3.322840396e+02
+[B3_WARN] hidden state norm explosion pos=378 norm=3.218348478e+02
+[B3_WARN] hidden state norm explosion pos=379 norm=3.236809086e+02
+[B3_WARN] hidden state norm explosion pos=380 norm=3.331032286e+02
+[B3_WARN] hidden state norm explosion pos=381 norm=3.104567463e+02
+[B3_WARN] hidden state norm explosion pos=382 norm=3.128594339e+02
+[B3_WARN] hidden state norm explosion pos=383 norm=3.440124548e+02
+[B3_WARN] hidden state norm explosion pos=384 norm=3.314884196e+02
+[B3_WARN] hidden state norm explosion pos=385 norm=3.324354001e+02
+[B3_WARN] hidden state norm explosion pos=386 norm=2.915536580e+02
+[B3_WARN] hidden state norm explosion pos=387 norm=3.157409749e+02
+[B3_WARN] hidden state norm explosion pos=388 norm=3.253660088e+02
+[B3_WARN] hidden state norm explosion pos=389 norm=3.060090790e+02
+[B3_WARN] hidden state norm explosion pos=390 norm=3.255730652e+02
+[B3_WARN] hidden state norm explosion pos=391 norm=3.203201256e+02
+[B3_WARN] hidden state norm explosion pos=392 norm=3.301118362e+02
+[B3_WARN] hidden state norm explosion pos=393 norm=3.222676612e+02
+[B3_WARN] hidden state norm explosion pos=394 norm=3.183328819e+02
+[B3_WARN] hidden state norm explosion pos=395 norm=3.302495795e+02
+[B3_WARN] hidden state norm explosion pos=396 norm=3.025129121e+02
+[B3_WARN] hidden state norm explosion pos=397 norm=3.299093248e+02
+[B3_WARN] hidden state norm explosion pos=398 norm=3.177421992e+02
+[B3_WARN] hidden state norm explosion pos=399 norm=3.248396669e+02
+[B3_WARN] hidden state norm explosion pos=400 norm=3.148944582e+02
+[B3_WARN] hidden state norm explosion pos=401 norm=3.170077005e+02
+[B3_WARN] hidden state norm explosion pos=402 norm=3.203588207e+02
+[B3_WARN] hidden state norm explosion pos=403 norm=3.336863760e+02
+[B3_WARN] hidden state norm explosion pos=404 norm=3.144775354e+02
+[B3_WARN] hidden state norm explosion pos=405 norm=3.359323724e+02
+[B3_WARN] hidden state norm explosion pos=406 norm=3.203852079e+02
+[B3_WARN] hidden state norm explosion pos=407 norm=3.196238681e+02
+[B3_WARN] hidden state norm explosion pos=408 norm=3.289410569e+02
+[B3_WARN] hidden state norm explosion pos=409 norm=3.259747968e+02
+[B3_WARN] hidden state norm explosion pos=410 norm=3.157853092e+02
+[B3_WARN] hidden state norm explosion pos=411 norm=3.258265583e+02
+[B3_WARN] hidden state norm explosion pos=412 norm=3.308268122e+02
+[B3_WARN] hidden state norm explosion pos=413 norm=3.220307888e+02
+[B3_WARN] hidden state norm explosion pos=414 norm=3.465098629e+02
+[B3_WARN] hidden state norm explosion pos=415 norm=3.181637166e+02
+[B3_WARN] hidden state norm explosion pos=416 norm=3.188722654e+02
+[B3_WARN] hidden state norm explosion pos=417 norm=3.162847979e+02
+[B3_WARN] hidden state norm explosion pos=418 norm=3.165591842e+02
+[B3_WARN] hidden state norm explosion pos=419 norm=3.285532462e+02
+[B3_WARN] hidden state norm explosion pos=420 norm=3.519767952e+02
+[B3_WARN] hidden state norm explosion pos=421 norm=3.177032397e+02
+[B3_WARN] hidden state norm explosion pos=422 norm=3.282478175e+02
+[B3_WARN] hidden state norm explosion pos=423 norm=3.230139555e+02
+[B3_WARN] hidden state norm explosion pos=424 norm=3.217108850e+02
+[B3_WARN] hidden state norm explosion pos=425 norm=3.294030098e+02
+[B3_WARN] hidden state norm explosion pos=426 norm=3.380702123e+02
+[B3_WARN] hidden state norm explosion pos=427 norm=3.473241561e+02
+[B3_WARN] hidden state norm explosion pos=428 norm=3.356277858e+02
+[B3_WARN] hidden state norm explosion pos=429 norm=3.239468619e+02
+[B3_WARN] hidden state norm explosion pos=430 norm=3.158952032e+02
+[B3_WARN] hidden state norm explosion pos=431 norm=3.182172481e+02
+[B3_WARN] hidden state norm explosion pos=432 norm=3.097052795e+02
+[B3_WARN] hidden state norm explosion pos=433 norm=3.146152963e+02
+[B3_WARN] hidden state norm explosion pos=434 norm=3.252125521e+02
+[B3_WARN] hidden state norm explosion pos=435 norm=3.283570875e+02
+[B3_WARN] hidden state norm explosion pos=436 norm=3.098837153e+02
+[B3_WARN] hidden state norm explosion pos=437 norm=3.202143613e+02
+[B3_WARN] hidden state norm explosion pos=438 norm=3.164431989e+02
+[B3_WARN] hidden state norm explosion pos=439 norm=3.421278710e+02
+[B3_WARN] hidden state norm explosion pos=440 norm=3.343378536e+02
+[B3_WARN] hidden state norm explosion pos=441 norm=3.327598707e+02
+[B3_WARN] hidden state norm explosion pos=442 norm=3.322450596e+02
+[B3_WARN] hidden state norm explosion pos=443 norm=3.286543872e+02
+[B3_WARN] hidden state norm explosion pos=444 norm=3.261676129e+02
+[B3_WARN] hidden state norm explosion pos=445 norm=3.314000504e+02
+[B3_WARN] hidden state norm explosion pos=446 norm=3.321052870e+02
+[B3_WARN] hidden state norm explosion pos=447 norm=3.061917630e+02
+[B3_WARN] hidden state norm explosion pos=448 norm=3.160946457e+02
+[B3_WARN] hidden state norm explosion pos=449 norm=3.358681245e+02
+[B3_WARN] hidden state norm explosion pos=450 norm=3.227004718e+02
+[B3_WARN] hidden state norm explosion pos=451 norm=3.358294095e+02
+[B3_WARN] hidden state norm explosion pos=452 norm=3.229173791e+02
+[B3_WARN] hidden state norm explosion pos=453 norm=3.142436157e+02
+[B3_WARN] hidden state norm explosion pos=454 norm=3.224762458e+02
+[B3_WARN] hidden state norm explosion pos=455 norm=3.209403198e+02
+[B3_WARN] hidden state norm explosion pos=456 norm=3.098513017e+02
+[B3_WARN] hidden state norm explosion pos=457 norm=3.222771443e+02
+[B3_WARN] hidden state norm explosion pos=458 norm=3.245204419e+02
+[B3_WARN] hidden state norm explosion pos=459 norm=3.331659819e+02
+[B3_WARN] hidden state norm explosion pos=460 norm=3.335238790e+02
+[B3_WARN] hidden state norm explosion pos=461 norm=3.469014622e+02
+[B3_WARN] hidden state norm explosion pos=462 norm=3.296395458e+02
+[B3_WARN] hidden state norm explosion pos=463 norm=3.267386362e+02
+[B3_WARN] hidden state norm explosion pos=464 norm=3.116735261e+02
+[B3_WARN] hidden state norm explosion pos=465 norm=3.192815413e+02
+[B3_WARN] hidden state norm explosion pos=466 norm=3.418014377e+02
+[B3_WARN] hidden state norm explosion pos=467 norm=3.275582823e+02
+[B3_WARN] hidden state norm explosion pos=468 norm=3.062617237e+02
+[B3_WARN] hidden state norm explosion pos=469 norm=3.127243375e+02
+[B3_WARN] hidden state norm explosion pos=470 norm=3.196506820e+02
+[B3_WARN] hidden state norm explosion pos=471 norm=3.278519555e+02
+[B3_WARN] hidden state norm explosion pos=472 norm=3.297881926e+02
+[B3_WARN] hidden state norm explosion pos=473 norm=3.266935984e+02
+[B3_WARN] hidden state norm explosion pos=474 norm=3.213306550e+02
+[B3_WARN] hidden state norm explosion pos=475 norm=3.112934320e+02
+[B3_WARN] hidden state norm explosion pos=476 norm=3.288686409e+02
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=   49504  ms=  862112.976  MACs=  215340023808  ms/MAC=0.000004
+  Q8_0      calls=   12376  ms=   39393.017  MACs=    3649830912  ms/MAC=0.000011
+  Q2_K      calls=     240  ms=    2397.095  MACs=   72477573120  ms/MAC=0.000000
+  Q5_K      calls=   24752  ms=   52726.058  MACs=  113144758272  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=  956629.147  MACs=  404612186112
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  blk.20.ffn_down.weight                        476     1882.517     3790209024        3.955
+  blk.19.ffn_down.weight                        476     1867.933     3790209024        3.924
+  blk.12.ffn_down.weight                        476     1653.706     3790209024        3.474
+  blk.22.ffn_down.weight                        476     1617.776     3790209024        3.399
+  blk.21.ffn_down.weight                        476     1614.522     3790209024        3.392
+  blk.24.ffn_down.weight                        476     1603.459     3790209024        3.369
+  blk.17.ffn_down.weight                        476     1600.336     3790209024        3.362
+  blk.25.ffn_down.weight                        476     1555.516     3790209024        3.268
+  blk.13.ffn_down.weight                        476     1547.384     3790209024        3.251
+  blk.14.ffn_down.weight                        476     1539.640     3790209024        3.235
+  blk.16.ffn_down.weight                        476     1538.170     3790209024        3.231
+  blk.18.ffn_down.weight                        476     1533.145     3790209024        3.221
+  blk.23.ffn_down.weight                        476     1503.923     3790209024        3.160
+  blk.11.ffn_down.weight                        476     1495.189     3790209024        3.141
+  blk.15.ffn_down.weight                        476     1441.482     3790209024        3.028
+  blk.4.ffn_down.weight                         476     1413.510     3790209024        2.970
+  blk.8.ffn_down.weight                         476     1385.538     3790209024        2.911
+  blk.2.ffn_down.weight                         476     1337.370     3790209024        2.810
+  blk.5.ffn_down.weight                         476     1328.835     3790209024        2.792
+  blk.1.ffn_down.weight                         476     1310.539     3790209024        2.753
+============================================================
+[AGENT] GENERATION_RECEIPT prompt=237 generated=240 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END

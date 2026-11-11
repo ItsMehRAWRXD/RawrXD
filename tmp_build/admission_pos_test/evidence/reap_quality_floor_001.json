@@ -1,0 +1,7 @@
+﻿{
+    "measured_quality":  0.95,
+    "schema":  "reap.quality_floor_001.v1",
+    "model":  "Kimi K2 Instruct Q4_K_M",
+    "quality_floor":  0.9,
+    "quality_floor_met":  true
+}

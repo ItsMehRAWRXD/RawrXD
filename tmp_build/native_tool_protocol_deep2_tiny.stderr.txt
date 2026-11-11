@@ -1,0 +1,87 @@
+[Deep2Backend] Resolved alias 'G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf' -> G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (1 shard)
+[Deep2Backend] Loading model: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Device] PnP name=AMD Radeon RX 7800 XT PROBLEM_CODE=31 RESET_ATTEMPTED=1 RESET_OK=0 ACCESS_DENIED=1 HEALTHY=0 instance=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Backend] Model loaded: hidden=2048 vocab=32000 layers=22
+[Deep2Backend] Chat template: tinyllama
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[ESP] seq=1 req=71454409650200 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=71454409650200 kind=model_load value=0 message=unknown
+[ESP] seq=3 req=71454409650200 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=71454409650200 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=71454409650200 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=71454409650200 kind=agent_step value=0 message=phase=WORKING
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  IQ2_XS    calls=       1  ms=    1005.042  MACs=      65536000  ms/MAC=0.000015
+  TOTAL     calls=       0  ms=    1005.042  MACs=      65536000
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+[AGENT] GENERATION_RECEIPT prompt=146 generated=1 completed=0 cancelled=1 stop_reason=13 stop=CANCELLED
+[agent] CANCELLED: user_interrupt
+[ESP] seq=7 req=71454409650200 kind=snap_stop value=130 message=user_interrupt
+[ESP] seq=8 req=71454409650200 kind=heartbeat value=0 message={"request":71454409650200,"agent":1,"phase":"error","generated":0,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":0.000,"decode_ms":0.000,"task_ms":64986.016,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=9 req=71454409650200 kind=finished value=1 message=FAIL
+[StreamEngine] Shutdown

@@ -1,0 +1,118 @@
+[0/2] Re-checking globbed directories...
+[1/315] Building ASM_MASM object CMakeFiles\rawrxd_hexmag_repeat.dir\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+ Assembling: F:\rawrxd\~dev\rawrxd\src\asm\RawrXD_HexMag_RepeatTuner.asm
+[2/315] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[3/315] Building ASM_MASM object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\asm\RawrXD_HexMag_Swarm.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+ Assembling: F:\rawrxd\~dev\rawrxd\src\asm\RawrXD_HexMag_Swarm.asm
+[4/315] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[5/315] Completed 'vulkan-shaders-gen'
+[6/315] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/tests/hexmag_ide_e2e_cert.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\tests\hexmag_ide_e2e_cert.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_runtime_controller.hpp(13): fatal error C1083: Cannot open include file: 'agent/hexmag_client.hpp': No such file or directory
+[7/315] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_runtime_controller.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_runtime_controller.hpp(13): fatal error C1083: Cannot open include file: 'agent/hexmag_client.hpp': No such file or directory
+[8/315] Building CXX object CMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_runtime_controller_cert.dir/~dev/rawrxd/tests/hexmag_runtime_controller_cert.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_runtime_controller_cert.dir\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp.obj /FdCMakeFiles\hexmag_runtime_controller_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\tests\hexmag_runtime_controller_cert.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_runtime_controller.hpp(13): fatal error C1083: Cannot open include file: 'agent/hexmag_client.hpp': No such file or directory
+[9/315] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_oracle_binder.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core\hexmag_oracle_binder.cpp(5): fatal error C1083: Cannot open include file: 'agentic/HexMagAction.hpp': No such file or directory
+[10/315] Building CXX object CMakeFiles\deep2_gdn_parity_harness.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(94): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(93): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(92): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(91): warning C4100: 'gate': unreferenced parameter
+[11/315] Building CXX object CMakeFiles\deep2_qwen4exp_gdn_probe.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\op_gdn.cpp(94): warning C4100: 'norm': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(93): warning C4100: 'dt_bias': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(92): warning C4100: 'a_log': unreferenced parameter
+F:\rawrxd\src\deep2\op_gdn.cpp(91): warning C4100: 'gate': unreferenced parameter
+[12/315] Building CXX object CMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj
+FAILED: [code=2] CMakeFiles/hexmag_ide_e2e_cert.dir/~dev/rawrxd/src/core/hexmag_control_plane.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_MASM=1 -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\~dev\rawrxd\src -IF:\rawrxd\~dev\rawrxd\src\agentic -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /showIncludes /FoCMakeFiles\hexmag_ide_e2e_cert.dir\~dev\rawrxd\src\core\hexmag_control_plane.cpp.obj /FdCMakeFiles\hexmag_ide_e2e_cert.dir\ /FS -c F:\rawrxd\~dev\rawrxd\src\core\hexmag_control_plane.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\~dev\rawrxd\src\core/hexmag_finalize_policy.hpp(15): fatal error C1083: Cannot open include file: 'agentic/HexMagAction.hpp': No such file or directory
+[13/315] Building CXX object CMakeFiles\gguf_universal_probe.dir\tools\gguf_universal_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\tools\gguf_universal_probe.cpp(167): warning C4189: 'c': local variable is initialized but not referenced
+F:\rawrxd\tools\gguf_universal_probe.cpp(332): warning C4456: declaration of 'in' hides previous local declaration
+F:\rawrxd\tools\gguf_universal_probe.cpp(300): note: see declaration of 'in'
+F:\rawrxd\tools\gguf_universal_probe.cpp(391): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+ninja: build stopped: subcommand failed.

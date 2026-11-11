@@ -18,9 +18,18 @@
 
 namespace {
 
+std::string buildEvidencePath(const char* filename, const char* fallback)
+{
+    char directory[32768]{};
+    const DWORD length = GetEnvironmentVariableA("RAWRXD_LOG_DIR", directory, sizeof(directory));
+    if (length && length < sizeof(directory)) return std::string(directory) + "\\" + filename;
+    return fallback;
+}
+
 void buildTrace(const std::string& line)
 {
-    std::ofstream out("F:\\rawrxd\\build_dispatch_trace.log", std::ios::app);
+    std::ofstream out(buildEvidencePath("build_dispatch_trace.log",
+        "F:\\rawrxd\\build_dispatch_trace.log"), std::ios::app);
     if (out) out << line << '\n';
 }
 
@@ -735,9 +744,9 @@ void Win32IDE::handleToolsCommand(int commandId) {
                 clExe + "\" /nologo /c /W4 /EHsc /FS \"" + fixture +
                 "\" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE\"";
             {
-                std::ofstream req(
+                std::ofstream req(buildEvidencePath("COMPILER_CAPTURE_RECEIPT.txt",
                     "F:\\rawrxd\\evidence\\FULL_FEATURE_FINAL_COMPLETION_001\\"
-                    "artifacts\\COMPILER_CAPTURE_RECEIPT.txt",
+                    "artifacts\\COMPILER_CAPTURE_RECEIPT.txt"),
                     std::ios::trunc);
                 if (req) {
                     req << "BUILD_REQUEST fixture=" << fixture << '\n'
@@ -762,9 +771,9 @@ void Win32IDE::handleToolsCommand(int commandId) {
                 buildTrace("PROBLEMS_FIXTURE_LAUNCH path=" + fixture +
                            " cl=" + clExe + " via=cmd_s_pipe_scrub_novcvars");
                 {
-                    std::ofstream req(
+                    std::ofstream req(buildEvidencePath("COMPILER_CAPTURE_RECEIPT.txt",
                         "F:\\rawrxd\\evidence\\FULL_FEATURE_FINAL_COMPLETION_001\\"
-                        "artifacts\\COMPILER_CAPTURE_RECEIPT.txt",
+                        "artifacts\\COMPILER_CAPTURE_RECEIPT.txt"),
                         std::ios::app);
                     if (req) {
                         req << "PROCESS_STARTED pid=" << pane->manager->pid()

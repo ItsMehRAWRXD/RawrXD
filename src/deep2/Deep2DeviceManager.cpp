@@ -421,7 +421,15 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
                       uint64_t(uint32_t(d.AdapterLuid.LowPart));
             id.dedicatedVram = (uint64_t)d.DedicatedVideoMemory;
             id.sharedVram = (uint64_t)d.SharedSystemMemory;
-            id.integrated = id.dedicatedVram < (1ull << 30);
+            // An adapter is integrated when it has no meaningful dedicated
+            // VRAM, or when its shared system memory dwarfs its dedicated
+            // VRAM (typical of iGPUs that report a small dedicated aperture
+            // but back most memory from system RAM).  Without the second
+            // clause an iGPU reporting a few hundred MB of "dedicated"
+            // aperture passes as discrete and gets paired with a real card,
+            // forcing cross-device synchronization on every token.
+            id.integrated = id.dedicatedVram < (1ull << 30) ||
+                            (id.sharedVram > 0 && id.sharedVram > id.dedicatedVram);
             id.score = Deep2Device_ScoreAdapter(id.dedicatedVram, id.sharedVram,
                                                 NameFlags(id.name, id.dedicatedVram));
             id.healthy = true;

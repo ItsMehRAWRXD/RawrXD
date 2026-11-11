@@ -1,0 +1,93 @@
+{
+  "HEXMAG_ANTI_HALLUCINATION": {
+    "policy_level": "STATE_MACHINE",
+    "prompt_dependency": "NONE",
+    "unsupported_claim_emission": "FORBIDDEN",
+    "guessing_missing_facts": "FORBIDDEN",
+    "confidence_as_evidence": "FORBIDDEN",
+    "missing_information": "ASK_USER",
+    "computational_uncertainty": "GROW_AND_REVERSE"
+  },
+  "grow_reverse": {
+    "id": "HEXMAG_GROW_REVERSE_001",
+    "initial_nodes": 0,
+    "candidate_count": 2,
+    "reverse_count": 2,
+    "failure_caused_growth": true,
+    "growth_targeted_to_failure": true,
+    "spawned_roles": [
+      "proposer",
+      "opposer",
+      "SemanticDebugger",
+      "opposer"
+    ],
+    "impl_sequence": [
+      "sub",
+      "add"
+    ],
+    "resolution": "Proven",
+    "answer": "candidate_impl=add  # repaired a-b \u2192 a+b",
+    "goal_satisfied": true,
+    "peak_nodes": 8,
+    "post_final_nodes": 0,
+    "persistent_weight_delta_bytes": 0,
+    "PASS": true
+  },
+  "finalize_deny": {
+    "id": "HEXMAG_FINALIZE_DENY_001",
+    "cases": [
+      {
+        "id": "1",
+        "state": "Candidate",
+        "allowed": false,
+        "deny_reason": "unsupported_claim"
+      },
+      {
+        "id": "2",
+        "state": "Supported",
+        "allowed": false,
+        "deny_reason": "unsupported_claim"
+      },
+      {
+        "id": "3",
+        "state": "Candidate",
+        "allowed": false,
+        "deny_reason": "confidence_as_evidence"
+      },
+      {
+        "id": "4",
+        "state": "Unverified",
+        "allowed": false,
+        "deny_reason": "bogus_epistemic:likely"
+      },
+      {
+        "id": "5",
+        "state": "Candidate",
+        "allowed": false,
+        "deny_reason": "bogus_epistemic:consensus"
+      },
+      {
+        "id": "6",
+        "state": "Unknown",
+        "allowed": false,
+        "deny_reason": "unsupported_claim"
+      },
+      {
+        "id": "7",
+        "state": "Contradicted",
+        "allowed": false,
+        "deny_reason": "contradicted_or_empty"
+      },
+      {
+        "id": "8",
+        "state": "Candidate",
+        "allowed": false,
+        "deny_reason": "confidence_as_evidence"
+      }
+    ],
+    "illegal_allows": [],
+    "PASS": true,
+    "confidence_as_evidence": "FORBIDDEN"
+  },
+  "PASS": true
+}

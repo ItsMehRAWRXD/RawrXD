@@ -1,0 +1,42 @@
+{
+  "acceptance": {
+    "agent_turns": 0,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "ask",
+  "agent_turns": 0,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [],
+  "driver_exit_code": -1,
+  "failure_reasons": [
+    "MOTD authorization failed: MOTD_NOT_FOUND"
+  ],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "fix/deep2-multimodel-safety-20261025",
+  "git_revision": "b3fda0aec73c8f895e344e57446f5f8bfd240bf9",
+  "model_identity": "ollama/qwen3:8b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1793256543,
+  "task_id": "",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\tmp_build\\cli_smoke_20261028\\fixture"
+}

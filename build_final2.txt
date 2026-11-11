@@ -1,0 +1,90 @@
+[1/294] Building CXX object CMakeFiles\deep2_qwen4exp_operator_harness.dir\src\deep2\op_ple.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/294] Building CXX object CMakeFiles\deep2_gdn_parity_harness.dir\tools\deep2_gdn_parity_harness.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/294] Building CXX object CMakeFiles\deep2_qwen4exp_operator_harness.dir\src\deep2\op_hyperconnection.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/294] Building CXX object CMakeFiles\deep2_qwen4exp_operator_harness.dir\tools\deep2_qwen4exp_operator_harness.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/294] Building CXX object CMakeFiles\deep2_qwen4exp_operator_harness.dir\src\deep2\op_sparse_moe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/294] Building CXX object CMakeFiles\deep2_qwen4exp_operator_harness.dir\src\deep2\op_qsa.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[7/294] Building CXX object CMakeFiles\deep2_qwen4exp_pipeline_probe.dir\tools\deep2_qwen4exp_pipeline_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/294] Building CXX object CMakeFiles\deep2_dynamic_interceptor.dir\tools\deep2_dynamic_interceptor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/294] Building CXX object CMakeFiles\deep2_qwen4exp_gdn_probe.dir\src\deep2\op_gdn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/294] Building CXX object CMakeFiles\deep2_qwen4exp_gdn_probe.dir\tools\deep2_qwen4exp_gdn_probe.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_qwen4exp_gdn_probe.dir/tools/deep2_qwen4exp_gdn_probe.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd -IC:\VulkanSDK\1.4.357.0\Include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /O2 /showIncludes /FoCMakeFiles\deep2_qwen4exp_gdn_probe.dir\tools\deep2_qwen4exp_gdn_probe.cpp.obj /FdCMakeFiles\deep2_qwen4exp_gdn_probe.dir\ /FS -c F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(188): error C2039: 'conv_kernel': is not a member of 'Deep2::Qwen4Exp::GDNDescriptor'
+F:\rawrxd\tools\../src/deep2/op_gdn.hpp(17): note: see declaration of 'Deep2::Qwen4Exp::GDNDescriptor'
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(190): error C3861: 'GDNQkvWidth': identifier not found
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(191): error C3861: 'GDNOutputWidth': identifier not found
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(201): error C3861: 'GDNQkvWidth': identifier not found
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(202): error C3861: 'GDNOutputWidth': identifier not found
+F:\rawrxd\tools\deep2_qwen4exp_gdn_probe.cpp(226): error C3861: 'GDNReferenceDecode': identifier not found
+[11/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[13/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[14/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[15/294] Building CXX object CMakeFiles\deep2_enterprise_manifest.dir\tools\deep2_enterprise_manifest.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[16/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\tools\deep2_d1_prefill_parity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+[17/294] Building CXX object CMakeFiles\deep2_d1_prefill_parity.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,501 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:405 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:414 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: 
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  e705d3c292
+-- rawr_run: MSVC security hardening enabled
+-- rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.357
+-- Vulkan header: C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_gpu_certify enabled (full-model GPU/CPU logits certification)
+-- deep2_reverse_engineer enabled (native Qwen4Exp contract audit)
+-- deep2_gdn_parity_harness enabled (reference-only GDN contract)
+-- deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)
+-- deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)
+-- deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)
+-- deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)
+-- deep2_enterprise_manifest enabled (source-to-parity closure receipt)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- HexMag cert targets EXCLUDED: required sources not found
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify EXCLUDED: test source or Vulkan SDK unavailable
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+CMake Warning at CMakeLists.txt:3501 (message):
+  RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the
+  IDE will start without hardening
+
+
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference enabled (headless Deep2 inference harness)
+-- Configuring done (2.6s)
+-- Generating done (0.2s)
+-- Build files have been written to: F:/rawrxd/build_msvc
+[0/4] Re-checking globbed directories...
+[1/142] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/142] Linking CXX static library tools\snap_process_guard\snap_process_guard.lib
+[3/142] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_msvc/Release/vulkan-shaders-gen.exe
+[4/142] Linking CXX static library rawrxd_security.lib
+[5/142] Completed 'vulkan-shaders-gen'
+[6/142] Linking CXX static library src\production\rawrxd_production_hardening.lib
+[7/142] Building CXX object CMakeFiles\rawr-reap-mask.dir\src\reap_mask_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[8/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/142] Building CXX object CMakeFiles\rawr-reap-writer.dir\src\reap_writer_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/142] Building CXX object CMakeFiles\rawr-reap-writer.dir\src\deep2\ReapWriter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\ReapWriter.cpp(305): warning C4189: 'dataStart': local variable is initialized but not referenced
+[11/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\tools\deep2_prefill_parity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_prefill_parity.cpp(148): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_tokenizer.hpp(44): warning C4505: 'deep2tools::ByteToSymbol': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_tokenizer.hpp(307): warning C4505: 'deep2tools::DetokenizeWith': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_tokenizer.hpp(338): warning C4505: 'deep2tools::FindMerge': unreferenced function with internal linkage has been removed
+[12/142] Building CXX object tools\rawrxd_parity_final\CMakeFiles\rawr_run.dir\rawr_run.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\tools\rawrxd_parity_final\rawr_run.cpp(4): warning C4005: 'NOMINMAX': macro redefinition
+F:\rawrxd\tools\rawrxd_parity_final\rawr_run.cpp(4): note: 'NOMINMAX' previously declared on the command line
+[13/142] Building CXX object tools\rawrxd_parity_final\CMakeFiles\rawr_fuzz_parsers.dir\rawr_fuzz_parsers.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\tools\rawrxd_parity_final\rawr_run.cpp(4): warning C4005: 'NOMINMAX': macro redefinition
+F:\rawrxd\tools\rawrxd_parity_final\rawr_run.cpp(4): note: 'NOMINMAX' previously declared on the command line
+[14/142] Building CXX object src\production\CMakeFiles\rawrxd_production_tests.dir\tests\production_hardening_tests.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\deep2\op_linear.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[16/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\deep2\runtime_graph_executor.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(565): warning C4189: 'row_bytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2237): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1689): note: see declaration of 'k'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4163): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member
+F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524): note: see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4170): warning C4189: 'ok': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2440): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed
+[17/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\deep2\quant_dot_dispatch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\quant_dot_dispatch.cpp(601): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[18/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\deep2\modelgenie\universal_gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\modelgenie\universal_gguf.cpp(725): warning C4244: '=': conversion from 'double' to 'uint64_t', possible loss of data
+[19/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[20/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[21/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[22/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\vulkan_compute.cpp(143): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(206): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\vulkan_compute.cpp(781): warning C4100: 'usage': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3407): warning C4100: 'binding_count': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'descriptor_set': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3414): warning C4100: 'layout': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer_size': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3422): warning C4100: 'buffer': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'binding': unreferenced parameter
+F:\rawrxd\src\vulkan_compute.cpp(3421): warning C4100: 'descriptor_set': unreferenced parameter
+[23/142] Building CXX object CMakeFiles\deep2_prefill_parity.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[24/142] Building CXX object CMakeFiles\deep2_uneven_tp_gemv.dir\tools\gpu_profiler\deep2_uneven_tp_gemv.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[25/142] Linking CXX static library deep2_engine_lib.lib
+[26/142] Building CXX object CMakeFiles\deep2_h11_prefill_parity.dir\tests\deep2_h11_prefill_parity.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tests\deep2_h11_prefill_parity.cpp(69): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[27/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\main_win32.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'lpCmdLine': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(68): warning C4100: 'hPrevInstance': unreferenced parameter
+[28/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(365): warning C4189: 'pThis': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(660): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(783): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(784): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(912): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(906): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(900): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1024): warning C4100: 'wParam': unreferenced parameter
+[29/142] Building CXX object CMakeFiles\deep2_gpu_decode_roofline.dir\tools\gpu_profiler\deep2_gpu_roofline.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[30/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(300): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(675): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(985): warning C4100: 'wholeWord': unreferenced parameter
+[31/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32TerminalManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\Win32TerminalManager.cpp(127): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+[32/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(328): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(436): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[33/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(602): warning C4100: 'eventName': unreferenced parameter
+[34/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Logger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[35/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(595): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(2879): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(2961): warning C4189: 'result': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(3236): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(3443): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(3390): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(4263): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4272): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4292): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4305): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5553): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(5556): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+[36/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[37/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Commands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[38/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(65): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105): warning C4189: 'btnStop': local variable is initialized but not referenced
+[39/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Autonomy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[40/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(33): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(258): warning C4100: 'timeoutMs': unreferenced parameter
+[41/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[42/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\TransparentRenderer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[43/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\GGUFLoader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[44/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cloud_api_client.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\cloud_api_client.cpp(33): warning C4505: 'wideToUtf8': unreferenced function with internal linkage has been removed
+[45/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[46/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(410): warning C4100: 'pid': unreferenced parameter
+[47/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+[48/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cpu_inference_engine_impl.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(41): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(579): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(483): note: see declaration of 'v'
+[49/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\utils\ErrorReporter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[50/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(26): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(226): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(224): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(237): warning C4189: 'sender': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(353): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(563): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(561): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(752): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(762): warning C4100: 'wParam': unreferenced parameter
+[51/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\streaming_gguf_loader.cpp(317): warning C4100: 'max_memory_mb': unreferenced parameter
+[52/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\VulkanRenderer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[53/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[54/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\reap_cli_contract.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[55/142] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(157): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365): warning C4100: 'tokenId': unreferenced parameter
+[56/142] Building CXX object CMakeFiles\rawr-reap.dir\src\reap_cli_contract.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[57/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\project_wizard\project_wizard.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[58/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\project_wizard\project_state_manager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[59/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\project_wizard\project_spec.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[60/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\core\qt_elimination.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[61/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\project_wizard\project_workflow.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\project_wizard\project_workflow.cpp(93): warning C4100: 'prompt_tokens': unreferenced parameter
+[62/142] Building CXX object CMakeFiles\rawr-reap.dir\src\reap_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[63/142] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\rawrxd_cli_v2.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\agentic/ToolCallBridge.h(55): warning C4100: 'registry': unreferenced parameter
+F:\rawrxd\src\rawrxd_cli_v2.cpp(412): warning C4100: 'args': unreferenced parameter
+F:\rawrxd\src\rawrxd_cli_v2.cpp(442): warning C4189: 'a': local variable is initialized but not referenced
+F:\rawrxd\src\rawrxd_cli_v2.cpp(1171): warning C4211: nonstandard extension used: redefined extern to static
+F:\rawrxd\src\rawrxd_cli_v2.cpp(1371): warning C4189: 'code': local variable is initialized but not referenced
+[64/142] Building CXX object tools\deep2_autotune\CMakeFiles\deep2_autotune.dir\deep2_autotune.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[65/142] Building CXX object src\workflow\CMakeFiles\rawrxd_workflow.dir\__\agentic_workflow_bridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+cl : Command line warning D9025 : overriding '/std:c++20' with '/std:c++17'
+[66/142] Building CXX object src\workflow\CMakeFiles\rawrxd_workflow.dir\__\browser\BrowserTestEngine.cpp.obj
+FAILED: [code=2] src/workflow/CMakeFiles/rawrxd_workflow.dir/__/browser/BrowserTestEngine.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src\workflow\.. -IF:\rawrxd\src\workflow\..\.. -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++17 /bigobj /wd4530 /wd4003 /wd4319 /wd4005 /showIncludes /Fosrc\workflow\CMakeFiles\rawrxd_workflow.dir\__\browser\BrowserTestEngine.cpp.obj /Fdsrc\workflow\CMakeFiles\rawrxd_workflow.dir\rawrxd_workflow.pdb /FS -c F:\rawrxd\src\browser\BrowserTestEngine.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+cl : Command line warning D9025 : overriding '/std:c++20' with '/std:c++17'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3503): error C2039: 'evaluateJavaScript': is not a member of 'RawrXD::Browser::Page'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(256): note: see declaration of 'RawrXD::Browser::Page'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3507): error C3536: 'jsResult': cannot be used before it is initialized
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3510): error C2039: 'testsRun': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3511): error C2039: 'testsPassed': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3514): error C2039: 'testsRun': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.cpp(3515): error C2039: 'testsPassed': is not a member of 'RawrXD::Browser::BrowserTestResult'
+F:\rawrxd\src\browser\BrowserTestEngine.hpp(554): note: see declaration of 'RawrXD::Browser::BrowserTestResult'
+[67/142] Building CXX object src\production\CMakeFiles\rawrxd_health_probe.dir\tools\health_probe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[68/142] Building CXX object tools\agent_esp\rawrxd_agent_esp\CMakeFiles\agent_esp_demo.dir\esp_demo.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[69/142] Building CXX object CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(92): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(94): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[70/142] Building CXX object tools\agent_esp\rawrxd_agent_esp\CMakeFiles\agent_esp_test.dir\esp_test.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[71/142] Building CXX object CMakeFiles\test_deep2_inference.dir\test_deep2_inference.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\test_deep2_inference.cpp(39): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[72/142] Linking CXX executable bin\gguf_universal_probe.exe
+[73/142] Building CXX object src\workflow\CMakeFiles\rawrxd_workflow.dir\__\github\GitHubIntegration.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+cl : Command line warning D9025 : overriding '/std:c++20' with '/std:c++17'
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,8 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    ask
+Root:    F:\rawrxd
+
+CLI_ESP_READ_PASS: int main(){return 0;}

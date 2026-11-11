@@ -1,0 +1,3 @@
+state=recovered
+target=calc.cpp
+backup=F:\rawrxd\agent_e2e_fixture_small\.rawrxd\agent_transactions\txn_150833820467900\before.bin

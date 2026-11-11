@@ -449,8 +449,30 @@ inline ModelFitPlan ModelFitEstimator::Estimate(
             return a.deviceLocalBytes > b.deviceLocalBytes;
         });
 
-    p.lane = gpus.size() > 1 ? FitExecutionLane::GPU_MULTI
-                             : FitExecutionLane::GPU_SINGLE;
+    // ===============================================================
+    // Case 2a: single-GPU bypass for small models.
+    // If the model weights + KV + arena fit entirely within the largest
+    // GPU's resident budget, run exclusively on that device.  Sharding a
+    // sub-10GB model across a discrete + integrated (or any dual-GPU)
+    // configuration forces cross-device synchronization on every token and
+    // collapses throughput, even when both devices are discrete.
+    // ===============================================================
+    const uint64_t kvBytesForCtx = p.kvBytesPerToken *
+        std::min<uint64_t>(requestedContext,
+            model.modelContextLength ? model.modelContextLength : (1ull << 22));
+    const uint64_t modelFootprint = model.totalWeightBytes + kvBytesForCtx + p.arenaBytes;
+    const uint64_t gpu0WeightBudget = gpus.empty() ? 0 :
+        static_cast<uint64_t>(static_cast<double>(gpus[0].budgetBytes(cfg.gpuResidentFraction)) * cfg.gpuWeightFraction);
+    const bool singleGpuBypass = !gpus.empty() &&
+        modelFootprint <= gpu0WeightBudget &&
+        modelFootprint <= (10ull * 1024 * 1024 * 1024); // 10 GB threshold
+    if (singleGpuBypass) {
+        gpus.resize(1);
+        p.lane = FitExecutionLane::GPU_SINGLE;
+    } else {
+        p.lane = gpus.size() > 1 ? FitExecutionLane::GPU_MULTI
+                                 : FitExecutionLane::GPU_SINGLE;
+    }
 
     // Usable weight budget per GPU: keep `gpuWeightFraction` of the device
     // budget for weights; the remainder covers KV + arena + driver.
