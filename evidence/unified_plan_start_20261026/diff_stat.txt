@@ -1,0 +1,21 @@
+ CMakeLists.txt                             |  11 ++-
+ kartgib/CMakeLists.txt                     |   8 ++
+ kartgib/src/editor_api.hpp                 |   1 +
+ kartgib/src/editor_mesh.cpp                |  72 ++++++----------
+ kartgib/src/editor_shot.cpp                |   8 +-
+ kartgib/src/editor_view.cpp                |  10 ++-
+ kartgib/src/game_loop.cpp                  |   5 +-
+ kartgib/src/inspector_wnd.cpp              |   8 +-
+ kartgib/src/render_graph.cpp               |   2 -
+ kartgib/src/studio_brush.cpp               |   3 +-
+ kartgib/src/vulkan_renderer.cpp            |  18 ++--
+ src/deep2/Deep2Engine.cpp                  |  51 ++++++++---
+ src/deep2/Deep2IDEIntegration.hpp          | Bin 13108 -> 12808 bytes
+ src/rawrxd_cli_v2.cpp                      | 134 ++++++++++++++++++++---------
+ src/reap_cli.cpp                           |   1 +
+ tests/deep2_h11_prefill_parity.cpp         |   4 +-
+ tools/deep2_debugger/CMakeLists.txt        |   2 +-
+ tools/deep2_snap/deep2_snap/CMakeLists.txt |   2 +-
+ tools/gate2_manifest_consistency.ps1       |  25 +++++-
+ tools/snap_process_guard/CMakeLists.txt    |   4 +-
+ 20 files changed, 234 insertions(+), 135 deletions(-)

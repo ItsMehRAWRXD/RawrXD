@@ -1,0 +1,57 @@
+{
+  "schema": "RAWRXD_FIVE_OS_LINK_MATRIX",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "targets": [
+    {
+      "os": "Windows",
+      "arch": "x86-64",
+      "linker": "MSVC link.exe",
+      "linker_version": "14.44.35207",
+      "output_format": "PE32+ (PE/COFF)",
+      "targets_linked": [
+        { "name": "cpu_engine_e2e.exe", "path": "build_ide\\bin-msvc\\cpu_engine_e2e.exe", "status": "LINK_PASS" },
+        { "name": "rawr-reap.exe", "path": "build_ide\\bin-msvc\\rawr-reap.exe", "status": "LINK_PASS" },
+        { "name": "rawr.exe", "path": "build_ide\\bin-msvc\\rawr.exe", "status": "LINK_PASS" }
+      ],
+      "undefined_symbols": 0,
+      "relocation_errors": 0,
+      "status": "LINK_PASS"
+    },
+    {
+      "os": "Linux",
+      "arch": "x86-64",
+      "linker": "none_available",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Linux toolchain on this host"
+    },
+    {
+      "os": "macOS",
+      "arch": "x86-64/ARM64",
+      "linker": "none_available",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No ld64, no macOS host"
+    },
+    {
+      "os": "Android",
+      "arch": "arm64-v8a",
+      "linker": "none_available",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Android NDK"
+    },
+    {
+      "os": "iOS",
+      "arch": "ARM64",
+      "linker": "none_available",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Xcode, no macOS host"
+    }
+  ],
+  "summary": {
+    "link_pass": 1,
+    "link_blocked": 4,
+    "five_os_link": "1/5 PASS"
+  }
+}

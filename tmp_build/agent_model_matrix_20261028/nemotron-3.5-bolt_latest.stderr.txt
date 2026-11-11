@@ -1,0 +1,17 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=48
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=48
+RUN_CONFIG_CONTEXT=4096
+[ESP] seq=1 req=2023719019800 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=2023719019800 kind=model_load value=0 message=nemotron-3.5-bolt:latest
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=2023719019800 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=2023719019800 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=2023719019800 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=2023719019800 kind=agent_step value=0 message=phase=WORKING
+[error] Ollama returned no chat content
+[ESP] seq=7 req=2023719019800 kind=error value=0 message=model_output_invalid
+[ESP] seq=8 req=2023719019800 kind=error value=1 message=inference_failed
+[ESP] seq=9 req=2023719019800 kind=heartbeat value=0 message={"request":2023719019800,"agent":1,"phase":"error","generated":0,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":0.000,"decode_ms":0.000,"task_ms":54453.619,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":false,"slow":false}
+[ESP] seq=10 req=2023719019800 kind=finished value=1 message=FAIL
+[StreamEngine] Shutdown

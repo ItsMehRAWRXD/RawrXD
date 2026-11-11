@@ -1,0 +1,142 @@
+=== RawrXD CPU Engine End-to-End Test ===
+Model: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+Prompt: "The capital of France is"
+
+[1/5] Loading model...
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 333 MB
+   layers_0: 80 tensors, 823 MB
+   layers_1: 80 tensors, 796 MB
+   layers_2: 80 tensors, 783 MB
+   layers_3: 80 tensors, 809 MB
+   layers_4: 40 tensors, 431 MB
+   output_head: 38 tensors, 810 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+   Tensors: 399
+   Zones: 7
+   Memory (header+index): ~0 MB
+  Load time: 5640.0 ms
+  Vocab size: 151936
+  Embedding dim: 4096
+  Layers: 36
+  Heads: 16
+
+[2/5] Tokenizing prompt...
+  Token count: 9
+  Token IDs: 785,220,65063,220,1055,220,49000,220,285
+  Detokenize check: "The capital of France is"
+
+[3/5] Running prefill forward pass...
+❌ Tensor not found: blk.0.blk.0.attn_norm.weight
+    [PRELOAD] layer=0 tensor=blk.0.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 0 weights
+❌ Tensor not found: blk.1.blk.1.attn_norm.weight
+    [PRELOAD] layer=1 tensor=blk.1.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 1 weights
+❌ Tensor not found: blk.2.blk.2.attn_norm.weight
+    [PRELOAD] layer=2 tensor=blk.2.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 2 weights
+❌ Tensor not found: blk.3.blk.3.attn_norm.weight
+    [PRELOAD] layer=3 tensor=blk.3.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 3 weights
+❌ Tensor not found: blk.4.blk.4.attn_norm.weight
+    [PRELOAD] layer=4 tensor=blk.4.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 4 weights
+❌ Tensor not found: blk.5.blk.5.attn_norm.weight
+    [PRELOAD] layer=5 tensor=blk.5.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 5 weights
+❌ Tensor not found: blk.6.blk.6.attn_norm.weight
+    [PRELOAD] layer=6 tensor=blk.6.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 6 weights
+❌ Tensor not found: blk.7.blk.7.attn_norm.weight
+    [PRELOAD] layer=7 tensor=blk.7.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 7 weights
+❌ Tensor not found: blk.8.blk.8.attn_norm.weight
+    [PRELOAD] layer=8 tensor=blk.8.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 8 weights
+❌ Tensor not found: blk.9.blk.9.attn_norm.weight
+    [PRELOAD] layer=9 tensor=blk.9.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 9 weights
+❌ Tensor not found: blk.10.blk.10.attn_norm.weight
+    [PRELOAD] layer=10 tensor=blk.10.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 10 weights
+❌ Tensor not found: blk.11.blk.11.attn_norm.weight
+    [PRELOAD] layer=11 tensor=blk.11.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 11 weights
+❌ Tensor not found: blk.12.blk.12.attn_norm.weight
+    [PRELOAD] layer=12 tensor=blk.12.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 12 weights
+❌ Tensor not found: blk.13.blk.13.attn_norm.weight
+    [PRELOAD] layer=13 tensor=blk.13.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 13 weights
+❌ Tensor not found: blk.14.blk.14.attn_norm.weight
+    [PRELOAD] layer=14 tensor=blk.14.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 14 weights
+❌ Tensor not found: blk.15.blk.15.attn_norm.weight
+    [PRELOAD] layer=15 tensor=blk.15.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 15 weights
+❌ Tensor not found: blk.16.blk.16.attn_norm.weight
+    [PRELOAD] layer=16 tensor=blk.16.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 16 weights
+❌ Tensor not found: blk.17.blk.17.attn_norm.weight
+    [PRELOAD] layer=17 tensor=blk.17.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 17 weights
+❌ Tensor not found: blk.18.blk.18.attn_norm.weight
+    [PRELOAD] layer=18 tensor=blk.18.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 18 weights
+❌ Tensor not found: blk.19.blk.19.attn_norm.weight
+    [PRELOAD] layer=19 tensor=blk.19.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 19 weights
+❌ Tensor not found: blk.20.blk.20.attn_norm.weight
+    [PRELOAD] layer=20 tensor=blk.20.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 20 weights
+❌ Tensor not found: blk.21.blk.21.attn_norm.weight
+    [PRELOAD] layer=21 tensor=blk.21.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 21 weights
+❌ Tensor not found: blk.22.blk.22.attn_norm.weight
+    [PRELOAD] layer=22 tensor=blk.22.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 22 weights
+❌ Tensor not found: blk.23.blk.23.attn_norm.weight
+    [PRELOAD] layer=23 tensor=blk.23.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 23 weights
+❌ Tensor not found: blk.24.blk.24.attn_norm.weight
+    [PRELOAD] layer=24 tensor=blk.24.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 24 weights
+❌ Tensor not found: blk.25.blk.25.attn_norm.weight
+    [PRELOAD] layer=25 tensor=blk.25.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 25 weights
+❌ Tensor not found: blk.26.blk.26.attn_norm.weight
+    [PRELOAD] layer=26 tensor=blk.26.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 26 weights
+❌ Tensor not found: blk.27.blk.27.attn_norm.weight
+    [PRELOAD] layer=27 tensor=blk.27.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 27 weights
+❌ Tensor not found: blk.28.blk.28.attn_norm.weight
+    [PRELOAD] layer=28 tensor=blk.28.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 28 weights
+❌ Tensor not found: blk.29.blk.29.attn_norm.weight
+    [PRELOAD] layer=29 tensor=blk.29.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 29 weights
+❌ Tensor not found: blk.30.blk.30.attn_norm.weight
+    [PRELOAD] layer=30 tensor=blk.30.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 30 weights
+❌ Tensor not found: blk.31.blk.31.attn_norm.weight
+    [PRELOAD] layer=31 tensor=blk.31.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 31 weights
+❌ Tensor not found: blk.32.blk.32.attn_norm.weight
+    [PRELOAD] layer=32 tensor=blk.32.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 32 weights
+❌ Tensor not found: blk.33.blk.33.attn_norm.weight
+    [PRELOAD] layer=33 tensor=blk.33.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 33 weights
+❌ Tensor not found: blk.34.blk.34.attn_norm.weight
+    [PRELOAD] layer=34 tensor=blk.34.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 34 weights
+❌ Tensor not found: blk.35.blk.35.attn_norm.weight
+    [PRELOAD] layer=35 tensor=blk.35.attn_norm.weight GET_DATA_FAIL
+  WARNING: Failed to preload layer 35 weights
+  Weight cache: 0/36 layers preloaded
+FAIL: Forward pass returned empty logits

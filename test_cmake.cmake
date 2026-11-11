@@ -1,0 +1,6 @@
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_autotune/CMakeLists.txt")
+    message(STATUS "FOUND: ${CMAKE_SOURCE_DIR}/tools/deep2_autotune/CMakeLists.txt")
+else()
+    message(STATUS "NOT FOUND: ${CMAKE_SOURCE_DIR}/tools/deep2_autotune/CMakeLists.txt")
+endif()

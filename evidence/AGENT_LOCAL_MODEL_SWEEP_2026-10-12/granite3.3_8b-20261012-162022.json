@@ -1,0 +1,10 @@
+{
+  "Model": "granite3.3:8b",
+  "StartedAt": "2026-10-12T16:20:22.6398103-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 12.3,
+  "EvalCount": 149,
+  "Tps": 12.1,
+  "Preview": "1. **Data Collection**: Gather relevant data by running the GPU inference engine with diverse datasets, varying input sizes, and different batch sizes. Measure performance metrics such as latency, throughput, and GPU utilization. 2. **Benchmarking**: Utilize standardized benchmarking tools (like TensorFlow Benchmark, NVIDIA's TensorRT, or PyTorch Torso) to evaluate the GPU inference engine's perfo"
+}

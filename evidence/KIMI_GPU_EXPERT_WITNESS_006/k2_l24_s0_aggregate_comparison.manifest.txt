@@ -1,0 +1,16 @@
+schema=DEEP2_KIMI_AGGREGATE_COMPARISON_001
+layer=24
+stick=0
+rows=7168
+experts=8
+source=POST_END_DEVICE_GPU_PARTIAL_AND_COMPLETE_CPU_REFERENCE
+scope=AGGREGATE_ONLY_NOT_PER_EXPERT_PARITY
+certified=0
+expert=89 weight=0.341120
+expert=144 weight=0.373006
+expert=159 weight=0.364959
+expert=173 weight=0.345922
+expert=216 weight=0.352904
+expert=283 weight=0.337231
+expert=296 weight=0.349344
+expert=319 weight=0.362514

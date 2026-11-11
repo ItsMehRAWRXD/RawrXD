@@ -1,0 +1,10 @@
+{
+  "Model": "deepseek-coder-v2:16b",
+  "StartedAt": "2026-10-12T16:22:06.7836225-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 48.3,
+  "EvalCount": 162,
+  "Tps": 3.4,
+  "Preview": "1. **Define Benchmarks**: Select industry-standard benchmarks such as the MLPerf Inference benchmark or the NVIDIA GPU Benchmark Suite. These benchmarks cover a range of AI tasks including image classification, object detection, and natural language processing. 2. **Set Up Environment**: Ensure the environment for benchmarking is consistent across all tests. This includes using the same hardware, "
+}

@@ -1,0 +1,12 @@
+﻿{
+    "logit_tolerance":  0.001,
+    "reference_parity_pass":  true,
+    "test_provenance":  "synthetic",
+    "continuous_decode_parity":  true,
+    "tokenizer_parity":  true,
+    "logit_parity":  true,
+    "model":  "Kimi K2 Instruct Q4_K_M",
+    "schema":  "reap.reference_parity_001.v1",
+    "greedy_token_parity":  true,
+    "reference_implementation":  "synthetic_test_harness"
+}

@@ -1,0 +1,11 @@
+Harness-only correction in `F_GUI_GHOSTTEXT_HARNESS_REPAIR_001/native_editor_harness.ps1`:
+
+```diff
+- Get-Process -Name rawrxd-win32ide-native
++ Win32_Process inventory with canonical full paths, exact-candidate classification,
++ parent PID, and creation time
++ block all same-product processes while shared state is unproven
++ cleanup only when PID and exact executable path match the owned launch
+```
+
+No production source or binary changed.

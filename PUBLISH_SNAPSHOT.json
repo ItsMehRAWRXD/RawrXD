@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "backup/pre-github-push-0e06d9d",
+  "original_commit": "0e06d9d1152dac20dcafe40460eccf3b5968d8b6",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/b9e61221/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

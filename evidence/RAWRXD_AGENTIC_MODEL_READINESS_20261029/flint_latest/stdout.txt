@@ -1,0 +1,9 @@
+﻿
+RawrXD Local Agent
+Model:   flint:latest
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+RAWRXD_AGENTIC_EDIT_COMPLETE
+

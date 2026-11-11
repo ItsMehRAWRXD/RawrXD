@@ -1,0 +1,18 @@
+{
+ "positions": 135,
+ "batched_vs_serial_gpu": {
+  "bit_identical": 135,
+  "argmax_match": 135,
+  "worst_cos": 1.0,
+  "worst_maxabs": 0.0,
+  "worst_rmse": 0.0
+ },
+ "batched_vs_same_binary_nobatch": {
+  "bit_identical": 135,
+  "argmax_match": 135,
+  "worst_cos": 1.0,
+  "worst_maxabs": 0.0,
+  "worst_rmse": 0.0
+ },
+ "verdict": "PASS"
+}

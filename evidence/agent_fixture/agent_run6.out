@@ -1,0 +1,7 @@
+
+RawrXD Local Agent
+Model:   llama3.2:3b
+Backend: ollama
+Mode:    code
+Root:    F:\rawrxd\evidence\agent_fixture
+
