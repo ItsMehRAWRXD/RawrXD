@@ -1,0 +1,13 @@
+{
+  "certification": "DEEP2_NEMOTRON_MOE_EXPERT_CPU_PARITY_001",
+  "block": 1,
+  "expert_up": "blk.1.ffn_up_exps.weight",
+  "expert_down": "blk.1.ffn_down_exps.weight",
+  "activation": "LLM_FFN_RELU_SQR (squared ReLU)",
+  "selected_experts": [64,117,126,45,100,10],
+  "worst_expert_max_abs": 5.900928974e-01,
+  "worst_exact_reference_max_abs": 5.900928974e-01,
+  "first_divergent_expert_index": 0,
+  "aggregation": {"max_abs": 1.328818202e+00, "rmse": 1.049993196e-01, "cosine": 0.994723026, "first_divergence": 0},
+  "result": "FAIL"
+}

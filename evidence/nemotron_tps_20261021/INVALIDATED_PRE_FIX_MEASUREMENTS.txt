@@ -1,0 +1,32 @@
+﻿INVALIDATED MEASUREMENT
+======================
+
+The figures in nemotron_flamegraph.txt and the earlier nemotron TPS run
+were produced by an execution graph that DID NOT CONTAIN THE MoE. The
+graph carried 266 operations and none of them touched an expert tensor;
+the 30B model was running 24 blocks per token whose only contribution was
+a pass-through of their norm into the residual stream.
+
+DO NOT USE as a baseline:
+  DECODE_TPS 3.310 / 3.062
+  device_bytes_peak 1010.0 MB / device_bytes_live 1010.0 MB
+  weight_cache_hits 2700 / misses 75
+  UPLOAD MB 1047.0
+  SUBMITS 2850 / WAIT EVENTS 2850
+  KERNEL ms 9855.122 == WAIT ms 9855.122
+  the LM head, ssm_out and attn_proj rankings
+
+These describe a materially different computation. The residency figure in
+particular is meaningless for the model as specified: the experts were
+never read, so the working set was never exercised. It must be
+re-measured once the corrected execution path is measured.
+
+The graph census, the operator counts, the LM head's weight bytes and the
+SSM timings remain valid as measurements OF THAT GRAPH, and are retained
+as pre-fix diagnostic evidence. They must not determine the optimisation
+priorities of the corrected model.
+
+Corrected graph, as certified by DEEP2_NEMOTRON_MOE_EXECUTION_001:
+  386 operations, 0 unsupported, 0 unbound
+  24 Router, 24 TopK, 24 MoEExecute
+  417 weights resolved, 0 missing

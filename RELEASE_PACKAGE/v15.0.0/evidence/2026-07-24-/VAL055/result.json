@@ -1,0 +1,9 @@
+{
+  "name": "Build Reproducibility",
+  "gate": "VAL-055",
+  "reproducible": true,
+  "build_system": "CMake + Ninja",
+  "status": "PASS",
+  "timestamp": "2026-07-24T12:44:39.1377507-04:00",
+  "message": "Build is reproducible"
+}

@@ -1,0 +1,53 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_PER_TOKEN_PROFILE_001",
+  "date": "2026-10-11",
+  "verdict": "PROFILE_CAPTURED",
+  "scope": "First native per-token profiler tied to the actual Deep2 decode path. This is workstream 01 and 02 of the TPS blueprint: freeze the baseline and profile the critical path.",
+  "measurement": {
+    "model": "DeepSeek-V2-Lite-Chat.Q4_K_M.gguf (9.65 GB)",
+    "model_sha256": "5D33E5F045C7A03351C319AAFC8AFDAD94B69D07BB68F36DC9BB5AF340B343A4",
+    "mode": "autoregressive multitoken decode, 40 tokens",
+    "device": "CPU only. No GPU acceleration active.",
+    "gpu_rope_enabled": false,
+    "steps_total": 40,
+    "steps_steady_state": 39,
+    "mean_ms_per_token": 5453.0713,
+    "median_ms_per_token": 5132.1258,
+    "min_ms_per_token": 4597.9088,
+    "max_ms_per_token": 9464.6902,
+    "mean_tps": 0.18,
+    "mean_exec_ms": 5452.97,
+    "mean_sample_ms": 0.1013,
+    "ir_ops_per_token": 300,
+    "ir_ops_skipped": 0,
+    "per_op_cost_us": 18176.9
+  },
+  "interpretation": {
+    "sampling_is_not_the_bottleneck": "mean_sample_ms 0.10 out of mean 5453.07, i.e. 0.002 percent. The bottleneck is entirely in IR execution.",
+    "per_op_cost": "300 dispatches cost about 18.2 ms each on average. With 300 operations per token that is the whole 5.45 s.",
+    "dominant_constraint": "CPU scalar arithmetic in the ModelGenie primitives. Not weight bandwidth, not expert routing, not Vulkan kernel execution, not synchronisation - none of those are exercised on this path.",
+    "variance": "Max 9.46 s versus median 5.13 s indicates scheduling or memory-pressure jitter on this machine."
+  },
+  "critical_blocker_for_the_stated_target": {
+    "target": "Nemotron 3.5 Lightning 30B-A3B, baseline 128.78 TPS, goal 643.90 TPS (5x).",
+    "finding": "The blueprint target model cannot run on this engine at all.",
+    "evidence": "ollama show nemotron-3.5-lightning:30b reports architecture nemotron_h_moe, 32.9B parameters, Q4_K_M. ModelGenieExecutor implements the DeepSeek-V2 architecture: MLA attention with a 512-rank KV latent plus 64-dim RoPE, and the DeepSeek MoE. These are different model families.",
+    "consequence": "A TPS number for Nemotron cannot be produced, improved, or certified on this engine without first implementing the nemotron_h_moe architecture. The 5x target is therefore not addressable as a performance task on this codebase.",
+    "measured_instead": "DeepSeek-V2-Lite, 32.9B-versus-9.65GB caveat noted, achieves 0.18 TPS on CPU. Against the stated 128.78 TPS baseline that is roughly a 700x gap, and on a SMALLER model, so the gap is architecture-wide rather than model-size-specific."
+  },
+  "harness_bug_fixed": {
+    "file": "compile_ir_executor.bat",
+    "issue": "/Fe came after /link, so it was handed to the linker, which does not understand /Fe and ignored it with LNK4044. The executable was then named after the first source file and written to the current directory, so every build silently left a stale binary at tmp_build and produced an unlabelled one at the repo root.",
+    "fix": "Moved /Fe before /link and documented why."
+  },
+  "what_was_added": {
+    "profiler_flag": "tools/rawrxd_modelgenie_ir_executor.cpp gains --profile, timing each step around Execute() and SampleToken() separately, and emitting the RAWRXD_DEEP2_PER_TOKEN_PROFILE_001 receipt.",
+    "steady_state": "The first step is excluded from steady-state statistics because it carries one-off arena growth and page-fault costs."
+  },
+  "not_claimed": [
+    "No Nemotron measurement. The model cannot be loaded by this engine.",
+    "No TPS improvement toward 643.90. No optimisation has been attempted yet.",
+    "No GPU dispatch counters in this profile; the path measured is the CPU path."
+  ],
+  "reproduction": "modelgenie_ir_executor.exe <gguf> <evidence_dir> <N> --profile"
+}

@@ -1,0 +1,25 @@
+﻿tokens: 2: 1 185
+ingesting D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ...
+arch=llama blocks=22 embd=2048 heads=32 kv=4 lora=0 kl=0 vl=0 experts=0 used=0 shared=0 dense_lead=0 rope_dim=64 eps=1e-05
+bound ops=311
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+pos=0 token=1 argmax=2760 max_logit=8.211859 (2105.4 ms)
+  op traces: 311
+pos=1 token=185 argmax=13 max_logit=8.292262 (241.4 ms)
+  op traces: 311
+GENSTREAM: 13 8.292262 29899 10.300501 29871 9.031725 29896 12.573488 29914 12.246878 29906 18.424431 18002 13.270939 3060 10.246848 2986 23.781065 10849 14.227903 610 15.808098 29879 25.354979 2330 21.683290 13 18.088688 29899 19.134111 29871 15.749612
+gpu_calls=2635 cpu_calls=0 fallback=<none>
+Released all tensors
+Vulkan resources cleaned up successfully

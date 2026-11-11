@@ -1,0 +1,37 @@
+﻿=== DEEP2_NEMOTRON_MOE_CPU_PARITY_001 ===
+model: F:\models\nemotron-3.5-lightning-30b.gguf
+
+BLOCK            1
+ROUTER_MATRIX    blk.1.ffn_gate_inp.weight
+ROUTER_BIAS      blk.1.exp_probs_b.bias
+
+loading the router's tensors ...
+router matrix: dims=[2688,128] bytes=1376256 type=0
+hidden=2688 experts=128 used=6 expert_weights_norm=1 expert_weights_scale=2.5
+
+CHECKPOINT                       RESULT
+  router_logits                 max_abs=0.000e+00 rmse=0.000e+00 cosine=1.000000000 first_divergence=-1 n=128
+  probs                         max_abs=5.960e-08 rmse=2.267e-08 cosine=1.000000000 first_divergence=-1 n=128
+  selection                     max_abs=0.000e+00 rmse=0.000e+00 cosine=1.000000000 first_divergence=-1 n=128
+  expert_choice                reference=[64,117,126,45,100,10] executor=[64,117,126,45,100,10] (exact)
+  expert_weights                max_abs=2.980e-08 rmse=1.721e-08 cosine=1.000000000 first_divergence=-1 n=6
+  weight normalisation         executor_sum=2.500000000 selected_probs_sum=4.801150918 spec_expert_weights_norm=1
+  executor weight hypothesis   as_raw=4.117e-01 as_normalised=2.684e-01
+  executor weight state        NEITHER - the weights are something else
+  seventh_selection_score      reference=41.445793152 executor=41.445793152
+[PASS] router_logits match the reference                max_abs= max_abs=0.000e+00 rmse=0.000e+00 cosine=1.000000000 first_divergence=-1 n=128
+[PASS] the gating probabilities match the reference     max_abs= max_abs=5.960e-08 rmse=2.267e-08 cosine=1.000000000 first_divergence=-1 n=128
+[PASS] the selection scores match the reference         max_abs= max_abs=0.000e+00 rmse=0.000e+00 cosine=1.000000000 first_divergence=-1 n=128
+[PASS] the selected expert IDs are EXACTLY the reference's reference [64,117,126,45,100,10] vs executor [64,117,126,45,100,10]
+[PASS] the expert weights match the reference           max_abs= max_abs=2.980e-08 rmse=1.721e-08 cosine=1.000000000 first_divergence=-1 n=6
+[PASS] the top-k boundary margin is recorded            sixth=41.450081 seventh=41.445793
+
+TOPK DETERMINISM
+  sixth expert 10 score 41.450080872
+  seventh expert 127 score 41.445793152
+  margin 4.288e-03
+[PASS] the top-k boundary margin is measured            0.004288
+
+receipt written to F:\wt_qwen4exp\evidence\nemotron_tps_20261021\moe_cpu_parity.json
+
+=== DEEP2_NEMOTRON_MOE_CPU_PARITY_001 = PASS ===

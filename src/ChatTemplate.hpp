@@ -1,0 +1,146 @@
+// ChatTemplate.hpp -- Model-Aware Chat Template Formatter Interface
+// ============================================================================
+
+#pragma once
+
+#include <string>
+#include <vector>
+#include <string_view>
+#include <cstdint>
+
+namespace Deep2 {
+
+enum class ChatTemplateType {
+    NONE = 0,
+    LLAMA2,
+    LLAMA3,
+    PHI3,
+    PHI4,
+    MISTRAL,
+    CHATML,
+    GEMMA2,
+    NEMO,
+    QWEN2,
+    ZEPHYR,
+    YI,
+    UNKNOWN
+};
+
+struct ChatMessage {
+    std::string role;      // "system", "user", "assistant", "tool"
+    std::string content;   // message content
+    std::string name;      // optional name for tool calls
+};
+
+struct ChatTemplateConfig {
+    ChatTemplateType type = ChatTemplateType::NONE;
+    std::string templateStr;      // full template string from tokenizer_config.json
+    std::string bosToken;         // beginning of sequence token
+    std::string eosToken;         // end of sequence token
+    std::string systemPrompt;     // optional system prompt prefix
+    bool addGenerationPrompt = true; // add assistant prefix for generation
+};
+
+class ChatTemplate {
+public:
+    ChatTemplate() = default;
+    explicit ChatTemplate(const ChatTemplateConfig& cfg);
+
+    // Format a conversation into a single prompt string
+    std::string format(const std::vector<ChatMessage>& messages) const;
+
+    // Format with system prompt
+    std::string formatWithSystem(const std::vector<ChatMessage>& messages, 
+                                  const std::string& systemPrompt) const;
+
+    // Get template type
+    ChatTemplateType getType() const { return type_; }
+
+    // Get configuration
+    const ChatTemplateConfig& getConfig() const { return config_; }
+
+    // Static detection from template string
+    static ChatTemplateType detectFromTemplate(const std::string& templateStr);
+
+    // The template family implied by a model's architecture and name.
+    //
+    // The model's OWN template string is the authority, and that is what
+    // detectFromTemplate reads and what initFromMetadata uses. This is the
+    // fallback for a model that carries no template string at all.
+    //
+    // It is deliberately conservative. An architecture that does not name a
+    // family returns UNKNOWN rather than a guess, because a template from
+    // the wrong family produces a plausible answer with the wrong turn
+    // structure, and that is worse than saying nothing.
+    static ChatTemplateType detectFromModel(const std::string& architecture,
+                                            const std::string& alias);
+
+    // Get tokenizer_config.json chat template from GGUF metadata
+    static ChatTemplateConfig fromGGUF(const class GGUFLoader& loader);
+
+    // Apply template to single user/assistant turn
+    std::string applyUserAssistant(const std::string& user, const std::string& assistant = "") const;
+
+    // ---- Metadata-driven construction (used by Deep2Engine) ----------------
+    // Detects the template from the GGUF metadata (architecture, chat_template
+    // string, BOS/EOS tokens) and configures this object. Returns false only
+    // when the metadata is too empty to pick a format at all, in which case the
+    // caller falls back to a raw prompt. `alias` is reserved for a model
+    // alias/name hint and may be empty.
+    bool initFromMetadata(const std::string& architecture,
+                           const std::string& alias,
+                           const std::string& chatTemplate,
+                           const std::string& bosToken,
+                           const std::string& eosToken);
+
+    // Human-readable name of the detected template type (never null).
+    const char* getTypeName() const;
+
+    // True when `text` contains an end-of-turn marker for this template.
+    // Matches the model's own EOS token plus the conventional sentinel strings
+    // for the detected family, so a caller can trim trailing turns safely.
+    bool isEndOfTurn(const std::string& text) const;
+
+private:
+    ChatTemplateConfig config_;
+    ChatTemplateType type_ = ChatTemplateType::NONE;
+
+    std::string formatLLAMA2(const std::vector<ChatMessage>& messages) const;
+    std::string formatLLAMA3(const std::vector<ChatMessage>& messages) const;
+    std::string formatPHI3(const std::vector<ChatMessage>& messages) const;
+    std::string formatPHI4(const std::vector<ChatMessage>& messages) const;
+    std::string formatMISTRAL(const std::vector<ChatMessage>& messages) const;
+    std::string formatCHATML(const std::vector<ChatMessage>& messages) const;
+    std::string formatGEMMA2(const std::vector<ChatMessage>& messages) const;
+    std::string formatNEMO(const std::vector<ChatMessage>& messages) const;
+    std::string formatQWEN2(const std::vector<ChatMessage>& messages) const;
+    std::string formatZEPHYR(const std::vector<ChatMessage>& messages) const;
+    std::string formatYI(const std::vector<ChatMessage>& messages) const;
+    std::string formatGeneric(const std::vector<ChatMessage>& messages) const;
+};
+
+} // namespace Deep2
+
+// C API for ChatTemplate
+extern "C" {
+
+// ChatTemplate handle
+typedef void* Deep2ChatTemplateHandle;
+
+// Create a chat template from configuration
+Deep2ChatTemplateHandle Deep2_ChatTemplate_Create(const char* templateStr);
+
+// Destroy chat template handle
+void Deep2_ChatTemplate_Destroy(Deep2ChatTemplateHandle handle);
+
+// Format messages into prompt string
+const char* Deep2_ChatTemplate_Format(Deep2ChatTemplateHandle handle, 
+                                       const char** roles, 
+                                       const char** contents, 
+                                       size_t count,
+                                       const char* systemPrompt);
+
+// Get last error string
+const char* Deep2_ChatTemplate_GetError(void);
+
+} // extern "C"

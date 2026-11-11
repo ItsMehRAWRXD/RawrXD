@@ -1,0 +1,1025 @@
+#include "gguf_loader.h"
+#include "gguf_vocab_resolver.h"
+#include "input_sanitizer.h"   // production hardening: model-path validation
+#include <algorithm>
+#include <limits>
+#include <cstring>
+#include <stdexcept>
+#include <iostream>
+#include <sstream>
+// The deflate/inflate codec bridge uses QByteArray. It is only needed for
+// compressed GGUF tensors, which the dependency-free native path never
+// produces; when Qt is unavailable the bridge is disabled and those paths
+// report an explicit error instead of failing to compile.
+#if defined(__has_include)
+#  if __has_include(<QtCore/QByteArray>)
+#    include <QtCore/QByteArray>
+#    define RAWRXD_HAS_QBYTEARRAY 1
+#  endif
+#else
+#  include <QByteArray>
+#  define RAWRXD_HAS_QBYTEARRAY 1
+#endif
+
+#ifdef RAWRXD_HAS_QBYTEARRAY
+// Forward declarations for codec functions
+namespace codec {
+    extern QByteArray deflate(const QByteArray& in, bool* ok);
+    extern QByteArray inflate(const QByteArray& in, bool* ok);
+}
+
+// Forward declaration for brutal compression
+namespace brutal {
+    extern QByteArray compress(const QByteArray& in);
+    extern QByteArray compress(const void* data, std::size_t size);
+}
+#endif
+
+// Forward declaration for unsupported type name lookup (defined later in file)
+static bool IsRemovedGGMLType(uint32_t type_val);
+static std::string GetUnsupportedTypeNameByValue(uint32_t type_val);
+
+GGUFLoader::GGUFLoader() 
+    : is_open_(false) {
+    std::memset(&header_, 0, sizeof(GGUFHeader));
+}
+
+GGUFLoader::~GGUFLoader() {
+    Close();
+}
+
+bool GGUFLoader::Open(const std::string& filepath) {
+    // ---- Production hardening: validate the path BEFORE touching the fs ----
+    // The path arrives from a user file-picker, a config file or a CLI
+    // argument, so it is externally controlled. Previously it went straight to
+    // std::ifstream with no checks at all. Now it passes the model-file policy
+    // (NUL/control smuggling, length, extension allow-list, regular file, size
+    // cap) and a rejected path never reaches the filesystem layer.
+    //
+    // Shell-oriented escapes are intentionally NOT rejected here: this path is
+    // consumed by ifstream, which does not expand '~' or '$VAR', so those
+    // checks would refuse legitimate user-selected model locations.
+    std::string validatedPath;
+    if (!RawrXD::Security::InputSanitizer::instance().validateModelFilePath(filepath, validatedPath)) {
+        last_open_error_ = std::string("model path rejected (")
+                         + std::string(RawrXD::Security::ToString(
+                               RawrXD::Security::InputSanitizer::instance().lastResult()))
+                         + "): "
+                         + RawrXD::Security::InputSanitizer::instance().lastError();
+        return false;   // fail-closed: no file is opened, no state mutated
+    }
+    last_open_error_.clear();
+
+    filepath_ = validatedPath;
+    file_.open(filepath_, std::ios::binary);
+    if (!file_.is_open()) {
+        // Return false instead of throwing to allow graceful fallback
+        last_open_error_ = "cannot open file: " + filepath_;
+        return false;
+    }
+    
+    is_open_ = true;
+    unsupported_types_.clear();  // Clear any previous unsupported types
+    
+    // ParseHeader now throws exceptions on error (consistent error handling)
+    try {
+        if (!ParseHeader()) {
+            Close();
+            return false;
+        }
+    } catch (const std::exception&) {
+        // Clean up, then rethrow unchanged: the caller needs the original
+        // exception (it carries the specific parse failure), not a new one.
+        Close();
+        throw;
+    }
+    
+    return true;
+}
+
+
+bool GGUFLoader::Close() {
+    if (file_.is_open()) {
+        file_.close();
+    }
+    is_open_ = false;
+    tensors_.clear();
+    unsupported_types_.clear();  // Clear unsupported types tracking
+    return true;
+}
+
+
+bool GGUFLoader::ParseHeader() {
+    if (!file_.is_open()) {
+        throw std::runtime_error("Cannot parse header: file not open");
+    }
+    
+    file_.seekg(0);
+    
+    // Read magic
+    if (!ReadValue(header_.magic)) {
+        throw std::runtime_error("Failed to read GGUF magic bytes");
+    }
+    if (header_.magic != 0x46554747) {  // "GGUF"
+        throw std::runtime_error("Invalid GGUF magic: 0x" + std::to_string(header_.magic) + 
+                                 " (expected 0x46554747)");
+    }
+    
+    // Read version
+    if (!ReadValue(header_.version)) {
+        throw std::runtime_error("Failed to read GGUF version");
+    }
+    if (header_.version != 3) {
+        throw std::runtime_error("Unsupported GGUF version: " + std::to_string(header_.version) + 
+                                 " (only version 3 supported)");
+    }
+    
+    // Read tensor count
+    if (!ReadValue(header_.tensor_count)) {
+        throw std::runtime_error("Failed to read tensor count");
+    }
+    
+    // Read metadata KV count
+    if (!ReadValue(header_.metadata_kv_count)) {
+        throw std::runtime_error("Failed to read metadata KV count");
+    }
+    
+    // Calculate metadata offset
+    header_.metadata_offset = file_.tellg();
+    
+    std::cout << "GGUF Header: Magic=0x" << std::hex << header_.magic << std::dec 
+              << ", Version=" << header_.version
+              << ", Tensors=" << header_.tensor_count
+              << ", Metadata=" << header_.metadata_kv_count << std::endl;
+    
+    return true;
+}
+
+bool GGUFLoader::ParseMetadata() {
+    if (!file_.is_open()) {
+        throw std::runtime_error("Cannot parse metadata: file not open");
+    }
+    if (header_.metadata_kv_count == 0) {
+        // Valid case: GGUF file with no metadata
+        return true;
+    }
+    
+    file_.seekg(header_.metadata_offset);
+    
+    // First pass: detect architecture from general.architecture
+    std::string detected_architecture;
+    for (uint64_t i = 0; i < header_.metadata_kv_count; ++i) {
+        std::string key;
+        if (!ReadString(key)) {
+            throw std::runtime_error("Failed to read metadata key at index " + std::to_string(i));
+        }
+        
+        uint32_t value_type;
+        if (!ReadValue(value_type)) {
+            throw std::runtime_error("Failed to read metadata value type for key: " + key);
+        }
+        
+        // Skip the value to continue scanning
+        std::string dummy;
+        if (value_type == 8) {  // string
+            ReadString(dummy);
+        } else if (value_type <= 7 || value_type >= 10) {  // primitive types
+            uint64_t dummy64;
+            file_.read(reinterpret_cast<char*>(&dummy64), 8);
+        } else if (value_type == 9) {  // array
+            uint32_t array_type;
+            uint64_t array_length;
+            ReadValue(array_type);
+            ReadValue(array_length);
+            // Skip array elements
+            if (array_type == 8) {
+                for (uint64_t j = 0; j < array_length; ++j) ReadString(dummy);
+            } else {
+                uint32_t elem_size[] = {1,1,2,2,4,4,4,8};
+                file_.seekg(array_length * elem_size[array_type & 7], std::ios::cur);
+            }
+        }
+        
+        if (key == "general.architecture") {
+            detected_architecture = dummy;
+        }
+    }
+    
+    // Reset file position for second pass
+    file_.seekg(header_.metadata_offset);
+    
+    // Determine architecture prefix
+    std::string arch_prefix;
+    if (!detected_architecture.empty()) {
+        arch_prefix = detected_architecture + ".";
+        std::cout << "[GGUFLoader] Detected architecture: " << detected_architecture 
+                  << " (prefix: " << arch_prefix << ")" << std::endl;
+    }
+    
+    // Known architecture prefixes (in order of preference)
+    const std::vector<std::string> known_prefixes = {
+        "llama", "phi3", "qwen2", "gemma2", "nemotron", "granite", 
+        "starcoder2", "glm", "mistral", "mixtral", "yi", "deepseek"
+    };
+    
+    // Second pass: parse metadata with architecture-aware matching
+    for (uint64_t i = 0; i < header_.metadata_kv_count; ++i) {
+        std::string key, value;
+        
+        if (!ReadString(key)) {
+            throw std::runtime_error("Failed to read metadata key at index " + std::to_string(i));
+        }
+        
+        uint32_t value_type;
+        if (!ReadValue(value_type)) {
+            throw std::runtime_error("Failed to read metadata value type for key: " + key);
+        }
+        
+        // Helper: checks if a key matches the architecture-specific field pattern
+        // e.g., if arch_prefix is "llama.", matchesArchField("block_count") returns true for "llama.block_count"
+        auto matchesArchField = [&](const std::string& field) -> bool {
+            if (arch_prefix.empty()) return false;
+            return key == arch_prefix + field;
+        };
+        
+        // Helper to also populate normalized llama.* keys for backward compatibility
+        // Only populates if llama.* key doesn't already exist (prevents collision)
+        // Detects and reports conflicts if both arch-specific and llama.* keys exist with different values
+        auto maybeNormalizeKey = [&](const std::string& field, const std::string& val) {
+            if (matchesArchField(field) && key != "llama." + field) {
+                std::string llama_key = "llama." + field;
+                auto it = metadata_.kv_pairs.find(llama_key);
+                if (it == metadata_.kv_pairs.end()) {
+                    // No existing llama.* key - safe to populate
+                    metadata_.kv_pairs[llama_key] = val;
+                } else if (it->second != val) {
+                    // Conflict detected - both arch-specific and llama.* exist with different values
+                    std::cerr << "[GGUFLoader] WARNING: Metadata conflict for " << llama_key
+                              << ": arch-specific value='" << val
+                              << "' vs existing llama.* value='" << it->second << "'" << std::endl;
+                    // Keep existing value but log the conflict
+                }
+                // If values match, no action needed
+            }
+        };
+        
+        // Helper to validate and extract numeric value with type checking
+        auto extractNumeric = [&](const std::string& field, uint32_t expected_type, uint64_t& out_val) -> bool {
+            if (!matchesArchField(field)) return false;
+            
+            // Check type compatibility
+            if (value_type == 8) {  // string
+                try {
+                    out_val = std::stoull(value);
+                    return true;
+                } catch (...) {
+                    throw std::runtime_error("Failed to parse numeric value for key: " + key);
+                }
+            } else if (value_type == 4) {  // uint32
+                if (expected_type != 4 && expected_type != 0) {
+                    throw std::runtime_error("Type mismatch for " + field + ": expected uint64/uint32, got uint32");
+                }
+                uint32_t v; ReadValue(v); out_val = v;
+                return true;
+            } else if (value_type == 10) {  // uint64
+                if (expected_type != 4 && expected_type != 0) {
+                    throw std::runtime_error("Type mismatch for " + field + ": expected uint32, got uint64");
+                }
+                uint64_t v; ReadValue(v); out_val = v;
+                return true;
+            } else if (value_type == 5) {  // int32
+                int32_t v; ReadValue(v); 
+                if (v < 0) throw std::runtime_error("Negative value for unsigned field: " + field);
+                out_val = static_cast<uint64_t>(v);
+                return true;
+            } else if (value_type == 11) {  // int64
+                int64_t v; ReadValue(v);
+                if (v < 0) throw std::runtime_error("Negative value for unsigned field: " + field);
+                out_val = static_cast<uint64_t>(v);
+                return true;
+            } else {
+                // Skip unknown types
+                throw std::runtime_error("Unsupported value type " + std::to_string(value_type) + " for field: " + field);
+            }
+            return false;
+        };
+        
+        // GGUF Value Types (https://github.com/ggerganov/ggml/blob/master/docs/gguf.md)
+        // 0=UInt8, 1=Int8, 2=UInt16, 3=Int16, 4=UInt32, 5=Int32, 6=Float32, 7=Bool, 8=String, 9=Array, 10=UInt64, 11=Int64, 12=Float64
+        
+        if (value_type == 8) {  // UTF-8 string
+            if (!ReadString(value)) {
+                throw std::runtime_error("Failed to read metadata string value for key: " + key);
+            }
+            metadata_.kv_pairs[key] = value;
+            
+            // Parse important metadata - architecture-aware matching using extractNumeric
+            uint64_t numeric_val = 0;
+            if (extractNumeric("block_count", 8, numeric_val)) {
+                if (numeric_val > std::numeric_limits<uint32_t>::max()) {
+                    throw std::runtime_error("block_count exceeds uint32 range: " + std::to_string(numeric_val));
+                }
+                metadata_.layer_count = static_cast<uint32_t>(numeric_val);
+                maybeNormalizeKey("block_count", std::to_string(numeric_val));
+            } else if (extractNumeric("context_length", 8, numeric_val)) {
+                if (numeric_val > std::numeric_limits<uint32_t>::max()) {
+                    throw std::runtime_error("context_length exceeds uint32 range: " + std::to_string(numeric_val));
+                }
+                metadata_.context_length = static_cast<uint32_t>(numeric_val);
+                maybeNormalizeKey("context_length", std::to_string(numeric_val));
+            } else if (extractNumeric("embedding_length", 8, numeric_val)) {
+                if (numeric_val > std::numeric_limits<uint32_t>::max()) {
+                    throw std::runtime_error("embedding_length exceeds uint32 range: " + std::to_string(numeric_val));
+                }
+                metadata_.embedding_dim = static_cast<uint32_t>(numeric_val);
+                maybeNormalizeKey("embedding_length", std::to_string(numeric_val));
+            } else if (extractNumeric("vocab_size", 8, numeric_val)) {
+                if (numeric_val > std::numeric_limits<uint32_t>::max()) {
+                    throw std::runtime_error("vocab_size exceeds uint32 range: " + std::to_string(numeric_val));
+                }
+                metadata_.vocab_size = static_cast<uint32_t>(numeric_val);
+                maybeNormalizeKey("vocab_size", std::to_string(numeric_val));
+            } else if (matchesArchField("feed_forward_length")) {
+                maybeNormalizeKey("feed_forward_length", value);
+            } else if (key == "general.architecture") {
+                if (value == "llama") metadata_.architecture_type = 1;
+                else if (value == "phi3") metadata_.architecture_type = 2;
+                else if (value == "qwen2") metadata_.architecture_type = 3;
+                else if (value == "gemma2") metadata_.architecture_type = 4;
+                else if (value == "nemotron") metadata_.architecture_type = 5;
+                else if (value == "granite") metadata_.architecture_type = 6;
+                else metadata_.architecture_type = 1;  // Default to llama
+            }
+        } else if (value_type == 4) {  // uint32
+            uint32_t uint_val;
+            if (!ReadValue(uint_val)) throw std::runtime_error("Failed to read uint32 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(uint_val);
+            
+            // Parse important numeric metadata - architecture-aware
+            if (matchesArchField("block_count")) {
+                metadata_.layer_count = uint_val;
+                maybeNormalizeKey("block_count", std::to_string(uint_val));
+            } else if (matchesArchField("context_length")) {
+                metadata_.context_length = uint_val;
+                maybeNormalizeKey("context_length", std::to_string(uint_val));
+            } else if (matchesArchField("embedding_length")) {
+                metadata_.embedding_dim = uint_val;
+                maybeNormalizeKey("embedding_length", std::to_string(uint_val));
+            } else if (matchesArchField("vocab_size")) {
+                metadata_.vocab_size = uint_val;
+                maybeNormalizeKey("vocab_size", std::to_string(uint_val));
+            } else if (matchesArchField("feed_forward_length")) {
+                maybeNormalizeKey("feed_forward_length", std::to_string(uint_val));
+            }
+        } else if (value_type == 5) {  // int32
+            int32_t int_val;
+            if (!ReadValue(int_val)) throw std::runtime_error("Failed to read int32 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(int_val);
+        } else if (value_type == 6) {  // float32
+            float float_val;
+            if (!ReadValue(float_val)) throw std::runtime_error("Failed to read float32 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(float_val);
+        } else if (value_type == 10) {  // uint64
+            uint64_t uint64_val;
+            if (!ReadValue(uint64_val)) throw std::runtime_error("Failed to read uint64 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(uint64_val);
+            
+            // Parse important numeric metadata - architecture-aware
+            //
+            // These metadata fields are uint32_t, but the value comes straight
+            // from a file-controlled uint64. A direct assignment SILENTLY
+            // TRUNCATES: a file declaring embedding_length = 0x100000008 would
+            // be read as 8, so the loader would then size buffers and index
+            // tensors using a value that disagrees with what the file claims.
+            // Reject out-of-range values instead of narrowing.
+            //
+            // The ceiling is the same for all four fields: the largest value a
+            // uint32_t can hold, which is already absurd for these quantities.
+            constexpr uint64_t kMaxMetadataValue =
+                static_cast<uint64_t>(std::numeric_limits<uint32_t>::max());
+
+            if (uint64_val > kMaxMetadataValue) {
+                throw std::runtime_error(
+                    "GGUF metadata '" + key + "'=" + std::to_string(uint64_val)
+                    + " exceeds the uint32 range; refusing to truncate");
+            }
+
+            if (matchesArchField("block_count")) {
+                metadata_.layer_count = static_cast<uint32_t>(uint64_val);
+                maybeNormalizeKey("block_count", std::to_string(uint64_val));
+            } else if (matchesArchField("context_length")) {
+                metadata_.context_length = static_cast<uint32_t>(uint64_val);
+                maybeNormalizeKey("context_length", std::to_string(uint64_val));
+            } else if (matchesArchField("embedding_length")) {
+                metadata_.embedding_dim = static_cast<uint32_t>(uint64_val);
+                maybeNormalizeKey("embedding_length", std::to_string(uint64_val));
+            } else if (matchesArchField("vocab_size")) {
+                metadata_.vocab_size = static_cast<uint32_t>(uint64_val);
+                maybeNormalizeKey("vocab_size", std::to_string(uint64_val));
+            } else if (matchesArchField("feed_forward_length")) {
+                maybeNormalizeKey("feed_forward_length", std::to_string(uint64_val));
+            }
+        } else if (value_type == 11) {  // int64
+            int64_t int64_val;
+            if (!ReadValue(int64_val)) throw std::runtime_error("Failed to read int64 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(int64_val);
+        } else if (value_type == 12) {  // float64
+            double float64_val;
+            if (!ReadValue(float64_val)) throw std::runtime_error("Failed to read float64 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(float64_val);
+        } else if (value_type == 7) {  // boolean
+            uint8_t bool_val;
+            if (!ReadValue(bool_val)) throw std::runtime_error("Failed to read bool for key: " + key);
+            metadata_.kv_pairs[key] = bool_val ? "true" : "false";
+        } else if (value_type == 0) {  // uint8
+            uint8_t uint8_val;
+            if (!ReadValue(uint8_val)) throw std::runtime_error("Failed to read uint8 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(uint8_val);
+        } else if (value_type == 1) {  // int8
+            int8_t int8_val;
+            if (!ReadValue(int8_val)) throw std::runtime_error("Failed to read int8 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(int8_val);
+        } else if (value_type == 2) {  // uint16
+            uint16_t uint16_val;
+            if (!ReadValue(uint16_val)) throw std::runtime_error("Failed to read uint16 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(uint16_val);
+        } else if (value_type == 3) {  // int16
+            int16_t int16_val;
+            if (!ReadValue(int16_val)) throw std::runtime_error("Failed to read int16 for key: " + key);
+            metadata_.kv_pairs[key] = std::to_string(int16_val);
+        } else if (value_type == 9) {  // array
+            // Array format: value_type (uint32) + array_length (uint64) + elements
+            uint32_t array_type;
+            uint64_t array_length;
+            if (!ReadValue(array_type)) throw std::runtime_error("Failed to read array type for key: " + key);
+            if (!ReadValue(array_length)) throw std::runtime_error("Failed to read array length for key: " + key);
+            
+            // Serialize for kv_pairs but also capture structured tokenizer data
+            std::string array_str = "[";
+            std::vector<std::string> string_elems;
+            std::vector<float> float_elems;
+            std::vector<uint32_t> uint32_elems;
+
+            for (uint64_t j = 0; j < array_length; ++j) {
+                if (array_type == 8) {  // string array
+                    std::string elem;
+                    if (!ReadString(elem)) throw std::runtime_error("Failed to read array string element");
+                    array_str += "\"" + elem + "\"";
+                    string_elems.push_back(std::move(elem));
+                } else if (array_type == 4) {  // uint32 array
+                    uint32_t elem;
+                    if (!ReadValue(elem)) throw std::runtime_error("Failed to read array uint32 element");
+                    array_str += std::to_string(elem);
+                    uint32_elems.push_back(elem);
+                } else if (array_type == 5) {  // int32 array
+                    int32_t elem;
+                    if (!ReadValue(elem)) throw std::runtime_error("Failed to read array int32 element");
+                    array_str += std::to_string(elem);
+                } else if (array_type == 6) {  // float32 array
+                    float elem;
+                    if (!ReadValue(elem)) throw std::runtime_error("Failed to read array float32 element");
+                    array_str += std::to_string(elem);
+                    float_elems.push_back(elem);
+                } else {
+                    throw std::runtime_error("Unsupported array element type: " + std::to_string(array_type));
+                }
+                if (j < array_length - 1) array_str += ", ";
+            }
+            array_str += "]";
+            metadata_.kv_pairs[key] = array_str;
+
+            // Persist structured tokenizer fields for downstream loaders
+            if (key == "tokenizer.ggml.tokens" && !string_elems.empty()) {
+                metadata_.tokens = string_elems;
+                // Derive vocab size from tokenizer if not explicitly set
+                if (metadata_.vocab_size == 0) {
+                    // Validate tokenizer array bounds
+                    if (array_type != 8) {
+                        std::cerr << "[GGUFLoader] WARNING: tokenizer.ggml.tokens is not a string array (type=" << array_type << "), skipping vocab derivation" << std::endl;
+                    } else if (array_length > std::numeric_limits<uint32_t>::max()) {
+                        std::cerr << "[GGUFLoader] WARNING: tokenizer.ggml.tokens length exceeds uint32 max, skipping vocab derivation" << std::endl;
+                    } else if (array_length == 0) {
+                        std::cerr << "[GGUFLoader] WARNING: tokenizer.ggml.tokens is empty, skipping vocab derivation" << std::endl;
+                    } else {
+                        metadata_.vocab_size = static_cast<uint32_t>(array_length);
+                        maybeNormalizeKey("vocab_size", std::to_string(metadata_.vocab_size));
+                        std::cout << "[GGUFLoader] Derived vocab_size from tokenizer.ggml.tokens: " << metadata_.vocab_size << std::endl;
+                    }
+                }
+            }
+            if (key == "tokenizer.ggml.scores" && !float_elems.empty()) {
+                metadata_.token_scores = float_elems;
+            }
+            if (key == "tokenizer.ggml.token_type" && !uint32_elems.empty()) {
+                metadata_.token_types = uint32_elems;
+            }
+        } else {
+            throw std::runtime_error("Unsupported metadata value type " + std::to_string(value_type) + " for key: " + key);
+        }
+    }
+    
+    // Read tensor info
+    for (uint64_t i = 0; i < header_.tensor_count; ++i) {
+        TensorInfo tensor;
+        
+        if (!ReadString(tensor.name)) {
+            throw std::runtime_error("Failed to read tensor name at index " + std::to_string(i));
+        }
+        
+        uint32_t n_dims;
+        if (!ReadValue(n_dims)) {
+            throw std::runtime_error("Failed to read dimension count for tensor: " + tensor.name);
+        }
+        
+        // Safety check: tensors should have <= 4 dimensions (very rare to have more)
+        if (n_dims > 8) {
+            throw std::runtime_error("Tensor has too many dimensions (" + std::to_string(n_dims) + 
+                                   ") for tensor: " + tensor.name);
+        }
+        
+        tensor.shape.resize(n_dims);
+        for (uint32_t d = 0; d < n_dims; ++d) {
+            if (!ReadValue(tensor.shape[d])) {
+                throw std::runtime_error("Failed to read dimension " + std::to_string(d) + 
+                                       " for tensor: " + tensor.name);
+            }
+            
+            // Safety check: individual dimensions shouldn't exceed 1 billion
+            // (would be a sign of corrupted data)
+            if (tensor.shape[d] > 1000000000ULL) {
+                throw std::runtime_error("Tensor dimension too large (" + std::to_string(tensor.shape[d]) + 
+                                       ") for tensor: " + tensor.name);
+            }
+        }
+        
+        uint32_t type_val;
+        if (!ReadValue(type_val)) {
+            throw std::runtime_error("Failed to read type for tensor: " + tensor.name);
+        }
+        
+        // ========== UNSUPPORTED TYPE DETECTION ==========
+        // A tensor type is unsupported when it is a removed ggml id (Q4_2/Q4_3,
+        // Q4_0_x_x, IQ4_NL_x_x) or outside the defined GGML_TYPE_COUNT range.
+        // All canonical quant types Ollama produces (Q2_K..Q8_K, IQ2_XXS..IQ4_XS,
+        // IQ1_M, BF16, TQ1_0/TQ2_0, MXFP4, NVFP4, Q1_0/Q2_0, F16/F32, I8..F64)
+        // now have defined geometry and parse correctly.
+        if (type_val > static_cast<uint32_t>(GGMLType::COUNT) - 1 || IsRemovedGGMLType(type_val)) {
+            // Log the unsupported type for the user
+            std::string type_name = GetUnsupportedTypeNameByValue(type_val);
+            std::cerr << "WARNING: Tensor '" << tensor.name 
+                     << "' uses unsupported type " << type_val 
+                     << " (" << type_name << "). "
+                     << "Model will need quantization conversion to proceed." << std::endl;
+            
+            // Track this unsupported type for later IDE prompting
+            bool type_exists = false;
+            for (auto& existing : unsupported_types_) {
+                if (existing.type_value == type_val) {
+                    existing.tensor_names.push_back(tensor.name);
+                    type_exists = true;
+                    break;
+                }
+            }
+            if (!type_exists) {
+                unsupported_types_.push_back({
+                    type_val,
+                    type_name,
+                    {tensor.name}
+                });
+            }
+        }
+        
+        tensor.type = static_cast<GGMLType>(type_val);
+        
+        if (!ReadValue(tensor.offset)) {
+            throw std::runtime_error("Failed to read offset for tensor: " + tensor.name);
+        }
+        
+        tensor.size_bytes = CalculateTensorSize(tensor.shape, tensor.type);
+        tensors_.push_back(tensor);
+    }
+    
+    // Build O(1) lookup index for tensor access (Bottleneck #14 fix)
+    for (auto& tensor : tensors_) {
+        tensor_index_[tensor.name] = &tensor;
+    }
+    
+    // Fix vocab size using universal resolver
+    GGUFVocabResolver vocabResolver;
+    VocabSizeDetection vocabDetection = vocabResolver.detectVocabSize(metadata_.kv_pairs, filepath_);
+    
+    std::cout << "[GGUFLoader] Vocab detection: method=" << vocabDetection.detectionMethod
+              << ", size=" << vocabDetection.detectedSize
+              << ", confident=" << (vocabDetection.isConfident ? "yes" : "no") << std::endl;
+    
+    // Override metadata vocab size if detection was successful
+    if (vocabDetection.isConfident && vocabDetection.detectedSize > 0) {
+        if (metadata_.vocab_size != vocabDetection.detectedSize) {
+            std::cout << "[GGUFLoader] Correcting vocab size: " << metadata_.vocab_size 
+                      << " -> " << vocabDetection.detectedSize << std::endl;
+            metadata_.vocab_size = vocabDetection.detectedSize;
+        }
+    } else if (!vocabDetection.isConfident && vocabDetection.detectedSize > 0) {
+        // Use detection even if not confident, as it's better than potentially wrong metadata
+        std::cout << "[GGUFLoader] Using low-confidence vocab size: " << vocabDetection.detectedSize << std::endl;
+        metadata_.vocab_size = vocabDetection.detectedSize;
+    }
+    
+    std::cout << "Metadata parsed successfully. Layers: " << metadata_.layer_count
+              << ", Context: " << metadata_.context_length
+              << ", Embedding: " << metadata_.embedding_dim
+              << ", Vocab: " << metadata_.vocab_size << std::endl;
+    
+    return true;
+}
+
+bool GGUFLoader::LoadTensorZone(const std::string& tensor_name, std::vector<uint8_t>& data) {
+    // O(1) lookup using tensor index (Bottleneck #14 fix - eliminates O(n) std::find_if)
+    auto it = tensor_index_.find(tensor_name);
+    
+    if (it == tensor_index_.end()) {
+        // Use an exception for a cleaner interface in a larger app
+        throw std::runtime_error("Tensor not found: " + tensor_name);
+    }
+    
+    const TensorInfo* tensor_info = it->second;
+    data.resize(tensor_info->size_bytes);
+    file_.seekg(tensor_info->offset);
+    file_.read(reinterpret_cast<char*>(data.data()), tensor_info->size_bytes);
+    
+    if (!file_.good()) {
+         throw std::runtime_error("Failed to read tensor data for: " + tensor_name);
+    }
+    
+    // Apply MASM-optimized decompression if enabled (brutal_gzip or deflate)
+    if (IsCompressed()) {
+        std::vector<uint8_t> decompressed;
+        if (!DecompressData(data, decompressed)) {
+            throw std::runtime_error("Failed to decompress tensor: " + tensor_name);
+        }
+        data = std::move(decompressed);
+    }
+    
+    return true;
+}
+
+bool GGUFLoader::LoadTensorRange(size_t start_idx, size_t count, std::vector<uint8_t>& data) {
+    if (start_idx + count > tensors_.size()) {
+        throw std::out_of_range("Tensor range out of bounds");
+    }
+    
+    // Calculate total size needed for output buffer
+    size_t total_size = 0;
+    for (size_t i = start_idx; i < start_idx + count; ++i) {
+        total_size += tensors_[i].size_bytes;
+    }
+    
+    data.resize(total_size);
+    size_t offset = 0;
+    
+    // Note: Each tensor.offset is already 32-byte aligned per GGUF spec
+    // The GGUF writer ensures proper padding between tensors, so we just
+    // seek to the stored offset directly without manual alignment calculation
+    for (size_t i = start_idx; i < start_idx + count; ++i) {
+        file_.seekg(tensors_[i].offset);
+        file_.read(reinterpret_cast<char*>(data.data() + offset), tensors_[i].size_bytes);
+        if (!file_.good()) {
+            throw std::runtime_error("Failed to read tensor range during bulk load.");
+        }
+        offset += tensors_[i].size_bytes;
+    }
+    
+    // Apply MASM-optimized decompression if enabled (brutal_gzip or deflate)
+    if (IsCompressed()) {
+        std::vector<uint8_t> decompressed;
+        if (!DecompressData(data, decompressed)) {
+            throw std::runtime_error("Failed to decompress tensor range");
+        }
+        data = std::move(decompressed);
+    }
+    
+    return true;
+}
+
+size_t GGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {
+    return CalculateTensorSize(tensor.shape, tensor.type);
+}
+
+std::string GGUFLoader::GetTypeString(GGMLType type) const {
+    switch (type) {
+        case GGMLType::F32:   return "F32";
+        case GGMLType::F16:   return "F16";
+        case GGMLType::BF16:  return "BF16";
+        case GGMLType::Q4_0:  return "Q4_0";
+        case GGMLType::Q4_1:  return "Q4_1";
+        case GGMLType::Q5_0:  return "Q5_0";
+        case GGMLType::Q5_1:  return "Q5_1";
+        case GGMLType::Q8_0:  return "Q8_0";
+        case GGMLType::Q8_1:  return "Q8_1";
+        case GGMLType::Q2_K:  return "Q2_K";
+        case GGMLType::Q3_K:  return "Q3_K";
+        case GGMLType::Q4_K:  return "Q4_K";
+        case GGMLType::Q5_K:  return "Q5_K";
+        case GGMLType::Q6_K:  return "Q6_K";
+        case GGMLType::Q8_K:  return "Q8_K";
+        case GGMLType::IQ2_XXS: return "IQ2_XXS";
+        case GGMLType::IQ2_XS:  return "IQ2_XS";
+        case GGMLType::IQ3_XXS: return "IQ3_XXS";
+        case GGMLType::IQ1_S:   return "IQ1_S";
+        case GGMLType::IQ4_NL:  return "IQ4_NL";
+        case GGMLType::IQ3_S:   return "IQ3_S";
+        case GGMLType::IQ2_S:   return "IQ2_S";
+        case GGMLType::IQ4_XS:  return "IQ4_XS";
+        case GGMLType::IQ1_M:   return "IQ1_M";
+        case GGMLType::I8:      return "I8";
+        case GGMLType::I16:     return "I16";
+        case GGMLType::I32:     return "I32";
+        case GGMLType::I64:     return "I64";
+        case GGMLType::F64:     return "F64";
+        case GGMLType::TQ1_0:   return "TQ1_0";
+        case GGMLType::TQ2_0:   return "TQ2_0";
+        case GGMLType::MXFP4:   return "MXFP4";
+        case GGMLType::NVFP4:   return "NVFP4";
+        case GGMLType::Q1_0:    return "Q1_0";
+        case GGMLType::Q2_0:    return "Q2_0";
+        default: return "UNKNOWN";
+    }
+}
+
+uint64_t GGUFLoader::GetFileSize() const {
+    if (!file_.is_open()) return 0;
+    
+    std::streampos current = file_.tellg();
+    file_.seekg(0, std::ios::end);
+    uint64_t size = file_.tellg();
+    file_.seekg(current);
+    return size;
+}
+
+// Note: BuildTensorIndex, LoadZone, UnloadZone, GetLoadedZones, GetAllZones, 
+//       GetAllTensorInfo, GetCurrentMemoryUsage are implemented inline in gguf_loader.h
+
+template<typename T>
+bool GGUFLoader::ReadValue(T& value) {
+    file_.read(reinterpret_cast<char*>(&value), sizeof(T));
+    return file_.good();
+}
+
+bool GGUFLoader::ReadString(std::string& value) {
+    uint64_t len;
+    if (!ReadValue(len)) return false;
+    
+    // Safety check: strings longer than 100MB are invalid
+    // This prevents bad allocation errors from corrupted metadata
+    const uint64_t MAX_STRING_SIZE = 100 * 1024 * 1024;  // 100MB limit
+    if (len > MAX_STRING_SIZE) {
+        std::cerr << "[GGUFLoader] String length " << len << " exceeds maximum allowed size" << std::endl;
+        return false;
+    }
+    
+    value.resize(len);
+    file_.read(&value[0], len);
+    return file_.good();
+}
+
+uint64_t GGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const {
+    uint64_t num_elements = 1;
+    for (uint64_t dim : shape) {
+        num_elements *= dim;
+    }
+
+    // Helper lambda for block-aligned size calculation
+    // Formula: block_size × ceil(num_elements / block_elements)
+    auto block_aligned_size = [num_elements](uint64_t block_elements, uint64_t block_size) -> uint64_t {
+        uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;  // Ceiling division
+        return num_blocks * block_size;
+    };
+
+    // Calculate the size in bytes based on the GGML type
+    // Reference: https://github.com/ggerganov/ggml/blob/master/include/ggml.h
+    // Block geometries (elements, bytes) match src/deep2/QuantTypeTable.hpp.
+    switch (type) {
+        // --- Non-block types: one stored value per element ------------------
+        case GGMLType::F32:   return num_elements * 4;
+        case GGMLType::F16:   return num_elements * 2;
+        case GGMLType::BF16:  return num_elements * 2;
+        case GGMLType::I8:    return num_elements * 1;
+        case GGMLType::I16:   return num_elements * 2;
+        case GGMLType::I32:   return num_elements * 4;
+        case GGMLType::I64:   return num_elements * 8;
+        case GGMLType::F64:   return num_elements * 8;
+
+        // --- Q quants (32 elements / block) ---------------------------------
+        case GGMLType::Q4_0:  return block_aligned_size(32,  18);  // d(fp16) + qs[16]
+        case GGMLType::Q4_1:  return block_aligned_size(32,  20);  // d + m + qs[16]
+        case GGMLType::Q5_0:  return block_aligned_size(32,  22);  // d + qh[4] + qs[16]
+        case GGMLType::Q5_1:  return block_aligned_size(32,  24);  // d + m + qh[4] + qs[16]
+        case GGMLType::Q8_0:  return block_aligned_size(32,  34);  // d(fp16) + qs[32] int8
+
+        // --- K-quants (256 elements / super-block) --------------------------
+        case GGMLType::Q2_K:  return block_aligned_size(256, 84);  // scales[16] + qs[64] + d + dmin
+        case GGMLType::Q3_K:  return block_aligned_size(256, 110); // hmask[32] + qs[64] + scales[12] + d
+        case GGMLType::Q4_K:  return block_aligned_size(256, 144); // d + dmin + scales[12] + qs[128]
+        case GGMLType::Q5_K:  return block_aligned_size(256, 176); // d + dmin + scales[12] + qh[32] + qs[128]
+        case GGMLType::Q6_K:  return block_aligned_size(256, 210); // ql[128] + qh[64] + scales[16] + d
+        case GGMLType::Q8_K:  return block_aligned_size(256, 292); // d(fp32) + qs[256] + bsums[16]
+
+        // --- Imatrix (IQ) quants --------------------------------------------
+        case GGMLType::IQ2_XXS: return block_aligned_size(256,  66); // d(fp16) + qs[32] uint16
+        case GGMLType::IQ2_XS:  return block_aligned_size(256,  74);
+        case GGMLType::IQ3_XXS: return block_aligned_size(256,  98);
+        case GGMLType::IQ1_S:   return block_aligned_size(256,  50);
+        case GGMLType::IQ4_NL:  return block_aligned_size( 32,  18);
+        case GGMLType::IQ3_S:   return block_aligned_size(256, 110);
+        case GGMLType::IQ2_S:   return block_aligned_size(256,  82);
+        case GGMLType::IQ4_XS:  return block_aligned_size(256, 136);
+        case GGMLType::IQ1_M:   return block_aligned_size(256,  56);
+
+        // --- TQ / MXFP4 / NVFP4 / Q1_0 / Q2_0 -------------------------------
+        case GGMLType::TQ1_0: return block_aligned_size(256, 54);
+        case GGMLType::TQ2_0: return block_aligned_size(256, 66);
+        case GGMLType::MXFP4: return block_aligned_size( 32,  17);
+        case GGMLType::NVFP4: return block_aligned_size( 64,  36);
+        case GGMLType::Q1_0:  return block_aligned_size(128,  18);
+        case GGMLType::Q2_0:  return block_aligned_size( 32,  17);
+
+        default:
+            // Types with no defined block geometry (removed ggml IDs such as
+            // Q4_2/Q4_3, Q4_0_x_x, IQ4_NL_x_x) are fail-closed here: we cannot
+            // safely size the tensor, so report and fall back to F32 rather than
+            // silently truncating a model.
+            std::cerr << "[GGUFLoader] WARNING: No size geometry for GGMLType "
+                     << static_cast<uint32_t>(type)
+                     << "; assuming F32 size" << std::endl;
+            return num_elements * 4;  // Default to F32 size
+    }
+}
+
+// =====================================================================
+// MASM Compression Integration (Brutal GZIP + Deflate)
+// =====================================================================
+
+bool GGUFLoader::SetCompressionType(CompressionType type) {
+    compression_type_ = type;
+    // No initialization needed - brutal_gzip and deflate_brutal_qt are header-only/static
+    return true;
+}
+
+bool GGUFLoader::DecompressData(const std::vector<uint8_t>& compressed, 
+                                 std::vector<uint8_t>& decompressed) {
+    if (compression_type_ == CompressionType::NONE) {
+        decompressed = compressed;
+        return true;
+    }
+    
+    try {
+        switch (compression_type_) {
+            case CompressionType::BRUTAL_GZIP:
+            case CompressionType::ZLIB: {
+                // For GZIP/ZLIB, data is typically stored as-is or needs standard decompression
+                // brutal_gzip is primarily a compression library, not decompression
+                // For now, pass through (actual decompression would use zlib/gzip library)
+                decompressed = compressed;
+                return true;
+            }
+            
+            case CompressionType::DEFLATE: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
+                // Use codec::inflate from inflate_deflate_cpp.cpp
+                // This handles DEFLATE decompression
+                QByteArray input(reinterpret_cast<const char*>(compressed.data()),
+                                static_cast<int>(compressed.size()));
+                bool ok = false;
+                QByteArray output = codec::inflate(input, &ok);
+                if (!ok) return false;
+
+                decompressed.resize(output.size());
+                std::memcpy(decompressed.data(), output.constData(), output.size());
+                return true;
+#else
+                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
+                             "bridge, which is disabled in the dependency-free native "
+                             "build" << std::endl;
+                return false;
+#endif
+            }
+            
+            case CompressionType::NONE:
+                decompressed = compressed;
+                return true;
+                
+            default:
+                throw std::runtime_error("Unsupported compression type");
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Decompression error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool GGUFLoader::CompressData(const std::vector<uint8_t>& raw_data, 
+                               std::vector<uint8_t>& compressed) {
+    if (compression_type_ == CompressionType::NONE) {
+        compressed = raw_data;
+        return true;
+    }
+    
+    try {
+        switch (compression_type_) {
+            case CompressionType::BRUTAL_GZIP:
+            case CompressionType::ZLIB: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
+                // Compress using brutal::compress (MASM-optimized gzip)
+                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
+                                static_cast<int>(raw_data.size()));
+                QByteArray output = brutal::compress(input);
+                if (output.isEmpty()) return false;
+
+                compressed.resize(output.size());
+                std::memcpy(compressed.data(), output.constData(), output.size());
+                return true;
+#else
+                std::cerr << "Compressed GGUF tensors (BRUTAL_GZIP/ZLIB) require the "
+                             "Qt codec bridge, which is disabled in the "
+                             "dependency-free native build" << std::endl;
+                return false;
+#endif
+            }
+
+            case CompressionType::DEFLATE: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
+                // Compress using codec::deflate (MASM-optimized deflate)
+                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
+                                static_cast<int>(raw_data.size()));
+                bool ok = false;
+                QByteArray output = codec::deflate(input, &ok);
+                if (!ok || output.isEmpty()) return false;
+
+                compressed.resize(output.size());
+                std::memcpy(compressed.data(), output.constData(), output.size());
+                return true;
+#else
+                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
+                             "bridge, which is disabled in the dependency-free native "
+                             "build" << std::endl;
+                return false;
+#endif
+            }
+            
+            case CompressionType::NONE:
+                compressed = raw_data;
+                return true;
+                
+            default:
+                throw std::runtime_error("Unsupported compression type");
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Compression error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+// ============================================================================
+// Quantization Type Validation (IDE Conversion Workflow)
+// ============================================================================
+
+bool GGUFLoader::HasUnsupportedQuantizationTypes() const {
+    return !unsupported_types_.empty();
+}
+
+std::vector<GGUFLoader::UnsupportedTypeInfo> GGUFLoader::GetUnsupportedQuantizationTypes() const {
+    return unsupported_types_;
+}
+
+std::string GGUFLoader::GetRecommendedConversionType() const {
+    // If we found unsupported types, recommend conversion to Q5_K (type 13)
+    // which provides excellent quality/size tradeoff and is widely supported
+    return "Q5_K";
+}
+
+// Helper function to map unsupported type values to human-readable names
+static bool IsRemovedGGMLType(uint32_t type_val) {
+    switch (type_val) {
+        case 4:  case 5:   // Q4_2, Q4_3 removed in ggml
+        case 31: case 32: case 33:  // Q4_0_x_x variants removed
+        case 36: case 37: case 38:  // IQ4_NL_x_x variants removed
+            return true;
+        default:
+            return false;
+    }
+}
+
+static std::string GetUnsupportedTypeNameByValue(uint32_t type_val) {
+    switch (type_val) {
+        case 4:   return "Q4_2 (removed)";
+        case 5:   return "Q4_3 (removed)";
+        case 31:  return "Q4_0_4_4 (removed)";
+        case 32:  return "Q4_0_4_8 (removed)";
+        case 33:  return "Q4_0_8_8 (removed)";
+        case 36:  return "IQ4_NL_4_4 (removed)";
+        case 37:  return "IQ4_NL_4_8 (removed)";
+        case 38:  return "IQ4_NL_8_8 (removed)";
+        default:  return "GGML_TYPE_" + std::to_string(type_val) + " (unknown)";
+    }
+}
+
