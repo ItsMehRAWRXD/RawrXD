@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-24T12:43:50.3221291-04:00",
+  "max_tokens": 32,
+  "prompt": "The quick brown fox",
+  "status": "completed",
+  "tokens_generated": 32,
+  "top_k": 1,
+  "latency_ms": 8,
+  "seed": 42,
+  "temperature": 0
+}

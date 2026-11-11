@@ -1,0 +1,2 @@
+snapshot ready: 51 files
+   Creating library ownership_test.lib and object ownership_test.exp

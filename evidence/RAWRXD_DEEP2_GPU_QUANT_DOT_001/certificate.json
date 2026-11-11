@@ -1,0 +1,150 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_GPU_QUANT_DOT_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "scope": "Native Vulkan quantised dot product (Q4_K x Q8_K and Q6_K x Q8_K) verified against an independent CPU reference that decodes the same GGML block layouts. This is the kernel prerequisite for GPU Deep2 inference without full-model FP32 expansion.",
+  "implementation": {
+    "shader_source": "tools/shaders/quant_dot.comp",
+    "shader_binary": "tools/shaders/quant_dot.spv",
+    "compiler": "glslc --target-env=vulkan1.2",
+    "wrapper_entry": "VulkanCompute::ExecuteQuantDot in src/vulkan_compute.cpp",
+    "pipeline": "VulkanCompute::EnsureQuantDotPipeline in src/vulkan_compute.cpp",
+    "device": "AMD Radeon AI PRO R9700, compute queue family 0",
+    "one_invocation_per": "output row",
+    "fp16": "half_to_float() in GLSL decodes the Q4_K d/dmin and Q6_K d fields, covering normals, subnormals and infinities.",
+    "no_silent_fallback": "ExecuteQuantDot returns false on any validation or dispatch failure. The caller decides; there is no implicit CPU path."
+  },
+  "block_layouts_decoded_in_shader": {
+    "Q4_K_144_bytes": "uint16 d, uint16 dmin, uint8 scales[12], uint8 qs[128]",
+    "Q6_K_210_bytes": "uint8 ql[128], uint8 qh[64], int8 scales[16], uint16 d",
+    "Q8_K_per_256": "float d, int8 qs[256], int16 bsums[16]",
+    "q4_scale_min": "6-bit scales/minima unpacked from 12 bytes exactly as ggml does, including the 4-plus-4 split for the high groups.",
+    "q6_layout": "Two 128-value halves, each with four 32-value subgroups, 4 low bits from ql and 2 high bits from qh, minus 32 to recentre.",
+    "accumulation": "Eight independent int32 lanes, then fp32 scaling by (fp16 d) x (Q8_K d), with a separate dmin * bsums term for Q4_K, matching the reference ordering."
+  },
+  "independent_cpu_reference": "tools/gpu_quant_dot_verify.cpp re-implements the layouts and arithmetic independently of the shader, using synthetic packed weights that exercise the full nibble range.",
+  "tolerances_declared_before_inspection": {
+    "cosine_min": 0.999999,
+    "relative_rmse_max": 0.0001,
+    "bitwise_required": false
+  },
+  "results": [
+    {
+      "label": "q4k_8x512",
+      "kind": "Q4_K",
+      "out": 8,
+      "in": 512,
+      "cosine": 1.0,
+      "rel_rmse": 1.57e-07,
+      "max_abs": 0.000229,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q4k_irregular_33x768",
+      "kind": "Q4_K",
+      "out": 33,
+      "in": 768,
+      "cosine": 1.0,
+      "rel_rmse": 6.99e-08,
+      "max_abs": 0.000488,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q4k_min_1x256",
+      "kind": "Q4_K",
+      "out": 1,
+      "in": 256,
+      "cosine": 1.0,
+      "rel_rmse": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q4k_17x2048",
+      "kind": "Q4_K",
+      "out": 17,
+      "in": 2048,
+      "cosine": 1.0,
+      "rel_rmse": 7.44e-08,
+      "max_abs": 0.00195,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q6k_8x512",
+      "kind": "Q6_K",
+      "out": 8,
+      "in": 512,
+      "cosine": 1.0,
+      "rel_rmse": 1.03e-07,
+      "max_abs": 6.1e-05,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q6k_irregular_33x768",
+      "kind": "Q6_K",
+      "out": 33,
+      "in": 768,
+      "cosine": 1.0,
+      "rel_rmse": 9.13e-08,
+      "max_abs": 0.000244,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q6k_min_1x256",
+      "kind": "Q6_K",
+      "out": 1,
+      "in": 256,
+      "cosine": 1.0,
+      "rel_rmse": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "q6k_17x2048",
+      "kind": "Q6_K",
+      "out": 17,
+      "in": 2048,
+      "cosine": 1.0,
+      "rel_rmse": 4.04e-08,
+      "max_abs": 0.000488,
+      "finite": true,
+      "verdict": "PASS"
+    }
+  ],
+  "summary": {
+    "shapes": "8/8",
+    "formats": [
+      "Q4_K x Q8_K",
+      "Q6_K x Q8_K"
+    ],
+    "verdict": "PASS"
+  },
+  "additional_bug_fixed": {
+    "file": "src/vulkan_compute.cpp, VulkanCompute::DispatchMatMulAsync",
+    "issue": "Had the same swapped push-constant order {M, K, N} that was already fixed in the synchronous DispatchMatMul. The async path is unused by the current harnesses, so it had gone unnoticed.",
+    "fix": "Now sends {M, N, K} to match the shader declaration { m, n, k }.",
+    "note": "This was found while re-verifying the Vulkan source after an external process reverted parts of the working tree."
+  },
+  "what_this_does_not_establish": [
+    "End-to-end Deep2 GPU inference. ModelGenieExecutor does not yet call ExecuteQuantDot.",
+    "Parity against real GGUF weights. The weights used here are synthetic; real tensors exercise different value distributions.",
+    "GPU RMSNorm, attention score/softmax, V aggregation, MoE or KV-cache operations.",
+    "Any performance or TPS claim. One invocation per row with host upload and readback is not a tuned matvec."
+  ],
+  "next": [
+    "Wire ExecuteQuantDot into one ModelGenieExecutor Layer 0 projection and prove intermediate tensor parity.",
+    "Test against real GGUF weights loaded from the model, not only synthetic ones.",
+    "Implement the remaining primitives before certifying a GPU-resident Layer 0."
+  ],
+  "reproduction": {
+    "harness_source": "tools/gpu_quant_dot_verify.cpp",
+    "build": "tools/build_gpu_quant_dot.bat"
+  }
+}

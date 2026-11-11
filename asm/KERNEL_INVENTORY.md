@@ -1,0 +1,103 @@
+# RawrXD Kernel Inventory
+
+Generated: 2026-07-09 20:30:09
+
+## Summary
+
+| Category | Count | Status |
+|----------|-------|--------|
+| MASM Kernels (Tagged) | 0 | COMPLETE |
+| C++ Kernels | 0 | Detected |
+| GPU Kernels | 0 | Detected |
+| Untagged MASM | 278 | NEEDS_TAG |
+
+---
+
+## MASM Kernels (Tagged/COMPLETE)
+---
+
+## Untagged Kernels (NEEDS_TAG)
+
+These kernels need `// KERNEL_COMPLETE: <name>` tags added.
+| Kernel | File | Line | Suggested Category |
+|--------|------|------|-------------------|
+| `GGUF_NextTensor` | `D:\src\asm\GGUF_NextTensor.asm` | 138 | MASM_Dequant |
+| `GGUF_GetTensorInfoPtr` | `D:\src\asm\GGUF_NextTensor.asm` | 305 | MASM_Dequant |
+| `GGUF_GetTypeSize` | `D:\src\asm\GGUF_NextTensor.asm` | 354 | MASM_Dequant |
+| `GGUF_CalculateElementCount` | `D:\src\asm\GGUF_NextTensor.asm` | 484 | MASM_Dequant |
+| `GGUF_GetTypeName` | `D:\src\asm\GGUF_NextTensor.asm` | 516 | MASM_Dequant |
+| `memcpy_wrapper` | `D:\src\asm\GGUF_NextTensor.asm` | 562 | MASM_Dequant |
+| `GGUF_CreateContext` | `D:\src\asm\GGUF_NextTensor.asm` | 590 | MASM_Dequant |
+| `GGUF_DestroyContext` | `D:\src\asm\GGUF_NextTensor.asm` | 637 | MASM_Dequant |
+| `GGUF_GetTensorCount` | `D:\src\asm\GGUF_NextTensor.asm` | 653 | MASM_Dequant |
+| `GGUF_ResetIterator` | `D:\src\asm\GGUF_NextTensor.asm` | 671 | MASM_Dequant |
+| `GGUF_NextTensor` | `D:\src\asm\GGUF_NextTensor.asm` | 138 | MASM_Dequant |
+| `GGUF_GetTensorInfoPtr` | `D:\src\asm\GGUF_NextTensor.asm` | 305 | MASM_Dequant |
+| `GGUF_GetTypeSize` | `D:\src\asm\GGUF_NextTensor.asm` | 354 | MASM_Dequant |
+| `GGUF_CalculateElementCount` | `D:\src\asm\GGUF_NextTensor.asm` | 484 | MASM_Dequant |
+| `GGUF_GetTypeName` | `D:\src\asm\GGUF_NextTensor.asm` | 516 | MASM_Dequant |
+| `memcpy_wrapper` | `D:\src\asm\GGUF_NextTensor.asm` | 562 | MASM_Dequant |
+| `GGUF_CreateContext` | `D:\src\asm\GGUF_NextTensor.asm` | 590 | MASM_Dequant |
+| `GGUF_DestroyContext` | `D:\src\asm\GGUF_NextTensor.asm` | 637 | MASM_Dequant |
+| `GGUF_GetTensorCount` | `D:\src\asm\GGUF_NextTensor.asm` | 653 | MASM_Dequant |
+| `GGUF_ResetIterator` | `D:\src\asm\GGUF_NextTensor.asm` | 671 | MASM_Dequant |
+| `GGUF_NextTensor` | `D:\src\asm\GGUF_NextTensor.asm` | 138 | MASM_RMSNorm |
+| `GGUF_GetTensorInfoPtr` | `D:\src\asm\GGUF_NextTensor.asm` | 305 | MASM_RMSNorm |
+| `GGUF_GetTypeSize` | `D:\src\asm\GGUF_NextTensor.asm` | 354 | MASM_RMSNorm |
+| `GGUF_CalculateElementCount` | `D:\src\asm\GGUF_NextTensor.asm` | 484 | MASM_RMSNorm |
+| `GGUF_GetTypeName` | `D:\src\asm\GGUF_NextTensor.asm` | 516 | MASM_RMSNorm |
+| `memcpy_wrapper` | `D:\src\asm\GGUF_NextTensor.asm` | 562 | MASM_RMSNorm |
+| `GGUF_CreateContext` | `D:\src\asm\GGUF_NextTensor.asm` | 590 | MASM_RMSNorm |
+| `GGUF_DestroyContext` | `D:\src\asm\GGUF_NextTensor.asm` | 637 | MASM_RMSNorm |
+| `GGUF_GetTensorCount` | `D:\src\asm\GGUF_NextTensor.asm` | 653 | MASM_RMSNorm |
+| `GGUF_ResetIterator` | `D:\src\asm\GGUF_NextTensor.asm` | 671 | MASM_RMSNorm |
+| `GGUF_NextTensor` | `D:\src\asm\GGUF_NextTensor.asm` | 138 | MASM_RMSNorm |
+| `GGUF_GetTensorInfoPtr` | `D:\src\asm\GGUF_NextTensor.asm` | 305 | MASM_RMSNorm |
+| `GGUF_GetTypeSize` | `D:\src\asm\GGUF_NextTensor.asm` | 354 | MASM_RMSNorm |
+| `GGUF_CalculateElementCount` | `D:\src\asm\GGUF_NextTensor.asm` | 484 | MASM_RMSNorm |
+| `GGUF_GetTypeName` | `D:\src\asm\GGUF_NextTensor.asm` | 516 | MASM_RMSNorm |
+| `memcpy_wrapper` | `D:\src\asm\GGUF_NextTensor.asm` | 562 | MASM_RMSNorm |
+| `GGUF_CreateContext` | `D:\src\asm\GGUF_NextTensor.asm` | 590 | MASM_RMSNorm |
+| `GGUF_DestroyContext` | `D:\src\asm\GGUF_NextTensor.asm` | 637 | MASM_RMSNorm |
+| `GGUF_GetTensorCount` | `D:\src\asm\GGUF_NextTensor.asm` | 653 | MASM_RMSNorm |
+| `GGUF_ResetIterator` | `D:\src\asm\GGUF_NextTensor.asm` | 671 | MASM_RMSNorm |
+| `GGUF_NextTensor` | `D:\src\asm\GGUF_NextTensor.asm` | 138 | MASM_Softmax |
+| `GGUF_GetTensorInfoPtr` | `D:\src\asm\GGUF_NextTensor.asm` | 305 | MASM_Softmax |
+| `GGUF_GetTypeSize` | `D:\src\asm\GGUF_NextTensor.asm` | 354 | MASM_Softmax |
+| `GGUF_CalculateElementCount` | `D:\src\asm\GGUF_NextTensor.asm` | 484 | MASM_Softmax |
+| `GGUF_GetTypeName` | `D:\src\asm\GGUF_NextTensor.asm` | 516 | MASM_Softmax |
+| `memcpy_wrapper` | `D:\src\asm\GGUF_NextTensor.asm` | 562 | MASM_Softmax |
+| `GGUF_CreateContext` | `D:\src\asm\GGUF_NextTensor.asm` | 590 | MASM_Softmax |
+| `GGUF_DestroyContext` | `D:\src\asm\GGUF_NextTensor.asm` | 637 | MASM_Softmax |
+| `GGUF_GetTensorCount` | `D:\src\asm\GGUF_NextTensor.asm` | 653 | MASM_Softmax |
+| `GGUF_ResetIterator` | `D:\src\asm\GGUF_NextTensor.asm` | 671 | MASM_Softmax |
+
+---
+
+## C++ Kernels
+
+---
+
+## Tagging Convention
+
+Add these tags to your kernel files:
+
+**MASM:**
+`sm
+; KERNEL_COMPLETE: Sovereign_GEMM_F32_AVX512
+Sovereign_GEMM_F32_AVX512 PROC
+    ; ... implementation ...
+Sovereign_GEMM_F32_AVX512 ENDP
+`
+
+**C++:**
+`cpp
+// KERNEL_COMPLETE: AVX2_RMSNorm_F32
+void AVX2_RMSNorm_F32(...) {
+    // ... implementation ...
+}
+`
+
+---
+
+*Generated by kernel_inventory.ps1*

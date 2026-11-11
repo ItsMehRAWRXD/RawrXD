@@ -1,0 +1,31 @@
+#version 460
+// Batch 19: gate/up dual projection fusion. Quant decode is supplied by production format specialization.
+layout(local_size_x = 256) in;
+layout(set=0,binding=0,std430) readonly buffer WG { float wg[]; } gateW;
+layout(set=0,binding=1,std430) readonly buffer WU { float wu[]; } upW;
+layout(set=0,binding=2,std430) readonly buffer X  { float x[]; } inputVec;
+layout(set=0,binding=3,std430) writeonly buffer O { float o[]; } outVec;
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+shared float gsum[256];
+shared float usum[256];
+
+float silu(float x) { return x / (1.0 + exp(-x)); }
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    if (row >= pc.rows) return;
+    uint lid = gl_LocalInvocationID.x;
+    float g=0.0, u=0.0;
+    uint base=row*pc.cols;
+    for(uint c=lid;c<pc.cols;c+=256u) {
+        float xv=inputVec.x[c];
+        g += gateW.wg[base+c]*xv;
+        u += upW.wu[base+c]*xv;
+    }
+    gsum[lid]=g; usum[lid]=u; barrier();
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride) { gsum[lid]+=gsum[lid+stride]; usum[lid]+=usum[lid+stride]; }
+        barrier();
+    }
+    if(lid==0u) outVec.o[row]=silu(gsum[0])*usum[0];
+}

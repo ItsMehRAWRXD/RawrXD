@@ -1,0 +1,6 @@
+fix(runtime): Fix ElasticResidencyManager races, MoEWeightProxy Vulkan cast, Win32IDE json ambiguity  
+  
+- ElasticResidencyManager: unique_ptr to shared_ptr for FindTensor  
+- ElasticResidencyManager: Replace spin-wait with condition_variable blocking  
+- MoEWeightProxy: Remove invalid VkBuffer cast, add Vulkan resource tracking  
+- Win32IDE_Core: Fix nlohmann json parser ambiguity 

@@ -1,0 +1,59 @@
+=== RAWRXD_DEEP2_GPU_MATMUL_001 ===
+Genuine GPU compute verification (not a CPU fallback)
+
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+VULKAN_INITIALIZE=PASS
+VULKAN_DEVICE_NAME=AMD Radeon AI PRO R9700
+VULKAN_VENDOR_ID=0x1002
+VULKAN_DEVICE_ID=0x7551
+VULKAN_SUPPORTS_COMPUTE=true
+VULKAN_COMPUTE_QUEUE_FAMILY=0
+VULKAN_IS_AMD=true
+VULKAN_API_VERSION=1.4.349
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+ENSURE_MATMUL_PIPELINE=PASS
+Allocated buffer 0 with 32768 bytes
+Allocated buffer 1 with 49152 bytes
+Allocated buffer 2 with 24576 bytes
+DEVICE_BUFFERS_ALLOCATED=PASS (A=32768 B=49152 O=24576 bytes)
+WEIGHTS_UPLOADED_TO_DEVICE=PASS (layer0 weights resident in device memory)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 6x4x1 workgroups
+MatMul dispatch completed successfully (64x128 * 128x96 -> 64x96)
+GPU_DISPATCH=PASS (0.899 ms for 64x128x96)
+REAL_GPU_DISPATCH_COUNT_GT_0=PASS
+ALL_ACTIVATIONS_FINITE=PASS
+GPU_CPU_COSINE=-0.2647591411
+GPU_CPU_RMSE=3.395579e-01
+GPU_CPU_MAX_ABS=1.124616e+00
+GPU_CPU_REL_RMSE=1.598994e+00
+CPU_RESULT_MAGNITUDE=0.212357
+MATMUL_NUMERIC_PARITY=FAIL (cos>=0.999999, rel<=1e-04)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 6x4x1 workgroups
+MatMul dispatch completed successfully (64x128 * 128x96 -> 64x96)
+GPU_DETERMINISTIC_REPEAT=PASS
+
+=== SCOPE STATEMENT ===
+This certificate covers the Vulkan matmul compute kernel ONLY.
+It does NOT certify Deep2 Layer 0 GPU inference: ModelGenieExecutor
+contains no GPU execution path, and VulkanCompute::ExecuteRoPE is a
+placeholder that performs no work.
+VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully
