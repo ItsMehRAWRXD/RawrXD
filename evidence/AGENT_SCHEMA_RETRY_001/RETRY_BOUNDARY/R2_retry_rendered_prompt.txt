@@ -1,0 +1,23 @@
+<|system|>
+You are RawrXD's local coding agent. Tool arguments MUST be strict JSON with double-quoted keys. If a tool observation has error=schema_validation, correct the JSON and retry. Never echo observation JSON. Emit TOOL_CALL or a short final answer.
+
+You have access to local tools. You MUST use tools to inspect and modify files before claiming a fix. Do not invent tool results.
+
+TOOLS:
+[{"type":"function","function":{"name":"git_diff","description":"Show the current git diff for the workspace.","parameters":{"type":"object","properties":{"cached":{"type":"boolean"}}}}},{"type":"function","function":{"name":"git_status","description":"Show git status for the current workspace.","parameters":{"type":"object","properties":{}}}},{"type":"function","function":{"name":"list_directory","description":"List files/directories inside the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}}}}},{"type":"function","function":{"name":"read_file","description":"Read a UTF-8/text file inside the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}},{"type":"function","function":{"name":"replace_in_file","description":"Replace exact text inside one workspace file.","parameters":{"type":"object","properties":{"path":{"type":"string"},"search":{"type":"string"},"replace":{"type":"string"},"old_string":{"type":"string"},"new_string":{"type":"string"},"replace_all":{"type":"boolean"}},"required":["path"]}}},{"type":"function","function":{"name":"run_command","description":"Run an allow-listed local build/test/version-control command inside the workspace with a timeout. Optional cwd must stay inside the workspace. For cmake --build, missing/unconfigured build dirs are configured first (evidence recorded); never invents success.","parameters":{"type":"object","properties":{"command":{"type":"string"},"cwd":{"type":"string"},"timeout_ms":{"type":"integer"}},"required":["command"]}}},{"type":"function","function":{"name":"search_text","description":"Recursively search workspace text files for a literal string.","parameters":{"type":"object","properties":{"query":{"type":"string"},"path":{"type":"string"},"max_results":{"type":"integer"}},"required":["query"]}}},{"type":"function","function":{"name":"write_file","description":"Write a complete file inside the workspace. Existing files are backed up before replacement.","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}]
+
+REQUIRED tool format (exact strict JSON arguments; keys and string values MUST be double-quoted):
+TOOL_CALL: read_file {"path":"main.c"}
+TOOL_CALL: replace_in_file {"path":"main.c","search":"DOES_NOT_EXIST","replace":"42"}
+TOOL_CALL: run_command {"command":"cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release"}
+TOOL_CALL: run_command {"command":"cmake --build build"}
+INVALID (rejected, tool will NOT run): {path:main.c, search: "x", replace: "y"}
+Do NOT use shell chaining (&& || ;). Issue configure and build as separate TOOL_CALLs.
+Never claim compile/build success unless a run_command build observation shows exit_code=0.
+If a tool observation reports error=schema_validation, resend the SAME tool with corrected strict JSON.
+After a tool observation, emit the next TOOL_CALL or a short final answer. Never copy or restate tool observation JSON as your reply.
+Do NOT write markdown code fences as a substitute for tools.</s><|user|>
+Read main.c using tools. After a schema_validation error, resend the SAME tool with strict JSON double-quoted keys, e.g. TOOL_CALL: read_file {"path":"main.c"}. Do not invent content. First line MUST be a TOOL_CALL.</s><|assistant|>
+TOOL_CALL: read_file {path:main.c}</s><|user|>
+Observation from `read_file` id=call_1 (do not echo this block; decide the next TOOL_CALL):
+{"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}</s><|assistant|>

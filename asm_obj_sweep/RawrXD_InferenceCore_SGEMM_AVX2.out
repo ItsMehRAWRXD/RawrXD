@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_InferenceCore_SGEMM_AVX2.asm
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_InferenceCore_SGEMM_AVX2.asm(52) : error A2026:constant expected
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_InferenceCore_SGEMM_AVX2.asm(53) : error A2026:constant expected
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_InferenceCore_SGEMM_AVX2.asm(54) : error A2026:constant expected

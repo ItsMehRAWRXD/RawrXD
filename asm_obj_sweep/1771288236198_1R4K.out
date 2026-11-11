@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(62) : error A2006:undefined symbol : g_prefetch_ring
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(63) : error A2006:undefined symbol : g_prefetch_head
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(64) : error A2006:undefined symbol : g_prefetch_tail
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(65) : error A2006:undefined symbol : g_prefetch_slots
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(75) : error A2006:undefined symbol : g_prefetch_event
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(80) : error A2006:undefined symbol : GhostPrefetchWorker
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(89) : error A2006:undefined symbol : g_prefetch_thread
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging.asm\1771288236198_1R4K.asm(91) : error A2006:undefined symbol : g_prefetch_active

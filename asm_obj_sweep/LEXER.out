@@ -1,0 +1,106 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(47) : error A2008:syntax error : type
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(52) : error A2008:syntax error : length
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(63) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(74) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(169) : error A2008:syntax error : ZeroMemory
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(188) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(191) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(193) : error A2008:syntax error : return
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(194) : warning A6001:no return from procedure
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(202) : error A2008:syntax error : while
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(204) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(206) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(208) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(210) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(211) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(212) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(214) : error A2008:syntax error : return
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(216) : warning A6001:no return from procedure
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(225) : error A2008:syntax error : token
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(228) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(230) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(236) : error A2008:syntax error : return
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(237) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(248) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(254) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(257) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(260) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(263) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(265) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(266) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(268) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(270) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(271) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(273) : error A2044:invalid character in file
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(277) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(279) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(280) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(282) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(284) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(285) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(286) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(289) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(290) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(291) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(292) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(293) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(294) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(295) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(304) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(306) : warning A6001:no return from procedure
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(319) : error A2008:syntax error : token
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(321) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(329) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(330) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(331) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(332) : error A2044:invalid character in file
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(334) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(335) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(336) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(337) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(339) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(341) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(344) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(347) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(349) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(350) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(351) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(352) : error A2044:invalid character in file
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(354) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(355) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(356) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(358) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(359) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(361) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(362) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(363) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(364) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(365) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(366) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(367) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(370) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(371) : error A2044:invalid character in file
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(373) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(374) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(379) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(380) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(381) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(382) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(383) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(386) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(388) : error A2008:syntax error : return
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(390) : warning A6001:no return from procedure
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(398) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(399) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(400) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(403) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(407) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(411) : error A2044:invalid character in file
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(412) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(413) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(414) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(415) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\agent\core\IDE\05\LEXER.ASM(416) : fatal error A1012:error count exceeds 100; stopping assembly

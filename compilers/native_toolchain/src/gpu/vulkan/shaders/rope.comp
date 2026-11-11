@@ -1,0 +1,52 @@
+#version 450
+
+// RoPE (Rotary Position Embedding) compute shader
+// Rotates query and key vectors by position-dependent angles
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer QueryBuffer {
+    float query_data[];
+};
+
+layout(std430, binding = 1) buffer KeyBuffer {
+    float key_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_heads;
+    uint head_dim;
+    uint position;
+    float freq_base;
+};
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint total_dim = n_heads * head_dim;
+    
+    if (global_id >= total_dim / 2) return;
+    
+    uint head = global_id / (head_dim / 2);
+    uint dim = global_id % (head_dim / 2);
+    
+    // Calculate rotation angle
+    float freq = 1.0 / pow(freq_base, (2.0 * float(dim)) / float(head_dim));
+    float theta = float(position) * freq;
+    float cos_theta = cos(theta);
+    float sin_theta = sin(theta);
+    
+    uint idx = head * head_dim + dim;
+    uint pair_idx = head * head_dim + dim + head_dim / 2;
+    
+    // Rotate query
+    float q1 = query_data[idx];
+    float q2 = query_data[pair_idx];
+    query_data[idx] = q1 * cos_theta - q2 * sin_theta;
+    query_data[pair_idx] = q1 * sin_theta + q2 * cos_theta;
+    
+    // Rotate key
+    float k1 = key_data[idx];
+    float k2 = key_data[pair_idx];
+    key_data[idx] = k1 * cos_theta - k2 * sin_theta;
+    key_data[pair_idx] = k1 * sin_theta + k2 * cos_theta;
+}

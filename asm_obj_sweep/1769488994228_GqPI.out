@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488994228_GqPI.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488994228_GqPI.asm(320) : error A2006:undefined symbol : _fail_init

@@ -1,0 +1,80 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(88) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(89) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(91) : error A2008:syntax error : AppendMenuA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(92) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(104) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(114) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(124) : error A2006:undefined symbol : TBUTTON
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(124) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(127) : error A2008:syntax error : CreateToolbarEx
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(165) : error A2008:syntax error : CreateStatusWindowA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(176) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(186) : error A2006:undefined symbol : BOOL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(186) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(189) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(191) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(193) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(195) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(220) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(233) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(246) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(259) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(272) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(285) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(298) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(323) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(324) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(337) : error A2006:undefined symbol : OPENFILENAMEA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(337) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(348) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(360) : error A2006:undefined symbol : OPENFILENAMEA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(360) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(371) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(382) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(340) : error A2006:undefined symbol : lStructSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(342) : error A2006:undefined symbol : hwndOwner
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(343) : error A2006:undefined symbol : lpstrFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(345) : error A2006:undefined symbol : nMaxFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(346) : error A2006:undefined symbol : Flags
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(363) : error A2006:undefined symbol : lStructSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(365) : error A2006:undefined symbol : hwndOwner
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(366) : error A2006:undefined symbol : lpstrFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(368) : error A2006:undefined symbol : nMaxFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(369) : error A2006:undefined symbol : Flags
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(94) : warning A6004:procedure argument or local not referenced : hParentMenu
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(94) : warning A6004:procedure argument or local not referenced : pMenuName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(106) : warning A6004:procedure argument or local not referenced : hMenu
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(106) : warning A6004:procedure argument or local not referenced : pItemText
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(106) : warning A6004:procedure argument or local not referenced : itemID
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(116) : warning A6004:procedure argument or local not referenced : hMenu
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(132) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(132) : warning A6004:procedure argument or local not referenced : tbButtons
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(146) : warning A6004:procedure argument or local not referenced : hToolbar
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(146) : warning A6004:procedure argument or local not referenced : pButtonText
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(146) : warning A6004:procedure argument or local not referenced : buttonID
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(157) : warning A6004:procedure argument or local not referenced : hToolbar
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(167) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(178) : warning A6004:procedure argument or local not referenced : hStatusBar
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(178) : warning A6004:procedure argument or local not referenced : pText
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(197) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(197) : warning A6004:procedure argument or local not referenced : isVertical
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(211) : warning A6004:procedure argument or local not referenced : hSplitter
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(211) : warning A6004:procedure argument or local not referenced : leftProportion
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(211) : warning A6004:procedure argument or local not referenced : middleProportion
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(211) : warning A6004:procedure argument or local not referenced : rightProportion
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(224) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(237) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(250) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(263) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(276) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(289) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(302) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(315) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(315) : warning A6004:procedure argument or local not referenced : pTooltip
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(327) : warning A6004:procedure argument or local not referenced : hDialog
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(350) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(373) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(384) : warning A6004:procedure argument or local not referenced : hEditor
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(384) : warning A6004:procedure argument or local not referenced : pText
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ui_helpers_masm.asm(396) : warning A6004:procedure argument or local not referenced : hEditor

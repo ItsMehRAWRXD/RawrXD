@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(25) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(32) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(160) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(178) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(140) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(181) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(192) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(196) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(219) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(252) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(273) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_gguf_memory_map.asm(310) : error A2206:missing operator in expression

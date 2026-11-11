@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\compilers\assembly_source\working_ide.asm
+D:\rawrxd\compilers\assembly_source\working_ide.asm(7) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(8) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(9) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(12) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(13) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(14) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(15) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(16) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(19) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(20) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(21) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(22) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(23) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(24) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(25) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(28) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(29) : error A2008:syntax error : define
+D:\rawrxd\compilers\assembly_source\working_ide.asm(32) : error A2008:syntax error : section
+D:\rawrxd\compilers\assembly_source\working_ide.asm(34) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(35) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(38) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(39) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(40) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(41) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(42) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(44) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(45) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(46) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(47) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(48) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(50) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(51) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(52) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(54) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(55) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(58) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(59) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(60) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(63) : error A2008:syntax error : times
+D:\rawrxd\compilers\assembly_source\working_ide.asm(64) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(67) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(68) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(69) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(72) : error A2008:syntax error : times
+D:\rawrxd\compilers\assembly_source\working_ide.asm(74) : error A2008:syntax error : section
+D:\rawrxd\compilers\assembly_source\working_ide.asm(76) : error A2008:syntax error : hInstance
+D:\rawrxd\compilers\assembly_source\working_ide.asm(77) : error A2008:syntax error : hWnd
+D:\rawrxd\compilers\assembly_source\working_ide.asm(78) : error A2008:syntax error : hMenu
+D:\rawrxd\compilers\assembly_source\working_ide.asm(79) : error A2008:syntax error : hEdit
+D:\rawrxd\compilers\assembly_source\working_ide.asm(80) : error A2008:syntax error : hStatus
+D:\rawrxd\compilers\assembly_source\working_ide.asm(83) : error A2008:syntax error : edit_buffer
+D:\rawrxd\compilers\assembly_source\working_ide.asm(86) : error A2008:syntax error : temp_buffer
+D:\rawrxd\compilers\assembly_source\working_ide.asm(88) : error A2008:syntax error : section
+D:\rawrxd\compilers\assembly_source\working_ide.asm(89) : error A2008:syntax error : global
+D:\rawrxd\compilers\assembly_source\working_ide.asm(90) : error A2008:syntax error : ,
+D:\rawrxd\compilers\assembly_source\working_ide.asm(90) : error A2008:syntax error : in directive
+D:\rawrxd\compilers\assembly_source\working_ide.asm(91) : error A2008:syntax error : ,
+D:\rawrxd\compilers\assembly_source\working_ide.asm(91) : error A2008:syntax error : in directive
+D:\rawrxd\compilers\assembly_source\working_ide.asm(92) : error A2008:syntax error : ,
+D:\rawrxd\compilers\assembly_source\working_ide.asm(92) : error A2008:syntax error : in directive
+D:\rawrxd\compilers\assembly_source\working_ide.asm(93) : error A2008:syntax error : ,
+D:\rawrxd\compilers\assembly_source\working_ide.asm(93) : error A2008:syntax error : in directive
+D:\rawrxd\compilers\assembly_source\working_ide.asm(94) : error A2008:syntax error : ,
+D:\rawrxd\compilers\assembly_source\working_ide.asm(94) : error A2008:syntax error : in directive
+D:\rawrxd\compilers\assembly_source\working_ide.asm(99) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(100) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(101) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(104) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(105) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(106) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(109) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(110) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(111) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(114) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(115) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(116) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(119) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(120) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(121) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(123) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(124) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(127) : error A2008:syntax error : .
+D:\rawrxd\compilers\assembly_source\working_ide.asm(128) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(129) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(130) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(131) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(132) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(134) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(135) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(137) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(138) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(140) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(141) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(143) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(145) : error A2008:syntax error : .
+D:\rawrxd\compilers\assembly_source\working_ide.asm(146) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(147) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(149) : error A2008:syntax error : .
+D:\rawrxd\compilers\assembly_source\working_ide.asm(150) : error A2034:must be in segment block
+D:\rawrxd\compilers\assembly_source\working_ide.asm(152) : error A2008:syntax error : .
+D:\rawrxd\compilers\assembly_source\working_ide.asm(153) : fatal error A1012:error count exceeds 100; stopping assembly

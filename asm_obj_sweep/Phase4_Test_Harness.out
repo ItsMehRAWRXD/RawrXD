@@ -1,0 +1,44 @@
+ Assembling: D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(95) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(101) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(160) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(172) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(212) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(220) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(269) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(277) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(314) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(322) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(368) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(376) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(411) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(419) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(451) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(459) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(519) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(527) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(549) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(561) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(612) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(620) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(636) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(644) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(682) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(690) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(704) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(712) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(749) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(214) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(271) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(316) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(370) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(413) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(453) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(521) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(551) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(614) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(638) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(684) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(706) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase4_Test_Harness.asm(751) : error A2220:Missing .ENDPROLOG

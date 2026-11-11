@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(27) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(105) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(106) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(107) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(113) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(117) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(120) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(164) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(165) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(166) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(167) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(168) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(169) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(203) : error A2006:undefined symbol : select
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(219) : error A2006:undefined symbol : recv
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(234) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(252) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(265) : error A2006:undefined symbol : recv
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(276) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(289) : error A2006:undefined symbol : closesocket
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(291) : error A2006:undefined symbol : closesocket
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(294) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(30) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(408) : warning A4025:ENDP found before .ENDPROLOG : RelayEngine_GetStats
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(408) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275016366_U67C.asm(408) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(1) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(2) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(3) : error A2008:syntax error : in directive
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(4) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(5) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(6) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(10) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(11) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(13) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(14) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(16) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(17) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(18) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(19) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(20) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(21) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(22) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(23) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(24) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(25) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(26) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(27) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(29) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(30) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_eon_working.asm(30) : error A2088:END directive required at end of file

@@ -1,0 +1,4 @@
+#pragma once
+#include <atomic>
+#include <cstdint>
+namespace RawrXD::Governance {struct alignas(8) AutocraticStateBlock{uint32_t ram_pressure_pct;uint32_t context_tokens;uint32_t backpressure_score;uint8_t routing_mode;uint8_t metaphor_confidence;uint8_t expert_switching;uint8_t emergency_halt;uint32_t autonomous_cycles;uint32_t governance_flags;uint32_t kv_bits;uint32_t reserved;};static_assert(sizeof(AutocraticStateBlock)==32,"state block ABI must remain 32 bytes");enum class PressureLevel:uint8_t{Normal,Pressed,Crushed};struct PressureDecision{PressureLevel level;uint8_t recommended_kv_bits;bool compact_kv;bool evict_oldest;bool reduce_context;bool emergency_halt;};class PressedStateEngine{public:PressureDecision evaluate(uint64_t,uint64_t,uint32_t)noexcept;AutocraticStateBlock state()const noexcept;void cycle()noexcept;private:std::atomic<uint32_t>cycles_{0};AutocraticStateBlock state_{};};}

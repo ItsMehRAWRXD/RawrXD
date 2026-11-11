@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(9) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(10) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(100) : error A2008:syntax error : k0
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(274) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(91) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\critical\paths\bpe\tokenize\simd.asm(178) : error A2206:missing operator in expression

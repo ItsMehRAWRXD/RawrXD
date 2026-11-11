@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\src\RawrXD_InferenceClient.asm
+D:\rawrxd\src\RawrXD_InferenceClient.asm(81) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(101) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(107) : error A2008:syntax error : Infer_DefaultConfig
+D:\rawrxd\src\RawrXD_InferenceClient.asm(118) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(134) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(167) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(182) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(190) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(197) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(204) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_InferenceClient.asm(209) : error A2008:syntax error : invoke

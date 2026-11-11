@@ -1,0 +1,55 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\error_reporting.asm
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(30) : error A2008:syntax error : error_reporting_enabled
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(31) : error A2008:syntax error : warning_level
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(32) : error A2008:syntax error : error_recovery
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(33) : error A2008:syntax error : max_errors
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(34) : error A2008:syntax error : max_warnings
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(35) : error A2008:syntax error : error_count
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(36) : error A2008:syntax error : warning_count
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(37) : error A2008:syntax error : info_count
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(38) : error A2008:syntax error : debug_count
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(41) : error A2008:syntax error : error_buffer
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(42) : error A2008:syntax error : error_buffer_size
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(43) : error A2008:syntax error : error_buffer_capacity
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(44) : error A2008:syntax error : error_buffer_head
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(45) : error A2008:syntax error : error_buffer_tail
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(48) : error A2008:syntax error : warning_buffer
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(49) : error A2008:syntax error : warning_buffer_size
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(50) : error A2008:syntax error : warning_buffer_capacity
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(51) : error A2008:syntax error : warning_buffer_head
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(52) : error A2008:syntax error : warning_buffer_tail
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(55) : error A2008:syntax error : errors_reported
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(56) : error A2008:syntax error : warnings_reported
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(57) : error A2008:syntax error : infos_reported
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(58) : error A2008:syntax error : debugs_reported
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(59) : error A2008:syntax error : errors_recovered
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(60) : error A2008:syntax error : errors_fatal
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(61) : error A2008:syntax error : errors_non_fatal
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(64) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(65) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(66) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(67) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(68) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(69) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(70) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(71) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(72) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(73) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(76) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(77) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(78) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(79) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(82) : error A2008:syntax error : error_recovery_enabled
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(83) : error A2008:syntax error : error_recovery_count
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(84) : error A2008:syntax error : error_recovery_max
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(85) : error A2008:syntax error : error_recovery_strategy
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(87) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(88) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(89) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(90) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(91) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(92) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\error_reporting.asm(93) : fatal error A1009:line too long

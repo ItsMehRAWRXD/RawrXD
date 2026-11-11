@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(41) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(78) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(113) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(136) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(137) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(138) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(139) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(276) : error A2006:undefined symbol : FindPieceAtOffset
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(286) : error A2006:undefined symbol : SplitPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(293) : error A2006:undefined symbol : InsertNewPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(301) : error A2006:undefined symbol : InvalidateLineCacheFrom
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(305) : error A2006:undefined symbol : RebalanceTree
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(393) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(233) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(330) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(339) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(407) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(430) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(445) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(461) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(472) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1769563556166_GnBP.ASM(488) : error A2220:Missing .ENDPROLOG

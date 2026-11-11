@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771270674242_Zf74.asm
+D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771270674242_Zf74.asm(5) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771270674242_Zf74.asm(77) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771270674242_Zf74.asm(80) : fatal error A1010:unmatched block nesting : DequantQ4_0_AVX2

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(15) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(121) : error A2008:syntax error : available
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(144) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(146) : error A2008:syntax error : dark_mode
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(163) : error A2008:syntax error : telemetry_enabled
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(232) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(235) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(310) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(313) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(333) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(361) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(391) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(415) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(433) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(438) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(502) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(507) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(510) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(522) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(574) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(577) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(599) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(614) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(636) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(681) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(685) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(871) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(877) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(882) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(887) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(924) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(928) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(932) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(939) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(943) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(947) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1008) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1049) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1082) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1090) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1100) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1104) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1132) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1140) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1150) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1153) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1194) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1197) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1513) : error A2005:symbol redefinition : telemetry_server
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1514) : error A2005:symbol redefinition : update_server
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1525) : error A2005:symbol redefinition : crash_dump_filename
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(1534) : error A2008:syntax error : telemetry_lock
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(52) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(54) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(55) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(209) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(210) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(212) : error A2006:undefined symbol : init_crash_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(218) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(219) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(221) : error A2006:undefined symbol : init_crash_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(226) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(227) : error A2006:undefined symbol : SetUnhandledExceptionFilter
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(230) : error A2006:undefined symbol : init_crash_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(260) : error A2006:undefined symbol : GetSystemTimeAsFileTime
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(264) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(268) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(286) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(292) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(293) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(297) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(304) : error A2006:undefined symbol : crash_dump_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(308) : error A2006:undefined symbol : crash_dump_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(331) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(334) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(350) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(353) : error A2006:undefined symbol : crash_upload_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(364) : error A2006:undefined symbol : ExitThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(380) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(384) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(389) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(392) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(417) : error A2006:undefined symbol : gen_id_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(430) : error A2006:undefined symbol : gen_id_store
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(436) : error A2006:undefined symbol : gen_id_loop
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(439) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(457) : error A2006:undefined symbol : telemetry_enabled
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(458) : error A2006:undefined symbol : telemetry_skip
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(461) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(462) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(467) : error A2006:undefined symbol : telemetry_full
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(470) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(484) : error A2006:undefined symbol : lstrcpyn
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(487) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(490) : error A2006:undefined symbol : lstrcpyn
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(493) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(496) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(497) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(500) : error A2006:undefined symbol : telemetry_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(503) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1771286636607_8rG9.asm(504) : fatal error A1012:error count exceeds 100; stopping assembly

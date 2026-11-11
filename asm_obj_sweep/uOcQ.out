@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-13a9e527\uOcQ.asm
+D:\rawrxd\history\-13a9e527\uOcQ.asm(24) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-13a9e527\uOcQ.asm(27) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

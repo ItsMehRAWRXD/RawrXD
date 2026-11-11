@@ -1,0 +1,32 @@
+---
+description: RawrXD performance completion — coverage/epoch only; no directional climb
+alwaysApply: true
+---
+
+# RawrXD Performance Completion
+
+Governing handoff: `evidence/RAWRXD_PERFORMANCE_001/PERF_COMPLETION_CONTRACT.md`
+
+## Hard law
+
+- Only: coverage, epoch accounting, measured authority, fail-closed promotion.
+- No directional climb, tip-bot 256, RNG, reopen QB/KVA/LOGITS by instinct.
+- Historical 5.904 is comparison-only until Phase A closes (`ROOT_REPEATABLE=0`).
+- `TIP_CLIMB=HOLD`. Rainbow live search blocked until `SEARCH_BASELINE_*` installed.
+- Finite space: 18 unique configs. `ORDINAL_ADVANCE != NEW_CONFIGURATION_COVERAGE`.
+- Exhaustion with no improvement is valid completion (`PROMOTION=NONE`, `BASELINE_RETAINED=1`).
+
+## Phase order
+
+1. Phase A: `CHAMPION_ENV_BYTEWISE_REPRO` → PASS or NOT_REPRODUCED + install SEARCH_BASELINE
+2. Phase B: enumerate 18 CONFIG_IDs (`COVERAGE_MATRIX_001`)
+3. Phase C: measure each once
+4. Phase D: endurance winner only (≥5), then promote or retain
+
+## Purity
+
+Forced off: TOKEN_PACING, DEEP2_CERT_STEP_LOG, DEEP2_LOGITS_GPU_SPLIT, QKV_OWNER_RESI_LOG, TOK_RESIDUAL_SPAM. Never force `DEEP2_MLA_Q_DEVICE=0`.
+
+## Agent loop
+
+READ_AUTHORITY → VERIFY_PHASE → NEXT_UNCOVERED → WITNESS → RECEIPT → MATRIX → … → SEAL. Do not ask for optimization direction.

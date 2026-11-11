@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # VAL-063 Foundation Attestation
+  val063-foundation:
+    build:
+      context: .
+      dockerfile: Dockerfile.certification
+      target: base
+    command: ["build/val063_master_test.exe"]
+    volumes:
+      - ./evidence:/certification/evidence
+    environment:
+      - CERTIFICATION_GATE=A
+      - CERTIFICATION_SEED=56ef83e
+    networks:
+      - certification-network
+
+  # VAL-064 Cross-Environment
+  val064-cross-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.certification
+      target: base
+    command: ["build/val064_test.exe"]
+    volumes:
+      - ./evidence:/certification/evidence
+    environment:
+      - CERTIFICATION_GATE=B
+      - CERTIFICATION_SEED=56ef83e
+    networks:
+      - certification-network
+    depends_on:
+      - val063-foundation
+
+  # VAL-065 Evidence Signing
+  val065-signing:
+    build:
+      context: .
+      dockerfile: Dockerfile.certification
+      target: base
+    command: ["build/val065_test.exe"]
+    volumes:
+      - ./evidence:/certification/evidence
+    environment:
+      - CERTIFICATION_GATE=C
+      - CERTIFICATION_SEED=56ef83e
+    networks:
+      - certification-network
+    depends_on:
+      - val064-cross-env
+
+  # VAL-066 Adversarial Testing
+  val066-adversarial:
+    build:
+      context: .
+      dockerfile: Dockerfile.certification
+      target: base
+    command: ["build/val066_test.exe"]
+    volumes:
+      - ./evidence:/certification/evidence
+    environment:
+      - CERTIFICATION_GATE=D
+      - CERTIFICATION_SEED=56ef83e
+    networks:
+      - certification-network
+    depends_on:
+      - val065-signing
+
+  # Report Generator
+  report-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.certification
+      target: base
+    command: ["python", "scripts/generate_certification_report.py"]
+    volumes:
+      - ./evidence:/certification/evidence
+      - ./reports:/certification/reports
+    depends_on:
+      - val066-adversarial
+    networks:
+      - certification-network
+
+networks:
+  certification-network:
+    driver: bridge

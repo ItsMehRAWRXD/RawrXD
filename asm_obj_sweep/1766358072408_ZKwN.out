@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_core.asm\1766358072408_ZKwN.asm
+D:\rawrxd\history\all_versions\pifabric_core.asm\1766358072408_ZKwN.asm(1) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\pifabric_core.asm\1766358072408_ZKwN.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_core.asm\1766358072408_ZKwN.asm(8) : fatal error A1000:cannot open file : user32.inc

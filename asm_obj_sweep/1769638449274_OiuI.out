@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_TEST.asm\1769638449274_OiuI.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_TEST.asm\1769638449274_OiuI.asm(70) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_TEST.asm\1769638449274_OiuI.asm(70) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_TEST.asm\1769638449274_OiuI.asm(70) : warning A6004:procedure argument or local not referenced : lpReserved

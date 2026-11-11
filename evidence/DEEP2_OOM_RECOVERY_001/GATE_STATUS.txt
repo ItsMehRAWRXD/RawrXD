@@ -1,0 +1,2 @@
+alive=1 gen=2 budget_mib=64
+DEEP2_OOM_RECOVERY_001=PASS

@@ -1,0 +1,1420 @@
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=000002A203350000 — inference cannot proceed.
+catalog-model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-path: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-kind: gguf
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=000002A206BF0000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000002A27FD99430  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=000002A27FD99430  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=000002A27FD99430  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000002A27FD99430  registered=201 tensors  bytes=667078656  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6B44B2B70 dequant=00007FF6B44B0060 GetGEMV(12)=00007FF6B44B2B70 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_E2E_002b\smoke_gen5
+external inference runtime: none
+cloud API: none
+
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000002A203350000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=000002A206E30000 type=12 wk.data=000002A27FFA0000 wv.data=000002A207070000 wo.data=000002A206BF0000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000002A27FC00000 ffnNorm.data=000002A27FC10000
+[Deep2Engine] computeLogits: hiddenState norm=88.133080 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=959 size=32000 min=-8.911673546e+00 max=1.456283188e+01 mean=-6.992690843e-01 l2=4.590008520e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=10605 logit=14.562832
+[GREEDY] selected=10605
+[GREEDY] probe comma id=29892 logit=3.839520
+[GREEDY] probe newline id=13 logit=7.740385
+[GREEDY] probe UE id=4462 logit=2.990026
+[GREEDY] probe comma_alt_1919 id=1919 logit=-3.101148
+[GREEDY] top10: 10605:14.562832 29902:14.336844 29903:13.658654 25271:13.554405 5612:13.434291 3492:13.430772 1762:13.370201 7058:13.284025 29907:13.179089 10401:13.098171
+[B3_LOGITS] AFTER sampleToken token=10605
+[B3_LOGITS] Storing token 10605 at index 0
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.886215 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=960 size=32000 min=-1.274052048e+01 max=1.839816666e+01 mean=-2.752023372e+00 l2=6.528279252e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29915 logit=18.398167
+[GREEDY] selected=29915
+[GREEDY] probe comma id=29892 logit=13.035471
+[GREEDY] probe newline id=13 logit=5.737660
+[GREEDY] probe UE id=4462 logit=-5.761384
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.980424
+[GREEDY] top10: 29915:18.398167 338:17.934767 526:15.461181 366:14.163629 29892:13.035471 30010:12.831881 297:11.890374 372:11.808484 591:11.029998 278:10.816828
+[B3_LOGITS] AFTER sampleToken token=29915
+[B3_LOGITS] Storing token 29915 at index 1
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=77.277626 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=961 size=32000 min=-1.187318230e+01 max=2.008679771e+01 mean=-1.632059500e+00 l2=5.119621952e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29879 logit=20.086798
+[GREEDY] selected=29879
+[GREEDY] probe comma id=29892 logit=1.072992
+[GREEDY] probe newline id=13 logit=3.126365
+[GREEDY] probe UE id=4462 logit=-1.008047
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.573463
+[GREEDY] top10: 29879:20.086798 276:12.514540 269:10.444152 366:9.822571 338:9.148376 344:8.838839 29878:8.407283 29916:7.930941 526:7.916339 29872:7.857274
+[B3_LOGITS] AFTER sampleToken token=29879
+[B3_LOGITS] Storing token 29879 at index 2
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.150856 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=962 size=32000 min=-1.114227962e+01 max=1.582210159e+01 mean=-2.123094859e+00 l2=5.781445290e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=263 logit=15.822102
+[GREEDY] selected=263
+[GREEDY] probe comma id=29892 logit=3.481103
+[GREEDY] probe newline id=13 logit=3.578163
+[GREEDY] probe UE id=4462 logit=-1.603918
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.958464
+[GREEDY] top10: 263:15.822102 278:15.726026 385:15.466784 1790:14.530415 777:12.802577 920:12.700004 596:11.914620 825:11.847391 1554:11.108645 3447:10.670492
+[B3_LOGITS] AFTER sampleToken token=263
+[B3_LOGITS] Storing token 263 at index 3
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.112877 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=963 size=32000 min=-1.265937996e+01 max=1.174344540e+01 mean=-3.438416343e+00 l2=8.130125967e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=337 logit=11.743445
+[GREEDY] selected=337
+[GREEDY] probe comma id=29892 logit=1.424682
+[GREEDY] probe newline id=13 logit=-0.039759
+[GREEDY] probe UE id=4462 logit=-0.845544
+[GREEDY] probe comma_alt_1919 id=1919 logit=-1.026414
+[GREEDY] top10: 337:11.743445 2788:11.020351 901:10.981996 4559:10.946630 10029:10.408412 5132:10.283299 9120:10.114343 4866:9.988225 775:9.722359 1950:9.678788
+[B3_LOGITS] AFTER sampleToken token=337
+[B3_LOGITS] Storing token 337 at index 4
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.969543 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=964 size=32000 min=-1.130260563e+01 max=2.062728882e+01 mean=-1.315787547e+00 l2=5.003783922e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=11292 logit=20.627289
+[GREEDY] selected=11292
+[GREEDY] probe comma id=29892 logit=3.182889
+[GREEDY] probe newline id=13 logit=3.646955
+[GREEDY] probe UE id=4462 logit=-0.690014
+[GREEDY] probe comma_alt_1919 id=1919 logit=-1.172990
+[GREEDY] top10: 11292:20.627289 24588:18.039894 17625:16.445543 1287:16.304174 1742:16.031036 29899:15.259710 561:15.247856 11600:12.953194 572:12.921574 2749:12.905228
+[B3_LOGITS] AFTER sampleToken token=11292
+[B3_LOGITS] Storing token 11292 at index 5
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.665161 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=965 size=32000 min=-1.330922222e+01 max=1.364071083e+01 mean=-2.986616900e+00 l2=7.151454060e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=1873 logit=13.640711
+[GREEDY] selected=1873
+[GREEDY] probe comma id=29892 logit=6.691298
+[GREEDY] probe newline id=13 logit=0.664504
+[GREEDY] probe UE id=4462 logit=-2.153577
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.796639
+[GREEDY] top10: 1873:13.640711 775:10.589556 1426:9.444127 1342:9.315944 18195:9.277237 2471:9.129457 13962:8.802848 2933:8.680260 322:8.642957 14880:8.530512
+[B3_LOGITS] AFTER sampleToken token=1873
+[B3_LOGITS] Storing token 1873 at index 6
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.132767 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=966 size=32000 min=-1.396175861e+01 max=1.892347527e+01 mean=-3.257748913e+00 l2=7.473219602e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=310 logit=18.923475
+[GREEDY] selected=310
+[GREEDY] probe comma id=29892 logit=12.261882
+[GREEDY] probe newline id=13 logit=6.207553
+[GREEDY] probe UE id=4462 logit=-4.508247
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.137231
+[GREEDY] top10: 310:18.923475 411:15.550303 393:13.853877 29901:13.328270 29892:12.261882 773:11.354272 3704:10.998579 363:10.758878 313:10.726376 1728:10.184486
+[B3_LOGITS] AFTER sampleToken token=310
+[B3_LOGITS] Storing token 310 at index 7
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.474586 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=967 size=32000 min=-1.123130798e+01 max=1.547655201e+01 mean=-1.996163646e+00 l2=5.598347098e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=278 logit=15.476552
+[GREEDY] selected=278
+[GREEDY] probe comma id=29892 logit=2.607894
+[GREEDY] probe newline id=13 logit=2.421354
+[GREEDY] probe UE id=4462 logit=0.961465
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.199760
+[GREEDY] top10: 278:15.476552 596:14.321697 3575:13.155321 887:12.597609 393:11.431946 376:10.376148 366:10.232046 2193:9.406287 445:9.388235 421:8.867932
+[B3_LOGITS] AFTER sampleToken token=278
+[B3_LOGITS] Storing token 278 at index 8
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.251587 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=968 size=32000 min=-1.116078472e+01 max=1.129403877e+01 mean=-2.522280079e+00 l2=6.608839470e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=775 logit=11.294039
+[GREEDY] selected=775
+[GREEDY] probe comma id=29892 logit=-0.513877
+[GREEDY] probe newline id=13 logit=-0.402080
+[GREEDY] probe UE id=4462 logit=-0.162787
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.317555
+[GREEDY] top10: 775:11.294039 1426:11.062133 1021:10.371498 2471:10.329257 5780:9.692967 376:9.589201 1824:9.238159 421:8.925842 5195:8.911402 11994:8.791329
+[B3_LOGITS] AFTER sampleToken token=775
+[B3_LOGITS] Storing token 775 at index 9
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.167160 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=969 size=32000 min=-1.676558304e+01 max=1.298538589e+01 mean=-3.674019221e+00 l2=8.206314402e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=411 logit=12.985386
+[GREEDY] selected=411
+[GREEDY] probe comma id=29892 logit=10.637648
+[GREEDY] probe newline id=13 logit=2.812747
+[GREEDY] probe UE id=4462 logit=-2.600175
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.202367
+[GREEDY] top10: 411:12.985386 393:12.420935 11534:11.152381 366:11.126739 29901:10.785754 29892:10.637648 773:9.886572 2908:9.867515 363:9.804401 304:9.660721
+[B3_LOGITS] AFTER sampleToken token=411
+[B3_LOGITS] Storing token 411 at index 10
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.016891 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=970 size=32000 min=-1.293875217e+01 max=1.180082607e+01 mean=-2.634481699e+00 l2=6.601582931e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=278 logit=11.800826
+[GREEDY] selected=278
+[GREEDY] probe comma id=29892 logit=3.263577
+[GREEDY] probe newline id=13 logit=2.080884
+[GREEDY] probe UE id=4462 logit=-1.746505
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.843854
+[GREEDY] top10: 278:11.800826 777:11.671965 901:11.504778 263:10.978708 5684:10.864031 2715:10.703383 16710:10.617771 6589:10.466904 596:10.230925 1571:10.003017
+[B3_LOGITS] AFTER sampleToken token=278
+[B3_LOGITS] Storing token 278 at index 11
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.116631 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=971 size=32000 min=-1.115672016e+01 max=1.197921467e+01 mean=-2.510048118e+00 l2=6.546577337e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=5181 logit=11.979215
+[GREEDY] selected=5181
+[GREEDY] probe comma id=29892 logit=1.219374
+[GREEDY] probe newline id=13 logit=1.426529
+[GREEDY] probe UE id=4462 logit=-1.272464
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.668305
+[GREEDY] top10: 5181:11.979215 3620:11.813775 5684:10.879259 13877:10.758517 2715:10.682741 1021:10.428250 4784:10.251844 8210:10.225891 4944:10.224339 3734:10.020013
+[B3_LOGITS] AFTER sampleToken token=5181
+[B3_LOGITS] Storing token 5181 at index 12
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.051102 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=972 size=32000 min=-1.352722740e+01 max=1.392013836e+01 mean=-3.229059390e+00 l2=7.672404249e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=3620 logit=13.920138
+[GREEDY] selected=3620
+[GREEDY] probe comma id=29892 logit=4.377434
+[GREEDY] probe newline id=13 logit=2.615404
+[GREEDY] probe UE id=4462 logit=-1.467821
+[GREEDY] probe comma_alt_1919 id=1919 logit=-1.666057
+[GREEDY] top10: 3620:13.920138 6589:12.250927 26278:12.089315 11217:11.490871 740:10.968117 3168:10.763838 15998:10.741464 28473:10.508453 2472:10.443135 4128:10.186038
+[B3_LOGITS] AFTER sampleToken token=3620
+[B3_LOGITS] Storing token 3620 at index 13
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.370247 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=973 size=32000 min=-1.364832783e+01 max=1.590813541e+01 mean=-3.538929656e+00 l2=7.955142746e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=304 logit=15.908135
+[GREEDY] selected=304
+[GREEDY] probe comma id=29892 logit=13.145271
+[GREEDY] probe newline id=13 logit=7.086075
+[GREEDY] probe UE id=4462 logit=-4.253068
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.042749
+[GREEDY] top10: 304:15.908135 29901:15.858494 363:14.429188 1754:13.351851 29892:13.145271 322:13.109570 5276:13.007820 2729:12.782960 29889:12.247768 12141:12.127460
+[B3_LOGITS] AFTER sampleToken token=304
+[B3_LOGITS] Storing token 304 at index 14
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.044418 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=974 size=32000 min=-1.171136761e+01 max=1.266594410e+01 mean=-2.982284993e+00 l2=7.287826762e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=671 logit=12.665944
+[GREEDY] selected=671
+[GREEDY] probe comma id=29892 logit=3.786853
+[GREEDY] probe newline id=13 logit=4.862216
+[GREEDY] probe UE id=4462 logit=-1.779606
+[GREEDY] probe comma_alt_1919 id=1919 logit=-1.705930
+[GREEDY] top10: 671:12.665944 3160:12.248475 2304:11.808615 3867:11.772827 4386:11.729564 1207:11.686803 4866:11.650640 2334:11.395608 6284:11.287007 22222:11.177766
+[B3_LOGITS] AFTER sampleToken token=671
+[B3_LOGITS] Storing token 671 at index 15
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.997978 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=975 size=32000 min=-1.351027298e+01 max=1.206528664e+01 mean=-3.094623658e+00 l2=7.360220926e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=278 logit=12.065287
+[GREEDY] selected=278
+[GREEDY] probe comma id=29892 logit=4.607296
+[GREEDY] probe newline id=13 logit=1.807076
+[GREEDY] probe UE id=4462 logit=-2.215418
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.095167
+[GREEDY] top10: 278:12.065287 263:10.017049 421:9.397799 596:9.300647 1438:8.873227 8492:8.838053 25492:8.701031 11786:8.619176 3168:8.597295 1269:8.530088
+[B3_LOGITS] AFTER sampleToken token=278
+[B3_LOGITS] Storing token 278 at index 16
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.629868 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=976 size=32000 min=-1.140907383e+01 max=1.172258663e+01 mean=-2.761361979e+00 l2=6.923955897e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=4944 logit=11.722587
+[GREEDY] selected=4944
+[GREEDY] probe comma id=29892 logit=0.381226
+[GREEDY] probe newline id=13 logit=1.580336
+[GREEDY] probe UE id=4462 logit=-2.468714
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.267835
+[GREEDY] top10: 4944:11.722587 421:11.397829 4240:9.177254 8492:9.076378 716:9.020660 15141:8.881418 3168:8.823493 887:8.535766 9281:8.089421 1887:8.060538
+[B3_LOGITS] AFTER sampleToken token=4944
+[B3_LOGITS] Storing token 4944 at index 17
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.702721 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=977 size=32000 min=-1.172133732e+01 max=1.088560390e+01 mean=-2.611152086e+00 l2=6.664652417e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=8492 logit=10.885604
+[GREEDY] selected=8492
+[GREEDY] probe comma id=29892 logit=4.542199
+[GREEDY] probe newline id=13 logit=0.812498
+[GREEDY] probe UE id=4462 logit=-1.262902
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.840592
+[GREEDY] top10: 8492:10.885604 3168:10.162284 775:9.810896 421:9.516906 3489:9.332508 9562:8.986319 887:8.846408 1051:8.579779 740:8.554622 4086:8.537052
+[B3_LOGITS] AFTER sampleToken token=8492
+[B3_LOGITS] Storing token 8492 at index 18
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.085579 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=978 size=32000 min=-1.468095207e+01 max=1.510870266e+01 mean=-3.636587825e+00 l2=8.099764691e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29901 logit=15.108703
+[GREEDY] selected=29901
+[GREEDY] probe comma id=29892 logit=12.670954
+[GREEDY] probe newline id=13 logit=5.946097
+[GREEDY] probe UE id=4462 logit=-4.890958
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.117621
+[GREEDY] top10: 29901:15.108703 322:14.115248 29892:12.670954 29889:12.621428 363:12.074693 297:11.759233 304:10.946468 6284:10.874496 313:10.783603 5149:10.525883
+[B3_LOGITS] AFTER sampleToken token=29901
+[B3_LOGITS] Storing token 29901 at index 19
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.784599 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=979 size=32000 min=-1.282303333e+01 max=1.945904922e+01 mean=-2.650012962e+00 l2=6.548678842e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=13 logit=19.459049
+[GREEDY] selected=13
+[GREEDY] probe comma id=29892 logit=1.123993
+[GREEDY] probe newline id=13 logit=19.459049
+[GREEDY] probe UE id=4462 logit=-3.277637
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.291805
+[GREEDY] top10: 13:19.459049 29871:11.880176 518:11.653022 887:10.232369 2045:9.480684 15974:9.480030 366:8.957182 313:8.786530 3529:8.722675 9133:8.248188
+[B3_LOGITS] AFTER sampleToken token=13
+[B3_LOGITS] Storing token 13 at index 20
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=88.728645 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=980 size=32000 min=-8.602585793e+00 max=1.866939163e+01 mean=-5.587052163e-01 l2=4.527105972e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=13 logit=18.669392
+[GREEDY] selected=13
+[GREEDY] probe comma id=29892 logit=3.069234
+[GREEDY] probe newline id=13 logit=18.669392
+[GREEDY] probe UE id=4462 logit=2.300528
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.958958
+[GREEDY] top10: 13:18.669392 28956:15.675874 29961:15.438901 19660:13.223231 29899:12.989249 29912:12.358374 3492:12.296968 29952:11.207352 29966:11.046747 29896:10.789749
+[B3_LOGITS] AFTER sampleToken token=13
+[B3_LOGITS] Storing token 13 at index 21
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=88.791977 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=981 size=32000 min=-9.597251892e+00 max=1.548600197e+01 mean=-5.306616076e-01 l2=4.687622690e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=28956 logit=15.486002
+[GREEDY] selected=28956
+[GREEDY] probe comma id=29892 logit=2.574319
+[GREEDY] probe newline id=13 logit=9.566903
+[GREEDY] probe UE id=4462 logit=4.643147
+[GREEDY] probe comma_alt_1919 id=1919 logit=-3.775955
+[GREEDY] top10: 28956:15.486002 29961:14.506387 16524:13.344078 3399:13.226445 12229:12.784901 24183:12.650598 4986:12.607754 3492:12.365808 29907:11.843699 1525:11.809498
+[B3_LOGITS] AFTER sampleToken token=28956
+[B3_LOGITS] Storing token 28956 at index 22
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.525597 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=982 size=32000 min=-1.252851009e+01 max=1.575116539e+01 mean=-2.227206112e+00 l2=6.077014358e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=13 logit=15.751165
+[GREEDY] selected=13
+[GREEDY] probe comma id=29892 logit=2.095717
+[GREEDY] probe newline id=13 logit=15.751165
+[GREEDY] probe UE id=4462 logit=2.949676
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.767128
+[GREEDY] top10: 13:15.751165 8768:14.362370 7729:14.350559 3126:13.871948 4691:13.826554 25162:13.418564 1315:12.464222 16963:11.406929 13067:11.328349 1372:11.124924
+[B3_LOGITS] AFTER sampleToken token=13
+[B3_LOGITS] Storing token 13 at index 23
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=87.824203 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=983 size=32000 min=-8.299401283e+00 max=1.455231380e+01 mean=-1.402194571e-01 l2=4.569291146e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=3492 logit=14.552314
+[GREEDY] selected=3492
+[GREEDY] probe comma id=29892 logit=3.804399
+[GREEDY] probe newline id=13 logit=10.022370
+[GREEDY] probe UE id=4462 logit=4.809929
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.455852
+[GREEDY] top10: 3492:14.552314 29961:13.883440 5215:13.671579 458:13.248031 29912:12.965401 3075:12.563671 1509:12.366340 3166:12.170257 6293:12.161913 29966:12.097209
+[B3_LOGITS] AFTER sampleToken token=3492
+[B3_LOGITS] Storing token 3492 at index 24
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.058174 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=984 size=32000 min=-1.256614971e+01 max=8.832371712e+00 mean=-1.645553253e+00 l2=5.612190502e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=20810 logit=8.832372
+[GREEDY] selected=20810
+[GREEDY] probe comma id=29892 logit=5.925943
+[GREEDY] probe newline id=13 logit=5.718417
+[GREEDY] probe UE id=4462 logit=-1.088857
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.138043
+[GREEDY] top10: 20810:8.832372 4423:8.560187 1887:8.469979 366:8.313038 14827:8.185154 671:7.909615 1788:7.906102 7395:7.817127 9826:7.757449 8952:7.612116
+[B3_LOGITS] AFTER sampleToken token=20810
+[B3_LOGITS] Storing token 20810 at index 25
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=76.917175 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=985 size=32000 min=-1.504296207e+01 max=8.844713211e+00 mean=-2.023595944e+00 l2=5.654622466e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=22131 logit=8.844713
+[GREEDY] selected=22131
+[GREEDY] probe comma id=29892 logit=6.416733
+[GREEDY] probe newline id=13 logit=4.698683
+[GREEDY] probe UE id=4462 logit=0.678766
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.690856
+[GREEDY] top10: 22131:8.844713 526:8.032538 3524:7.605638 29934:7.258823 671:7.186644 3492:7.114556 366:7.062380 10650:7.060651 17506:7.013270 29889:6.890246
+[B3_LOGITS] AFTER sampleToken token=22131
+[B3_LOGITS] Storing token 22131 at index 26
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=77.306114 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=986 size=32000 min=-1.048405075e+01 max=1.870269966e+01 mean=-9.323682195e-01 l2=4.508287640e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29878 logit=18.702700
+[GREEDY] selected=29878
+[GREEDY] probe comma id=29892 logit=6.324636
+[GREEDY] probe newline id=13 logit=7.075096
+[GREEDY] probe UE id=4462 logit=3.014836
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.764314
+[GREEDY] top10: 29878:18.702700 276:13.099305 29934:13.077810 29893:12.360072 719:12.162843 13975:11.733941 19046:11.585718 17697:11.144958 29916:11.067808 2241:10.806285
+[B3_LOGITS] AFTER sampleToken token=29878
+[B3_LOGITS] Storing token 29878 at index 27
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=75.115685 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=987 size=32000 min=-1.306389427e+01 max=1.813620377e+01 mean=-1.347117879e+00 l2=4.771624269e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29990 logit=18.136204
+[GREEDY] selected=29990
+[GREEDY] probe comma id=29892 logit=7.914130
+[GREEDY] probe newline id=13 logit=6.786419
+[GREEDY] probe UE id=4462 logit=3.957309
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.274712
+[GREEDY] top10: 29990:18.136204 1252:10.991767 1060:10.597016 12188:10.548543 29916:10.145023 18454:10.036617 29889:9.441549 28462:9.309540 29979:9.250683 3492:9.137840
+[B3_LOGITS] AFTER sampleToken token=29990
+[B3_LOGITS] Storing token 29990 at index 28
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=77.163383 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=988 size=32000 min=-1.115559959e+01 max=1.970330048e+01 mean=-1.158133136e+00 l2=4.655180750e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29928 logit=19.703300
+[GREEDY] selected=29928
+[GREEDY] probe comma id=29892 logit=7.391158
+[GREEDY] probe newline id=13 logit=8.137671
+[GREEDY] probe UE id=4462 logit=1.243943
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.619482
+[GREEDY] top10: 29928:19.703300 29881:14.808250 19558:13.731158 12696:13.526358 7858:13.517913 7698:13.316422 27838:12.897341 12972:12.727974 8452:12.555901 4037:12.170100
+[B3_LOGITS] AFTER sampleToken token=29928
+[B3_LOGITS] Storing token 29928 at index 29
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=82.410629 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=989 size=32000 min=-1.311775398e+01 max=1.391646481e+01 mean=-1.692946750e+00 l2=5.120128770e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29915 logit=13.916465
+[GREEDY] selected=29915
+[GREEDY] probe comma id=29892 logit=9.914848
+[GREEDY] probe newline id=13 logit=9.596051
+[GREEDY] probe UE id=4462 logit=0.635572
+[GREEDY] probe comma_alt_1919 id=1919 logit=4.215021
+[GREEDY] top10: 29915:13.916465 29892:9.914848 13:9.596051 29889:9.543365 322:8.424435 29991:8.039595 671:7.910493 3867:7.477327 29952:7.205587 525:7.137644
+[B3_LOGITS] AFTER sampleToken token=29915
+[B3_LOGITS] Storing token 29915 at index 30
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=75.385925 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=990 size=32000 min=-9.136052132e+00 max=1.944031715e+01 mean=-6.852051563e-01 l2=4.216627686e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29879 logit=19.440317
+[GREEDY] selected=29879
+[GREEDY] probe comma id=29892 logit=1.265096
+[GREEDY] probe newline id=13 logit=8.006559
+[GREEDY] probe UE id=4462 logit=-1.073138
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.751970
+[GREEDY] top10: 29879:19.440317 578:11.731249 1028:11.472609 4501:11.302885 893:10.747218 1557:10.658337 5223:10.593122 2774:10.571080 1100:10.549427 29903:10.324457
+[B3_LOGITS] AFTER sampleToken token=29879
+[B3_LOGITS] Storing token 29879 at index 31
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=83.164558 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=991 size=32000 min=-1.220406342e+01 max=1.037052345e+01 mean=-1.086009085e+00 l2=4.641236227e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=10858 logit=10.370523
+[GREEDY] selected=10858
+[GREEDY] probe comma id=29892 logit=6.762825
+[GREEDY] probe newline id=13 logit=7.972658
+[GREEDY] probe UE id=4462 logit=-1.111760
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.410556
+[GREEDY] top10: 10858:10.370523 8066:9.742457 3492:9.522796 596:9.265640 6293:9.019850 20810:8.847028 3575:8.413603 28502:8.323447 13:7.972658 887:7.958245
+[B3_LOGITS] AFTER sampleToken token=10858
+[B3_LOGITS] Storing token 10858 at index 32
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=83.311646 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=992 size=32000 min=-1.403869247e+01 max=9.780716896e+00 mean=-1.887264617e+00 l2=5.561582005e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=1887 logit=9.780717
+[GREEDY] selected=1887
+[GREEDY] probe comma id=29892 logit=3.800789
+[GREEDY] probe newline id=13 logit=4.549190
+[GREEDY] probe UE id=4462 logit=1.735495
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.229141
+[GREEDY] top10: 1887:9.780717 4423:9.547768 9959:9.430601 29931:9.328142 17015:8.735729 5976:8.668682 3524:8.638611 1914:8.523298 6508:8.375121 365:8.131197
+[B3_LOGITS] AFTER sampleToken token=1887
+[B3_LOGITS] Storing token 1887 at index 33
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=81.557274 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=993 size=32000 min=-1.379202461e+01 max=1.012559128e+01 mean=-2.364437275e+00 l2=6.382306722e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=577 logit=10.125591
+[GREEDY] selected=577
+[GREEDY] probe comma id=29892 logit=8.469208
+[GREEDY] probe newline id=13 logit=5.978299
+[GREEDY] probe UE id=4462 logit=-0.899571
+[GREEDY] probe comma_alt_1919 id=1919 logit=4.482889
+[GREEDY] top10: 577:10.125591 1788:8.920166 537:8.536294 1105:8.475219 29892:8.469208 1887:8.321233 2913:8.296112 775:8.175124 470:8.153534 4423:8.035747
+[B3_LOGITS] AFTER sampleToken token=577
+[B3_LOGITS] Storing token 577 at index 34
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=79.741051 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=994 size=32000 min=-1.189027309e+01 max=1.752980804e+01 mean=-1.796947188e+00 l2=5.377628067e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=9359 logit=17.529808
+[GREEDY] selected=9359
+[GREEDY] probe comma id=29892 logit=6.482925
+[GREEDY] probe newline id=13 logit=6.130279
+[GREEDY] probe UE id=4462 logit=0.730911
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.263400
+[GREEDY] top10: 9359:17.529808 369:14.375514 1310:11.309263 345:10.890515 29872:10.838725 12675:9.633990 495:9.616349 720:9.566692 2330:9.516895 4895:9.141430
+[B3_LOGITS] AFTER sampleToken token=9359
+[B3_LOGITS] Storing token 9359 at index 35
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.100578 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=995 size=32000 min=-1.109181499e+01 max=2.219172096e+01 mean=-1.606348015e+00 l2=5.295048729e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=335 logit=22.191721
+[GREEDY] selected=335
+[GREEDY] probe comma id=29892 logit=7.031164
+[GREEDY] probe newline id=13 logit=8.051034
+[GREEDY] probe UE id=4462 logit=-4.429408
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.943752
+[GREEDY] top10: 335:22.191721 647:17.562372 1141:16.169373 2231:14.949352 2101:14.623631 25692:14.286924 4895:13.759855 292:13.465547 4087:12.577625 6259:12.532339
+[B3_LOGITS] AFTER sampleToken token=335
+[B3_LOGITS] Storing token 335 at index 36
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.323570 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=996 size=32000 min=-1.170452881e+01 max=2.021284103e+01 mean=-2.120337182e+00 l2=5.921254608e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=593 logit=20.212841
+[GREEDY] selected=593
+[GREEDY] probe comma id=29892 logit=6.295590
+[GREEDY] probe newline id=13 logit=7.303852
+[GREEDY] probe UE id=4462 logit=-3.625657
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.969303
+[GREEDY] top10: 593:20.212841 299:14.741445 484:12.306523 3801:11.131135 17720:10.530944 13712:10.435561 2264:10.340955 386:9.996776 524:9.940529 1076:9.646295
+[B3_LOGITS] AFTER sampleToken token=593
+[B3_LOGITS] Storing token 593 at index 37
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=79.648727 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=997 size=32000 min=-9.699111938e+00 max=1.338407898e+01 mean=-1.341645414e+00 l2=4.987307436e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=354 logit=13.384079
+[GREEDY] selected=354
+[GREEDY] probe comma id=29892 logit=6.884202
+[GREEDY] probe newline id=13 logit=6.779485
+[GREEDY] probe UE id=4462 logit=-3.215362
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.320005
+[GREEDY] top10: 354:13.384079 397:12.629879 7288:12.553368 668:12.353298 29891:12.208248 1740:12.080605 603:11.832805 356:11.043896 459:10.948577 1165:10.751311
+[B3_LOGITS] AFTER sampleToken token=354
+[B3_LOGITS] Storing token 354 at index 38
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=77.054077 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=998 size=32000 min=-1.047975636e+01 max=9.281121254e+00 mean=-1.583852254e+00 l2=5.242921382e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=488 logit=9.281121
+[GREEDY] selected=488
+[GREEDY] probe comma id=29892 logit=7.354122
+[GREEDY] probe newline id=13 logit=5.445885
+[GREEDY] probe UE id=4462 logit=-2.594300
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.147142
+[GREEDY] top10: 488:9.281121 381:9.088978 3668:8.993918 706:8.988729 1887:8.837836 29891:8.519898 12116:8.472712 361:8.469385 7661:8.348007 29888:8.323366
+[B3_LOGITS] AFTER sampleToken token=488
+[B3_LOGITS] Storing token 488 at index 39
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=78.770943 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=999 size=32000 min=-9.907804489e+00 max=1.056942368e+01 mean=-1.569117679e+00 l2=5.240892755e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=369 logit=10.569424
+[GREEDY] selected=369
+[GREEDY] probe comma id=29892 logit=8.242172
+[GREEDY] probe newline id=13 logit=5.974538
+[GREEDY] probe UE id=4462 logit=-2.587246
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.273189
+[GREEDY] top10: 369:10.569424 1201:9.588737 459:9.318467 29887:8.974795 386:8.928651 2997:8.907287 29886:8.844492 29889:8.267104 29892:8.242172 1552:8.178416
+[B3_LOGITS] AFTER sampleToken token=369
+[B3_LOGITS] Storing token 369 at index 40
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=80.317894 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1000 size=32000 min=-9.961713791e+00 max=1.067521286e+01 mean=-1.563443523e+00 l2=5.325867376e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=482 logit=10.675213
+[GREEDY] selected=482
+[GREEDY] probe comma id=29892 logit=7.577341
+[GREEDY] probe newline id=13 logit=6.070952
+[GREEDY] probe UE id=4462 logit=-4.634737
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.668478
+[GREEDY] top10: 482:10.675213 4063:9.486992 361:9.477821 2231:9.358611 479:9.300915 568:9.137520 488:9.065207 2164:8.941995 7577:8.765311 537:8.739170
+[B3_LOGITS] AFTER sampleToken token=482
+[B3_LOGITS] Storing token 482 at index 41
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=77.740448 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1001 size=32000 min=-1.121512794e+01 max=9.943380356e+00 mean=-1.788280031e+00 l2=5.491068427e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=22131 logit=9.943380
+[GREEDY] selected=22131
+[GREEDY] probe comma id=29892 logit=8.159194
+[GREEDY] probe newline id=13 logit=7.054969
+[GREEDY] probe UE id=4462 logit=-0.150134
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.067904
+[GREEDY] top10: 22131:9.943380 1319:9.394318 29889:8.897687 3730:8.823451 29916:8.592896 3538:8.467158 29892:8.159194 29883:8.032603 310:7.923580 29872:7.825183
+[B3_LOGITS] AFTER sampleToken token=22131
+[B3_LOGITS] Storing token 22131 at index 42
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=75.238289 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1002 size=32000 min=-1.020986748e+01 max=1.559265900e+01 mean=-1.305468192e+00 l2=4.716468219e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29878 logit=15.592659
+[GREEDY] selected=29878
+[GREEDY] probe comma id=29892 logit=7.146136
+[GREEDY] probe newline id=13 logit=6.393332
+[GREEDY] probe UE id=4462 logit=1.539431
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.383861
+[GREEDY] top10: 29878:15.592659 29934:10.843369 29893:10.746287 276:10.722583 29916:10.639320 719:9.808658 19046:9.730407 13975:9.468161 29880:9.432163 1127:9.190464
+[B3_LOGITS] AFTER sampleToken token=29878
+[B3_LOGITS] Storing token 29878 at index 43
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=72.276207 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1003 size=32000 min=-1.299156284e+01 max=1.404106045e+01 mean=-1.690781917e+00 l2=5.144899746e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29990 logit=14.041060
+[GREEDY] selected=29990
+[GREEDY] probe comma id=29892 logit=7.466308
+[GREEDY] probe newline id=13 logit=6.382154
+[GREEDY] probe UE id=4462 logit=2.222576
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.688031
+[GREEDY] top10: 29990:14.041060 1060:9.967993 29889:8.625187 29979:8.200614 1252:7.816747 29892:7.466308 29956:7.421015 278:7.386296 366:7.379541 29916:7.263851
+[B3_LOGITS] AFTER sampleToken token=29990
+[B3_LOGITS] Storing token 29990 at index 44
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=70.874672 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1004 size=32000 min=-1.164552975e+01 max=1.737297821e+01 mean=-1.788539347e+00 l2=5.172187046e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29928 logit=17.372978
+[GREEDY] selected=29928
+[GREEDY] probe comma id=29892 logit=7.163218
+[GREEDY] probe newline id=13 logit=7.295787
+[GREEDY] probe UE id=4462 logit=-0.009085
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.901221
+[GREEDY] top10: 29928:17.372978 12696:12.417594 27838:12.194786 19558:12.170940 7858:11.828110 7698:11.795760 12130:11.408092 29881:11.274291 12972:11.177221 8452:11.085353
+[B3_LOGITS] AFTER sampleToken token=29928
+[B3_LOGITS] Storing token 29928 at index 45
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=81.322296 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1005 size=32000 min=-1.420493221e+01 max=1.124648476e+01 mean=-1.799509652e+00 l2=5.454406347e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29915 logit=11.246485
+[GREEDY] selected=29915
+[GREEDY] probe comma id=29892 logit=8.618651
+[GREEDY] probe newline id=13 logit=7.703411
+[GREEDY] probe UE id=4462 logit=-0.660280
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.719733
+[GREEDY] top10: 29915:11.246485 29889:10.123134 29892:8.618651 322:8.165556 29936:7.755351 13:7.703411 278:7.572889 22131:7.446344 1552:7.400055 29918:7.243499
+[B3_LOGITS] AFTER sampleToken token=29915
+[B3_LOGITS] Storing token 29915 at index 46
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=75.822060 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=000002A200000000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1006 size=32000 min=-1.077641201e+01 max=1.643209076e+01 mean=-1.325704406e+00 l2=4.800772254e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29879 logit=16.432091
+[GREEDY] selected=29879
+[GREEDY] probe comma id=29892 logit=0.038483
+[GREEDY] probe newline id=13 logit=7.710922
+[GREEDY] probe UE id=4462 logit=-2.501949
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.890722
+[GREEDY] top10: 29879:16.432091 578:9.559420 1552:9.284979 276:9.089177 29903:8.726844 29878:8.555212 29881:8.509200 645:8.493189 29874:8.477118 1028:8.425999
+[B3_LOGITS] AFTER sampleToken token=29879
+[B3_LOGITS] Storing token 29879 at index 47
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[B3_LOGITS] Generation loop exited, tokensGenerated=48
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[Deep2Engine] Generation complete: 48 tokens in 241771.37 ms (0.20 TPS)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+Here's▁a▁revised▁version▁of▁the▁code▁with▁the▁necessary▁changes▁to▁use▁the▁provided▁tools:
+
+```
+You▁nearbyRawrXD'sYour▁local▁sovereigntheileverageRawrXD's
+
+[AGENT_DONE]
+status=success
+steps=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

@@ -1,0 +1,65 @@
+# RawrXD.RawrXD.yaml
+# Phase H.2 Batch 1/5: Windows Package Manager (Winget) Manifest
+# https://docs.microsoft.com/en-us/windows/package-manager/package/
+
+PackageIdentifier: RawrXD.RawrXD
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: RawrXD AI
+PublisherUrl: https://rawrxd.ai
+PublisherSupportUrl: https://github.com/ItsMehRAWRXD/RawrXD/issues
+PrivacyUrl: https://rawrxd.ai/privacy
+Author: RawrXD Team
+PackageName: RawrXD Sovereign
+PackageUrl: https://rawrxd.ai/download
+License: MIT
+LicenseUrl: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/LICENSE
+Copyright: Copyright (c) 2026 RawrXD AI
+CopyrightUrl: https://rawrxd.ai/legal
+ShortDescription: Sovereign AI runtime with autonomous capabilities
+Description: |
+  RawrXD Sovereign is a production-grade AI inference runtime featuring:
+  - Autonomous operation with self-healing capabilities
+  - Hotpatch MASM kernel optimization (zero-downtime updates)
+  - Chaos engineering validation for production resilience
+  - Intelligent operations with predictive analytics
+  - Multi-platform support (Windows, macOS, Linux)
+  
+  Designed for enterprise deployment with 99.99% availability targets.
+Moniker: rawrxd
+Tags:
+  - ai
+  - inference
+  - llm
+  - machine-learning
+  - autonomous
+  - sovereign
+  - runtime
+  - production
+MinimumOSVersion: 10.0.17763.0
+InstallerType: wix
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+UpgradeBehavior: install
+Commands:
+  - rawrxd
+  - rawrxd-cli
+FileExtensions:
+  - gguf
+  - onnx
+Protocols:
+  - rawrxd
+ReleaseDate: 2026-07-13
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v1.0.0/RawrXD-1.0.0-x64.msi
+    InstallerSha256: PLACEHOLDER_SHA256
+    Scope: machine
+    InstallerLocale: en-US
+    ProductCode: "{12345678-1234-1234-1234-123456789012}"
+    ElevationRequirement: elevationRequired
+    ReleaseDate: 2026-07-13
+ManifestType: singleton
+ManifestVersion: 1.4.0

@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\ydEc.asm
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(953) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(956) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(957) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(959) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(961) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(971) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(984) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(991) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1038) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1041) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1044) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1046) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1056) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1069) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1076) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1749) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1750) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1756) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1757) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(1916) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(3968) : error A2006:undefined symbol : szChatComp
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(3975) : error A2006:undefined symbol : szInputComp
+D:\rawrxd\history\-1bd1bafa\ydEc.asm(3976) : error A2006:undefined symbol : COMPONENT_INPUT

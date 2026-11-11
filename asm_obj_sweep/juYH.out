@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-2b4f82f3\juYH.asm
+D:\rawrxd\history\-2b4f82f3\juYH.asm(6) : error A2008:syntax error : BITS
+D:\rawrxd\history\-2b4f82f3\juYH.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\-2b4f82f3\juYH.asm(14) : error A2008:syntax error : define
+D:\rawrxd\history\-2b4f82f3\juYH.asm(15) : error A2008:syntax error : define
+D:\rawrxd\history\-2b4f82f3\juYH.asm(16) : error A2008:syntax error : define
+D:\rawrxd\history\-2b4f82f3\juYH.asm(17) : error A2008:syntax error : define
+D:\rawrxd\history\-2b4f82f3\juYH.asm(23) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\juYH.asm(25) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\juYH.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(27) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(43) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2b4f82f3\juYH.asm(45) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2b4f82f3\juYH.asm(47) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2b4f82f3\juYH.asm(54) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(55) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(56) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(57) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(58) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(59) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(60) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\juYH.asm(72) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\juYH.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(79) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\juYH.asm(86) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\juYH.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(98) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(117) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\juYH.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(131) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\juYH.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(145) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(152) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\juYH.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(157) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\juYH.asm(158) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(168) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(173) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(174) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\juYH.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(178) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\juYH.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(181) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(182) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\juYH.asm(183) : fatal error A1012:error count exceeds 100; stopping assembly

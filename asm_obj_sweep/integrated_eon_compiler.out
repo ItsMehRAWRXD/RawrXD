@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(19) : error A2008:syntax error : compiler_state
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(20) : error A2008:syntax error : compiler_phase
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(21) : error A2008:syntax error : compiler_input_file
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(22) : error A2008:syntax error : compiler_output_file
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(23) : error A2008:syntax error : compiler_ast
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(24) : error A2008:syntax error : compiler_ir
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(25) : error A2008:syntax error : compiler_assembly
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(26) : error A2008:syntax error : compiler_errors
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(27) : error A2008:syntax error : compiler_warnings
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(28) : error A2008:syntax error : compiler_optimization_level
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(29) : error A2008:syntax error : compiler_debug_info
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(30) : error A2008:syntax error : compiler_verbose
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(33) : error A2008:syntax error : lexer_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(34) : error A2008:syntax error : parser_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(35) : error A2008:syntax error : semantic_analyzer_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(36) : error A2008:syntax error : code_generator_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(37) : error A2008:syntax error : assembly_output_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(40) : error A2008:syntax error : compilation_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(41) : error A2008:syntax error : lexing_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(42) : error A2008:syntax error : parsing_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(43) : error A2008:syntax error : semantic_analysis_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(44) : error A2008:syntax error : code_generation_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(45) : error A2008:syntax error : optimization_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(46) : error A2008:syntax error : assembly_output_time
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(47) : error A2008:syntax error : tokens_generated
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(48) : error A2008:syntax error : ast_nodes_created
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(49) : error A2008:syntax error : ir_instructions_generated
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(50) : error A2008:syntax error : assembly_instructions_generated
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(51) : error A2008:syntax error : functions_compiled
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(52) : error A2008:syntax error : variables_processed
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(53) : error A2008:syntax error : types_checked
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(54) : error A2008:syntax error : scopes_processed
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(57) : error A2008:syntax error : compiler_config
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(58) : error A2008:syntax error : target_architecture
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(59) : error A2008:syntax error : target_os
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(60) : error A2008:syntax error : target_format
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(61) : error A2008:syntax error : optimization_flags
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(62) : error A2008:syntax error : warning_flags
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(63) : error A2008:syntax error : debug_flags
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(66) : error A2008:syntax error : error_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(67) : error A2008:syntax error : error_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(68) : error A2008:syntax error : warning_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(69) : error A2008:syntax error : warning_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(70) : error A2008:syntax error : max_errors
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(71) : error A2008:syntax error : max_warnings
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(72) : error A2008:syntax error : error_recovery_enabled
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(75) : error A2008:syntax error : input_file_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(76) : error A2008:syntax error : output_file_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(77) : error A2008:syntax error : input_file_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(78) : error A2008:syntax error : output_file_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(79) : error A2008:syntax error : input_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(80) : error A2008:syntax error : output_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(81) : error A2008:syntax error : input_buffer_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(82) : error A2008:syntax error : output_buffer_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(84) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(85) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(86) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(87) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(88) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(89) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(90) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(91) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(92) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(93) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(94) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(95) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(96) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(97) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(98) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(99) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(100) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(101) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(102) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(103) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(104) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(105) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(106) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(107) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(108) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(109) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(110) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(111) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(112) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(116) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(123) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(127) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(130) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(131) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(132) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm(133) : fatal error A1012:error count exceeds 100; stopping assembly

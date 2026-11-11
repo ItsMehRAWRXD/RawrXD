@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(39) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(148) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(152) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(192) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(206) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(213) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(239) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(244) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(245) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(246) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(295) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(332) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(334) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(370) : error A2008:syntax error : bits
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(371) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(419) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(421) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(422) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(423) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(424) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(425) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(426) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(429) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(430) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(431) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(432) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(433) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(436) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(437) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(438) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(441) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(442) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(443) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(446) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(447) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(448) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(449) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(452) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(453) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(454) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(455) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(458) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(459) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(460) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(463) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(464) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(465) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(467) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(468) : error A2008:syntax error : global
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(469) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(470) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(471) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(472) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(473) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(474) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(475) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(476) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(477) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(478) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(479) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(480) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(481) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(482) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(483) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(484) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(485) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(533) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(547) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(562) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(577) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(581) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(585) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(597) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(656) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(663) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(669) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(673) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(677) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(681) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(685) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(689) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(693) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(696) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(728) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(730) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(742) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(750) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(759) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(773) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(781) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(790) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(796) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(797) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(800) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(812) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(822) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(832) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(878) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(881) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771287844717_QiCi.asm(920) : fatal error A1012:error count exceeds 100; stopping assembly

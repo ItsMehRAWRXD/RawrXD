@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(555) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(30) : error A2005:symbol redefinition : ml_masm_init
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(52) : error A2005:symbol redefinition : ml_masm_inference
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(75) : error A2005:symbol redefinition : ml_masm_get_arch
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(107) : error A2005:symbol redefinition : ml_masm_get_tensor
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(128) : error A2005:symbol redefinition : ml_masm_get_response
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(150) : error A2005:symbol redefinition : ml_masm_last_error
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(168) : error A2005:symbol redefinition : ml_masm_free
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(213) : error A2005:symbol redefinition : parse_gguf_metadata_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(239) : error A2005:symbol redefinition : format_arch_string
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(269) : error A2005:symbol redefinition : agent_chat_load_model
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(297) : error A2005:symbol redefinition : agent_chat_run_inference
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(329) : error A2005:symbol redefinition : agent_chat_get_session_state
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(345) : error A2005:symbol redefinition : agent_chat_is_model_loaded
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(360) : error A2005:symbol redefinition : agent_chat_get_inference_count
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(383) : error A2005:symbol redefinition : test_gguf_loader_main
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(403) : error A2005:symbol redefinition : model_loader_init
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(424) : error A2005:symbol redefinition : model_loader_load_gguf_model
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(447) : error A2005:symbol redefinition : model_loader_run_inference
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(477) : error A2005:symbol redefinition : model_loader_get_metrics
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(503) : error A2005:symbol redefinition : model_loader_get_state
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(519) : error A2005:symbol redefinition : model_loader_is_initialized
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(535) : error A2005:symbol redefinition : model_loader_unload_current_model
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_GGUF_LOADER_API_REFERENCE.asm(550) : error A2005:symbol redefinition : model_loader_run_self_tests

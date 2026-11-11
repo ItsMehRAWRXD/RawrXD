@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906113009_5jrJ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906113009_5jrJ.asm(245) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906113009_5jrJ.asm(575) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906113009_5jrJ.asm(599) : error A2006:undefined symbol : wsprintfA

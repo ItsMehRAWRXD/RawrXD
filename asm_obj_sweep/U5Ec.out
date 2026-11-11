@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\-240f271b\U5Ec.asm
+D:\rawrxd\history\-240f271b\U5Ec.asm(41) : error A2008:syntax error : size
+D:\rawrxd\history\-240f271b\U5Ec.asm(167) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(250) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(285) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(307) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(311) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(320) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(323) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(332) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(335) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(386) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(388) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(397) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(400) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(445) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-240f271b\U5Ec.asm(458) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(461) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(470) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(474) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\U5Ec.asm(406) : warning A6004:procedure argument or local not referenced : idx

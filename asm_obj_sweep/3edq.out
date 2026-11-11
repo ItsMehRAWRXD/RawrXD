@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\-137b8862\3edq.asm
+D:\rawrxd\history\-137b8862\3edq.asm(20) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(21) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(22) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(23) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(24) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(25) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(26) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(27) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\3edq.asm(193) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\3edq.asm(262) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\3edq.asm(140) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\3edq.asm(161) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\3edq.asm(267) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\3edq.asm(323) : error A2022:instruction operands must be the same size

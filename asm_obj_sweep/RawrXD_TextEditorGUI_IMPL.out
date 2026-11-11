@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(261) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(36) : error A2006:undefined symbol : GetWindowLongPtrA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(57) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(58) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(143) : error A2006:undefined symbol : GetStockObject
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(152) : error A2006:undefined symbol : RegisterClassA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(172) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(204) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(228) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(233) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(255) : error A2006:undefined symbol : BeginPaintA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(283) : error A2006:undefined symbol : EndPaintA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(396) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(431) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(469) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(504) : error A2006:undefined symbol : GlobalFree
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(511) : error A2006:undefined symbol : GlobalFree
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(515) : error A2006:undefined symbol : PostQuitMessage
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(779) : error A2006:undefined symbol : CreateMenu
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(783) : error A2006:undefined symbol : CreateMenu
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(804) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(815) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(832) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(843) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(880) : error A2006:undefined symbol : GetOpenFileNameA
+D:\rawrxd\RawrXD_TextEditorGUI_IMPL.asm(913) : error A2006:undefined symbol : GetSaveFileNameA

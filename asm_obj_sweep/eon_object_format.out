@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(10) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(11) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(12) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(13) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(14) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(15) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(39) : error A2005:symbol redefinition : RELOC_RELATIVE
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(68) : error A2005:symbol redefinition : SECTION_GROUP
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(75) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(77) : error A2008:syntax error : obj_file_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(78) : error A2008:syntax error : obj_file_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(81) : error A2008:syntax error : symbol_table
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(82) : error A2008:syntax error : symbol_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(85) : error A2008:syntax error : string_table
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(86) : error A2008:syntax error : string_table_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(89) : error A2008:syntax error : relocation_table
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(90) : error A2008:syntax error : relocation_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(93) : error A2008:syntax error : code_section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(94) : error A2008:syntax error : code_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(97) : error A2008:syntax error : data_section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(98) : error A2008:syntax error : data_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(100) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(101) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(102) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(103) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(104) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(105) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(106) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(107) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(108) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(109) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(110) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(111) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(113) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(118) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(119) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(123) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(124) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(130) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(131) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(132) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(133) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(135) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(136) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(138) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(139) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(140) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(143) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(146) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(148) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(149) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(151) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(152) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(161) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(162) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(163) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(166) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(167) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(170) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(173) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(176) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(182) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(185) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(186) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(188) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(189) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(191) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(192) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(193) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(201) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(202) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(203) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(206) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(209) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(212) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(215) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(218) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(219) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(221) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(222) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(224) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(225) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(226) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(232) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(233) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(234) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_object_format.asm(235) : fatal error A1012:error count exceeds 100; stopping assembly

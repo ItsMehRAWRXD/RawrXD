@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_ui_telemetry_view.asm\1766358232514_URa5.asm
+D:\rawrxd\history\all_versions\pifabric_ui_telemetry_view.asm\1766358232514_URa5.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_telemetry_view.asm\1766358232514_URa5.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_telemetry_view.asm\1766358232514_URa5.asm(7) : fatal error A1000:cannot open file : user32.inc

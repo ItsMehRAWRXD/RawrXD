@@ -1,0 +1,45 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(274) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(275) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(276) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(277) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(280) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(289) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(290) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(291) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(292) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(295) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(313) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(314) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(317) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(326) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(327) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(328) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(329) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(332) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(420) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(731) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(732) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(867) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(509) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(512) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(515) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(520) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(521) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(526) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(542) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(546) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(550) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(553) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(554) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(555) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(558) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(600) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(689) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(786) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(843) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771508148981_ResG.asm(907) : error A2220:Missing .ENDPROLOG

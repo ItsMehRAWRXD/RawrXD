@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769838170804_fkzs.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769838170804_fkzs.asm(22) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769838170804_fkzs.asm(31) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769838170804_fkzs.asm(40) : error A2220:Missing .ENDPROLOG

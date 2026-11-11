@@ -1,0 +1,23 @@
+[23:38:52.649] PID=21804 CRT_ENTRY_REACHED
+[23:38:52.655] PID=21804 STATIC_INIT_COMPLETE_OK
+[Prometheus] bind() failed on port 9090 (WSA=10048); exporter will continue in degraded mode.
+[23:38:52.664] PID=21804 INIT_0_WINMAIN_ENTRY_REACHED
+[Prometheus] Listening on port 9091 for /metrics...
+[SMOKE] start model=d:\rawrxd\model_solo\tinyllama_fresh.gguf  max_tokens=128 timeout_ms=120000
+[SMOKE] trace_path=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json
+[SMOKE] post-embedding checkpoint reached (model loaded). load_only=0 cpu_only=0 skip_gpu=0
+[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection
+ggml_vulkan: Found 2 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon AI PRO R9700 (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 32 | shared memory: 32768 | int dot: 1 | matrix cores: none
+[RawrXD][GPU] Vulkan locked: AMD Radeon AI PRO R9700 (31704 MiB free / 32624 MiB total) across 2 device(s)
+[PIPELINE MODE] gpu
+[PIPELINE ACTIVE] runLocalInferencePipeline entered
+[PIPELINE TRACE] wrote trace JSON
+But if I want to send more text messages, I can do that by adding the following code to my Python library:```pythonimport twilio# Twilio account SID and auth tokenaccount_sid = "your_sid"auth_token = "your_token"client = twilio.client(account_sid, auth_token)# Pull or set number of conversationsconversation_ids = fetch_conversation_ids(client)total_conversation_count = len(conversation
+[PIPELINE_END] completed=1 tokens=112
+[PIPELINE DONE] runLocalInferencePipeline ok
+
+[PIPELINE_END] completed=1 tokens=112
+
+[chat-smoke-headless] PASS: no-window chat path completed; trace=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json bytes=3958

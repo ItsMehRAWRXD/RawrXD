@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\reverser_compiler\tests\test_reverser_runtime.asm
+D:\rawrxd\src\reverse_engineering\reverser_compiler\tests\test_reverser_runtime.asm(5) : fatal error A1000:cannot open file : "reverser_runtime.asm"

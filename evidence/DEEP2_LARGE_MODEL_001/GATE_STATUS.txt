@@ -1,0 +1,2 @@
+weight_bytes=667078656 peak_window=107520000 gen=4 growth=0
+DEEP2_LARGE_MODEL_001=PASS

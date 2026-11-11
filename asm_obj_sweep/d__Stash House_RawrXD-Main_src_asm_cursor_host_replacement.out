@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(37) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(108) : error A2008:syntax error : CreateNamedPipeA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(119) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(123) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(191) : error A2008:syntax error : CreateProcessA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(223) : error A2008:syntax error : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(227) : error A2008:syntax error : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(242) : error A2008:syntax error : CreateNamedPipeA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(272) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(276) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(328) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(329) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(332) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(366) : error A2008:syntax error : LoadLibraryA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(425) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(487) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(493) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(506) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(509) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(516) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(517) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(567) : error A2008:syntax error : GetFileAttributesA
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(173) : error A2006:undefined symbol : STARTUPINFO
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_cursor_host_replacement.asm(176) : error A2006:undefined symbol : STARTUPINFO

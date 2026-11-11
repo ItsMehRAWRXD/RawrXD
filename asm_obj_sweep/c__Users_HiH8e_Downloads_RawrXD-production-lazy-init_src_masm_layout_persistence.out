@@ -1,0 +1,41 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(109) : error A2006:undefined symbol : LAYOUT_FILE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(130) : error A2006:undefined symbol : ui_get_main_hwnd
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(132) : error A2006:undefined symbol : temp_rect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(133) : error A2006:undefined symbol : GetWindowRect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(135) : error A2006:undefined symbol : temp_rect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(136) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(139) : error A2006:undefined symbol : temp_rect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(140) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(144) : error A2006:undefined symbol : szEditorVisible
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(145) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(149) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(150) : error A2006:undefined symbol : append_json_bool
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(153) : error A2006:undefined symbol : output_pane_is_visible
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(155) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(156) : error A2006:undefined symbol : append_json_bool
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(159) : error A2006:undefined symbol : file_tree_is_visible
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(161) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(162) : error A2006:undefined symbol : append_json_bool
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(165) : error A2006:undefined symbol : chat_pane_is_visible
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(167) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(168) : error A2006:undefined symbol : append_json_bool
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(171) : error A2006:undefined symbol : terminal_pane_is_visible
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(173) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(174) : error A2006:undefined symbol : append_json_bool
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(177) : error A2006:undefined symbol : szTabsJSON
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(178) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(181) : error A2006:undefined symbol : tab_manager_get_count
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(190) : error A2006:undefined symbol : tab_manager_get_tab
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(192) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(200) : error A2006:undefined symbol : g_current_theme
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(201) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(204) : error A2006:undefined symbol : g_font_size
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(205) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(208) : error A2006:undefined symbol : g_auto_save_interval
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(209) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(214) : error A2101:cannot add two relocatable labels
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(255) : error A2006:undefined symbol : LAYOUT_FILE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_layout_persistence.asm(56) : error A2206:missing operator in expression

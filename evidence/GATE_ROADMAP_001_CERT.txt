@@ -1,0 +1,87 @@
+GATE_ROADMAP_001 — RUNTIME CERTIFICATION
+========================================
+Generated: 2026-08-31 (certification pass)
+
+IMPLEMENTATION                 = 15/15 PASS
+
+--- P1_1M_CONTEXT_MASTER_001 ---
+Evidence: f:\~dev\rawrxd\evidence\P1_1M_CONTEXT_MASTER_001\
+
+MASTER_RUNTIME                 = PASS
+MASTER_EXIT                    = 0x00000000
+MASTER_EXE_SHA256              = 87f22bd6503033d54136499fd628b9b8821c89f392d372bcbeeb60523428cbf7
+
+PASS2_RING_PUBLICATION_001     = PASS
+  PASS2_SUBMIT_CALLED          = PASS
+  PASS2_SLOT_WAS_EMPTY_BEFORE  = PASS
+  PASS2_PAYLOAD_NONZERO_BYTES  = 65536
+  PASS2_RELEASE_STATUS         = STATUS_PLAINTEXT
+  PASS2_GENERATION_MATCH       = PASS
+  PASS2_ACQUIRE_AFTER_PUBLISH  = PASS
+  PASS2_GEMV_AFTER_ACQUIRE     = PASS
+  PASS2_OUTPUT_NONZERO         = PASS
+
+PASS2_SMT_PREFETCH_LEAD_001    = PASS
+  PREFETCH_LEAD_CYCLES         = 22428
+  OVERLAP_CYCLES               = 279216
+
+GATE_DISPOSITION_SUMMARY       = PASS
+PASS3_LARGE_PAGE_ENV           = PASS
+PASS4_CONTEXT_1M_STREAM        = PASS
+
+--- P1_OLLAMA_EMIT_001 ---
+Evidence: f:\~dev\rawrxd\evidence\P1_OLLAMA_EMIT_001\
+
+Prior fault (superseded):
+  EMIT_EXIT=9009               = COMMAND_RESOLUTION (bare `python` not on cmd PATH)
+  Fix: pinned Python313 path + quoted args in run_ollama_emit_gates.cmd
+
+Second pass (Python resolved, gates exercised):
+  RUNNER_START                 = PASS
+  GATE_EXECUTION               = REACHABLE
+  EMIT_EXIT                    = 2 (gate predicate failures, not 9009)
+  ALL_EXIT                     = 0
+
+RAWRXD_NO_REASONING_EMIT_001   = PASS (think=false, done=true; model text still wrong)
+RAWRXD_FINAL_ONLY_001          = PASS (prefix block fired on termination probe)
+P1_VERIFIED_EMISSION_001       = FAIL* (operand parse bug: 500,000kg -> mass=500)
+  *Fixed: comma-stripping in extract_operands; spot re-run PASS:
+    verified_line_source=NATIVE_COMPUTE
+    verified_line=5.7142857;499611904.0
+    native_compute_authority=PASS
+    model_emit_matches_native=false (model still wrong; authority is native)
+RAWRXD_JSON_SCHEMA_001         = FAIL (shape PASS, semantics FAIL)
+MODEL_RESPONSE_TERMINATION_001   = FAIL (blocked exposition prefix on verbose model)
+
+OLLAMA_ALL_MODELS_001          = PASS (3/3 HTTP completions)
+
+--- DISPOSITION ---
+MASTER CERTIFICATION           = CERTIFIED
+EMISSION CERTIFICATION         = PARTIAL — re-run run_ollama_emit_gates.cmd after fixes
+
+Freeze blocked on:
+  - JSON_SCHEMA semantic truth
+  - TERMINATION gate on non-exposition prompt variant
+
+--- P1_BANDWIDTH_SANITY_001 ---
+Evidence: f:\~dev\rawrxd\evidence\P1_BANDWIDTH_SANITY_001\
+
+32 GB/token @ 100 TPS:
+  REQUIRED_GBPS                 = 3200.00
+  REQUIRED_TBPS                 = 3.200
+  COMBINED_CEILING_GBPS         = 76.50
+  P1_BANDWIDTH_SANITY_001       = FAIL_NON_PHYSICAL
+
+400 MB/token @ 25 TPS:
+  REQUIRED_GBPS                 = 10.00
+  P1_BANDWIDTH_SANITY_001       = PASS
+
+Verdict: 32×100=3.2 TB/s claim rejected by physics gate.
+
+Fresh emit re-run (2026-08-31):
+  P1_VERIFIED_EMISSION_001       = PASS (native_compute_authority=PASS)
+  EMIT_EXIT                      = 2 (JSON_SCHEMA + TERMINATION still FAIL)
+
+Re-run:
+  cmd.exe /c "f:\~dev\run_ollama_emit_gates.cmd"
+  cmd.exe /c "f:\~dev\run_bandwidth_sanity.cmd"

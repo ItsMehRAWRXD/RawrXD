@@ -1,0 +1,71 @@
+#version 450
+
+// Softmax compute shader
+// output[i] = exp(input[i] - max) / sum(exp(input[j] - max))
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(std430, binding = 1) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_elements;
+};
+
+shared float shared_max[256];
+shared float shared_sum[256];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    // Find max
+    float local_max = -1e30;
+    for (uint i = global_id; i < n_elements; i += gl_NumWorkGroups.x * 256) {
+        local_max = max(local_max, input_data[i]);
+    }
+    
+    shared_max[local_id] = local_max;
+    barrier();
+    
+    // Parallel max reduction
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_max[local_id] = max(shared_max[local_id], shared_max[local_id + stride]);
+        }
+        barrier();
+    }
+    
+    float global_max = shared_max[0];
+    
+    // Compute exp and sum
+    float local_sum = 0.0;
+    for (uint i = global_id; i < n_elements; i += gl_NumWorkGroups.x * 256) {
+        float exp_val = exp(input_data[i] - global_max);
+        output_data[i] = exp_val;  // Store temporarily
+        local_sum += exp_val;
+    }
+    
+    shared_sum[local_id] = local_sum;
+    barrier();
+    
+    // Parallel sum reduction
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_sum[local_id] += shared_sum[local_id + stride];
+        }
+        barrier();
+    }
+    
+    float global_sum = shared_sum[0];
+    
+    // Normalize
+    for (uint i = global_id; i < n_elements; i += gl_NumWorkGroups.x * 256) {
+        output_data[i] /= global_sum;
+    }
+}

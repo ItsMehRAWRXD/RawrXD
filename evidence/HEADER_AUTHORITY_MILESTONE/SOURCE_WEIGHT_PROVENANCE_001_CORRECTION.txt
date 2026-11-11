@@ -1,0 +1,38 @@
+RAWRXD_SOURCE_WEIGHT_PROVENANCE_001_CORRECTION
+ARCHIVE DATE: 2026-10-07
+
+=============================================================================
+CORRECTION TO SOURCE_WEIGHT_PROVENANCE_001
+=============================================================================
+
+ORIGINAL_SOURCE_AUDIT=VALID
+OFFICIAL_BF16_WEIGHTS_FINITE=1
+
+PREVIOUS_CONCLUSION_GGUF_CORRUPT=SUPERSEDED
+ACTUAL_ROOT_CAUSE=STALE_DATA_START_OFFSET
+
+OLD_DATA_START=3972000
+AUTHORITATIVE_DATA_START=3996416
+
+GGUF_ARTIFACT_CORRUPTION=0
+SUPERSEDED_BY=ROM_OFFSET_AUTHORITY_001
+
+=============================================================================
+EXPLANATION
+=============================================================================
+
+The original SOURCE_WEIGHT_PROVENANCE_001 concluded that GGUF corruption
+occurred during conversion/quantization because NaNs were observed in the
+GGUF read at the stale data-start offset (3972000).
+
+Subsequent ROM_OFFSET_AUTHORITY_001 established that the authoritative
+data-start offset is 3996416, not 3972000. The 24,416-byte stale offset
+caused reads from the wrong file position, producing NaN values that were
+incorrectly attributed to GGUF artifact corruption.
+
+The original GGUF file is NOT corrupted. The NaNs were a read-alignment
+artifact, not a quantization/conversion defect.
+
+OFFICIAL_SOURCE_WEIGHT=FINITE (unchanged)
+GGUF_WEIGHT=FINITE (when read at authoritative offset)
+ROOT_CAUSE=STALE_DATA_START_OFFSET (corrected)

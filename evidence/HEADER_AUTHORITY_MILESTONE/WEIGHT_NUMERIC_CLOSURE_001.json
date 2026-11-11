@@ -1,0 +1,65 @@
+{
+  "gate": "RAWRXD_MODELGENIE_WEIGHT_NUMERIC_CLOSURE_001",
+  "archive_date": "2026-10-07",
+  "status": "CERTIFIED_PASS",
+  "final_correction": {
+    "root_cause": "STALE_DATA_START_OFFSET",
+    "old_kDataStart": 3972000,
+    "new_kDataStart": 3996416,
+    "delta_bytes": 24416,
+    "effect": "All tensor reads were off by 24416 bytes"
+  },
+  "official_source_audit": {
+    "repo_id": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+    "tensors_checked": 3,
+    "all_finite": true,
+    "results": {
+      "blk.0.attn_norm.weight": {
+        "shape": [2048],
+        "dtype": "torch.bfloat16",
+        "nonfinite": 0,
+        "nan": 0,
+        "inf": 0,
+        "min": 0.2197266,
+        "max": 7.625
+      },
+      "blk.0.ffn_norm.weight": {
+        "shape": [2048],
+        "dtype": "torch.bfloat16",
+        "nonfinite": 0,
+        "nan": 0,
+        "inf": 0,
+        "min": 0.01611328,
+        "max": 0.4746094
+      },
+      "output_norm.weight": {
+        "shape": [2048],
+        "dtype": "torch.bfloat16",
+        "nonfinite": 0,
+        "nan": 0,
+        "inf": 0,
+        "min": 0.2773438,
+        "max": 2.609375
+      }
+    }
+  },
+  "post_correction_results": {
+    "logits_finite": true,
+    "verdict": "PASS_EXECUTABLE_PARTIAL_MODEL_MATH",
+    "block_0_attn_norm_finite": true,
+    "block_0_ffn_norm_finite": true,
+    "all_27_attn_norm_blocks_finite": true,
+    "all_27_ffn_norm_blocks_finite": true
+  },
+  "closed_frontiers": [
+    "PREVIOUS_NAN_WEIGHT_FRONTIER",
+    "RMSNORM_NUMERIC_FRONTIER",
+    "ROM_OFFSET_AUTHORITY"
+  ],
+  "remaining_work": [
+    "FULL_EXECUTIONIR_001",
+    "MLA real output (27 blocks)",
+    "MoE execution (26 blocks)",
+    "Token-0 emission"
+  ]
+}

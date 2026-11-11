@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(98) : error A2008:syntax error : LogCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(119) : error A2008:syntax error : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(194) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(602) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(751) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(752) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(173) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(179) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(222) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(240) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(281) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(509) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(512) : error A2006:undefined symbol : WM_LBUTTONDBLCLK
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(531) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(534) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(551) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(554) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(614) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(618) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(653) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(659) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(858) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(867) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(148) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(894) : warning A4025:ENDP found before .ENDPROLOG : DllMain
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(894) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508569975_slu3.asm(894) : error A2220:Missing .ENDPROLOG

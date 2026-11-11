@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\W1Vg.asm
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1041) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1052) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1063) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1081) : error A2006:undefined symbol : _write_json_to_file
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1114) : error A2006:undefined symbol : _read_json_from_file
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1130) : error A2006:undefined symbol : _find_json_key
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1153) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1158) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1163) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1168) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1173) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1178) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1183) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1188) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1193) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1198) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1883) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1884) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1890) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(1891) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\W1Vg.asm(2050) : error A2006:undefined symbol : WS_CHILD

@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(136) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(453) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(227) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(236) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(376) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(403) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(420) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(446) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(469) : error A2006:undefined symbol : g_Plugins
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(264) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(281) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(292) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(307) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(318) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(333) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(344) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\reconstructed\RawrXDLoops\plugins.asm(360) : warning A6004:procedure argument or local not referenced : pParams

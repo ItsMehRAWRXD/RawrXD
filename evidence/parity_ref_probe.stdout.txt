@@ -1,0 +1,39 @@
+
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b8352-d23355afc
+model      : tinyllama_fresh.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read               add a text file
+
+
+> hello
+
+Certainly! Here's a sample paragraph with the "less than
+
+[ Prompt: 170.7 t/s | Generation: 58.4 t/s ]
+
+> 
+
+> 
+
+> 
+
+> 
+
+Exiting...
+[0m

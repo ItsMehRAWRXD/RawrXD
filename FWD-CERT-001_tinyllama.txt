@@ -1,0 +1,43 @@
+FWD-CERT-001: Deterministic Forward-Pass Certification
+Model: F:\~dev\tinyllama_fresh.gguf
+File size: 637699456
+Architecture: llama
+Hidden dim: 2048
+Layers: 22
+Heads: 32
+KV heads: 4
+Vocab size: 2048
+Intermediate dim: 5632
+Prompt: Hello
+Seed: 42 (deterministic)
+Tokens generated: 1
+Output token: 1196
+
+=== Branch Selection ===
+Layer,Branch
+0,attention
+1,attention
+2,attention
+3,attention
+4,attention
+5,attention
+6,attention
+7,attention
+8,attention
+9,attention
+10,attention
+11,attention
+12,attention
+13,attention
+14,attention
+15,attention
+16,attention
+17,attention
+18,attention
+19,attention
+20,attention
+21,attention
+
+=== Summary ===
+SSM layers: 0
+Attention layers: 22

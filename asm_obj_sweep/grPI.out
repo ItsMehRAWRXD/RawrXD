@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\-268f42ca\grPI.asm
+D:\rawrxd\history\-268f42ca\grPI.asm(181) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(186) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(191) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(223) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\-268f42ca\grPI.asm(229) : error A2008:syntax error : GetFileSize
+D:\rawrxd\history\-268f42ca\grPI.asm(233) : error A2008:syntax error : CreateFileMappingA
+D:\rawrxd\history\-268f42ca\grPI.asm(239) : error A2008:syntax error : MapViewOfFile
+D:\rawrxd\history\-268f42ca\grPI.asm(259) : error A2008:syntax error : GlobalAlloc
+D:\rawrxd\history\-268f42ca\grPI.asm(272) : error A2008:syntax error : UnmapViewOfFile
+D:\rawrxd\history\-268f42ca\grPI.asm(275) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\-268f42ca\grPI.asm(278) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\-268f42ca\grPI.asm(335) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-268f42ca\grPI.asm(344) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-268f42ca\grPI.asm(350) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(373) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(440) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\-268f42ca\grPI.asm(170) : error A2206:missing operator in expression
+D:\rawrxd\history\-268f42ca\grPI.asm(172) : error A2206:missing operator in expression
+D:\rawrxd\history\-268f42ca\grPI.asm(174) : error A2206:missing operator in expression
+D:\rawrxd\history\-268f42ca\grPI.asm(343) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\-268f42ca\grPI.asm(358) : error A2029:multiple base registers not allowed

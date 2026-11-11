@@ -1,0 +1,126 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(10) : error A2008:syntax error : WIN64
+d:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(9) : error A2008:syntax error : WIN64
+d:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(54) : error A2008:syntax error : byte
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(53) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(57) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(60) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(125) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(136) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(156) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(160) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(193) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(202) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(210) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215) : error A2084:constant value too large
+ CHECK_BUFFER(4): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215) : error A2008:syntax error : &
+ CHECK_BUFFER(5): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215) : error A2008:syntax error : &
+ CHECK_BUFFER(9): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(215): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(227) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(247) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(281) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(290) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(301) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(309) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(320) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(324) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(357) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(366) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(378) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(387) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(398) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(435) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(444) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(449) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(459) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(463) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(519) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(534) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(537) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(562) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566) : error A2084:constant value too large
+ CHECK_BUFFER(4): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566) : error A2008:syntax error : &
+ CHECK_BUFFER(5): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566) : error A2008:syntax error : &
+ CHECK_BUFFER(9): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(566): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(572) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(575) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586) : error A2084:constant value too large
+ CHECK_BUFFER(4): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586) : error A2008:syntax error : &
+ CHECK_BUFFER(5): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586) : error A2008:syntax error : &
+ CHECK_BUFFER(9): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(586): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(591) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(594) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(605) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(611) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(615) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(106) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(122) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(127) : error A2006:undefined symbol : name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(131) : error A2006:undefined symbol : name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(134) : error A2006:undefined symbol : copy_name
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(145) : error A2006:undefined symbol : init_failed
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(154) : error A2006:undefined symbol : init_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(165) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(175) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(190) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(195) : error A2006:undefined symbol : seq_name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(200) : error A2006:undefined symbol : copy_seq_name
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(212) : error A2006:undefined symbol : seq_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(225) : error A2006:undefined symbol : seq_loop
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(239) : error A2006:undefined symbol : seq_calc_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(253) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(263) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(278) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(283) : error A2006:undefined symbol : trap_name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(288) : error A2006:undefined symbol : copy_trap_name
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(302) : error A2006:undefined symbol : trap_failed
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(310) : error A2006:undefined symbol : trap_failed
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(318) : error A2006:undefined symbol : trap_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(329) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(339) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(354) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(359) : error A2006:undefined symbol : rot_name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(364) : error A2006:undefined symbol : copy_rot_name
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(373) : error A2022:instruction operands must be the same size
+ GET_SLOT_STATE(1): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(373): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(380) : error A2006:undefined symbol : rot_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(385) : error A2006:undefined symbol : rot_loop
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(390) : error A2022:instruction operands must be the same size
+ GET_SLOT_STATE(1): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(390): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(394) : error A2006:undefined symbol : rot_success
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(409) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(419) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(432) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(437) : error A2006:undefined symbol : eff_name_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(442) : error A2006:undefined symbol : copy_eff_name
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(451) : error A2006:undefined symbol : eff_calc
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(453) : error A2022:instruction operands must be the same size
+ GET_SLOT_STATE(1): Macro Called From
+  D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(453): Main Line Code
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(455) : error A2006:undefined symbol : eff_skip
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(461) : error A2006:undefined symbol : eff_loop
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(476) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(511) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(521) : error A2006:undefined symbol : report_done
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(530) : error A2006:undefined symbol : report_fail
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(535) : error A2006:undefined symbol : report_loop
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(545) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(555) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\orchestrator\RawrXD\QuadBuffer\Validate.asm(564) : fatal error A1012:error count exceeds 100; stopping assembly

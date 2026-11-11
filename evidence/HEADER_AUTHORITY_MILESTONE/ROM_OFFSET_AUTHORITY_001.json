@@ -1,0 +1,40 @@
+{
+  "gate": "RAWRXD_ROM_OFFSET_AUTHORITY_001",
+  "archive_date": "2026-10-07",
+  "status": "CERTIFIED_ROOT_CAUSE_STALE_DATASTART_OFFSET",
+  "root_cause": {
+    "identified": true,
+    "cause": "STALE_DATA_START_OFFSET",
+    "old_kDataStart": 3972000,
+    "new_kDataStart": 3996416,
+    "delta_bytes": 24416,
+    "effect": "All tensor reads were off by 24416 bytes, reading wrong physical memory"
+  },
+  "address_verification": {
+    "blk.0.attn_norm.weight_relative_offset": 289996800,
+    "A_absolute": 289996800,
+    "B_old_base": 293968800,
+    "C_authoritative": 293993216,
+    "A_result": "13 NaN (unrelated tensor data)",
+    "B_result": "13 NaN (correct tensor, wrong address)",
+    "C_result": "0 nonfinite, MIN=0.219727, MAX=7.625 (correct tensor, correct address)"
+  },
+  "evidence_chain": [
+    "Official BF16 source weights: all finite",
+    "Original GGUF at address B: 13 NaN values",
+    "Original GGUF at address C: 0 nonfinite, finite values",
+    "Runtime with old kDataStart=3972000: reads from B, sees NaNs",
+    "Runtime with new kDataStart=3996416: reads from C, all finite",
+    "Conclusion: GGUF file is correct, runtime offset was wrong"
+  ],
+  "correction": {
+    "code_change": "uint64_t absoluteOffset = Generated::ModelConfig::kDataStart + rom.fileOffset;",
+    "header_change": "kDataStart updated from 3972000 to 3996416",
+    "result": "All 27 blocks now produce finite outputs"
+  },
+  "post_correction_results": {
+    "logits_finite": true,
+    "verdict": "PASS_EXECUTABLE_PARTIAL_MODEL_MATH",
+    "note": "Partial because MLA/MoE are still stubs, but all tensor reads are correct"
+  }
+}

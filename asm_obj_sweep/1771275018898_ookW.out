@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(40) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(120) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(121) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(122) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(128) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(132) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(133) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(180) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(181) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(182) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(183) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(184) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(280) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275018898_ookW.asm(43) : warning A4014:instructions and initialized data not supported in BSS segments

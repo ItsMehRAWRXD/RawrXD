@@ -1,0 +1,255 @@
+ RawrXD_Engine_Sovereign
+
+ Timestamp is 6a155861 (Tue May 26 03:22:57 2026)
+
+ Preferred load address is 0000000140000000
+
+ Start         Length     Name                   Class
+ 0001:00000000 00002e0fH .text$mn                CODE
+ 0002:00000000 00001433H _BBOX                   DATA
+ 0003:00000000 00000144H .rdata                  DATA
+ 0003:00000143 00000000H .edata                  DATA
+ 0003:00000144 00000164H .rdata$zzzdbg           DATA
+ 0004:00000000 00346d54H .data                   DATA
+ 0005:00000000 00000160H .idata$5                DATA
+ 0005:00000160 00000028H .idata$2                DATA
+ 0005:00000188 00000018H .idata$3                DATA
+ 0005:000001a0 00000160H .idata$4                DATA
+ 0005:00000300 0000029fH .idata$6                DATA
+
+  Address         Publics by Value              Rva+Base               Lib:Object
+
+ 0000:00000000       __AbsoluteZero             0000000000000000     <absolute>
+ 0000:00000000       ___safe_se_handler_count   0000000000000000     <absolute>
+ 0000:00000000       ___safe_se_handler_table   0000000000000000     <absolute>
+ 0000:00000000       __arm64x_extra_rfe_table   0000000000000000     <absolute>
+ 0000:00000000       __arm64x_extra_rfe_table_size 0000000000000000     <absolute>
+ 0000:00000000       __arm64x_native_entrypoint 0000000000000000     <absolute>
+ 0000:00000000       __arm64x_redirection_metadata 0000000000000000     <absolute>
+ 0000:00000000       __arm64x_redirection_metadata_count 0000000000000000     <absolute>
+ 0000:00000000       __dynamic_value_reloc_table 0000000000000000     <absolute>
+ 0000:00000000       __enclave_config           0000000000000000     <absolute>
+ 0000:00000000       __guard_check_icall_a64n_fptr 0000000000000000     <absolute>
+ 0000:00000000       __guard_eh_cont_count      0000000000000000     <absolute>
+ 0000:00000000       __guard_eh_cont_table      0000000000000000     <absolute>
+ 0000:00000000       __guard_fids_count         0000000000000000     <absolute>
+ 0000:00000000       __guard_fids_table         0000000000000000     <absolute>
+ 0000:00000000       __guard_flags              0000000000000000     <absolute>
+ 0000:00000000       __guard_iat_count          0000000000000000     <absolute>
+ 0000:00000000       __guard_iat_table          0000000000000000     <absolute>
+ 0000:00000000       __guard_longjmp_count      0000000000000000     <absolute>
+ 0000:00000000       __guard_longjmp_table      0000000000000000     <absolute>
+ 0000:00000000       __hybrid_auxiliary_delayload_iat 0000000000000000     <absolute>
+ 0000:00000000       __hybrid_auxiliary_delayload_iat_copy 0000000000000000     <absolute>
+ 0000:00000000       __hybrid_auxiliary_iat     0000000000000000     <absolute>
+ 0000:00000000       __hybrid_auxiliary_iat_copy 0000000000000000     <absolute>
+ 0000:00000000       __hybrid_code_map          0000000000000000     <absolute>
+ 0000:00000000       __hybrid_code_map_count    0000000000000000     <absolute>
+ 0000:00000000       __hybrid_image_info_bitfield 0000000000000000     <absolute>
+ 0000:00000000       __volatile_metadata        0000000000000000     <absolute>
+ 0000:00000000       __x64_code_ranges_to_entry_points 0000000000000000     <absolute>
+ 0000:00000000       __x64_code_ranges_to_entry_points_count 0000000000000000     <absolute>
+ 0001:00000230       XR_SchedulerTick           0000000140001230 f   Sovereign_OS_Core.obj
+ 0001:0000025b       XR_Runtime_Tick            000000014000125b f   Sovereign_OS_Core.obj
+ 0001:000002e5       XR_Kernel_Fuse             00000001400012e5 f   Sovereign_OS_Core.obj
+ 0001:00000330       XR_Runtime_Bootstrap       0000000140001330 f   Sovereign_Runtime.obj
+ 0001:00000355       TITAN_LOOP                 0000000140001355 f   Sovereign_Runtime.obj
+ 0001:00000410       XR_Production_Entry        0000000140001410 f   Sovereign_Final.obj
+ 0001:000004be       XR_FaultHandler_Resolve    00000001400014be f   Sovereign_Final.obj
+ 0001:000004f0       XR_Run_Stability_Baseline  00000001400014f0 f   Sovereign_Stability.obj
+ 0001:00000550       XR_Promote_To_Executable   0000000140001550 f   Sovereign_Memory.obj
+ 0001:0000059b       XR_Apply_MemoryGuard       000000014000159b f   Sovereign_Memory.obj
+ 0001:000005c3       XR_Commit_And_Seal         00000001400015c3 f   Sovereign_Memory.obj
+ 0001:00000620       XR_Append_Log_Atomic       0000000140001620 f   Sovereign_SHA256NI.obj
+ 0001:00000658       XR_Verify_Log_Chain        0000000140001658 f   Sovereign_SHA256NI.obj
+ 0001:00000680       XR_BuildExecutionDAG       0000000140001680 f   Sovereign_DAG_Compiler.obj
+ 0001:0000070a       XR_SealExecutionGraph      000000014000170a f   Sovereign_DAG_Compiler.obj
+ 0001:00000754       XR_ComputeLifetimeRanges   0000000140001754 f   Sovereign_DAG_Compiler.obj
+ 0001:000007db       XR_FinalizeTensorBindingTable 00000001400017db f   Sovereign_DAG_Compiler.obj
+ 0001:000008a7       XR_Seal_To_Artifact        00000001400018a7 f   Sovereign_DAG_Compiler.obj
+ 0001:00000904       XR_EmitGPUCommandStream    0000000140001904 f   Sovereign_DAG_Compiler.obj
+ 0001:000009aa       XR_Compiler_FusePass       00000001400019aa f   Sovereign_DAG_Compiler.obj
+ 0001:00000bf0       XR_Emit_PE_Header          0000000140001bf0 f   Sovereign_PE_Emitter.obj
+ 0001:00000db9       XR_Seal_Runtime_Artifact   0000000140001db9 f   Sovereign_PE_Emitter.obj
+ 0001:00000e7a       XR_JIT_Emit_Kernel         0000000140001e7a f   Sovereign_JIT_Engine.obj
+ 0001:00000f2d       XR_JIT_Inject_Probe        0000000140001f2d f   Sovereign_JIT_Engine.obj
+ 0001:00000f82       XR_JIT_Emit_LoadImm64      0000000140001f82 f   Sovereign_JIT_Engine.obj
+ 0001:00000fa7       XR_JIT_Emit_LoopEnd        0000000140001fa7 f   Sovereign_JIT_Engine.obj
+ 0001:00000fd4       XR_JIT_Emit_AddImm32       0000000140001fd4 f   Sovereign_JIT_Engine.obj
+ 0001:00001070       XR_Apply_Relocations       0000000140002070 f   Sovereign_Relocator.obj
+ 0001:000010ce       XR_Stitch_Runtime_IAT      00000001400020ce f   Sovereign_Relocator.obj
+ 0001:000010f0       XR_Fault_Handler_Entry     00000001400020f0 f   Sovereign_FaultHandler.obj
+ 0001:00001162       XR_Install_Fault_Hooks     0000000140002162 f   Sovereign_FaultHandler.obj
+ 0001:000011b0       XR_Test_Validation         00000001400021b0 f   Sovereign_TestBench.obj
+ 0001:0000120c       XR_Harness_Entry           000000014000220c f   Sovereign_TestBench.obj
+ 0001:00001240       XR_Runtime_Run             0000000140002240 f   Sovereign_Runtime_Run.obj
+ 0001:0000128a       XR_Runtime_TestBench       000000014000228a f   Sovereign_Runtime_Run.obj
+ 0001:000012b0       XR_Registry_RegisterNode   00000001400022b0 f   Sovereign_Execution_Graph_ABI.obj
+ 0001:000012e9       XR_Dependency_Validate     00000001400022e9 f   Sovereign_Execution_Graph_ABI.obj
+ 0001:00001310       XR_Export_Manifest         0000000140002310 f   Sovereign_Manifest_Generator.obj
+ 0001:00001328       XR_Verify_Magic            0000000140002328 f   Sovereign_Manifest_Generator.obj
+ 0001:00001350       XR_Acquire_LargePage_Privilege 0000000140002350 f   Sovereign_Stream_Ingest.obj
+ 0001:000013da       XR_Dispatch_Ingest         00000001400023da f   Sovereign_Stream_Ingest.obj
+ 0001:0000153b       Sovereign_Stream_Release   000000014000253b f   Sovereign_Stream_Ingest.obj
+ 0001:00001560       Sovereign_Stream_Ingest    0000000140002560 f   Sovereign_Stream_Ingest.obj
+ 0001:000015f0       SafeDiv64                  00000001400025f0 f   Sovereign_GGUF_Parser.obj
+ 0001:000015f7       AlignUp64                  00000001400025f7 f   Sovereign_GGUF_Parser.obj
+ 0001:00001607       XR_GGUF_ReadU32            0000000140002607 f   Sovereign_GGUF_Parser.obj
+ 0001:0000161c       XR_GGUF_ReadU64            000000014000261c f   Sovereign_GGUF_Parser.obj
+ 0001:00001632       XR_KV_SkipStateMachine     0000000140002632 f   Sovereign_GGUF_Parser.obj
+ 0001:000017bf       XR_GGUF_ParseTensorDirectory 00000001400027bf f   Sovereign_GGUF_Parser.obj
+ 0001:000018d5       XR_Parse_GGUF_Tensors      00000001400028d5 f   Sovereign_GGUF_Parser.obj
+ 0001:00001b60       XR_FaultLog_Flush          0000000140002b60 f   Sovereign_FaultLog.obj
+ 0001:00001c00       XR_Registry_Push_Telemetry 0000000140002c00 f   Sovereign_Kernel_Registry.obj
+ 0001:00001c45       XR_Registry_Pop_Telemetry  0000000140002c45 f   Sovereign_Kernel_Registry.obj
+ 0001:00001cb0       XR_Renderer_RenderFrame    0000000140002cb0 f   Sovereign_Renderer_AVX512.obj
+ 0001:00001cc0       XR_Network_Sync_Poll       0000000140002cc0 f   Sovereign_Network_Sync.obj
+ 0001:00001ccd       ExitProcess                0000000140002ccd f   kernel32:KERNEL32.dll
+ 0001:00001cd3       GetCommandLineW            0000000140002cd3 f   kernel32:KERNEL32.dll
+ 0001:00001cd9       GetCurrentProcess          0000000140002cd9 f   kernel32:KERNEL32.dll
+ 0001:00001cdf       FlushInstructionCache      0000000140002cdf f   kernel32:KERNEL32.dll
+ 0001:00001ce5       VirtualProtect             0000000140002ce5 f   kernel32:KERNEL32.dll
+ 0001:00001ceb       AddVectoredExceptionHandler 0000000140002ceb f   kernel32:KERNEL32.dll
+ 0001:00001cf1       WriteFile                  0000000140002cf1 f   kernel32:KERNEL32.dll
+ 0001:00001cf7       CreateFileW                0000000140002cf7 f   kernel32:KERNEL32.dll
+ 0001:00001cfd       CreateFileMappingW         0000000140002cfd f   kernel32:KERNEL32.dll
+ 0001:00001d03       MapViewOfFileEx            0000000140002d03 f   kernel32:KERNEL32.dll
+ 0001:00001d09       UnmapViewOfFile            0000000140002d09 f   kernel32:KERNEL32.dll
+ 0001:00001d0f       VirtualLock                0000000140002d0f f   kernel32:KERNEL32.dll
+ 0001:00001d15       VirtualUnlock              0000000140002d15 f   kernel32:KERNEL32.dll
+ 0001:00001d1b       CloseHandle                0000000140002d1b f   kernel32:KERNEL32.dll
+ 0001:00001d21       GetFileSize                0000000140002d21 f   kernel32:KERNEL32.dll
+ 0001:00001d27       GetLastError               0000000140002d27 f   kernel32:KERNEL32.dll
+ 0001:00001d2d       OpenProcessToken           0000000140002d2d f   Advapi32:ADVAPI32.dll
+ 0001:00001d33       LookupPrivilegeValueW      0000000140002d33 f   Advapi32:ADVAPI32.dll
+ 0001:00001d39       AdjustTokenPrivileges      0000000140002d39 f   Advapi32:ADVAPI32.dll
+ 0002:00000000       g_BlackBoxBuffer           0000000140004000     Sovereign_OS_Core.obj
+ 0004:00000060       g_JIT_StagingArea          0000000140007060     Sovereign_OS_Core.obj
+ 0004:000013b0       g_SovereignStack           00000001400083b0     Sovereign_Runtime.obj
+ 0004:00014960       g_pVirtualProtect          000000014001b960     Sovereign_Memory.obj
+ 0004:00014968       g_PageSize                 000000014001b968     Sovereign_Memory.obj
+ 0004:00020990       g_ExecNodes                0000000140027990     Sovereign_DAG_Compiler.obj
+ 0004:00028990       g_TensorBindingTable       000000014002f990     Sovereign_DAG_Compiler.obj
+ 0004:00228990       g_ExecNodeCount            000000014022f990     Sovereign_DAG_Compiler.obj
+ 0004:00228994       g_BindingCount             000000014022f994     Sovereign_DAG_Compiler.obj
+ 0004:0022899c       g_PeakVramUsage            000000014022f99c     Sovereign_DAG_Compiler.obj
+ 0004:002289a4       g_VRAMPoolBase             000000014022f9a4     Sovereign_DAG_Compiler.obj
+ 0004:002289ac       g_VRAMPoolSize             000000014022f9ac     Sovereign_DAG_Compiler.obj
+ 0004:0032ca00       g_ExecutionPlan            0000000140333a00     Sovereign_Runtime_Run.obj
+ 0004:0032d200       g_SchedulerState           0000000140334200     Sovereign_Runtime_Run.obj
+ 0004:0032fa20       test_graph_binary          0000000140336a20     Sovereign_Manifest_Generator.obj
+ 0004:0032fb38       g_IngestStatus             0000000140336b38     Sovereign_Stream_Ingest.obj
+ 0004:0032fb3c       g_MappedBase               0000000140336b3c     Sovereign_Stream_Ingest.obj
+ 0004:0032fb44       g_MappedSize               0000000140336b44     Sovereign_Stream_Ingest.obj
+ 0004:0032fb4c       g_ManifestBase             0000000140336b4c     Sovereign_Stream_Ingest.obj
+ 0004:0032fb54       g_TensorBase               0000000140336b54     Sovereign_Stream_Ingest.obj
+ 0004:0032fb5c       g_LastIngestError          0000000140336b5c     Sovereign_Stream_Ingest.obj
+ 0004:0032fb90       g_TensorRegistry           0000000140336b90     Sovereign_GGUF_Parser.obj
+ 0004:00340b90       g_TensorCount              0000000140347b90     Sovereign_GGUF_Parser.obj
+ 0004:00340b98       g_GGUFAlignment            0000000140347b98     Sovereign_GGUF_Parser.obj
+ 0004:00340ba0       g_GGML_Type_Table          0000000140347ba0     Sovereign_GGUF_Parser.obj
+ 0004:003444f0       g_SovereignRegistry        000000014034b4f0     Sovereign_Kernel_Registry.obj
+ 0005:00000000       __imp_OpenProcessToken     000000014034e000     Advapi32:ADVAPI32.dll
+ 0005:00000008       __imp_AdjustTokenPrivileges 000000014034e008     Advapi32:ADVAPI32.dll
+ 0005:00000010       __imp_LookupPrivilegeValueW 000000014034e010     Advapi32:ADVAPI32.dll
+ 0005:00000018       \177ADVAPI32_NULL_THUNK_DATA 000000014034e018     Advapi32:ADVAPI32.dll
+ 0005:00000070       __imp_VirtualProtect       000000014034e070     kernel32:KERNEL32.dll
+ 0005:00000078       __imp_AddVectoredExceptionHandler 000000014034e078     kernel32:KERNEL32.dll
+ 0005:00000080       __imp_WriteFile            000000014034e080     kernel32:KERNEL32.dll
+ 0005:00000088       __imp_CreateFileW          000000014034e088     kernel32:KERNEL32.dll
+ 0005:00000090       __imp_CreateFileMappingW   000000014034e090     kernel32:KERNEL32.dll
+ 0005:00000098       __imp_FlushInstructionCache 000000014034e098     kernel32:KERNEL32.dll
+ 0005:000000a0       __imp_UnmapViewOfFile      000000014034e0a0     kernel32:KERNEL32.dll
+ 0005:000000a8       __imp_VirtualLock          000000014034e0a8     kernel32:KERNEL32.dll
+ 0005:000000b0       __imp_VirtualUnlock        000000014034e0b0     kernel32:KERNEL32.dll
+ 0005:000000b8       __imp_CloseHandle          000000014034e0b8     kernel32:KERNEL32.dll
+ 0005:000000c0       __imp_GetFileSize          000000014034e0c0     kernel32:KERNEL32.dll
+ 0005:000000c8       __imp_GetLastError         000000014034e0c8     kernel32:KERNEL32.dll
+ 0005:000000d0       __imp_GetCurrentProcess    000000014034e0d0     kernel32:KERNEL32.dll
+ 0005:000000d8       __imp_GetCommandLineW      000000014034e0d8     kernel32:KERNEL32.dll
+ 0005:000000e0       __imp_MapViewOfFileEx      000000014034e0e0     kernel32:KERNEL32.dll
+ 0005:000000e8       __imp_ExitProcess          000000014034e0e8     kernel32:KERNEL32.dll
+ 0005:000000f0       \177KERNEL32_NULL_THUNK_DATA 000000014034e0f0     kernel32:KERNEL32.dll
+ 0005:00000160       __IMPORT_DESCRIPTOR_KERNEL32 000000014034e160     kernel32:KERNEL32.dll
+ 0005:00000174       __IMPORT_DESCRIPTOR_ADVAPI32 000000014034e174     Advapi32:ADVAPI32.dll
+ 0005:00000188       __NULL_IMPORT_DESCRIPTOR   000000014034e188     kernel32:KERNEL32.dll
+
+ entry point at        0001:00000087
+
+ Static symbols
+
+ 0000:ffcb0000       .debug$S                   0000000140000000     Advapi32:ADVAPI32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     Advapi32:ADVAPI32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     Advapi32:ADVAPI32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0000:ffcb0000       .debug$S                   0000000140000000     kernel32:KERNEL32.dll
+ 0001:00000230       $$000000                   0000000140001230     Sovereign_OS_Core.obj
+ 0001:00000330       $$000000                   0000000140001330     Sovereign_Runtime.obj
+ 0001:00000410       $$000000                   0000000140001410     Sovereign_Final.obj
+ 0001:000004f0       $$000000                   00000001400014f0     Sovereign_Stability.obj
+ 0001:00000550       $$000000                   0000000140001550     Sovereign_Memory.obj
+ 0001:00000620       $$000000                   0000000140001620     Sovereign_SHA256NI.obj
+ 0001:00000680       $$000000                   0000000140001680     Sovereign_DAG_Compiler.obj
+ 0001:00000bf0       $$000000                   0000000140001bf0     Sovereign_PE_Emitter.obj
+ 0001:00000e30       $$000000                   0000000140001e30     Sovereign_JIT_Engine.obj
+ 0001:00000e30       JIT_PROLOGUE               0000000140001e30     Sovereign_JIT_Engine.obj
+ 0001:00000e40       JIT_EPILOGUE               0000000140001e40     Sovereign_JIT_Engine.obj
+ 0001:00000e50       JIT_FMA_ZMM                0000000140001e50     Sovereign_JIT_Engine.obj
+ 0001:00000e60       JIT_Q2K_FMA                0000000140001e60     Sovereign_JIT_Engine.obj
+ 0001:00000ef0       JIT_VNNI_DOT               0000000140001ef0     Sovereign_JIT_Engine.obj
+ 0001:00000f00       JIT_XCHG_RAX               0000000140001f00     Sovereign_JIT_Engine.obj
+ 0001:00000f10       JIT_PROBE_INC              0000000140001f10     Sovereign_JIT_Engine.obj
+ 0001:00000f20       JIT_PROBE_TSC              0000000140001f20     Sovereign_JIT_Engine.obj
+ 0001:00001070       $$000000                   0000000140002070     Sovereign_Relocator.obj
+ 0001:000010f0       $$000000                   00000001400020f0     Sovereign_FaultHandler.obj
+ 0001:000011b0       $$000000                   00000001400021b0     Sovereign_TestBench.obj
+ 0001:00001240       $$000000                   0000000140002240     Sovereign_Runtime_Run.obj
+ 0001:000012b0       $$000000                   00000001400022b0     Sovereign_Execution_Graph_ABI.obj
+ 0001:00001310       $$000000                   0000000140002310     Sovereign_Manifest_Generator.obj
+ 0001:00001350       $$000000                   0000000140002350     Sovereign_Stream_Ingest.obj
+ 0001:000015f0       $$000000                   00000001400025f0     Sovereign_GGUF_Parser.obj
+ 0001:00001b60       $$000000                   0000000140002b60     Sovereign_FaultLog.obj
+ 0001:00001c00       $$000000                   0000000140002c00     Sovereign_Kernel_Registry.obj
+ 0001:00001cb0       $$000000                   0000000140002cb0     Sovereign_Renderer_AVX512.obj
+ 0001:00001cc0       $$000000                   0000000140002cc0     Sovereign_Network_Sync.obj
+ 0004:00000000       g_TelemetryContext         0000000140007000     Sovereign_OS_Core.obj
+ 0004:00000020       g_SchedulerState           0000000140007020     Sovereign_OS_Core.obj
+ 0004:00000028       g_TickCount                0000000140007028     Sovereign_OS_Core.obj
+ 0004:00000030       g_ExecutionTick            0000000140007030     Sovereign_OS_Core.obj
+ 0004:00000038       g_ResidencyMask            0000000140007038     Sovereign_OS_Core.obj
+ 0004:000146f0       output_sequence            000000014001b6f0     Sovereign_Final.obj
+ 0004:00014980       g_LogTailIndex             000000014001b980     Sovereign_SHA256NI.obj
+ 0004:00014990       g_CompileNodes             000000014001b990     Sovereign_DAG_Compiler.obj
+ 0004:002289b4       g_ChildLists               000000014022f9b4     Sovereign_DAG_Compiler.obj
+ 0004:002a89b4       g_ExecGraph                00000001402af9b4     Sovereign_DAG_Compiler.obj
+ 0004:0032c9f0       g_ValidationStatus         00000001403339f0     Sovereign_TestBench.obj
+ 0004:0032d3b0       g_NodeRegistryTable        00000001403343b0     Sovereign_Execution_Graph_ABI.obj
+ 0004:0032f3b0       g_GraphStatus              00000001403363b0     Sovereign_Execution_Graph_ABI.obj
+ 0004:0032fad0       TensorFileName             0000000140336ad0     Sovereign_Stream_Ingest.obj
+ 0004:0032fb0c       szLockPriv                 0000000140336b0c     Sovereign_Stream_Ingest.obj
+ 0004:00344490       log_path                   000000014034b490     Sovereign_FaultLog.obj
+ 0004:00344550       g_TelemetryRing            000000014034b550     Sovereign_Kernel_Registry.obj
+ 0004:00346550       g_RingReadIdx              000000014034d550     Sovereign_Kernel_Registry.obj
+ 0004:00346558       g_RingWriteIdx             000000014034d558     Sovereign_Kernel_Registry.obj
+ 0004:00346be0       g_ColorPalette             000000014034dbe0     Sovereign_Renderer_AVX512.obj
+ 0005:0000041a       .idata$6                   000000014034e41a     kernel32:KERNEL32.dll
+ 0005:0000046c       .idata$6                   000000014034e46c     Advapi32:ADVAPI32.dll
+
+ Exports
+
+  ordinal    name
+

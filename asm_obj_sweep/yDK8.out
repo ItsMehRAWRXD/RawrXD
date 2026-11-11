@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\yDK8.asm
+D:\rawrxd\history\-29b34fd4\yDK8.asm(631) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\yDK8.asm(636) : error A2006:undefined symbol : OperationSize

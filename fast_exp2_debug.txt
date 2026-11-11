@@ -1,0 +1,101 @@
+Debugging FAST_EXP2 macro...
+Input x[0] = -5
+  I = floor(x) = -5
+  F = x - I = 0
+  P(F) = 1
+  I_int = -5
+  2^I = 0.03125
+  Result = P(F) * 2^I = 0.03125
+  True exp(x) = 0.00673795
+  Error = 0.0245121
+
+Input x[1] = -4
+  I = floor(x) = -4
+  F = x - I = 0
+  P(F) = 1
+  I_int = -4
+  2^I = 0.0625
+  Result = P(F) * 2^I = 0.0625
+  True exp(x) = 0.0183156
+  Error = 0.0441844
+
+Input x[2] = -3
+  I = floor(x) = -3
+  F = x - I = 0
+  P(F) = 1
+  I_int = -3
+  2^I = 0.125
+  Result = P(F) * 2^I = 0.125
+  True exp(x) = 0.0497871
+  Error = 0.0752129
+
+Input x[3] = -2
+  I = floor(x) = -2
+  F = x - I = 0
+  P(F) = 1
+  I_int = -2
+  2^I = 0.25
+  Result = P(F) * 2^I = 0.25
+  True exp(x) = 0.135335
+  Error = 0.114665
+
+Input x[4] = -1
+  I = floor(x) = -1
+  F = x - I = 0
+  P(F) = 1
+  I_int = -1
+  2^I = 0.5
+  Result = P(F) * 2^I = 0.5
+  True exp(x) = 0.367879
+  Error = 0.132121
+
+Input x[5] = 0
+  I = floor(x) = 0
+  F = x - I = 0
+  P(F) = 1
+  I_int = 0
+  2^I = 1
+  Result = P(F) * 2^I = 1
+  True exp(x) = 1
+  Error = 0
+
+Input x[6] = 1
+  I = floor(x) = 1
+  F = x - I = 0
+  P(F) = 1
+  I_int = 1
+  2^I = 2
+  Result = P(F) * 2^I = 2
+  True exp(x) = 2.71828
+  Error = 0.718282
+
+Input x[7] = 2
+  I = floor(x) = 2
+  F = x - I = 0
+  P(F) = 1
+  I_int = 2
+  2^I = 4
+  Result = P(F) * 2^I = 4
+  True exp(x) = 7.38906
+  Error = 3.38906
+
+Input x[8] = 3
+  I = floor(x) = 3
+  F = x - I = 0
+  P(F) = 1
+  I_int = 3
+  2^I = 8
+  Result = P(F) * 2^I = 8
+  True exp(x) = 20.0855
+  Error = 12.0855
+
+Input x[9] = 4
+  I = floor(x) = 4
+  F = x - I = 0
+  P(F) = 1
+  I_int = 4
+  2^I = 16
+  Result = P(F) * 2^I = 16
+  True exp(x) = 54.5981
+  Error = 38.5981
+

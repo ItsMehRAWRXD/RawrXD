@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(301) : error A2034:must be in segment block : complete_example
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(302) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(303) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(306) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(309) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(310) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(311) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(312) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(315) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(316) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(317) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(318) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(321) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(322) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(325) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(326) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(329) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(330) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(331) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(334) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(335) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(338) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(339) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(341) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(342) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(344) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(345) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(347) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(348) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(349) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\MASM\QUICK\REFERENCE.asm(350) : fatal error A1010:unmatched block nesting : complete_example

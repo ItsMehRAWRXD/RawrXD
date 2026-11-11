@@ -1,0 +1,41 @@
+ Assembling: D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(6) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(137) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(144) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(157) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(164) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(178) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(185) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(190) : error A2008:syntax error : ,
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(197) : error A2008:syntax error : ,
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(203) : error A2008:syntax error : ,
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(213) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(238) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(246) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(262) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(267) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(271) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(297) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(305) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(324) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(324) : error A2088:END directive required at end of file
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(116) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(131) : error A2006:undefined symbol : phase1_fail
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(135) : error A2006:undefined symbol : phase2_start
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(141) : error A2006:undefined symbol : test_cleanup
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(151) : error A2006:undefined symbol : phase2_fail
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(155) : error A2006:undefined symbol : phase3_start
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(161) : error A2006:undefined symbol : test_cleanup
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(172) : error A2006:undefined symbol : phase3_fail
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(176) : error A2006:undefined symbol : phase4_start
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(182) : error A2006:undefined symbol : test_cleanup
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(210) : error A2006:undefined symbol : phase5_start
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(230) : error A2006:undefined symbol : phase5_fail
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(236) : error A2006:undefined symbol : phase6_start
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(243) : error A2006:undefined symbol : test_cleanup
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(256) : error A2006:undefined symbol : phase6_fail
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(260) : error A2006:undefined symbol : test_complete
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(273) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(300) : error A2006:undefined symbol : measure_done
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(303) : error A2006:undefined symbol : measure_loop
+D:\rawrxd\RawrXD_InlineEdit_Week1_IntegrationTest.asm(307) : error A2022:instruction operands must be the same size

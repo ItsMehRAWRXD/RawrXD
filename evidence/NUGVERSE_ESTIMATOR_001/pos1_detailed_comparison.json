@@ -1,0 +1,25 @@
+{
+  "native_argmax": 1,
+  "ref_argmax": 185,
+  "native_top2": [
+    10432,
+    409
+  ],
+  "ref_top2": [
+    9213,
+    6
+  ],
+  "native_logit_1": 7.854964256286621,
+  "ref_logit_1": 7.901198863983154,
+  "native_logit_185": 7.80757999420166,
+  "ref_logit_185": 7.959512710571289,
+  "native_margin": -0.04738426208496094,
+  "ref_margin": 0.058313846588134766,
+  "cosine": 0.9971559047698975,
+  "rmse": 0.5630946755409241,
+  "max_abs_diff": 3.4639854431152344,
+  "native_rank_1": 1,
+  "ref_rank_1": 2,
+  "native_rank_185": 2,
+  "ref_rank_185": 1
+}

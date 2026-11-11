@@ -1,0 +1,96 @@
+ Assembling: D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(284) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(288) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(324) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(330) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(331) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(430) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(431) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(432) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(433) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(489) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(491) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(493) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(511) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(512) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(517) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(518) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(551) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(578) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(590) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(595) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(600) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(602) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(607) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(612) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(616) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(620) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(624) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(694) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(695) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(696) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(697) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(806) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(843) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(889) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(936) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(941) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(943) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(945) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(947) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(949) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(954) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1009) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1015) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1017) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1019) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1021) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1023) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1025) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1030) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1036) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1037) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1149) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1151) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1153) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1155) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1200) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1202) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1204) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1206) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1250) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(475) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(577) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(585) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(592) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(597) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(629) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(760) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(831) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(839) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(856) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(870) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(880) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(893) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(906) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(953) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1029) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1112) : error A2006:undefined symbol : QueryPerformanceFrequency
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1161) : error A2006:undefined symbol : GetVersion
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1162) : error A2206:missing operator in expression
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1167) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1174) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1213) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(478) : warning A6004:procedure argument or local not referenced : pContext
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(478) : warning A6004:procedure argument or local not referenced : operation
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(990) : warning A6004:procedure argument or local not referenced : dsResult
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1254) : warning A4025:ENDP found before .ENDPROLOG : Titan_IsDeviceAddress
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1254) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1254) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1289) : warning A4025:ENDP found before .ENDPROLOG : Titan_GetGPUStats
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1289) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1289) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1307) : warning A4025:ENDP found before .ENDPROLOG : Titan_ResetGPUStats
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1307) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_complete_reverse_engineered_final_v7.asm(1307) : error A2220:Missing .ENDPROLOG
