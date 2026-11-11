@@ -1,0 +1,3 @@
+=== D1 batched-prefill parity certification (cpu) ===
+tokens=128 model=F:\rawrxd\test_min_model.gguf
+INGEST_FAIL: GGUF header/metadata parse failed

@@ -1,0 +1,15 @@
+=== D1 batched-prefill parity certification (cpu) ===
+tokens=128 model=F:\rawrxd\gemma3-1b-Q2_K.gguf
+ingest ok: arch=gemma3 blocks=26 embd=1152
+L=1    positions_bit_equal=1/1 kv_bytes serial=6656 batch=6656(equal) cont=bit-equal(maxdiff=0) max_diff=0 first_diff=18446744073709551615 nonfinite=0 :: PASS
+      timing: total=628.1ms first=628.0ms steady_mean=0.0ms
+L=2    positions_bit_equal=2/2 kv_bytes serial=13312 batch=13312(equal) cont=bit-equal(maxdiff=0) max_diff=0 first_diff=18446744073709551615 nonfinite=0 :: PASS
+      timing: total=1249.6ms first=617.0ms steady_mean=632.1ms
+L=8    positions_bit_equal=8/8 kv_bytes serial=53248 batch=53248(equal) cont=bit-equal(maxdiff=0) max_diff=0 first_diff=18446744073709551615 nonfinite=0 :: PASS
+      timing: total=5203.5ms first=642.4ms steady_mean=651.3ms
+L=32   positions_bit_equal=32/32 kv_bytes serial=212992 batch=212992(equal) cont=bit-equal(maxdiff=0) max_diff=0 first_diff=18446744073709551615 nonfinite=0 :: PASS
+      timing: total=21372.7ms first=649.8ms steady_mean=668.3ms
+L=128  positions_bit_equal=128/128 kv_bytes serial=851968 batch=851968(equal) cont=bit-equal(maxdiff=0) max_diff=0 first_diff=18446744073709551615 nonfinite=0 :: PASS
+      timing: total=79795.1ms first=622.1ms steady_mean=623.2ms
+D1_RESULT: PASS
+json written: F:\rawrxd\.worktrees\codex-d1-batched-prefill\evidence\D1_PREFILL_ACCEPTANCE_20261019\cpu_gemma3_1b_q2k.json
