@@ -1,0 +1,12 @@
+GATE2_NEXT=BUILD_VULKAN_LLAMA_CLI
+HOLD_IDLE=REJECTED_AS_PRIMARY
+VULKAN_SDK=C:\VulkanSDK\1.4.357.0
+GLSLC=C:\VulkanSDK\1.4.357.0\Bin\glslc.exe
+SRC=F:\llama.cpp-ref
+EXISTING_BUILD_GGML_VULKAN=OFF
+OUT_TREE=F:\llama.cpp-ref\build-vulkan
+MSVC_VCVARS=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat
+CMAKE=C:\Program Files\CMake\bin\cmake.exe
+NOTE=Even with Vulkan, K2 Q4 ~580GiB will not fully resident in 2x32GiB VRAM; require mmap + --fit on + layer offload; --list-devices must show AMD GPUs before capture
+PROMOTE=0
+TIP_CLIMB=HOLD

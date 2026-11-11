@@ -1,0 +1,6 @@
+name=starcoder2:15b
+exit=0
+result=PASS
+steady_decode_tps=1.129
+finite=yes
+gpu_complete=yes

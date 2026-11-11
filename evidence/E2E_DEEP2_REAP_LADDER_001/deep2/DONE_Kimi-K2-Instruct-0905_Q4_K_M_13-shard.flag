@@ -1,0 +1,7 @@
+name=Kimi-K2-Instruct-0905-Q4_K_M:13-shard
+exit=0
+result=PASS
+multi_shard=13
+generated=1
+metrics=480
+replay_complete=1

@@ -1,0 +1,54 @@
+DEEP2_BENCH_TPS_N64_WIDE_001
+MOTD_ACK=1
+CURSOR_AGENTIC_PRIMARY=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+
+CMD=F:\rawrxd\build_reap\bin\deep2_bench_tps.exe --model F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf --tokens "1 185" --decode 64 --runs 1 --device 0
+DEFAULTS=PrefillBatch + WIDE (wide_dot_batch=1)
+LOG=F:\rawrxd-native-agent-001\evidence\deep2_bench_qwen3_prefillbatch_wide_n64.log
+DEVICE=0 AMD Radeon AI PRO R9700
+START=2026-10-26T23:46:06.5271530-04:00
+END=2026-10-26T23:48:31.9881588-04:00
+EXIT=0
+
+MEASURED
+DECODE_TPS=0.621
+STEADY_DECODE_TPS=0.621
+PREFILL_TPS=0.112
+E2E_TPS=0.017
+prefill_ms=17929.9
+decode_ms=101410.9
+e2e_ms=119340.7
+bind_ms=23725.2
+tokens_in=2
+tokens_out=64
+submits=9533
+waits=9533
+gpu_ms=90994.5
+decode_gpu_ms=88326.8
+kernel_ms=97565.3
+wait_ms=97565.3
+logits_finite=yes
+gpu_complete=yes
+
+TARGET
+BASELINE_DECODE_TPS=0.638
+TARGET_30PCT_TPS=0.829
+MEASURED_DECODE_TPS=0.621
+TARGET_30PCT=MISS
+DELTA_VS_TARGET=-0.208
+DELTA_VS_BASELINE=-0.017
+
+N8_AB_CONTEXT_PRIOR (not this run)
+N8_PrefillBatch_WIDE_DECODE_TPS=0.647
+N8_serial_DECODE_TPS=0.548
+N8_prefill_ms_batch=19484
+N8_prefill_ms_serial=306985
+
+DISPOSITION
+PERFORMANCE_PASS=NOT_CLAIMED
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOTE=Bench binary RUN1 VERDICT PASS is logits/gpu completeness only; not +30% TPS gate.

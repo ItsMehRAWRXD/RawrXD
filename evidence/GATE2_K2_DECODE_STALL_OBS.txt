@@ -1,0 +1,15 @@
+PRESERVE_ACTIVE_RUN=1
+PID_LLAMA=56816
+HARNESS_562630=running
+SAMPLE_15s_CPU=447.7->462.6
+SAMPLE_15s_WS_GB=37.23->36.65
+ERR_DELTA=0
+OUT_DELTA=0
+NEXT_TOKEN_COUNT=0
+OUT_BYTES=0
+EXIT=PENDING
+LAST_DECODE=4.02.625.690 decode n_batch=2048 then yield_to_queue; SSE pings only after
+INTERPRETATION=CPU still active but no token/log progress — decode not demonstrated; possible silent MoE/mmap or GPU sync stall
+RECOVERY_TEST=HELD until EXIT= from this run
+PROMOTE=0
+TIP_CLIMB=HOLD

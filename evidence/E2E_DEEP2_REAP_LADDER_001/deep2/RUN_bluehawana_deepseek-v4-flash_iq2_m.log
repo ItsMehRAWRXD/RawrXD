@@ -1,0 +1,4 @@
+device-pin requested index=0
+BENCH model=F:\OllamaModels\blobs\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21 decode=8 runs=1 backend=vulkan-native
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\blobs\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21 ...

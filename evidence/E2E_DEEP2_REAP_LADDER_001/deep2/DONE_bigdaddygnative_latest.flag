@@ -1,0 +1,7 @@
+name=bigdaddygnative:latest
+exit=0
+result=PASS
+steady_decode_tps=0.084
+finite=yes
+gpu_complete=yes
+aliases=bigdaddyglocal,bigdaddyg-productivity-local,bigdaddyg-productivity-native

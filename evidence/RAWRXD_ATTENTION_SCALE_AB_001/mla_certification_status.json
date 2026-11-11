@@ -1,0 +1,55 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_MLA_STATUS_001",
+  "date": "2026-10-10",
+  "attention_scale_ab": {
+    "certificate_id": "RAWRXD_ATTENTION_SCALE_AB_001",
+    "winner": "Variant A (mscale\u00b2/\u221a192 \u2248 0.114721)",
+    "variant_A": {
+      "argmax": "19/20",
+      "mean_cosine": 0.99911389,
+      "min_cosine": 0.99616206
+    },
+    "variant_B": {
+      "argmax": "17/20",
+      "mean_cosine": 0.98895103,
+      "min_cosine": 0.93983367
+    },
+    "decision": "Variant A retained as certified baseline"
+  },
+  "position_1_logit_margin": {
+    "certificate_id": "RAWRXD_DEEP2_POS1_LOGIT_MARGIN_001",
+    "reference_argmax": 185,
+    "native_argmax": 1,
+    "reference_margin_185_1": 0.0583138466,
+    "native_margin_185_1": -0.0758333206,
+    "verdict": "Near-tie at decision boundary; both tokens in top-2 with swapped order"
+  },
+  "kv_cache_reconstruction": {
+    "native_captures_working": true,
+    "captures": {
+      "MLA_KV_LATENT_CACHED": "27 layers \u00d7 2 positions (1024 elements)",
+      "MLA_K_ROPE_RAW_CACHED": "27 layers \u00d7 2 positions (128 elements)",
+      "MLA_KV_KNOPE_CACHED": "27 layers \u00d7 2 positions (4096 elements)",
+      "MLA_KV_VALUE_CACHED": "27 layers \u00d7 2 positions (4096 elements)",
+      "MLA_KV_KNOPE_READ": "Layer 0 \u00d7 2 historical positions",
+      "MLA_K_ROPE_RAW_READ": "Layer 0 \u00d7 2 historical positions",
+      "MLA_KV_VALUE_READ": "Layer 0 \u00d7 2 historical positions",
+      "MLA_V_RECONSTRUCTED": "All layers \u00d7 16 heads \u00d7 2 positions"
+    },
+    "reference_comparison": {
+      "kv_latent_pos1": "cos=1.0 (match)",
+      "k_rope_raw_pos1": "cos=1.0 (match)",
+      "k_knope_pos1": "cos\u22480.01 (mismatch - layout/timing difference)",
+      "v_value_pos1": "cos\u2248-0.005 (mismatch - layout/timing difference)",
+      "v_reconstructed_l0": "cos\u2248-0.006 (mismatch - layout/timing difference)"
+    },
+    "note": "Position 1 native caches match reference perfectly for latent and rope_raw. K/V noRope and value show layout/timing differences. Reference tensor layout validation required (DEEP2_MLA_REFERENCE_LAYOUT_001)."
+  },
+  "next_actions": [
+    "Validate reference tensor strides and axis ordering (DEEP2_MLA_REFERENCE_LAYOUT_001)",
+    "Compare native vs reference with correct tensor layout interpretation",
+    "If layout validated and mismatch persists, isolate first divergent MLA primitive",
+    "Apply targeted correction and rerun 20-position A/B differential",
+    "Expand to 64-position certification"
+  ]
+}

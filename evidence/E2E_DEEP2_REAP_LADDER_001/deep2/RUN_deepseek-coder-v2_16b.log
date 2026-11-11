@@ -1,0 +1,46 @@
+device-pin requested index=0
+BENCH model=F:\OllamaModels\blobs\sha256-5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046 decode=8 runs=1 backend=vulkan-native
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\blobs\sha256-5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046 ...
+arch=deepseek2 blocks=27 embd=2048 heads=16 kv=16 rope_dim=64 experts=64 used=6
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+bound ops=458 (bind 34613.9 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+  prefill pos=0 token=1 (3133.1 ms)
+  prefill pos=1 token=185 (2656.1 ms)
+RUN1: logits_finite=yes gpu_complete=yes
+RUN1: bind_ms=34613.9 prefill_ms=5789.4 decode_ms=11468.4 e2e_ms=17257.8
+RUN1: PREFILL_TPS=0.345 DECODE_TPS=0.610 STEADY_DECODE_TPS=0.660 E2E_TPS=0.116
+RUN1: first_decode_ms=2370.9 tokens_in=2 tokens_out=8
+RUN1: gpu_calls=5436 cpu_calls=0 fallback=<none> submits=4069 waits=4069 kernel_ms=5310.4 wait_ms=5310.4
+RUN1: timing_semantics legacy_kernel_ms_is_host_wait=5310.4 device_gpu_ms=4281.6 submit_ms=41.6 host_wait_ms=5310.4
+RUN1: per_token submits=452.1 waits=452.1 gpu_ms=4281.6 submit_ms=41.6 wait_ms=5310.4
+RUN1: ACCOUNT positions=9 decode_forward_passes=7 prefill_submits_per_pos=667.5 decode_submits_per_fwd=390.6
+RUN1: gpu_time_share=24.8% of the measured window (gpu 4281.6 ms of prefill+decode 17257.8 ms)
+RUN1: BOUNDARY bind_ms=34613.9 (model load+bind, excluded from TPS)
+RUN1: BOUNDARY prefill wall=5789.4 ms gpu=973.1 ms host_wait=1391.7 ms submit=9.9 ms submits=1335
+RUN1: BOUNDARY decode wall=11468.4 ms gpu=3308.5 ms host_wait=3918.7 ms submit=31.7 ms submits=2734
+RUN1: BOUNDARY decode gpu_share=28.8% wall; unaccounted(host+queue)=7549.7 ms; kernel_ms is a HOST-WAIT alias, gpu_ms is device timeline
+RUN1: device_bytes_peak=4074.2 MB device_bytes_live=4074.2 MB weight_cache_hits=3050 misses=2386 upload=4117.2 MB
+RUN1: ram_peak=8019.7 MB ram_cur=8019.7 MB
+RUN1 GENSTREAM: 300 17827 185 300 440 83 5156 25
+RUN1 VERDICT: PASS
+Released all tensors
+Vulkan resources cleaned up successfully

@@ -1,0 +1,9 @@
+model=MiniMax-M2.7-Q4_K_M:3-shard
+exit=0
+generated=1
+metrics=6808
+complete=1
+replay=one-window
+certification=unsealed
+receipt=receipt_minimax_onewindow.json
+receipt_sha256=FF203B3F07E11F300C72EFB5364F47DBBAFA4E615708ABAC7A495EC21AE9EE53

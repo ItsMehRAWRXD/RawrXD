@@ -1,0 +1,4 @@
+name=nemotron-3.5-lightning:30b
+exit=1
+result=FAIL
+reason=INGEST_EXIT_WITHOUT_DIAGNOSTIC_OUTPUT

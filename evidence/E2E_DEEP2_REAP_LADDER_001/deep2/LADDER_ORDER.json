@@ -1,0 +1,110 @@
+﻿[
+    {
+        "name":  "n4-tiny-oracle:latest",
+        "size":  "637MB"
+    },
+    {
+        "name":  "qwen2.5-coder:1.5b-base",
+        "size":  "986MB"
+    },
+    {
+        "name":  "embeddinggemma-2:740m",
+        "size":  "1.3GB"
+    },
+    {
+        "name":  "llama3.2:3b",
+        "size":  "2.0GB"
+    },
+    {
+        "name":  "qwen35-40b-heretic-q8:latest",
+        "size":  "2.2GB"
+    },
+    {
+        "name":  "nemotron-3-nano:4b",
+        "size":  "2.8GB"
+    },
+    {
+        "name":  "gemma3:4b",
+        "size":  "3.3GB"
+    },
+    {
+        "name":  "granite3.3:8b",
+        "size":  "4.9GB"
+    },
+    {
+        "name":  "llama3.1:8b",
+        "size":  "4.9GB"
+    },
+    {
+        "name":  "qwen3:8b",
+        "size":  "5.2GB"
+    },
+    {
+        "name":  "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest",
+        "size":  "6.6GB"
+    },
+    {
+        "name":  "kiminoto/T0.0.1:latest",
+        "size":  "6.6GB"
+    },
+    {
+        "name":  "deepseek-coder-v2:16b",
+        "size":  "8.9GB"
+    },
+    {
+        "name":  "starcoder2:15b",
+        "size":  "9.1GB"
+    },
+    {
+        "name":  "gpt-oss:20b",
+        "size":  "13GB"
+    },
+    {
+        "name":  "qwen3.8:27b",
+        "size":  "17GB"
+    },
+    {
+        "name":  "deepseek-r1:32b",
+        "size":  "19GB"
+    },
+    {
+        "name":  "flint:latest",
+        "size":  "22GB"
+    },
+    {
+        "name":  "ornith-1.5:35b",
+        "size":  "22GB"
+    },
+    {
+        "name":  "nemotron-3.5-bolt:latest",
+        "size":  "24GB"
+    },
+    {
+        "name":  "nemotron-3.5-lightning:30b",
+        "size":  "25GB"
+    },
+    {
+        "name":  "bigdaddygnative:latest",
+        "size":  "25GB"
+    },
+    {
+        "name":  "deepseek-r1:70b",
+        "size":  "42GB"
+    },
+    {
+        "name":  "qwen3-next:80b",
+        "size":  "50GB"
+    },
+    {
+        "name":  "gpt-oss:120b",
+        "size":  "65GB"
+    },
+    {
+        "name":  "laguna-s-2.1:Q4_K_M",
+        "size":  "96GB"
+    },
+    {
+        "name":  "bluehawana/deepseek-v4-flash:iq2_m",
+        "size":  "103GB"
+    }
+]

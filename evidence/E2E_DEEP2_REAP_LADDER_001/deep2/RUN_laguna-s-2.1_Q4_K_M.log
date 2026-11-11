@@ -1,0 +1,23 @@
+device-pin requested index=0
+BENCH model=F:\OllamaModels\blobs\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8 decode=8 runs=1 backend=vulkan-native
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\blobs\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8 ...
+arch=laguna blocks=48 embd=3072 heads=0 kv=8 rope_dim=64 experts=256 used=10
+bound ops=863 (bind 454873.0 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+PREFILL_FAIL pos=0 err=attention: head_count 0
+Released all tensors
+Vulkan resources cleaned up successfully

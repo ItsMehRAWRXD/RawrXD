@@ -1,0 +1,1017 @@
+[Deep2Engine] Loading model from: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=GPU_SINGLE devices=1 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001AB5434BD10  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001AB5434BD10  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001AB5434BD10  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001AB5434BD10  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6B95C7CC0 dequant=00007FF6B95CAB90 GetGEMV(12)=00007FF6B95C7CC0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 22 layers x 2048 positions x 4 heads x 64 dim = 88.00 MB
+[Deep2Engine] Model loaded successfully (201 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BC6C
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000001AB99596580 sizeBytes=36864000 rows=32000 cols=2048
+H11_PREFILL_PARITY
+  model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  prompt_tokens=8
+  chunk_tokens=4
+  layers=22 kv_heads=4 head_dim=64
+  serial_tokens_done=8
+  batched_tokens_done=8
+  kv_rows_serial=8
+  kv_rows_batched=8
+  kv_rows_match=1
+  kv_byte_exact=1
+  max_abs_hidden=0.000000e+00
+  rmse_hidden=0.000000e+00
+  max_abs_kv=0.000000e+00
+  rmse_kv=0.000000e+00
+  max_abs_logits=0.000000e+00
+  max_abs_overall=0.000000e+00
+  first_mismatch_hidden_index=0 value=0.000000e+00
+  first_mismatch_kv_flat_index=0 value=0.000000e+00
+  tolerance=1e-03
+  verdict=PASS
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=97
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=3216
+DEEP2_GPU_Q6K_PACKED_OPS=482
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=256
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=5632
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=256
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 1 (patch_c3fd64e1539e8519)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=2048 pos=16)
+[KVCache] page grow 24 -> 32 hot (virtualMax=2048 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=2048 pos=32)
+[KVCache] page grow 40 -> 48 hot (virtualMax=2048 pos=40)
+[KVCache] page grow 48 -> 56 hot (virtualMax=2048 pos=48)
+[KVCache] page grow 56 -> 64 hot (virtualMax=2048 pos=56)
+[KVCache] page grow 64 -> 72 hot (virtualMax=2048 pos=64)
+[KVCache] page grow 72 -> 80 hot (virtualMax=2048 pos=72)
+[KVCache] page grow 80 -> 88 hot (virtualMax=2048 pos=80)
+[KVCache] page grow 88 -> 96 hot (virtualMax=2048 pos=88)
+[KVCache] page grow 96 -> 104 hot (virtualMax=2048 pos=96)
+[AGENT] PREFILL_DONE prompt_tokens=97 prefill_ms=191909.754
+[AGENT] DECODE_BEGIN max_out=256
+[DBG] stateNorm=8.571833e+01 finite=1 pos=97
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[AGENT] TOKEN id=13 piece=\x0A
+[DBG] stateNorm=8.930665e+01 finite=1 pos=98
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=28956 eosId=2
+[DBG] stateNorm=8.708329e+01 finite=1 pos=99
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.337932e+01 finite=1 pos=100
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.396790e+01 finite=1 pos=101
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=797 eosId=2
+[DBG] stateNorm=8.506573e+01 finite=1 pos=102
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=445 eosId=2
+[DBG] stateNorm=8.622738e+01 finite=1 pos=103
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=9120 eosId=2
+[DBG] stateNorm=8.543917e+01 finite=1 pos=104
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1824 eosId=2
+[KVCache] page grow 104 -> 112 hot (virtualMax=2048 pos=104)
+[DBG] stateNorm=8.521312e+01 finite=1 pos=105
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29892 eosId=2
+[DBG] stateNorm=8.470704e+01 finite=1 pos=106
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=591 eosId=2
+[DBG] stateNorm=8.587445e+01 finite=1 pos=107
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=505 eosId=2
+[DBG] stateNorm=8.501085e+01 finite=1 pos=108
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2715 eosId=2
+[DBG] stateNorm=8.608770e+01 finite=1 pos=109
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[DBG] stateNorm=8.693071e+01 finite=1 pos=110
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=9.127005e+01 finite=1 pos=111
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.615397e+01 finite=1 pos=112
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[KVCache] page grow 112 -> 120 hot (virtualMax=2048 pos=112)
+[DBG] stateNorm=8.674132e+01 finite=1 pos=113
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.585427e+01 finite=1 pos=114
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.546354e+01 finite=1 pos=115
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1596 eosId=2
+[DBG] stateNorm=8.594540e+01 finite=1 pos=116
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.769865e+01 finite=1 pos=117
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.586920e+01 finite=1 pos=118
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.529845e+01 finite=1 pos=119
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.698145e+01 finite=1 pos=120
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[KVCache] page grow 120 -> 128 hot (virtualMax=2048 pos=120)
+[DBG] stateNorm=8.885386e+01 finite=1 pos=121
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[DBG] stateNorm=8.620392e+01 finite=1 pos=122
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.644881e+01 finite=1 pos=123
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.646721e+01 finite=1 pos=124
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.882906e+01 finite=1 pos=125
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[DBG] stateNorm=8.746891e+01 finite=1 pos=126
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.992708e+01 finite=1 pos=127
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.399030e+01 finite=1 pos=128
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[KVCache] page grow 128 -> 136 hot (virtualMax=2048 pos=128)
+[DBG] stateNorm=8.606265e+01 finite=1 pos=129
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.627084e+01 finite=1 pos=130
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.644483e+01 finite=1 pos=131
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[DBG] stateNorm=8.530934e+01 finite=1 pos=132
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.592260e+01 finite=1 pos=133
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[DBG] stateNorm=8.651060e+01 finite=1 pos=134
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.809221e+01 finite=1 pos=135
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.576306e+01 finite=1 pos=136
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[KVCache] page grow 136 -> 144 hot (virtualMax=2048 pos=136)
+[DBG] stateNorm=8.634317e+01 finite=1 pos=137
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.720398e+01 finite=1 pos=138
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.673040e+01 finite=1 pos=139
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[DBG] stateNorm=8.620187e+01 finite=1 pos=140
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.899586e+01 finite=1 pos=141
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.127028e+01 finite=1 pos=142
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.133596e+01 finite=1 pos=143
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=797 eosId=2
+[DBG] stateNorm=8.592179e+01 finite=1 pos=144
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[KVCache] page grow 144 -> 152 hot (virtualMax=2048 pos=144)
+[DBG] stateNorm=8.632790e+01 finite=1 pos=145
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=9.098021e+01 finite=1 pos=146
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3396 eosId=2
+[DBG] stateNorm=8.554129e+01 finite=1 pos=147
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.664053e+01 finite=1 pos=148
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.706410e+01 finite=1 pos=149
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29892 eosId=2
+[DBG] stateNorm=8.563591e+01 finite=1 pos=150
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=591 eosId=2
+[DBG] stateNorm=8.661775e+01 finite=1 pos=151
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=505 eosId=2
+[DBG] stateNorm=8.669205e+01 finite=1 pos=152
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2715 eosId=2
+[KVCache] page grow 152 -> 160 hot (virtualMax=2048 pos=152)
+[DBG] stateNorm=8.717206e+01 finite=1 pos=153
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[DBG] stateNorm=8.836429e+01 finite=1 pos=154
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=9.005153e+01 finite=1 pos=155
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.345986e+01 finite=1 pos=156
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.615473e+01 finite=1 pos=157
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.595878e+01 finite=1 pos=158
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.619196e+01 finite=1 pos=159
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1596 eosId=2
+[DBG] stateNorm=8.555783e+01 finite=1 pos=160
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[KVCache] page grow 160 -> 168 hot (virtualMax=2048 pos=160)
+[DBG] stateNorm=8.748036e+01 finite=1 pos=161
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.536273e+01 finite=1 pos=162
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.517608e+01 finite=1 pos=163
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.673276e+01 finite=1 pos=164
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.813690e+01 finite=1 pos=165
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[DBG] stateNorm=8.543374e+01 finite=1 pos=166
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.361634e+01 finite=1 pos=167
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.632742e+01 finite=1 pos=168
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[KVCache] page grow 168 -> 176 hot (virtualMax=2048 pos=168)
+[DBG] stateNorm=8.884114e+01 finite=1 pos=169
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[DBG] stateNorm=8.750463e+01 finite=1 pos=170
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.953670e+01 finite=1 pos=171
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.483624e+01 finite=1 pos=172
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.517781e+01 finite=1 pos=173
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.634795e+01 finite=1 pos=174
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.547450e+01 finite=1 pos=175
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[DBG] stateNorm=8.561704e+01 finite=1 pos=176
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[KVCache] page grow 176 -> 184 hot (virtualMax=2048 pos=176)
+[DBG] stateNorm=8.458238e+01 finite=1 pos=177
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[DBG] stateNorm=8.524354e+01 finite=1 pos=178
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.689196e+01 finite=1 pos=179
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.522830e+01 finite=1 pos=180
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.473977e+01 finite=1 pos=181
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.617252e+01 finite=1 pos=182
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.503482e+01 finite=1 pos=183
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[DBG] stateNorm=8.564986e+01 finite=1 pos=184
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[KVCache] page grow 184 -> 192 hot (virtualMax=2048 pos=184)
+[DBG] stateNorm=8.939285e+01 finite=1 pos=185
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.138851e+01 finite=1 pos=186
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.090681e+01 finite=1 pos=187
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1576 eosId=2
+[DBG] stateNorm=8.733281e+01 finite=1 pos=188
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.988887e+01 finite=1 pos=189
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[DBG] stateNorm=8.601756e+01 finite=1 pos=190
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.461333e+01 finite=1 pos=191
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.719030e+01 finite=1 pos=192
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3639 eosId=2
+[KVCache] page grow 192 -> 200 hot (virtualMax=2048 pos=192)
+[DBG] stateNorm=8.683388e+01 finite=1 pos=193
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.703392e+01 finite=1 pos=194
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.601540e+01 finite=1 pos=195
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.624171e+01 finite=1 pos=196
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.706764e+01 finite=1 pos=197
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=6124 eosId=2
+[DBG] stateNorm=8.675639e+01 finite=1 pos=198
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.643952e+01 finite=1 pos=199
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1023 eosId=2
+[DBG] stateNorm=8.731667e+01 finite=1 pos=200
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=11920 eosId=2
+[KVCache] page grow 200 -> 208 hot (virtualMax=2048 pos=200)
+[DBG] stateNorm=8.607268e+01 finite=1 pos=201
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.880270e+01 finite=1 pos=202
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[DBG] stateNorm=8.751814e+01 finite=1 pos=203
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.961898e+01 finite=1 pos=204
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.470708e+01 finite=1 pos=205
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.512611e+01 finite=1 pos=206
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.684349e+01 finite=1 pos=207
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.585995e+01 finite=1 pos=208
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[KVCache] page grow 208 -> 216 hot (virtualMax=2048 pos=208)
+[DBG] stateNorm=8.544343e+01 finite=1 pos=209
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.615121e+01 finite=1 pos=210
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[DBG] stateNorm=8.502014e+01 finite=1 pos=211
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.713809e+01 finite=1 pos=212
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.534594e+01 finite=1 pos=213
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.569139e+01 finite=1 pos=214
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.625622e+01 finite=1 pos=215
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.583839e+01 finite=1 pos=216
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[KVCache] page grow 216 -> 224 hot (virtualMax=2048 pos=216)
+[DBG] stateNorm=8.582133e+01 finite=1 pos=217
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.929766e+01 finite=1 pos=218
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.096721e+01 finite=1 pos=219
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.071651e+01 finite=1 pos=220
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=797 eosId=2
+[DBG] stateNorm=8.602267e+01 finite=1 pos=221
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.668941e+01 finite=1 pos=222
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=9120 eosId=2
+[DBG] stateNorm=8.469760e+01 finite=1 pos=223
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1824 eosId=2
+[DBG] stateNorm=8.596869e+01 finite=1 pos=224
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29892 eosId=2
+[KVCache] page grow 224 -> 232 hot (virtualMax=2048 pos=224)
+[DBG] stateNorm=8.566857e+01 finite=1 pos=225
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=591 eosId=2
+[DBG] stateNorm=8.606700e+01 finite=1 pos=226
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=505 eosId=2
+[DBG] stateNorm=8.589562e+01 finite=1 pos=227
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2715 eosId=2
+[DBG] stateNorm=8.656931e+01 finite=1 pos=228
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[DBG] stateNorm=8.740140e+01 finite=1 pos=229
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=9.010600e+01 finite=1 pos=230
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.208641e+01 finite=1 pos=231
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.474810e+01 finite=1 pos=232
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[KVCache] page grow 232 -> 240 hot (virtualMax=2048 pos=232)
+[DBG] stateNorm=8.546334e+01 finite=1 pos=233
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.460644e+01 finite=1 pos=234
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1596 eosId=2
+[DBG] stateNorm=8.487049e+01 finite=1 pos=235
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.555756e+01 finite=1 pos=236
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.508257e+01 finite=1 pos=237
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.468925e+01 finite=1 pos=238
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.490965e+01 finite=1 pos=239
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.740483e+01 finite=1 pos=240
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[KVCache] page grow 240 -> 248 hot (virtualMax=2048 pos=240)
+[DBG] stateNorm=8.528371e+01 finite=1 pos=241
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.390423e+01 finite=1 pos=242
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.612547e+01 finite=1 pos=243
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.890295e+01 finite=1 pos=244
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[DBG] stateNorm=8.449242e+01 finite=1 pos=245
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.833772e+01 finite=1 pos=246
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.483248e+01 finite=1 pos=247
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.483577e+01 finite=1 pos=248
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[KVCache] page grow 248 -> 256 hot (virtualMax=2048 pos=248)
+[DBG] stateNorm=8.545323e+01 finite=1 pos=249
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.447668e+01 finite=1 pos=250
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[DBG] stateNorm=8.551618e+01 finite=1 pos=251
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.425437e+01 finite=1 pos=252
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[DBG] stateNorm=8.375219e+01 finite=1 pos=253
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.439740e+01 finite=1 pos=254
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.461635e+01 finite=1 pos=255
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.364956e+01 finite=1 pos=256
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[KVCache] page grow 256 -> 264 hot (virtualMax=2048 pos=256)
+[DBG] stateNorm=8.547610e+01 finite=1 pos=257
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.524333e+01 finite=1 pos=258
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[DBG] stateNorm=8.521435e+01 finite=1 pos=259
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.940058e+01 finite=1 pos=260
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.073002e+01 finite=1 pos=261
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.079076e+01 finite=1 pos=262
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=797 eosId=2
+[DBG] stateNorm=8.571061e+01 finite=1 pos=263
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.509774e+01 finite=1 pos=264
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[KVCache] page grow 264 -> 272 hot (virtualMax=2048 pos=264)
+[DBG] stateNorm=9.009533e+01 finite=1 pos=265
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3396 eosId=2
+[DBG] stateNorm=8.395598e+01 finite=1 pos=266
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.554805e+01 finite=1 pos=267
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.690493e+01 finite=1 pos=268
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29892 eosId=2
+[DBG] stateNorm=8.466349e+01 finite=1 pos=269
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=591 eosId=2
+[DBG] stateNorm=8.514061e+01 finite=1 pos=270
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=505 eosId=2
+[DBG] stateNorm=8.455779e+01 finite=1 pos=271
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2715 eosId=2
+[DBG] stateNorm=8.523872e+01 finite=1 pos=272
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[KVCache] page grow 272 -> 280 hot (virtualMax=2048 pos=272)
+[DBG] stateNorm=8.543504e+01 finite=1 pos=273
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.925353e+01 finite=1 pos=274
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.462099e+01 finite=1 pos=275
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.527596e+01 finite=1 pos=276
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.483242e+01 finite=1 pos=277
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.454848e+01 finite=1 pos=278
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1596 eosId=2
+[DBG] stateNorm=8.494657e+01 finite=1 pos=279
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.488001e+01 finite=1 pos=280
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[KVCache] page grow 280 -> 288 hot (virtualMax=2048 pos=280)
+[DBG] stateNorm=8.496424e+01 finite=1 pos=281
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.428553e+01 finite=1 pos=282
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.367762e+01 finite=1 pos=283
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.793448e+01 finite=1 pos=284
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[DBG] stateNorm=8.662663e+01 finite=1 pos=285
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.520365e+01 finite=1 pos=286
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.549897e+01 finite=1 pos=287
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.797669e+01 finite=1 pos=288
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[KVCache] page grow 288 -> 296 hot (virtualMax=2048 pos=288)
+[DBG] stateNorm=8.361101e+01 finite=1 pos=289
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.844497e+01 finite=1 pos=290
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.500092e+01 finite=1 pos=291
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.524058e+01 finite=1 pos=292
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.492173e+01 finite=1 pos=293
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.439514e+01 finite=1 pos=294
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[DBG] stateNorm=8.570345e+01 finite=1 pos=295
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[DBG] stateNorm=8.493091e+01 finite=1 pos=296
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[KVCache] page grow 296 -> 304 hot (virtualMax=2048 pos=296)
+[DBG] stateNorm=8.381755e+01 finite=1 pos=297
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.457590e+01 finite=1 pos=298
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.459520e+01 finite=1 pos=299
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.374627e+01 finite=1 pos=300
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.550003e+01 finite=1 pos=301
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.539775e+01 finite=1 pos=302
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[DBG] stateNorm=8.425489e+01 finite=1 pos=303
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.931940e+01 finite=1 pos=304
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[KVCache] page grow 304 -> 312 hot (virtualMax=2048 pos=304)
+[DBG] stateNorm=9.055692e+01 finite=1 pos=305
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.060406e+01 finite=1 pos=306
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1576 eosId=2
+[DBG] stateNorm=8.558063e+01 finite=1 pos=307
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.909228e+01 finite=1 pos=308
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1202 eosId=2
+[DBG] stateNorm=8.586945e+01 finite=1 pos=309
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.521836e+01 finite=1 pos=310
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.666787e+01 finite=1 pos=311
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3639 eosId=2
+[DBG] stateNorm=8.589115e+01 finite=1 pos=312
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[KVCache] page grow 312 -> 320 hot (virtualMax=2048 pos=312)
+[DBG] stateNorm=8.574089e+01 finite=1 pos=313
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.549420e+01 finite=1 pos=314
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.451895e+01 finite=1 pos=315
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.543794e+01 finite=1 pos=316
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=6124 eosId=2
+[DBG] stateNorm=8.535518e+01 finite=1 pos=317
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.450350e+01 finite=1 pos=318
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1023 eosId=2
+[DBG] stateNorm=8.637540e+01 finite=1 pos=319
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=11920 eosId=2
+[DBG] stateNorm=8.520231e+01 finite=1 pos=320
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[KVCache] page grow 320 -> 328 hot (virtualMax=2048 pos=320)
+[DBG] stateNorm=8.764203e+01 finite=1 pos=321
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=450 eosId=2
+[DBG] stateNorm=8.390115e+01 finite=1 pos=322
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.789527e+01 finite=1 pos=323
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.528981e+01 finite=1 pos=324
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.529291e+01 finite=1 pos=325
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.515888e+01 finite=1 pos=326
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=8.483954e+01 finite=1 pos=327
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1304 eosId=2
+[DBG] stateNorm=8.542542e+01 finite=1 pos=328
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[KVCache] page grow 328 -> 336 hot (virtualMax=2048 pos=328)
+[DBG] stateNorm=8.467048e+01 finite=1 pos=329
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1962 eosId=2
+[DBG] stateNorm=8.413349e+01 finite=1 pos=330
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.522278e+01 finite=1 pos=331
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1121 eosId=2
+[DBG] stateNorm=8.468044e+01 finite=1 pos=332
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=310 eosId=2
+[DBG] stateNorm=8.376134e+01 finite=1 pos=333
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.519881e+01 finite=1 pos=334
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=740 eosId=2
+[DBG] stateNorm=8.528950e+01 finite=1 pos=335
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1246 eosId=2
+[DBG] stateNorm=8.468318e+01 finite=1 pos=336
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29889 eosId=2
+[KVCache] page grow 336 -> 344 hot (virtualMax=2048 pos=336)
+[DBG] stateNorm=8.906888e+01 finite=1 pos=337
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.078769e+01 finite=1 pos=338
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=9.101687e+01 finite=1 pos=339
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=797 eosId=2
+[DBG] stateNorm=8.506373e+01 finite=1 pos=340
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=8.093108e+01 finite=1 pos=341
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=9120 eosId=2
+[DBG] stateNorm=8.388173e+01 finite=1 pos=342
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1824 eosId=2
+[DBG] stateNorm=8.616456e+01 finite=1 pos=343
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29892 eosId=2
+[DBG] stateNorm=8.458537e+01 finite=1 pos=344
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=591 eosId=2
+[KVCache] page grow 344 -> 352 hot (virtualMax=2048 pos=344)
+[DBG] stateNorm=8.526885e+01 finite=1 pos=345
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=505 eosId=2
+[DBG] stateNorm=8.474384e+01 finite=1 pos=346
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2715 eosId=2
+[DBG] stateNorm=8.543143e+01 finite=1 pos=347
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[DBG] stateNorm=8.597065e+01 finite=1 pos=348
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=421 eosId=2
+[DBG] stateNorm=8.925843e+01 finite=1 pos=349
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8124 eosId=2
+[DBG] stateNorm=8.582223e+01 finite=1 pos=350
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=29952 eosId=2
+[DBG] stateNorm=8.546422e+01 finite=1 pos=351
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=3229 eosId=2
+[DBG] stateNorm=8.504877e+01 finite=1 pos=352
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=304 eosId=2
+[Deep2Engine] Generation complete: 256 tokens in 233967.51 ms (E2E 1.09 TPS)
+[Deep2Engine] PREFILL: 97 tok in 191909.75 ms (0.51 tok/s) | DECODE: 256 tok in 42057.05 ms (6.09 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=47168
+DEEP2_GPU_Q6K_PACKED_OPS=7296
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 7744
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 232611.273
+totalEmbedMs       = 7.821
+totalLogitsMs      = 769.396
+totalAttnMs        = 25847.627
+totalFfnMs         = 19885.221
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 30.038
+============================================================
+[live-path] vacuumArmed=0 trampoline=1/8001 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=0 plasmaAbsence=0 enhancements=1
+[AGENT] POST_GENERATE generated=256 tokens
+REPLAY_CONTINUOUS generated=256 prompt_tokens=97 completed=1
+REPLAY_WINDOWS=256 GENERATED=256 METRICS=0 COMPLETE=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

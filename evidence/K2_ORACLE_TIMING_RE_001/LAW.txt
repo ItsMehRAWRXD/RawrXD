@@ -1,0 +1,64 @@
+GATE=K2_ORACLE_TIMING_RE_001
+BASELINE_SOURCE=ABORTED_86_TOKEN_TRACE
+SOURCE_ERR=F:\rawrxd-native-agent-001\evidence\k2_oracle_single_turn.err.aborted
+SOURCE_ABORT=F:\rawrxd-native-agent-001\evidence\GATE2_K2_ORACLE_ABORTED.txt
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+FACTORY_SEAL=NOT_ACHIEVED
+INTERNAL_STAGE_SPLIT=UNMEASURED
+CPU_MOE=CONFIRMED
+
+PREFILL_N=87
+PREFILL_MS=448802.14
+PREFILL_MS_PER_TOKEN=5158.65
+PREFILL_TOK_S=0.194
+
+DECODE_MS=1146641.913
+DECODE_TOKENS=86
+BASELINE_MS_PER_TOKEN=13333.05
+TARGET_PLUS30_TPS_MS_PER_TOKEN=10256.37
+REQUIRED_SAVINGS_MS_PER_TOKEN=3076.68
+
+DECODE_CHECKPOINT_13_MS_PER_TOKEN~15481
+DECODE_CHECKPOINT_41_MS_PER_TOKEN~13910
+
+TOTAL_WALL_MS~1595444
+DOMINANT_PHASE=DECODE
+DECODE_FRAC_OF_E2E~0.719
+
+LOAD_CONFIGURATION=mmap + cpu-moe (+ no-repack as logged)
+HOST_MODEL_ACCOUNT_GIB~585
+WS_GIB~33-39
+DISK_READ_DELTA=0_NOT_PROOF_SOFT_FAULTS
+
+QUARANTINE=
+  Deep2 Lite totalFfnMs%~91 NOT_SUBSTITUTED
+  Deep2 Kimi 1-tok ~153 tok/s NOT_SUBSTITUTED
+
+HYPOTHESIS_UNPROVEN=CPU MoE weight access + expert GEMV (not proven paging or Vulkan sync)
+INSTRUMENTATION=
+  Separate llama.cpp-ref build only after factory-sealed 256-id receipt OR authorized diagnostic branch
+  Do not continue/instrument the preserved aborted capture as if it were the seal run
+  Capture non-overlapping: expert acquire, expert GEMV, CPU/GPU xfer+sync, Vulkan attn/non-MoE, wall
+
+K2_ORACLE_BASELINE=LOCKED
+REFERENCE_RECEIPT=AWAITING
+STAGE_PROFILING=BLOCKED_UNTIL_SEAL
+VERDICT=ENGINEERING_AUTH_ACTIVE_SEAL_STILL_OPEN
+AUTH=GATE2_E2E_AUTH_SUPERSESSION_001 (dev HOLD superseded; failed gates not auto-cleared)
+
+UNBLOCK_ACCEPTANCE=
+  1. independent_reference_receipt_k2.json physically on disk
+  2. Produced by reap-reference-receipt.exe (not hand-JSON / not synthetic)
+  3. token_ids.Count == 256 exactly (no truncation / pad / partial override)
+  4. Integrity + completion checks of the receipt toolchain PASS
+  File existence alone != ACCEPT; JSON presence != SEAL
+
+OBSERVED_NOW=
+  independent_reference_receipt_k2.json = ABSENT
+  P1_CAPTURE=STARTING_vulkan_mmap_cpu-moe_256
+
+NEXT=
+  Execute capture_oracle_vectors_k2.ps1 to factory seal (new run; not continuation of aborted 86-tok)
+  On seal: schema validate then separate llama.cpp-ref instrumentation for >=3076.68 ms/tok recovery

@@ -1,0 +1,12 @@
+MMAP_RETRY=ACTIVE_DIAGNOSTIC_NOT_CERTIFIED
+EXIT_CODE=PENDING (harness still running; no EXIT= in meta)
+LOAD_571GiB_ALLOC=NOT_REPEATED_SO_FAR
+LOAD_MODE_LOG=mmap (after an earlier fit pass with load_mode=none)
+LAYER_OFFLOAD=62/62
+PROMPT_ACCEPTED=1 task.n_tokens=87
+NEXT_TOKEN_COUNT=0
+OUT_BYTES=0
+PROCESS=llama PID=56816 WS_GB~39.25 PM_GB~9.65
+NOTE=WS << 571GiB suggests experts not fully resident-copied; first decode posted then long SSE-ping stall — MoE inference not yet proven
+PROMOTE=0
+TIP_CLIMB=HOLD

@@ -1,0 +1,49 @@
+
+
+Loading model... {"type":"fit_memory_breakdown","data":{"unit":"MiB","rows":[{"kind":"host","name":"Host","self":4931,"model":4304,"context":540,"compute":86},{"kind":"buffer_type","name":"CPU_REPACK","self":5575,"model":5575,"context":0,"compute":0}]}}
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-961c376
+model      : F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+ftype      : Q4_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+>  #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS
+");
+    } else {
+        printf("FAIL add(2,3)=%d
+", add(2, 3));
+    }
+    return 0;
+}
+ The code you provided is a C++
+
+[ Prompt: 15.2 t/s | Generation: 13.0 t/s ]
+
+> 
+
+Exiting...
+{"type":"fit_memory_breakdown","data":{"unit":"MiB","rows":[{"kind":"host","name":"Host","self":4931,"model":4304,"context":540,"compute":86},{"kind":"buffer_type","name":"CPU_REPACK","self":5575,"model":5575,"context":0,"compute":0}]}}

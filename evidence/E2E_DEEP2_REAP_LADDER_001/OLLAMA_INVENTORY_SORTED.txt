@@ -1,0 +1,34 @@
+POST_REBOOT_GPU=R9700 OK + RX7800XT OK + iGPU OK
+ORDER=smallest_local_first; cloud SKIP for Deep2 GGUF; shards AFTER dense ladder
+
+LOCAL_ASC_SIZE=
+  637MB  n4-tiny-oracle:latest
+  986MB  qwen2.5-coder:1.5b-base
+  1.3GB  embeddinggemma-2:740m
+  2.0GB  llama3.2:3b / llama3.2:latest
+  2.2GB  qwen35-40b-heretic-q8:latest
+  2.8GB  nemotron-3-nano:4b
+  3.3GB  gemma3:latest / gemma3:4b
+  4.9GB  granite3.3:8b / llama3.1:8b
+  5.2GB  qwen3:8b
+  6.6GB  pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest / kiminoto/T0.0.1:latest
+  8.9GB  deepseek-coder-v2:16b
+  9.1GB  starcoder2:15b
+  13GB   gpt-oss:latest / gpt-oss:20b
+  17GB   qwen3.8:27b
+  19GB   deepseek-r1:32b
+  22GB   flint:latest / ornith-1.5:35b
+  24GB   nemotron-3.5-bolt:latest
+  25GB   nemotron-3.5-lightning:30b / bigdaddy*
+  42GB   deepseek-r1:70b
+  50GB   qwen3-next:80b
+  65GB   gpt-oss:120b
+  96GB   laguna-s-2.1:Q4_K_M
+  103GB  bluehawana/deepseek-v4-flash:iq2_m*
+
+CLOUD_SKIP=
+  minimax-m3:cloud, deepseek-v4*:cloud, glm-*:cloud, kimi-k2.6:cloud, wormgpt cloud
+
+SHARDS_AFTER=
+  Kimi-K2 13-shard under F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\
+  other multi-shard GGUF under F:\OllamaModels\

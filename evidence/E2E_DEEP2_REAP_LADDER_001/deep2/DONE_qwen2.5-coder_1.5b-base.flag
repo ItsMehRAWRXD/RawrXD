@@ -1,0 +1,5 @@
+﻿name=qwen2.5-coder:1.5b-base
+exit=0
+tps=1.269
+notes=finite=yes;gpu_complete=yes;elapsed_s=15.4;bench_verdict=PASS
+

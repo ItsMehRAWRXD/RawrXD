@@ -1,0 +1,4 @@
+name=flint:latest
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_ROUTER_ZERO_WEIGHT

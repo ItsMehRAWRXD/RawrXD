@@ -1,0 +1,4 @@
+name=qwen3.8:27b
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_GDN_DIMENSIONS_MUST_BE_NON_ZERO

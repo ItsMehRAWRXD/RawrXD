@@ -1,0 +1,4 @@
+name=ornith-1.5:35b
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_GDN_DIMENSIONS_MUST_BE_NON_ZERO

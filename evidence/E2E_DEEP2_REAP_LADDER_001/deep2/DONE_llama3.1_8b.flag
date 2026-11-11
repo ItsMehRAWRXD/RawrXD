@@ -1,0 +1,5 @@
+﻿name=llama3.1:8b
+exit=0
+tps=0.520
+notes=finite=yes;gpu_complete=yes;elapsed_s=44.8;bench_verdict=PASS
+
