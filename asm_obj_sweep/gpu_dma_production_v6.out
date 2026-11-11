@@ -1,0 +1,57 @@
+ Assembling: D:\rawrxd\gpu_dma_production_v6.asm
+D:\rawrxd\gpu_dma_production_v6.asm(51) : error A2008:syntax error : r8
+D:\rawrxd\gpu_dma_production_v6.asm(182) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(188) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(252) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(256) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(292) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(293) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(298) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(299) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(396) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(397) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(398) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(399) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(473) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(474) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(479) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(480) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(513) : error A2008:syntax error : r8
+D:\rawrxd\gpu_dma_production_v6.asm(531) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(543) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v6.asm(548) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v6.asm(553) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(555) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(560) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(565) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(569) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(573) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(577) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(647) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(648) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(649) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(650) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v6.asm(759) : error A2008:syntax error : r8
+D:\rawrxd\gpu_dma_production_v6.asm(786) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(877) : error A2008:syntax error : r8
+D:\rawrxd\gpu_dma_production_v6.asm(890) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(945) : error A2008:syntax error : r8
+D:\rawrxd\gpu_dma_production_v6.asm(960) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(966) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(967) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(1079) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(1127) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v6.asm(1171) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v6.asm(424) : error A2166:structure field expected
+D:\rawrxd\gpu_dma_production_v6.asm(545) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v6.asm(550) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v6.asm(1086) : error A2206:missing operator in expression
+D:\rawrxd\gpu_dma_production_v6.asm(443) : warning A6004:procedure argument or local not referenced : operation
+D:\rawrxd\gpu_dma_production_v6.asm(443) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(736) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(858) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(926) : warning A6004:procedure argument or local not referenced : dsResult
+D:\rawrxd\gpu_dma_production_v6.asm(1065) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(1175) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(1210) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v6.asm(1228) : error A2220:Missing .ENDPROLOG

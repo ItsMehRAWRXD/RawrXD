@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(38) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(75) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(97) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(126) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(190) : error A2006:undefined symbol : emit_dword
+D:\rawrxd\history\all_versions\terraform.asm\1771246054311_qARJ.asm(439) : error A2006:undefined symbol : WriteConsoleA

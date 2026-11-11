@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(6) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(10) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(11) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(12) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(15) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(16) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(17) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(20) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(21) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(23) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(26) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(27) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(28) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(31) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(34) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(37) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(40) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(43) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(45) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(46) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(47) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(50) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(51) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(52) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(55) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(56) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(57) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(60) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(61) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(63) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(64) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(65) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(68) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(69) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(70) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(73) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(76) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(77) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(78) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(80) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(81) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(84) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(85) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(86) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(95) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(96) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(99) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(101) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(106) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(108) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(109) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(112) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(113) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(116) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(119) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(127) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(133) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(134) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(137) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(138) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(139) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(142) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(143) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(144) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(145) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(146) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(147) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(148) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(150) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(152) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(154) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(155) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(157) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(159) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(160) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(162) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(164) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(165) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(167) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(168) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(172) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(173) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(174) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(180) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(183) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(184) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(185) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\bash_compiler_from_scratch.asm(190) : fatal error A1012:error count exceeds 100; stopping assembly

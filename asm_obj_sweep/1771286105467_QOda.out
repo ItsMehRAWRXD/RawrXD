@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_interceptor_cli_robust.asm\1771286105467_QOda.asm
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_robust.asm\1771286105467_QOda.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_robust.asm\1771286105467_QOda.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_robust.asm\1771286105467_QOda.asm(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

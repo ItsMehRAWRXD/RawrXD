@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1ec43a2c\BbkD.asm
+D:\rawrxd\history\-1ec43a2c\BbkD.asm(4526) : error A2006:undefined symbol : BBDetectJumpTables
+D:\rawrxd\history\-1ec43a2c\BbkD.asm(4534) : error A2006:undefined symbol : BBIsInSkipRegion
+D:\rawrxd\history\-1ec43a2c\BbkD.asm(4787) : error A2006:undefined symbol : BBValidateBlocks

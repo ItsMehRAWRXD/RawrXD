@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(779) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(805) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(607) : error A2006:undefined symbol : sz_codegen_header
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(611) : error A2006:undefined symbol : sz_dot_code
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(626) : error A2006:undefined symbol : sz_func_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(643) : error A2006:undefined symbol : sz_entry_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(656) : error A2006:undefined symbol : sz_size_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(669) : error A2006:undefined symbol : sz_calls_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(677) : error A2006:undefined symbol : sz_loops_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(690) : error A2006:undefined symbol : sz_body_prefix
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(694) : error A2006:undefined symbol : sz_ret_line
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222076059_kiMR.asm(718) : error A2022:instruction operands must be the same size

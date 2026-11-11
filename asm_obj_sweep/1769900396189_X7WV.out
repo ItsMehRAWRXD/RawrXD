@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769900396189_X7WV.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769900396189_X7WV.asm(46) : fatal error A1010:unmatched block nesting : TensorDescriptor

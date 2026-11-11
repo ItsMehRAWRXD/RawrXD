@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1771079491970_itz4.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1771079491970_itz4.asm(972) : error A2006:undefined symbol : GetEnvironmentVariableA
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1771079491970_itz4.asm(516) : warning A6004:procedure argument or local not referenced : dwHashLen
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1771079491970_itz4.asm(997) : warning A6004:procedure argument or local not referenced : valueSize

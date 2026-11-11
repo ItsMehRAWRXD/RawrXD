@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Engine.asm\1770863311978_v5ci.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Engine.asm\1770863311978_v5ci.asm(181) : error A2006:undefined symbol : asm_spengine_quant_switch_adaptive

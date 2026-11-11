@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(54) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(61) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(62) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(63) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(85) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(93) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(103) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(18) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(19) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(20) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(21) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(22) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(23) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(24) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(25) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(26) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(31) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(125) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(128) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(129) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(130) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(131) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(134) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(136) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_PE_Writer_Test_ml64.asm(138) : error A2206:missing operator in expression

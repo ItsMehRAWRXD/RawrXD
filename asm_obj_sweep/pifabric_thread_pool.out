@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\pifabric_thread_pool.asm
+D:\rawrxd\pifabric_thread_pool.asm(2) : error A2008:syntax error : .
+D:\rawrxd\pifabric_thread_pool.asm(3) : error A2008:syntax error : .
+D:\rawrxd\pifabric_thread_pool.asm(43) : warning A6004:procedure argument or local not referenced : pTask

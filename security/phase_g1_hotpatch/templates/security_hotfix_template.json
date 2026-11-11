@@ -1,0 +1,89 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "security-hotfix-{timestamp}",
+  "Version": "1.0.0",
+  "Type": "security",
+  "Severity": "critical",
+  "Description": "Critical security hotfix for vulnerability CVE-XXXX-XXXXX",
+  "Author": "security-team@rawrxd.ai",
+  "CreatedAt": "{iso_timestamp}",
+  "ExpiresAt": "{iso_timestamp_plus_30d}",
+  
+  "Patches": [
+    {
+      "System": "tools",
+      "Target": "cli",
+      "PatchFile": "patches/security/cli_auth_fix_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "orchestrator",
+      "PatchFile": "patches/security/agent_sandbox_escape_fix_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": true,
+      "BackupRequired": true
+    },
+    {
+      "System": "swarm",
+      "Target": "coordinator",
+      "PatchFile": "patches/security/swarm_injection_fix_v1.0.1.json",
+      "Priority": 2,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "tools", "MinimumVersion": "1.0.0", "MaximumVersion": "1.0.99" },
+    { "System": "agent", "MinimumVersion": "1.0.0", "MaximumVersion": "1.0.99" },
+    { "System": "swarm", "MinimumVersion": "1.0.0", "MaximumVersion": "1.0.99" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "security-hotfix-*", "Reason": "Previous security patches must be rolled back first" },
+    { "PatchId": "config-change-*", "Reason": "Configuration changes may conflict with security hardening" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 100,
+    "MinMemoryMB": 512,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "echo 'Running security pre-patch validation...'",
+      "powershell -Command 'Test-Path $env:RAWRXD_HOME'"
+    ],
+    "PostPatchCommands": [
+      "echo 'Running security post-patch validation...'",
+      "powershell -File security/phase_g1_hotpatch/validate_security_fix.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 3,
+    "RetryDelaySeconds": 5,
+    "NotifyOnRollback": ["security-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": ["ops@rawrxd.ai"],
+    "OnSuccess": ["security-team@rawrxd.ai", "ops@rawrxd.ai"],
+    "OnFailure": ["security-team@rawrxd.ai", "ops@rawrxd.ai", "oncall@rawrxd.ai"],
+    "OnRollback": ["security-team@rawrxd.ai", "ops@rawrxd.ai", "oncall@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "CVE": "CVE-XXXX-XXXXX",
+    "CVSS": 9.8,
+    "AffectedVersions": ["1.0.0", "1.0.1"],
+    "FixedVersions": ["1.0.2"],
+    "TestingStatus": "validated",
+    "ApprovalRequired": true,
+    "ApprovedBy": "",
+    "ApprovalTimestamp": ""
+  }
+}

@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\-240f271b\b2OT.asm
+D:\rawrxd\history\-240f271b\b2OT.asm(41) : error A2008:syntax error : size
+D:\rawrxd\history\-240f271b\b2OT.asm(167) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(186) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-240f271b\b2OT.asm(187) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(250) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(285) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(290) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-240f271b\b2OT.asm(292) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-240f271b\b2OT.asm(307) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(311) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(320) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(323) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(332) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(335) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(386) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(388) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(397) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(400) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(445) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-240f271b\b2OT.asm(458) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(461) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(470) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(474) : error A2009:syntax error in expression
+D:\rawrxd\history\-240f271b\b2OT.asm(406) : warning A6004:procedure argument or local not referenced : idx

@@ -1,0 +1,9 @@
+{
+  "top_k": 1,
+  "prompt": "The quick brown fox",
+  "model_path": "D:\\ministral3_q4_0.gguf",
+  "top_p": 0.0,
+  "seed": 42,
+  "max_tokens": 32,
+  "temperature": 0.0
+}

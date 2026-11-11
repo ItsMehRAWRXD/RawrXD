@@ -1,0 +1,17 @@
+# Simple Tree Attention Benchmark
+add_executable(tree_attention_bench_simple
+    tree_attention_avx512_intrinsics.cpp
+    tree_attention_bench_simple.cpp
+)
+
+target_include_directories(tree_attention_bench_simple PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(MSVC)
+    target_compile_options(tree_attention_bench_simple PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+endif()
+
+set_target_properties(tree_attention_bench_simple PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)

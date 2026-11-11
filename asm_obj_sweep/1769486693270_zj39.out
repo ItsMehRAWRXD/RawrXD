@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486693270_zj39.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486693270_zj39.asm(264) : error A2006:undefined symbol : _map_view_failed

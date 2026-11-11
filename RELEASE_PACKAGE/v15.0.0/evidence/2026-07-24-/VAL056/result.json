@@ -1,0 +1,21 @@
+{
+  "name": "Dependency Validation",
+  "gate": "VAL-056",
+  "message": "All dependencies present",
+  "dependencies": [
+    {
+      "name": "Vulkan SDK",
+      "present": true
+    },
+    {
+      "name": "Windows SDK",
+      "present": true
+    },
+    {
+      "name": "MSVC",
+      "present": true
+    }
+  ],
+  "status": "PASS",
+  "timestamp": "2026-07-24T12:44:44.8126442-04:00"
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- rawrxd.nuspec - Phase F.1 Batch 1/5: Chocolatey package for Windows -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>rawrxd</id>
+    <version>1.0.0</version>
+    <title>RawrXD Sovereign Runtime</title>
+    <authors>RawrXD AI</authors>
+    <owners>ItsMehRAWRXD</owners>
+    <licenseUrl>https://github.com/ItsMehRAWRXD/RawrXD/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://rawrxd.ai</projectUrl>
+    <iconUrl>https://rawrxd.ai/assets/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      RawrXD Sovereign is an autonomous AI runtime engine featuring:
+      - Native inference with custom kernel optimization
+      - Multi-agent swarm orchestration
+      - Sovereign Execution Graph (SEG) for parallel workloads
+      - Autonomous decision-making with safety constraints
+      - Self-healing through rollback and oscillation dampening
+      - Comprehensive benchmark suite with statistical rigor
+    </description>
+    <summary>Autonomous AI runtime with sovereign execution capabilities</summary>
+    <releaseNotes>https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/v1.0.0</releaseNotes>
+    <copyright>Copyright 2024 RawrXD AI</copyright>
+    <tags>ai llm inference runtime autonomous benchmark</tags>
+    <projectSourceUrl>https://github.com/ItsMehRAWRXD/RawrXD</projectSourceUrl>
+    <docsUrl>https://docs.rawrxd.ai</docsUrl>
+    <bugTrackerUrl>https://github.com/ItsMehRAWRXD/RawrXD/issues</bugTrackerUrl>
+    <packageSourceUrl>https://github.com/ItsMehRAWRXD/RawrXD/tree/main/packaging/chocolatey</packageSourceUrl>
+    <dependencies>
+      <dependency id="vcredist140" version="14.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+    <file src="bin\**" target="bin" />
+    <file src="config\**" target="config" />
+  </files>
+</package>

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-21f4e183\G7go.asm
+D:\rawrxd\history\-21f4e183\G7go.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-21f4e183\G7go.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\-21f4e183\G7go.asm(9) : fatal error A1000:cannot open file : user32.inc

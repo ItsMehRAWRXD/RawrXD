@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(160) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(160) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(160) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(191) : warning A6004:procedure argument or local not referenced : ppContext
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(207) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(207) : warning A6004:procedure argument or local not referenced : pPath
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(334) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(334) : warning A6004:procedure argument or local not referenced : pLogits
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(334) : warning A6004:procedure argument or local not referenced : pState
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(487) : warning A6004:procedure argument or local not referenced : lpPath
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(487) : warning A6004:procedure argument or local not referenced : ppContext
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(524) : warning A6004:procedure argument or local not referenced : pTokenIds
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(524) : warning A6004:procedure argument or local not referenced : n_tokens
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(524) : warning A6004:procedure argument or local not referenced : pOutBuffer
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(524) : warning A6004:procedure argument or local not referenced : outMaxSize
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(547) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(547) : warning A6004:procedure argument or local not referenced : pTokens
+D:\rawrxd\Ship\RawrXD_NativeModelBridge.asm(547) : warning A6004:procedure argument or local not referenced : n_tokens

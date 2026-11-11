@@ -1,0 +1,52 @@
+ Assembling: D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(19) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(60) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(105) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(113) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(157) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(159) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(630) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(133) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(161) : error A2006:undefined symbol : CreateFileW
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(173) : error A2006:undefined symbol : CreateIoCompletionPort
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(181) : error A2006:undefined symbol : InitializeSRWLock
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(193) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(201) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(229) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(242) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(248) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(269) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(285) : error A2006:undefined symbol : AcquireSRWLockShared
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(289) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(302) : error A2006:undefined symbol : ReleaseSRWLockShared
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(310) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(332) : error A2006:undefined symbol : ReleaseSRWLockShared
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(335) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(341) : error A2006:undefined symbol : ReleaseSRWLockShared
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(347) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(364) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(374) : error A2006:undefined symbol : AcquireSRWLockExclusive
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(384) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(410) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(439) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(445) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(449) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(479) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(493) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(515) : error A2006:undefined symbol : ReleaseSRWLockExclusive
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(518) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(528) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(542) : error A2006:undefined symbol : GetQueuedCompletionStatus
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(550) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(590) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(597) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(610) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(635) : error A2006:undefined symbol : SwitchToThread
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(641) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(686) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(703) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(720) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(737) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(741) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(745) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_QuadBuffer_DMA_Orchestrator.asm\1769572424223_kEA6.asm(753) : error A2006:undefined symbol : CloseHandle

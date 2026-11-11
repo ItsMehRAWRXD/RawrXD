@@ -1,0 +1,310 @@
+#============================================================================
+# Azure DevOps Pipeline: RawrXD N-EVM Validation
+# Multi-stage pipeline for PR and Nightly validation
+#============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+      - release/*
+
+pr:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+
+variables:
+  - name: modelPath
+    value: 'test_model.gguf'
+  - name: baselinePath
+    value: '$(Build.ArtifactStagingDirectory)/baseline.json'
+
+stages:
+  #==========================================================================
+  # Stage 1: Build
+  #==========================================================================
+  - stage: Build
+    displayName: 'Build Validation Framework'
+    jobs:
+      - job: Build_Windows
+        displayName: 'Build (Windows)'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: Cache@2
+            inputs:
+              key: 'windows | "build" | src/**/*.cpp | src/**/*.hpp'
+              restoreKeys: |
+                windows | "build"
+              path: $(Build.SourcesDirectory)/src/nevm/build
+            displayName: 'Cache build artifacts'
+
+          - script: |
+              cd src\nevm
+              build_nevm.bat
+            displayName: 'Build with MSVC'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build'
+              ArtifactName: 'nevm-build-windows'
+              publishLocation: 'Container'
+
+      - job: Build_Linux
+        displayName: 'Build (Linux)'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Cache@2
+            inputs:
+              key: 'linux | "build" | src/**/*.cpp | src/**/*.hpp | CMakeLists.txt'
+              restoreKeys: |
+                linux | "build"
+              path: $(Build.SourcesDirectory)/src/nevm/build
+            displayName: 'Cache build artifacts'
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install -y cmake build-essential libjsoncpp-dev
+            displayName: 'Install dependencies'
+
+          - script: |
+              cd src/nevm
+              mkdir -p build && cd build
+              cmake ..
+              make -j$(nproc)
+            displayName: 'Build with CMake'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build'
+              ArtifactName: 'nevm-build-linux'
+              publishLocation: 'Container'
+
+  #==========================================================================
+  # Stage 2: PR Validation
+  #==========================================================================
+  - stage: PR_Validation
+    displayName: 'PR Validation'
+    dependsOn: Build
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    jobs:
+      - job: Validate_Windows
+        displayName: 'Validate (Windows)'
+        pool:
+          vmImage: 'windows-latest'
+        timeoutInMinutes: 15
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'nevm-build-windows'
+              downloadPath: '$(Build.SourcesDirectory)/src/nevm'
+
+          - script: |
+              cd src\nevm\build
+              nevm_validate.exe ..\..\..\$(modelPath) --mode=pr_check -o pr_report.json
+            displayName: 'Run PR CHECK validation'
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/pr_report.json'
+              mergeTestResults: true
+              testRunTitle: 'PR Validation (Windows)'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/pr_report.json'
+              ArtifactName: 'pr-report-windows'
+            condition: always()
+
+      - job: Validate_Linux
+        displayName: 'Validate (Linux)'
+        pool:
+          vmImage: 'ubuntu-latest'
+        timeoutInMinutes: 15
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'nevm-build-linux'
+              downloadPath: '$(Build.SourcesDirectory)/src/nevm'
+
+          - script: |
+              cd src/nevm/build
+              chmod +x bin/nevm_validate
+              ./bin/nevm_validate ../../../$(modelPath) --mode=pr_check -o pr_report.json
+            displayName: 'Run PR CHECK validation'
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/pr_report.json'
+              mergeTestResults: true
+              testRunTitle: 'PR Validation (Linux)'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/pr_report.json'
+              ArtifactName: 'pr-report-linux'
+            condition: always()
+
+  #==========================================================================
+  # Stage 3: Nightly Validation
+  #==========================================================================
+  - stage: Nightly_Validation
+    displayName: 'Nightly Validation'
+    dependsOn: Build
+    condition: or(
+      eq(variables['Build.Reason'], 'Schedule'),
+      eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    )
+    jobs:
+      - job: Nightly_Windows
+        displayName: 'Nightly (Windows)'
+        pool:
+          vmImage: 'windows-latest'
+        timeoutInMinutes: 180
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'nevm-build-windows'
+              downloadPath: '$(Build.SourcesDirectory)/src/nevm'
+
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: '$(System.DefinitionId)'
+              buildVersionToDownload: 'latestFromBranch'
+              branchName: 'refs/heads/main'
+              artifactName: 'nightly-baseline-windows'
+              downloadPath: '$(Build.ArtifactStagingDirectory)/baseline'
+            continueOnError: true
+            displayName: 'Download baseline'
+
+          - script: |
+              cd src\nevm\build
+              if exist $(Build.ArtifactStagingDirectory)\baseline\baseline.json (
+                nevm_validate.exe ..\..\..\$(modelPath) --mode=nightly --baseline=$(Build.ArtifactStagingDirectory)\baseline\baseline.json -o nightly_report.json --capture-artifacts
+              ) else (
+                nevm_validate.exe ..\..\..\$(modelPath) --mode=nightly -o nightly_report.json --capture-artifacts
+              )
+            displayName: 'Run NIGHTLY validation'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/nightly_report.json'
+              ArtifactName: 'nightly-report-windows'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'failure_artifacts/'
+              ArtifactName: 'failure-artifacts-windows'
+            condition: failed()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/nightly_report.json'
+              ArtifactName: 'nightly-baseline-windows'
+            condition: succeeded()
+
+      - job: Nightly_Linux
+        displayName: 'Nightly (Linux)'
+        pool:
+          vmImage: 'ubuntu-latest'
+        timeoutInMinutes: 180
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'nevm-build-linux'
+              downloadPath: '$(Build.SourcesDirectory)/src/nevm'
+
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: '$(System.DefinitionId)'
+              buildVersionToDownload: 'latestFromBranch'
+              branchName: 'refs/heads/main'
+              artifactName: 'nightly-baseline-linux'
+              downloadPath: '$(Build.ArtifactStagingDirectory)/baseline'
+            continueOnError: true
+            displayName: 'Download baseline'
+
+          - script: |
+              cd src/nevm/build
+              chmod +x bin/nevm_validate
+              if [ -f $(Build.ArtifactStagingDirectory)/baseline/baseline.json ]; then
+                ./bin/nevm_validate ../../../$(modelPath) --mode=nightly --baseline=$(Build.ArtifactStagingDirectory)/baseline/baseline.json -o nightly_report.json --capture-artifacts
+              else
+                ./bin/nevm_validate ../../../$(modelPath) --mode=nightly -o nightly_report.json --capture-artifacts
+              fi
+            displayName: 'Run NIGHTLY validation'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/nightly_report.json'
+              ArtifactName: 'nightly-report-linux'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'failure_artifacts/'
+              ArtifactName: 'failure-artifacts-linux'
+            condition: failed()
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'src/nevm/build/nightly_report.json'
+              ArtifactName: 'nightly-baseline-linux'
+            condition: succeeded()
+
+  #==========================================================================
+  # Stage 4: Trend Analysis
+  #==========================================================================
+  - stage: Trend_Analysis
+    displayName: 'Trend Analysis'
+    dependsOn: Nightly_Validation
+    condition: succeededOrFailed()
+    jobs:
+      - job: Analyze_Trends
+        displayName: 'Analyze Performance Trends'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'all'
+              downloadPath: '$(Build.ArtifactStagingDirectory)/reports'
+
+          - script: |
+              echo "Analyzing performance trends..."
+              # Would run trend analysis here
+            displayName: 'Analyze trends'
+
+          - task: SendGridEmail@1
+            inputs:
+              ToEmailAddresses: 'team@rawrxd.ai'
+              Subject: 'RawrXD N-EVM Nightly Validation Report'
+              Body: 'Nightly validation completed. See attached reports.'
+            condition: always()
+            displayName: 'Send email report'

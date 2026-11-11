@@ -1,0 +1,20 @@
+{
+  "gpu_count": 1,
+  "gpus": [
+    {
+      "adapter_ram_gb": 4,
+      "device_id": "VideoController1",
+      "driver_version": "32.0.31021.5001",
+      "is_primary": false,
+      "is_r9700": true,
+      "is_rx7800xt": false,
+      "name": "AMD Radeon AI PRO R9700",
+      "status": "OK",
+      "video_mode": "3840x2160@144Hz"
+    }
+  ],
+  "multi_gpu_ready": false,
+  "r9700_detected": true,
+  "rx7800xt_detected": false,
+  "timestamp": "2026-07-30 22:42:42"
+}

@@ -1,0 +1,39 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(8) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(122) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(144) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(264) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1243) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1245) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(760) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(765) : error A2006:undefined symbol : sym_table
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(786) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(791) : error A2006:undefined symbol : sym_table
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(799) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(930) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(936) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(990) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1000) : error A2006:undefined symbol : stack_offset
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1011) : error A2006:undefined symbol : stack_offset
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1046) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1053) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1057) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1061) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1070) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1074) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1080) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1102) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1110) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1115) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1119) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1167) : error A2006:undefined symbol : syntax_err
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1168) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1201) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1206) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1277) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1285) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1412) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1413) : error A2006:undefined symbol : func_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1414) : error A2006:undefined symbol : literal_count
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(1415) : error A2006:undefined symbol : stack_offset
+D:\rawrxd\history\all_versions\terraform.asm\1771246979318_MRcO.asm(132) : error A2006:undefined symbol : C0000040h

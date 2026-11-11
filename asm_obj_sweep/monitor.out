@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(71) : error A2008:syntax error : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(178) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(102) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(105) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(119) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(121) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(150) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(155) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(195) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(213) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(270) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(309) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(314) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(331) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(343) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(357) : error A2006:undefined symbol : metricsMutex
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\gpu\gpu\performance\monitor.asm(368) : error A2006:undefined symbol : metricsMutex

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(5) : error A2008:syntax error : BITS
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(6) : error A2008:syntax error : DEFAULT
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(28) : error A2008:syntax error : section
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(30) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(31) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(32) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(33) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(34) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(35) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(38) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(39) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(40) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(41) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(42) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(43) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(44) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(45) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(46) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(47) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(48) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(49) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(50) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(51) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(52) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(53) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(54) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(55) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(56) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(57) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(60) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(61) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(64) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(65) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(68) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(69) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(70) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(71) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(74) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(75) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(76) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(79) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(80) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(81) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(82) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(83) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(84) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(85) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(86) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(87) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(88) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(89) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(90) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(91) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(92) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(93) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(94) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(97) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(98) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(99) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(102) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(103) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(104) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(105) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(106) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(109) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(110) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(112) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(113) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(115) : error A2008:syntax error : section
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(116) : error A2008:syntax error : input_buffer
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(117) : error A2008:syntax error : command_buffer
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(118) : error A2008:syntax error : file_buffer
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(119) : error A2008:syntax error : current_mode
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(120) : error A2008:syntax error : cursor_x
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(121) : error A2008:syntax error : cursor_y
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(122) : error A2008:syntax error : terminal_visible
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(124) : error A2008:syntax error : section
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(125) : error A2008:syntax error : global
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(127) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(128) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(129) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(132) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(133) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(134) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(137) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(138) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(139) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(140) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(141) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(144) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(145) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(146) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(147) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(149) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(150) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(153) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(154) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(155) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(157) : error A2008:syntax error : .
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(158) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm(159) : fatal error A1012:error count exceeds 100; stopping assembly

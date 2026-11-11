@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\07Xb.asm
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(173) : error A2008:syntax error : width
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(1764) : error A2008:syntax error : ENDPsi
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(1790) : error A2005:symbol redefinition : @show
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(1792) : error A2005:symbol redefinition : @set_visibility
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(1795) : error A2005:symbol redefinition : @no_window
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(4402) : error A2005:symbol redefinition : ParseStyleJson
+D:\rawrxd\history\-1bd1bafa\07Xb.asm(4432) : fatal error A1010:unmatched block nesting : ParseStyleJson

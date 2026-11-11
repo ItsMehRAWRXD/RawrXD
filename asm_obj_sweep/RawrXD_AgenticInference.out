@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\RawrXD_AgenticInference.asm
+D:\rawrxd\RawrXD_AgenticInference.asm(83) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(97) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(153) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_AgenticInference.asm(155) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(159) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(162) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_AgenticInference.asm(173) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(192) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(204) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticInference.asm(73) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(85) : error A2006:undefined symbol : reasoning_done
+D:\rawrxd\RawrXD_AgenticInference.asm(99) : error A2006:undefined symbol : choose_best_candidate
+D:\rawrxd\RawrXD_AgenticInference.asm(113) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(118) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(124) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(129) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(149) : error A2006:undefined symbol : eval_skip_candidate
+D:\rawrxd\RawrXD_AgenticInference.asm(157) : error A2006:undefined symbol : eval_candidates
+D:\rawrxd\RawrXD_AgenticInference.asm(166) : error A2006:undefined symbol : candidate_accepted
+D:\rawrxd\RawrXD_AgenticInference.asm(169) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_AgenticInference.asm(171) : error A2006:undefined symbol : reasoning_loop
+D:\rawrxd\RawrXD_AgenticInference.asm(189) : error A2006:undefined symbol : hist_ok
+D:\rawrxd\RawrXD_AgenticInference.asm(202) : error A2006:undefined symbol : reasoning_loop

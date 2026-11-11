@@ -1,0 +1,85 @@
+name: HexMag Swarm & IDE Build Test
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+  workflow_dispatch:   # allows the "Run workflow" button
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: RawrXD-ModelLoader
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Build Win32 IDE
+        run: .\scripts\build.ps1 -Config Release -A x64
+
+      - name: Sovereign Dashboard Gate
+        shell: pwsh
+        run: |
+          Write-Host "Running Sovereign Dashboard Gate (8-point validation)..."
+          .\scripts\sovereign_dashboard_gate.ps1 -SkipKernel
+        continue-on-error: true  # Gate advisory on main until NVMe Oracle available in CI
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: RawrXD-ModelLoader/services
+        run: pip install -r requirements.txt
+
+      - name: Start HexMag swarm and smoke-test endpoints
+        working-directory: RawrXD-ModelLoader/services
+        shell: pwsh
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
+        run: |
+          # Keep the swarm in this step. Start-Process -NoNewWindow in a prior
+          # step is torn down when that step exits (WinError 10061 on /ask).
+          $hexmag = Join-Path (Get-Location) 'hexmag'
+          $logOut = Join-Path $hexmag 'swarm-out.log'
+          $logErr = Join-Path $hexmag 'swarm-err.log'
+          $proc = Start-Process -FilePath python `
+            -WorkingDirectory $hexmag `
+            -ArgumentList @('hexmag_engine.py', '--port', '8001') `
+            -RedirectStandardOutput $logOut `
+            -RedirectStandardError $logErr `
+            -PassThru -WindowStyle Hidden
+          try {
+            $deadline = (Get-Date).AddSeconds(60)
+            do {
+              Start-Sleep -Seconds 1
+              if ($proc.HasExited) {
+                $err = if (Test-Path $logErr) { Get-Content $logErr -Raw } else { '' }
+                throw "HexMag exited $($proc.ExitCode). stderr: $err"
+              }
+              $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
+            } while ($r -ne 200 -and (Get-Date) -lt $deadline)
+            if ($r -ne 200) { throw "HexMag swarm did not become healthy on port 8001" }
+            python test_smoke.py
+            if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
+          } finally {
+            if ($proc -and -not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Kill test swarm
+        if: always()
+        shell: pwsh
+        run: |
+          taskkill /F /IM python.exe 2>$null
+          exit 0

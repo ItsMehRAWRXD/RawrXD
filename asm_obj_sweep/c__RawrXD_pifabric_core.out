@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_core.asm
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_core.asm(1) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_core.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_core.asm(8) : fatal error A1000:cannot open file : user32.inc

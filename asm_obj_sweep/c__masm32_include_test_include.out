@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__masm32_include_test_include.asm
+D:\rawrxd\history\runoff\part_0001\c__masm32_include_test_include.asm(6) : error A2008:syntax error : main
+D:\rawrxd\history\runoff\part_0001\c__masm32_include_test_include.asm(6) : error A2088:END directive required at end of file

@@ -1,0 +1,6 @@
+{
+  "events": 5,
+  "passed": true,
+  "target": "< 5000ms",
+  "total_boot_time_ms": 1
+}

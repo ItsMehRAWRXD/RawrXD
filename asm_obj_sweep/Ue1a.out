@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-18c51369\Ue1a.asm
+D:\rawrxd\history\-18c51369\Ue1a.asm(136) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\Ue1a.asm(136) : error A2039:line too long
+D:\rawrxd\history\-18c51369\Ue1a.asm(152) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\Ue1a.asm(152) : error A2039:line too long
+D:\rawrxd\history\-18c51369\Ue1a.asm(168) : error A2008:syntax error :     ret
+D:\rawrxd\history\-18c51369\Ue1a.asm(218) : fatal error A1009:line too long

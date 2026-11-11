@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_halving_bare_minimal.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_halving_bare_minimal.asm(5) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_halving_bare_minimal.asm(6) : error A2008:syntax error : STACKBASE
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_halving_bare_minimal.asm(181) : error A2000:memory operand not allowed in context
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_halving_bare_minimal.asm(44) : error A2006:undefined symbol : VirtualAlloc

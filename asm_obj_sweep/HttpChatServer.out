@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\masm\RawrXD\HttpChatServer.asm
+D:\rawrxd\reconstructed\RawrXD\src\masm\RawrXD\HttpChatServer.asm(558) : error A2006:undefined symbol : printf

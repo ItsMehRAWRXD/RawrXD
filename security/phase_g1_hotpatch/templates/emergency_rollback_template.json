@@ -1,0 +1,86 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "emergency-rollback-{timestamp}",
+  "Version": "1.0.0",
+  "Type": "emergency",
+  "Severity": "critical",
+  "Description": "Emergency rollback to previous stable state",
+  "Author": "ops-team@rawrxd.ai",
+  "CreatedAt": "{iso_timestamp}",
+  "ExpiresAt": "{iso_timestamp_plus_1d}",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "all",
+      "PatchFile": "patches/emergency/swarm_rollback.json",
+      "Priority": 1,
+      "RequiresRestart": true,
+      "BackupRequired": false,
+      "Action": "rollback"
+    },
+    {
+      "System": "agent",
+      "Target": "all",
+      "PatchFile": "patches/emergency/agent_rollback.json",
+      "Priority": 1,
+      "RequiresRestart": true,
+      "BackupRequired": false,
+      "Action": "rollback"
+    },
+    {
+      "System": "tools",
+      "Target": "all",
+      "PatchFile": "patches/emergency/tools_rollback.json",
+      "Priority": 1,
+      "RequiresRestart": true,
+      "BackupRequired": false,
+      "Action": "rollback"
+    }
+  ],
+  
+  "Dependencies": [],
+  
+  "Conflicts": [],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 10,
+    "MinMemoryMB": 128,
+    "ServicesToStop": ["rawrxd-swarm", "rawrxd-agent", "rawrxd-tools"],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "echo 'EMERGENCY ROLLBACK INITIATED'",
+      "echo 'Stopping all services...'",
+      "powershell -File scripts/emergency/stop_all_services.ps1"
+    ],
+    "PostPatchCommands": [
+      "echo 'Starting services...'",
+      "powershell -File scripts/emergency/start_all_services.ps1",
+      "echo 'Running health checks...'",
+      "powershell -File scripts/emergency/health_check.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": false,
+    "MaxRetries": 0,
+    "RetryDelaySeconds": 0,
+    "NotifyOnRollback": []
+  },
+  
+  "Notifications": {
+    "OnStart": ["ops@rawrxd.ai", "oncall@rawrxd.ai", "incident-response@rawrxd.ai"],
+    "OnSuccess": ["ops@rawrxd.ai", "oncall@rawrxd.ai", "incident-response@rawrxd.ai"],
+    "OnFailure": ["ops@rawrxd.ai", "oncall@rawrxd.ai", "incident-response@rawrxd.ai", "cto@rawrxd.ai"],
+    "OnRollback": []
+  },
+  
+  "Metadata": {
+    "Emergency": true,
+    "IncidentId": "{incident_id}",
+    "Reason": "{rollback_reason}",
+    "TestingStatus": "not_applicable",
+    "ApprovalRequired": false,
+    "CanRollback": false
+  }
+}

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155660850_UrN4.asm
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155660850_UrN4.asm(1214) : error A2006:undefined symbol : memset
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155660850_UrN4.asm(1226) : error A2006:undefined symbol : DeviceIoControl

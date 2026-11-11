@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(523) : error A2006:undefined symbol : szLogPatchApplied
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(530) : error A2006:undefined symbol : g_hotpatch_metrics
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(557) : error A2006:undefined symbol : szLogPatchFailed
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(564) : error A2006:undefined symbol : g_hotpatch_metrics
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(568) : error A2006:undefined symbol : g_error_recovery_enabled
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_hotpatch_manager.asm(574) : error A2006:undefined symbol : unified_attempt_patch_recovery

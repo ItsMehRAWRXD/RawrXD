@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(202) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(244) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(265) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(308) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(316) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(317) : error A2008:syntax error : size
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(330) : error A2008:syntax error : size
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(335) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(343) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(353) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1222) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1495) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1579) : error A2008:syntax error : [
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1587) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(406) : error A2084:constant value too large
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(413) : error A2084:constant value too large
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(415) : error A2084:constant value too large
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(630) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(886) : error A2084:constant value too large
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1045) : error A2006:undefined symbol : vkCmdPushConstants
+D:\rawrxd\src\agentic\vulkan\NEON_VULKAN_FABRIC.asm(1642) : error A2006:undefined symbol : VulkanCreateFSMBuffer

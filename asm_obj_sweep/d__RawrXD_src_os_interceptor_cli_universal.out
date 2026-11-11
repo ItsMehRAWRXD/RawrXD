@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_interceptor_cli_universal.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_interceptor_cli_universal.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_interceptor_cli_universal.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_interceptor_cli_universal.asm(16) : fatal error A1000:cannot open file : user32.inc

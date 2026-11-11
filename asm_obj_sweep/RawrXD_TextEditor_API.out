@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_API.asm
+D:\rawrxd\RawrXD_TextEditor_API.asm(423) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(425) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(427) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(428) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(429) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(432) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(435) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(436) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(437) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(441) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(442) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(445) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(449) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(456) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(457) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(458) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(459) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(460) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(461) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(464) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(469) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(473) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(476) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(479) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(480) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(482) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(485) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(486) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(490) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_API.asm(491) : error A2034:must be in segment block
+D:\rawrxd\RawrXD_TextEditor_API.asm(506) : error A2088:END directive required at end of file

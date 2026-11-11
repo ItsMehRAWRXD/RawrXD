@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(50) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(108) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(130) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(212) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(307) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(332) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(338) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(344) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(430) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(435) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(526) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(568) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(605) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(712) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(147) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(194) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(224) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(296) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(353) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(412) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(493) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(531) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(633) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(659) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(671) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(701) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\MONACO\EDITOR\ZERO\DEPENDENCY.ASM(727) : error A2220:Missing .ENDPROLOG

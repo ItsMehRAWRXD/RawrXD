@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(74) : error A2008:syntax error : low
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(75) : error A2008:syntax error : high
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(76) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(99) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(107) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(128) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(149) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(160) : error A2008:syntax error : g_TracerLock
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(235) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(241) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(244) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(324) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(359) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(410) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(413) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(414) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(445) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(478) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(507) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(558) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_distributed_tracer.asm(562) : fatal error A1010:unmatched block nesting : SetBaggageItem

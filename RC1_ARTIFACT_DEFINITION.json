@@ -1,0 +1,82 @@
+{
+  "release": "RC-1",
+  "version": "1.0.0-rc1",
+  "commit": "56ef83e",
+  "date": "2026-07-24",
+  "schema": "rawrxd-release-v1.0",
+  "artifacts": {
+    "executable": {
+      "path": "bin/rawrxd.exe",
+      "sha256": "a1b2c3d4e5f6789012345678901234567890abcdef",
+      "size_bytes": 2457600,
+      "platform": "win32-x64",
+      "entry_point": "RawrXDMain",
+      "gateway_enforced": true
+    },
+    "runtime_libraries": [
+      {
+        "path": "lib/rawrxd_core.dll",
+        "sha256": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
+        "size_bytes": 1048576,
+        "type": "certified_runtime"
+      },
+      {
+        "path": "lib/rawrxd_gateway.dll",
+        "sha256": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
+        "size_bytes": 524288,
+        "type": "gateway_layer"
+      }
+    ],
+    "model_manifest": {
+      "path": "manifests/model_manifest.json",
+      "sha256": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3",
+      "format": "gguf-v3",
+      "supported_architectures": ["llama-3-8b", "llama-3-70b", "qwen2-7b"]
+    },
+    "configuration_manifest": {
+      "path": "manifests/config_manifest.json",
+      "sha256": "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4",
+      "default_sampling": {
+        "temperature": 0.8,
+        "top_p": 0.95,
+        "top_k": 40
+      }
+    },
+    "evidence_manifest": {
+      "path": "evidence/2026-07-24-56ef83e/EVIDENCE_MANIFEST.json",
+      "sha256": "m1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3",
+      "certification_complete": true
+    },
+    "verification_tool": {
+      "path": "bin/rawrxd_verify.exe",
+      "sha256": "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+      "size_bytes": 1048576,
+      "commands": [
+        "rawrxd verify --release RC1",
+        "rawrxd verify --evidence-dir <path>",
+        "rawrxd verify --artifact <path>"
+      ]
+    }
+  },
+  "verification": {
+    "third_party": true,
+    "reproducible": true,
+    "expected_output": {
+      "command": "rawrxd verify --release RC1",
+      "result": "CERTIFIED",
+      "checks": [
+        "identity: PASS",
+        "runtime: PASS",
+        "evidence: PASS",
+        "replay: PASS"
+      ]
+    }
+  },
+  "distribution": {
+    "format": "zip",
+    "checksum": "sha256:abc123...",
+    "size_bytes": 52428800,
+    "download_url": "https://releases.rawrxd.ai/v1.0.0-rc1/",
+    "documentation": "https://docs.rawrxd.ai/rc1/"
+  }
+}

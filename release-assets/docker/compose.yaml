@@ -1,0 +1,99 @@
+# RawrXD Sovereign v1.0.0 - Docker Compose Configuration
+# Production-ready deployment with monitoring stack
+
+version: '3.8'
+
+services:
+  rawrxd:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: rawrxd/sovereign:1.0.0
+    container_name: rawrxd-sovereign
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/app/models:ro
+      - rawrxd-data:/app/data
+      - rawrxd-logs:/app/logs
+    environment:
+      - RAWRXD_LOG_LEVEL=info
+      - RAWRXD_GPU_LAYERS=-1
+      - RAWRXD_MODEL_PATH=/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rawrxd-network
+
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: rawrxd-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - rawrxd-network
+
+  grafana:
+    image: grafana/grafana:10.3.0
+    container_name: rawrxd-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - rawrxd-network
+
+  # Optional: Load balancer for multi-node deployment
+  nginx:
+    image: nginx:alpine
+    container_name: rawrxd-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - rawrxd
+    networks:
+      - rawrxd-network
+
+volumes:
+  rawrxd-data:
+  rawrxd-logs:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  rawrxd-network:
+    driver: bridge

@@ -1,0 +1,79 @@
+ Assembling: D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(36) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(55) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(69) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(78) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(97) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(102) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(107) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(112) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(116) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(120) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(149) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(162) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(170) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(174) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(196) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(211) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(215) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(218) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(240) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(264) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(271) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(279) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(295) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(300) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(305) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(310) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(315) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(321) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(325) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(31) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(38) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(50) : error A2006:undefined symbol : batch_no_prefix
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(64) : error A2006:undefined symbol : batch_no_modrm
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(73) : error A2006:undefined symbol : batch_no_sib
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(82) : error A2006:undefined symbol : batch_next_instr
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(87) : error A2006:undefined symbol : batch_imm_1
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(89) : error A2006:undefined symbol : batch_imm_2
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(91) : error A2006:undefined symbol : batch_imm_4
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(93) : error A2006:undefined symbol : batch_imm_8
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(95) : error A2006:undefined symbol : batch_next_instr
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(100) : error A2006:undefined symbol : batch_next_instr
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(105) : error A2006:undefined symbol : batch_next_instr
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(110) : error A2006:undefined symbol : batch_next_instr
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(118) : error A2006:undefined symbol : batch_loop
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(142) : error A2006:undefined symbol : serialize_unaligned
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(151) : error A2006:undefined symbol : serialize_done
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(154) : error A2032:invalid use of register
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(155) : error A2006:undefined symbol : serialize_64_bytes
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(160) : error A2006:undefined symbol : serialize_final
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(168) : error A2006:undefined symbol : serialize_loop
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(198) : error A2006:undefined symbol : match_not_found
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(206) : error A2006:undefined symbol : match_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(209) : error A2006:undefined symbol : match_found
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(213) : error A2006:undefined symbol : match_loop
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(242) : error A2006:undefined symbol : operand_done
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(245) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(254) : error A2006:undefined symbol : encode_register
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(256) : error A2006:undefined symbol : encode_memory
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(258) : error A2006:undefined symbol : encode_immediate
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(260) : error A2006:undefined symbol : encode_offset
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(262) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(266) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(269) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(274) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(277) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(281) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(282) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(285) : error A2006:undefined symbol : imm_1_byte
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(287) : error A2006:undefined symbol : imm_2_bytes
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(289) : error A2006:undefined symbol : imm_4_bytes
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(291) : error A2006:undefined symbol : imm_8_bytes
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(293) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(298) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(303) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(308) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(313) : error A2006:undefined symbol : operand_next
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(317) : error A2083:invalid scale value
+D:\rawrxd\src\agentic\kernels\instruction_encoder_vectorized.asm(323) : error A2006:undefined symbol : operand_loop

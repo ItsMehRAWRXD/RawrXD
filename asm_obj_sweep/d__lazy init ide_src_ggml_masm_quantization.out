@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_ggml_masm_quantization.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_ggml_masm_quantization.asm(36) : error A2030:multiple index registers not allowed
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_ggml_masm_quantization.asm(87) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_ggml_masm_quantization.asm(132) : error A2029:multiple base registers not allowed

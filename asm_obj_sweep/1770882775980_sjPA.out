@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(107) : error A2006:undefined symbol : asm_camellia256_self_test
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(108) : error A2006:undefined symbol : asm_camellia256_get_hmac_key
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(1275) : error A2006:undefined symbol : asm_camellia256_self_test
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(1337) : error A2006:undefined symbol : cam_kdf_label
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(1396) : error A2006:undefined symbol : cam_hmac_label
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(1465) : error A2006:undefined symbol : cam_debug_kdf_fail
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770882775980_sjPA.asm(1471) : error A2006:undefined symbol : cam_debug_selftest_fail

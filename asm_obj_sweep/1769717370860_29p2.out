@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm(417) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm(442) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm(92) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm(92) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769717370860_29p2.asm(92) : warning A6004:procedure argument or local not referenced : lpReserved

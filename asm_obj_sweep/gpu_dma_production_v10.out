@@ -1,0 +1,73 @@
+ Assembling: D:\rawrxd\gpu_dma_production_v10.asm
+D:\rawrxd\gpu_dma_production_v10.asm(162) : error A2008:syntax error : r11
+D:\rawrxd\gpu_dma_production_v10.asm(163) : error A2008:syntax error : r11
+D:\rawrxd\gpu_dma_production_v10.asm(165) : error A2008:syntax error : r11
+D:\rawrxd\gpu_dma_production_v10.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(264) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(301) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(306) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(307) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(406) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(407) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(408) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(409) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(484) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(485) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(490) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(491) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(524) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_production_v10.asm(542) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(554) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v10.asm(559) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v10.asm(564) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(566) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(571) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(576) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(580) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(584) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(588) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(658) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(659) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(660) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(661) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_v10.asm(770) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_production_v10.asm(772) : error A2008:syntax error : r11
+D:\rawrxd\gpu_dma_production_v10.asm(798) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(891) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_production_v10.asm(904) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(959) : error A2008:syntax error : size
+D:\rawrxd\gpu_dma_production_v10.asm(974) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(980) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(981) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(1093) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(1141) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_v10.asm(1185) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_v10.asm(366) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(451) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(541) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(549) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(556) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(561) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(593) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(724) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(786) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(794) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(811) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(825) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(835) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(837) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(848) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(861) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_v10.asm(903) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(973) : error A2081:missing operand after unary operator
+D:\rawrxd\gpu_dma_production_v10.asm(1100) : error A2206:missing operator in expression
+D:\rawrxd\gpu_dma_production_v10.asm(454) : warning A6004:procedure argument or local not referenced : operation
+D:\rawrxd\gpu_dma_production_v10.asm(454) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(747) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(872) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(940) : warning A6004:procedure argument or local not referenced : dsResult
+D:\rawrxd\gpu_dma_production_v10.asm(1079) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(1189) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(1224) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_v10.asm(1242) : error A2220:Missing .ENDPROLOG

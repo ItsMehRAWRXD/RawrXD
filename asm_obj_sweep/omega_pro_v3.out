@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(4) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(178) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(180) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(186) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(195) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(215) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(244) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(248) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(252) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(255) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(259) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(261) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(265) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(266) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(306) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(307) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(317) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(318) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(323) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(324) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(331) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(344) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(345) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(346) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(347) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(348) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(349) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(350) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(351) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(352) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(355) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(402) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(406) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(413) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(417) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(418) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(425) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(436) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(442) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(443) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(448) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(449) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(467) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(471) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(477) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(482) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(487) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(501) : error A2008:syntax error : RVA2Off
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(504) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(515) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(516) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(517) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(535) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(550) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(551) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(552) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(553) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(556) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(568) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(575) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(576) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(588) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(589) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(606) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(611) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(612) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(613) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(623) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(631) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(632) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(637) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(638) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(647) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(652) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(655) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(658) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(661) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(669) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(670) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(671) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(672) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(673) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(674) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(682) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(683) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(684) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(706) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(707) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(708) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(711) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(714) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(715) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\omega_pro_v3.asm(716) : fatal error A1012:error count exceeds 100; stopping assembly

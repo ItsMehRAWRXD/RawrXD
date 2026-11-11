@@ -1,0 +1,25 @@
+#pragma once
+
+#include <cstring>
+
+namespace RawrXD {
+namespace IDE {
+
+class CreativityPanel {
+public:
+    static void Init();
+    static void Render();
+    static void Toggle();
+    static bool IsVisible();
+    static const char* Id();
+
+private:
+    static bool s_visible;
+    static int s_selectedWork;
+    static int s_selectedPrinciple;
+    static char s_titleBuffer[256];
+    static char s_contentBuffer[1024];
+};
+
+} // namespace IDE
+} // namespace RawrXD

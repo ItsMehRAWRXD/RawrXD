@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(96) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(107) : error A2008:syntax error : mask
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(394) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(418) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(611) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(615) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(693) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(713) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(717) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(725) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(729) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(738) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(747) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(750) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(752) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(926) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(961) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1009) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1010) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1027) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1054) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1080) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_High_Priority_P1.asm\1771284800575_HOj7.asm(1119) : error A2081:missing operand after unary operator

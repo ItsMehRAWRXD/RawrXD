@@ -1,0 +1,196 @@
+# Batch 6: Docker Compose Configuration
+#
+# Orchestrates benchmark suite with Sovereign backend
+#
+# Usage:
+#   docker-compose up --build
+#   docker-compose run benchmarks --mode standard
+#   docker-compose run benchmarks --mode stress
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Sovereign Backend
+  # ============================================================================
+  sovereign:
+    image: rawrxd/sovereign:latest
+    container_name: sovereign-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL=phi-4
+      - QUANTIZATION=Q4_K_M
+      - CONTEXT_SIZE=8192
+      - BATCH_SIZE=512
+    volumes:
+      - model-cache:/models
+      - sovereign-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - benchmark-network
+
+  # ============================================================================
+  # Benchmark Runner (Quick Mode)
+  # ============================================================================
+  benchmarks-quick:
+    build:
+      context: .
+      target: runtime
+    container_name: benchmarks-quick
+    depends_on:
+      sovereign:
+        condition: service_healthy
+    command:
+      - --mode
+      - quick
+      - --backend
+      - sovereign
+      - --sovereign-url
+      - http://sovereign:8080
+      - --output-json
+      - /results/quick_results.json
+    volumes:
+      - ./results:/results
+    networks:
+      - benchmark-network
+    profiles:
+      - quick
+
+  # ============================================================================
+  # Benchmark Runner (Standard Mode)
+  # ============================================================================
+  benchmarks-standard:
+    build:
+      context: .
+      target: runtime
+    container_name: benchmarks-standard
+    depends_on:
+      sovereign:
+        condition: service_healthy
+    command:
+      - --mode
+      - standard
+      - --backend
+      - sovereign
+      - --sovereign-url
+      - http://sovereign:8080
+      - --output-json
+      - /results/standard_results.json
+      - --output-junit
+      - /results/junit.xml
+    volumes:
+      - ./results:/results
+    networks:
+      - benchmark-network
+    profiles:
+      - standard
+
+  # ============================================================================
+  # Benchmark Runner (Stress Mode)
+  # ============================================================================
+  benchmarks-stress:
+    build:
+      context: .
+      target: runtime
+    container_name: benchmarks-stress
+    depends_on:
+      sovereign:
+        condition: service_healthy
+    command:
+      - --mode
+      - stress
+      - --backend
+      - sovereign
+      - --sovereign-url
+      - http://sovereign:8080
+      - --output-json
+      - /results/stress_results.json
+      - --timeout
+      - '10800'
+    volumes:
+      - ./results:/results
+    networks:
+      - benchmark-network
+    profiles:
+      - stress
+
+  # ============================================================================
+  # Results Analyzer
+  # ============================================================================
+  analyzer:
+    build:
+      context: .
+      target: runtime
+    container_name: benchmark-analyzer
+    depends_on:
+      - benchmarks-standard
+    command:
+      - /opt/benchmarks/scripts/analyze_results.py
+      - --input
+      - /results
+      - --output
+      - /results/analysis
+    volumes:
+      - ./results:/results
+    networks:
+      - benchmark-network
+    profiles:
+      - analyze
+
+  # ============================================================================
+  # Grafana Dashboard (Optional)
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: benchmark-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - benchmark-network
+    profiles:
+      - dashboard
+
+  # ============================================================================
+  # Prometheus (Optional)
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: benchmark-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - benchmark-network
+    profiles:
+      - dashboard
+
+volumes:
+  model-cache:
+  sovereign-data:
+  grafana-data:
+  prometheus-data:
+
+networks:
+  benchmark-network:
+    driver: bridge

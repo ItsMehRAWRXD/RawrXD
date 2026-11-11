@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(13) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(19) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(28) : error A2006:undefined symbol : LVITEM
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(28) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(34) : error A2008:syntax error : SendMessage
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(41) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(44) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(57) : error A2008:syntax error : lvcol
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(31) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(38) : error A2006:undefined symbol : lvcol
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(39) : error A2006:undefined symbol : lvcol
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(40) : error A2006:undefined symbol : lvcol
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_model_manager_dialog.asm(47) : warning A6004:procedure argument or local not referenced : lvitem

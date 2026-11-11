@@ -1,0 +1,17 @@
+[package]
+name = "omega1_engine"
+version = "1.0.0"
+edition = "2021"
+authors = ["RawrXD Team"]
+description = "Rust FFI bindings for OMEGA-1 Engine"
+license = "MIT"
+repository = "https://github.com/ItsMehRAWRXD/rawrxd"
+
+[dependencies]
+thiserror = "1.0"
+bitflags = "2.4"
+
+[dev-dependencies]
+
+[features]
+default = []

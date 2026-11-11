@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_working.asm\1771286086250_qvyv.asm
+D:\rawrxd\history\all_versions\src\dumpbin_working.asm\1771286086250_qvyv.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_working.asm\1771286086250_qvyv.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_working.asm\1771286086250_qvyv.asm(16) : fatal error A1000:cannot open file : user32.inc

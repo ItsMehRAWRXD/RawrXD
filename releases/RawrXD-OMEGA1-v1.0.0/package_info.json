@@ -1,0 +1,24 @@
+{
+  "TestResults": [
+    "dual_gpu_validation_20260729_072121.json",
+    "e2e_integration_20260729_061339.json",
+    "e2e_integration_20260729_073050.json",
+    "ipc_validation_20260729_073031.json",
+    "ipc_validation_20260729_090057.json"
+  ],
+  "Version": "1.0.0",
+  "BuildDate": "2026-07-29 09:01:20",
+  "Name": "RawrXD-OMEGA1",
+  "Binaries": [
+    {
+      "Size": 302080,
+      "SizeMB": 0.29,
+      "Name": "RawrXD-InferenceEngine.exe"
+    },
+    {
+      "Size": 318078976,
+      "SizeMB": 303.34,
+      "Name": "RawrXD-Win32IDE.exe"
+    }
+  ]
+}

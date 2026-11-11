@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\-1b707747\xrFC.asm
+D:\rawrxd\history\-1b707747\xrFC.asm(270) : error A2039:line too long
+D:\rawrxd\history\-1b707747\xrFC.asm(3549) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\xrFC.asm(3596) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\xrFC.asm(3798) : error A2005:symbol redefinition : szBackDir
+D:\rawrxd\history\-1b707747\xrFC.asm(3799) : error A2005:symbol redefinition : szExplorerDir
+D:\rawrxd\history\-1b707747\xrFC.asm(3800) : error A2005:symbol redefinition : szExplorerPattern
+D:\rawrxd\history\-1b707747\xrFC.asm(3802) : error A2005:symbol redefinition : find_data
+D:\rawrxd\history\-1b707747\xrFC.asm(962) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\xrFC.asm(1396) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\xrFC.asm(1520) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\xrFC.asm(1593) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\xrFC.asm(1601) : error A2006:undefined symbol : save_theme_to_config
+D:\rawrxd\history\-1b707747\xrFC.asm(1635) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\xrFC.asm(3465) : error A2006:undefined symbol : EM_LINEFROMCHAR
+D:\rawrxd\history\-1b707747\xrFC.asm(3762) : error A2006:undefined symbol : hwndProblemPanel
+D:\rawrxd\history\-1b707747\xrFC.asm(340) : warning A4014:instructions and initialized data not supported in BSS segments

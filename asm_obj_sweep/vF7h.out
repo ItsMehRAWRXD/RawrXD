@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1bb7a9f4\vF7h.asm
+D:\rawrxd\history\-1bb7a9f4\vF7h.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-1bb7a9f4\vF7h.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-1bb7a9f4\vF7h.asm(10) : fatal error A1000:cannot open file : \masm32\include\windows.inc

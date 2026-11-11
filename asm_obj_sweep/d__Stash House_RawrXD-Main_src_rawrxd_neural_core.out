@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_rawrxd_neural_core.asm
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_rawrxd_neural_core.asm(14) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_rawrxd_neural_core.asm(15) : error A2008:syntax error : LITERALS
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_rawrxd_neural_core.asm(20) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

@@ -1,0 +1,92 @@
+// ============================================================================
+// AISettingsDialog.rc - AI Configuration Dialog Resources
+// ============================================================================
+
+#include <windows.h>
+#include "resource.h"
+
+// ============================================================================
+// Dialog Template
+// ============================================================================
+IDD_AI_SETTINGS DIALOGEX 0, 0, 400, 480
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AI Completion Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    // Generation Parameters Group
+    GROUPBOX        "Generation Parameters", IDC_STATIC, 7, 7, 386, 120
+    
+    LTEXT           "Max Tokens:", IDC_STATIC, 15, 22, 50, 8
+    EDITTEXT        IDC_MAX_TOKENS, 70, 20, 50, 14, ES_NUMBER
+    CONTROL         "Slider1", IDC_MAX_TOKENS_SLIDER, "msctls_trackbar32", 
+                    TBS_AUTOTICKS | WS_TABSTOP, 125, 20, 100, 14
+    
+    LTEXT           "Temperature:", IDC_STATIC, 15, 42, 50, 8
+    EDITTEXT        IDC_TEMPERATURE_TEXT, 70, 40, 30, 14, ES_READONLY
+    CONTROL         "Slider2", IDC_TEMPERATURE, "msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 105, 40, 150, 14
+    LTEXT           "(0.0 - 2.0)", IDC_STATIC, 260, 42, 40, 8
+    
+    LTEXT           "Top-P:", IDC_STATIC, 15, 62, 50, 8
+    EDITTEXT        IDC_TOP_P_TEXT, 70, 60, 30, 14, ES_READONLY
+    CONTROL         "Slider3", IDC_TOP_P, "msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 105, 60, 150, 14
+    LTEXT           "(0.0 - 1.0)", IDC_STATIC, 260, 62, 40, 8
+    
+    LTEXT           "Top-K:", IDC_STATIC, 15, 82, 50, 8
+    EDITTEXT        IDC_TOP_K, 70, 80, 50, 14, ES_NUMBER
+    
+    LTEXT           "Repetition Penalty:", IDC_STATIC, 15, 102, 70, 8
+    EDITTEXT        IDC_REP_PENALTY, 90, 100, 50, 14, ES_NUMBER
+    LTEXT           "(1.0 = off)", IDC_STATIC, 145, 102, 40, 8
+    
+    // UI Behavior Group
+    GROUPBOX        "UI Behavior", IDC_STATIC, 7, 132, 386, 90
+    
+    CONTROL         "Enable Ghost Text", IDC_ENABLE_GHOST, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 147, 100, 10
+    CONTROL         "Auto-trigger on typing", IDC_AUTO_TRIGGER, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 162, 100, 10
+    
+    LTEXT           "Trigger Delay (ms):", IDC_STATIC, 15, 177, 70, 8
+    EDITTEXT        IDC_TRIGGER_DELAY, 90, 175, 50, 14, ES_NUMBER
+    
+    CONTROL         "Show Inline Suggestions", IDC_SHOW_INLINE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 192, 120, 10
+    CONTROL         "Multi-line Completions", IDC_MULTI_LINE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 207, 120, 10
+    
+    // Model Selection Group
+    GROUPBOX        "Model Selection", IDC_STATIC, 7, 227, 386, 80
+    
+    LTEXT           "Model Path:", IDC_STATIC, 15, 242, 45, 8
+    EDITTEXT        IDC_MODEL_PATH, 65, 240, 280, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...", IDC_BROWSE_MODEL, 350, 240, 40, 14
+    
+    LTEXT           "Context Window:", IDC_STATIC, 15, 262, 60, 8
+    EDITTEXT        IDC_CONTEXT_WINDOW, 80, 260, 60, 14, ES_NUMBER
+    COMBOBOX        IDC_CONTEXT_PRESET, 145, 260, 80, 60, CBS_DROPDOWNLIST | WS_TABSTOP
+    
+    LTEXT           "GPU Layers:", IDC_STATIC, 15, 282, 50, 8
+    EDITTEXT        IDC_GPU_LAYERS, 70, 280, 50, 14, ES_NUMBER
+    LTEXT           "(0 = CPU only)", IDC_STATIC, 125, 282, 60, 8
+    
+    // Advanced Group
+    GROUPBOX        "Advanced", IDC_STATIC, 7, 312, 386, 100
+    
+    CONTROL         "Use Speculative Decoding", IDC_USE_SPECULATIVE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 327, 120, 10
+    LTEXT           "Draft Tokens:", IDC_STATIC, 145, 327, 50, 8
+    EDITTEXT        IDC_DRAFT_TOKENS, 200, 325, 40, 14, ES_NUMBER
+    
+    CONTROL         "Cache KV (faster inference)", IDC_CACHE_KV, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 15, 347, 130, 10
+    
+    LTEXT           "Note: Settings are saved to ai_settings.ini", IDC_STATIC,
+                    15, 375, 200, 8
+    
+    // Buttons
+    DEFPUSHBUTTON   "OK", IDOK, 230, 420, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 285, 420, 50, 14
+    PUSHBUTTON      "Defaults", IDC_DEFAULTS, 15, 420, 50, 14
+END

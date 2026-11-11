@@ -1,0 +1,39 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(97) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(440) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(446) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(451) : error A2006:undefined symbol : version
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(455) : error A2006:undefined symbol : tensor_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(622) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(625) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(631) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(639) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(645) : error A2006:undefined symbol : dtype
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(651) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(657) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(661) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(667) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(708) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(735) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(736) : error A2006:undefined symbol : unknown_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(740) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(741) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(744) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(748) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(749) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(752) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(756) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(757) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(761) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(762) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(792) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(801) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(802) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(803) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(804) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(805) : error A2006:undefined symbol : layer_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(832) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(921) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(922) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775519938_WhlL.asm(936) : error A2006:undefined symbol : param_count

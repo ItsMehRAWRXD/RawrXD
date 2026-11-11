@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(5) : error A2008:syntax error : frame
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(137) : error A2008:syntax error : g_rcChannelRack
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(138) : error A2008:syntax error : g_rcPianoRoll
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(139) : error A2008:syntax error : g_rcPlaylist
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(140) : error A2008:syntax error : g_rcMixer
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(141) : error A2008:syntax error : g_rcBrowser
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(197) : error A2006:undefined symbol : RegisterWindowClass
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(202) : error A2006:undefined symbol : CreateMainWindow
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(216) : error A2006:undefined symbol : InitializeAudio
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(221) : error A2006:undefined symbol : InitializeModelLoader
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(230) : error A2006:undefined symbol : MessageLoop
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(233) : error A2006:undefined symbol : CleanupAudio
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(337) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(651) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(652) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(660) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(661) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(669) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(670) : error A2050:real or BCD number not allowed
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(677) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(688) : error A2006:undefined symbol : lParam
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(690) : error A2006:undefined symbol : lParam
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(752) : error A2006:undefined symbol : GenerateSamples
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(755) : error A2006:undefined symbol : OutputAudio
+D:\rawrxd\reconstructed\RawrXDLoops\FruitLoopsUltra.asm(740) : warning A6004:procedure argument or local not referenced : param

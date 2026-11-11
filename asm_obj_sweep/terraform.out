@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\terraform.asm
+D:\rawrxd\terraform.asm(679) : error A2084:constant value too large
+D:\rawrxd\terraform.asm(694) : error A2084:constant value too large
+D:\rawrxd\terraform.asm(861) : error A2084:constant value too large

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm(486) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm(525) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm(552) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm(576) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1771284167265_gRi7.asm(607) : error A2006:undefined symbol : Inference_ReleaseSequence

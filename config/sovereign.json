@@ -1,0 +1,197 @@
+{
+  "version": "1.0.0",
+  "environment": "production",
+  
+  "guardrails": {
+    "enabled": true,
+    "max_tokens_per_minute": 100000,
+    "max_intents_per_minute": 60,
+    "max_concurrent_intents": 10,
+    "require_confirmation": [
+      "write_file",
+      "delete_file",
+      "execute_command",
+      "git_commit",
+      "git_push"
+    ],
+    "blocked_actions": [
+      "execute_shell",
+      "modify_system_files",
+      "delete_repository"
+    ],
+    "confirmation_timeout_seconds": 300
+  },
+  
+  "security": {
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_second": 10,
+      "burst_size": 20,
+      "window_seconds": 60
+    },
+    "sandbox": {
+      "enabled": true,
+      "allowed_paths": [
+        "${WORKSPACE}",
+        "${HOME}/.sovereign"
+      ],
+      "blocked_paths": [
+        "/etc",
+        "/usr/bin",
+        "/System",
+        "C:\\Windows"
+      ],
+      "allow_absolute_paths": false,
+      "allow_parent_directory": false
+    },
+    "audit_logging": {
+      "enabled": true,
+      "log_file": "${LOG_DIR}/audit.log",
+      "max_file_size_mb": 100,
+      "max_files": 10,
+      "log_level": "INFO",
+      "include_hash_chains": true
+    },
+    "memory_protection": {
+      "enabled": true,
+      "guard_pages": true,
+      "stack_canaries": true,
+      "aslr": true
+    }
+  },
+  
+  "model": {
+    "provider": "kimi",
+    "api_key": "${KIMI_API_KEY}",
+    "model": "kimi-k2.5",
+    "temperature": 0.7,
+    "max_tokens": 8192,
+    "context_window": 200000,
+    "timeout_seconds": 60,
+    "retry_attempts": 3,
+    "backends": [
+      {
+        "name": "kimi",
+        "priority": 1,
+        "enabled": true
+      },
+      {
+        "name": "moonshot",
+        "priority": 2,
+        "enabled": true,
+        "api_key": "${MOONSHOT_API_KEY}"
+      },
+      {
+        "name": "local",
+        "priority": 3,
+        "enabled": false,
+        "model_path": "${MODELS_DIR}/local.gguf"
+      }
+    ]
+  },
+  
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "http://localhost:8081",
+    "batch_size": 100,
+    "flush_interval_seconds": 30,
+    "metrics": {
+      "intent_execution": true,
+      "tool_execution": true,
+      "model_calls": true,
+      "memory_usage": true,
+      "performance": true
+    },
+    "sampling": {
+      "enabled": true,
+      "rate": 1.0
+    }
+  },
+  
+  "persistence": {
+    "enabled": true,
+    "auto_save_interval_minutes": 5,
+    "memory_graph_path": "${DATA_DIR}/project.graph",
+    "backup_count": 5,
+    "compression": true
+  },
+  
+  "tools": {
+    "enabled": [
+      "read_file",
+      "write_file",
+      "search_files",
+      "list_directory",
+      "file_exists",
+      "delete_file",
+      "git_status",
+      "git_diff",
+      "git_log",
+      "git_commit",
+      "git_branch",
+      "git_checkout",
+      "cmake",
+      "test",
+      "breakpoint",
+      "step",
+      "stack_trace",
+      "fetch",
+      "download"
+    ],
+    "timeouts": {
+      "read_file": 5,
+      "write_file": 10,
+      "search_files": 30,
+      "git_status": 5,
+      "cmake": 300,
+      "test": 600,
+      "fetch": 30,
+      "download": 300
+    }
+  },
+  
+  "control_plane": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 8080,
+    "websocket_port": 8081,
+    "cors_origins": [
+      "http://localhost:3000",
+      "http://localhost:8080"
+    ],
+    "auth": {
+      "enabled": true,
+      "type": "api_key",
+      "api_key_header": "X-API-Key"
+    },
+    "rate_limit": {
+      "enabled": true,
+      "requests_per_minute": 100
+    }
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "format": "json",
+    "output": "${LOG_DIR}/sovereign.log",
+    "max_size_mb": 100,
+    "max_files": 10,
+    "console": true,
+    "file": true
+  },
+  
+  "performance": {
+    "thread_pool_size": 8,
+    "max_queue_size": 1000,
+    "cache_size_mb": 512,
+    "gc_interval_minutes": 10
+  },
+  
+  "features": {
+    "intent_replay": true,
+    "hotpatch": true,
+    "self_healing": true,
+    "multi_agent": true,
+    "distributed": false
+  }
+}

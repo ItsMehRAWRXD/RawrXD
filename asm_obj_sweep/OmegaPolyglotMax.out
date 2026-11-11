@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglotMax.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglotMax.asm(4) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglotMax.asm(5) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglotMax.asm(9) : fatal error A1000:cannot open file : \masm32\include\windows.inc

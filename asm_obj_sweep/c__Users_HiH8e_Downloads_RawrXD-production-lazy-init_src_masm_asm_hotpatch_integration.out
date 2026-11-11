@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(169) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(213) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(86) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(92) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(93) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(94) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(141) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(177) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(183) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(220) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(224) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(228) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(375) : error A2006:undefined symbol : mutex_lock_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(396) : error A2006:undefined symbol : mutex_unlock_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(470) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(891) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(898) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_asm_hotpatch_integration.asm(939) : error A2206:missing operator in expression

@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.20)
+project(GPUBackend)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find Vulkan
+find_package(Vulkan REQUIRED)
+
+# Create DLL
+add_library(gpu_backend SHARED
+    src/backend/gpu_backend.cpp
+)
+
+target_include_directories(gpu_backend PRIVATE
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(gpu_backend PRIVATE
+    ${Vulkan_LIBRARIES}
+    kernel32
+)
+
+# Set output name and directory
+set_target_properties(gpu_backend PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RUNTIME_OUTPUT_NAME gpu_backend
+)
