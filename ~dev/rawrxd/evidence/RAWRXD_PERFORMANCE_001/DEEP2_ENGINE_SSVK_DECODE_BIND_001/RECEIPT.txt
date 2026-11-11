@@ -1,0 +1,28 @@
+GATE=DEEP2_ENGINE_SSVK_DECODE_BIND_001
+STATUS=SOURCE_WIRED
+RUNTIME_REACHED=0
+LIVE_PRODUCT_RUN=NOT_RUN
+TOKENS_COMMITTED=0
+WINDOW_TARGET=16
+CONJUNCTION_16=OPEN
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+SOURCE_WIRED=
+  Deep2GpuForward.hpp q2kPackedOps + emit
+  Deep2Engine_GpuForward.cpp Q2_K packed DispatchGemvQuant + product soft-fail
+  QuantKernelRegistry Q2_K 72-byte MASM ban under RAWRXD_Q2K_PRODUCT_DECODE=1
+  Deep2Engine_SsVkDecodeBind.{hpp,cpp} D2DecodeBindOps → real Deep2Engine
+  deep2_engine_ssvk_decode_bind_cert.cpp + CMake target
+  evidence state machine include/ + src/d2_engine_ssvk_decode_bind.c
+
+RUNTIME_REACHED_REQUIRES=
+  build deep2_engine_ssvk_decode_bind_cert
+  run against Q2_K GGUF with RAWRXD_Q2K_PRODUCT_DECODE=1
+  16/16 authoritative D2DecodeReceipt conjunction (BIND_POINTS.md)
+
+BLOCKERS_FOR_16_16=
+  live binary not yet executed this gate (honest NOT_RUN)
+  full conjunction needs dual-stick + zero host_forward/material/expand
+  FINISH_BALANCE remains SIDE / PASS_PARTIAL / CP_BETTER=0 (non-blocking)

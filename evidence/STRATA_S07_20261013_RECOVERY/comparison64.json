@@ -1,0 +1,13 @@
+{
+  "tokens_plain": 64,
+  "tokens_spec": 64,
+  "token_matches": 64,
+  "plain_tps": 4.07,
+  "spec_tps": 1.52,
+  "speed_ratio": 0.37346437346437344,
+  "proposed": 4,
+  "accepted": 0,
+  "rejected": 1,
+  "chains": 1,
+  "acceptance_rate": 0.0
+}

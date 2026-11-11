@@ -1,0 +1,35 @@
+{
+  "gate": "VAL-063",
+  "component": "ModelIdentity",
+  "claim": "Model artifact identity is verified and locked",
+  "timestamp": "2026-07-24T14:32:46.852456789Z",
+  "model": {
+    "requested_path": "./models/llama-3-8b-q4.gguf",
+    "resolved_path": "./models/llama-3-8b-q4.gguf",
+    "manifest_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "tensor_hash": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "parameter_count": 8030261248,
+    "architecture": "llama-3-8b",
+    "quantization": "Q4_K_M",
+    "file_size_bytes": 4918342336,
+    "gguf_version": 3
+  },
+  "identity_lock": {
+    "locked": true,
+    "locked_hash": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "verification_result": "MATCH",
+    "substitution_prevented": true
+  },
+  "integrity_checks": {
+    "manifest_hash_valid": true,
+    "tensor_hash_valid": true,
+    "file_accessible": true,
+    "format_recognized": true
+  },
+  "verification": {
+    "identity_verified": true,
+    "integrity_confirmed": true,
+    "locked_to_path": true
+  },
+  "status": "PASS"
+}

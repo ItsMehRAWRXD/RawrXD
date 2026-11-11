@@ -1,0 +1,36 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_GPU_DISPATCH_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "scope": "First GPU dispatch wired into the real Deep2 inference engine (ModelGenieExecutor), covering the FP32 RoPE stage only.",
+  "what_changed": {
+    "backend_selector": "GpuRoPEEnabled() in src/modelgenie/ModelGenieExecutor.cpp reads RAWRXD_GPU_ROPE. Off by default, so existing behaviour is unchanged.",
+    "integration_point": "MlaDecompressFwd, the K_rope stage that produces the shared 64-dim rotary component of K_new. This is the same stage that was previously verified against the llama.cpp K_PE reference.",
+    "kernel": "VulkanCompute::ExecuteRoPE, now a real compute dispatch instead of the placeholder that performed no work (see RAWRXD_VULKAN_ROPE_CORRECTNESS_001).",
+    "fallback": "If Vulkan init or the dispatch fails, the CPU path runs and a diagnostic is printed. The KV cache is never populated from a partially failed dispatch.",
+    "build": "compile_ir_executor.bat now compiles and links src/vulkan_compute.cpp against the real Vulkan SDK, with the SDK include ordered first and RAWRXD_VULKAN_SDK_HEADER set so the local stub header forwards to the real one."
+  },
+  "verification": {
+    "test": "65-position teacher-forced decode of the certified sequence on DeepSeek-V2-Lite-Chat.Q4_K_M.gguf.",
+    "baseline": "The certified CPU logits from RAWRXD_DEEP2_DLL_EQUIVALENCE_001.",
+    "default_cpu_path_vs_baseline": "65/65 BITWISE IDENTICAL",
+    "gpu_rope_enabled_vs_baseline": "65/65 BITWISE IDENTICAL",
+    "interpretation": "Enabling the GPU RoPE kernel changes no logit bit across all 65 positions, so it is a drop-in equivalent of the certified CPU stage. This is a stronger statement than agreement within a tolerance.",
+    "execution_integrity": "Both runs: TEACHER_FORCED_DECODE=PASS, TOKENS_PROCESSED=65, 300/300 operations per position."
+  },
+  "artifacts": {
+    "gpu_rope_logits": "evidence/RAWRXD_DEEP2_GPU_DISPATCH_001/gpu_rope_enabled/native_tf_logits_pos*.bin",
+    "certified_cpu_baseline": "evidence/RAWRXD_CORE_DLL_NATIVE_E2E_001/native_tf_logits_pos*.bin"
+  },
+  "honest_scope": {
+    "gpu_dispatch_is_real": true,
+    "but": "Only the 64-element RoPE stage executes on the GPU. Every quantised linear projection, RMSNorm, attention score/softmax, V aggregation and MoE output still executes on the CPU.",
+    "consequence": "RAWRXD_DEEP2_GPU_LAYER_001 remains blocked. This certificate proves the dispatch mechanism and the RoPE kernel inside the real engine, not Deep2 Layer 0 GPU inference."
+  },
+  "remaining_for_layer_0_gpu": [
+    "A GPU quantised-dot kernel (Q4_K/Q6_K x Q8_K) so the linear layers can run on device without dequantising the whole 10 GB model into FP32.",
+    "GPU RMSNorm and GPU attention score/softmax/V-aggregation kernels.",
+    "Backend selection covering all of the above, plus dispatch counters and a zero-silent-fallback assertion.",
+    "Then per-tensor Layer 0 parity against the CPU/reference baseline."
+  ]
+}
