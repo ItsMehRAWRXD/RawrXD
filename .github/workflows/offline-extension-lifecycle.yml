@@ -1,0 +1,60 @@
+name: RawrXD offline extension lifecycle
+on:
+  push:
+    paths:
+      - "src/win32app/OfflineExtensionStore.h"
+      - "src/win32app/Win32IDE_Sidebar.cpp"
+      - "tools/rawrxd_extensions_cli.cpp"
+      - "tests/test_offline_extensions_cli.py"
+      - "tests/test_ide_extension_integration_contract.py"
+      - "~dev/rawrxd/src/core/js_extension_host.cpp"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - "~dev/rawrxd/cmake/OfflineExtensionsCli.cmake"
+      - ".github/workflows/offline-extension-lifecycle.yml"
+  pull_request:
+    paths:
+      - "src/win32app/OfflineExtensionStore.h"
+      - "src/win32app/Win32IDE_Sidebar.cpp"
+      - "tools/rawrxd_extensions_cli.cpp"
+      - "tests/test_offline_extensions_cli.py"
+      - "tests/test_ide_extension_integration_contract.py"
+      - "~dev/rawrxd/src/core/js_extension_host.cpp"
+      - "~dev/rawrxd/CMakeLists.txt"
+      - "~dev/rawrxd/cmake/OfflineExtensionsCli.cmake"
+      - ".github/workflows/offline-extension-lifecycle.yml"
+  workflow_dispatch:
+
+jobs:
+  linux-offline-cli:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile actual C++ inventory CLI, warnings as errors
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O2 \
+            tools/rawrxd_extensions_cli.cpp -o rawrxd-extensions
+      - name: Execute actual CLI black-box acceptance suite
+        env:
+          RAWRXD_EXTENSIONS_BIN: ${{ github.workspace }}/rawrxd-extensions
+        run: python3 -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Verify source integration contracts without claiming runtime certification
+        run: python3 -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
+
+  windows-msvc-offline-cli:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile C++ inventory CLI with MSVC
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 /WX /O2 tools\rawrxd_extensions_cli.cpp /Fe:rawrxd-extensions.exe
+      - name: Execute MSVC-built CLI acceptance suite
+        shell: pwsh
+        env:
+          RAWRXD_EXTENSIONS_BIN: ${{ github.workspace }}\rawrxd-extensions.exe
+        run: python -m unittest discover -s tests -p test_offline_extensions_cli.py -v
+      - name: Verify Windows-side source integration contracts
+        shell: pwsh
+        run: python -m unittest discover -s tests -p test_ide_extension_integration_contract.py -v
