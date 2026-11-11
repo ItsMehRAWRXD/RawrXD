@@ -1,0 +1,96 @@
+RAWRXD_STREAM_CANCEL_001 — STREAMING, CANCELLATION AND FAILURE-STATUS CERTIFICATE
+=============================================================================
+
+OPERATION (single operation, one purpose)
+    Make mg_context_generate() and the production DLL stream tokens as they
+    are produced, honour cancellation inside the decode loop, and report an
+    explicit outcome, without changing any numerical result.
+
+CONTEXT
+    tools/stream_cancel_probe.cpp drives the production ModelGenie runtime
+    (the code RawrXDCore.dll serves through RawrXDCore_RunInference) through
+    the public API only. Log: evidence/RAWRXD_CORE_DLL_NATIVE_E2E_001/
+    stream_cancel_probe_run.log
+
+WHAT CHANGED
+    1. IRExecutor::GenerateStreaming() (src/modelgenie/ModelGenieExecutor.cpp):
+       same token sequence and token/position alignment as Generate(), but a
+       TokenSink is invoked immediately after each token's logits are computed
+       and before the next forward pass runs. A false return stops the decode
+       at once; the terminating token is not reported as generated.
+    2. Explicit outcome: GenerateStatus (kCompleted / kCancelled /
+       kExecutionFailed), the failing IR op id (LastFailedOp, recorded on
+       skipped ops and on the fail-closed LM-head authority checks), and a
+       cumulative ForwardPasses() counter.
+    3. mg_context_generate()/mg_context_generate_text() use the streaming path
+       and return MG_SUCCESS / MG_ERROR_CANCELLED / MG_ERROR_EXECUTION_FAILED
+       to match; mg_context_last_generate_status(),
+       mg_context_last_failed_op() and mg_context_forward_passes() expose the
+       outcome. (include/ModelGenieRuntime.h; MG_ERROR_CANCELLED = -9 is new.)
+    4. RawrXDCore_RunInference: an EOS stop or a client cancellation is a
+       normal end of stream (MG_ERROR_CANCELLED), not an internal error; an
+       execution failure still sets the error state and names the failing op.
+    5. tools/compare_stages.py stage-map correction (verified against
+       tmp_llama-clone/src/models/deepseek2.cpp): the reference k_pe is
+       registered before ggml_rope_ext, so its native counterpart is
+       MLA_k_rope_raw; the native fused MoE_Output (routed + shared) matches
+       the reference's combined ffn_out, not the routed-only ffn_moe_out.
+
+CLAIMS AND EVIDENCE
+
+STREAM_CALLBACK_BEFORE_NEXT_DECODE = PASS
+    Full decode of the 11-token chat-template prompt (max_tokens=16): the
+    callback for token i observed forward passes 11,12,13,...,20 - exactly one
+    more per token - and the count after the call equals the count the last
+    callback observed. Every token is delivered while decoding, before the
+    forward pass that produces the next token has run. (The previous
+    implementation ran the entire decode first, so every callback observed
+    the final count and cancellation could not stop inference.)
+
+CANCEL_AFTER_TOKEN_20 = PASS
+    Client cancellation after 20 tokens on a long-form prompt: 20 tokens
+    delivered, status CANCELLED, mg_context_generate returned
+    MG_ERROR_CANCELLED (-9).
+
+POST_CANCEL_FORWARD_COUNT = 0
+    The forward-pass count when the cancelling callback fired (58) equals the
+    count after the call returned (58): zero forward passes ran after the
+    cancellation. Cancellation now stops inference itself, not just delivery.
+
+EOS_STOP = PASS
+    A run driven to the model's EOS delivered 10 tokens, observed EOS, ended
+    with status CANCELLED / MG_ERROR_CANCELLED, and cost no extra forward
+    pass for the refused EOS token.
+
+STATUS_REPORTING = PASS
+    Outcomes are explicit and consistent across the API surface:
+    COMPLETED+MG_SUCCESS on a full run, CANCELLED+MG_ERROR_CANCELLED on a
+    stop, EXECUTION_FAILED+MG_ERROR_EXECUTION_FAILED+ failing op id on a
+    forward failure. A partially generated token vector can no longer be
+    reported as success: the old code treated any non-empty vector as
+    MG_SUCCESS.
+
+INVALID_ARGS = PASS
+    Invalid arguments return MG_ERROR_INVALID_ARGUMENT (-1).
+
+EXECUTION_FAILURE_CONTRACT = fail-closed by construction
+    The failure path is exercised only through fault injection; the public
+    API exposes no fault-injection point, so no fabricated fault is claimed.
+    Verified instead: the skip/failure instrumentation records
+    last_failed_op_ on skipped ops and on both fail-closed LM-head authority
+    checks, and the status is plumbed to mg_context_generate's return code.
+    Reachable negative checks (invalid args) all behave.
+
+NUMERICS UNCHANGED
+    The 65-position single-pass teacher-forced capture was re-run after the
+    change: every position is bitwise identical to the pre-change capture
+    (evidence/.../native_tf_indep_single vs native_tf_post_stream, 65/65
+    positions compared). Token sequences, token/position alignment and every
+    authority dump are unchanged; only delivery timing and failure semantics
+    changed.
+
+PROBE VERDICT = PASS
+    SEQUENCE: 16a8353339 -> c8d76ca284 (this change)
+    Runtime: RawrXDCore.dll sha256 f9d387bb99684ebddaec7cb56a7aee20fe8467e2fb9400de0c075969141eecd2
+    Verifier: tools/stream_cancel_probe.cpp (ignored by .gitignore like every
+    other *_probe.cpp / _build_* / *.cmd tool in this repo)

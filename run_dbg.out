@@ -1,0 +1,2 @@
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[quant] w=token_embd.weight kind=1 n_in=3072 n_out=128256 n_blk=12 rb=2520 wbytes=323205120 need=323205120
