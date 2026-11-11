@@ -1,0 +1,5 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792053482802}}
+{"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792053490523}}
+{"type":"RETRY","entry":3,"payload":{"attempt":2,"reason":"budget exhausted","can_continue":false,"timestamp":1792053490523}}
+{"type":"LEDGER_END","entry":4,"payload":{"total_entries":4}}

@@ -1,0 +1,21 @@
+ntdll
+ucrtbase
+RawrXD-Win32IDE-Native.exe
+Ollama
+HandleCopilotSend@Win32IDE@@AEAAXXZ@
+generateResponseAsync@Win32IDE@@AEAAXAEBV?$basic_string@
+RawrXD@@AEBV34@H@Z@
+RawrXD@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@
+Deep2
+RawrXD@@UEAA?AV?$vector@HV?$allocator@H@std@@@std@@AEBV45@H@Z@
+RawrXD@@AEBV45@H@Z@XAEBV45@@std@@
+RawrXD@@AEBV45@H@Z@X$$V@std@@
+HandleCopilotSend@Win32IDE@@AEAAXXZ@XAEBV?$basic_stri
+RawrXD@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@XAEB
+RawrXD@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@X$$V
+RawrXD@@
+RawrXD@@UEAA?AV?$vector@HV?$allocator@H@std@@@std@@AEBV56@H@Z@XAEBV?$basic_string@DU?$
+RawrXD@@UEAA?AV?$vector@HV?$allocator@H@std@@@std@@AEBV56@H@Z@X$$V@std@@
+RawrXD@@UEAA?AV?$vector@HV?$allocator@H@std@@@std@@AEBV56@H@Z@XH@std@@
+RawrXD Chat/1.0
+RawrXD\ide_session.json.rawrxd-tmp

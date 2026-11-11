@@ -1,0 +1,12 @@
+
+RawrXD Local Agent
+Model:   kiminoto/T0.0.1:latest
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+**RAWRXD_AGENT_READ_PASS=verified**
+
+The file `tmp_build/cli_smoke_20261028/fixture/calc.cpp` contains:
+```cpp
+int main(){return 0;}

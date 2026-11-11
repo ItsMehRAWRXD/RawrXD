@@ -1,0 +1,9 @@
+rawr.exe : Unknown command: --agent-mode
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-eb696ff6-d3f2-4a19-b759-da7c96837ad4.ps1:113 char:8
++   $out=& $cli @a 2>&1 | Out-String
++        ~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unknown command: --agent-mode:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown
+

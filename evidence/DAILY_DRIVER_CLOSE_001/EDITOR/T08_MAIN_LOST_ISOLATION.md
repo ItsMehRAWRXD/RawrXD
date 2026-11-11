@@ -1,0 +1,32 @@
+# T08 Isolation — MAIN_LOST after multi File→Open
+
+ASOF_UTC=2026-11-09T07:35:30Z
+ACTIVE_SHA=9C91059940A49C970586FF18FC92B1B7BA422AF09E8D579B1C8606387E74A9C8
+SHA_VERIFIED=1
+SIZE=2592256
+EXE=F:\rawrxd\build_progression_finish25\bin\RawrXD-Win32IDE-Native.exe
+TIP_FIX=NOT_APPLIED
+STOP_SPECULATIVE_EDITOR_BATCH=1
+PROMOTE=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+
+| Check | Result |
+|-------|--------|
+| Freeze EXE SHA verify | MATCH 9C910599… SIZE=2592256 |
+| LocalDumps HKLM+HKCU | ENABLED → EDITOR\dumps_t08_neg1 |
+| procdump -t -e -ma | ENABLED |
+| Stress B (4 runs) | 3× SURVIVED openOk=10; 1× FAIL openOk=6 exit=-1 |
+| Stress A (-e only) | FAIL openOk=5 exit=-1 dump=NONE |
+| Terminate dump | `dumps_t08_neg1\procdump_r4_26936.dmp` (228102757) |
+| WER/exception dump | NONE |
+| Stack / causality | NOT_PROVEN |
+
+```
+T08=INTERMITTENT
+T08_ORIGIN=ABNORMAL_EXIT_NEG1_TERMINATE_DUMP
+T08_STABLE_PASS=0
+PRODUCT_TIP_FIX=NOT_APPLIED
+CAUSALITY_PROVEN=0
+```
+
+Seals: `T08_STRESS_NEG1_DUMP_SEAL.md` · `TIP_FIX_NOT_APPLIED_T08.md` · runlog `RUNLOG_T08_STRESS_NEG1_DUMP.txt`

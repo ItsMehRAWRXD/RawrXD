@@ -1,0 +1,1 @@
+{"source":"F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf","shards":3,"tensors":809,"bytes":138342384448,"expert_tensors":186,"expert_bytes":135725580288,"logical_experts":15872,"logical_expert_bytes":135725580288,"min_triplet_bytes":7962624,"max_triplet_bytes":9179136}

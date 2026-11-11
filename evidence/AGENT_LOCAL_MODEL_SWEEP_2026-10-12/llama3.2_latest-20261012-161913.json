@@ -1,0 +1,10 @@
+{
+  "Model": "llama3.2:latest",
+  "StartedAt": "2026-10-12T16:19:13.3483863-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 1.2,
+  "EvalCount": 189,
+  "Tps": 157.0,
+  "Preview": "**GPU Inference Engine Benchmarking Plan** **Step 1: Prepare Benchmarking Environment** * Install necessary benchmarking tools (e.g., OpenBenchmarking.org, TensorFlow Benchmarks) * Configure benchmarking environment to match target GPU model * Ensure optimal system configuration (e.g., OS, drivers, RAM) **Step 2: Define Benchmarking Scope and Metrics** * Identify target inference tasks (e.g., imag"
+}

@@ -1,0 +1,31 @@
+
+RawrXD Local Agent
+Model:   nemotron-3-nano:4b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+[ESP] seq=1 req=55688729297900 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=55688729297900 kind=model_load value=0 message=nemotron-3-nano:4b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=55688729297900 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=55688729297900 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=55688729297900 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=55688729297900 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=55688729297900 kind=heartbeat value=0 message=source=ollama prompt_eval_count=807 eval_count=51 total_duration_ns=4796133700 load_duration_ns=4184121800 prompt_eval_duration_ns=253077000 eval_duration_ns=352367000 eval_tps=144.735460472
+[ESP] seq=8 req=55688729297900 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=55688729297900 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp
+[ESP] seq=10 req=55688729297900 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=55688729297900 kind=heartbeat value=0 message=source=ollama prompt_eval_count=915 eval_count=75 total_duration_ns=631725500 load_duration_ns=7203700 prompt_eval_duration_ns=92037000 eval_duration_ns=525438000 eval_tps=142.738058534
+[ESP] seq=12 req=55688729297900 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp
+[ESP] seq=13 req=55688729297900 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp status=PASS duration_ms=8 PASS
+[ESP] seq=14 req=55688729297900 kind=file_changed value=0 message=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp
+[ESP] seq=15 req=55688729297900 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1019 eval_count=52 total_duration_ns=473152600 load_duration_ns=7874800 prompt_eval_duration_ns=90358000 eval_duration_ns=366200000 eval_tps=141.998907701
+[ESP] seq=16 req=55688729297900 kind=tool_start value=0 message=TOOL_START id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp
+[ESP] seq=17 req=55688729297900 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_nano.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=18 req=55688729297900 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1127 eval_count=8 total_duration_ns=161133200 load_duration_ns=9610500 prompt_eval_duration_ns=92029000 eval_duration_ns=50944000 eval_tps=157.035175879
+[ESP] seq=20 req=55688729297900 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=21 req=55688729297900 kind=heartbeat value=0 message={"request":55688729297900,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":168.640,"prefill_tps":0.000,"task_tps":0.164,"ttft_ms":6089.923,"prefill_ms":0.000,"decode_ms":5.930,"task_ms":6095.852,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":3,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=22 req=55688729297900 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown
+The file has been updated successfully.

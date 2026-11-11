@@ -1,0 +1,21 @@
+﻿{
+    "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+    "model":  "qwen3:8b,llama3.1:8b",
+    "workspace_root":  "F:\\rawrxd",
+    "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_CURRENT_BUILD_REGRESSION_001\\cli_agentic\\qwen3_8b_llama3.1_8b\\fixture.cpp",
+    "capabilities":  [
+
+                     ],
+    "family":  null,
+    "parameter_size":  null,
+    "real_model_inference":  false,
+    "motd_gate":  false,
+    "read_tool":  false,
+    "edit_tool":  false,
+    "readback_tool":  false,
+    "file_changed_count":  0,
+    "diff_verified":  false,
+    "synthetic_success":  0,
+    "status":  "MODEL_METADATA_UNAVAILABLE",
+    "timestamp_utc":  "2026-10-30T08:02:55.2268050Z"
+}

@@ -1,0 +1,14 @@
+RawrXD CLI v2
+
+Usage:
+  rawr run <model> [mode] [--backend b] [--workspace d]   interactive agent
+  rawr run <model> "new project"                          project wizard
+  rawr run <model> "add a GUI"                            follow-up wizard
+  rawr modes                                                  list agent modes
+  rawr tools list|describe <name>|run <name> [k=v ...]       tool interface
+  rawr models                                                 list models
+  rawr backend [auto|deep2|ollama]                            backend status/switch
+  rawr doctor                                                 environment health
+  rawr self-audit                                             run the audit checklist
+  rawr build [--config Release] [--target t]                  build project
+  rawr test [--filter f]                                      run tests

@@ -1,0 +1,33 @@
+GPU_CODE10_RECOVERY_DISPOSITION_001
+DATE=2026-10-27
+
+LIVE_PNP:
+  AMD Radeon RX 7800 XT Instance=PCI\VEN_1002&DEV_747E&...0000000B
+  BEFORE: Status=Error ProblemCode=10 (CM_PROB_FAILED_START)
+  ELEVATED_DISABLE=OK ELEVATED_ENABLE=OK
+  AFTER:  Status=Error ProblemCode=10
+  RESULT=SOFT_RESCAN_FAILED_STILL_CODE_10
+
+NON_ELEVATED_EARLIER:
+  DISABLE=Generic failure; ENABLE=OK; still code 10
+
+ANSWER:
+  Elevated PnP disable/enable did NOT restore the secondary GPU.
+  Full system cold boot is required to clear latched PCIe power/start state
+  before any compile/runtime dual-GPU exercise of that device.
+
+STRUCTURAL_PATCH_REQUEST:
+  REJECTED — symbols do not exist in tree:
+    ForwardLayerAsynchronous / DEEP2_RING_BUFFER_SLOTS /
+    g_CommandRingBuffer / ApplyHardwarePowerGate / GetVulkanComputeQueue
+  sleep_for + vkQueueWaitIdle "power gate" conflicts with Deep2
+  constant-time / zero-idle product law; not applied.
+  Real path already: Deep2Device_RefreshPnPHealth excludes any CM_PROB_*,
+  attempts one CM_Disable/Enable; GpuLost classifies code 10/31.
+
+agentic_bridge_runtime_current.log:
+  BRIDGE_* smoke PASS only — no WDDM TDR / Code-10 evidence in that log.
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT=cold boot; then re-run gpu_code31/code10 probe; only then dual-GPU load

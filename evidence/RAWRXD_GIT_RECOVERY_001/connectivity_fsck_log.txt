@@ -1,0 +1,13 @@
+﻿=== kill hung fsck; connectivity-only 2026-10-26T20:05:55.2751735-04:00
+SEEN_PID=10832 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+SEEN_PID=9720 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+SEEN_PID=20656 CMD=git fsmonitor--daemon run --detach --ipc-threads=8
+STOPPED_PS_PID=41116
+CONN_FSCK_PID=34864
+CONN_FSCK_EXIT=2
+CONN_FSCK_ELAPSED_MS=11449
+CONN_FSCK_MISSING_UNIQUE=678
+CONN_FSCK_STDERR=
+COMMIT_GRAPH_ERRS=0
+commit-graph_exists=False
+commit-graphs_exists=False

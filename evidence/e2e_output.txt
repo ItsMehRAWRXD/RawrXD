@@ -1,0 +1,106 @@
+=== RawrXD CPU Engine End-to-End Test ===
+Model: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+Prompt: "The capital of France is"
+
+[1/5] Loading model...
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 333 MB
+   layers_0: 80 tensors, 823 MB
+   layers_1: 80 tensors, 796 MB
+   layers_2: 80 tensors, 783 MB
+   layers_3: 80 tensors, 809 MB
+   layers_4: 40 tensors, 431 MB
+   output_head: 38 tensors, 810 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+   Tensors: 399
+   Zones: 7
+   Memory (header+index): ~0 MB
+  Load time: 5342.7 ms
+  Vocab size: 151936
+  Embedding dim: 4096
+  Layers: 36
+  Heads: 16
+
+[2/5] Tokenizing prompt...
+  Token count: 9
+  Token IDs: 785,220,65063,220,1055,220,49000,220,285
+  Detokenize check: "The capital of France is"
+
+[3/5] Running prefill forward pass...
+    [PRELOAD] layer=0 tensor=blk.0.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 0 weights
+    [PRELOAD] layer=1 tensor=blk.1.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 1 weights
+    [PRELOAD] layer=2 tensor=blk.2.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 2 weights
+    [PRELOAD] layer=3 tensor=blk.3.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 3 weights
+    [PRELOAD] layer=4 tensor=blk.4.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 4 weights
+    [PRELOAD] layer=5 tensor=blk.5.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 5 weights
+    [PRELOAD] layer=6 tensor=blk.6.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 6 weights
+    [PRELOAD] layer=7 tensor=blk.7.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 7 weights
+    [PRELOAD] layer=8 tensor=blk.8.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 8 weights
+    [PRELOAD] layer=9 tensor=blk.9.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 9 weights
+    [PRELOAD] layer=10 tensor=blk.10.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 10 weights
+    [PRELOAD] layer=11 tensor=blk.11.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 11 weights
+    [PRELOAD] layer=12 tensor=blk.12.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 12 weights
+    [PRELOAD] layer=13 tensor=blk.13.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 13 weights
+    [PRELOAD] layer=14 tensor=blk.14.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 14 weights
+    [PRELOAD] layer=15 tensor=blk.15.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 15 weights
+    [PRELOAD] layer=16 tensor=blk.16.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 16 weights
+    [PRELOAD] layer=17 tensor=blk.17.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 17 weights
+    [PRELOAD] layer=18 tensor=blk.18.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 18 weights
+    [PRELOAD] layer=19 tensor=blk.19.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 19 weights
+    [PRELOAD] layer=20 tensor=blk.20.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 20 weights
+    [PRELOAD] layer=21 tensor=blk.21.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 21 weights
+    [PRELOAD] layer=22 tensor=blk.22.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 22 weights
+    [PRELOAD] layer=23 tensor=blk.23.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 23 weights
+    [PRELOAD] layer=24 tensor=blk.24.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 24 weights
+    [PRELOAD] layer=25 tensor=blk.25.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 25 weights
+    [PRELOAD] layer=26 tensor=blk.26.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 26 weights
+    [PRELOAD] layer=27 tensor=blk.27.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 27 weights
+    [PRELOAD] layer=28 tensor=blk.28.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 28 weights
+    [PRELOAD] layer=29 tensor=blk.29.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 29 weights
+    [PRELOAD] layer=30 tensor=blk.30.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 30 weights
+    [PRELOAD] layer=31 tensor=blk.31.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 31 weights
+    [PRELOAD] layer=32 tensor=blk.32.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 32 weights
+    [PRELOAD] layer=33 tensor=blk.33.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 33 weights
+    [PRELOAD] layer=34 tensor=blk.34.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 34 weights
+    [PRELOAD] layer=35 tensor=blk.35.attn_norm.weight NOT_FOUND
+  WARNING: Failed to preload layer 35 weights
+  Weight cache: 0/36 layers preloaded
+FAIL: Forward pass returned empty logits

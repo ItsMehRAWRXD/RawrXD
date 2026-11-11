@@ -1,0 +1,28 @@
+# Phase3 T11–T15 — Evidence Reconciliation (no new runs)
+
+ASOF_UTC=2026-11-03T15:08:30Z
+CERT_EXE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+EXECUTION=0
+CONTROLLING_FINISH_25_PASS=11
+PHASE3_COUNTED_IN_11=0
+
+| Task | Evidence status | Count as PASS? |
+|------|-----------------|----------------|
+| T11 ChatWindow | SHA-bound reuse PASS (`T11_CHATWINDOW_REUSE.md`) | READY_TO_CREDIT |
+| T12 Token64 | SHA-bound reuse PASS (`T12_TOKEN64_REUSE.md`) | READY_TO_CREDIT |
+| T13 GhostText+Stale | SHA-bound reuse PASS (`T13_GHOSTTEXT_REUSE.md`) | READY_TO_CREDIT |
+| T14 Model route | PASS (`T14_MODEL_ROUTE_RECEIPT.md`) same SHA | READY_TO_CREDIT |
+| T15 Agent tools | Tool PASS narrative **superseded** by disk FAIL (`AGENT\T15_DISK_VERIFY.md`) | **NO** — FAIL / PENDING full acceptance |
+
+```
+PHASE3_WORKER_CLAIMED_5_OF_5=RETRACTED
+T15_FULL_ACCEPTANCE=PENDING
+T15_EDITFILES_DISK_CONTENT=FAIL
+PHASE3_PASS_IF_CREDITED=4
+PHASE3_FAIL=1
+READY_TO_CREDIT=4
+FINISH_25_IF_PHASE3_CREDITED=15/25
+FINISH_25_CONTROLLING_UNTIL_CREDIT=11/25
+```
+
+Do not invent Phase3 into the 11 until disposition explicitly credits T11–T14. T15 must not be counted PASS.

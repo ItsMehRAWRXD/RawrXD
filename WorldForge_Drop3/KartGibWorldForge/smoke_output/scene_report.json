@@ -1,0 +1,10 @@
+{
+  "schema": 2,
+  "triangles": 3176,
+  "quality_pass": true,
+  "quality_reason": "PASS",
+  "maximum_track_grade": 0.0745348,
+  "terrain_min_y": -5.81468,
+  "terrain_max_y": 19.4897,
+  "prop_grid_cells": 98
+}
