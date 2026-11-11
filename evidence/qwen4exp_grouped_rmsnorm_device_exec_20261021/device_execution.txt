@@ -1,0 +1,14 @@
+=== Qwen4Exp grouped RMSNorm: device execution ===
+artifact: src\deep2\shaders\deep2_qwen4exp_grouped_rmsnorm.spv
+artifact: 685 words of SPIR-V
+validation: VK_LAYER_KHRONOS_validation is on
+device : AMD Radeon AI PRO R9700
+pipeline: created
+
+tokens=7 head_dim=16 hc_count=4 width=64
+max_abs_diff = 4.080363e-07
+tolerance    = 2.000000e-05
+all finite   = yes
+
+RESULT: PASS (the device reproduced the reference)
+EXIT=0 

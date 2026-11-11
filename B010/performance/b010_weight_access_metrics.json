@@ -1,0 +1,56 @@
+{
+  "b010_version": "1.0.0",
+  "timestamp": "2026-08-10T01:00:00Z",
+  "parent_baseline": "B008",
+  "sibling_experiment": "B009",
+  "scope": "Weight Residency Profiling (profiling-only, no caching)",
+  "model": {
+    "path": "F:\\Franken\\BackwardsUnlock\\1b\\unlock-1B-Q4_K_M.gguf",
+    "size_bytes": 2019377376,
+    "dim": 3072,
+    "layers": 28,
+    "quantization": "Q4_K_M"
+  },
+  "test_config": {
+    "prompt": "Hi",
+    "prompt_tokens": 3,
+    "generated_tokens": 2,
+    "forward_passes": 3,
+    "generated_token": 108
+  },
+  "weight_access_metrics": {
+    "total_streaming_matmul_calls": 983,
+    "unique_tensors_acquired": 197,
+    "repeated_acquisitions": 786,
+    "total_bytes_read_mb": 8971.96,
+    "map_calls_streaming_pin": 74693,
+    "unmap_calls": 983,
+    "incidental_map_calls": 73728,
+    "acquisition_time_ms": 0.0,
+    "compute_time_ms": 16614.34,
+    "total_time_ms": 16614.34,
+    "acquisition_pct": 0.0,
+    "compute_pct": 100.0
+  },
+  "derived_metrics": {
+    "residency_hit_rate_pct": 0.0,
+    "acquisition_overhead_pct": 0.0,
+    "compute_overhead_pct": 100.0,
+    "effective_weight_bytes_touched_mb": 8971.96,
+    "repeated_weight_acquisition_count": 786,
+    "avg_maps_per_matmul": 75.99,
+    "avg_incidental_maps_per_matmul": 74.99,
+    "bytes_per_matmul_call_mb": 9.13
+  },
+  "key_findings": [
+    "983 StreamingMatMul calls for 3 forward passes (3+1+1 tokens)",
+    "Only 197 unique tensors, but 983 calls = 786 repeated acquisitions",
+    "8971 MB of weight data dequantized — 4.4x the model file size (2019 MB)",
+    "74693 map calls (StreamingPin) — 75 per matmul on average",
+    "73728 incidental map calls — nearly 1:1 with map calls",
+    "100% of time attributed to compute (dequant+dot), 0% to acquisition",
+    "The 8971 MB read is 4.4x the model size, confirming massive redundant weight loading"
+  ],
+  "conclusion": "The dominant cost is repeated weight dequantization and mapping. Each forward pass re-acquires the same 197 tensors, reading 8971 MB total (4.4x model size). The 73728 incidental maps indicate the streaming window is too small for the tensor shards, forcing per-row remapping. Weight residency caching would eliminate the 786 repeated acquisitions and reduce bytes read from 8971 MB to ~2019 MB (model size).",
+  "next_step": "B011: Implement weight residency cache in StreamingMatMul to eliminate repeated acquisitions"
+}

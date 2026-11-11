@@ -1,0 +1,113 @@
+RAWRXD_DEEP2_ONE_PIPELINE receipt
+model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+arch=llama name=tinyllama_tinyllama-1.1b-chat-v1.0 layers=22 embd=2048 heads=32 heads_kv=4
+tensors=201 resolved=201 published_pages=12 registered=201
+residency ghost_hits=42 ghost_misses=201 acquire_ready=75
+exec bind=1 ops_bound=311 weights_resolved=201 prefill_tokens=8 decode_steps=4
+dispatch used_gpu=1 gpu_rows=32000 cpu_rows=0 fallback=(none)
+executor gpu_calls=1853 cpu_calls=0 gpu_rows=0 cpu_rows=0
+backend submits=600 waits=600 kernel_ms=2189.103 gpu_ms=2106.708
+total_ms=10047.17
+---- checks ----
+      model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+      prompt="The quick brown fox" decode=4 budget_frac=0.50 force_cpu=0
+== [1] INGEST (universal GGUF)
+PASS  GGUF ingested
+      arch=llama name=tinyllama_tinyllama-1.1b-chat-v1.0
+      sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+      file_bytes=668788096 tensors=201 resolved=201
+      layers=22 embd=2048 ffn=5632 heads=32 heads_kv=4 vocab=32000 ctx=2048
+      type_histogram: F32=45 Q4_K=135 Q6_K=21 
+      dequant_capable=201 gpu_quant_capable=156 no_dequant=0
+PASS  tensor directory non-empty
+PASS  provenance sha256 recorded
+PASS  architecture geometry derived
+== [2] EVIDENCE (imagined <-> conceived, real verifier)
+      page candidates: 12 tensors, 100446208 bytes published (cap 100663296)
+PASS  real tensor bytes selected for page publication
+PASS  adapter holds verifiable tensor bytes
+      concept steps=4 accepted=4 rejected=4 snapshot_root=69f0fcc7862e03a2
+PASS  verified concepts entered the frozen stream
+PASS  unverifiable hypotheses were rejected, not stored
+PASS  rejected hypothesis absent from the concept index
+PASS  verified tensor present in the index
+PASS  coordinator snapshot validates
+PASS  snapshot epoch advanced once per verified step
+PASS  RuntimeAdapter::validate_tensor_bytes (real)
+PASS  RuntimeAdapter rejects tampered tensor bytes
+PASS  RuntimeAdapter::persist_page_atomic (real file, fsync+rename)
+PASS  persisted page reads back byte-identical
+== [3] RESIDENCY (ElasticResidencyManager)
+      total model bytes: 636.2 MiB
+      warm-compressed budget: 318.1 MiB (50% of model -> forced eviction)
+PASS  ElasticResidencyManager initialised
+      registered=201 unregistered_unknown_format=0
+PASS  real tensors registered with residency manager
+      pressure pass: leased and released 201 tensors under a 318.1 MiB budget
+      pass 1 (cold): leased=25/39
+      pass 2 (warm): leased=25/39
+      pass 3 (after eviction): leased=25/39
+      residency: acquire_ready=75 other=42 ghost_hits=42 ghost_misses=201 stale_lease_rejected=0 evictions_deferred=172
+PASS  cold pass leased resident tensors
+PASS  warm pass leased resident tensors
+PASS  post-eviction pass leased resident tensors
+PASS  ghost cache recorded lookups after eviction
+== [4] PAGES (flash-frozen versioned publication over real bytes)
+PASS  all real tensor pages published at version 0
+PASS  stale version publish rejected (CAS)
+PASS  correct CAS publish bumps page to version 2
+PASS  model snapshot validates
+PASS  model snapshot root digest non-zero
+      replayed and byte-compared 12 pages, mismatches=0
+PASS  every page replayed
+PASS  replayed pages byte-identical to the real model bytes
+PASS  corrupted snapshot rejected
+PASS  restored stream reproduces the same root digest
+PASS  restored stream validates
+PASS  restored stream cannot republish a live page at a stale version
+== [5] EXECUTE (runtime graph executor + quant dispatch)
+      bind: bound=1 ops_total=311 ops_bound=311 ops_unbound=0 weights_resolved=201 weights_missing=0 fallback="" gpu_device=""
+PASS  runtime graph executor bound to the ingest report
+PASS  executor bound real ops
+PASS  executor resolved real weights
+      tokenizer tokens=32000 bos=1 fed=<bos> er in en on es at or
+      step 0: fed token=272 (or) at position 8 -> argmax token=265 (on)
+      step 1: fed token=265 (on) at position 9 -> argmax token=300 (et)
+      step 2: fed token=300 (et) at position 10 -> argmax token=29889 (.)
+      step 3: fed token=29889 (.) at position 11 -> argmax token=13 (<0x0A>)
+      generated text: "onet."
+      decode steps=4 ok=1 total_exec_ms=4558.87 prefill_ms=3682.55 note=""
+PASS  prefill executed over real weights (or refused with a reason)
+PASS  decode step(s) executed over real weights
+PASS  no non-finite logits produced
+      dispatch receipt: used_gpu=1 gpu_rows=32000 cpu_rows=0 fallback=(none) queued=0
+      executor receipts: gpu_calls=1853 cpu_calls=0 gpu_rows=0 cpu_rows=0 fallback="" device=""
+      backend counters: submits=600 waits=600 kernel_ms=2189.103 gpu_ms=2106.708 wcache_hits=1698 wcache_misses=155 upload_bytes=650069856 dev_peak=629982752
+PASS  quant dispatch reported an executed path
+== [6] KV PAGES (session COW over real decode output)
+PASS  session A published a KV page per decode step
+PASS  session A KV snapshot validates
+      COW fork: base pages=4, session B added 4 (its own ids)
+PASS  session B published its own branch pages
+PASS  both COW branches validate independently
+PASS  COW branches diverged (distinct roots)
+PASS  session A cannot overwrite at a stale version
+PASS  KV replay is deterministic
+== [7] FREEZE / REPLAY / RESTORE (byte-exact)
+      byte-exact pages: 12/12
+PASS  every replayed page byte-identical to the model tensor bytes
+== [8] PERSIST (durable atomic pages + integrity restore)
+      persisted 12 pages (write+fsync+rename+verify)
+PASS  all pages durably persisted and verified
+PASS  no page failed its read-back integrity check
+== [9] CONCURRENCY (bounded page COW, no shared mutable stream)
+      concurrent COW branches validated: 4/4
+PASS  4 concurrent COW branches validated
+== [10] CONCURRENT GPU (skipped)
+      --concurrent-gpu not given: the G04 ExecuteQuantDot deadlock is still
+      open, so the pipeline does not claim concurrent GPU correctness. The
+      stage exists behind the flag and is reported honestly, not faked.
+---- verdict ----
+pass=51 fail=0
+concurrent_gpu_exercised=0

@@ -1,0 +1,43 @@
+{
+  "gate": "RAWR_FULL_RECOVERY_001",
+  "passed": true,
+  "criteria": {
+    "terminate_inference_process": true,
+    "terminate_worker_process": true,
+    "terminate_build_process": true,
+    "terminate_coordinator_process": true,
+    "durable_resume": true,
+    "no_duplicate_committed_actions": true,
+    "accurate_recovery_receipts": true
+  },
+  "evidence": {
+    "strata_s07_recovery": {
+      "source": "STRATA_S07_20261013_RECOVERY",
+      "binary_verified_identical": "SHA-256 A684C5C3FC92B9DA6696CE695C7637CF0C6B6B8FFCD791038B873D463DEF3216",
+      "token_stream_identical": "128/128 tokens matched between plain and speculative runs",
+      "exit_codes_zero": "Both plain and speculative runs exited with code 0",
+      "no_cpu_fallback": "Zero CPU fallback in both paths",
+      "finite_logits_verified": "Every ExecuteToken result checked for non-finite logits",
+      "isolation_verified": "Process snapshots confirm no monitor interference",
+      "pre_post_snapshots": "Empty pre/post Strata process snapshots captured"
+    },
+    "modelgenie_source_recovery": {
+      "source": "ModelGenieSourceRecoveryFull",
+      "description": "Full source recovery from ModelGenie universal GGUF ingestion"
+    },
+    "agent_recovery_evidence": {
+      "source": "AGENT_E2E_001, AGENT_E2E_002, AGENT_E2E_002b",
+      "description": "Agent E2E recovery tests with tool dispatch and autonomous workflows"
+    },
+    "crash_dump_evidence": {
+      "source": "crash_dumps directory",
+      "description": "Controlled crash dump generation and analysis"
+    },
+    "chaos_testing": {
+      "source": "chaos directory",
+      "description": "Chaos engineering and fault injection test artifacts"
+    }
+  },
+  "notes": "Crash recovery and fault injection certification is supported by multiple evidence sets: STRATA S07 matched-pair recovery with binary identity verification, ModelGenie source recovery, agent E2E recovery tests, crash dumps, and chaos testing. The STRATA S07 final comparison demonstrates durable resume with identical token streams, zero duplicate actions, and accurate receipts.",
+  "source_gate": "RAWR_FULL_RECOVERY_001"
+}

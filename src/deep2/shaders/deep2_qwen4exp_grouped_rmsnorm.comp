@@ -1,0 +1,61 @@
+#version 450
+// Qwen4Exp grouped RMSNorm lowering.
+//
+// The hyperconnection mix normalises the hidden state per stream before the
+// down projection, and the combine path normalises the combined buffer per
+// stream as well. Both are the same operation: the hidden state is cut into
+// hc_count streams, and each stream is normalised on its own.
+//
+// The normalisation is a Gemma-style RMSNorm: the scale is (1 + w) rather
+// than w, because that is what the reference's grouped_gemma_rmsnorm does.
+// The sum of squares is taken over the stream's own slice and not over the
+// whole width, which is what makes it grouped.
+//
+// The weight has head_dim elements and is applied at the position within the
+// stream, or width elements and is applied at the position within the row.
+//
+// This is a correctness kernel over an F32 staging buffer. It is the norm the
+// mix path needs and it is the same operation the proven combine path already
+// performs, so the two cannot disagree about it.
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer XBuffer { float x[]; };
+layout(set = 0, binding = 1, std430) readonly buffer NormBuffer { float norm_weight[]; };
+layout(set = 0, binding = 2, std430) writeonly buffer YBuffer { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint tokens;
+    uint head_dim;
+    uint hc_count;
+    uint reserved;
+    float epsilon;
+} pc;
+
+void main() {
+    if (pc.tokens == 0u || pc.head_dim == 0u || pc.hc_count == 0u) return;
+    uint width = pc.head_dim * pc.hc_count;
+    uint gid = gl_GlobalInvocationID.x;
+    if (gid >= pc.tokens * width) return;
+
+    uint token = gid / width;
+    uint element = gid - token * width;
+    uint stream = element / pc.head_dim;
+    uint col = element - stream * pc.head_dim;
+
+    // The sum of squares over this stream's slice, and only this stream's.
+    float ss = 0.0;
+    for (uint j = 0u; j < pc.head_dim; ++j) {
+        uint e = stream * pc.head_dim + j;
+        float q = x[token * width + e];
+        ss += q * q;
+    }
+    float inv = inversesqrt(ss / float(pc.head_dim) + pc.epsilon);
+
+    // The weight is per position within the stream when it has head_dim
+    // elements, and per position within the row when it has width elements.
+    float w = norm_weight[pc.head_dim == 0u ? col :
+                          (norm_weight.length() == pc.head_dim ? col : element)];
+
+    float scaled = x[token * width + element] * inv;
+    // Gemma style: the scale is (1 + w).
+    y[token * width + element] = scaled + scaled * w;
+}
