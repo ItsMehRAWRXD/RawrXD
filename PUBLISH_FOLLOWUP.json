@@ -1,0 +1,70 @@
+{
+  "captured_at_utc": "2026-11-11T17:28:48.5746945Z",
+  "base_snapshot": "c37ac84698de6189cf27061eb1172608dfc2f13d",
+  "included_paths": [
+    "evidence/BATCH01_SESSION01_20261111/final_tinyllama_cpu.txt",
+    "evidence/BATCH01_SESSION01_20261111/final_tinyllama_run.txt",
+    "evidence/DEEP2_CLI_AGENTIC_BATCH_16_cpu_q6_runtime.txt",
+    "evidence/DEEP2_CLI_AGENTIC_BATCH_16_ollama_smoke.txt",
+    "evidence/DEEP2_NATIVE_CORRECTNESS_BATCH_001/BATCH_PLAN.json",
+    "evidence/DEEP2_NATIVE_CORRECTNESS_BATCH_001/N01_CLEAN_TIP_REBUILD/RECEIPT.json",
+    "evidence/DEEP2_NATIVE_CORRECTNESS_BATCH_001/N01_CLEAN_TIP_REBUILD/SMOKE_MULTI.txt",
+    "evidence/DEEP2_NATIVE_CORRECTNESS_BATCH_001/N01_CLEAN_TIP_REBUILD/SMOKE_SINGLE.txt",
+    "evidence/UPPER_TIER_MASTER_001/_plan_excerpt.txt",
+    "evidence/UPPER_TIER_MASTER_001/BATCH_17/G1_HANDOFF.txt",
+    "evidence/UPPER_TIER_MASTER_001/BATCH_17/rebuild_b17_01.log",
+    "evidence/UPPER_TIER_MASTER_001/BATCH_22_AUDIT/EXTENSION_HOST_GAP_MATRIX.json",
+    "evidence/UPPER_TIER_MASTER_001/BATCH_22_AUDIT/EXTENSION_HOST_GAP_MATRIX.md",
+    "src/rawr_cli.cpp",
+    "src/win32app/Win32IDE_LSPClient.cpp",
+    "src/win32app/Win32IDE.h",
+    "tests/q6k_row_differential_test.cpp"
+  ],
+  "exclusions": [
+    {
+      "Path": "Cursor_Source_Extracted/electron_source_app/out/vs/workbench/workbench.desktop.main.js",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "dist/RawrXD_Enterprise_v3.0/extras/cursor_source_complete/out/vs/workbench/workbench.desktop.main.js",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "external/strata/terminal/0.1.59/python/Lib/site-packages/PIL/ImageFont.py",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "external/strata/terminal/0.1.59/python/Lib/site-packages/psutil/_pslinux.py",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "external/strata/terminal/current/python/Lib/site-packages/PIL/ImageFont.py",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "external/strata/terminal/current/python/Lib/site-packages/psutil/_pslinux.py",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "Extracted_Chat_Agent_Features/ai_services/ectron_source_app/out/vs/workbench/workbench.desktop.main.js",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "Fixed_Reverse_Engineered/obfuscated_js/ectron_source_app/out/vs/workbench/workbench.desktop.main.js",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "OrganizedPiProject/misc/Desktop/deploy-to-digital-ocean-all.bat",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "OrganizedPiProject/misc/Desktop/deploy-to-digital-ocean.bat",
+      "Reason": "possible-credential-content"
+    },
+    {
+      "Path": "OrganizedPiProject/misc/Desktop/force-kimi-all.bat",
+      "Reason": "possible-credential-content"
+    }
+  ],
+  "release_certification": "NOT_CLAIMED"
+}

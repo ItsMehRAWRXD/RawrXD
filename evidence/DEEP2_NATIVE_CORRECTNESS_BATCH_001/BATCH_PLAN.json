@@ -5,9 +5,10 @@
   "preserve_historical": "AGGREGATE_DECODE_DEEP2_RUNTIME_001",
   "CERTIFIED": 0,
   "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
   "items": {
-    "N01": {"name": "Clean source rebuild", "receipt": "N01_CLEAN_TIP_REBUILD/", "status": "OPEN"},
-    "N02": {"name": "Numerical correctness", "receipt": "N02_NUMERICAL_CORRECTNESS/", "status": "OPEN"},
+    "N01": {"name": "Clean source rebuild", "receipt": "N01_CLEAN_TIP_REBUILD/", "status": "PASS"},
+    "N02": {"name": "Numerical correctness", "receipt": "N02_NUMERICAL_CORRECTNESS/", "status": "IN_PROGRESS"},
     "N03": {"name": "Session isolation", "receipt": "N03_SESSION_ISOLATION/", "status": "OPEN"},
     "N04": {"name": "Concurrency architecture", "receipt": "N04_CONCURRENCY_ARCHITECTURE/", "status": "OPEN"},
     "N05": {"name": "E2E stress acceptance", "receipt": "N05_E2E_STRESS/", "status": "OPEN"}

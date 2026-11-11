@@ -46,6 +46,11 @@ namespace RawrXD { namespace LSPServer { class RawrXDLSPServer; } }
 #define DOC_TAB_HEIGHT 26
 #endif
 
+#ifndef IDC_TERMTAB_BAR
+#define IDC_TERMTAB_BAR 9300
+#define IDC_TERMTAB_ADD_BTN 9301
+#define IDC_TERMTAB_PROFILE 9302
+#endif
 #ifndef IDM_LSP_SERVER_START
 #define IDM_LSP_SERVER_START            9200
 #define IDM_LSP_SERVER_STOP             9201
@@ -2311,7 +2316,7 @@ public:
     void cmdLSPServerLaunchStdio();
     void forwardToLSPServer(const std::string& method, const nlohmann::json& params);
     void notifyLSPServerDidOpen(const std::string& uri, const std::string& languageId, const std::string& content);
-    void notifyLSPServerDidChange(const std::string& uri, const std::string& content);
+    void notifyLSPServerDidChange(const std::string& uri, const std::string& content, int version = 1);
     void notifyLSPServerDidClose(const std::string& uri);
 
     void initLanguagePlugin();
@@ -2622,6 +2627,13 @@ public:
     HWND m_hwndSearchReplace = nullptr;
     HWND m_hwndSearchInclude = nullptr;
     HWND m_hwndSearchExclude = nullptr;
+    void createSearchPanel();
+    void performSearch();
+    void searchDirectory(const std::string& dir, const char* query, int depth,
+                         bool caseSensitive, bool useRegex, bool wholeWord,
+                         const std::string& includeFilter,
+                         const std::string& excludeFilter);
+    void performSearchReplace(bool replaceAll);
     HWND m_hwndSearchStatus = nullptr;
     std::vector<std::string> m_searchResults;
     bool m_searchInProgress;
@@ -2630,6 +2642,16 @@ public:
     HWND m_hwndProblemsPanel = nullptr;
 
     // Terminal Tabs (Batch 4 P06)
+    void initTerminalTabs();
+    void shutdownTerminalTabs();
+    void createTerminalTabBar(HWND hwndParent);
+    void createTerminalTab(const std::string& profile);
+    void closeTerminalTab(int index);
+    void switchTerminalTab(int index);
+    void renameTerminalTab(int index, const std::string& name);
+    void updateTerminalTabBar();
+    static LRESULT CALLBACK TermTabBarProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     HWND m_hwndTermTabBar = nullptr;
     struct TerminalTabInfo {
         std::string profile;

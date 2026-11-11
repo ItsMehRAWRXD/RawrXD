@@ -1,0 +1,593 @@
+﻿<timestamp>Wednesday, Nov 11, 2026, 12:12 PM (UTC-5)</timestamp>
+<user_query>
+# RawrXD — Upper-Tier IDE Completion Master Plan
+
+**Target: Upper-tier performance in all eight competitive dimensions. No exceptions, no prototype-only implementations, no stubbed acceptance, and no unverified PASS results.**
+
+To reach the upper tier of both AI-native and traditional IDEs, RawrXD must deliver not just feature breadth, but reliable end-to-end execution, mature developer workflows, and repeatable releases.
+
+The following is the comprehensive engineering backlog based on the reported RawrXD/Deep2 state. Items marked missing may be absent, incomplete, broken, or simply not independently verified. They should not automatically be treated as unimplemented.
+
+## 1. Required competitive targets
+
+| Dimension                           | Previous estimate | Target |
+| ----------------------------------- | ----------------- | ------ |
+| Local-first AI architecture         | 85%               | 95%+   |
+| Multi-model support                 | 85%\*             | 95%+   |
+| Agentic feature breadth             | 67%               | 95%+   |
+| Agentic reliability                 | 48%               | 99%+   |
+| Traditional editor capabilities     | 78%               | 95%+   |
+| Debugging and language intelligence | 53%               | 95%+   |
+| Extension ecosystem                 | 43%               | 90%+   |
+| Release readiness                   | 42%               | 99%+   |
+
+\*The prior 85% was an illustrative local-model assessment, not a separately benchmarked multi-model score. Targets are engineering goals, not claims of current parity.
+
+Upper-tier status must ultimately be established by comparative benchmarks against current competitors, not percentages alone.
+
+## 2. Critical-path blockers — fix first
+
+These are the immediate blockers preventing the current native IDE from progressing to a certified, daily-usable release.
+
+| ID  | Required work                               | Acceptance requirement                   |
+| --- | ------------------------------------------- | ---------------------------------------- |
+| P01 | Repair LSP compilation                      | Clean source compilation                 |
+| P02 | Repair semantic-token compilation           | Clean build and correct highlighting     |
+| P03 | Repair symbol-index compilation             | Correct symbol discovery/navigation      |
+| P04 | Repair peek-overlay compilation             | Correct navigation, rendering, dismissal |
+| P05 | Repair autonomous-loop compilation          | Build and functional test pass           |
+| P06 | Complete PowerShell command routing         | Execute/Clear/Stop all work              |
+| P07 | Verify bottom-dock tab switching            | Four tabs switch correctly               |
+| P08 | Verify dock resize and restoration          | No broken layouts or missing controls    |
+| P09 | Verify Problems click-to-line               | Real compiler error opens exact location |
+| P10 | Stabilize native IDE startup                | No startup exceptions                    |
+| P11 | Fix cancellation/recovery regressions       | Stop A, run B, process survives          |
+| P12 | Complete extension-host integration         | Real extension loads and executes        |
+| P13 | Complete native Deep2 inference correctness | Finite logits and valid generation       |
+| P14 | Complete single/multi aggregate decode      | Real tokens, correct concurrency         |
+| P15 | Complete autonomous repair-loop acceptance  | Inspect→edit→build→test→verify           |
+| P16 | Reconcile all candidate binaries and hashes | One authoritative release candidate      |
+| P17 | Resolve packaging/runtime dependencies      | Clean-machine installation succeeds      |
+| P18 | Complete Finish-25 acceptance               | Every mandatory gate passes              |
+| P19 | Complete release certification              | `CERTIFIED=1` only after evidence        |
+| P20 | Complete promotion                          | `PROMOTE=1` only after certification     |
+
+These 20 items are the immediate release-critical sequence. The broader upper-tier requirements follow.
+
+## 3. Local-first AI architecture — required capabilities
+
+(Target: 95%+ parity)
+
+- Fully functional CPU inference for all advertised supported model families.
+- Vulkan inference on AMD, NVIDIA, and Intel where supported.
+- ROCm integration with correct device and runtime compatibility detection.
+- CUDA backend where supported.
+- Multi-GPU tensor, layer, and pipeline distribution.
+- Correct heterogeneous GPU scheduling.
+- VRAM-aware model placement, offloading, and migration.
+- Safe CPU/RAM fallback without silently changing execution semantics.
+- GGUF loader validation across supported quantization formats.
+- Correct GQA/MQA attention dimensions and KV-head allocation.
+- Numerically stable attention, softmax, normalization, and RoPE.
+- Correct MoE expert routing and sparse activation.
+- Sliding-window, hybrid, and full attention where required by model architecture.
+- Long-context KV-cache management with bounded memory growth.
+- Prefix caching and reusable prompt-state management.
+- Continuous batching with real concurrent decoding.
+- Aggregate decode for single and multiple sessions.
+- Paged attention or equivalent efficient KV management.
+- Speculative decoding with validated acceptance/rejection behavior.
+- Flash-attention-style optimized kernels where supported.
+- Correct cancellation, cleanup, and recovery during generation.
+- Deterministic regression fixtures and numerical comparisons against trusted inference engines.
+- End-to-end model loading, prefill, decode, streaming, and unload tests.
+- Measured TPS, TTFT, memory, latency, and concurrency performance.
+- Performance regression detection on each release candidate.
+- Fully offline operation without mandatory cloud authentication.
+
+**Acceptance:** Real models produce correct, non-stubbed output through the native Deep2 backend, with verified single-session and concurrent-session performance.
+
+## 4. Multi-model support — required capabilities
+
+- Unified provider abstraction covering Deep2, Ollama, and supported remote APIs.
+- Consistent model discovery, selection, loading, and unloading.
+- Model capability registry: context, tools, vision, structured output, reasoning.
+- Support for GGUF and other explicitly advertised formats.
+- Correct model-specific chat templates and tokenizers.
+- Model-specific stop tokens and end-of-turn semantics.
+- Reliable tool-call parsing for different model protocols.
+- Tool-call adapters for models without native function calling.
+- Structured-output schema validation and recovery.
+- Model fallback policies with explicit user controls.
+- Per-task model routing and independent model assignments for agents.
+- Parallel model execution and result aggregation.
+- Multi-model comparison, evaluation, and selection.
+- Context-window enforcement and overflow recovery.
+- Model warm pools and configurable eviction.
+- Model download/import integrity checks.
+- Quantization compatibility validation.
+- Model configuration profiles and presets.
+- Correct usage, token, latency, and cost accounting.
+- Offline-first provider failure behavior.
+- Security boundaries between local and remote providers.
+- End-to-end tests for every advertised provider and model family.
+
+**Acceptance:** Switching models or backends does not break chat history, tools, edits, streaming, or agent execution.
+
+## 5. Agentic feature breadth — required capabilities
+
+(Target: 95%+ parity)
+
+### Autonomous coding
+
+- Repository-wide code understanding and planning.
+- Multi-file code generation and modification.
+- Autonomous bug identification and repair.
+- Autonomous compile/test/fix iterations.
+- Cross-language refactoring.
+- Dependency-aware edits.
+- AST-aware transformations where supported.
+- Automated test generation.
+- Automated documentation generation.
+- Automated code review and suggested fixes.
+- Git-aware patch creation and inspection.
+- Controlled commit, branch, and PR workflows.
+- Task decomposition into independent subtasks.
+- Multi-agent delegation and coordination.
+- Parallel agent execution with isolated workspaces.
+- Parent/worker task ownership and handoff.
+- Persistent task checkpoints and resumability.
+- Agent state recovery after crashes or interruption.
+- Agent-to-agent context transfer without losing constraints.
+- Long-running task supervision and progress reporting.
+- Agent result validation against the original task.
+- Explicit completion criteria and refusal to claim false success.
+
+### Tools and execution
+
+- Real filesystem read/write/patch tools.
+- Terminal and PowerShell tools.
+- Build, test, and debug tools.
+- Git and repository tools.
+- Search, grep, symbol, and semantic retrieval tools.
+- Browser/computer interaction where explicitly supported.
+- Language-server tools.
+- Diagnostics and compiler-feedback tools.
+- MCP or comparable tool interoperability.
+- Tool schema validation and argument repair.
+- Tool permission management.
+- Human approval for consequential mutations.
+- Tool timeout, cancellation, and retry.
+- Exactly-once or idempotent handling for sensitive operations.
+- Complete tool-call transcripts and audit receipts.
+
+### AI editing experience
+
+- Inline completions.
+- Ghost-text acceptance, rejection, and cancellation.
+- Multi-line completions.
+- Predictive next-edit suggestions.
+- Inline natural-language edits.
+- Diff previews before applying changes.
+- Multi-file change previews.
+- Contextual code actions.
+- AI-assisted refactoring.
+- AI-assisted debugging.
+- AI-generated tests.
+- AI commit-message generation.
+- Reversible AI edits and checkpoint restoration.
+
+**Acceptance:** The agent completes real repository tasks autonomously, with correct edits, successful builds/tests, verified results, and no fabricated tool execution.
+
+## 6. Agentic reliability — highest-priority competitive gap
+
+(Target: 99%+ reliability)
+
+- Eliminate incorrect tool dispatch.
+- Eliminate unsupported-command fallthrough.
+- Prevent malformed JSON and invalid UTF-8 serialization.
+- Handle malformed model tool-call responses.
+- Recover from missing or invalid tool arguments.
+- Handle tool timeouts without deadlocking.
+- Handle model timeouts and disconnects.
+- Support cancellation at every execution stage.
+- Prevent stale callbacks after cancellation.
+- Prevent use-after-free in asynchronous operations.
+- Prevent duplicate tool execution on retries.
+- Prevent partial-file corruption during failed edits.
+- Atomic edits with rollback.
+- Transactional multi-file operations.
+- Preserve user changes during autonomous edits.
+- Detect conflicts between concurrent agents.
+- Isolate parallel worker environments.
+- Detect infinite agent loops.
+- Enforce bounded retries, token budgets, and time budgets.
+- Recover safely from model hallucinated file paths.
+- Recover safely from nonexistent tools.
+- Verify build/test results independently of model claims.
+- Detect incomplete or misleading test receipts.
+- Preserve session state across IDE restart.
+- Preserve task state across worker failure.
+- Implement structured errors and failure classification.
+- Correlate all events with task/session IDs.
+- Record reproducible traces for failures.
+- Run stress tests with multiple simultaneous agents.
+- Run fault-injection tests.
+- Run soak tests for memory/resource leaks.
+- Measure actual task-success rates on held-out repositories.
+
+**Acceptance:** At least 99% success on a defined, repeatable critical-workflow reliability suite, with zero known data-loss defects. Broader autonomous task-success rates must be measured separately.
+
+## 7. Traditional editor capabilities — required for upper-tier parity
+
+### Core editing
+
+- Reliable open/save/save-as.
+- Multi-file editing and tabs.
+- Split editors and editor groups.
+- Undo/redo across supported edits.
+- Search and replace across files.
+- Regex search and replace.
+- Multi-cursor editing.
+- Column/rectangular selection.
+- Code folding.
+- Bracket matching.
+- Auto-indentation.
+- Smart formatting.
+- Syntax highlighting.
+- Semantic highlighting.
+- Minimap.
+- Breadcrumb navigation.
+- File outline.
+- Command palette.
+- Keyboard shortcut customization.
+- Snippets and templates.
+- Bookmarks and navigation history.
+- Large-file performance.
+- Encoding and line-ending preservation.
+- External file-change detection.
+- Unsaved-change recovery.
+- Autosave and crash recovery.
+- Workspace and project restoration.
+- Accessible keyboard navigation and screen-reader support.
+
+### Workspace and UI
+
+- Complete startup layout initialization.
+- Sidebar rendering and navigation.
+- Explorer and file-tree operations.
+- Editor docking and split layouts.
+- Bottom panel docking and resizing.
+- Terminal, Output, Problems, and Debug Console switching.
+- Chat panel layout and resize.
+- Theme application to every native child control.
+- Dynamic brush/resource recreation on theme changes.
+- High-DPI and mixed-DPI monitor support.
+- Multi-monitor support.
+- Responsive layout at small window sizes.
+- Workspace layout persistence.
+- Consistent focus and keyboard handling.
+- No white/fallback surfaces in dark mode.
+- No clipped controls or overlapping panels.
+- Reliable window close and restart.
+- No UI-thread blocking during long-running tasks.
+
+### Terminal integration
+
+- Native terminal process lifecycle.
+- PowerShell Execute/Clear/Stop.
+- Command Prompt integration.
+- Configurable shells.
+- Correct command routing.
+- Working-directory synchronization.
+- Environment-variable propagation.
+- Interactive stdin/stdout/stderr.
+- Unicode terminal output.
+- ANSI/VT escape processing.
+- Terminal resizing.
+- Multiple terminal sessions.
+- Terminal history.
+- Exit-code reporting.
+- Process-tree cancellation.
+- No orphaned processes after shutdown.
+
+**Acceptance:** Daily development tasks can be completed without switching to another editor for essential editing, terminal, navigation, or build operations.
+
+## 8. Debugging and language intelligence — required capabilities
+
+(Target: 95%+ parity)
+
+### Language services
+
+- Functional LSP client and server lifecycle.
+- MASM language-server source/build integration.
+- C/C++ language intelligence.
+- Additional language support through LSP.
+- Completion, hover, and signature help.
+- Go to definition, declaration, type definition, and implementation.
+- Find all references.
+- Rename symbol across files.
+- Document/workspace symbol search.
+- Semantic tokens and diagnostics.
+- Code actions and quick fixes.
+- Peek definition/references.
+- Call hierarchy and type hierarchy.
+- Inlay hints and code lenses.
+- Incremental indexing.
+- Background indexing and cancellation.
+- Workspace-aware build configuration.
+- Correct stale-diagnostic invalidation.
+- Language-server crash recovery.
+
+### Debugging
+
+- Debug Adapter Protocol or equivalent extensible debugger integration.
+- Launch and attach debugging.
+- Breakpoints, conditional breakpoints, and logpoints.
+- Step into, over, and out.
+- Continue, pause, and terminate.
+- Call stack and thread inspection.
+- Variables, scopes, and watch expressions.
+- Expression evaluation.
+- Memory and register inspection where supported.
+- Disassembly and source mapping.
+- Exception breakpoints.
+- Debug Console command execution.
+- Multiple debug sessions.
+- Debug configuration persistence.
+- Native crash diagnostics and minidumps.
+- Debugging of agent-launched applications.
+- Real end-to-end debugging acceptance tests.
+
+**Acceptance:** Debug a real application from breakpoint through variable inspection and termination, while language navigation and diagnostics remain correct.
+
+## 9. Extension ecosystem — required capabilities
+
+(Target: 90%+ parity)
+
+- Stable public extension API.
+- Versioned extension manifest.
+- Extension discovery and installation.
+- Enable, disable, uninstall, and update.
+- Extension dependency management.
+- Extension activation events.
+- Command registration.
+- Editor and workspace APIs.
+- Terminal and task APIs.
+- Debugger and language-service APIs.
+- Webview/custom UI support where applicable.
+- Extension settings and persistent state.
+- Extension host process isolation.
+- Crash containment and restart.
+- Permissions and sandboxing.
+- Extension signature/integrity validation.
+- API compatibility testing.
+- Documented extension SDK.
+- Working sample extensions.
+- Extension developer tools.
+- Automated extension regression tests.
+- Defined compatibility strategy for VS Code extensions.
+- Real extension E2E acceptance.
+- Extension distribution channel or marketplace integration.
+
+**Important:** VS Code extension compatibility must be explicitly implemented and tested. A custom extension host does not automatically provide compatibility with the VS Code marketplace or its extension API.
+
+## 10. Release readiness — required capabilities
+
+(Target: 99%+ reliability)
+
+### Build and packaging
+
+- Clean checkout builds successfully.
+- All required CMake targets build.
+- Reproducible MSVC/Ninja configuration.
+- Correct source and dependency linkage.
+- Debug and Release builds.
+- Automated CI build pipeline.
+- Automated unit/integration/E2E tests.
+- Static analysis and sanitizer-equivalent checks where supported.
+- Dependency and vulnerability scanning.
+- Runtime DLL dependency closure.
+- Windows installer and portable distribution.
+- Clean-machine installation test.
+- Clean-machine launch and smoke test.
+- Installer upgrade and uninstall tests.
+- Signed binaries and release artifacts.
+- SHA-256 artifact manifest.
+- SBOM and third-party license compliance.
+- Release notes and known-issues register.
+- Rollback strategy for failed updates.
+
+### Quality and certification
+
+- Single authoritative candidate SHA.
+- All mandatory Finish-25 gates passing.
+- No stale or conflicting certification receipts.
+- T05 cancellation/recovery accepted.
+- T080 Problems navigation accepted.
+- T15 autonomous editing accepted.
+- T18/T19 and other held gates closed.
+- T24 package validation accepted.
+- T25 final certification accepted.
+- Real PowerShell and terminal acceptance.
+- Deep2 single/multi inference accepted.
+- Multi-model routing accepted.
+- Extension host accepted.
+- Native GUI interaction accepted.
+- Startup, shutdown, and crash recovery accepted.
+- Long-duration soak tests accepted.
+- Memory/resource leak checks accepted.
+- Multi-agent concurrency stress tests accepted.
+- No critical unresolved security defects.
+- No critical unresolved data-loss defects.
+- Release documentation and support procedures completed.
+
+## 11. Hidden cross-cutting gaps that must be audited
+
+These are often overlooked even when visible IDE features appear complete.
+
+| Area                | Hidden requirement                                                       |
+| ------------------- | ------------------------------------------------------------------------ |
+| Security            | Workspace trust, command injection prevention, path traversal protection |
+| Data integrity      | Atomic writes, backups, concurrent-edit conflict handling                |
+| Performance         | Large repository indexing, memory limits, startup latency                |
+| Accessibility       | Keyboard-only workflows, screen readers, contrast, focus                 |
+| Privacy             | Offline telemetry defaults, secret redaction, provider disclosure        |
+| Compatibility       | Windows versions, DPI, GPU drivers, runtime dependencies                 |
+| Scalability         | Concurrent agents, terminal processes, model sessions                    |
+| Observability       | Structured logs, traces, crash dumps, performance counters               |
+| Reproducibility     | Dependency pinning, artifact provenance, deterministic fixtures          |
+| Distribution        | Installer integrity, update signing, rollback                            |
+| Documentation       | User manual, API reference, troubleshooting, migration guides            |
+| Licensing           | Third-party license inventory and redistribution rights                  |
+| Extensibility       | Stable API contracts, compatibility guarantees, test harnesses           |
+| Commercial maturity | Support, onboarding, adoption, retention, operational cost               |
+
+## 12. Upper-tier benchmark acceptance matrix
+
+A feature checklist alone cannot prove upper-tier parity. RawrXD must compete on measurable workflows.
+
+| Benchmark         | Required result                                               |
+| ----------------- | ------------------------------------------------------------- |
+| Autonomous coding | Held-out repository tasks with independently verified success |
+| Agent reliability | ≥99% critical workflow pass rate                              |
+| Editing           | Core editing suite passes without data loss                   |
+| LSP               | Correctness and latency competitive with established IDEs     |
+| Debugging         | Real launch/attach/breakpoint/inspection workflow passes      |
+| Inference         | Accuracy parity plus measured throughput/latency              |
+| Concurrency       | Stable multi-session and multi-agent stress tests             |
+| Extensions        | Supported API contract passes compatibility suite             |
+| Stability         | Extended soak and crash-recovery testing                      |
+| Release           | Reproducible clean-machine installation and operation         |
+
+For top-tier claims, these results must be measured against a defined selection of leading AI and traditional IDEs on equivalent hardware and tasks. The thresholds above are proposed acceptance standards, not existing measurements.
+
+## 13. Execution order — independent batches of five
+
+To preserve your five-session batch structure, group the work as follows. Sessions within each batch can be developed independently where possible, but integrated acceptance may depend on earlier batches.
+
+| Batch | Five workstreams                                                                                       | Required milestone              |
+| ----- | ------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| 17    | LSP, semantic tokens, symbols, peek, agent-loop compilation                                            | Native build unblocked          |
+| 18    | PowerShell routing, terminal, tabs, dock resizing, GUI regression                                      | Interactive GUI accepted        |
+| 19    | Deep2 attention, token generation, single decode, multi decode, numerical verification                 | Native inference accepted       |
+| 20    | Tool dispatch, autonomous edits, build/test loop, rollback, cancellation                               | Agent loop accepted             |
+| 21    | LSP runtime, navigation, refactoring, diagnostics, debugging                                           | Language/debugging accepted     |
+| 22    | Extension host, SDK, activation, isolation, compatibility                                              | Extension E2E accepted          |
+| 23    | Multi-model routing, capability registry, concurrency, context, fallback                               | Model interoperability accepted |
+| 24    | Editor completeness, workspace persistence, accessibility, themes, performance                         | Daily-driver acceptance         |
+| 25    | Security, fault injection, soak tests, packaging, clean-machine tests                                  | Release candidate accepted      |
+| 26    | Finish-25 reconciliation, reproducibility, independent E2E, benchmarks, certification                  | Release certification           |
+| 27    | Competitor benchmark suite, performance tuning, reliability tuning, usability validation, parity audit | Upper-tier status evaluated     |
+
+This is an **11-batch planning structure containing 55 workstreams**, not a claim that 55 fixes are sufficient or that each workstream contains only one defect.
+
+## 14. Final definition of completion
+
+RawrXD should not be declared upper-tier until all eight dimensions have evidence-backed acceptance.
+
+**Upper-tier certification tracker** /8
+
+Manual planning tracker only. Check an item after its independently verified acceptance evidence exists.
+
+[Reset tracker] [Copy status]
+
+**Controlling rule:**
+
+```
+TARGET=UPPER_TIER_ALL_8_DIMENSIONS
+IMPLEMENTATION=REAL_END_TO_END
+STUB_ACCEPTANCE=FORBIDDEN
+SOURCE_PATCH != RUNTIME_PASS
+CANDIDATE_PASS != RELEASE_CERTIFICATION
+COMPETITIVE_PARITY=BENCHMARK_REQUIRED
+
+CURRENT_CERTIFIED=0
+CURRENT_PROMOTE=0
+
+UPPER_TIER=0
+UNTIL_ALL_8_DIMENSIONS_VERIFIED=1
+```
+
+The immediate priority remains **Batch 17: restore the full native build**, preserving the PowerShell routing patch. Then certify the actual interactive behavior on the rebuilt executable. That is the first prerequisite for turning the broader upper-tier plan into measurable results.
+
+This is a comprehensive target backlog derived from the reported state, not a line-by-line repository audit. An exhaustive list of every remaining defect requires inspection of the current source tree, build logs, test harnesses, and acceptance receipts.
+
+## RawrXD — Hotpatch Foundation Accepted as Source-Level Progress
+
+The hotpatch foundation adds important infrastructure for reproducible testing, model-routing observability, and GhostText request correlation.
+
+However, it does not yet close the routing acceptance gate.
+
+| Component                      | Status                     |
+| ------------------------------ | -------------------------- |
+| Computer-use hotpatch skill    | IMPLEMENTED                |
+| Hash-locked launcher           | PASS (reported)            |
+| Fail-closed validator          | IMPLEMENTED                |
+| Routing evidence template      | IMPLEMENTED                |
+| GhostText request IDs          | IMPLEMENTED                |
+| Model-routing evidence logging | IMPLEMENTED                |
+| Native IDE process launch      | PASS on previous candidate |
+| Local Ollama/GGUF dropdown     | OBSERVED                   |
+| PeekOverlay target blocker     | REMOVED                    |
+| Latest native rebuild          | FAIL                       |
+| Routing E2E                    | NOT_CERTIFIED              |
+| T25                            | HELD                       |
+
+### Next five execution objectives
+
+| Priority | Task                                                   | Required acceptance                                      |
+| -------- | ------------------------------------------------------ | -------------------------------------------------------- |
+| 1        | Isolate remaining LSP and feature compilation failures | Exact compiler errors classified by source and target    |
+| 2        | Repair or correctly isolate incomplete integrations    | No accidental feature removal or regression              |
+| 3        | Produce a clean native executable                      | Exit 0, exact SHA-256, reproducible build                |
+| 4        | Validate GhostText request correlation                 | Request → model → response → editor action trace         |
+| 5        | Validate real model routing                            | Ollama and GGUF selections reach their intended backends |
+
+The last two gates must be exercised on the newly rebuilt candidate, not the previous executable.
+
+### Additional safeguards
+
+The hotpatch implementation should also verify that:
+
+- The launcher rejects mismatched binary hashes.
+- The validator rejects incomplete, stale, or mismatched evidence.
+- Request IDs remain unique across concurrent GhostText operations.
+- Model selection changes cannot silently reuse stale routing state.
+- Cancellation invalidates outstanding GhostText requests.
+- Logging does not expose credentials or sensitive prompt contents.
+- A previous candidate's successful launch cannot certify newer source changes.
+
+### Updated project assessment
+
+| Metric                          | Previous | Current |
+| ------------------------------- | -------- | ------- |
+| Engineering completeness        | 82%      | 82%     |
+| Release readiness estimate      | 58%      | 58%     |
+| AI IDE parity estimate          | 69%      | 69%     |
+| Traditional IDE parity estimate | 63%      | 63%     |
+| Certified release               | No       | No      |
+
+The estimates remain unchanged because this is infrastructure progress without a new integrated runtime acceptance milestone.
+
+### Controlling disposition
+
+```
+HOTPATCH_SOURCE=IMPLEMENTED
+LAUNCHER_HASH_GATE=PASS_REPORTED
+GUI_MODEL_SELECTOR=OBSERVED
+GHOSTTEXT_CORRELATION=SOURCE_IMPLEMENTED
+ROUTING_E2E=NOT_CERTIFIED
+
+REBUILD=FAIL
+T25=HELD
+CERTIFIED=0
+PROMOTE=0
+```
+
+Next milestone: Restore a reproducible native build, then demonstrate real Ollama/GGUF routing and GhostText correlation on the same SHA-256.
+
+The hotpatch work is worth preserving. It establishes the instrumentation needed to prove the behavior rather than relying on visual confirmation, while maintaining the existing fail-closed certification rules.
+
+Use all the agents possible to get these numbers raised closer to 1000%! Make no mistakes! Do it yourself in parallel if need be!
+</user_query>
