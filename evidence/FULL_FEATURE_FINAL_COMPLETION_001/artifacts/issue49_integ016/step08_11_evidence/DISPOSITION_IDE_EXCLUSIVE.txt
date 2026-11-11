@@ -1,0 +1,60 @@
+ASOF_UTC=2026-11-10T03:25:00Z
+TIP=tip_final_integ_016
+TIP_SHA256=5A3577543CE4A1CBD17C610B76C4A2894731347D5B756DFEDB8413EE16FFEE18
+LOOP_SHA256=47CED214BCBC1DBB76B2EFF89F19D72411821C3FC700B4B2339E5C191E7F9EF7
+LANE=IDE_EXCLUSIVE_PRODUCT_FINAL
+HOST_SEED=OFF
+HOST_SEED_SKIPPED=1
+MODEL=F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+WORKSPACE=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+
+ROOT_CAUSE_TIP015_SNAP_GLOBAL_NO_PROGRESS=
+  1) IDE AgenticLoopBridge omitted --prefill-chunk → default 8 vs loop-exclusive 128
+  2) PrefillBatch had zero flight progress ticks (only ExecuteToken ticked) →
+     flight recorder logged global_no_progress after 5s during healthy GPU batches
+  3) ParseOutput returned early on all [ESP] lines → PrefillToken Progress never
+     reached IDE watchdog (latent StartupTimedOut risk)
+  4) tip016 R1 also preferred workDir deep2_agentic_loop.exe fixture shadow
+     (stale binary exit -1) over tip-package loop
+  5) driver_exception = AgentSession generic fail termination (≠ GPU driver proof)
+  LOOP_EXCLUSIVE_08_11 CEB669 PASS with --prefill-chunk 128 + SHORT_FIXTURE_MOTD
+  is NOT inherited as IDE 11/11
+
+FIXES_LANDED_TIP016=
+  Bridge: --prefill-chunk 128 --batched-prefill 1 (RAWRXD_PREFILL_CHUNK override)
+  Bridge: ESP prefill_start/prefill_end/heartbeat → watchdog Progress
+  Bridge: ideDir deep2_agentic_loop preferred over workDir
+  Loop default prefill_chunk=128
+  PrefillBatch flight begin/progress/end; flight slowMs 5000→180000
+
+MEASURED_TIP016_R2=
+  createprocess tip_final_integ_016\deep2_agentic_loop.exe (idDir-first OK)
+  flight: begin prefill_batch_P128_at0 + progress units (gnp_tail≈0 during ticks)
+  DEEP2_AGENTIC_LOOP_SPAWNED=1 HOST_SEED_SKIPPED=1
+  IDE exited ALIVE=0 mid-prefill (~2.5min) while orphan loop continued
+  TOOL_CALLS=0 SOURCE_EDIT=0 REQUIRED_PASS_HITS=3/11
+  HASH_DRIFT_UNCORROBORATED (fixture foreign rewrite; not credited)
+
+IDE_11_STEP_MATRIX=
+  01 LAUNCH                  PASS_MAIN_HWND
+  02 LOCAL_MODEL_LOAD        MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+  03 GPU_RUNTIME_R9700       NOT_RUN
+  04 OPEN_PROJECT            PASS_ARGV_OPEN_FIXTURE
+  05 AGENT_PROMPT            PASS_PROMPT_CTRL_ENTER_SEND
+  06 AGENT_READS_PROJECT     PARTIAL_LOOP_SPAWNED_READ_NOT_PROVEN
+  07 AGENT_REASONING_GPU     PARTIAL_STRING_HIT_NOT_GPU_PROOF
+  08 TOOL_AUTHORITY          BLOCKED_NO_REAL_TOOL_CALL_EVIDENCE
+  09 RESULT_REINJECTION      NOT_RUN
+  10 REAL_SOURCE_EDIT        NOT_RUN_HASH_DRIFT_UNCORROBORATED
+  11 BUILD_FAILURE_RECOVERY  NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+  REQUIRED_PASS_HITS=3/11
+
+ISSUE49_PASS_CONJUNCTION=0
+INVENT_PASS=0
+PROMOTE=0
+TIP_MOVE=0
+CONTROLLING=CC79
+A4F_UNTOUCHED=1
+NO_TIP014_LOOP_08_11_INHERIT=1
+NEXT=IDE_KEEPALIVE_DURING_7B_PREFILL_OR_HARNESS_WAIT_ORPHAN_LOOP
+RECEIPT=artifacts/issue49_integ016/ISSUE49_PRODUCT_FINAL_TIP016_RECEIPT.txt

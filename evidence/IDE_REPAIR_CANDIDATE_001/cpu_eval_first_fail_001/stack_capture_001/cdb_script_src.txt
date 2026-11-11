@@ -1,0 +1,7 @@
+.sympath F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001
+.reload /f bridge_lifecycle_test.exe
+.lines -e
+.ecxr
+lsa bridge_lifecycle_test!StreamingGGUFLoader::LoadTensorSlice+0x169
+lsa bridge_lifecycle_test!RawrXD::CPUInferenceEngine::Eval+0x409
+q

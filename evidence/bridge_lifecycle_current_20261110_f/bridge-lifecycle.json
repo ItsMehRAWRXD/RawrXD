@@ -1,0 +1,11 @@
+{
+  "tested_utc": "2026-11-10T13:37:41.1489053Z",
+  "status": "FAIL",
+  "process_exit": 3,
+  "timed_out": false,
+  "model": "F:\\rawrxd\\test_min_model.gguf",
+  "product_ide_sha256": "401071ADD351A9CF82DD11941E6DB26D10D0DFF6543CD39197772221CF98E7B3",
+  "bridge_object_sha256": "2990AF4D52CA850EFC5D040453C04EBD771140BDA5708C40596ABE04815622F3",
+  "test_exe_sha256": "4BB3937E08D5D84767BD1A23A1466BC1CD30EA0C8C01C3AA0359651F0BA6023B",
+  "scope": "Three sequential real-engine generation requests using the product object files."
+}

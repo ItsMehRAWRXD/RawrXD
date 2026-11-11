@@ -1,0 +1,202 @@
+[deep2-engine] rawrxd_deep2_engine starting
+[deep2-engine] loading model: F:\models\gguf\library__nemotron-3-nano__4b.gguf
+[Deep2Engine] Loading model from: F:\models\gguf\library__nemotron-3-nano__4b.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\models\gguf\library__nemotron-3-nano__4b.gguf mode=GPU_MULTI devices=2 kv_per_token=147420 max_ctx_est=31268
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\models\gguf)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 layers=42 heads=40 kvHeads=40 inter=0 vocab=131072
+[Deep2Engine] Nemotron-H MoE/Bolt architecture detected: nemotron_h
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=1x9728 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=9728x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=1x96 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=17504x3136 type=6)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x960 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=3136x7680 type=12)
+[Deep2Engine] Layer topology: 4 attention, 21 SSM, 17 unknown of 42 total
+[Deep2Engine] KV cache sized for 4 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000016580044490  Registered 'blk.0.attn_norm.weight': shard=0 offset=0 bytes=12544  |  registry_size=1  registeredBytes=12544  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000016580044490  Registered 'blk.16.ssm_a': shard=0 offset=0 bytes=384  |  registry_size=100  registeredBytes=831716608  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000016580044490  Registered 'blk.32.attn_k.weight': shard=0 offset=0 bytes=2207744  |  registry_size=200  registeredBytes=1622745984  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000016580044490  registered=263 tensors  bytes=2829187200  max=536870912
+[Deep2Engine] Mamba-2 state buffers: proj=17504 state=30965760x1634304 conv=4x9728
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF73BE9FE50 dequant=00007FF73BEA3010 GetGEMV(12)=00007FF73BE9FE50 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=4 page=8 virtualMax=31268 heads=40 dim=78
+[KVCache] HOT_BYTES=798720 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 4 layers x 31268 positions x 40 heads x 78 dim = 2977.18 MB
+[Deep2Engine] Model loaded successfully (263 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[deep2-engine] model loaded
+[deep2-engine] prompt: hello
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=42 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=42
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=42 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2322600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 1 (patch_32a099d2cc2f400a)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] embedToken: type=6 vocabSize=131072 hiddenDim=3136 data=00000166BC2E2240 sizeBytes=282591232 rows=131072 cols=3136
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=3136 min=-6.542968750e-02 max=6.982421875e-02 mean=-1.539259541e-04 l2=1.334494956e+00 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER0_INPUT pos=0 size=3136 min=-6.542968750e-02 max=6.982421875e-02 mean=-1.539259541e-04 l2=1.334494956e+00 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=0 size=3136 min=-1.362402558e+00 max=1.395570517e+00 mean=-3.326749533e-03 l2=2.589788099e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER0_POST_ATTN pos=0 size=3136 min=-1.405844331e+00 max=1.465394735e+00 mean=-3.480675591e-03 l2=2.723026342e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=0 size=3136 min=-2.891107321e+00 max=3.013572216e+00 mean=-7.157980447e-03 l2=5.599881484e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=0 size=3136 min=-7.910780311e-01 max=4.632543623e-01 mean=1.264918775e-03 l2=7.865839967e+00 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER0_POST_FFN pos=0 size=3136 min=-1.756678343e+00 max=1.658392787e+00 mean=-2.215757076e-03 l2=2.850603365e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER1_INPUT pos=1 size=3136 min=-1.756678343e+00 max=1.658392787e+00 mean=-2.215757076e-03 l2=2.850603365e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=1 size=3136 min=-1.178950071e+00 max=9.828957915e-01 mean=2.565384993e-04 l2=8.192628649e+00 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER1_POST_ATTN pos=1 size=3136 min=-2.746662617e+00 max=2.126528502e+00 mean=-1.959218549e-03 l2=3.618979128e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=1 size=3136 min=-4.250128269e+00 max=3.290545940e+00 mean=-3.031653740e-03 l2=5.599932796e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_SWIGLU pos=1 size=12544 min=7.875379460e-09 max=9.796243286e+01 mean=9.871093034e-01 l2=2.795199888e+02 finite=12544 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=1 size=3136 min=-3.559998703e+01 max=1.907430077e+01 mean=-2.552343065e-02 l2=5.970619926e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=1 size=3136 min=-3.559998703e+01 max=1.907430077e+01 mean=-2.552343065e-02 l2=5.970619926e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER1_POST_FFN pos=1 size=3136 min=-3.603333282e+01 max=1.990083313e+01 mean=-2.748264897e-02 l2=7.018589761e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER2_INPUT pos=2 size=3136 min=-3.603333282e+01 max=1.990083313e+01 mean=-2.748264897e-02 l2=7.018589761e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=2 size=3136 min=-2.919944572e+01 max=1.383161736e+01 mean=-2.269913203e-02 l2=5.158987237e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER2_POST_ATTN pos=2 size=3136 min=-6.523278046e+01 max=3.373245239e+01 mean=-5.018178116e-02 l2=1.216329036e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=2 size=3136 min=-3.003325272e+01 max=1.553046322e+01 mean=-2.310375374e-02 l2=5.599993921e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=2 size=3136 min=-1.814972520e+00 max=7.340367317e+00 mean=-3.769552713e-04 l2=1.705186508e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER2_POST_FFN pos=2 size=3136 min=-6.552321625e+01 max=3.419715881e+01 mean=-5.055873633e-02 l2=1.233585891e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER3_INPUT pos=3 size=3136 min=-6.552321625e+01 max=3.419715881e+01 mean=-5.055873633e-02 l2=1.233585891e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=3 size=3136 min=-5.749711037e+00 max=2.031482220e+00 mean=-2.295877013e-03 l2=9.331233187e+00 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER3_POST_ATTN pos=3 size=3136 min=-6.734597015e+01 max=3.622864151e+01 mean=-5.285461502e-02 l2=1.318630158e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=3 size=3136 min=-2.860067368e+01 max=1.538567924e+01 mean=-2.244644405e-02 l2=5.599995015e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_SWIGLU pos=3 size=12544 min=6.177999223e-10 max=2.432497787e+01 mean=1.016059246e+00 l2=2.610790312e+02 finite=12544 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=3 size=3136 min=-4.662261581e+01 max=2.698934174e+01 mean=-1.072275821e-02 l2=6.071754051e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=3 size=3136 min=-4.662261581e+01 max=2.698934174e+01 mean=-1.072275821e-02 l2=6.071754051e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER3_POST_FFN pos=3 size=3136 min=-1.110584564e+02 max=6.321798325e+01 mean=-6.357737141e-02 l2=1.758897910e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER4_INPUT pos=4 size=3136 min=-1.110584564e+02 max=6.321798325e+01 mean=-6.357737141e-02 l2=1.758897910e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=4 size=3136 min=-3.107715988e+01 max=1.981291389e+01 mean=-2.192714988e-02 l2=5.356326746e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER4_POST_ATTN pos=4 size=3136 min=-1.421356201e+02 max=8.303089905e+01 mean=-8.550452262e-02 l2=2.292374094e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=4 size=3136 min=-3.472204590e+01 max=2.028346443e+01 mean=-2.088774117e-02 l2=5.599998109e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=4 size=3136 min=-2.428381920e+00 max=6.331566334e+00 mean=4.365662621e-03 l2=1.978922521e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER4_POST_FFN pos=4 size=3136 min=-1.428953400e+02 max=8.378559875e+01 mean=-8.113886215e-02 l2=2.319235428e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER5_INPUT pos=5 size=3136 min=-1.428953400e+02 max=8.378559875e+01 mean=-8.113886215e-02 l2=2.319235428e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=5 size=3136 min=-8.895392418e+00 max=3.319111109e+00 mean=-3.312960935e-03 l2=1.185019705e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER5_POST_ATTN pos=5 size=3136 min=-1.517907257e+02 max=8.710471344e+01 mean=-8.445182028e-02 l2=2.431385932e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=5 size=3136 min=-3.496063232e+01 max=2.006206703e+01 mean=-1.945104971e-02 l2=5.599998760e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_SWIGLU pos=5 size=12544 min=4.386115027e-09 max=1.849582291e+01 mean=7.348873117e-01 l2=1.857489241e+02 finite=12544 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=5 size=3136 min=-5.191383362e+01 max=8.386404037e+00 mean=-2.252892336e-02 l2=5.851632929e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=5 size=3136 min=-5.191383362e+01 max=8.386404037e+00 mean=-2.252892336e-02 l2=5.851632929e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER5_POST_FFN pos=5 size=3136 min=-2.037045593e+02 max=9.348548126e+01 mean=-1.069807435e-01 l2=2.850712209e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER6_INPUT pos=6 size=3136 min=-2.037045593e+02 max=9.348548126e+01 mean=-1.069807435e-01 l2=2.850712209e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=6 size=3136 min=-3.907827377e+01 max=1.908184814e+01 mean=-2.458801277e-02 l2=5.772783682e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER6_POST_ATTN pos=6 size=3136 min=-2.427828369e+02 max=1.125673294e+02 mean=-1.315687548e-01 l2=3.424964074e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=6 size=3136 min=-3.969629288e+01 max=1.840535927e+01 mean=-2.151219548e-02 l2=5.599999409e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=6 size=3136 min=-2.250392199e+00 max=2.217736483e+00 mean=-6.420259472e-03 l2=1.997946586e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER6_POST_FFN pos=6 size=3136 min=-2.433012848e+02 max=1.127387619e+02 mean=-1.379890104e-01 l2=3.446759289e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER7_INPUT pos=7 size=3136 min=-2.433012848e+02 max=1.127387619e+02 mean=-1.379890104e-01 l2=3.446759289e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=7 size=3136 min=-3.443390656e+01 max=1.595567417e+01 mean=-2.095949046e-02 l2=4.922000599e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER7_POST_ATTN pos=7 size=3136 min=-2.777351990e+02 max=1.286944427e+02 mean=-1.589485038e-01 l2=3.937122733e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=7 size=3136 min=-3.950389481e+01 max=1.830496025e+01 mean=-2.260817229e-02 l2=5.599999071e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=7 size=3136 min=-1.037139416e+01 max=2.040482140e+01 mean=5.085544933e-02 l2=8.739204794e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER7_POST_FFN pos=7 size=3136 min=-2.795818481e+02 max=1.270554047e+02 mean=-1.080930547e-01 l2=4.062783019e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER8_INPUT pos=8 size=3136 min=-2.795818481e+02 max=1.270554047e+02 mean=-1.080930547e-01 l2=4.062783019e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=8 size=3136 min=-2.107469749e+01 max=4.309809685e+00 mean=-5.245213777e-03 l2=2.410048086e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER8_POST_ATTN pos=8 size=3136 min=-3.006565552e+02 max=1.313652191e+02 mean=-1.133382742e-01 l2=4.284874149e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=8 size=3136 min=-3.929348755e+01 max=1.716841888e+01 mean=-1.481243663e-02 l2=5.599999373e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_SWIGLU pos=8 size=12544 min=6.541584163e-09 max=1.197328758e+01 mean=4.077230317e-01 l2=9.045179198e+01 finite=12544 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=8 size=3136 min=-4.530552673e+01 max=6.669246197e+00 mean=-1.204469129e-02 l2=4.685745148e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=8 size=3136 min=-4.530552673e+01 max=6.669246197e+00 mean=-1.204469129e-02 l2=4.685745148e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER8_POST_FFN pos=8 size=3136 min=-3.459620972e+02 max=1.354311981e+02 mean=-1.253829744e-01 l2=4.631729021e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER9_INPUT pos=9 size=3136 min=-3.459620972e+02 max=1.354311981e+02 mean=-1.253829744e-01 l2=4.631729021e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=9 size=3136 min=-3.398574066e+01 max=1.317621899e+01 mean=-1.273591340e-02 l2=4.586164510e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER9_POST_ATTN pos=9 size=3136 min=-3.799478455e+02 max=1.486074219e+02 mean=-1.381188862e-01 l2=5.088241472e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=9 size=3136 min=-4.181616974e+01 max=1.635538483e+01 mean=-1.520104097e-02 l2=5.599999372e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=9 size=3136 min=-6.157547474e+00 max=8.331426620e+00 mean=-7.654164946e-03 l2=3.364087758e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER9_POST_FFN pos=9 size=3136 min=-3.805728760e+02 max=1.493449860e+02 mean=-1.457730507e-01 l2=5.129718354e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER10_INPUT pos=10 size=3136 min=-3.805728760e+02 max=1.493449860e+02 mean=-1.457730507e-01 l2=5.129718354e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=10 size=3136 min=-2.661559486e+01 max=4.458031654e+00 mean=-6.666364579e-03 l2=2.925191629e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER10_POST_ATTN pos=10 size=3136 min=-4.071884766e+02 max=1.538030243e+02 mean=-1.524394183e-01 l2=5.400843513e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=10 size=3136 min=-4.222035599e+01 max=1.594745159e+01 mean=-1.580606205e-02 l2=5.599999723e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_SWIGLU pos=10 size=12544 min=7.011956554e-12 max=1.128512859e+01 mean=4.132209356e-01 l2=9.312090980e+01 finite=12544 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=10 size=3136 min=-4.605208206e+01 max=3.830084085e+00 mean=-1.424003254e-02 l2=4.700472821e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_DOWN pos=10 size=3136 min=-4.605208206e+01 max=3.830084085e+00 mean=-1.424003254e-02 l2=4.700472821e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER10_POST_FFN pos=10 size=3136 min=-4.532405701e+02 max=1.531012421e+02 mean=-1.666794553e-01 l2=5.769579686e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER11_INPUT pos=11 size=3136 min=-4.532405701e+02 max=1.531012421e+02 mean=-1.666794553e-01 l2=5.769579686e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=11 size=3136 min=-3.058811188e+01 max=1.120314312e+01 mean=-1.118037264e-02 l2=4.038695911e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER11_POST_ATTN pos=11 size=3136 min=-4.838286743e+02 max=1.643043823e+02 mean=-1.778598235e-01 l2=6.169992769e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=11 size=3136 min=-4.391318893e+01 max=1.491257095e+01 mean=-1.614288787e-02 l2=5.599999983e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=SSM_OUT pos=11 size=3136 min=-1.220332527e+01 max=2.066002083e+01 mean=1.247336694e-02 l2=1.190717305e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER11_POST_FFN pos=11 size=3136 min=-4.944897461e+02 max=1.614679565e+02 mean=-1.653864615e-01 l2=6.435017123e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER12_INPUT pos=12 size=3136 min=-4.944897461e+02 max=1.614679565e+02 mean=-1.653864615e-01 l2=6.435017123e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=12 size=3136 min=-2.605477524e+01 max=1.322823048e+01 mean=-1.070780599e-02 l2=3.908937842e+01 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_Q pos=12 size=5120 min=-3.692566395e+00 max=4.343698025e+00 mean=2.213000958e-03 l2=7.169119267e+01 finite=5120 nan=0 inf=0
+[B3_STATE] phase=ATTN_K pos=12 size=1024 min=-5.013341904e+00 max=5.706214905e+00 mean=2.959892567e-02 l2=4.969933208e+01 finite=1024 nan=0 inf=0
+[B3_STATE] phase=ATTN_V pos=12 size=1024 min=-1.468300819e+00 max=1.429754019e+00 mean=-3.797680526e-03 l2=1.502611467e+01 finite=1024 nan=0 inf=0
+[B3_STATE] phase=ATTN_ROPE pos=12 size=5120 min=-3.692566395e+00 max=4.343698025e+00 mean=2.213000958e-03 l2=7.169119267e+01 finite=5120 nan=0 inf=0
+[B3_STATE] phase=ATTN_OUT pos=12 size=3136 min=-3.044933128e+01 max=5.958626938e+01 mean=6.677152987e-02 l2=1.428707859e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=ATTN_O pos=12 size=3136 min=-1.010452271e+01 max=9.024036407e+00 mean=7.187486939e-02 l2=1.282461917e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=LAYER12_POST_ATTN pos=12 size=3136 min=-4.951528931e+02 max=1.576345520e+02 mean=-9.351159879e-02 l2=6.553907509e+02 finite=3136 nan=0 inf=0
+[B3_STATE] phase=FFN_NORM pos=12 size=3136 min=-4.230844116e+01 max=1.346911621e+01 mean=-7.990117905e-03 l2=5.599999689e+01 finite=3136 nan=0 inf=0
+[live-path] vacuumArmed=0 trampoline=1/14 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=0 plasmaAbsence=0 enhancements=1
+[AGENT] POST_GENERATE generated=0 tokens
+
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

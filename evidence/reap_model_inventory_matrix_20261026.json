@@ -1,0 +1,49 @@
+{
+  "schema": "reap.model_inventory_matrix_001",
+  "receipt": "REAP_MODEL_INVENTORY_MATRIX_20261026",
+  "executable": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.exe",
+  "executable_sha256": "D1C3F35B8383415CDA7CF82806284E25D5106AAAC61F48CD9960BFE5268E2AA3",
+  "models": [
+    {
+      "name": "DeepSeek-R1-Q4_K_M",
+      "first_shard": "F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf",
+      "status": "PASS",
+      "shards": 11,
+      "tensors": 1025,
+      "bytes": 404430188064,
+      "expert_tensors": 174,
+      "expert_bytes": 393983557632,
+      "logical_experts": 14848
+    },
+    {
+      "name": "MiniMax-M2.7-Q4_K_M",
+      "first_shard": "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+      "status": "PASS",
+      "shards": 3,
+      "tensors": 809,
+      "bytes": 138342384448,
+      "expert_tensors": 186,
+      "expert_bytes": 135725580288,
+      "logical_experts": 15872
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M",
+      "first_shard": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+      "status": "PASS",
+      "shards": 13,
+      "tensors": 1096,
+      "bytes": 621245224864,
+      "expert_tensors": 180,
+      "expert_bytes": 612907352064,
+      "logical_experts": 23040
+    }
+  ],
+  "acceptance": {
+    "inspect_all_models": "PASS",
+    "capabilities_all_models": "PASS",
+    "plan_all_models": "BLOCKED_REQUIRES_CALIBRATION_MASK"
+  },
+  "original_models_modified": false,
+  "calibration_and_rewrite_authorized": false,
+  "reason": "inventory is validated; calibration, parity, selection, and writer gates remain required"
+}

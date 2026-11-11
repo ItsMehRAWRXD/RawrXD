@@ -1,0 +1,27 @@
+﻿> User: [dispatch_id=1] RXD_ONCE_8592e16be596451f8fcab65734392729
+
+
+AI:   Greetings! I'm BigDaddyG Productivity Mode, ready to assist you with your questions and tasks. Please feel free to ask me anything, and I'll do my best to provide concise and actionable responses.
+
+To better serve you, I'd like to clarify a few things:
+
+1. When answering questions, I'll always try to lead with the direct answer, keeping it brief and to the point.
+2. If necessary, I'll provide a brief explanation (1-2 sentences) to help contextualize the response.
+3. I'll only include examples when they're essential for understanding.
+4. To save time, I won't engage in meta-commentary about my responses.
+
+As an expert assistant, I'm best suited for tasks such as:
+
+* Programming questions (code solutions, debugging)
+* Quick research summaries
+* Technical explanations
+* Problem-solving assistance
+* Rapid brainstorming
+
+When it comes to coding, I can provide code solutions and debugging help. For research, I can offer quick summaries to save you time. If you have technical questions, I'll do my best to explain things clearly and concisely. When you need help solving a problem, I can assist with that too. And if you're looking for ideas, I can rapid brainstorming suggestions.
+
+Remember, I'm designed to prioritize clarity and speed over comprehensiveness. So, I'll always strive to provide the most direct and actionable responses possible.
+
+Now, please feel free to ask me anything, and I'll do my best to assist you!
+
+

@@ -1,0 +1,504 @@
+UpdateCTestConfiguration  from :F:/rawrxd/build_ide/DartConfiguration.tcl
+Test project F:/rawrxd/build_ide
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Could not find executable F:/rawrxd/build_ide/deep2_gpu_code31_pnp_probe.exe
+Looked in the following places:
+F:/rawrxd/build_ide/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/Release/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/Release/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/Debug/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/Debug/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/Deployment/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/Deployment/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_ide/Development/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_ide/Development/deep2_gpu_code31_pnp_probe.exe.exe
+
+1: Test command: 
+1: Working Directory: F:/rawrxd/build_ide
+  Test  #1: deep2_gpu_code31_pnp_probe
+Could not find executable F:/rawrxd/build_ide/bin/deep2_gdn_parity_harness.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/Release/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/Release/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_gdn_parity_harness.exe.exe
+F:/rawrxd/build_ide/bin/Development/deep2_gdn_parity_harness.exe
+F:/rawrxd/build_ide/bin/Development/deep2_gdn_parity_harness.exe.exe
+
+2: Test command: 
+2: Working Directory: F:/rawrxd/build_ide
+  Test  #2: deep2_gdn_reference_contract
+Could not find executable F:/rawrxd/build_ide/bin/deep2_qwen4exp_operator_harness.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/Release/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/Release/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_qwen4exp_operator_harness.exe.exe
+F:/rawrxd/build_ide/bin/Development/deep2_qwen4exp_operator_harness.exe
+F:/rawrxd/build_ide/bin/Development/deep2_qwen4exp_operator_harness.exe.exe
+
+3: Test command: 
+3: Working Directory: F:/rawrxd/build_ide
+  Test  #3: deep2_qwen4exp_operator_contract
+Could not find executable F:/rawrxd/build_ide/bin/deep2_vulkan_gdn_dispatch_probe.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/Release/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/Release/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/Debug/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/MinSizeRel/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/RelWithDebInfo/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/Deployment/deep2_vulkan_gdn_dispatch_probe.exe.exe
+F:/rawrxd/build_ide/bin/Development/deep2_vulkan_gdn_dispatch_probe.exe
+F:/rawrxd/build_ide/bin/Development/deep2_vulkan_gdn_dispatch_probe.exe.exe
+
+4: Test command: 
+4: Working Directory: F:/rawrxd/build_ide
+  Test  #4: deep2_vulkan_gdn_dispatch
+Could not find executable F:/rawrxd/build_ide/deep2_h11_prefill_parity.exe
+Looked in the following places:
+F:/rawrxd/build_ide/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/Release/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/Release/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/Debug/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/Debug/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/Deployment/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/Deployment/deep2_h11_prefill_parity.exe.exe
+F:/rawrxd/build_ide/Development/deep2_h11_prefill_parity.exe
+F:/rawrxd/build_ide/Development/deep2_h11_prefill_parity.exe.exe
+
+5: Test command: 
+5: Working Directory: F:/rawrxd/build_ide
+  Test  #5: deep2_h11_prefill_parity
+Could not find executable F:/rawrxd/build_ide/bin-msvc/workspace_path_policy_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Release/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/workspace_path_policy_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Development/workspace_path_policy_smoke.exe.exe
+
+6: Test command: 
+6: Working Directory: F:/rawrxd/build_ide
+  Test  #6: workspace_path_policy_smoke
+
+7: Test command: F:\rawrxd\build_ide\bin\native_tool_protocol_smoke.exe
+7: Working Directory: F:/rawrxd/build_ide
+  Test  #7: native_tool_protocol_smoke
+Could not find executable F:/rawrxd/build_ide/bin-msvc/cursor_parity_registry_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Release/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_ide/bin-msvc/Development/cursor_parity_registry_smoke.exe.exe
+
+8: Test command: 
+8: Working Directory: F:/rawrxd/build_ide
+  Test  #8: cursor_parity_registry_smoke
+Could not find executable F:/rawrxd/build_ide/bin-msvc/q8k_edge_tests.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/Release/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/q8k_edge_tests.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/q8k_edge_tests.exe
+F:/rawrxd/build_ide/bin-msvc/Development/q8k_edge_tests.exe.exe
+
+9: Test command: 
+9: Working Directory: F:/rawrxd/build_ide
+  Test  #9: q8k_edge_tests
+Could not find executable F:/rawrxd/build_ide/bin-msvc/q8k_parity_tool.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/Release/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/q8k_parity_tool.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/q8k_parity_tool.exe
+F:/rawrxd/build_ide/bin-msvc/Development/q8k_parity_tool.exe.exe
+
+10: Test command:  "--blocks" "8" "--seed" "12345"
+10: Working Directory: F:/rawrxd/build_ide
+  Test #10: q8k_byte_parity
+Could not find executable F:/rawrxd/build_ide/bin-msvc/quant_parity_cert.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/Release/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/quant_parity_cert.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/quant_parity_cert.exe
+F:/rawrxd/build_ide/bin-msvc/Development/quant_parity_cert.exe.exe
+
+11: Test command:  "--blocks" "8" "--seed" "12345"
+11: Working Directory: F:/rawrxd/build_ide
+  Test #11: quant_parity_cert
+Could not find executable F:/rawrxd/build_ide/bin-msvc/kquant_dot_parity.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/Release/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/kquant_dot_parity.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/kquant_dot_parity.exe
+F:/rawrxd/build_ide/bin-msvc/Development/kquant_dot_parity.exe.exe
+
+12: Test command: 
+12: Working Directory: F:/rawrxd/build_ide
+  Test #12: kquant_dot_parity
+
+13: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-E" "env" "POWERSHELL_TELEMETRY_OPTOUT=1" "powershell" "-ExecutionPolicy" "Bypass" "-NoProfile" "-File" "F:/rawrxd/tools/gate2_manifest_consistency.ps1" "-BuildDir" "F:/rawrxd/build_ide" "-CliExe" "F:/rawrxd/build_ide/bin-msvc/rawr.exe" "-RepoRoot" "F:/rawrxd" "-EvidenceDir" "F:/rawrxd/build_ide/gate2_manifest_evidence"
+13: Working Directory: F:/rawrxd/build_ide
+  Test #13: gate2_manifest_consistency
+Could not find executable F:/rawrxd/build_ide/rawr-reap-cli-contract-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/Release/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/Release/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-cli-contract-test.exe.exe
+F:/rawrxd/build_ide/Development/rawr-reap-cli-contract-test.exe
+F:/rawrxd/build_ide/Development/rawr-reap-cli-contract-test.exe.exe
+
+14: Test command: 
+14: Working Directory: F:/rawrxd/build_ide
+  Test #14: rawr_reap_cli_contract
+Could not find executable F:/rawrxd/build_ide/rawr-reap-expert-layout-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/Release/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/Release/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-expert-layout-test.exe.exe
+F:/rawrxd/build_ide/Development/rawr-reap-expert-layout-test.exe
+F:/rawrxd/build_ide/Development/rawr-reap-expert-layout-test.exe.exe
+
+15: Test command: 
+15: Working Directory: F:/rawrxd/build_ide
+  Test #15: rawr_reap_expert_layout
+Could not find executable F:/rawrxd/build_ide/rawr-reap-runtime-plan-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/Release/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/Release/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/Debug/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/Deployment/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_ide/Development/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_ide/Development/rawr-reap-runtime-plan-test.exe.exe
+
+16: Test command: 
+16: Working Directory: F:/rawrxd/build_ide
+  Test #16: rawr_reap_runtime_plan
+Could not find executable F:/rawrxd/build_ide/rawr-tensor-residency-budget-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/Release/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/Release/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/Debug/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/Debug/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/MinSizeRel/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/Deployment/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/Deployment/rawr-tensor-residency-budget-test.exe.exe
+F:/rawrxd/build_ide/Development/rawr-tensor-residency-budget-test.exe
+F:/rawrxd/build_ide/Development/rawr-tensor-residency-budget-test.exe.exe
+
+17: Test command: 
+17: Working Directory: F:/rawrxd/build_ide
+  Test #17: rawr_tensor_residency_budget
+Could not find executable F:/rawrxd/build_ide/hexmag-reap-live-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/Release/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/Release/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/Debug/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/Debug/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/MinSizeRel/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/Deployment/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/Deployment/hexmag-reap-live-test.exe.exe
+F:/rawrxd/build_ide/Development/hexmag-reap-live-test.exe
+F:/rawrxd/build_ide/Development/hexmag-reap-live-test.exe.exe
+
+18: Test command: 
+18: Working Directory: F:/rawrxd/build_ide
+  Test #18: hexmag_reap_live_fail_closed
+Could not find executable F:/rawrxd/build_ide/reap-moe-transform-test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/Release/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/Release/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/Debug/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/Debug/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/MinSizeRel/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/Deployment/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/Deployment/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_ide/Development/reap-moe-transform-test.exe
+F:/rawrxd/build_ide/Development/reap-moe-transform-test.exe.exe
+
+19: Test command: 
+19: Working Directory: F:/rawrxd/build_ide
+  Test #19: reap_moe_transform
+Could not find executable F:/rawrxd/build_ide/deep2_mla_lifecycle_test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/Release/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/Release/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/Debug/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/Debug/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/MinSizeRel/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/RelWithDebInfo/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/Deployment/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/Deployment/deep2_mla_lifecycle_test.exe.exe
+F:/rawrxd/build_ide/Development/deep2_mla_lifecycle_test.exe
+F:/rawrxd/build_ide/Development/deep2_mla_lifecycle_test.exe.exe
+
+20: Test command: 
+20: Working Directory: F:/rawrxd/build_ide
+  Test #20: deep2_mla_lifecycle_test
+Could not find executable F:/rawrxd/build_ide/bin-msvc/reap-floor-audit.exe
+Looked in the following places:
+F:/rawrxd/build_ide/bin-msvc/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Release/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/Release/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/Debug/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/MinSizeRel/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/RelWithDebInfo/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/Deployment/reap-floor-audit.exe.exe
+F:/rawrxd/build_ide/bin-msvc/Development/reap-floor-audit.exe
+F:/rawrxd/build_ide/bin-msvc/Development/reap-floor-audit.exe.exe
+
+21: Test command:  "F:/rawrxd/tests/reap_floor_synthetic.tsv" "30" "8"
+21: Working Directory: F:/rawrxd/build_ide
+  Test #21: reap-floor-audit-smoke
+Could not find executable F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/deep2_snap_test.exe
+Looked in the following places:
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Release/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Release/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Debug/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Debug/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/MinSizeRel/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/MinSizeRel/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/RelWithDebInfo/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/RelWithDebInfo/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Deployment/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Deployment/deep2_snap_test.exe.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Development/deep2_snap_test.exe
+F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap/Development/deep2_snap_test.exe.exe
+
+22: Test command: 
+22: Working Directory: F:/rawrxd/build_ide/tools/deep2_snap/deep2_snap
+  Test #22: deep2_snap_test
+Could not find executable F:/rawrxd/build_ide/tools/snap_process_guard/snap_process_guard_cli.exe
+Looked in the following places:
+F:/rawrxd/build_ide/tools/snap_process_guard/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Release/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Release/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Debug/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Debug/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/MinSizeRel/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/MinSizeRel/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/RelWithDebInfo/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/RelWithDebInfo/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Deployment/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Deployment/snap_process_guard_cli.exe.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Development/snap_process_guard_cli.exe
+F:/rawrxd/build_ide/tools/snap_process_guard/Development/snap_process_guard_cli.exe.exe
+
+23: Test command:  "--help"
+23: Working Directory: F:/rawrxd/build_ide/tools/snap_process_guard
+  Test #23: snap_process_guard_test
+Could not find executable F:/rawrxd/build_ide/tools/deep2_debugger/flight_recorder_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_ide/tools/deep2_debugger/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Release/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Release/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Debug/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Debug/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/MinSizeRel/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/MinSizeRel/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/RelWithDebInfo/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/RelWithDebInfo/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Deployment/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Deployment/flight_recorder_smoke.exe.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Development/flight_recorder_smoke.exe
+F:/rawrxd/build_ide/tools/deep2_debugger/Development/flight_recorder_smoke.exe.exe
+
+24: Test command: 
+24: Working Directory: F:/rawrxd/build_ide/tools/deep2_debugger
+  Test #24: flight_recorder_smoke_test
+
+25: Test command: F:\rawrxd\build_ide\tools\rawrxd_parity_final\rawr_run.exe "--self-test"
+25: Working Directory: F:/rawrxd/build_ide/tools/rawrxd_parity_final
+  Test #25: rawr_run_self_test
+Could not find executable F:/rawrxd/build_ide/tools/rawrxd_parity_final/rawr_fuzz_parsers.exe
+Looked in the following places:
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Release/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Release/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Debug/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Debug/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/MinSizeRel/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/MinSizeRel/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/RelWithDebInfo/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/RelWithDebInfo/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Deployment/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Deployment/rawr_fuzz_parsers.exe.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Development/rawr_fuzz_parsers.exe
+F:/rawrxd/build_ide/tools/rawrxd_parity_final/Development/rawr_fuzz_parsers.exe.exe
+
+26: Test command:  "20000"
+26: Working Directory: F:/rawrxd/build_ide/tools/rawrxd_parity_final
+  Test #26: rawr_fuzz_parsers
+Could not find executable F:/rawrxd/build_ide/src/production/rawrxd_production_tests.exe
+Looked in the following places:
+F:/rawrxd/build_ide/src/production/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/Release/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/Release/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/Debug/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/Debug/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/MinSizeRel/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/MinSizeRel/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/RelWithDebInfo/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/RelWithDebInfo/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/Deployment/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/Deployment/rawrxd_production_tests.exe.exe
+F:/rawrxd/build_ide/src/production/Development/rawrxd_production_tests.exe
+F:/rawrxd/build_ide/src/production/Development/rawrxd_production_tests.exe.exe
+
+27: Test command: 
+27: Working Directory: F:/rawrxd/build_ide/src/production
+  Test #27: rawrxd_production_hardening
+
+28: Test command: F:\rawrxd\build_ide\tools\agent_esp\rawrxd_agent_esp\agent_esp_test.exe
+28: Working Directory: F:/rawrxd/build_ide/tools/agent_esp/rawrxd_agent_esp
+  Test #28: agent_esp_test
+
+Total Tests: 28

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "seed": 42,
+  "biome": "tropical",
+  "terrain_resolution": 33,
+  "track_samples": 64,
+  "placed_props": 100,
+  "closure_residual_m": 0.0000,
+  "closure_heading_error_rad": 0.0000,
+  "assets": ["world.obj", "heightmap.pgm"]
+}

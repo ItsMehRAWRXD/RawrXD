@@ -1,0 +1,13 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794281467277}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"write","target":"bug.cpp","observation_bytes":137,"exit_code":1,"valid":true,"timestamp":1794281475552}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794281480867}}
+{"type":"RETRY","entry":4,"payload":{"attempt":4,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794281492982}}
+{"type":"TOOL_CALL","entry":5,"payload":{"step":5,"tool":"read","target":"C:\\\\Program Files (x86)\\\\Microsoft Visual Studio\\\\2019\\\\BuildTools\\\\VC\\\\Tools\\\\MSVC\\\\14.32.31326\\\\bin\\\\Hostx64\\\\x64\\\\cl.exe","observation_bytes":29,"exit_code":-1,"valid":false,"timestamp":1794281507947}}
+{"type":"TOOL_CALL","entry":6,"payload":{"step":6,"tool":"read","target":".\\third_party\\cmake\\bin\\cmake.exe","observation_bytes":14,"exit_code":0,"valid":true,"timestamp":1794281514402}}
+{"type":"TOOL_CALL","entry":7,"payload":{"step":7,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794281519068}}
+{"type":"RETRY","entry":8,"payload":{"attempt":8,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794281528212}}
+{"type":"RETRY","entry":9,"payload":{"attempt":9,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794281540430}}
+{"type":"TOOL_CALL","entry":10,"payload":{"step":10,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794281547733}}
+{"type":"VERIFICATION","entry":11,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794281547770}}
+{"type":"LEDGER_END","entry":12,"payload":{"total_entries":12}}

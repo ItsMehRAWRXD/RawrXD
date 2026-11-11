@@ -1,0 +1,7 @@
+﻿TIP_EXE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+INITIALPATH_ARG=F:\rawrxd\T080_test_bad.cpp
+TITLE=RawrXD IDE  -  broken_multi.cpp  -  rawrxd
+TITLE_MATCH_T080=False
+EDITOR_WM_GETTEXTLENGTH=0
+EDITOR_GetWindowTextLength=0
+NOTE=BUFFER_LEN_0_AND_TITLE_MISS__openDocumentPath_OR_initialPath_BUG

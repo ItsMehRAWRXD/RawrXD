@@ -1,0 +1,135 @@
+IDE_C0000409_DIVERGENCE_001
+ASOF_UTC=2026-11-10T14:40:00Z
+CANDIDATE=issue49_candidate_96B6D9F4_928a90f0_001
+IDE_SHA256=96B6D9F4F9A25C6DA164108B6BB534D521F53581E438476BA1BD61FC4EE929E0
+LOOP_SHA256=928a90f00d646a39b082559ffa88bec046362609ec69baa16c0e6c3de34e7d8c
+REMEASURE_REF=issue49_gui_ollama_qwen3_018
+DUMP_RUN=issue49_gui_ollama_qwen3_019_dump
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INHERIT=1
+NO_INHERIT_FROM=015/401071/5BAC
+HISTORICAL_CONTROLLING=issue49_candidate_401071_5bac_001 / 015 = 10/11
+
+========================================================================
+QUESTION
+Why does post-LoadTensorSlice tip Issue49 still exit -1073740791 (0xC0000409)
+while bridge_lifecycle_test PASSed requests=3?
+========================================================================
+
+SAME_AS_LOADTENSORSLICE=N
+
+DUMP_PATH=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\issue49_gui_ollama_qwen3_019_dump\dumps\RawrXD-Win32IDE-Native-Ext.exe_261110_093410.dmp
+DUMP_BYTES=136179555
+DUMP_TOOL=procdump64.exe -accepteula -e -ma -w RawrXD-Win32IDE-Native-Ext.exe
+ANALYZER=cdb 10.0.29680.1004
+  path=C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\cdb.exe
+PDB=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.pdb (private)
+
+PROCESS_EXIT_CODE=-1073740791
+PROCESS_EXIT_HEX=0xC0000409
+DUMP_STORED_EXCEPTION=0xE06D7363 (C++ EH)
+DUMP_EXCEPTION_TYPE=nlohmann::json_abi_v3_11_3::detail::type_error
+TYPE_ERROR_ID=316
+TYPE_ERROR_MEANING=json.exception.type_error.316 invalid UTF-8 byte during string serialize
+EXCEPTION_SUBCODE_NOTE=
+  Dump primary fault is C++ EH type_error.316, NOT CRT FAST_FAIL_INVALID_ARG/5.
+  Harness still observes process exit 0xC0000409 because the uncaught C++ throw
+  reaches terminate/abort/fail-fast on the UI thread (no matching catch around Flush).
+  Do NOT treat this as the LoadTensorSlice fread invalid-arg site.
+
+FIRST_APP_FRAME=
+  RawrXD_Win32IDE_Native_Ext!nlohmann::...::serializer::dump_escaped+0x416
+  (throw site for type_error.316)
+
+FIRST_PRODUCT_FRAME=
+  RawrXD::Agent::AgentSession::Flush+0x4e
+  via AppendAssistantMessage+0x342
+  via Win32IDE::handleAgenticLoopComplete+0x550
+  via Win32IDE::WindowProc / runMessageLoop
+
+STACK_SUMMARY (k / .ecxr):
+ 00 KERNELBASE!RaiseException
+ 01 VCRUNTIME140!_CxxThrowException
+ 02 nlohmann::detail::serializer::dump_escaped+0x416   << FIRST APP FRAME
+ 03 nlohmann::detail::serializer::dump
+ 04 nlohmann::basic_json::dump
+ 05 RawrXD::Agent::AgentSession::Flush+0x4e            << FIRST PRODUCT FRAME
+ 06 RawrXD::Agent::AgentSession::AppendAssistantMessage+0x342
+ 07 Win32IDE::handleAgenticLoopComplete+0x550
+ 08 Win32IDE::WindowProc
+ 09 user32!DispatchMessageWorker
+ 10 Win32IDE::runMessageLoop
+ 11 WinMain
+NO_LoadTensorSlice_FRAME=1
+NO_CPUInferenceEngine_Eval_FRAME=1
+NO_StreamingGGUFLoader_FRAME=1
+NO_fread_FRAME=1
+
+LoadTensorSlice_related=N
+
+OLLAMA_PATH_REACHED=Y
+  chat_runtime: AGENT_SESSION_SPAWNED model=qwen3:8b
+  chat_runtime: REQUEST_DISPATCH_CORRELATED + DEEP2_AGENTIC_LOOP_CREATEPROCESS
+  ollama_runtime: OLLAMA_REUSE=PASS OLLAMA_BACKEND_POLICY=vulkan
+  IDE log: GhostText inference route backend=ollama
+  dump other thread: OllamaClient::makePostRequest / generateSync (GhostText)
+  NOTE: Issue49 agent path uses Ollama qwen3:8b; it does NOT exercise in-process
+  CPU Eval GGUF LoadTensorSlice (that path is what bridge_lifecycle_test covered).
+
+PRE_CRASH_MARKERS_018_019=
+  IDE log ends at GhostText ollama route; no TENSOR_LOOKUP_FAIL / LoadTensorSlice
+  chat_runtime stops after RESPONSE_START + loop CreateProcess (no tool-call line)
+  018/019: editHit=1 transient project SHA flip then SOURCE_EDITED=0 at gate
+  018/019: IDE_EXIT=-1073740791; REQUIRED_PASS_HITS=6/11; S_08 TOOL_AUTHORITY FAIL
+  userdata/ empty (logs live under bin\logs + logs_live)
+
+WHY_LIFECYCLE_PASS_NE_ISSUE49=
+  bridge_lifecycle_test.exe (separate binary) exercised
+  Deep2Bridge CPU GenerateStreaming -> Eval -> LoadTensorSlice fread path.
+  Post-fread fix made that harness PASS requests=3.
+  Product IDE Issue49 with OllamaAgentModel=qwen3:8b never enters that CPU
+  tensor-slice path; crash is on agentic loop completion when flushing the
+  AgentSession ledger JSON containing non-UTF8 assistant summary bytes
+  (type_error.316 in dump_escaped).
+
+COMPARE_TO_PRIOR_LoadTensorSlice_STACK (cpu_eval_first_fail_001/NATIVE_STACK.txt):
+  PRIOR: ucrtbase!fread -> StreamingGGUFLoader::LoadTensorSlice -> CPUInferenceEngine::Eval
+         FAST_FAIL_INVALID_ARG subcode=5
+  NOW:   nlohmann dump_escaped type_error.316 -> AgentSession::Flush
+         C++ EH 0xE06D7363; process exit still reported as 0xC0000409
+  DIVERGENT_SITE=1
+
+SOURCE_ANCHORS=
+  F:\rawrxd\src\agentic\AgentSession.cpp :: Flush
+    WriteAtomically(m_ledger_path, ToJson().dump(2));   // throws on invalid UTF-8
+  F:\rawrxd\src\agentic\AgentSession.cpp :: AppendAssistantMessage
+  F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp :: handleAgenticLoopComplete
+    session->AppendAssistantMessage(*summary);  // summary may contain non-UTF8
+    session->Flush();
+
+RECOMMENDED_FIX_TARGET=
+  1) PRIMARY: AgentSession::Flush / ToJson().dump — make ledger serialize fail-closed
+     without killing the IDE:
+       - sanitize content to valid UTF-8 before dump, OR
+       - use nlohmann dump with error_handler_t::replace / ignore, OR
+       - try/catch json::type_error around dump and write a sanitized fallback
+  2) CALLSITE: Win32IDE::handleAgenticLoopComplete — sanitize *summary before
+     AppendAssistantMessage; never allow uncaught exception on UI thread
+  3) DO NOT reopen LoadTensorSlice fread as the Issue49 018/019 fix target
+     (lifecycle PASS already closed that site for the harness binary)
+
+019_DUMP_HARNESS=
+  Invoke-Issue49Live74aa.ps1
+  TipExe=...\issue49_candidate_96B6D9F4_928a90f0_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+  ExpectSha=96B6D9F4...
+  OutDir=...\issue49_gui_ollama_qwen3_019_dump
+  OllamaAgentModel=qwen3:8b
+  ASCII prompt (same staged dual-fault prompt)
+  RESULT: 6/11 SOURCE_EDITED=0 S_13=NOT_RUN IDE_EXIT=-1073740791 PRODUCT_PASS=0
+
+NEXT_GATE=AGENTSESSION_FLUSH_UTF8_TYPE_ERROR_316
+KEEP_D_CONTROLLING=1
+PROMOTE=0
+PASS_INVENTED=0

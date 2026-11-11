@@ -1,0 +1,40 @@
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000013E113E err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+initial document opened
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done

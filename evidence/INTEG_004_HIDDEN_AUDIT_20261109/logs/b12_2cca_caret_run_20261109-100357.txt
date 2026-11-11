@@ -1,0 +1,18 @@
+2026-11-09T10:03:58.1350110-05:00 TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_b02_remediation_001\RawrXD-B02Measure-Isolated.exe
+2026-11-09T10:03:58.2590291-05:00 TIP_SHA256=2CCAE57A02AEB778E8DB678BC8937C63512B296924E4784DB0FE9BCCEFD385DD
+2026-11-09T10:03:58.2620470-05:00 EXPECT_SHA=2CCAE57A02AEB778E8DB678BC8937C63512B296924E4784DB0FE9BCCEFD385DD
+2026-11-09T10:03:58.2711333-05:00 SHA_MATCH=1
+2026-11-09T10:03:59.3859529-05:00 PID=17868 FIXTURE=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp
+2026-11-09T10:04:03.7037420-05:00 MAIN_HWND=0x2D50848 alive=True
+2026-11-09T10:04:04.3517923-05:00 POST_WM_COMMAND id=2034
+2026-11-09T10:04:04.7449355-05:00 POST_WM_COMMAND id=2025
+2026-11-09T10:04:05.1265827-05:00 POST_WM_COMMAND id=2021
+2026-11-09T10:04:06.6025868-05:00 POLL t=0 ID1312=0 LV=0x14508F6 TITLE='RawrXD IDE  -  broken_multi.cpp  -  fixtures' built=0
+2026-11-09T10:04:11.7200214-05:00 POLL t=5 ID1312=0 LV=0x14508F6 TITLE='RawrXD IDE  -  broken_multi.cpp  -  fixtures' built=0
+2026-11-09T10:04:15.7700770-05:00 POST_BUILD=3014 (deferred; fixture empty after 8s)
+2026-11-09T10:04:17.4705847-05:00 PROBLEMS_POPULATED t=9 items=3 LV=0x14508F6
+2026-11-09T10:04:17.5077042-05:00 TITLE_BEFORE='RawrXD IDE  -  broken_multi.cpp  -  fixtures'
+2026-11-09T10:04:17.5127348-05:00 EDITOR_BEFORE=0xAF0F7C LINE=1 CP=0
+2026-11-09T10:04:24.9430093-05:00 EDITORS_BEFORE=id=6020 class=Edit len=0 cp=0 line1=1 hwnd=0x2C40B8A | id=6026 class=Edit len=11 cp=0 line1=1 hwnd=0x1C30BC4 | id=6027 class=Edit len=16 cp=0 line1=1 hwnd=0x2810B5E | id=6035 class=Edit len=0 cp=0 line1=1 hwnd=0x1360B52 | id=6050 class=Edit len=0 cp=0 line1=1 hwnd=0x2DF0C12 | id=1012 class=Edit len=114 cp=0 line1=1 hwnd=0xAC0C26 | id=1013 class=Edit len=0 cp=0 line1=1 hwnd=0x1380C20 | id=1014 class=Edit len=1649 cp=0 line1=1 hwnd=0x1B909BE | id=1015 class=Edit len=0 cp=0 line1=1 hwnd=0x2610A26 | id=1604 class=Edit len=990 cp=0 line1=1 hwnd=0x29B0996 | id=1605 class=Edit len=0 cp=0 line1=1 hwnd=0x1AF0A66 | id=1606 class=Edit len=886 cp=0 line1=1 hwnd=0x27F0A14 | id=1607 class=Edit len=0 cp=0 line1=1 hwnd=0x1E406BC | id=1608 class=Edit len=0 cp=0 line1=1 hwnd=0x1190C40 | id=1609 class=Edit len=0 cp=0 line1=1 hwnd=0xA80C90 | id=1610 class=Edit len=0 cp=0 line1=1 hwnd=0x1830CE8 | id=1611 class=Edit len=0 cp=0 line1=1 hwnd=0x12504EC | id=1203 class=Edit len=75 cp=0 line1=1 hwnd=0x3AC0612 | id=1202 class=Edit len=0 cp=0 line1=1 hwnd=0x39C05FE | id=5001 class=RichEdit20A len=342 cp=0 line1=-1 hwnd=0x375060E
+2026-11-09T10:04:24.9467671-05:00 LIST_HWND=0x0 count=-1
+2026-11-09T10:04:24.9538572-05:00 B12_NAVIGATE_LATEST=ABSENT

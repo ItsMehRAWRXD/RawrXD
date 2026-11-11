@@ -1,0 +1,11 @@
+﻿{
+    "Gate":  "T05",
+    "Result":  "PASS",
+    "CandidateSHA256":  "1946F0C04BF6E01C827004BFAE74688FEF2E97A7700798D5AB0422B3AA5592E6",
+    "PID":  17348,
+    "RequestA":  "T05_A_A559_LONG_REQUEST_20261104",
+    "RequestB":  "T05_B_A559_SUCCESS_20261104",
+    "StopObserved":  true,
+    "BMarkerObserved":  true,
+    "TimestampUtc":  "2026-11-04T13:57:52.5422726Z"
+}

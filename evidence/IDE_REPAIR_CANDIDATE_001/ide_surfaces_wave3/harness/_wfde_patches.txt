@@ -1,0 +1,90 @@
+==== L29 PATH=F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp ====
+---NEW---
+#include "Win32IDE.h"
+#include "Win32NativeDebugBackend.h"
+#include <sstream>
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <cstdlib>
+#include <cstdio>
+
+==== L29 PATH=F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp ====
+---NEW---
+    applyNativeDebugSnapshot(*snap);
+    if (snap->stopReason.rfind("breakpoint:", 0) == 0) {
+        appendToOutput("Breakpoint hit (native WaitForDebugEvent)\n", "Debug",
+                       OutputSeverity::Warning);
+        // S11 / four-panel: durable BP-hit receipt under RAWRXD_LOG_DIR (freeze tip
+        // 317D had this; tip_integ rebuilds lost the emission — SOURCE_WIRED gap).
+        {
+            const char* logDir = std::getenv("RAWRXD_LOG_DIR");
+            const std::string path = (logDir && *logDir)
+                ? (std::string(logDir) + "\\WFDE_BP_HIT_RECEIPT.txt")
+                : std::string("WFDE_BP_HIT_RECEIPT.txt");
+            std::ofstream out(path, std::ios::trunc);
+            if (out) {
+                char ripBuf[64];
+                std::snprintf(ripBuf, sizeof(ripBuf), "0x%llX",
+                              static_cast<unsigned long long>(snap->rip));
+                out << "WFDE_BP_HIT=1\n"
+                    << "STOP_REASON=" << snap->stopReason << '\n'
+                    << "RIP=" << ripBuf << '\n'
+                    << "PID=" << snap->pid << '\n'
+                    << "API=WaitForDebugEvent\n";
+            }
+        }
+    } else if (snap->state == rawrxd::NativeDebugState::Terminated) {
+
+==== L42 PATH=F:\rawrxd\src\win32app\Win32NativeDebugBackend.cpp ====
+---NEW---
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+
+==== L42 PATH=F:\rawrxd\src\win32app\Win32NativeDebugBackend.cpp ====
+---NEW---
+void Win32NativeDebugBackend::publishState(const std::string& reason) {
+    m_stopReason = reason;
+    refreshVariablesUnlocked();
+    // Emit S11 WFDE receipt from the WaitForDebugEvent thread itself so Native-Ext
+    // does not depend solely on UI WM_APP+620 dispatch (Core TU not linked).
+    if (reason.rfind("breakpoint:", 0) == 0) {
+        const char* logDir = std::getenv("RAWRXD_LOG_DIR");
+        const std::string path = (logDir && *logDir)
+            ? (std::string(logDir) + "\\WFDE_BP_HIT_RECEIPT.txt")
+            : std::string("WFDE_BP_HIT_RECEIPT.txt");
+        std::ofstream out(path, std::ios::trunc);
+        if (out) {
+            char ripBuf[64];
+            std::snprintf(ripBuf, sizeof(ripBuf), "0x%llX",
+                          static_cast<unsigned long long>(m_currentRip));
+            out << "WFDE_BP_HIT=1\n"
+                << "STOP_REASON=" << reason << '\n'
+                << "RIP=" << ripBuf << '\n'
+                << "PID=" << m_pi.dwProcessId << '\n'
+                << "API=WaitForDebugEvent\n";
+        }
+    }
+    if (!m_onState) {
+        return;
+    }
+    // Callback must not re-enter backend APIs (PostMessage / queue only).
+    NativeDebugSnapshot s;
+    s.state = m_state;
+    s.pid = m_pi.dwProcessId;
+    s.exitCode = m_exitCode;
+    s.rip = m_currentRip;
+    s.rsp = m_currentRsp;
+    s.imageBase = m_imageBase;
+    s.stopReason = m_stopReason;
+    s.threads = m_threads;
+    s.exports = m_exports;
+    s.variables = m_variables;
+    walkStackUnlocked(s.stack);
+    m_onState(s);
+}
+

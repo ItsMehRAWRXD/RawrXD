@@ -1,0 +1,11 @@
+﻿{
+    "tested_utc":  "2026-11-10T13:53:13.2269645Z",
+    "status":  "PASS",
+    "process_exit":  0,
+    "timed_out":  false,
+    "model":  "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "product_ide_sha256":  "4E840E665C0EC2AFA440AA8F7C18644BD964468D10FB9F0D4252D63E5137CDEF",
+    "bridge_object_sha256":  "8DF2D255080C55D3F82B36ACDB2E22C68B726CB78CEED73C46D1D1DB0D6964DD",
+    "test_exe_sha256":  "F46CF9EA821F6045523E4B8384A3DA4D2EC72DD7E7128720ECF2FB02B11D5BC6",
+    "scope":  "Three sequential real-engine generation requests using the product object files."
+}

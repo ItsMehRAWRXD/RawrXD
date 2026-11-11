@@ -1,0 +1,94 @@
+{
+    "pid":  23916,
+    "root":  "0xB0C4C",
+    "guiThread":  23916,
+    "beforeForeground":  "0xA0296",
+    "beforePid":  10416,
+    "visible":  true,
+    "enabled":  true,
+    "minimized":  false,
+    "showRestoreReturn":  true,
+    "setForegroundReturn":  false,
+    "timeline":  [
+                     {
+                         "tick":  0,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  1,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  2,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  3,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  4,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  5,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  6,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  7,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  8,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     },
+                     {
+                         "tick":  9,
+                         "foreground":  "0xA0296",
+                         "foregroundPid":  10416,
+                         "guiInfoOk":  false,
+                         "active":  "0x0",
+                         "focus":  "0x0"
+                     }
+                 ]
+}

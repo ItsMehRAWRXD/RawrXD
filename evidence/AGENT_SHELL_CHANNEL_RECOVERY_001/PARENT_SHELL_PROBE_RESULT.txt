@@ -1,0 +1,13 @@
+ASOF_UTC=2026-11-02T14:50:30Z
+CHANNEL=PARENT_CURSOR_AGENT_SHELL
+COMMAND=cmd.exe /d /c "echo HELLO & exit /b 0"
+CWD=C:\
+TEE=0
+STDOUT=HELLO
+EXIT_CODE=0
+ELAPSED_MS≈2090
+RESULT=PASS
+CLASS=OBSERVED
+PRIOR_FAILS=superseded_by_this_pass
+NATIVE_CMD=PASS
+INTERPRETATION=NATIVE_PASS+PARENT_PASS => shell recovery demonstrated; product certification remains separate

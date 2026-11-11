@@ -1,0 +1,9 @@
+{"ts_ns":1793170446182211100,"seq":1,"request":33111246549800,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793170446182213100,"seq":2,"request":33111246549800,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793170446185835500,"seq":3,"request":33111246549800,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793170456187449200,"seq":4,"request":33111246549800,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793170456187452300,"seq":5,"request":33111246549800,"agent":1,"kind":"agent_step","value":0,"message":"tool_calls_received"}
+{"ts_ns":1793170456187453500,"seq":6,"request":33111246549800,"agent":1,"kind":"tool_start","value":0,"message":"readFile"}
+{"ts_ns":1793170456187833900,"seq":7,"request":33111246549800,"agent":1,"kind":"tool_result","value":0,"message":"readFile PASS"}
+{"ts_ns":1793170456497494400,"seq":8,"request":33111246549800,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":33111246549800,\"agent\":1,\"phase\":\"done\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":10315.251,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":1,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793170456497498900,"seq":9,"request":33111246549800,"agent":1,"kind":"finished","value":0,"message":"PASS"}

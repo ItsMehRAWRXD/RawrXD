@@ -1,0 +1,7 @@
+tokens: 1: 1
+ingesting F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf ...
+arch=qwen35moe blocks=40 embd=2048 heads=16 kv=2 lora=0 kl=256 vl=256 experts=256 used=8 shared=0 dense_lead=0 rope_dim=64 eps=1e-06
+bound ops=603
+pos=0 token=1 argmax=110817 max_logit=9.128013 (2456.3 ms)
+  op traces: 603
+gpu_calls=0 cpu_calls=1301 fallback=GDN reference recurrence; Vulkan stateful dispatch unavailable

@@ -1,0 +1,39 @@
+{
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "activation": {
+    "columns": 2048,
+    "columns_mod_256": 0,
+    "columns_must_be_multiple_of_256": true,
+    "quant": "per-256 Q8_K; invScale=-127/signedMaxAbs; MAGIC=12582912; clamp[-127,127]",
+    "source": "ArenaFFNAct / post_swiglu capture"
+  },
+  "boundary_review": {
+    "notes": [
+      "blocksPerRow=(cols+255)/256; rowBytes=blocksPerRow*210 contiguous",
+      "Q6_K packed layout matches GGML (no pad between ql/qh/scales/d)",
+      "Lane fill zeros only when cols%256!=0; this capture cols%256==0",
+      "Scale index mapping half*8+group*2+l//16 matches shader scIndex"
+    ],
+    "unexpected_block_boundary_shift": false,
+    "unexpected_padding": false
+  },
+  "layout": {
+    "d_f16_bytes": 2,
+    "inter_block_padding": 0,
+    "qh_bytes": 64,
+    "ql_bytes": 128,
+    "scales_bytes": 16,
+    "total": 210,
+    "trailing_block_padding": 0
+  },
+  "output": {
+    "rows": 7168,
+    "source": "ArenaDown / gpu_down capture"
+  },
+  "q6k_block_bytes": 210,
+  "qk_k": 256,
+  "schema": "DEEP2_KIMI_TYPE14_CONTRACT_001/v1",
+  "shader": "src/deep2/shaders/deep2_qgemv.comp",
+  "type": 14
+}

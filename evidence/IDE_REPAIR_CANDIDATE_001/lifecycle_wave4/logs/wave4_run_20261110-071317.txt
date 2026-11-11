@@ -1,0 +1,6 @@
+[2026-11-10T07:13:17.2127094-05:00] WAVE4_START sha=FD31ABF29DE2B25BB8217D39DCC65AC6CA96D28852DEADD8F493CC884F008343 tip=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_dockfix\RawrXD-Win32IDE-Native-Ext.exe
+[2026-11-10T07:13:20.2446588-05:00] EXT-01=PASS EXT-02=PASS EXIT=0 FORCE_KILL=0 ORPHANS=0 DEACT=1
+[2026-11-10T07:13:28.9978345-05:00] CAN-01=PASS started=True req=True ack=True model=Local models / Ollama / qwen2.5-coder:1.5b-base
+[2026-11-10T07:13:39.2349651-05:00] MSW-01=PASS selA=Local models / Ollama / qwen2.5-coder:1.5b-base selB=Local models / Ollama / nemotron-3-nano:4b idA=qwen2.5-coder:1.5b-base idB=nemotron-3-nano:4b needleB=nemotron-3-nano:4b gotA=True gotB=True resp=True
+[2026-11-10T07:13:48.5215552-05:00] PER-01=PASS wrote=True still=True jsonOk=True path=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-071317\per01\ide_session.json
+[2026-11-10T07:14:05.2992872-05:00] PER-02=PASS sessOk=True canPrior=True mswPrior=True

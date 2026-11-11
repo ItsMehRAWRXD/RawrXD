@@ -1,0 +1,17 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=18
+[ollama step 1] TOOL=read exit=0 valid=1 observation=75
+[ollama step 1] result=#include <cstdio>\n\nint main() {\n    std::printf("FAIL\n");\n    return 1;\n}\n
+[ollama step 2] response_bytes=98
+[ollama step 2] TOOL=write exit=0 valid=1 observation=40
+[ollama step 2] result=write committed; build and test verified
+[ollama step 3] response_bytes=11
+[ollama step 3] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 3] result=verified completion
+OLLAMA_AGENT_MODEL qwen3:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 7bf3c60666bb95562795bf0e6bfaee2c6d96a7e8b6cf3d675158d3a15d274b04
+OLLAMA_AGENT_AFTER_SHA256 78ff04cb897ffe948f86d86dd8e5cecde95fe6831fdcffcb757cf65532b1d062
+OLLAMA_AGENT_VERDICT PASS

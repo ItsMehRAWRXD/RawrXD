@@ -1,0 +1,10 @@
+﻿START=2026-10-26T19:13:57.3277637-04:00
+PID=39956
+CMD=git -C F:\rawrxd fsck --full
+SCOPE=reachable_refs_and_objects_via_git_fsck_full_canonical_F_rawrxd
+NOTE=clean_fsck_does_not_prove_every_historical_object_ever_created_still_exists
+EXIT=18
+ELAPSED_MS=328108
+END=2026-10-26T19:19:25.4473874-04:00
+STDOUT_BYTES=366518
+STDERR_BYTES=267

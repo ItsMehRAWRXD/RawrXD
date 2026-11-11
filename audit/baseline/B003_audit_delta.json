@@ -1,0 +1,35 @@
+{
+  "before": {
+    "targets": 83,
+    "source_target_edges": 976,
+    "unique_referenced_sources": 836,
+    "win32ide_sources": 595,
+    "rawrengine_sources": 37,
+    "deep2_production_sources": 14,
+    "deep2_total": 114,
+    "deep2_referenced": 41,
+    "deep2_orphaned": 73
+  },
+  "after": {
+    "targets": 83,
+    "source_target_edges": 976,
+    "unique_referenced_sources": 836,
+    "win32ide_sources": 595,
+    "rawrengine_sources": 37,
+    "deep2_production_sources": 14,
+    "deep2_total": 114,
+    "deep2_referenced": 41,
+    "deep2_orphaned": 73
+  },
+  "diff": {
+    "targets": 0,
+    "source_target_edges": 0,
+    "unique_referenced_sources": 0,
+    "win32ide_sources": 0,
+    "rawrengine_sources": 0,
+    "deep2_production_sources": 0,
+    "deep2_total": 0,
+    "deep2_referenced": 0,
+    "deep2_orphaned": 0
+  }
+}

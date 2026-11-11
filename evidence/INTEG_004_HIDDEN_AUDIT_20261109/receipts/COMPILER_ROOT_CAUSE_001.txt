@@ -1,0 +1,42 @@
+COMPILER_ROOT_CAUSE=MEASURED
+ASOF_UTC=2026-11-09T12:00:00Z
+CONTROLLING_TIP=CC79
+CANDIDATE_NOT_PROMOTED=1
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+FROZEN_A4F_UNTOUCHED=1
+
+SYMPTOM=
+  RAWRXD_BUILD_OUTPUT_latest.log stops after [RAWRXD_PROBLEMS_FIXTURE_START]
+  (sometimes + "broken_multi.cpp"); PROBLEMS_ID1312_ITEMS=0 is downstream.
+
+ROOT_CAUSE=
+  MSVC cl.exe stalls under redirected non-console pipes when VS_UNICODE_OUTPUT
+  is set/inherited (invalid IDE unicode diagnostic channel). Emits /nologo
+  filename then neither diagnostics nor clean EOF → fixture never completes.
+
+SECONDARY=
+  ConPTY fixture path historically dropped/hung the same way.
+  Pipe reader used PeekNamedPipe gated on m_running (could miss drain on exit).
+
+PROOF_ISOLATED=
+  artifacts\COMPILER_CAPTURE_ISOLATED_RECEIPT.txt
+  artifacts\prove_compiler_capture.ps1
+  poison: diag=False out_len=74
+  scrub:  diag=True  out_len=887 COMPILER_EXECUTION=VERIFIED COMPILER_OUTPUT_CAPTURE=VERIFIED
+
+PRODUCT_FIX_SOURCE=
+  src\win32app\Win32IDE_Commands.cpp  (scrub + /FS + 2>&1 + FORCE_PIPE + closeInput + receipts)
+  src\win32app\Win32TerminalManager.cpp/.h (EOF drain + bounded FORCE_PIPE wait + PROCESS_EXIT)
+  src\win32app\Win32IDE.cpp (HWND-null safe feed + DIAGNOSTIC_PARSED receipts)
+
+BLOCKER_NOW=
+  Full ninja -t clean of tip Ext wedged host (341-file rebuild / cl storm).
+  IDE candidate rebuild + IDE_COMPILER_FEED_RECEIPT pending host reclaim.
+  Until rebuilt EXE measured: DIAGNOSTIC_FEED IDE path = NOT_VERIFIED; PROBLEMS_ITEMS=0.
+
+LAW=
+  FIXTURE_START_ONLY ≠ successful compilation
+  Fail-closed disposition required: success|failure|cancel|timeout
+  tip_003 must NOT replace CC79 until EXT+chat7/7+term+Output+debug headless re-proven

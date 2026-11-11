@@ -1,0 +1,15 @@
+﻿{
+    "schema":  "RAWRXD_ROUTING_LAUNCH_001",
+    "timestamp":  "2026-11-08T08:06:05.5640298-05:00",
+    "executable":  "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "sha256":  "5B96BC6AF74D4A7527D06E9CDA55AF342B66B7B0C744B80C9CD5E9C38A481002",
+    "pid":  34840,
+    "alive":  true,
+    "working_directory":  "F:\\rawrxd\\build_ide\\bin",
+    "agent_model_routing":  "UNVERIFIED",
+    "ghosttext_routing":  "UNVERIFIED",
+    "cancellation_recovery":  "UNVERIFIED",
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "T25":  "HELD"
+}

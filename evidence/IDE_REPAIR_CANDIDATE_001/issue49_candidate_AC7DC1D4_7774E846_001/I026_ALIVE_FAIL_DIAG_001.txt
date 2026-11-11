@@ -1,0 +1,167 @@
+I026_ALIVE_FAIL_DIAG_001
+ASOF_UTC=2026-11-10T16:05:00Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+RECEIPT=issue49_gui_ollama_qwen3_026
+REPAIR_SHA=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+LOOP_SHA=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+STRING_VERIFY_PASS=1
+STRING_VERIFY_NEQ_ALIVE_PASS=1
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+BEATS_D015=0
+THREATEN_D015=0
+SUPERSEDE_PENDING_REVIEW=0
+PROMOTE=0
+CERTIFIED=0
+NO_INVENT_PASS=1
+NO_BLIND_027=1
+T05_LANE_SEPARATE=1
+LoadTensorSlice_REOPENED=0
+
+========================================================================
+EVIDENCE PATHS
+========================================================================
+OUTDIR=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_026
+RUNLOG / PRODUCT_FINAL=
+  ...\issue49_product_final_74aa_20261110-105226.txt
+  ...\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+LAUNCH=
+  ...\_launch_026.txt
+CHAT_RUNTIME=
+  ...\logs_live\chat_runtime.log
+OLLAMA_RUNTIME=
+  ...\logs_live\ollama_runtime.log
+DISPOSITION=
+  ...\DISPOSITION.txt
+LEDGER (post-death)=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\bin\.rawrxd\ledger\agent_session.json
+HARNESS=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+FIXTURE=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp
+  SHA=AF4519C6AF7B603D35A55A1EE622ADFF8A60225A96455E92A52AF051B232BAA0 (unchanged)
+
+========================================================================
+1) IDE_EXIT=-1 CLASSIFICATION
+========================================================================
+SCORE_026:
+  REQUIRED_PASS_HITS=8/11
+  ALIVE=0
+  IDE_EXIT_CODE=-1
+  IDE_EXIT_C0000409=0
+  SOURCE_EDITED=0
+  WRITE_COMMIT=0
+  S_13=NOT_RUN
+  NEW_CRASH_DUMP=0
+
+TIMELINE (local -05:00):
+  10:52:28  IDE PID=3356 spawn
+  10:52:34  CHAT_INPUT len=746 setOk
+  10:52:35  CTRL_ENTER send; AGENT_WAIT_SEC=600 DEADLINE=+600s
+  10:52:35  chat_runtime: SESSION_SPAWNED + REQUEST_DISPATCH + RESPONSE_START
+  10:52:35  chat_runtime LAST: DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=29924
+  10:52:35..10:52:59  POLL loopChild=1 every ~3s (child alive)
+  10:53:02  IDE_EXIT=-1  (~27s post-spawn; ~27s post-send)
+  NO RESPONSE_END / NO TRANSCRIPT_INSERT after CREATEPROCESS
+
+CLASS_DECISION:
+  IDE_EXIT=-1 = ABNORMAL_EARLY_PROCESS_DEATH_WITHOUT_DUMP
+  NOT harness AgentWait kill (deadline was +600s; death at ~27s;
+    harness Stop-Process only runs AFTER the wait loop ends)
+  NOT clean ExitCode=0
+  NOT agent-timeout (AgentWaitSec unused; wait broken by HasExited)
+  NOT 0xC0000409 / FAST_FAIL (contrast 025 = -1073740791)
+  NO WER/CrashDumps artifacts in 10:50-10:55 window for RawrXD
+  NO Application Error 1000/1001 for RawrXD-Win32IDE in that window
+  ledger.driver_exit_code=-1 ; termination_reason="running"
+    => session frozen mid-run; not orderly agent completion
+
+FAMILY vs prior remasures (D015 lane):
+  015: CREATEPROCESS -> RESPONSE_END ; ALIVE=1 (controlling)
+  024: CREATEPROCESS -> RESPONSE_END then IDE_EXIT=-1 (later death)
+  025: CREATEPROCESS -> ui_update incomplete then 0xC0000409 + dump
+  026: CREATEPROCESS then STOP ; IDE_EXIT=-1 ; no dump
+       (earlier than 024; different exit class than 025)
+
+========================================================================
+2) WHY SOURCE_EDITED=0 DESPITE 746 STEP A/B + HARDEN PRESENT
+========================================================================
+ROOT_CAUSE:
+  EARLY_PROCESS_DEATH_BEFORE_ANY_AGENT_TOOL_WRITE
+
+NOT:
+  - agent FAIL after write
+  - rollback-only path (WRITE_ROLLBACK_COUNT=0; no TOOL write observed)
+  - prompt/tool inability alone as primary (dispatch+loop spawn succeeded;
+    death cut the path before tools)
+  - missing UTF-8 harden in tip (STRING_VERIFY_PASS=1 pre-harness;
+    SOURCE_EDIT_THIS_TURN=0 rebuild-only is orthogonal)
+
+LEDGER PROOF (agent_session.json after 026):
+  source_edit_performed=false
+  tool_calls=[] / tool_calls=0
+  files_modified=[]
+  termination_reason=running
+  driver_exit_code=-1
+  conversation = user prompt only (no assistant tool turns persisted)
+
+SOURCE_EDIT_GATE (final, fail-closed, correct):
+  loop=1 collapse=0 shaDelta=0 ledgerWrite=0 ledgerSource=0
+  execLedger=1 transcriptWrite=0 sessionShaMatch=0 sessionWrite=1
+  => edited=0
+
+FALSE EDIT_HIT DURING POLL (harness contamination — do not treat as edit):
+  First POLL @10:52:35 logged:
+    EDIT_HIT ... ledgerWrite=1 collapseChanged=0
+  Cause in Invoke-Issue49Live74aa.ps1:
+    (1) blob -match 'write committed|OLLAMA_AGENT_EDIT' sets ledgerWrite=1
+    (2) same 'write committed' OR-arm sets editHit without collapseChanged
+  The 746 STEP A/B prompt TEXT itself contains "write committed"
+  => poll false-positive editHit=1 with unchanged fixture SHA AF4519...
+  Final SOURCE_EDIT_GATE still rejected (correct).
+  Side effect: IDE_EXIT_BEFORE_EDIT was NOT set because editHit==1,
+  but ALIVE=0 / SOURCE_EDITED=0 remain authoritative.
+
+LAW RESTATED:
+  STRING_VERIFY_PASS != ALIVE_PASS
+  POLL_EDIT_HIT != SOURCE_EDITED
+  LOOP_SPAWNED != WRITE_COMMIT
+
+========================================================================
+3) SINGLE NEXT ACCEPTANCE ACTION (RANKED; DO ONE ONLY)
+========================================================================
+NEXT_ACTION=
+  CAPTURE_DUMP_OR_STACK_FOR_IDE_EXIT_MINUS_1
+  under the SAME 746 STEP A/B regime (do not abandon supersede mandate:
+  requires 746 + SOURCE_EDITED + WRITE_COMMIT + ALIVE).
+
+HOW (acceptance diagnostic, not blind 027):
+  Enable LocalDumps (or attach procdump -e -ma / AeDebug) for
+  RawrXD-Win32IDE-Native-Ext.exe BEFORE a controlled same-regime launch;
+  preserve full chat_runtime through death; classify whether -1 is
+  ExitProcess(-1), silent abort, or external TerminateProcess.
+  Do NOT supersede D015 on any partial. Do NOT reopen LoadTensorSlice
+  without dump evidence. Do NOT merge T05.
+
+DEFERRED (not this action):
+  - harness-owned kill fix: NOT indicated for 026 wait-path death
+  - agent-path edit/commit fix: premature until process survives to TOOL write
+  - blind 027 remasure without -1 classification: FORBIDDEN (NO_BLIND_027=1)
+  - prompt-text EDIT_HIT contamination fix: secondary; may run AFTER dump
+    class is known, but is not the ALIVE blocker
+
+SUPERSEDE_REQUIREMENT_UNCHANGED=
+  746 regime + SOURCE_EDITED=1 + WRITE_COMMIT=1 + ALIVE=1
+  to threaten/beat D015. Currently unmet.
+
+========================================================================
+4) AUTHORITY
+========================================================================
+CONTROLLING=D015
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PRODUCT_PASS=0
+ACCEPTED=0

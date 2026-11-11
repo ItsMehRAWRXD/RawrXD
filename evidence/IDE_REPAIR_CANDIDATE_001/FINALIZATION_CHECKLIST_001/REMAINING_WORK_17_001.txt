@@ -1,0 +1,32 @@
+REMAINING_WORK_17_001
+ASOF_UTC=2026-11-10T17:41:00Z
+USER_AUTH_CONTINUE_TO_IDE_COMPLETION=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+RAWR_OLLAMA_ROUTE=SOURCE_FIXED_RUNTIME_PENDING
+FIRST_EXECUTION_TASK=P1_BUILD_REPAIRED_RAWR_CLI
+
+P01=OPEN Build repaired Rawr CLI + SHA
+P02=OPEN Verify backend routing ollama/deep2/unknown
+P03=OPEN CLI inspect-edit-build-test loop
+P04=OPEN Deep2 service availability :8080
+P05=OPEN GPU selection reconcile
+P06=OPEN Model inventory reconcile
+P07=OPEN T080 initialPath/title/Problems on tip_ext_host
+P08=OPEN GUI accept 89A5F76F or successor
+P09=OPEN Consolidate candidate evidence one package
+P10=OPEN Cancellation+lifecycle together
+P11=OPEN Repair failure recovery
+P12=OPEN Broader self-repair
+P13=OPEN Deep2 correctness+performance
+P14=OPEN STRATA readiness audit
+P15=OPEN Finish-25 release suite
+P16=OPEN Install+daily use
+P17=OPEN Cert+publication
+
+LAW=NOT_RUN!=PASS
+LAW=I027_NEQ_AUTO_SUPERSEDE_D015
+LAW=SOURCE_FIXED!=RUNTIME_REACHED
+TIP_LIVE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe

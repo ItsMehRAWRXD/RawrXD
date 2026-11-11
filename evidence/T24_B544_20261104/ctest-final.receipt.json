@@ -1,0 +1,11 @@
+{
+  "candidate_sha256": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+  "registered": 31,
+  "passed": 30,
+  "skipped": 1,
+  "failed": 0,
+  "not_run": 0,
+  "exit_code": 0,
+  "binary_hash_after": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+  "timestamp_utc": "2026-11-04T14:09:02.0117699Z"
+}

@@ -1,0 +1,16 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=16
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=16
+RUN_CONFIG_CONTEXT=4096
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=1 req=72302948426200 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=72302948426200 kind=model_load value=0 message=qwen3:8b
+[ESP] seq=3 req=72302948426200 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=72302948426200 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=72302948426200 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=72302948426200 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=72302948426200 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1045 eval_count=11 total_duration_ns=199514900 load_duration_ns=16777300 prompt_eval_duration_ns=48375000 eval_duration_ns=121697000 eval_tps=90.3884237081
+[ESP] seq=9 req=72302948426200 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=10 req=72302948426200 kind=heartbeat value=0 message={"request":72302948426200,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":120.664,"prefill_tps":0.000,"task_tps":4.527,"ttft_ms":212.592,"prefill_ms":0.000,"decode_ms":8.287,"task_ms":220.879,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=11 req=72302948426200 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown

@@ -1,0 +1,21 @@
+﻿STRATA_HIP_RX9070_ENGINE_INSTALL
+TIMESTAMP=2026-11-10T08:46:06.9032508-05:00
+FEED_RELEASE=v0.2.13 (https://github.com/Niko1221/Strata/releases/tag/v0.2.13)
+PACKAGE=strata-engine-0.1.59-windows-x86_64-hip-rx9070.tar.gz
+PACKAGE_SHA256=a5ef46b93a2ccf3782f39fd1ac7cd03e3a65c906ced864083c21835aba6f806b
+SHA256SUMS_MATCH=1 (release SHA256SUMS.txt + feed.engine.packages[].sha256)
+FEED_MANIFEST_SHA256=a3ad266a0a49f9faf4789cbe4d18a39515a729754615493eb13d45b15d980a05
+CONTROL_ZIP_SHA256=c81f6800094942a5e750c7d93f348062bc16484f946ea83b0c0d2f8c91c44e87 (install-manifest match; used for strata components CLI only)
+INSTALL_METHOD=strata components install-file (official CLI) then side-by-side unpack + strata components use
+INSTALL_FILE_FIRST_ATTEMPT=FAIL code=7 (Strata launch held GPU; stopped via strata launch --stop; Ollama untouched)
+INSTALL_FILE_SECOND_ATTEMPT=FAIL code=6 test-start server_exited on wrong card: Windows budgets 15408/16368 MiB (7800 XT class) with error 'prefill mmq: iota: device kernel image is invalid'; rolled back; rdna3 unchanged
+SIDE_BY_SIDE_UNPACK=PASS (verified tar.gz extracted to ENGINE_DIR without deleting hip-rdna3)
+COMPONENTS_USE=PASS folder=0.1.59-windows-x86_64-hip-rx9070
+ENGINE_ACTIVE=0.1.59-windows-x86_64-hip-rx9070
+ENGINE_DIR=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rx9070
+ENGINE_INSTALLED_ON_DISK=1
+RDNA3_PRESERVED=1 path=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3 exists=True
+BUILD_JSON_ARCHS=gfx1200,gfx1201
+BUILD_JSON_BACKEND=hip platform=windows-x64 version=0.1.59 rocm=10.2.0a20260930 commit=712fec6b4297 source=f-0213-rc
+CUSTOM_COMPILE=0
+STRATA_RX9070_ENGINE=INSTALLED

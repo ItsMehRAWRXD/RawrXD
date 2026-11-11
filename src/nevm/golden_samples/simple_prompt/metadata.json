@@ -1,0 +1,15 @@
+{
+  "model_path": "model.gguf",
+  "model_hash": "sha256:placeholder_model_hash",
+  "prompt": "Hello world",
+  "prompt_hash": "sha256:12345",
+  "math_mode": "BitExact",
+  "max_tokens": 128,
+  "temperature": 0.0,
+  "random_seed": 42,
+  "token_count": 128,
+  "output_hash": "sha256:67890",
+  "generated_at": "2026-07-20 12:00:00",
+  "description": "Simple prompt for basic determinism testing",
+  "generator_version": "1.0.0"
+}

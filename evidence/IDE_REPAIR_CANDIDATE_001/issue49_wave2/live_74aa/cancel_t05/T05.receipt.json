@@ -1,0 +1,14 @@
+﻿{
+    "Gate":  "T05",
+    "CandidateSHA256":  "74AA42F76F0853EC9A72AE4879F0A25C586AAADF70D47303451F560DCC3A1EE6",
+    "PID":  24148,
+    "Model":  null,
+    "CancelObserved":  false,
+    "SecondRequestSent":  false,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  true,
+    "StopFeedbackObserved":  false,
+    "MarkerExact":  false,
+    "TranscriptDelta":  null,
+    "Error":  "NO_USABLE_MODEL count=2"
+}

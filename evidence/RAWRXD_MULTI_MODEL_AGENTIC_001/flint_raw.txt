@@ -1,0 +1,31 @@
+
+RawrXD Local Agent
+Model:   flint:latest
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+[ESP] seq=1 req=55938930232700 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=55938930232700 kind=model_load value=0 message=flint:latest
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=55938930232700 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=55938930232700 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=55938930232700 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=55938930232700 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=55938930232700 kind=heartbeat value=0 message=source=ollama prompt_eval_count=479 eval_count=26 total_duration_ns=28824515000 load_duration_ns=28246946200 prompt_eval_duration_ns=293467000 eval_duration_ns=278058000 eval_tps=93.5056714786
+[ESP] seq=8 req=55938930232700 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=55938930232700 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp
+[ESP] seq=10 req=55938930232700 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=55938930232700 kind=heartbeat value=0 message=source=ollama prompt_eval_count=529 eval_count=44 total_duration_ns=615735100 load_duration_ns=10861400 prompt_eval_duration_ns=138084000 eval_duration_ns=457378000 eval_tps=96.2005168591
+[ESP] seq=12 req=55938930232700 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp
+[ESP] seq=13 req=55938930232700 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-1-0 name=editFiles target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp status=PASS duration_ms=9 PASS
+[ESP] seq=14 req=55938930232700 kind=file_changed value=0 message=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp
+[ESP] seq=15 req=55938930232700 kind=heartbeat value=0 message=source=ollama prompt_eval_count=577 eval_count=26 total_duration_ns=403820700 load_duration_ns=8211300 prompt_eval_duration_ns=120113000 eval_duration_ns=268988000 eval_tps=96.6585870002
+[ESP] seq=16 req=55938930232700 kind=tool_start value=0 message=TOOL_START id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp
+[ESP] seq=17 req=55938930232700 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-2-0 name=readFile target=evidence/RAWRXD_MULTI_MODEL_AGENTIC_001/em_flint.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=18 req=55938930232700 kind=heartbeat value=0 message=source=ollama prompt_eval_count=627 eval_count=16 total_duration_ns=300339800 load_duration_ns=7674000 prompt_eval_duration_ns=123630000 eval_duration_ns=162069000 eval_tps=98.7233832503
+[ESP] seq=20 req=55938930232700 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=21 req=55938930232700 kind=heartbeat value=0 message={"request":55938930232700,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":202.930,"prefill_tps":0.000,"task_tps":0.033,"ttft_ms":30172.506,"prefill_ms":0.000,"decode_ms":4.928,"task_ms":30177.434,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":3,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=22 req=55938930232700 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown
+Done. The file now returns `0;` instead of `1;`.

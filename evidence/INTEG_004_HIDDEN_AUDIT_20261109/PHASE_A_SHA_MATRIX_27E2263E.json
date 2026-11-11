@@ -1,0 +1,86 @@
+{
+  "asof_utc": "2026-11-09T13:28:30Z",
+  "motd_ack": 1,
+  "phase": "A",
+  "reconciled_candidate_sha256": "27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC",
+  "candidate_exe_present": true,
+  "sealed_47451_exe_absent": true,
+  "no_inherit_47451_problems_pass": true,
+  "phase_a_matrix": "SEALED",
+  "phase_a_all_gates_pass": 0,
+  "promote": 0,
+  "certified": 0,
+  "product_pass": 0,
+  "tip_move_authorized": 0,
+  "tip_climb": "HOLD",
+  "controlling_tip": "CC79",
+  "controlling_tip_sha256": "CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4",
+  "a4f_immutable": 1,
+  "a4f_sha256": "A4F083DFB9CCD1F78036E1CDCDCA9AF881EF10B3E34170B68C4610D51AC6EF4E",
+  "engineering_maturity_estimate": 82,
+  "invent_pass": 0,
+  "harness_run_this_turn": 1,
+  "hash_drift": false,
+  "gates": [
+    {
+      "id": 1,
+      "gate": "EXTENSION_HOST",
+      "disposition": "PASS",
+      "force_kill": 0,
+      "orphans": 0,
+      "harness_exit": 0,
+      "receipt": "logs/ext_smoke + FULL_FEATURE_ONESHOT_001/artifacts/ext_smoke_summary_20261109-081823.json"
+    },
+    {
+      "id": 2,
+      "gate": "CHAT_LOCAL_AI",
+      "disposition": "FAIL",
+      "chat_hwnd_present": true,
+      "stream_stop_clear": "NOT_RUN",
+      "receipt": "receipts/CHAT_27E2_RECEIPT.txt"
+    },
+    {
+      "id": 3,
+      "gate": "TERMINAL",
+      "disposition": "FAIL",
+      "args": "--term-smoke --term-quit",
+      "force_kill": 1,
+      "process_exit": -1,
+      "receipt": "receipts/TERM_SMOKE_27E2_RECEIPT.txt"
+    },
+    {
+      "id": 4,
+      "gate": "OUTPUT",
+      "disposition": "PASS",
+      "max_visible_edit_len": 12921,
+      "gui_output_panel_e2e": "PASS",
+      "receipt": "receipts/PHASE_A_FOUR_PANEL_27E2_RECEIPT.txt"
+    },
+    {
+      "id": 5,
+      "gate": "DEBUG_HEADLESS",
+      "disposition": "PASS",
+      "verify_rc": 0,
+      "session_real": 1,
+      "note": "not IDE Debug UI (B39)",
+      "receipt": "receipts/DEBUG_HEADLESS_27E2_RECEIPT.txt"
+    },
+    {
+      "id": 6,
+      "gate": "PROBLEMS_UI_POPULATE",
+      "disposition": "PASS",
+      "problems_id1312_items": 3
+    },
+    {
+      "id": "6b",
+      "gate": "B12_ACTUAL_CARET_NAVIGATION",
+      "disposition": "FAIL",
+      "click_to_line": "POSTED_NM_DBLCLK",
+      "actual_editor_caret_navigation": "FAIL",
+      "law": "POSTED_NM_DBLCLK != ACTUAL_EDITOR_CARET_NAVIGATION",
+      "receipt": "receipts/B12_CARET_NAV_27E2_RECEIPT.txt"
+    }
+  ],
+  "b02_cross_subsystem": "FAIL",
+  "b02_reason": "CHAT_FAIL + TERMINAL_FAIL + B12_CARET_FAIL"
+}

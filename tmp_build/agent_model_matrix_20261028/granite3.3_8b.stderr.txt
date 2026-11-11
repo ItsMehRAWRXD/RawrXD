@@ -1,0 +1,17 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=48
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=48
+RUN_CONFIG_CONTEXT=4096
+[ESP] seq=1 req=1926841021700 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=1926841021700 kind=model_load value=0 message=granite3.3:8b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=1926841021700 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=1926841021700 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=1926841021700 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=1926841021700 kind=agent_step value=0 message=phase=WORKING
+[error] READ_TASK_INCOMPLETE: requested readFile evidence or completion marker missing
+[ESP] seq=7 req=1926841021700 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1089 eval_count=48 total_duration_ns=7941066700 load_duration_ns=7072227200 prompt_eval_duration_ns=336869000 eval_duration_ns=525207000 eval_tps=91.392536657
+[ESP] seq=9 req=1926841021700 kind=error value=1 message=read_task_incomplete
+[ESP] seq=10 req=1926841021700 kind=heartbeat value=0 message={"request":1926841021700,"agent":1,"phase":"error","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":156.580,"prefill_tps":0.000,"task_tps":0.126,"ttft_ms":7945.244,"prefill_ms":0.000,"decode_ms":6.386,"task_ms":7951.631,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=11 req=1926841021700 kind=finished value=1 message=FAIL
+[StreamEngine] Shutdown

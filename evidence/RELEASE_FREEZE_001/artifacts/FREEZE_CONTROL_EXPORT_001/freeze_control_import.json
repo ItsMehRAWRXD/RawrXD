@@ -1,0 +1,33 @@
+﻿{
+    "asof_utc":  "2026-11-10T02:43:08Z",
+    "user_auth":  "CONTINUE_AND_EXPORT_WITHOUT_FURTHER_PROMPT",
+    "dashboard":  "https://rawrxd-freeze-control.garrettaosborne.chatgpt.site",
+    "dashboard_fetch":  "401_UNAUTHORIZED_THIS_SESSION",
+    "promote":  0,
+    "certified":  0,
+    "product_pass":  0,
+    "maturity":  82,
+    "freeze_pin":  {
+                       "pin_verify":  "PASS_BOTH_35C22",
+                       "sha256":  "35C22E8AAFC1E9B30E40C2505AF7B4DEB66BDFB73D56B75D31C937D8C70D8563",
+                       "certified":  0,
+                       "issue49_engineering":  "11/11",
+                       "freeze001":  "PASS"
+                   },
+    "oneshot_tip":  {
+                        "major":  "DEMONSTRATED",
+                        "p3_four_panel":  "PASS",
+                        "one_sha_1_11":  "PASS",
+                        "sha256":  "4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6",
+                        "issue49_maps":  "11/11",
+                        "p3_pass_count":  "17/17"
+                    },
+    "register":  {
+                     "oneshot":  "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\MASTER_HIDDEN_GAP_REGISTER.md",
+                     "audit":  "F:\\rawrxd\\evidence\\HIDDEN_GAP_AUDIT_001\\MASTER_HIDDEN_GAP_REGISTER.md",
+                     "local_absent":  0,
+                     "dashboard_flag":  "RECONCILE_EXPORT_NOT_ABSENCE"
+                 },
+    "independent_review":  "IN_FLIGHT",
+    "independent_reviewer_agent":  "51eddb98-8b1d-476f-8679-4b450c7f86d3"
+}

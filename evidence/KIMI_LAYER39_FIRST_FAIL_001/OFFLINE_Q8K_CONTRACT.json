@@ -1,0 +1,64 @@
+{
+  "cpu_vs_fp32_scalar": {
+    "cosine_similarity": 0.9999999999999994,
+    "elements": 7168,
+    "max_abs": 4.401140718535146e-08,
+    "max_relative": 0.0001542349910915032,
+    "mean_abs": 5.838303824248656e-09,
+    "nonfinite": 0,
+    "rms_abs": 7.643616218063187e-09,
+    "rms_relative_to_reference": 3.586150805115421e-08,
+    "worst_candidate": -0.633048892,
+    "worst_index": 2700,
+    "worst_reference": -0.6330488479885928
+  },
+  "first_element_exceeding_max_abs_0_001": {
+    "abs": 0.003025628208290776,
+    "abs_vs_q8k": 3.548095045546873e-08,
+    "fp32_scalar": -0.3176836142082908,
+    "gpu": -0.314657986,
+    "index": 0,
+    "q6k_q8k_oracle": -0.31465795051904955
+  },
+  "gpu_vs_fp32_scalar": {
+    "cosine_similarity": 0.9998999330434921,
+    "elements": 7168,
+    "max_abs": 0.010918879306201279,
+    "max_relative": 60.997902917588185,
+    "mean_abs": 0.0024138183205469174,
+    "nonfinite": 0,
+    "rms_abs": 0.0030167764655034232,
+    "rms_relative_to_reference": 0.014153791925151992,
+    "worst_candidate": 0.279927015,
+    "worst_index": 5418,
+    "worst_reference": 0.2690081356937987
+  },
+  "gpu_vs_q6k_q8k_oracle": {
+    "cosine_similarity": 0.9999999999999404,
+    "elements": 7168,
+    "max_abs": 3.177003051191285e-07,
+    "max_relative": 0.03859536167710437,
+    "mean_abs": 6.268771648232947e-08,
+    "nonfinite": 0,
+    "rms_abs": 7.884472612984803e-08,
+    "rms_relative_to_reference": 3.6978457273942285e-07,
+    "worst_candidate": -0.383772969,
+    "worst_index": 2844,
+    "worst_reference": -0.3837726512996949
+  },
+  "q8_match_n_gt_1e-5": 0,
+  "q8_match_n_gt_1e-6": 0,
+  "tensor_sha256": {
+    "cpu_down": "e7b5c18ececd09736fa6d2fdc45615e0d68914ae85d8dc44310244b295758339",
+    "gpu_down": "e84915e16680b5379d0b9a61f06183911e5c95cd4a93f0af9ece13440dc53275",
+    "post_swiglu": "5722bc39939fc10842e14bda81c1b312ef08ee4128af8dead7022b9641661333",
+    "weights": "83a4217ca4b4590e83ea424c0f8f7268754b2349f155421bc7dabe1b648eb014"
+  },
+  "worst_vs_fp32": {
+    "abs_vs_q8k": 1.0341018807924485e-07,
+    "fp32_scalar": 0.2690081356937987,
+    "gpu": 0.279927015,
+    "index": 5418,
+    "q6k_q8k_oracle": 0.2799269115898119
+  }
+}

@@ -1,0 +1,196 @@
+=== LINKER SHA256 === 
+SHA256 hash of F:\rawrxd\build_5os_win\rawrxd_link.exe:
+5be9408e5e1e424a41bcd283e4e409daafb6c4fbf9882ad08d5d8a4d1bd68438
+CertUtil: -hashfile command completed successfully.
+=== COMPILE test_minimal.c === 
+test_minimal.c
+=== LINK with rawrxd_link === 
+=== COFF: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_PE_RUNTIME_001\test_minimal.obj ===
+  Machine: 0x8664  Sections: 4  Symbols: 12
+  Timestamp: 0x6AE05EB0  SymTableOff: 0x0000019D
+  Section[0]: .drectve  RawSize=0x2F  RawOff=0xB4  Relocs=0  Align=1  Chars=0x00100A00
+  Section[1]: .debug$S  RawSize=0x94  RawOff=0xE3  Relocs=0  Align=1  Chars=0x42100040 IDATA READ
+  Section[2]: .text$mn  RawSize=0x6  RawOff=0x177  Relocs=0  Align=16  Chars=0x60501020 CODE EXEC READ
+  Section[3]: .chks64   RawSize=0x20  RawOff=0x17D  Relocs=0  Align=1  Chars=0x00000A00
+  Symbols:
+    [0] @comp.id                        val=0x0104899C  sec=-1  type=0x0000  class=3
+    [1] @feat.00                        val=0x80010190  sec=-1  type=0x0000  class=3
+    [2] @vol.md                         val=0x00000003  sec=-1  type=0x0000  class=3
+    [3] .drectve                        val=0x00000000  sec=1  type=0x0000  class=3
+    [5] .debug$S                        val=0x00000000  sec=2  type=0x0000  class=3
+    [7] .text$mn                        val=0x00000000  sec=3  type=0x0000  class=3
+    [9] main                            val=0x00000000  sec=3  type=0x0020  class=2
+    [10] .chks64                         val=0x00000000  sec=4  type=0x0000  class=3
+
+[linker] phase 1 complete: 1 object file(s) loaded
+=== Merged Section Map ===
+  [0] .text$mn  RVA=0x00001000  VirtSize=0x6  RawSize=0x6  Align=16  Chars=0x60001020
+       Contributions: 1
+         obj[0] sec[2]: src=0x0 -> dst=0x0  size=0x6  rva=0x00001000
+  [1] .chks64   RVA=0x00002000  VirtSize=0x20  RawSize=0x20  Align=1  Chars=0x00000A00
+       Contributions: 1
+         obj[0] sec[3]: src=0x0 -> dst=0x0  size=0x20  rva=0x00002000
+
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+=== PE Builder ===
+  Machine: 0x8664  Subsystem: 3
+  ImageBase: 0x140000000  Entry: 0x00001000
+  SizeOfHeaders: 0x0  SizeOfImage: 0x0
+  Stack: reserve=0x100000 commit=0x10000
+  Heap:  reserve=0x100000 commit=0x10000
+  Sections: 2
+    [0] .text$mn  RVA=0x00001000  VSize=0x6  RawOff=0x0  RawSz=0x0  Chars=0x60001020
+    [1] .chks64   RVA=0x00002000  VSize=0x20  RawOff=0x0  RawSz=0x0  Chars=0x00000A00
+
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_PE_RUNTIME_001\test_exit42.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_PE_RUNTIME_001\test_exit42.exe written successfully
+[linker] all phases complete (exit 0)
+=== DUMPBIN IMPORTS/HEADERS === 
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\rawrxd\evidence\RAWRXD_SOVEREIGN_PE_RUNTIME_001\test_exit42.exe
+
+PE signature found
+
+File Type: EXECUTABLE IMAGE
+
+FILE HEADER VALUES
+            8664 machine (x64)
+               4 number of sections
+        6AE05EB0 time date stamp Tue Oct 27 04:20:00 2026
+               0 file pointer to symbol table
+               0 number of symbols
+              F0 size of optional header
+              22 characteristics
+                   Executable
+                   Application can handle large (>2GB) addresses
+
+OPTIONAL HEADER VALUES
+             20B magic # (PE32+)
+            1.00 linker version
+             400 size of code
+             200 size of initialized data
+               0 size of uninitialized data
+            4000 entry point (0000000140004000)
+            1000 base of code
+       140000000 image base (0000000140000000 to 0000000140004FFF)
+            1000 section alignment
+             200 file alignment
+            6.00 operating system version
+            0.00 image version
+            6.00 subsystem version
+               0 Win32 version
+            5000 size of image
+             400 size of headers
+               0 checksum
+               3 subsystem (Windows CUI)
+            8160 DLL characteristics
+                   High Entropy Virtual Addresses
+                   Dynamic base
+                   NX compatible
+                   Terminal Server Aware
+          100000 size of stack reserve
+           10000 size of stack commit
+          100000 size of heap reserve
+           10000 size of heap commit
+               0 loader flags
+              10 number of directories
+               0 [       0] RVA [size] of Export Directory
+            3000 [      28] RVA [size] of Import Directory
+               0 [       0] RVA [size] of Resource Directory
+               0 [       0] RVA [size] of Exception Directory
+               0 [       0] RVA [size] of Certificates Directory
+               0 [       0] RVA [size] of Base Relocation Directory
+               0 [       0] RVA [size] of Debug Directory
+               0 [       0] RVA [size] of Architecture Directory
+               0 [       0] RVA [size] of Global Pointer Directory
+               0 [       0] RVA [size] of Thread Storage Directory
+               0 [       0] RVA [size] of Load Configuration Directory
+               0 [       0] RVA [size] of Bound Import Directory
+               0 [       0] RVA [size] of Import Address Table Directory
+               0 [       0] RVA [size] of Delay Import Directory
+               0 [       0] RVA [size] of COM Descriptor Directory
+               0 [       0] RVA [size] of Reserved Directory
+
+
+SECTION HEADER #1
+.text$mn name
+       6 virtual size
+    1000 virtual address (0000000140001000 to 0000000140001005)
+     200 size of raw data
+     400 file pointer to raw data (00000400 to 000005FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+60001020 flags
+         Code
+         COMDAT
+         Execute Read
+
+SECTION HEADER #2
+ .chks64 name
+      20 virtual size
+    2000 virtual address (0000000140002000 to 000000014000201F)
+     200 size of raw data
+     600 file pointer to raw data (00000600 to 000007FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+     A00 flags
+         Info
+         Remove
+
+SECTION HEADER #3
+  .idata name
+      63 virtual size
+    3000 virtual address (0000000140003000 to 0000000140003062)
+     200 size of raw data
+     800 file pointer to raw data (00000800 to 000009FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+C0000040 flags
+         Initialized Data
+         Read Write
+
+  Section contains the following imports:
+
+    kernel32.dll
+             140003045 Import Address Table
+             140003035 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                           0 ExitProcess
+
+SECTION HEADER #4
+   .stub name
+      12 virtual size
+    4000 virtual address (0000000140004000 to 0000000140004011)
+     200 size of raw data
+     A00 file pointer to raw data (00000A00 to 00000BFF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+60000020 flags
+         Code
+         Execute Read
+
+  Summary
+
+        1000 .chks64
+        1000 .idata
+        1000 .stub
+        1000 .text$mn
+=== RUN === 
+EXIT_CODE=42
+RUNTIME_PASS_EXIT_42

@@ -1,0 +1,19 @@
+
+F:\rawrxd\.worktrees\request-a-diag-4ed>call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64  1>nul 
+[0/2] Re-checking globbed directories...
+[1/9] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/9] Performing install step for 'vulkan-shaders-gen'
+-- Install configuration: ""
+-- Up-to-date: F:/rawrxd/build_repair_candidate/vulkan-shaders-gen.exe
+[3/9] Completed 'vulkan-shaders-gen'
+[4/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[5/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[6/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[7/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[8/9] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe
+NINJA_EXIT=0

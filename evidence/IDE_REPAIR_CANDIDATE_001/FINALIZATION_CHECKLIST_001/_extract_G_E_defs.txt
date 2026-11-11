@@ -1,0 +1,52 @@
+GUI agent-session stability  | Prove the IDE remains alive throughout the full agent workflow             |
+| B04 | Agent environment regression | Verify the routing environment does not reintroduce the early-exit failure |
+| B05 | Exactly-once dispatch        | Verify Send, Enter, Ctrl+Enter, cancellation, and busy-state behavior      |
+| B06 | Tool execution integrity     | Verify read, edit, build, test, rollback, commit, and reinjection          |
+| B07 | Integrated acceptance        | Demonstrate all mandatory subsystems operating together on one build       |
+| B08 | Independent certification    | Obtain an independent acceptance run with matching binary hashes           |
+
+B01 is the immediate controlling gate. B02–B08 are necessary to move from a working agent demonstration to a certifiable IDE.
+
+The CPU `LoadTensorSlice` repair and three-request lifecycle PASS are closed and are not included as outstanding repair work.
+
+## 2. GUI, layout, and visual completeness
+
+The earlier GUI investigations identified incomplete theme propagation, static brushes, deferred initialization, and incomplete four-panel behavior.
+
+| ID  | Remaining requirement                       | Evidence status                                                |
+| --- | ------------------------------------------- | -------------------------------------------------------------- |
+| G01 | Full dark/light theme propagation           | Sidebar source repair landed; runtime verification outstanding |
+| G02 | Theme-aware sidebar, chat, and controls     | Full-system acceptance unverified                              |
+| G03 | Recreate/invalidate theme brushes safely    | Partial repair; comprehensive verification outstanding         |
+| G04 | Four-panel layout and docking               | Integrated acceptance outstanding                              |
+| G05 | Bottom dock and terminal resizing           | Full runtime acceptance outstanding                            |
+| G06 | Problems pane click-to-line                 | Historical PASS; verify in final candidate                     |
+| G07 | Editor/output background consistency        | Final visual verification outstanding                          |
+| G08 | Toolbar, menu, tabs, and status bar styling | Final theme acceptance outstanding                             |
+| G09 | Window resize, minimize, maximize, DPI      | Complete regression coverage unverified                        |
+| G10 | Startup and shutdown without layout faults  | Final candidate verification outstanding                       |
+| G11 | Panel visibility and persistence            | Complete restart/persistence evidence unverified               |
+| G12 | Keyboard focus and accessibility            | Complete acceptance coverage unverified                        |
+
+Important: G01–G12 are not twelve confirmed source defects. They are twelve remaining acceptance obligations; several may already work.
+
+## 3. Editor and coding features
+
+| ID  | Missing or unverified capability | Required proof                                        |
+| --- | -------------------------------- | ----------------------------------------------------- |
+| E01 | File open/save/reopen            | No data loss or encoding corruption                   |
+| E02 | Unicode and UTF-16 handling      | Correct round-trip across supported encodings         |
+| E03 | Multi-file editing               | Correct buffers, tabs, and file identities            |
+| E04 | Undo/redo                        | Correct operation after agent and manual edits        |
+| E05 | Search/replace                   | Accurate navigation and replacement                   |
+| E06 | Syntax highlighting              | Correct rendering across supported languages          |
+| E07 | Diagnostics navigation           | Problems entries navigate to correct source locations |
+| E08 | GhostText                        | Accept, reject, cancel, and stale-result protection   |
+| E09 | Concurrent agent/manual edits    | No silent overwrites or lost updates                  |
+| E10 | External file changes            | Detect and reconcile modified files                   |
+| E11 | Workspace persistence            | Restore intended files and sessions                   |
+| E12 | Large-file responsiveness        | No hangs, excessive memory use, or corruption         |
+
+Historical receipts establish portions of save/reopen, diagnostics, and GhostText. Those results still need reconciliation with the final release candidate.
+
+## 4. 
