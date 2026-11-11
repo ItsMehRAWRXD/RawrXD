@@ -1,0 +1,4 @@
+name=gpt-oss:120b
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_RESIDUALADD_ATTN_PROJ_MISSING

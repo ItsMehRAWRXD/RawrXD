@@ -1,0 +1,4 @@
+name=laguna-s-2.1:Q4_K_M
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_ATTENTION_HEAD_COUNT_ZERO

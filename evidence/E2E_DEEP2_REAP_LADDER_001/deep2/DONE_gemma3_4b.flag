@@ -1,0 +1,5 @@
+﻿name=gemma3:4b
+exit=1
+tps=
+notes=finite=n/a;gpu_complete=n/a;elapsed_s=31.4;PREFILL_FAIL pos=0 err=linear: declared bias tensor missing: blk.0.attn_q.bias;PREFILL_BATCH_FAIL err=prefill-batch: declared bias tensor missing: blk.0.attn_q.bias; falling back to serial
+

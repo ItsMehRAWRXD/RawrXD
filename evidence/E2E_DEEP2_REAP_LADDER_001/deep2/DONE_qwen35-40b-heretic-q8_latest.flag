@@ -1,0 +1,5 @@
+﻿name=qwen35-40b-heretic-q8:latest
+exit=0
+tps=3.244
+notes=finite=yes;gpu_complete=yes;elapsed_s=12.1;bench_verdict=PASS
+

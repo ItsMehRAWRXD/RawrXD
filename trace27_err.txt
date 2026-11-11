@@ -1,0 +1,150 @@
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=0 q_idx=1
+[qdot] descriptor allocated ds=00000251BD340BC0 count=1
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=3 q_idx=4
+[qdot] descriptor allocated ds=00000251BD340C00 count=2
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=6 q_idx=7
+[qdot] descriptor allocated ds=00000251BD340C40 count=3
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=9 q_idx=10
+[qdot] descriptor allocated ds=00000251BD340C80 count=4
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=12 q_idx=13
+[qdot] descriptor allocated ds=00000251BD340CC0 count=5
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=15 q_idx=16
+[qdot] descriptor allocated ds=00000251BD340D00 count=6
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=18 q_idx=19
+[qdot] descriptor allocated ds=00000251BD340D40 count=7
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=21 q_idx=22
+[qdot] descriptor allocated ds=00000251BD340D80 count=8
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=24 q_idx=25
+[qdot] descriptor allocated ds=00000251BD340DC0 count=9
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=27 q_idx=28
+[qdot] descriptor allocated ds=00000251BD340E00 count=10
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=30 q_idx=31
+[qdot] descriptor allocated ds=00000251BD340E40 count=11
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=33 q_idx=34
+[qdot] descriptor allocated ds=00000251BD340E80 count=12
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=36 q_idx=37
+[qdot] descriptor allocated ds=00000251BD340EC0 count=13
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=39 q_idx=40
+[qdot] descriptor allocated ds=00000251BD340F00 count=14
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=42 q_idx=43
+[qdot] descriptor allocated ds=00000251BD340F40 count=15
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=45 q_idx=46
+[qdot] descriptor allocated ds=00000251BD340F80 count=16
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=48 q_idx=49
+[qdot] descriptor allocated ds=00000251BD340FC0 count=17
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=51 q_idx=52
+[qdot] descriptor allocated ds=00000251BD341000 count=18
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=54 q_idx=55
+[qdot] descriptor allocated ds=00000251BD341040 count=19
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=57 q_idx=58
+[qdot] descriptor allocated ds=00000251BD341080 count=20
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=60 q_idx=61
+[qdot] descriptor allocated ds=00000251BD3410C0 count=21
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=63 q_idx=64
+[qdot] descriptor allocated ds=00000251BD341100 count=22
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=66 q_idx=67
+[qdot] descriptor allocated ds=00000251BD341140 count=23
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=69 q_idx=70
+[qdot] descriptor allocated ds=00000251BD341180 count=24
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=72 q_idx=73
+[qdot] descriptor allocated ds=00000251BD3411C0 count=25
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=75 q_idx=76
+[qdot] descriptor allocated ds=00000251BD341200 count=26
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=78 q_idx=79
+[qdot] descriptor allocated ds=00000251BD341240 count=27
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=81 q_idx=82
+[qdot] descriptor allocated ds=00000251BD341280 count=28
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=84 q_idx=85
+[qdot] descriptor allocated ds=00000251BD3412C0 count=29
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=87 q_idx=88
+[qdot] descriptor allocated ds=00000251BD341300 count=30
+[qdot] descriptors updated
+[qdot] recording dispatch

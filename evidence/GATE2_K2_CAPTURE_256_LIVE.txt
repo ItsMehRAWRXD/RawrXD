@@ -1,0 +1,7 @@
+﻿DISPOSITION=ABORTED_NON_OFFICIAL_CAPTURE
+REASON=wrong_prompt_hash_vs_first_corpus_prompt; killed_official_bat_PID_47992; harness!=run_k2_oracle_vulkan.bat
+ORACLE_PID=22716
+KILLED_AT=2026-10-26T23:07:07.5625986-04:00
+OFFICIAL_NEXT=run_k2_oracle_n8_probe.bat then run_k2_oracle_vulkan.bat
+PROMOTE=0
+RECEIPT=NOT_SEALED

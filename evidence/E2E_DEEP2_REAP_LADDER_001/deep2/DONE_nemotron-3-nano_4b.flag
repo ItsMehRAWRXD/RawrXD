@@ -1,0 +1,5 @@
+﻿name=nemotron-3-nano:4b
+exit=0
+tps=1.240
+notes=finite=yes;gpu_complete=yes;elapsed_s=21.3;bench_verdict=PASS
+

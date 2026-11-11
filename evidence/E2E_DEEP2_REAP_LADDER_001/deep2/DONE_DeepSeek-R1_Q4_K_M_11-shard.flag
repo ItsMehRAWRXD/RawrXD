@@ -1,0 +1,8 @@
+name=DeepSeek-R1-Q4_K_M:11-shard
+exit=0
+result=PASS
+multi_shard=11
+generated=1
+metrics=464
+continuous=1
+replay_complete=1

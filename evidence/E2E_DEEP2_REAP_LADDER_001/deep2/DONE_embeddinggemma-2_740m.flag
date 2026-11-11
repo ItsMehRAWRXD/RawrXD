@@ -1,0 +1,5 @@
+﻿name=embeddinggemma-2:740m
+exit=0
+tps=16.999
+notes=finite=yes;gpu_complete=yes;elapsed_s=3.8;bench_verdict=PASS
+

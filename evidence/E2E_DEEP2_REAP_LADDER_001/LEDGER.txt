@@ -1,0 +1,57 @@
+GATE=E2E_DEEP2_REAP_LADDER_001
+POST_REBOOT=2026-10-27T02:00-04
+GPU=
+  R9700=OK
+  RX7800XT=OK (Code10 cleared by cold boot)
+  iGPU=OK
+DUAL_GPU=AVAILABLE
+FABRICATE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+PLAN=ollama list small→large; Deep2 true inference; REAP parallel per model; then shards
+STATUS=INVENTORY_THEN_LADDER
+
+DEEP2_LADDER_START=2026-10-27T02:03:20.9570854-04:00
+GGUF_MAP=34_LOCAL_ALL_EXIST
+UNIQUE_DENSE=27
+ALIASES_SKIPPED=llama3.2:latest,gemma3:latest,gpt-oss:latest,bigdaddy*dupes
+STATUS=RUNNING_DENSE
+
+DEEP2_START name=qwen2.5-coder:1.5b-base t=2026-10-27T02:04:08.9487797-04:00
+
+DEEP2_DONE name=qwen2.5-coder:1.5b-base exit=0 tps=1.269 notes=finite=yes;gpu_complete=yes;elapsed_s=15.4;bench_verdict=PASS
+
+DEEP2_START name=embeddinggemma-2:740m t=2026-10-27T02:04:24.3574025-04:00
+
+DEEP2_DONE name=embeddinggemma-2:740m exit=0 tps=16.999 notes=finite=yes;gpu_complete=yes;elapsed_s=3.8;bench_verdict=PASS
+
+DEEP2_START name=llama3.2:3b t=2026-10-27T02:04:28.1403958-04:00
+
+DEEP2_DONE name=llama3.2:3b exit=0 tps=1.296 notes=finite=yes;gpu_complete=yes;elapsed_s=17.6;bench_verdict=PASS
+
+DEEP2_START name=qwen35-40b-heretic-q8:latest t=2026-10-27T02:04:45.7709014-04:00
+
+DEEP2_DONE name=qwen35-40b-heretic-q8:latest exit=0 tps=3.244 notes=finite=yes;gpu_complete=yes;elapsed_s=12.1;bench_verdict=PASS
+
+DEEP2_START name=nemotron-3-nano:4b t=2026-10-27T02:04:57.8939356-04:00
+
+DEEP2_DONE name=nemotron-3-nano:4b exit=0 tps=1.240 notes=finite=yes;gpu_complete=yes;elapsed_s=21.3;bench_verdict=PASS
+
+DEEP2_START name=gemma3:4b t=2026-10-27T02:05:19.2520744-04:00
+
+DEEP2_DONE name=gemma3:4b exit=1 tps= notes=finite=n/a;gpu_complete=n/a;elapsed_s=31.4;PREFILL_FAIL pos=0 err=linear: declared bias tensor missing: blk.0.attn_q.bias;PREFILL_BATCH_FAIL err=prefill-batch: declared bias tensor missing: blk.0.attn_q.bias; falling back to serial
+
+DEEP2_START name=granite3.3:8b t=2026-10-27T02:05:50.7297880-04:00
+
+DEEP2_DONE name=granite3.3:8b exit=0 tps=0.411 notes=finite=yes;gpu_complete=yes;elapsed_s=64.8;bench_verdict=PASS
+
+DEEP2_START name=llama3.1:8b t=2026-10-27T02:06:55.6077271-04:00
+
+DEEP2_DONE name=llama3.1:8b exit=0 tps=0.520 notes=finite=yes;gpu_complete=yes;elapsed_s=44.8;bench_verdict=PASS
+
+DEEP2_START name=qwen3:8b t=2026-10-27T02:07:40.4143033-04:00
+
+DEEP2_DONE name=qwen3:8b exit=2 tps=0.291 notes=finite=yes;gpu_complete=yes;elapsed_s=68;bench_verdict=FAIL
+
+DEEP2_START name=pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest t=2026-10-27T02:08:48.5399651-04:00
+

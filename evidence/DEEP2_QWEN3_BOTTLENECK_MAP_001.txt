@@ -1,0 +1,26 @@
+SOURCE=explore agent d5e3d533-7394-415a-859f-1e42e26cb0e8
+WITNESS=F:\rawrxd\evidence\deep2_timing_breakdown_20261026_qwen3_gpu.md
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+K2_SUBSTITUTE=FORBIDDEN
+
+HOT_PATH=
+  ExecuteQuantDot vkQueueSubmit+WaitQuantFence @ vulkan_compute.cpp:1749-1786
+  EndQuantDotBatch @ vulkan_compute.cpp:2199-2227
+  FlushDotBatch @ runtime_graph_executor.cpp:1117-1129, 4169-4170
+
+GPU_WEIGHT_CACHE=EnsureQuantWeight (NOT TensorResidencyCache host mmap)
+  hits/misses witness 759/253; upload ~4.48GB
+
+PREFILL_BENCH=serial ExecuteToken @ deep2_bench_tps.cpp:174-179
+  PrefillBatch EXISTS @ runtime_graph_executor.cpp:3323 UNUSED_BY_BENCH
+
+DUMPS=BackendCounters / ResidencyCounters / Deep2_ReportLinearWStats (no Deep2PerfProbe symbol)
+
+NEXT_IMPL_ORDER=
+  1 widen/hold quant-dot batches (DEEP2_WIDE_DOT_BATCH / fewer FlushDotBatch)
+  2 defer WaitQuantFence to logits join
+  3 wire deep2_bench_tps to PrefillBatch
+  4 PrefetchWeight warm residency (TensorResidencyCache unmodified)
+  5 activation staging / DEEP2_QUANT_DIRECT_IO

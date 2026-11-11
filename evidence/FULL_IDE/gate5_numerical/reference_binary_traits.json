@@ -1,0 +1,71 @@
+{
+  "cpu_only": true,
+  "method": "ggml_get_type_traits_cpu exported by reference binary dependency",
+  "abi_authority": "3rdparty/ggml/include/ggml-cpu.h:112 (from_float,vec_dot,vec_dot_type,nrows)",
+  "traits": [
+    {
+      "weight_type": 2,
+      "weight_name": "q4_0",
+      "vec_dot_type": 8,
+      "vec_dot_name": "q8_0",
+      "nrows": 1,
+      "from_float_present": true,
+      "vec_dot_present": true
+    },
+    {
+      "weight_type": 8,
+      "weight_name": "q8_0",
+      "vec_dot_type": 8,
+      "vec_dot_name": "q8_0",
+      "nrows": 1,
+      "from_float_present": true,
+      "vec_dot_present": true
+    },
+    {
+      "weight_type": 12,
+      "weight_name": "q4_K",
+      "vec_dot_type": 15,
+      "vec_dot_name": "q8_K",
+      "nrows": 1,
+      "from_float_present": true,
+      "vec_dot_present": true
+    },
+    {
+      "weight_type": 14,
+      "weight_name": "q6_K",
+      "vec_dot_type": 15,
+      "vec_dot_name": "q8_K",
+      "nrows": 1,
+      "from_float_present": true,
+      "vec_dot_present": true
+    }
+  ],
+  "binaries": [
+    {
+      "path": "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\llama_dump_logits_teacher_forced.exe",
+      "bytes": 216064,
+      "sha256": "729ef976e756434eed2bcf6b170fa1eda669117711d860935a88efb009d7bdd8"
+    },
+    {
+      "path": "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\llama.dll",
+      "bytes": 2779136,
+      "sha256": "8edaa155318273f865c8d9d236cee060f09e190834bf58ef1c2b0d627a354b60"
+    },
+    {
+      "path": "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\ggml.dll",
+      "bytes": 61952,
+      "sha256": "3a27505242bfa7dc0935226e07c6ba45efe500137946574a68a6c861f3ea7997"
+    },
+    {
+      "path": "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\ggml-cpu.dll",
+      "bytes": 1201664,
+      "sha256": "c162e4af4c37e7a1148bb1dd7b276e6fc942cde4bb0a714f23f842b9569acffd"
+    },
+    {
+      "path": "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\ggml-base.dll",
+      "bytes": 676864,
+      "sha256": "f35529e6c0a67d3657051cbdfdcc50a709f815f2ca61ed6d660b70f7682e8913"
+    }
+  ],
+  "interpretation": "Q4_K and Q6_K use Q8_K activations in this exact reference runtime; per-32 Q8_0 activation granularity does not explain their differences."
+}

@@ -1,0 +1,9 @@
+﻿START=Mon 10/26/2026 23:16:01.39
+EXE=F:\llama.cpp-ref\build-vulkan\bin\llama.exe cli
+EXIT=KILLED END=2026-10-26T23:20:16.1470304-04:00
+DISPOSITION=ABORTED_FOR_N8_FIRST
+ABORT_REASON=P1_K2_recover requires n8 MoE receipt before 256; llama.exe cli also fails HTTP first-token timeout during ~7.5min K2 prefill
+GENERATED_TOKENS=0
+RECEIPT=NOT_SEALED
+PROMOTE=0
+NEXT=await_n8_completion_then_restart_256_via_llama-completion_or_fixed_cli

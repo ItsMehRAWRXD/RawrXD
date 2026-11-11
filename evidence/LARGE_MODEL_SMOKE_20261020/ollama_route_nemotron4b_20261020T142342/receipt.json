@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-20T14:23:42.8207965-04:00",
+  "endpoint": "http://127.0.0.1:11434/api/generate",
+  "model": "nemotron-3-nano:4b",
+  "exit_code": 0,
+  "elapsed_ms": 5864.5,
+  "response": "",
+  "done": true,
+  "eval_count": 8,
+  "eval_duration_ns": 52166000,
+  "model_count": 41,
+  "error": ""
+}

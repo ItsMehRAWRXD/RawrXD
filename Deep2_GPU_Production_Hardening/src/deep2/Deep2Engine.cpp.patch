@@ -1,0 +1,37 @@
+// ============================================================================
+// Deep2Engine.cpp — Expert Access Recording (P0-C)
+// Connects to StrataExpertResidency for MoE telemetry
+// ============================================================================
+
+void Deep2Engine::recordExpertAccess(int layerId, int expertId, float weight)
+{
+    // Existing warmup scheduler recording
+    if (warmupScheduler_ && warmupEnabled_)
+    {
+        warmupScheduler_->recordAccess(layerId, expertId, weight);
+    }
+
+    // P0-C: Also record in StrataExpertResidency if available
+    if (strataResidency_) {
+        strataResidency_->RecordExpertAccess(layerId, expertId, weight);
+    }
+}
+
+// In Deep2Engine initialization, connect StrataExpertResidency:
+// (Add to constructor or Initialize method)
+
+void Deep2Engine::InitializeStrataResidency() {
+    if (!strataResidency_) {
+        strataResidency_ = std::make_unique<Deep2::Strata::ExpertResidencyLedger>();
+        strataResidency_->Configure(/* experts */ 128, /* used */ 6, /* policy */ 1 /* LRU */);
+    }
+}
+
+// In Deep2Engine destructor:
+Deep2Engine::~Deep2Engine() {
+    strataResidency_.reset();
+    // ... existing cleanup ...
+}
+
+// Add member to Deep2Engine class (in .h):
+// std::unique_ptr<Deep2::Strata::ExpertResidencyLedger> strataResidency_;

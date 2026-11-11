@@ -1,0 +1,4 @@
+name=bluehawana/deepseek-v4-flash:iq2_m
+exit=1
+result=FAIL
+reason=INGEST_BIND_EXIT_WITHOUT_DIAGNOSTIC_OUTPUT

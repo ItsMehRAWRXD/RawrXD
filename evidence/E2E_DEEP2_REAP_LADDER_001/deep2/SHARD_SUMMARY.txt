@@ -1,0 +1,58 @@
+DEEP2/REAP shard-lane closeout (2026-10-27)
+
+REPLAY_EXECUTABLE=F:\rawrxd\build_reap\bin-msvc\rawr-reap-replay.exe
+REPLAY_EXECUTABLE_SHA256=D529A7DD6D10F9A592874402F1D935F7A44360D916B89DAF80C8E032A1854BCA
+
+KIMI_K2
+  shards=13
+  tensors=1096
+  one_window=PASS
+  generated=1
+  metrics=480
+  complete=1
+  log=RUN_SHARD_Kimi-K2_13.log
+  log_sha256=914D35F6D4C00E8209D3482B7BA0C6B7EEE02E0B2B86C073741D727337CDE9EF
+  certification=ONE_WINDOW_ONLY;PARITY_AND_FULL_CALIBRATION_PENDING
+
+DEEPSEEK_R1
+  shards=11
+  tensors=1025
+  one_window=PASS
+  generated=1
+  metrics=464
+  continuous=1
+  complete=1
+  log=RUN_SHARD_DeepSeek-R1_11.log
+  log_sha256=83D73503BCC9B95924957B2B4A9DBD38222C8089760CB86698D53C692B114DAA
+  certification=ONE_WINDOW_ONLY;PARITY_AND_FULL_CALIBRATION_PENDING
+
+MINIMAX_M2_7
+  shards=3
+  one_window=PASS
+  generated=1
+  metrics=6808
+  complete=1
+  output_utf8_valid=1
+  elapsed_ms=1137222
+  gpu_dispatch_observed=0
+  receipt=receipt_minimax_onewindow.json
+  receipt_sha256=FF203B3F07E11F300C72EFB5364F47DBBAFA4E615708ABAC7A495EC21AE9EE53
+  certification=ONE_WINDOW_ONLY;PARITY_AND_FULL_CALIBRATION_PENDING
+
+QWEN3_8_FLASH_NEXT
+  shards=2
+  tensors=1224
+  architecture=qwen4exp
+  one_window=FAIL
+  exit=4
+  generated=0
+  metrics=0
+  reason=GENERATION_REJECTED_UNSUPPORTED_MULTISHARD_ARCH
+  receipt=receipt_qwen38_shard_onewindow_diag.json
+  receipt_sha256=EF9EC7E6642884745824E025246307E137CD224268F0BF3572A254D71BFEC818
+
+GPU_STATUS=R9700_OK;RX7800XT_OK
+GPU_CODE31_OR_CODE10_RESET=NOT_OBSERVED_DURING_THIS_LANE
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0

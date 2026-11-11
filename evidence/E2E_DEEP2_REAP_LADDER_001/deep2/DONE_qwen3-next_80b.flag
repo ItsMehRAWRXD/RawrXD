@@ -1,0 +1,4 @@
+name=qwen3-next:80b
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_SSM_CONV1D_BIAS_MISSING

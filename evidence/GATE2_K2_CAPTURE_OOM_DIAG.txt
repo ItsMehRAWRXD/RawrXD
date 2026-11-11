@@ -1,0 +1,7 @@
+ATTEMPT_CPU_MOE=FAIL
+EXIT=1
+CAUSE=CPU buffer alloc 612907352064 (~571GiB) for q6_K expert tensors
+NOTE=Vulkan auto load-mode disables mmap; --cpu-moe alone still resident-allocates
+NEXT_TRY=--load-mode mmap --cpu-moe --no-repack
+PROMOTE=0
+TIP_CLIMB=HOLD

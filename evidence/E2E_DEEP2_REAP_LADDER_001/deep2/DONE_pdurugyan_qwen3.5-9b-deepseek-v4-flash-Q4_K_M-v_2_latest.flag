@@ -1,0 +1,4 @@
+name=pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest
+exit=1
+result=FAIL
+reason=PREFILL_FAIL_GDN_DIMENSIONS_MUST_BE_NON_ZERO

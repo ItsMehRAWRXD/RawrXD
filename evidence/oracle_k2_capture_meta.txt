@@ -1,0 +1,9 @@
+K2_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+K2_FIRST_SHARD_GB=43.12
+HOST_RAM_TOTAL_GB=63.1
+HOST_RAM_FREE_GB=0.4
+PAGEFILE_MAX_MB=4096
+GPU=nvidia-smi_ABSENT
+ENGINE=F:\llama.cpp-ref\build-vulkan\bin\llama-completion.exe
+N_PREDICT=256
+START=2026-10-26T22:59:35.7319783-04:00

@@ -1,0 +1,6 @@
+name=nemotron-3.5-bolt:latest
+exit=1
+result=FAIL
+reason=GPU_DISPATCH_FALLBACK_CPU_CALLS=720
+finite=yes
+gpu_complete=yes

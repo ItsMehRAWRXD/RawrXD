@@ -1,0 +1,11 @@
+USER_REQUEST=push everything to github and continue
+DISPATCH=Cursor Task 05dac238-c3ab-4e18-b30f-777badb6aa96
+HOOK_FIX=absolute hooks.json paths; non-hanging Get-HookInput; catch-allow if hook errors
+REPOS=
+  F:\rawrxd branch=fix/deep2-multimodel-safety-20261025 tracks origin
+  F:\rawrxd-native-agent-001 remotes=origin,everything,final,closure-origin,rawrxda
+  g:\~dev=NO_GIT (hooks live under workspace .cursor)
+PROMOTE=0
+TIP_CLIMB=HOLD
+EXCLUDE_HINT=*.gguf secrets huge oracle .err
+STATUS=WORKER_IN_FLIGHT

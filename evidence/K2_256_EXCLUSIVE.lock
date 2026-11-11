@@ -1,0 +1,5 @@
+﻿HOLDER=GATE2_K2_ORACLE_RELAUNCH_001
+MANDATE=run_k2_oracle_vulkan.bat 256
+SUPERSEDES=K2_N8_EXCLUSIVE (n8 is NOT Gate2 seal; brief requires kill+256 relaunch)
+TS=2026-10-26T23:39:34
+PROMOTE=0

@@ -1,0 +1,36 @@
+GATE2_DENSE_CONTROL_RESULT
+LABEL=CONTROL (not K2 product)
+PROMOTE=0
+TIP_CLIMB=HOLD
+K2_STATUS=FAIL_K2_ORACLE_OOM_FROZEN
+K2_LEDGER=F:\rawrxd\evidence\reap_shard_verification_kimi-k2_20261026.json
+K2_LEDGER_SHA256=4B1A94C303FC9933A95310B2BBB73147B20FBB71927678F2388201359C774DE7
+K2_LEDGER_ACTION=FROZEN_NOT_OVERWRITTEN
+K2_GATE2_PASS=0
+NOT_RUN!=PASS
+
+CONTROL_MODEL=F:\rawrxd\llama3.2-3b-Q2_K.gguf
+CONTROL_MODEL_PRESENT=1
+CAPTURE=SEALED
+ENGINE=F:\llama.cpp-ref\build\bin\llama-completion.exe
+CAPTURE_FLAGS=-no-cnv -n 256 --ignore-eos --temp 0 --top-k 1 --top-p 1.0 --min-p 0.0 --repeat-penalty 1.0 --seed 0 --no-display-prompt -c 2048 -f oracle_continuous_prompt.txt (corpus.jsonl prompts.front)
+PROMPT_TOKENS_ORACLE=81
+TOKEN_IDS_LEN=256
+RECEIPT=F:\rawrxd-native-agent-001\evidence\independent_reference_receipt_dense_control.json
+RECEIPT_SCHEMA=RAWRXD_REAP_REFERENCE_001
+SIDECAR=F:\rawrxd-native-agent-001\evidence\oracle_dense_control_generated_token_ids.txt
+
+REPLAY_BIN=F:\rawrxd-native-agent-001\build_reap\bin-msvc\rawr-reap-replay.exe
+REPLAY_FLAGS=model corpus calib_out 256 --continuous --parity --reference-receipt <CONTROL_RECEIPT>; OMIT --require-mla (dense non-MLA; MLA seal would false-fail)
+REPLAY_CALIBRATION_OUT=F:\rawrxd-native-agent-001\evidence\reap_calibration_dense_control.json
+REPLAY_EXIT=4
+REPLAY_BLOCKER=DEEP2_NUMERIC_ABORT ATTN_K_POST_ROPE layer=0 (nan flood) -> FORWARD_FAULT; generated=0
+REFERENCE_PARITY=FAIL
+REFERENCE_REASON=reference prompt token count does not match replay (oracle prompt_tokens=81 vs replay prompt_tokens=80; also zero decode tokens)
+PREFILL_PARITY_INTERNAL=pass_reported_but_no_decode
+CALIBRATION_COMPLETE=0
+
+NOTE=CONTROL success would not equal K2 product Gate2 PASS. Do not invent K2 vectors.
+NEXT=Fix Deep2 dense Llama-3.2 Q2_K forward (ATTN_K_POST_ROPE numeric abort / BOS prompt_token 81 vs 80) so continuous --parity can emit 256 ids against CONTROL receipt; OR schedule CONTROL on TinyLlama Q4_K_M only if Q2_K remains un-forwardable. K2 remains FAIL_K2_ORACLE_OOM_FROZEN until host can seal real K2 256-id receipt + --require-mla replay.
+
+FOLLOWUP_20261026=GATE2_TINYLLAMA_CONTROL_RESULT.txt executed (retarget TinyLlama Q4_K_M). Dense Q2_K receipt untouched. TinyLlama CAPTURE=SEALED TOKEN_IDS_LEN=256 REPLAY_EXIT=6 REFERENCE_PARITY=FAIL (99 vs 97); FORWARD completed generated=256 (no ATTN_K_POST_ROPE fault). CONTROL_SUCCESS_NEQ_K2_PRODUCT_PASS. PROMOTE=0.

@@ -1,0 +1,59 @@
+#version 450
+layout(local_size_x=64) in;
+
+// Q [batch][heads][headDim]
+layout(set=0,binding=0,std430) readonly buffer Q0 { float q[]; };
+// K/V [kvHeads][seqLen][headDim], including speculative positions.
+layout(set=0,binding=1,std430) readonly buffer K0 { float k[]; };
+layout(set=0,binding=2,std430) readonly buffer V0 { float v[]; };
+// O [batch][heads][headDim]
+layout(set=0,binding=3,std430) writeonly buffer O0 { float o[]; };
+
+layout(push_constant) uniform Push {
+    uint headDim;
+    uint heads;
+    uint kvHeads;
+    uint seqLen;
+    uint capacity;
+    uint basePos;
+    uint batch;
+    float scale;
+} pc;
+
+void main() {
+    uint gid=gl_GlobalInvocationID.x;
+    uint width=pc.heads*pc.headDim;
+    uint total=pc.batch*width;
+    if(gid>=total||pc.kvHeads==0u||pc.heads%pc.kvHeads!=0u) return;
+
+    uint token=gid/width;
+    uint rem=gid-token*width;
+    uint h=rem/pc.headDim;
+    uint od=rem-h*pc.headDim;
+    uint group=pc.heads/pc.kvHeads;
+    uint kh=h/group;
+    uint visible=min(pc.seqLen,pc.basePos+token+1u);
+    uint qb=token*width+h*pc.headDim;
+
+    float maxScore=-3.402823466e+38;
+    for(uint t=0u;t<visible;++t) {
+        uint kb=(kh*pc.capacity+t)*pc.headDim;
+        float s=0.0;
+        for(uint d=0u;d<pc.headDim;++d)
+            s+=q[qb+d]*k[kb+d];
+        maxScore=max(maxScore,s*pc.scale);
+    }
+    float denom=0.0;
+    float numer=0.0;
+    for(uint t=0u;t<visible;++t) {
+        uint kb=(kh*pc.capacity+t)*pc.headDim;
+
+        float s=0.0;
+        for(uint d=0u;d<pc.headDim;++d)
+            s+=q[qb+d]*k[kb+d];
+        float e=exp(s*pc.scale-maxScore);
+        denom+=e;
+        numer+=e*v[kb+od];
+    }
+    o[gid]=denom>0.0 ? numer/denom : 0.0;
+}

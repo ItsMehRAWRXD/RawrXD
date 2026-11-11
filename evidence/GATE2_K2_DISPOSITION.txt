@@ -1,0 +1,42 @@
+GATE2=FAIL_K2_ORACLE_OOM
+K2_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+K2_SHARD_DIR=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+K2_SHARDS=13
+CAPTURE=FAILED
+TOKEN_IDS_LEN=0
+RECEIPT=NOT_SEALED
+RECEIPT_TARGET=F:\rawrxd-native-agent-001\evidence\independent_reference_receipt_k2.json
+REPLAY_EXIT=NOT_RUN
+REFERENCE_PARITY=NOT_RUN
+CALIBRATION_COMPLETE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+MLA_CERT_001=UNWEAKENED
+MOCK_SEAL=FORBIDDEN
+
+LOAD_PATH_CONFIRM=
+  Deep2Engine::loadModel: first-shard leaf with "-of-" => isMultiShard=true; directory with .gguf => isMultiShard=true
+  RawrModelAlias::ResolveModelAlias: ParseShardOf idx==1 && total>1 => path=shard directory, shards=total
+  MLA admit still requires isMultiShard && k2ShardIndexOpen_ && globalIndex_ (MLA-CERT-001)
+
+ORACLE=
+  ENGINE=F:\llama.cpp-ref\build\bin\llama-completion.exe
+  CORPUS=F:\rawrxd-native-agent-001\corpus.jsonl
+  CORPUS_SHA256=28ae4d7073d981ee93c8fb092f1b647e88baf90127b1cac716d8de785b01e103
+  PROMPT=F:\rawrxd-native-agent-001\evidence\oracle_continuous_prompt.txt (corpus prompts.front)
+  FLAGS=-no-cnv -n 256 --ignore-eos greedy zero-variance --load-mode mmap --lazy-mode on
+  ORACLE_EXIT=1
+  ALLOC_FAIL_BYTES=481993850880
+  ALLOC_FAIL=~449GB CPU_REPACK
+  HOST_RAM_TOTAL_GB=63.1
+  HOST_RAM_FREE_GB=35.6
+  PAGEFILE_MAX_MB=4096
+  GPU=nvidia-smi_ABSENT
+  STDERR=F:\rawrxd-native-agent-001\evidence\oracle_k2_stderr.log
+  BLOCKER=F:\rawrxd-native-agent-001\evidence\GATE2_K2_CAPTURE_BLOCKER.txt
+
+DEEPSEEK_SINGLE_GGUF=STILL_REJECTED_BY_MLA_CERT_001
+PRIOR_RECEIPT_DEEPSEEK=F:\rawrxd-native-agent-001\evidence\independent_reference_receipt.json (valid for DeepSeek-V2-Lite only; cannot replay under --require-mla)
+
+NEXT=Host with >=~450GB usable CPU RAM (or VRAM/offload capable of full K2 Q4_K_M) OR alternate certified oracle that can emit 256 real greedy token ids for this K2 path; then seal independent_reference_receipt_k2.json and run rawr-reap-replay continuous --parity --require-mla. Do not invent vectors. Do not mock 5-token seal. Do not weaken MLA-CERT-001.

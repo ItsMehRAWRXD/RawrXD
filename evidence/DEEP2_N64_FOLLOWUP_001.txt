@@ -1,0 +1,16 @@
+SOURCE=Cursor Task d5588d69-b673-4626-a0e1-5ff9bd10db02
+CONFIG=PrefillBatch+DEEP2_WIDE_DOT_BATCH decode=64
+DECODE_TPS=0.621
+STEADY_TPS=0.621
+SUBMITS=9533 WAITS=9533
+GPU_MS=90994.5
+BASELINE_WITNESS_TPS=0.638
+TARGET_30PCT_TPS=0.829
+TARGET_30PCT=MISS (gap -0.208)
+INTERPRETATION=PrefillBatch+WIDE helps prefill strongly (N8) but decode still ~0.62 TPS; submit count still ~149/tok (9533/64) — fence frequency still dominant
+TPS_PASS=NOT_CLAIMED
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT_LEVER=defer WaitQuantFence / widen FlushDotBatch further / pipeline fence before logits (bottleneck map #1-#2)
+RECEIPT=DEEP2_BENCH_TPS_N64_WIDE_001.txt
+LOG=deep2_bench_qwen3_prefillbatch_wide_n64.log

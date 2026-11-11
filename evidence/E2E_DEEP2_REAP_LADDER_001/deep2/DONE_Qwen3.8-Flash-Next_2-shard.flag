@@ -1,0 +1,9 @@
+model=Qwen3.8-Flash-Next:2-shard
+exit=4
+generated=0
+metrics=0
+complete=0
+replay=failed
+reason=GENERATION_REJECTED_UNSUPPORTED_MULTISHARD_ARCH
+receipt=receipt_qwen38_shard_onewindow_diag.json
+receipt_sha256=EF9EC7E6642884745824E025246307E137CD224268F0BF3572A254D71BFEC818

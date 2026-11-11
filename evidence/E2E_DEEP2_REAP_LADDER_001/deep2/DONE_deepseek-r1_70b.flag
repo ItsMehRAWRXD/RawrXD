@@ -1,0 +1,6 @@
+name=deepseek-r1:70b
+exit=1
+result=FAIL
+reason=GPU_OOM_WEIGHT_ACTIVATION_ALLOCATION
+DEEP2_GPU_DEVICE_RESET=1
+gpu_status_after=OK

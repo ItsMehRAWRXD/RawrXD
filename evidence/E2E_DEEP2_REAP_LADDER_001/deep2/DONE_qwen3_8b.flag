@@ -1,0 +1,5 @@
+﻿name=qwen3:8b
+exit=2
+tps=0.291
+notes=finite=yes;gpu_complete=yes;elapsed_s=68;bench_verdict=FAIL
+

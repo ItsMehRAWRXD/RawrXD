@@ -1,0 +1,6 @@
+CURSOR_AGENTIC_PRIMARY=1
+SURPASS=fail-closed evidence + Cursor Task workers (not invent PASS; not invent parallel orchestrators)
+HOOK_FIX=motd-*.ps1 never silent-empty; optimistic ACK on MOTD Read allow; postToolUse matcher Read|read_file|read_motd
+MULTITASK=MultitaskMode.mdc Cursor-first dispatch
+PROMOTE=0
+TIP_CLIMB=HOLD

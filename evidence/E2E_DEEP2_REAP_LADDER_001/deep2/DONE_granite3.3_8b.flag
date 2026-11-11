@@ -1,0 +1,5 @@
+﻿name=granite3.3:8b
+exit=0
+tps=0.411
+notes=finite=yes;gpu_complete=yes;elapsed_s=64.8;bench_verdict=PASS
+
