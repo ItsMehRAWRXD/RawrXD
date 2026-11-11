@@ -1,0 +1,90 @@
+2026-11-09T05:17:37.4039882-05:00 TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\candidates\tip_final_005\RawrXD-Win32IDE-Native-Ext.exe
+2026-11-09T05:17:37.4117978-05:00 TIP_SHA256=7123C6369DDA608949734230E21BBC3764479A4E3476E7E5764724FE278CA2C9
+2026-11-09T05:17:38.5078189-05:00 PID=35232
+2026-11-09T05:17:40.0780714-05:00 MAIN_HWND=0x2C04B6
+2026-11-09T05:17:40.7218360-05:00 POST_WM_COMMAND id=2034
+2026-11-09T05:17:41.4504893-05:00 POST_WM_COMMAND id=2025
+2026-11-09T05:17:42.1778952-05:00 POST_WM_COMMAND id=2021
+2026-11-09T05:17:43.3754417-05:00 POST_WM_COMMAND id=3014
+2026-11-09T05:17:45.1027033-05:00 CHILD_COUNT=116
+2026-11-09T05:17:45.1068863-05:00 CHILD id=0 cls=ToolbarWindow32 vis=1 len=0 txt=
+2026-11-09T05:17:45.1099190-05:00 CHILD id=1018 cls=Static vis=1 len=41 txt=t10_hardkill.txt  -  workdir_t10_verified
+2026-11-09T05:17:45.1124364-05:00 CHILD id=1024 cls=Button vis=1 len=4 txt=Gear
+2026-11-09T05:17:45.1156794-05:00 CHILD id=1030 cls=SysTabControl32 vis=1 len=0 txt=
+2026-11-09T05:17:45.1187163-05:00 CHILD id=1100 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.1227510-05:00 CHILD id=1101 cls=Button vis=1 len=2 txt=[]
+2026-11-09T05:17:45.1257754-05:00 CHILD id=1102 cls=Button vis=1 len=2 txt=()
+2026-11-09T05:17:45.1288612-05:00 CHILD id=1103 cls=Button vis=1 len=2 txt=<>
+2026-11-09T05:17:45.1329003-05:00 CHILD id=1104 cls=Button vis=1 len=1 txt=>
+2026-11-09T05:17:45.1363087-05:00 CHILD id=1105 cls=Button vis=1 len=2 txt=++
+2026-11-09T05:17:45.1393436-05:00 CHILD id=1106 cls=Button vis=1 len=1 txt=*
+2026-11-09T05:17:45.1423842-05:00 CHILD id=1107 cls=Button vis=1 len=1 txt=@
+2026-11-09T05:17:45.1453586-05:00 CHILD id=0 cls=Static vis=1 len=7 txt=Sidebar
+2026-11-09T05:17:45.1485238-05:00 CHILD id=0 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.1530711-05:00 CHILD id=0 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.1560885-05:00 CHILD id=6011 cls=Button vis=0 len=3 txt=New
+2026-11-09T05:17:45.1596479-05:00 CHILD id=6012 cls=Button vis=0 len=6 txt=Folder
+2026-11-09T05:17:45.1616706-05:00 CHILD id=6013 cls=Button vis=0 len=7 txt=Refresh
+2026-11-09T05:17:45.1656968-05:00 CHILD id=6014 cls=Button vis=0 len=8 txt=Collapse
+2026-11-09T05:17:45.1687399-05:00 CHILD id=6010 cls=SysTreeView32 vis=1 len=0 txt=
+2026-11-09T05:17:45.1717717-05:00 CHILD id=6020 cls=Edit vis=0 len=0 txt=
+2026-11-09T05:17:45.1763367-05:00 CHILD id=0 cls=Static vis=0 len=0 txt=
+2026-11-09T05:17:45.1793718-05:00 CHILD id=6023 cls=Button vis=0 len=5 txt=Regex
+2026-11-09T05:17:45.1824057-05:00 CHILD id=6024 cls=Button vis=0 len=4 txt=Case
+2026-11-09T05:17:45.1855902-05:00 CHILD id=6025 cls=Button vis=0 len=5 txt=Whole
+2026-11-09T05:17:45.1897816-05:00 CHILD id=0 cls=Static vis=0 len=8 txt=Include:
+2026-11-09T05:17:45.1928142-05:00 CHILD id=6026 cls=Edit vis=0 len=6 txt=?????p
+2026-11-09T05:17:45.1953357-05:00 CHILD id=0 cls=Static vis=0 len=8 txt=Exclude:
+2026-11-09T05:17:45.1986409-05:00 CHILD id=6027 cls=Edit vis=0 len=8 txt=????????
+2026-11-09T05:17:45.2031918-05:00 CHILD id=6022 cls=ListBox vis=0 len=0 txt=
+2026-11-09T05:17:45.2062113-05:00 CHILD id=0 cls=Static vis=0 len=0 txt=
+2026-11-09T05:17:45.2102523-05:00 CHILD id=6031 cls=Button vis=0 len=5 txt=Stage
+2026-11-09T05:17:45.2133049-05:00 CHILD id=6032 cls=Button vis=0 len=7 txt=Unstage
+2026-11-09T05:17:45.2173433-05:00 CHILD id=6033 cls=Button vis=0 len=6 txt=Commit
+2026-11-09T05:17:45.2240607-05:00 CHILD id=6034 cls=Button vis=0 len=4 txt=Sync
+2026-11-09T05:17:45.2263256-05:00 CHILD id=0 cls=Static vis=0 len=8 txt=Message:
+2026-11-09T05:17:45.2345905-05:00 CHILD id=6035 cls=Edit vis=0 len=0 txt=
+2026-11-09T05:17:45.2453808-05:00 CHILD id=6030 cls=SysListView32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2483887-05:00 CHILD id=0 cls=SysHeader32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2605533-05:00 CHILD id=0 cls=Static vis=0 len=0 txt=
+2026-11-09T05:17:45.2625705-05:00 CHILD id=6041 cls=Button vis=0 len=5 txt=Start
+2026-11-09T05:17:45.2670829-05:00 CHILD id=6042 cls=Button vis=0 len=4 txt=Stop
+2026-11-09T05:17:45.2726377-05:00 CHILD id=6040 cls=ComboBox vis=0 len=17 txt=PowerShell Script
+2026-11-09T05:17:45.2761508-05:00 CHILD id=0 cls=Static vis=0 len=10 txt=Variables:
+2026-11-09T05:17:45.2801644-05:00 CHILD id=6043 cls=SysListView32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2831953-05:00 CHILD id=0 cls=SysHeader32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2867111-05:00 CHILD id=6050 cls=Edit vis=0 len=0 txt=
+2026-11-09T05:17:45.2914680-05:00 CHILD id=6051 cls=SysListView32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2934759-05:00 CHILD id=0 cls=SysHeader32 vis=0 len=0 txt=
+2026-11-09T05:17:45.2974829-05:00 CHILD id=1004 cls=msctls_statusbar32 vis=1 len=71 txt=Model routes ready: 190 local model(s), Kilo free cloud route available
+2026-11-09T05:17:45.3020534-05:00 CHILD id=1005 cls=SysTabControl32 vis=0 len=0 txt=
+2026-11-09T05:17:45.3055648-05:00 CHILD id=1017 cls=ComboBox vis=0 len=12 txt=All Messages
+2026-11-09T05:17:45.3085731-05:00 CHILD id=1016 cls=Static vis=0 len=0 txt=
+2026-11-09T05:17:45.3125936-05:00 CHILD id=1300 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.3151029-05:00 CHILD id=1301 cls=SysTabControl32 vis=1 len=0 txt=
+2026-11-09T05:17:45.3313332-05:00 CHILD id=1306 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.3370373-05:00 CHILD id=1307 cls=Button vis=1 len=1 txt=+
+2026-11-09T05:17:45.3401041-05:00 CHILD id=1308 cls=Button vis=1 len=2 txt=||
+2026-11-09T05:17:45.3446698-05:00 CHILD id=1309 cls=Button vis=1 len=1 txt=X
+2026-11-09T05:17:45.3488563-05:00 CHILD id=1310 cls=Button vis=1 len=1 txt=^
+2026-11-09T05:17:45.3519158-05:00 CHILD id=1311 cls=Button vis=1 len=1 txt=x
+2026-11-09T05:17:45.3565177-05:00 CHILD id=1312 cls=SysListView32 vis=0 len=0 txt=
+2026-11-09T05:17:45.3590265-05:00 CHILD id=0 cls=SysHeader32 vis=0 len=0 txt=
+2026-11-09T05:17:45.3636727-05:00 CHILD id=1200 cls=Static vis=1 len=0 txt=
+2026-11-09T05:17:45.3694864-05:00 CHILD id=1208 cls=SysTabControl32 vis=1 len=0 txt=
+2026-11-09T05:17:45.3725516-05:00 CHILD id=1 cls=msctls_updown32 vis=1 len=0 txt=
+2026-11-09T05:17:45.3774141-05:00 CHILD id=1209 cls=Button vis=1 len=8 txt=New Chat
+2026-11-09T05:17:45.3799229-05:00 CHILD id=1214 cls=Button vis=1 len=1 txt=X
+2026-11-09T05:17:45.3829594-05:00 CHILD id=1215 cls=Button vis=1 len=7 txt=Restore
+2026-11-09T05:17:45.3877353-05:00 CHILD id=1216 cls=Button vis=1 len=8 txt=Rollback
+2026-11-09T05:17:45.3902446-05:00 CHILD id=0 cls=Static vis=1 len=11 txt=AI Sessions
+2026-11-09T05:17:45.3950393-05:00 CHILD id=0 cls=Static vis=1 len=6 txt=Model:
+2026-11-09T05:17:45.3981536-05:00 CHILD id=1206 cls=ComboBox vis=1 len=59 txt=Local models / Ollama / bigdaddyg-productivity-local:latest
+2026-11-09T05:17:45.4006670-05:00 CHILD id=0 cls=Static vis=1 len=16 txt=GhostText model:
+2026-11-09T05:17:45.4054979-05:00 CHILD id=1211 cls=ComboBox vis=1 len=21 txt=GhostText: Auto Local
+2026-11-09T05:17:45.4085860-05:00 CHILD id=1212 cls=Button vis=1 len=38 txt=Allow cloud GhostText for this session
+2026-11-09T05:17:45.4126245-05:00 CHILD id=0 cls=Static vis=1 len=11 txt=Max tokens:
+2026-11-09T05:17:45.4156589-05:00 CHILD id=0 cls=Static vis=0 len=4 txt=4096
+2026-11-09T05:17:45.4196965-05:00 CHILD id=1219 cls=ComboBox vis=1 len=4 txt=4096
+2026-11-09T05:17:45.4227199-05:00 CHILD id=0 cls=Static vis=1 len=8 txt=Context:
+2026-11-09T05:17:45.5210184-05:00 MAX_EDIT_LEN=457 MAX_LISTVIEW_ITEMS=0 ID1012=-1 ID1011=-1 ID1312=0 ID1202_CHAT=0

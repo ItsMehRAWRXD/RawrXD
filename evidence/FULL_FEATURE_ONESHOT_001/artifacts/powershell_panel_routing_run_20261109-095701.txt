@@ -1,0 +1,20 @@
+2026-11-09T09:57:02.0737689-05:00 TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\candidates\tip_ps_routing_001\RawrXD-Win32IDE-Native-Ext.exe
+2026-11-09T09:57:02.0800273-05:00 TIP_SHA256=0F7D90269C6E4AD8A0E515C3708553F01FBB6ED5BC292FD674457E903464277D
+2026-11-09T09:57:02.0830746-05:00 SESSION_ID=ps_routing_20261109-095701
+2026-11-09T09:57:02.0926523-05:00 RUN_ID=ps_routing_run_20261109-095701
+2026-11-09T09:57:03.1756407-05:00 PID=19936
+2026-11-09T09:57:05.6850673-05:00 MAIN_HWND=0x3CD05F0
+2026-11-09T09:57:06.5423791-05:00 PS_PANEL=0xB70C30 vis=0
+2026-11-09T09:57:06.6118770-05:00 PS_OUT=0x12D0D7A
+2026-11-09T09:57:06.6291143-05:00 PS_IN=0x1150D88
+2026-11-09T09:57:06.6642649-05:00 PS_EXEC=0x1130D9A
+2026-11-09T09:57:06.7332599-05:00 CHAT=0x1860BE2
+2026-11-09T09:57:07.1543102-05:00 CHAT_BEFORE_LEN=0
+2026-11-09T09:57:07.1621419-05:00 PS_BEFORE_LEN=342
+2026-11-09T09:57:07.1748218-05:00 PS_BEFORE_SAMPLE=[PowerShell session started]\r\n\r\n  RawrXD Integrated PowerShell Console\r\n\r\n\r\nPowerShell Version: 5.1.26100.9818\r\n\r\nEdition: Desktop\r\n\r\n\r\nType commands below or click 'Load RawrXD' t
+2026-11-09T09:57:07.2994903-05:00 EXEC_PATH=POST_WM_COMMAND_PANEL_5010
+2026-11-09T09:57:19.5714674-05:00 PS_AFTER_LEN=788
+2026-11-09T09:57:19.5760233-05:00 CHAT_AFTER_LEN=0
+2026-11-09T09:57:19.5823248-05:00 PS_DELTA_SAMPLE=l\r\n[ERROR] l : The term 'l' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the \r\n[ERROR] spelling of the name, or if a path was included, verify that the path is correct and try again.\r\n[ERROR] At line:1 char:1\r\n+ l\r\n[ERROR] + ~\r\n[ERROR]     + CategoryInfo          : ObjectNotFound: (l:String) [], CommandNotFoundException\r\n[ERROR]     + FullyQualifiedE
+2026-11-09T09:57:25.9394087-05:00 BUILD_PRODUCER_MAX_EDIT_LEN=75
+2026-11-09T09:57:25.9434507-05:00 PS_TRACE_TAIL=43520 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=43520 |  | 43520 [PS_TRACE] executePowerShellInput() ENTRY thread=43520 |  | 43520 [PS_TRACE] executePowerShellInput() command_len=1 cmd='l' |  | 43520 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=43520 |  | 43520 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=43520 |  | 43520 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=43520 |  | 43520 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned |  | 43520 [PS_TRACE] executePowerShellPanelCommand() EXIT |  | 43520 [PS_TRACE] executePowerShellInput() EXIT | 

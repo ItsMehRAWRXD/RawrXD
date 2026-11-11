@@ -1,0 +1,44 @@
+[2026-11-08T22:54:17.7793939-05:00] FLAGS = -std:c++20 -MD
+[2026-11-08T22:54:17.7834208-05:00] FLAGS = -std:c++20 -MD
+[2026-11-08T22:54:17.7897987-05:00] FLAGS = -MD
+[2026-11-08T22:54:17.7938674-05:00] LINK_FLAGS = /subsystem:console
+[2026-11-08T22:54:17.8136386-05:00] build rawrxd_certification_harnesses: phony tools\deep2_debugger\flight_recorder_smoke.exe tools\deep2_snap\deep2_snap\deep2_snap_test.exe tools\snap_process_guard\snap_process_guard_cli.exe
+[2026-11-08T22:54:17.8171230-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8201792-05:00] FLAGS = -MD
+[2026-11-08T22:54:17.8237899-05:00] LINK_FLAGS = /subsystem:console
+[2026-11-08T22:54:17.8293260-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8308646-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8349480-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8381310-05:00] FLAGS = -MD
+[2026-11-08T22:54:17.8413889-05:00] LINK_FLAGS = /subsystem:console
+[2026-11-08T22:54:17.8454283-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8494149-05:00] FLAGS = -std:c++20 -MD /EHsc /std:c++20
+[2026-11-08T22:54:17.8595377-05:00] DEL_OBJ=CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+[2026-11-08T22:54:17.8625692-05:00] DEL_OBJ=CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+[2026-11-08T22:54:17.8658160-05:00] DEL_OBJ=CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+[2026-11-08T22:54:17.8712310-05:00] DEL_OBJ=CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+[2026-11-08T22:54:17.8848719-05:00] NINJA_START
+[2026-11-08T22:54:26.5629206-05:00] NINJA_EXIT=
+[2026-11-08T22:54:26.5720667-05:00] 
+[2026-11-08T22:54:26.5736518-05:00] F:\rawrxd\.worktrees\request-a-diag-4ed>call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64  1>nul 
+[2026-11-08T22:54:26.5777952-05:00] [0/2] Re-checking globbed directories...
+[2026-11-08T22:54:26.5813162-05:00] [1/9] Performing build step for 'vulkan-shaders-gen'
+[2026-11-08T22:54:26.5843244-05:00] ninja: no work to do.
+[2026-11-08T22:54:26.5873346-05:00] [2/9] Performing install step for 'vulkan-shaders-gen'
+[2026-11-08T22:54:26.5906876-05:00] -- Install configuration: ""
+[2026-11-08T22:54:26.5936963-05:00] -- Up-to-date: F:/rawrxd/build_repair_candidate/vulkan-shaders-gen.exe
+[2026-11-08T22:54:26.5977054-05:00] [3/9] Completed 'vulkan-shaders-gen'
+[2026-11-08T22:54:26.6007141-05:00] [4/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+[2026-11-08T22:54:26.6050447-05:00] cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[2026-11-08T22:54:26.6081995-05:00] [5/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+[2026-11-08T22:54:26.6124016-05:00] cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[2026-11-08T22:54:26.6159235-05:00] [6/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+[2026-11-08T22:54:26.6194377-05:00] cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[2026-11-08T22:54:26.6236006-05:00] [7/9] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+[2026-11-08T22:54:26.6272163-05:00] cl : Command line warning D9025 : overriding '/Fdbin\RawrXD-Win32IDE-Native.pdb' with '/FdCMakeFiles\RawrXD-Win32IDE-Native.dir\'
+[2026-11-08T22:54:26.6307512-05:00] [8/9] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe
+[2026-11-08T22:54:26.6337583-05:00] NINJA_EXIT=0
+[2026-11-08T22:54:26.6810922-05:00] PREV_DEST_SHA=18FA04F9CAA2BC762279DE7C1AC30DEEBD83D357BCD0133ABFEC2F043E531E68
+[2026-11-08T22:54:26.7167957-05:00] POST_SHA=7EEE4427E941395252D689CCC78D51D509E55B493BBB9F09DD96E30DA63A3A86 SIZE=4065280 PDB=True
+[2026-11-08T22:54:26.7529092-05:00] PDB_COPIED
+[2026-11-08T22:54:26.7546607-05:00] DONE

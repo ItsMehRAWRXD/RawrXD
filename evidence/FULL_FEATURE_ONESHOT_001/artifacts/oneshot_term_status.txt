@@ -1,0 +1,21 @@
+START Mon 11/09/2026  5:14:24.15
+BUILD_BEGIN
+SMOKE_BEGIN
+HAS_RECEIPT=
+START=PASS
+TRANSPORT=CONPTY
+CONPTY=PASS
+ALIVE_ECHO=PASS
+PID=13504
+EXIT_CODE=0
+OUT_LEN=631
+WinMain entered
+--term-smoke --term-quit
+runTermSmoke entered
+runTermSmoke before start
+runTermSmoke start OK
+runTermSmoke before stop
+runTermSmoke after stop
+runTermSmoke receipt written
+term-smoke PASS
+DONE
