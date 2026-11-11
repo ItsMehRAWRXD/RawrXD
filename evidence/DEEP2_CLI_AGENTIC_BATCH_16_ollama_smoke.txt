@@ -1,0 +1,15 @@
+RUN_CONFIG_MAX_TOKENS=1
+{
+[12:25:23.674] run: ask mode answer accepted at turn 1 chars=3
+  "backend": "ollama",
+  "completed": true,
+  "denied_calls": 0,
+  "mode": "ask",
+  "model": "qwen2.5-coder:1.5b-base",
+  "summary": " to",
+  "tool_calls": 0,
+[StreamEngine] Shutdown
+  "tools": [],
+  "turns": 1,
+  "workspace": "F:\\rawrxd"
+}

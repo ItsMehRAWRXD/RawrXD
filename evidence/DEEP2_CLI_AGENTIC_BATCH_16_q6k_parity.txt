@@ -1,0 +1,42 @@
+=== Q6_K Row-Level Differential Test ===
+
+[QuantKernelRegistry] Q4_K GEMV=00007FF61CBA46B0 dequant=00007FF61CBA72E0 GetGEMV(12)=00007FF61CBA46B0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+Test 1: Direct kernel call (full tensor)
+
+Dequantization comparison for row 0:
+  max_abs_diff=0
+Direct kernel output:
+  Row 0: -29435.2
+  Row 1: 13869.8
+  Row 2: 17223.4
+  Row 3: 60528.3
+
+Test 2: Reference dequant + FP32 dot (per row)
+  Row 0: -29435.2 (diff: 0)
+  Row 1: 13869.8 (diff: 0)
+  Row 2: 17223.4 (diff: 0)
+  Row 3: 60528.3 (diff: 0)
+
+Test 3: Scalar kernel with row slicing (LinearW_Range style)
+  Rows [0:1): Row 0=-29435.2 (exp=-29435.2 diff=0)
+  Rows [0:2): Row 0=-29435.2 (exp=-29435.2 diff=0) Row 1=13869.8 (exp=13869.8 diff=0)
+  Rows [0:3): Row 0=-29435.2 (exp=-29435.2 diff=0) Row 1=13869.8 (exp=13869.8 diff=0) Row 2=17223.4 (exp=17223.4 diff=0)
+  Rows [0:4): Row 0=-29435.2 (exp=-29435.2 diff=0) Row 1=13869.8 (exp=13869.8 diff=0) Row 2=17223.4 (exp=17223.4 diff=0) Row 3=60528.3 (exp=60528.3 diff=0)
+  Rows [1:2): Row 1=13869.8 (exp=13869.8 diff=0)
+  Rows [1:3): Row 1=13869.8 (exp=13869.8 diff=0) Row 2=17223.4 (exp=17223.4 diff=0)
+  Rows [1:4): Row 1=13869.8 (exp=13869.8 diff=0) Row 2=17223.4 (exp=17223.4 diff=0) Row 3=60528.3 (exp=60528.3 diff=0)
+  Rows [2:3): Row 2=17223.4 (exp=17223.4 diff=0)
+  Rows [2:4): Row 2=17223.4 (exp=17223.4 diff=0) Row 3=60528.3 (exp=60528.3 diff=0)
+  Rows [3:4): Row 3=60528.3 (exp=60528.3 diff=0)
+
+Test 4: Geometry verification
+  cols=256
+  blockSize=210
+  elemsPerBlock=256
+  blocksPerRow=1
+  rowBytes=210
+  total weight bytes=840
+  expected total=840
+  Registry geom: blockSize=210 elemsPerBlock=256

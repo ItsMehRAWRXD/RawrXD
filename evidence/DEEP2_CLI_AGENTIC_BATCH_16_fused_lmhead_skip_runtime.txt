@@ -1,0 +1,214 @@
+=== DEEP2_SPEC_FUSED_RUNTIME_001 ===
+Model: F:\rawrxd\llama3.2-3b-Q2_K.gguf
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Num KV Heads: 32
+  Head Dim: 128
+  Max Seq Len: 2048
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+  ThreadPool: 32 threads (auto-detected)
+[Deep2Engine] KV_CACHE_DEFERRED reason=initialize (model not bound)
+[flight] Recorder started: F:\rawrxd\llama3.2-3b-Q2_K.gguf_flight.jsonl
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF7C439BF70 dequant=00007FF7C439EB70 GetGEMV(12)=00007FF7C439BF70 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=2 ramAvail=23977MB vram=32479MB L=32 pressure=0
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+FUTURE_CONSUMERS=0
+FUTURE_PAGES=0
+FUTURE_POOL_GROWS=0
+FUTURE_GENERATION=0
+FUTURE_GENERATE_BEGIN=0
+FUTURE_CONSUMER_HITS=0
+FUTURE_CONSUMER_MISSES=0
+FUTURE_PREFETCH_HITS=0
+FUTURE_PREFETCH_LATE=0
+FUTURE_STALL_NS=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 25 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 25 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=128256\n[REAP_TOKENIZER] merges=280147\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=128256\n[REAP_TOKENIZER] merges=280147\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[ElasticResidencyManager] WARNING: tensor 'token_embd.weight' already registered
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ModelFit] KV budget caps context: requested=131072 fit=126911 (kv_bytes_per_token=32256)
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Scheduler thread started
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=2
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=42949672960 vram=12884901888)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[NVMeStream] Mapped F:\rawrxd\llama3.2-3b-Q2_K.gguf (1.27 GB)
+[NVMeStream] Max resident: 4.00 GB
+[Deep2Engine] NVMe streaming initialized
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: F:\rawrxd\llama3.2-3b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\llama3.2-3b-Q2_K.gguf mode=GPU_SINGLE devices=1 kv_per_token=32256 max_ctx_est=126911
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Context length from metadata: 131072 tokens
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[Deep2Engine] Layer topology: 28 attention, 0 SSM, 0 unknown of 28 total
+[Deep2Engine] KV cache sized for 28 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=128 modelWeights.headDim=128 kvHeads=8
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000002483EC47FE0  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=3096576  |  registry_size=1  registeredBytes=3096576  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000002483EC47FE0  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=3096576  |  registry_size=100  registeredBytes=408870912  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000002483EC47FE0  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=1032192  |  registry_size=200  registeredBytes=815677440  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000002483EC47FE0  registered=254 tensors  bytes=1356097536  max=536870912
+[Deep2Engine] ElasticResidencyManager: registered all tensors
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=128 qHeads=24 kvHeads=8
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=126911 heads=8 dim=128
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=28
+[LIFE] unloadModel FreeTensorData ggufResult (255 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=28 positions=126911 kvHeads=8 headDim=128
+[Deep2Engine] Model loaded successfully (255 tensors)
+[Deep2Engine] RAWR_REAP_CPU_ONLY=1: CPU reference mode active
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+Engine initialized with Vulkan: no
+LM Head: Q6_K (type=14), rows=128256, cols=3072
+Hidden dim: 3072
+Vocab size: 128256
+Parity tolerance: 0.0005
+Prompt tokens: 24
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=000002483F79C8E0 sizeBytes=323205120 rows=128256 cols=3072
+[KVCache] page grow 8 -> 16 hot (virtualMax=126911 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=126911 pos=16)
+Prefill complete, hidden state ready. KV cache length: 24
+Forcing CPU path for Q6_K LM head (known GPU parity issue)
+[KVCache] page grow 24 -> 32 hot (virtualMax=126911 pos=24)
+
+=== Timing Results ===
+Single-token logits: 1846.61 ms
+Generated tokens: 4
+
+=== Parity Verification ===
+Max logit diff (GPU vs CPU): 0
+Avg logit diff: 0
+Finite logits compared: 128256 / 128256
+Tolerance: 0.0005
+Parity: PASS
+
+=== GPU Forward Counters (delta) ===
+Forward layers:      0
+RMSNorm ops:         0
+QKV ops:             0
+Attn score ops:      0
+FFN act ops:         0
+Host forward calls:  0
+Op submits:          0
+Layer submits:       0
+Q6K packed ops:      0
+Q2K packed ops:      0
+CPU F32 expands:     0
+Host materializations: 0
+Live decode tokens:  0
+Live decode resident: 0
+NOTE: Q6_K LM head uses CPU path; GPU path not expected for lm_head
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 0.00 MB, Total freed: 0.00 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete
+
+=== VERDICT ===
+PASS
+Evidence written to: evidence\DEEP2_CLI_AGENTIC_BATCH_16_fused_lmhead_skip

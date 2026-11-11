@@ -1,0 +1,5 @@
+Swarm status
+  running             : no
+  inference reachable : yes
+  start with          : rawr run <model> swarm --agents N --goal "..."
+[StreamEngine] Shutdown

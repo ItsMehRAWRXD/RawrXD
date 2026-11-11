@@ -9,6 +9,7 @@
 #endif
 
 #include "deep2/QuantKernelRegistry.hpp"
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -51,23 +52,33 @@ static inline bool kernel_q6k_dequant_block(const uint8_t* block, float* dst) {
     const uint8_t* qh = block + 128;
     const int8_t* scales = reinterpret_cast<const int8_t*>(block + 192);
 
-    for (int j = 0; j < 16; ++j) {
-        const float d_scales = d * static_cast<float>(scales[j]);
-        for (int l = 0; l < 16; ++l) {
-            const int idx = j * 16 + l;
-            const int ql_idx = idx / 2;
-            const int qh_idx = idx / 4;
-            const int shift = (idx % 2) * 4;
-            const int ql_val = (ql[ql_idx] >> shift) & 0xF;
-            const int qh_val = (qh[qh_idx] >> ((idx % 4) * 2)) & 0x3;
-            const int8_t q = static_cast<int8_t>((ql_val | (qh_val << 4)) - 32);
-            dst[idx] = d_scales * static_cast<float>(q);
+    for (int half = 0; half < 2; ++half) {
+        const int qlOffset = half * 64;
+        const int qhOffset = half * 32;
+        const int outOffset = half * 128;
+        for (int l = 0; l < 32; ++l) {
+            const uint8_t h = qh[qhOffset + l];
+            const uint8_t low0 = ql[qlOffset + l];
+            const uint8_t low1 = ql[qlOffset + l + 32];
+            const int q[4] = {
+                static_cast<int>(low0 & 0x0Fu) | ((h & 0x03u) << 4),
+                static_cast<int>(low1 & 0x0Fu) | (((h >> 2) & 0x03u) << 4),
+                static_cast<int>(low0 >> 4) | (((h >> 4) & 0x03u) << 4),
+                static_cast<int>(low1 >> 4) | (((h >> 6) & 0x03u) << 4),
+            };
+            for (int group = 0; group < 4; ++group) {
+                const int scaleIndex = half * 8 + group * 2 + l / 16;
+                dst[outOffset + group * 32 + l] =
+                    d * static_cast<float>(scales[scaleIndex]) * static_cast<float>(q[group] - 32);
+            }
         }
     }
     return true;
 }
 
-// Reference Q6_K dequantization matching llama.cpp exactly
+// Independent Q6_K dequantization matching llama.cpp exactly. The packed
+// planes are four interleaved 32-value streams per 128-value half; treating
+// ql/qh as a flat 16-value sequence is not the GGML layout.
 static inline bool q6k_dequant_reference(const uint8_t* block, float* dst) {
     if (!block || !dst) return false;
     
@@ -83,18 +94,25 @@ static inline bool q6k_dequant_reference(const uint8_t* block, float* dst) {
     const uint8_t* qh = block + 128;
     const int8_t* scales = reinterpret_cast<const int8_t*>(block + 192);
 
-    // llama.cpp dequantize_row_q6_K: 16 scale groups × 16 values
-    for (int j = 0; j < 16; ++j) {
-        float d_scales = d * static_cast<float>(scales[j]);
-        for (int l = 0; l < 16; ++l) {
-            int idx = j * 16 + l;
-            int ql_idx = idx / 2;
-            int qh_idx = idx / 4;
-            int shift = (idx % 2) * 4;
-            int ql_val = (ql[ql_idx] >> shift) & 0xF;
-            int qh_val = (qh[qh_idx] >> (shift * 2)) & 0x3;
-            int8_t q = static_cast<int8_t>((ql_val | (qh_val << 4)) - 32);
-            dst[idx] = d_scales * static_cast<float>(q);
+    for (int half = 0; half < 2; ++half) {
+        const int qlOffset = half * 64;
+        const int qhOffset = half * 32;
+        const int outOffset = half * 128;
+        for (int l = 0; l < 32; ++l) {
+            const uint8_t h = qh[qhOffset + l];
+            const uint8_t low0 = ql[qlOffset + l];
+            const uint8_t low1 = ql[qlOffset + l + 32];
+            const int q[4] = {
+                static_cast<int>(low0 & 0x0Fu) | ((h & 0x03u) << 4),
+                static_cast<int>(low1 & 0x0Fu) | (((h >> 2) & 0x03u) << 4),
+                static_cast<int>(low0 >> 4) | (((h >> 4) & 0x03u) << 4),
+                static_cast<int>(low1 >> 4) | (((h >> 6) & 0x03u) << 4),
+            };
+            for (int group = 0; group < 4; ++group) {
+                const int scaleIndex = half * 8 + group * 2 + l / 16;
+                dst[outOffset + group * 32 + l] =
+                    d * static_cast<float>(scales[scaleIndex]) * static_cast<float>(q[group] - 32);
+            }
         }
     }
     return true;
@@ -161,20 +179,21 @@ int main(int argc, char** argv) {
     std::vector<float> outputDirect(rows);
     scalarKernel(weightData.data(), input.data(), outputDirect.data(), rows, cols);
     
-    // DEBUG: Compare dequantization
-    std::cout << "\nDEBUG: Dequantization comparison for row 0:\n";
+    // Compare the registered production kernel with the independent layout
+    // decoder. This must fail loudly; the previous test printed large
+    // mismatches but returned success, masking an LM-head correctness defect.
+    std::cout << "\nDequantization comparison for row 0:\n";
     std::vector<float> dequantKernel(256), dequantRef(256);
     kernel_q6k_dequant_block(weightData.data(), dequantKernel.data());
     q6k_dequant_reference(weightData.data(), dequantRef.data());
-    for (int i = 0; i < 16; ++i) {
-        if (dequantKernel[i] != dequantRef[i]) {
-            std::cout << "  [" << i << "] kernel=" << dequantKernel[i] << " ref=" << dequantRef[i] << " DIFF\n";
-        }
+    float maxDequantDiff = 0.0f;
+    for (int i = 0; i < 256; ++i) {
+        maxDequantDiff = (std::max)(maxDequantDiff, std::abs(dequantKernel[i] - dequantRef[i]));
     }
-    for (int i = 240; i < 256; ++i) {
-        if (dequantKernel[i] != dequantRef[i]) {
-            std::cout << "  [" << i << "] kernel=" << dequantKernel[i] << " ref=" << dequantRef[i] << " DIFF\n";
-        }
+    std::cout << "  max_abs_diff=" << maxDequantDiff << "\n";
+    if (maxDequantDiff > 1.0e-6f) {
+        std::cerr << "FAIL: Q6_K dequantization mismatch\n";
+        return 1;
     }
     
     std::cout << "Direct kernel output:\n";
@@ -187,11 +206,18 @@ int main(int argc, char** argv) {
     std::vector<float> outputRef(rows);
     std::vector<float> dequant(256);
     
+    float maxDotDiff = 0.0f;
     for (size_t r = 0; r < rows; ++r) {
         const uint8_t* block = weightData.data() + r * 210;
         q6k_dequant_reference(block, dequant.data());
         outputRef[r] = fp32_dot(dequant.data(), input.data(), cols);
-        std::cout << "  Row " << r << ": " << outputRef[r] << " (diff: " << std::abs(outputDirect[r] - outputRef[r]) << ")\n";
+        const float diff = std::abs(outputDirect[r] - outputRef[r]);
+        maxDotDiff = (std::max)(maxDotDiff, diff);
+        std::cout << "  Row " << r << ": " << outputRef[r] << " (diff: " << diff << ")\n";
+    }
+    if (maxDotDiff > 1.0e-4f) {
+        std::cerr << "FAIL: Q6_K GEMV mismatch max_abs_diff=" << maxDotDiff << "\n";
+        return 1;
     }
     
     // Test 3: Scalar kernel with row slicing (simulating LinearW_Range)

@@ -38,6 +38,11 @@ using Deep2::Deep2Engine;
 
 static const char* WORKSPACE_ROOT = R"(F:\rawrxd)";
 
+// Ollama publishes the local llama.cpp-style model name `llama3.2-3b` under
+// the registry tag `llama3.2:3b`. Keep this translation available to every
+// CLI route, including `rawr run --backend=ollama`.
+static std::string ollamaModelFor(const std::string& model);
+
 // Ensure the Windows console emits UTF-8 (not CP1252) so detokenized model
 // output and all CLI text render correctly instead of mojibake.
 #if defined(_WIN32)
@@ -929,7 +934,7 @@ static int cmdRun(const std::vector<std::string>& args) {
         const int httpPort = backend == "ollama" ? 11434 : 8080;
         // Ollama OpenAI-compatible surface: http://127.0.0.1:11434/v1/...
         httpClient.setEndpoint(httpPort);
-        httpClient.setModel(model);
+        httpClient.setModel(backend == "ollama" ? ollamaModelFor(model) : model);
 
         if (!g_json) {
             out("RawrXD Local Agent");
