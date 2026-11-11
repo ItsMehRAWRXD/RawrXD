@@ -1,0 +1,47 @@
+#version 460
+// Batch 31 reference Q4_K-style fused decode/dot kernel.
+// Actual scale/min packing must be specialized to the engine's canonical GGUF block layout.
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) readonly buffer S { float scale[]; };
+layout(set=0,binding=3,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+    uint wordsPerRow;
+    uint groupsPerRow;
+    uint groupSize;
+    uint rowBase;
+} pc;
+
+shared float red[256];
+
+float decode_q4(uint word, uint nib) {
+    return float(int((word >> (nib*4u)) & 15u) - 8);
+}
+
+void main() {
+    uint row = pc.rowBase + gl_WorkGroupID.x;
+    if (row >= pc.rows) return;
+    uint lid = gl_LocalInvocationID.x;
+    float sum = 0.0;
+
+    for (uint c=lid; c<pc.cols; c+=256u) {
+        uint wi = row*pc.wordsPerRow + (c>>3u);
+        uint gi = row*pc.groupsPerRow + (c/pc.groupSize);
+        sum += decode_q4(w[wi], c&7u) * scale[gi] * x[c];
+    }
+
+    red[lid] = sum;
+    barrier();
+
+    for (uint stride=128u; stride>0u; stride>>=1u) {
+        if (lid<stride) red[lid] += red[lid+stride];
+        barrier();
+    }
+
+    if (lid==0u) y[row] = red[0];
+}
