@@ -1,0 +1,14 @@
+  [loop] pc=0/473 kind=0 blk=-1 a='<token_id>' b='' out='token_embd.weight' bSlot=-1
+  [loop] pc=1/473 kind=11 blk=0 a='<hidden>' b='' out='resid_in' bSlot=-1
+  [loop] pc=2/473 kind=1 blk=0 a='<hidden>' b='blk.0.attn_norm.weight' out='attn_norm' bSlot=3
+  [loop] pc=3/473 kind=10 blk=0 a='attn_norm' b='blk.0.ssm_in.weight' out='ssm_out' bSlot=9
+  [loop] pc=4/473 kind=2 blk=0 a='ssm_out' b='blk.0.ssm_out.weight' out='attn_proj' bSlot=11
+  [loop] pc=5/473 kind=8 blk=0 a='resid_in' b='attn_proj' out='resid1' bSlot=-1
+  [loop] pc=6/473 kind=1 blk=0 a='resid1' b='blk.0.ssm_norm.weight' out='ffn_norm' bSlot=10
+  [loop] pc=7/473 kind=11 blk=0 a='ffn_norm' b='' out='ffn_out' bSlot=-1
+  [loop] pc=8/473 kind=8 blk=0 a='resid1' b='ffn_out' out='resid2' bSlot=-1
+  [loop] pc=9/473 kind=11 blk=1 a='<hidden>' b='' out='resid_in' bSlot=-1
+  [loop] pc=10/473 kind=1 blk=1 a='<hidden>' b='blk.1.attn_norm.weight' out='attn_norm' bSlot=12
+  [loop] pc=11/473 kind=11 blk=1 a='attn_norm' b='' out='attn_proj' bSlot=-1
+  [loop] pc=12/473 kind=8 blk=1 a='resid_in' b='attn_proj' out='resid1' bSlot=-1
+  [loop] pc=13/473 kind=1 blk=1 a='resid1' b='' out='ffn_norm' bSlot=-1

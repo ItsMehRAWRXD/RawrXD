@@ -1,0 +1,19 @@
+{
+  "purpose": "Independent earliest-divergence localization; diagnostic bounds are not a replacement release acceptance definition.",
+  "created_before_fresh_execution": true,
+  "model": "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "teacher_forced_tokens": [1, 185, 278, 20606, 23808, 7936, 14336, 28416],
+  "reference": "F:/rawrxd/tmp_llama-clone/build/bin/Release/llama_dump_logits_teacher_forced.exe",
+  "deep2": "F:/rawrxd/tools/deep2_parity_trace.exe",
+  "bounds": {
+    "required_nonfinite_count": 0,
+    "required_argmax_equality": true,
+    "operator_maxabs": 0.0001,
+    "operator_maxabs_authority": "Existing tools/gate5_independent_logits_compare.py OP_TOL=1e-4, committed before this audit.",
+    "logit_maxabs_diagnostic": 0.01,
+    "logit_bound_authority": "Existing tools/gate5_independent_logits_compare.py first_abs reports first maxabs > 1e-2; localization threshold, never certification tolerance.",
+    "primitive_relative_error": 0.0001,
+    "primitive_bound_authority": "evidence/GAP_AUDIT_2026-10-13/GATE4_CERTIFICATION_2026-10-13.md kernel reference <=1e-4."
+  },
+  "forbidden_acceptance": "Do not use the observed per-position maximum error as its own acceptance bound. Retain finite, bounded historical evidence without promoting to exact reference or current production-path PASS."
+}

@@ -1,0 +1,21 @@
+ScopeGroup,AllowedPathOrPattern,Rationale
+PredictiveMemoryCore,src/runtime/memory/PlacementPolicy.hpp,Core typed interfaces for memory tiers and transfer policies
+PredictiveMemoryCore,src/runtime/memory/PlacementPolicy.cpp,Build translation unit for placement policy
+PredictiveMemoryCore,src/runtime/memory/CapacityManager.hpp,Capacity policy and budget management
+PredictiveMemoryCore,src/runtime/memory/CapacityManager.cpp,Capacity policy implementation
+PredictiveMemoryCore,src/runtime/memory/ResidencyTracker.hpp,Tensor residency abstraction
+PredictiveMemoryCore,src/runtime/memory/ResidencyTracker.cpp,Tensor residency implementation
+PredictiveMemoryCore,src/runtime/memory/WorkingSetPredictor.hpp,Prediction abstraction
+PredictiveMemoryCore,src/runtime/memory/WorkingSetPredictor.cpp,Prediction implementation
+PredictiveMemoryCore,src/runtime/memory/TransferScheduler.hpp,Transfer queue abstraction
+PredictiveMemoryCore,src/runtime/memory/TransferScheduler.cpp,Transfer queue implementation
+PredictiveMemoryCore,src/runtime/memory/TensorPlacementManager.hpp,Placement orchestration abstraction
+PredictiveMemoryCore,src/runtime/memory/TensorPlacementManager.cpp,Placement orchestration implementation
+PredictiveMemoryCore,src/runtime/memory/PredictiveMemoryManager.hpp,Top-level predictive memory interface
+PredictiveMemoryCore,src/runtime/memory/PredictiveMemoryManager.cpp,Top-level predictive memory implementation
+RuntimeIntegration,src/runtime/TensorExecutionRouter.hpp,Integration seam only; router must remain tier-agnostic
+RuntimeIntegration,src/runtime/TensorExecutionRouter.cpp,Integration seam only; no direct tier-specific branching expansion
+RuntimeIntegration,src/runtime/CMakeLists.txt,Build wiring for predictive memory modules only
+RuntimeIntegration,CMakeLists.txt,Root build wiring only if required for target membership updates
+RuntimeTests,src/runtime/tests/predictive_memory_test.cpp,B002 functional gate: deterministic test required by execution contract
+AuditAndGates,audit/**,Gate logs metrics and audit delta artifacts for B002

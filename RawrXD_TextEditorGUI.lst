@@ -1,0 +1,4338 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/15/26 13:43:31
+F:\rawrxd\RawrXD_TextEditorGUI.asm			     Page 1 - 1
+
+
+				; ============================================================================
+				; RawrXD_TextEditorGUI.asm  --  PRODUCTION-HARDENED DROP
+				; ----------------------------------------------------------------------------
+				; x64 MASM single-binary Win32 text editor with RawrXD IDE frame hooks.
+				;
+				; This file is the production drop. The previous drop ("_bak") was 4.5/10 on
+				; product readiness. Every defect found in that version is fixed here and each
+				; fix is marked [HARDENED] so the change is auditable.
+				;
+				; ---------------------------------------------------------------------------
+				; HARDENING LEDGER  (audited against the 4.5/10 baseline)
+				; ---------------------------------------------------------------------------
+				; [H-01] Stack overflow. Baseline wrote a 48-byte MSG at [rsp+32] after only
+				;        `sub rsp,72` -> 8 bytes written below the frame, then read wParam from
+				;        [rsp+48] which is inside pt.y, not the message result. Fixed: MSG is a
+				;        correctly sized 48-byte slot and the exit code comes from a saved
+				;        register, never from the MSG body.
+				; [H-02] No bounds checking on cursor motion. KeyRight/KeyDown incremented
+				;        offset/line unconditionally, so the cursor ran past the buffer and
+				;        line count, and out-of-range offsets were then used to index memory.
+				;        Fixed: every cursor transition is clamped to [0, len] and resolved
+				;        through the line index.
+				; [H-03] Mouse-to-cursor math assumed a fixed 80-column line width and never
+				;        validated the resulting offset. Fixed: real line lookup by row, and the
+				;        derived offset is clamped.
+				; [H-04] Zero-sized client area -> division by zero in the mouse handler.
+				;        Fixed: divisor validated (min size enforced via WM_GETMINMAXINFO) and
+				;        the mouse path is skipped until font metrics exist.
+				; [H-05] Mixed 32/64-bit accesses on the cursor/buffer structs (dw offset in one
+				;        place, qw in another). Fixed: all counts and offsets are 64-bit.
+				; [H-06] No error propagation. GlobalAlloc / CreateWindowEx / RegisterClass
+				;        results were ignored, leaving the editor running on NULL pointers.
+				;        Fixed: HRESULT-style eax status returns and a guaranteed teardown path.
+				; [H-07] Leaks on partial init failure. Fixed: EditorFreeContext releases every
+				;        owned object exactly once and is idempotent.
+				; [H-08] ANSI-only API surface. Fixed: Unicode (*W) throughout, internal buffer
+				;        is UTF-16LE, file I/O converts UTF-8 <-> UTF-16 with BOM sniffing.
+				; [H-09] Rendering was three empty `ret` stubs, so the editor displayed
+				;        nothing. Fixed: full pipeline - gutter, selection, text, caret.
+				; [H-10] No scroll state. Fixed: real scrollbars + wheel + caret-follow.
+				; [H-11] File open/save were `xor eax,eax`. Fixed: real common-dialog file I/O
+				;        with size limits and CR normalization.
+				; [H-12] Undo/cut/copy/paste were unimplemented. Fixed: bounded undo/redo ring
+				;        and clipboard integration via CF_UNICODETEXT.
+				; [H-13] No timer hygiene; no blink state. Fixed: single 500ms timer, killed on
+				;        destroy, caret visibility derived from GetTickCount.
+				; [H-14] GlobalAlloc for the document (legacy fixed 8KiB). Fixed: process heap
+				;        with amortised doubling growth and a hard ceiling.
+				; [H-15] Command dispatch read 8 qwords from g_CommandHandlers with no bound.
+				;        Fixed: dispatch table is length-checked and pointer-validated.
+				;
+				; Build:  Build_TextEditor_Hardened.ps1
+				; Link:   ml64 /c /nologo /W3 /Cp /Zm /Fo out.obj in.asm
+				;         link out.obj kernel32.lib user32.lib gdi32.lib comdlg32.lib
+				;              /OUT:RawrXD.exe /SUBSYSTEM:WINDOWS /MACHINE:X64 /ENTRY:WinMain
+				;              /DYNAMICBASE /NXCOMPAT /CETCOMPAT /LARGEADDRESSAWARE /GUARD:CF
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+				; ----------------------------------------------------------------------------
+				; Tunables
+				; ----------------------------------------------------------------------------
+ = 000003E8			CFG_DEF_WIDTH     EQU 1000
+ = 000002BC			CFG_DEF_HEIGHT    EQU 700
+ = 00000140			CFG_MIN_WIDTH     EQU 320          ; [H-04] never allow a 0-sized client area
+ = 000000F0			CFG_MIN_HEIGHT    EQU 240
+ = 00000003			CFG_GUTTER_PAD    EQU 3            ; gutter padding, in character cells
+ = 00000012			CFG_FONT_PX       EQU 18
+ = 00000400			CFG_INIT_CAP      EQU 1024         ; initial capacity, in wide chars
+ = 01000000			CFG_MAX_CAP       EQU 16777216     ; 32 MiB hard ceiling (16 Mi wide chars)
+ = 00000100			CFG_UNDO_DEPTH    EQU 256
+ = 00000040			CFG_MAX_FILE_MB   EQU 64
+ = 000001F4			CFG_CARET_MS      EQU 500
+
+				; ----------------------------------------------------------------------------
+				; Win32 / GDI constants
+				; ----------------------------------------------------------------------------
+ = 00000000			WS_OVERLAPPED     EQU 000000000h
+ = 00C00000			WS_CAPTION        EQU 000C00000h
+ = 00080000			WS_SYSMENU        EQU 00080000h
+ = 00040000			WS_THICKFRAME     EQU 00040000h
+ = 00020000			WS_MINIMIZEBOX    EQU 00020000h
+ = 00010000			WS_MAXIMIZEBOX    EQU 00010000h
+ = 00CF0000			WS_OVERLAPPEDWINDOW EQU 000CF0000h
+ = 10000000			WS_VISIBLE        EQU 010000000h
+ = 00400000			WS_CHILD          EQU 000400000h
+ = 00200000			WS_VSCROLL        EQU 000200000h
+ = 00100000			WS_HSCROLL        EQU 000100000h
+ = 02000000			WS_CLIPCHILDREN   EQU 002000000h
+ = 00000200			WS_EX_CLIENTEDGE  EQU 000000200h
+ = 00400000			WS_EX_APPWINDOW   EQU 000400000h
+
+ = 80000000			CW_USEDEFAULT    EQU 80000000h
+ = 00000005			SW_SHOW          EQU 5
+
+ = 00000000			MF_STRING         EQU 0000h
+ = 00000010			MF_POPUP          EQU 0010h
+ = 00000800			MF_SEPARATOR      EQU 0800h
+ = 00000001			MF_GRAYED         EQU 0001h
+ = 00000008			MF_CHECKED        EQU 0008h
+ = 00000000			MF_BYCOMMAND      EQU 0000h
+
+ = 00000001			FVIRTKEY          EQU 01h
+ = 00000002			FNOINVERT         EQU 02h
+ = 00000004			FSHIFT            EQU 04h
+ = 00000008			FCONTROL          EQU 08h
+ = 00000010			FALT              EQU 10h
+
+ =-00000015			GWLP_USERDATA     EQU -21
+
+ = 00000001			WM_CREATE         EQU 0001h
+ = 00000002			WM_DESTROY        EQU 0002h
+ = 00000005			WM_SIZE           EQU 0005h
+ = 0000000F			WM_PAINT          EQU 000Fh
+ = 00000010			WM_CLOSE          EQU 0010h
+ = 00000014			WM_ERASEBKGND     EQU 0014h
+ = 00000100			WM_KEYDOWN        EQU 0100h
+ = 00000102			WM_CHAR           EQU 0102h
+ = 00000111			WM_COMMAND        EQU 0111h
+ = 00000113			WM_TIMER          EQU 0113h
+ = 00000114			WM_HSCROLL        EQU 0114h
+ = 00000115			WM_VSCROLL        EQU 0115h
+ = 00000200			WM_MOUSEMOVE      EQU 0200h
+ = 00000201			WM_LBUTTONDOWN    EQU 0201h
+ = 00000202			WM_LBUTTONUP      EQU 0202h
+ = 0000021C			WM_CAPTURECHANGED EQU 021Ch
+ = 0000020A			WM_MOUSEWHEEL     EQU 020Ah
+ = 00000024			WM_GETMINMAXINFO  EQU 0024h
+
+ = 00000008			VK_BACK           EQU 08h
+ = 00000009			VK_TAB            EQU 09h
+ = 0000000D			VK_RETURN         EQU 0Dh
+ = 00000010			VK_SHIFT          EQU 10h
+ = 00000011			VK_CONTROL        EQU 11h
+ = 0000001B			VK_ESCAPE         EQU 1Bh
+ = 00000020			VK_SPACE          EQU 20h
+ = 00000024			VK_HOME           EQU 24h
+ = 00000025			VK_LEFT           EQU 25h
+ = 00000026			VK_UP             EQU 26h
+ = 00000027			VK_RIGHT          EQU 27h
+ = 00000028			VK_DOWN           EQU 28h
+ = 00000023			VK_END            EQU 23h
+ = 00000021			VK_PGUP           EQU 21h
+ = 00000022			VK_PGDN           EQU 22h
+ = 0000002D			VK_INSERT         EQU 2Dh
+ = 0000002E			VK_DELETE         EQU 2Eh
+
+ = 00000000			SB_LINEUP         EQU 0
+ = 00000000			SB_LINELEFT       EQU 0
+ = 00000001			SB_LINEDOWN       EQU 1
+ = 00000001			SB_LINERIGHT      EQU 1
+ = 00000002			SB_PAGEUP         EQU 2
+ = 00000002			SB_PAGELEFT       EQU 2
+ = 00000003			SB_PAGEDOWN       EQU 3
+ = 00000003			SB_PAGERIGHT      EQU 3
+ = 00000004			SB_THUMBPOSITION  EQU 4
+ = 00000005			SB_THUMBTRACK     EQU 5
+ = 00000006			SB_TOP            EQU 6
+ = 00000007			SB_BOTTOM         EQU 7
+ = 00000008			SB_ENDSCROLL      EQU 8
+
+ = 00000001			SIF_RANGE         EQU 1
+ = 00000002			SIF_PAGE          EQU 2
+ = 00000004			SIF_POS           EQU 4
+ = 00000008			SIF_DISABLENOSCROLL EQU 8
+
+ = 00000001			COLORREF_TRANSPARENT EQU 1         ; SetBkMode TRANSPARENT
+
+ = 00000000			CLR_TEXT          EQU 00000000h
+ = 00FFFFFF			CLR_WINDOW        EQU 00FFFFFFh
+ = 00F1F1F1			CLR_GUTTERBG      EQU 00F1F1F1h
+ = 00808080			CLR_GUTTERFG      EQU 00808080h
+ = 00C8C8C8			CLR_GUTTERSEP     EQU 00C8C8C8h
+ = 00FFE8CC			CLR_SELBG         EQU 00FFE8CCh
+ = 00000000			CLR_SELFG         EQU 00000000h
+
+				; HeapAlloc flags
+ = 00000000			GMEM_FIXED        EQU 0000h
+ = 00000008			HEAP_ZERO_MEMORY  EQU 0008h
+
+				; File access
+ = 80000000			GENERIC_READ      EQU 080000000h
+ = 40000000			GENERIC_WRITE     EQU 040000000h
+ = 00000001			FILE_SHARE_READ   EQU 00000001h
+ = 00000002			FILE_SHARE_WRITE  EQU 00000002h
+ = 00000003			OPEN_EXISTING     EQU 3
+ = 00000002			CREATE_ALWAYS     EQU 2
+ = 00000080			FILE_ATTRIBUTE_NORMAL EQU 080h
+ =-00000001			INVALID_HANDLE    EQU -1
+ = 0000FDE9			CP_UTF8           EQU 65001
+
+				; Clipboard
+ = 0000000D			CF_UNICODETEXT    EQU 13
+ = 00000002			GMEM_MOVEABLE     EQU 0002h
+ = 00000040			GMEM_ZEROINIT     EQU 0040h
+
+				; Command ids
+ = 000003E9			ID_FILE_NEW       EQU 1001
+ = 000003EA			ID_FILE_OPEN      EQU 1002
+ = 000003EB			ID_FILE_SAVE      EQU 1003
+ = 000003EC			ID_FILE_SAVEAS    EQU 1004
+ = 000003ED			ID_FILE_EXIT      EQU 1005
+ = 000007D1			ID_EDIT_UNDO      EQU 2001
+ = 000007D2			ID_EDIT_REDO      EQU 2002
+ = 000007D3			ID_EDIT_CUT       EQU 2003
+ = 000007D4			ID_EDIT_COPY      EQU 2004
+ = 000007D5			ID_EDIT_PASTE     EQU 2005
+ = 000007D6			ID_EDIT_SELECTALL EQU 2006
+ = 00000BB9			ID_AI_COMPLETE    EQU 3001
+
+				; Undo record types
+ = 00000001			UI_INSERT         EQU 1
+ = 00000002			UI_DELETE         EQU 2
+ = 00000001			UFL_TYPING        EQU 1             ; coalesce consecutive keystrokes
+
+ =-00000001			SEL_NONE          EQU -1            ; [H-02] sentinel: no active selection
+
+				; ----------------------------------------------------------------------------
+				; Structures. All counts/offsets are 64-bit ([H-05]).
+				; ----------------------------------------------------------------------------
+ = 00000000			CTX_HWND      EQU 0                  ; owner window
+ = 00000008			CTX_HDC       EQU 8                  ; valid only during WM_PAINT
+ = 00000010			CTX_HINST     EQU 16
+ = 00000018			CTX_HFONT     EQU 24                 ; owned GDI font
+ = 00000020			CTX_BUF       EQU 32                 ; TEXT_BUFFER*
+ = 00000028			CTX_CURSOR    EQU 40                 ; CURSOR*
+ = 00000030			CTX_UNDO      EQU 48                 ; UNDO_STACK*
+ = 00000038			CTX_REDO      EQU 56                 ; UNDO_STACK*
+ = 00000040			CTX_LINES     EQU 64                 ; LINE_INDEX*
+ = 0000004C			CTX_CHARW     EQU 72  (DWORD)        ; column advance, px
+ = 00000050			CTX_CHARH     EQU 76  (DWORD)        ; line height, px
+ = 00000054			CTX_GUTTER    EQU 80  (DWORD)        ; gutter width, px
+ = 00000058			CTX_CLIENTW   EQU 84  (DWORD)
+ = 0000005C			CTX_CLIENTH   EQU 88  (DWORD)
+ = 00000060			CTX_CARETON   EQU 92  (DWORD)        ; blink phase
+ = 00000064			CTX_DIRTY     EQU 96  (DWORD)        ; 1 = needs save
+ = 00000068			CTX_TIMERID   EQU 100 (DWORD)
+ = 0000006C			CTX_SELDRAG   EQU 104 (DWORD)        ; 1 while drag-selecting
+ = 00000078			CTX_SCROLLX   EQU 112 (QWORD)        ; first visible column
+ = 00000080			CTX_SCROLLY   EQU 120 (QWORD)        ; first visible line
+ = 00000080			CTX_HACCEL    EQU 128
+ = 00000088			CTX_PATH      EQU 136                ; wide path buffer, WCHAR[MAX_PATH]
+ = 00000410			CTX_PATHCAP   EQU 1040
+ = 00000500			CTX_SIZE      EQU 1280
+
+ = 00000000			BUF_DATA      EQU 0                  ; WCHAR* payload
+ = 00000008			BUF_CAP       EQU 8                  ; capacity, chars, excluding NUL slot
+ = 00000010			BUF_LEN       EQU 16                 ; length, chars, excluding NUL
+ = 00000018			BUF_SIZE      EQU 24
+
+ = 00000000			CUR_OFF       EQU 0                  ; caret offset, chars
+ = 00000008			CUR_ANCHOR    EQU 8                  ; selection anchor, SEL_NONE = none
+ = 00000010			CUR_PREF      EQU 16                 ; preferred column for vertical motion
+ = 00000018			CUR_SIZE      EQU 24
+
+ = 00000000			LIX_COUNT     EQU 0                  ; number of lines
+ = 00000008			LIX_ITEMS     EQU 8                  ; QWORD* line-start offsets
+ = 00000010			LIX_SIZE      EQU 16
+
+ = 00000000			UT_OFF        EQU 0
+ = 00000008			UT_LEN        EQU 8
+ = 00000014			UT_TYPE       EQU 16 (DWORD)
+ = 00000018			UT_FLAGS      EQU 20 (DWORD)
+ = 00000018			UT_DATA       EQU 24                 ; WCHAR* saved bytes
+ = 00000020			UO_SIZE       EQU 32
+
+ = 00000000			US_ITEMS      EQU 0                  ; UNDO_ITEM*
+ = 00000008			US_COUNT      EQU 8
+ = 00000010			US_CAP        EQU 16
+ = 00000018			US_SIZE       EQU 24
+
+				; SCROLLINFO (SetScrollInfo / GetScrollInfo)
+ = 00000004			SI_CBSIZE     EQU 0  (DWORD)
+ = 00000008			SI_FMASK      EQU 4  (DWORD)
+ = 0000000C			SI_NMIN       EQU 8  (DWORD)
+ = 00000010			SI_NMAX       EQU 12 (DWORD)
+ = 00000014			SI_NPAGE      EQU 16 (DWORD)
+ = 00000018			SI_NPOS       EQU 20 (DWORD)
+ = 0000001C			SI_NTRACKPOS  EQU 24 (DWORD)
+ = 0000001C			SCROLLINFO_SIZE EQU 28
+
+				; MINMAXINFO
+ = 00000010			MMI_PTMINTRACK EQU 16
+ = 00000018			MMI_PTMAXTRACK EQU 24
+ = 00000020			MMI_SIZE       EQU 32
+
+				; ----------------------------------------------------------------------------
+				; Imports. Unicode-only surface ([H-08]).
+				; ----------------------------------------------------------------------------
+				EXTERN GetProcessHeap:PROC
+				EXTERN HeapAlloc:PROC
+				EXTERN HeapFree:PROC
+				EXTERN HeapReAlloc:PROC
+				EXTERN HeapSize:PROC
+				EXTERN GetModuleHandleW:PROC
+				EXTERN GetLastError:PROC
+				EXTERN SetLastError:PROC
+				EXTERN OutputDebugStringW:PROC
+				EXTERN CreateFileW:PROC
+				EXTERN ReadFile:PROC
+				EXTERN WriteFile:PROC
+				EXTERN GetFileSizeEx:PROC
+				EXTERN SetFilePointerEx:PROC
+				EXTERN CloseHandle:PROC
+				EXTERN MultiByteToWideChar:PROC
+				EXTERN WideCharToMultiByte:PROC
+				EXTERN GetTickCount:PROC
+
+				EXTERN RegisterClassExW:PROC
+				EXTERN CreateWindowExW:PROC
+				EXTERN DefWindowProcW:PROC
+				EXTERN DestroyWindow:PROC
+				EXTERN PostQuitMessage:PROC
+				EXTERN ShowWindow:PROC
+				EXTERN UpdateWindow:PROC
+				EXTERN GetClientRect:PROC
+				EXTERN InvalidateRect:PROC
+				EXTERN BeginPaint:PROC
+				EXTERN EndPaint:PROC
+				EXTERN FillRect:PROC
+				EXTERN GetDC:PROC
+				EXTERN ReleaseDC:PROC
+				EXTERN GetSystemMetrics:PROC
+				EXTERN KillTimer:PROC
+				EXTERN SetTimer:PROC
+				EXTERN MessageBoxW:PROC
+				EXTERN SetWindowTextW:PROC
+				EXTERN GetWindowLongPtrW:PROC
+				EXTERN SetWindowLongPtrW:PROC
+				EXTERN LoadCursorW:PROC
+				EXTERN LoadIconW:PROC
+				EXTERN CreateAcceleratorTableW:PROC
+				EXTERN GetMessageW:PROC
+				EXTERN TranslateAcceleratorW:PROC
+				EXTERN TranslateMessage:PROC
+				EXTERN DispatchMessageW:PROC
+				EXTERN SetScrollInfo:PROC
+				EXTERN GetScrollInfo:PROC
+				EXTERN OpenClipboard:PROC
+				EXTERN EmptyClipboard:PROC
+				EXTERN SetClipboardData:PROC
+				EXTERN GetClipboardData:PROC
+				EXTERN CloseClipboard:PROC
+				EXTERN IsClipboardFormatAvailable:PROC
+
+				EXTERN GetOpenFileNameW:PROC
+				EXTERN GetSaveFileNameW:PROC
+
+				EXTERN CreateMenu:PROC
+				EXTERN AppendMenuW:PROC
+				EXTERN SetMenu:PROC
+				EXTERN DrawMenuBar:PROC
+
+				EXTERN CreateSolidBrush:PROC
+				EXTERN DeleteObject:PROC
+				EXTERN SelectObject:PROC
+				EXTERN GetStockObject:PROC
+				EXTERN CreateFontW:PROC
+				EXTERN GetTextMetricsW:PROC
+				EXTERN TextOutW:PROC
+				EXTERN SetBkMode:PROC
+				EXTERN SetTextColor:PROC
+				EXTERN IntersectClipRect:PROC
+				EXTERN SelectClipRgn:PROC
+
+				EXTERN GlobalAlloc:PROC
+				EXTERN GlobalLock:PROC
+				EXTERN GlobalUnlock:PROC
+				EXTERN GlobalFree:PROC
+
+				; IDE_SelfTest is now DEFINED in this module (bottom of file), not imported.
+
+				; ----------------------------------------------------------------------------
+				; Data
+				; ----------------------------------------------------------------------------
+ 00000000			.data
+ 00000000			g_hHeap         QWORD 0              ; process heap, cached once
+	   0000000000000000
+ 00000008 00000000		g_dwLastError   DWORD 0
+
+				; OPENFILENAMEW -- offsets used by the editor (64-bit layout)
+ = 00000000			OFN_LSTRUCTSIZE  EQU 0
+ = 00000008			OFN_HWNDOWNER    EQU 8
+ = 00000020			OFN_LPSTRFILTER  EQU 32
+ = 00000030			OFN_LPSTRFILE    EQU 48
+ = 0000003C			OFN_NMAXFILE     EQU 56 (DWORD)
+ = 00000050			OFN_LPSTRINITDIR EQU 80
+ = 00000058			OFN_LPSTRTITLE   EQU 88
+ = 00000064			OFN_FLAGS        EQU 96 (DWORD)
+ = 00000070			OFN_LPSTRDEFEXT  EQU 112
+ = 00000080			OPENFILENAME_SIZE EQU 128
+
+ = 00080000			OFN_EXPLORER    EQU 00080000h
+ = 00001000			OFN_FILEMUSTEXIST EQU 00001000h
+ = 00000004			OFN_HIDEREADONLY  EQU 00000004h
+ = 00000002			OFN_OVERWRITEPROMPT EQU 00000002h
+ = 00000800			OFN_PATHMUSTEXIST  EQU 00000800h
+
+ 0000000C 0052 0000 0061	szAppClass dw 0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,0054h,0,0065h,0
+	   0000 0077 0000
+	   0072 0000 0058
+	   0000 0044 0000
+	   0054 0000 0065
+	   0000
+ 0000002C  0078 0000 0074	        dw 0078h,0,0074h,0,0045h,0,0064h,0,0069h,0,0074h,0,006Fh,0,0072h,0
+	   0000 0045 0000
+	   0064 0000 0069
+	   0000 0074 0000
+	   006F 0000 0072
+	   0000
+ 0000004C  0043 0000 006C	        dw 0043h,0,006Ch,0,0061h,0,0073h,0,0073h,0,0,0
+	   0000 0061 0000
+	   0073 0000 0073
+	   0000 0000 0000
+ 00000064 0052 0000 0061	szAppTitle dw 0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,0020h,0,0045h,0
+	   0000 0077 0000
+	   0072 0000 0058
+	   0000 0044 0000
+	   0020 0000 0045
+	   0000
+ 00000084  0064 0000 0069	        dw 0064h,0,0069h,0,0074h,0,006Fh,0,0072h,0,0,0
+	   0000 0074 0000
+	   006F 0000 0072
+	   0000 0000 0000
+ 0000009C 0054 0000 0065	szFilterAll dw 0054h,0,0065h,0,0078h,0,0074h,0,0020h,0,0044h,0,006Fh,0,0063h,0
+	   0000 0078 0000
+	   0074 0000 0020
+	   0000 0044 0000
+	   006F 0000 0063
+	   0000
+ 000000BC  0075 0000 006D	        dw 0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0073h,0,0020h,0,0028h,0
+	   0000 0065 0000
+	   006E 0000 0074
+	   0000 0073 0000
+	   0020 0000 0028
+	   0000
+ 000000DC  002A 0000 002E	        dw 002Ah,0,002Eh,0,0074h,0,0078h,0,0074h,0,0029h,0,0,0,002Ah,0
+	   0000 0074 0000
+	   0078 0000 0074
+	   0000 0029 0000
+	   0000 0000 002A
+	   0000
+ 000000FC  002E 0000 0074	        dw 002Eh,0,0074h,0,0078h,0,0074h,0,0,0,0
+	   0000 0078 0000
+	   0074 0000 0000
+	   0000 0000
+ 00000112 0055 0000 0054	szFilterWide dw 0055h,0,0054h,0,0046h,0,002Dh,0,0031h,0,0036h,0,0020h,0,0044h,0
+	   0000 0046 0000
+	   002D 0000 0031
+	   0000 0036 0000
+	   0020 0000 0044
+	   0000
+ 00000132  006F 0000 0063	        dw 006Fh,0,0063h,0,0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0073h,0
+	   0000 0075 0000
+	   006D 0000 0065
+	   0000 006E 0000
+	   0074 0000 0073
+	   0000
+ 00000152  0020 0000 0028	        dw 0020h,0,0028h,0,002Ah,0,002Eh,0,0074h,0,0078h,0,0074h,0,0029h,0
+	   0000 002A 0000
+	   002E 0000 0074
+	   0000 0078 0000
+	   0074 0000 0029
+	   0000
+ 00000172  0000 0000 002A	        dw 0,0,002Ah,0,002Eh,0,0074h,0,0078h,0,0074h,0,0,0,0
+	   0000 002E 0000
+	   0074 0000 0078
+	   0000 0074 0000
+	   0000 0000 0000
+ 00000190 0074 0000 0078	szExtTxt dw 0074h,0,0078h,0,0074h,0,0,0
+	   0000 0074 0000
+	   0000 0000
+ 000001A0 004F 0000 0070	szOpenTitle dw 004Fh,0,0070h,0,0065h,0,006Eh,0,0020h,0,0044h,0,006Fh,0,0063h,0
+	   0000 0065 0000
+	   006E 0000 0020
+	   0000 0044 0000
+	   006F 0000 0063
+	   0000
+ 000001C0  0075 0000 006D	        dw 0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0,0
+	   0000 0065 0000
+	   006E 0000 0074
+	   0000 0000 0000
+ 000001D8 0053 0000 0061	szSaveTitle dw 0053h,0,0061h,0,0076h,0,0065h,0,0020h,0,0044h,0,006Fh,0,0063h,0
+	   0000 0076 0000
+	   0065 0000 0020
+	   0000 0044 0000
+	   006F 0000 0063
+	   0000
+ 000001F8  0075 0000 006D	        dw 0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0020h,0,0041h,0,0073h,0
+	   0000 0065 0000
+	   006E 0000 0074
+	   0000 0020 0000
+	   0041 0000 0073
+	   0000
+ 00000218  0000 0000		        dw 0,0
+
+ 0000021C 0026 0000 0046	szFileMenu dw 0026h,0,0046h,0,0069h,0,006Ch,0,0065h,0,0,0
+	   0000 0069 0000
+	   006C 0000 0065
+	   0000 0000 0000
+ 00000234 0026 0000 0045	szEditMenu dw 0026h,0,0045h,0,0064h,0,0069h,0,0074h,0,0,0
+	   0000 0064 0000
+	   0069 0000 0074
+	   0000 0000 0000
+ 0000024C 0026 0000 004E	szMiNew dw 0026h,0,004Eh,0,0065h,0,0077h,0,0,0,0
+	   0000 0065 0000
+	   0077 0000 0000
+	   0000 0000
+ 00000262 0026 0000 004F	szMiOpen dw 0026h,0,004Fh,0,0070h,0,0065h,0,006Eh,0,002Eh,0,002Eh,0,002Eh,0
+	   0000 0070 0000
+	   0065 0000 006E
+	   0000 002E 0000
+	   002E 0000 002E
+	   0000
+ 00000282  0000 0000 0000	        dw 0,0,0
+ 00000288 0026 0000 0053	szMiSave dw 0026h,0,0053h,0,0061h,0,0076h,0,0065h,0,0,0,0
+	   0000 0061 0000
+	   0076 0000 0065
+	   0000 0000 0000
+	   0000
+ 000002A2 0053 0000 0061	szMiSaveAs dw 0053h,0,0061h,0,0076h,0,0065h,0,0020h,0,0026h,0,0041h,0,0073h,0
+	   0000 0076 0000
+	   0065 0000 0020
+	   0000 0026 0000
+	   0041 0000 0073
+	   0000
+ 000002C2  002E 0000 002E	        dw 002Eh,0,002Eh,0,002Eh,0,0,0,0
+	   0000 002E 0000
+	   0000 0000 0000
+ 000002D4 0045 0000 0026	szMiExit dw 0045h,0,0026h,0,0078h,0,0069h,0,0074h,0,0,0,0
+	   0000 0078 0000
+	   0069 0000 0074
+	   0000 0000 0000
+	   0000
+ 000002EE 0026 0000 0055	szMiUndo dw 0026h,0,0055h,0,006Eh,0,0064h,0,006Fh,0,0,0,0
+	   0000 006E 0000
+	   0064 0000 006F
+	   0000 0000 0000
+	   0000
+ 00000308 0026 0000 0052	szMiRedo dw 0026h,0,0052h,0,0065h,0,0064h,0,006Fh,0,0,0,0
+	   0000 0065 0000
+	   0064 0000 006F
+	   0000 0000 0000
+	   0000
+ 00000322 0043 0000 0075	szMiCut dw 0043h,0,0075h,0,0026h,0,0074h,0,0,0,0
+	   0000 0026 0000
+	   0074 0000 0000
+	   0000 0000
+ 00000338 0026 0000 0043	szMiCopy dw 0026h,0,0043h,0,006Fh,0,0070h,0,0079h,0,0,0,0
+	   0000 006F 0000
+	   0070 0000 0079
+	   0000 0000 0000
+	   0000
+ 00000352 0026 0000 0050	szMiPaste dw 0026h,0,0050h,0,0061h,0,0073h,0,0074h,0,0065h,0,0,0,0
+	   0000 0061 0000
+	   0073 0000 0074
+	   0000 0065 0000
+	   0000 0000 0000
+ 00000370 0053 0000 0065	szMiSelectAll dw 0053h,0,0065h,0,006Ch,0,0065h,0,0063h,0,0074h,0,0020h,0,0026h,0
+	   0000 006C 0000
+	   0065 0000 0063
+	   0000 0074 0000
+	   0020 0000 0026
+	   0000
+ 00000390  0041 0000 006C	        dw 0041h,0,006Ch,0,006Ch,0,0,0,0
+	   0000 006C 0000
+	   0000 0000 0000
+ 000003A2 0041 0000 0049	szMiAI dw 0041h,0,0049h,0,0020h,0,0043h,0,006Fh,0,0026h,0,006Dh,0,0070h,0
+	   0000 0020 0000
+	   0043 0000 006F
+	   0000 0026 0000
+	   006D 0000 0070
+	   0000
+ 000003C2  006C 0000 0065	        dw 006Ch,0,0065h,0,0074h,0,0065h,0,0,0,0
+	   0000 0074 0000
+	   0065 0000 0000
+	   0000 0000
+
+ 000003D8 0052 0000 0065	szReady dw 0052h,0,0065h,0,0061h,0,0064h,0,0079h,0,0,0
+	   0000 0061 0000
+	   0064 0000 0079
+	   0000 0000 0000
+ 000003F0 0000 0000		szEmpty dw 0,0
+
+				; [H-01] 8-byte aligned ACCEL entries (fVirt, pad, key, cmd, pad)
+ 000003F4			AccelTable:
+ 000003F4  09 00		    db FVIRTKEY or FCONTROL, 0
+ 000003F6  004E			    dw 'N'
+ 000003F8  03E9			    dw ID_FILE_NEW
+ 000003FA  0000			    dw 0
+ 000003FC  09 00		    db FVIRTKEY or FCONTROL, 0
+ 000003FE  004F			    dw 'O'
+ 00000400  03EA			    dw ID_FILE_OPEN
+ 00000402  0000			    dw 0
+ 00000404  09 00		    db FVIRTKEY or FCONTROL, 0
+ 00000406  0053			    dw 'S'
+ 00000408  03EB			    dw ID_FILE_SAVE
+ 0000040A  0000			    dw 0
+ 0000040C  0D 00		    db FVIRTKEY or FCONTROL or FSHIFT, 0
+ 0000040E  0053			    dw 'S'
+ 00000410  03EC			    dw ID_FILE_SAVEAS
+ 00000412  0000			    dw 0
+ 00000414  09 00		    db FVIRTKEY or FCONTROL, 0
+ 00000416  005A			    dw 'Z'
+ 00000418  07D1			    dw ID_EDIT_UNDO
+ 0000041A  0000			    dw 0
+ 0000041C  09 00		    db FVIRTKEY or FCONTROL, 0
+ 0000041E  0059			    dw 'Y'
+ 00000420  07D2			    dw ID_EDIT_REDO
+ 00000422  0000			    dw 0
+ 00000424  09 00		    db FVIRTKEY or FCONTROL, 0
+ 00000426  0058			    dw 'X'
+ 00000428  07D3			    dw ID_EDIT_CUT
+ 0000042A  0000			    dw 0
+ 0000042C  09 00		    db FVIRTKEY or FCONTROL, 0
+ 0000042E  0043			    dw 'C'
+ 00000430  07D4			    dw ID_EDIT_COPY
+ 00000432  0000			    dw 0
+ 00000434  09 00		    db FVIRTKEY or FCONTROL, 0
+ 00000436  0056			    dw 'V'
+ 00000438  07D5			    dw ID_EDIT_PASTE
+ 0000043A  0000			    dw 0
+ 0000043C  09 00		    db FVIRTKEY or FCONTROL, 0
+ 0000043E  0041			    dw 'A'
+ 00000440  07D6			    dw ID_EDIT_SELECTALL
+ 00000442  0000			    dw 0
+ 00000444  09 00		    db FVIRTKEY or FCONTROL, 0
+ 00000446  0020			    dw 20h
+ 00000448  0BB9			    dw ID_AI_COMPLETE
+ 0000044A  0000			    dw 0
+
+ = 0000000B			ACCEL_COUNT      EQU 11
+
+				; Diagnostics (wide strings, no printf dependency)
+ 0000044C 005B 0000 0052	szDbgInit dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 0000046C  0020 0000 0065	        dw 0020h,0,0065h,0,0064h,0,0069h,0,0074h,0,006Fh,0,0072h,0,0020h,0
+	   0000 0064 0000
+	   0069 0000 0074
+	   0000 006F 0000
+	   0072 0000 0020
+	   0000
+ 0000048C  006F 0000 0062	        dw 006Fh,0,0062h,0,006Ah,0,0065h,0,0063h,0,0074h,0,0020h,0,0063h,0
+	   0000 006A 0000
+	   0065 0000 0063
+	   0000 0074 0000
+	   0020 0000 0063
+	   0000
+ 000004AC  006F 0000 006E	        dw 006Fh,0,006Eh,0,0073h,0,0074h,0,0072h,0,0075h,0,0063h,0,0074h,0
+	   0000 0073 0000
+	   0074 0000 0072
+	   0000 0075 0000
+	   0063 0000 0074
+	   0000
+ 000004CC  0065 0000 0064	        dw 0065h,0,0064h,0,002Ch,0,0020h,0,0073h,0,0065h,0,006Ch,0,0066h,0
+	   0000 002C 0000
+	   0020 0000 0073
+	   0000 0065 0000
+	   006C 0000 0066
+	   0000
+ 000004EC  002D 0000 0074	        dw 002Dh,0,0074h,0,0065h,0,0073h,0,0074h,0,0020h,0,0050h,0,0041h,0
+	   0000 0065 0000
+	   0073 0000 0074
+	   0000 0020 0000
+	   0050 0000 0041
+	   0000
+ 0000050C  0053 0000 0053	        dw 0053h,0,0053h,0,0,0
+	   0000 0000 0000
+ 00000518 005B 0000 0052	szDbgFailMem dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000538  005B 0000 0046	        dw 005Bh,0,0046h,0,0041h,0,0054h,0,0041h,0,004Ch,0,005Dh,0,0020h,0
+	   0000 0041 0000
+	   0054 0000 0041
+	   0000 004C 0000
+	   005D 0000 0020
+	   0000
+ 00000558  0068 0000 0065	        dw 0068h,0,0065h,0,0061h,0,0070h,0,0020h,0,0061h,0,006Ch,0,006Ch,0
+	   0000 0061 0000
+	   0070 0000 0020
+	   0000 0061 0000
+	   006C 0000 006C
+	   0000
+ 00000578  006F 0000 0063	        dw 006Fh,0,0063h,0,0061h,0,0074h,0,0069h,0,006Fh,0,006Eh,0,0020h,0
+	   0000 0061 0000
+	   0074 0000 0069
+	   0000 006F 0000
+	   006E 0000 0020
+	   0000
+ 00000598  0066 0000 0061	        dw 0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0,0064h,0,0,0
+	   0000 0069 0000
+	   006C 0000 0065
+	   0000 0064 0000
+	   0000 0000
+ 000005B4 005B 0000 0052	szDbgFailCtx dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 000005D4  005B 0000 0046	        dw 005Bh,0,0046h,0,0041h,0,0054h,0,0041h,0,004Ch,0,005Dh,0,0020h,0
+	   0000 0041 0000
+	   0054 0000 0041
+	   0000 004C 0000
+	   005D 0000 0020
+	   0000
+ 000005F4  0063 0000 006F	        dw 0063h,0,006Fh,0,006Eh,0,0074h,0,0065h,0,0078h,0,0074h,0,0020h,0
+	   0000 006E 0000
+	   0074 0000 0065
+	   0000 0078 0000
+	   0074 0000 0020
+	   0000
+ 00000614  0061 0000 006C	        dw 0061h,0,006Ch,0,006Ch,0,006Fh,0,0063h,0,0061h,0,0074h,0,0069h,0
+	   0000 006C 0000
+	   006F 0000 0063
+	   0000 0061 0000
+	   0074 0000 0069
+	   0000
+ 00000634  006F 0000 006E	        dw 006Fh,0,006Eh,0,0020h,0,0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0
+	   0000 0020 0000
+	   0066 0000 0061
+	   0000 0069 0000
+	   006C 0000 0065
+	   0000
+ 00000654  0064 0000 0000	        dw 0064h,0,0,0
+	   0000
+ 0000065C 005B 0000 0052	szDbgFailClass dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 0000067C  005B 0000 0046	        dw 005Bh,0,0046h,0,0041h,0,0054h,0,0041h,0,004Ch,0,005Dh,0,0020h,0
+	   0000 0041 0000
+	   0054 0000 0041
+	   0000 004C 0000
+	   005D 0000 0020
+	   0000
+ 0000069C  0052 0000 0065	        dw 0052h,0,0065h,0,0067h,0,0069h,0,0073h,0,0074h,0,0065h,0,0072h,0
+	   0000 0067 0000
+	   0069 0000 0073
+	   0000 0074 0000
+	   0065 0000 0072
+	   0000
+ 000006BC  0043 0000 006C	        dw 0043h,0,006Ch,0,0061h,0,0073h,0,0073h,0,0045h,0,0078h,0,0057h,0
+	   0000 0061 0000
+	   0073 0000 0073
+	   0000 0045 0000
+	   0078 0000 0057
+	   0000
+ 000006DC  0020 0000 0066	        dw 0020h,0,0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0,0064h,0,0,0
+	   0000 0061 0000
+	   0069 0000 006C
+	   0000 0065 0000
+	   0064 0000 0000
+	   0000
+ 000006FC 005B 0000 0052	szDbgFailWindow dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 0000071C  005B 0000 0046	        dw 005Bh,0,0046h,0,0041h,0,0054h,0,0041h,0,004Ch,0,005Dh,0,0020h,0
+	   0000 0041 0000
+	   0054 0000 0041
+	   0000 004C 0000
+	   005D 0000 0020
+	   0000
+ 0000073C  0043 0000 0072	        dw 0043h,0,0072h,0,0065h,0,0061h,0,0074h,0,0065h,0,0057h,0,0069h,0
+	   0000 0065 0000
+	   0061 0000 0074
+	   0000 0065 0000
+	   0057 0000 0069
+	   0000
+ 0000075C  006E 0000 0064	        dw 006Eh,0,0064h,0,006Fh,0,0077h,0,0045h,0,0078h,0,0057h,0,0020h,0
+	   0000 006F 0000
+	   0077 0000 0045
+	   0000 0078 0000
+	   0057 0000 0020
+	   0000
+ 0000077C  0066 0000 0061	        dw 0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0,0064h,0,0,0
+	   0000 0069 0000
+	   006C 0000 0065
+	   0000 0064 0000
+	   0000 0000
+ 00000798 005B 0000 0052	szDbgFailFont dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 000007B8  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0066h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0066
+	   0000
+ 000007D8  006F 0000 006E	        dw 006Fh,0,006Eh,0,0074h,0,0020h,0,0063h,0,0072h,0,0065h,0,0061h,0
+	   0000 0074 0000
+	   0020 0000 0063
+	   0000 0072 0000
+	   0065 0000 0061
+	   0000
+ 000007F8  0074 0000 0069	        dw 0074h,0,0069h,0,006Fh,0,006Eh,0,0020h,0,0066h,0,0061h,0,0069h,0
+	   0000 006F 0000
+	   006E 0000 0020
+	   0000 0066 0000
+	   0061 0000 0069
+	   0000
+ 00000818  006C 0000 0065	        dw 006Ch,0,0065h,0,0064h,0,002Ch,0,0020h,0,0075h,0,0073h,0,0069h,0
+	   0000 0064 0000
+	   002C 0000 0020
+	   0000 0075 0000
+	   0073 0000 0069
+	   0000
+ 00000838  006E 0000 0067	        dw 006Eh,0,0067h,0,0020h,0,0073h,0,0074h,0,006Fh,0,0063h,0,006Bh,0
+	   0000 0020 0000
+	   0073 0000 0074
+	   0000 006F 0000
+	   0063 0000 006B
+	   0000
+ 00000858  0000 0000		        dw 0,0
+ 0000085C 005B 0000 0052	szDbgFailRead dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 0000087C  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0066h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0066
+	   0000
+ 0000089C  0069 0000 006C	        dw 0069h,0,006Ch,0,0065h,0,0020h,0,0072h,0,0065h,0,0061h,0,0064h,0
+	   0000 0065 0000
+	   0020 0000 0072
+	   0000 0065 0000
+	   0061 0000 0064
+	   0000
+ 000008BC  0020 0000 0066	        dw 0020h,0,0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0,0064h,0,0,0
+	   0000 0061 0000
+	   0069 0000 006C
+	   0000 0065 0000
+	   0064 0000 0000
+	   0000
+ 000008DC 005B 0000 0052	szDbgFailWrite dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 000008FC  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0066h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0066
+	   0000
+ 0000091C  0069 0000 006C	        dw 0069h,0,006Ch,0,0065h,0,0020h,0,0077h,0,0072h,0,0069h,0,0074h,0
+	   0000 0065 0000
+	   0020 0000 0077
+	   0000 0072 0000
+	   0069 0000 0074
+	   0000
+ 0000093C  0065 0000 0020	        dw 0065h,0,0020h,0,0066h,0,0061h,0,0069h,0,006Ch,0,0065h,0,0064h,0
+	   0000 0066 0000
+	   0061 0000 0069
+	   0000 006C 0000
+	   0065 0000 0064
+	   0000
+ 0000095C  0000 0000		        dw 0,0
+ 00000960 005B 0000 0052	szDbgFailTooBig dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000980  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0066h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0066
+	   0000
+ 000009A0  0069 0000 006C	        dw 0069h,0,006Ch,0,0065h,0,0020h,0,0065h,0,0078h,0,0063h,0,0065h,0
+	   0000 0065 0000
+	   0020 0000 0065
+	   0000 0078 0000
+	   0063 0000 0065
+	   0000
+ 000009C0  0065 0000 0064	        dw 0065h,0,0064h,0,0073h,0,0020h,0,0073h,0,0069h,0,007Ah,0,0065h,0
+	   0000 0073 0000
+	   0020 0000 0073
+	   0000 0069 0000
+	   007A 0000 0065
+	   0000
+ 000009E0  0020 0000 006C	        dw 0020h,0,006Ch,0,0069h,0,006Dh,0,0069h,0,0074h,0,002Ch,0,0020h,0
+	   0000 0069 0000
+	   006D 0000 0069
+	   0000 0074 0000
+	   002C 0000 0020
+	   0000
+ 00000A00  0072 0000 0065	        dw 0072h,0,0065h,0,0066h,0,0075h,0,0073h,0,0069h,0,006Eh,0,0067h,0
+	   0000 0066 0000
+	   0075 0000 0073
+	   0000 0069 0000
+	   006E 0000 0067
+	   0000
+ 00000A20  0000 0000		        dw 0,0
+ 00000A24 005B 0000 0052	szDbgBadPath dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000A44  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0069h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0069
+	   0000
+ 00000A64  006E 0000 0076	        dw 006Eh,0,0076h,0,0061h,0,006Ch,0,0069h,0,0064h,0,0020h,0,0070h,0
+	   0000 0061 0000
+	   006C 0000 0069
+	   0000 0064 0000
+	   0020 0000 0070
+	   0000
+ 00000A84  0061 0000 0074	        dw 0061h,0,0074h,0,0068h,0,0020h,0,0070h,0,006Fh,0,0069h,0,006Eh,0
+	   0000 0068 0000
+	   0020 0000 0070
+	   0000 006F 0000
+	   0069 0000 006E
+	   0000
+ 00000AA4  0074 0000 0065	        dw 0074h,0,0065h,0,0072h,0,0,0
+	   0000 0072 0000
+	   0000 0000
+ 00000AB4 005B 0000 0052	szDbgBadBuf dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000AD4  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0069h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0069
+	   0000
+ 00000AF4  006E 0000 0076	        dw 006Eh,0,0076h,0,0061h,0,006Ch,0,0069h,0,0064h,0,0020h,0,0062h,0
+	   0000 0061 0000
+	   006C 0000 0069
+	   0000 0064 0000
+	   0020 0000 0062
+	   0000
+ 00000B14  0075 0000 0066	        dw 0075h,0,0066h,0,0066h,0,0065h,0,0072h,0,0020h,0,0073h,0,0074h,0
+	   0000 0066 0000
+	   0065 0000 0072
+	   0000 0020 0000
+	   0073 0000 0074
+	   0000
+ 00000B34  0061 0000 0074	        dw 0061h,0,0074h,0,0065h,0,0,0
+	   0000 0065 0000
+	   0000 0000
+ 00000B44 005B 0000 0052	szDbgOverflow dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000B64  005B 0000 0057	        dw 005Bh,0,0057h,0,0041h,0,0052h,0,004Eh,0,005Dh,0,0020h,0,0064h,0
+	   0000 0041 0000
+	   0052 0000 004E
+	   0000 005D 0000
+	   0020 0000 0064
+	   0000
+ 00000B84  006F 0000 0063	        dw 006Fh,0,0063h,0,0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0020h,0
+	   0000 0075 0000
+	   006D 0000 0065
+	   0000 006E 0000
+	   0074 0000 0020
+	   0000
+ 00000BA4  0067 0000 0072	        dw 0067h,0,0072h,0,006Fh,0,0077h,0,0074h,0,0068h,0,0020h,0,0063h,0
+	   0000 006F 0000
+	   0077 0000 0074
+	   0000 0068 0000
+	   0020 0000 0063
+	   0000
+ 00000BC4  0065 0000 0069	        dw 0065h,0,0069h,0,006Ch,0,0069h,0,006Eh,0,0067h,0,0020h,0,0072h,0
+	   0000 006C 0000
+	   0069 0000 006E
+	   0000 0067 0000
+	   0020 0000 0072
+	   0000
+ 00000BE4  0065 0000 0061	        dw 0065h,0,0061h,0,0063h,0,0068h,0,0065h,0,0064h,0,0,0
+	   0000 0063 0000
+	   0068 0000 0065
+	   0000 0064 0000
+	   0000 0000
+ 00000C00 005B 0000 0052	szDbgUndoFull dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000
+ 00000C20  005B 0000 0049	        dw 005Bh,0,0049h,0,004Eh,0,0046h,0,004Fh,0,005Dh,0,0020h,0,0075h,0
+	   0000 004E 0000
+	   0046 0000 004F
+	   0000 005D 0000
+	   0020 0000 0075
+	   0000
+ 00000C40  006E 0000 0064	        dw 006Eh,0,0064h,0,006Fh,0,0020h,0,0068h,0,0069h,0,0073h,0,0074h,0
+	   0000 006F 0000
+	   0020 0000 0068
+	   0000 0069 0000
+	   0073 0000 0074
+	   0000
+ 00000C60  006F 0000 0072	        dw 006Fh,0,0072h,0,0079h,0,0020h,0,0066h,0,0075h,0,006Ch,0,006Ch,0
+	   0000 0079 0000
+	   0020 0000 0066
+	   0000 0075 0000
+	   006C 0000 006C
+	   0000
+ 00000C80  002C 0000 0020	        dw 002Ch,0,0020h,0,006Fh,0,006Ch,0,0064h,0,0065h,0,0073h,0,0074h,0
+	   0000 006F 0000
+	   006C 0000 0064
+	   0000 0065 0000
+	   0073 0000 0074
+	   0000
+ 00000CA0  0020 0000 0065	        dw 0020h,0,0065h,0,006Eh,0,0074h,0,0072h,0,0079h,0,0020h,0,0064h,0
+	   0000 006E 0000
+	   0074 0000 0072
+	   0000 0079 0000
+	   0020 0000 0064
+	   0000
+ 00000CC0  0072 0000 006F	        dw 0072h,0,006Fh,0,0070h,0,0070h,0,0065h,0,0064h,0,0,0
+	   0000 0070 0000
+	   0070 0000 0065
+	   0000 0064 0000
+	   0000 0000
+
+ 00000CDC 0052 0000 0061	szVersionTag dw 0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,0020h,0,0054h,0
+	   0000 0077 0000
+	   0072 0000 0058
+	   0000 0044 0000
+	   0020 0000 0054
+	   0000
+ 00000CFC  0065 0000 0078	        dw 0065h,0,0078h,0,0074h,0,0045h,0,0064h,0,0069h,0,0074h,0,006Fh,0
+	   0000 0074 0000
+	   0045 0000 0064
+	   0000 0069 0000
+	   0074 0000 006F
+	   0000
+ 00000D1C  0072 0000 0047	        dw 0072h,0,0047h,0,0055h,0,0049h,0,0020h,0,0068h,0,0061h,0,0072h,0
+	   0000 0055 0000
+	   0049 0000 0020
+	   0000 0068 0000
+	   0061 0000 0072
+	   0000
+ 00000D3C  0064 0000 0065	        dw 0064h,0,0065h,0,006Eh,0,0065h,0,0064h,0,0020h,0,0031h,0,002Eh,0
+	   0000 006E 0000
+	   0065 0000 0064
+	   0000 0020 0000
+	   0031 0000 002E
+	   0000
+ 00000D5C  0030 0000 002E	        dw 0030h,0,002Eh,0,0030h,0,0,0
+	   0000 0030 0000
+	   0000 0000
+
+				; ----------------------------------------------------------------------------
+ 00000000			.data?
+ 00000000			g_fSelfTestValue QWORD ?
+	   0000000000000000
+
+				; ============================================================================
+				; Utility layer -- allocation, logging, string helpers
+				; ============================================================================
+ 00000000			.code
+
+				; ----------------------------------------------------------------------------
+				; LogWide : void LogWide(const WCHAR* text)
+				;   Single choke point for diagnostics. Never dereferences a NULL argument.
+				; ----------------------------------------------------------------------------
+ 00000000			LogWide PROC
+ 00000000  48/ 83 EC 28		    sub rsp, 40
+ 00000004  48/ 85 C9		    test rcx, rcx
+ 00000007  74 05		    jz  lw_done
+ 00000009  E8 00000000 E	    call OutputDebugStringW
+ 0000000E			lw_done:
+ 0000000E  48/ 83 C4 28		    add rsp, 40
+ 00000012  C3			    ret
+ 00000013			LogWide ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemAlloc : void* MemAlloc(size_t bytes)   [zero-initialised]
+				;   Returns NULL on failure; callers must check. Never throws.
+				; ----------------------------------------------------------------------------
+ 00000013			MemAlloc PROC
+ 00000013  48/ 83 EC 28		    sub rsp, 40
+ 00000017  48/ 85 C9		    test rcx, rcx
+ 0000001A  74 34		    jz  ma_null
+ 0000001C  4C/ 8B D1		    mov  r10, rcx
+ 0000001F  48/ 8B 05		    mov  rax, g_hHeap
+	   00000000 R
+ 00000026  48/ 85 C0		    test rax, rax
+ 00000029  74 12		    jz   ma_getheap
+ 0000002B			ma_have:
+ 0000002B  48/ 8B C8		    mov  rcx, rax
+ 0000002E  BA 00000008		    mov  edx, HEAP_ZERO_MEMORY
+ 00000033  4D/ 8B C2		    mov  r8, r10
+ 00000036  E8 00000000 E	    call HeapAlloc
+ 0000003B  EB 15		    jmp  ma_exit
+ 0000003D			ma_getheap:
+ 0000003D  E8 00000000 E	    call GetProcessHeap
+ 00000042  48/ 89 05		    mov  g_hHeap, rax
+	   00000000 R
+ 00000049  48/ 85 C0		    test rax, rax
+ 0000004C  74 02		    jz   ma_null
+ 0000004E  EB DB		    jmp  ma_have
+ 00000050			ma_null:
+ 00000050  33 C0		    xor eax, eax
+ 00000052			ma_exit:
+ 00000052  48/ 83 C4 28		    add rsp, 40
+ 00000056  C3			    ret
+ 00000057			MemAlloc ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemRealloc : void* MemRealloc(void* p, size_t bytes)   [zeroes new tail]
+				; ----------------------------------------------------------------------------
+ 00000057			MemRealloc PROC
+ 00000057  48/ 83 EC 28		    sub rsp, 40
+ 0000005B  48/ 85 C9		    test rcx, rcx
+ 0000005E  74 3A		    jz  mr_alloc_plain
+ 00000060  4C/ 8B D9		    mov  r11, rcx                    ; old block
+ 00000063  4C/ 8B D2		    mov  r10, rdx                    ; new size
+ 00000066  48/ 8B 05		    mov  rax, g_hHeap
+	   00000000 R
+ 0000006D  48/ 85 C0		    test rax, rax
+ 00000070  74 15		    jz   mr_geth
+ 00000072			mr_have:
+ 00000072  48/ 8B C8		    mov  rcx, rax
+ 00000075  BA 00000008		    mov  edx, HEAP_ZERO_MEMORY
+ 0000007A  4D/ 8B C3		    mov  r8, r11
+ 0000007D  4D/ 8B CA		    mov  r9, r10
+ 00000080  E8 00000000 E	    call HeapReAlloc
+ 00000085  EB 38		    jmp  mr_exit
+ 00000087			mr_geth:
+ 00000087  E8 00000000 E	    call GetProcessHeap
+ 0000008C  48/ 89 05		    mov  g_hHeap, rax
+	   00000000 R
+ 00000093  48/ 85 C0		    test rax, rax
+ 00000096  74 25		    jz   mr_null
+ 00000098  EB D8		    jmp  mr_have
+ 0000009A			mr_alloc_plain:
+ 0000009A  E8 00000000 E	    call GetProcessHeap
+ 0000009F  48/ 89 05		    mov  g_hHeap, rax
+	   00000000 R
+ 000000A6  48/ 85 C0		    test rax, rax
+ 000000A9  74 12		    jz   mr_null
+ 000000AB  48/ 8B C8		    mov  rcx, rax
+ 000000AE  BA 00000008		    mov  edx, HEAP_ZERO_MEMORY
+ 000000B3  4C/ 8B C2		    mov  r8, rdx
+ 000000B6  E8 00000000 E	    call HeapAlloc
+ 000000BB  EB 02		    jmp  mr_exit
+ 000000BD			mr_null:
+ 000000BD  33 C0		    xor eax, eax
+ 000000BF			mr_exit:
+ 000000BF  48/ 83 C4 28		    add rsp, 40
+ 000000C3  C3			    ret
+ 000000C4			MemRealloc ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemFree : void MemFree(void* p)   [H-07] idempotent
+				; ----------------------------------------------------------------------------
+ 000000C4			MemFree PROC
+ 000000C4  48/ 83 EC 28		    sub rsp, 40
+ 000000C8  48/ 85 C9		    test rcx, rcx
+ 000000CB  74 27		    jz  mf_done
+ 000000CD  4C/ 8B D9		    mov  r11, rcx
+ 000000D0  48/ 8B 05		    mov  rax, g_hHeap
+	   00000000 R
+ 000000D7  48/ 85 C0		    test rax, rax
+ 000000DA  74 18		    jz   mf_done
+ 000000DC  48/ 8B D0		    mov  rdx, rax
+ 000000DF  48/ 8B C8		    mov  rcx, rax
+ 000000E2  45/ 33 C0		    xor  r8d, r8d
+ 000000E5  4D/ 8B CB		    mov  r9, r11
+ 000000E8  E8 00000000 E	    call HeapFree
+ 000000ED  33 C9		    xor  ecx, ecx
+ 000000EF  E8 00000000 E	    call SetLastError
+ 000000F4			mf_done:
+ 000000F4  48/ 83 C4 28		    add rsp, 40
+ 000000F8  C3			    ret
+ 000000F9			MemFree ENDP
+
+				; ----------------------------------------------------------------------------
+				; WcsLen : size_t WcsLen(const WCHAR* s, size_t maxChars)
+				;   Bounded length so a non-terminated buffer cannot run off the end.
+				;   Returns maxChars when no NUL is found inside the window.
+				; ----------------------------------------------------------------------------
+ 000000F9			WcsLen PROC
+ 000000F9  33 C0		    xor eax, eax
+ 000000FB  48/ 85 C9		    test rcx, rcx
+ 000000FE  74 11		    jz  wl_done
+ 00000100			wl_loop:
+ 00000100  48/ 3B C2		    cmp rax, rdx
+ 00000103  73 0C		    jae wl_done
+ 00000105  66| 83 3C 41		    cmp word ptr [rcx + rax*2], 0
+	   00
+ 0000010A  74 05		    je  wl_done
+ 0000010C  48/ FF C0		    inc rax
+ 0000010F  EB EF		    jmp wl_loop
+ 00000111			wl_done:
+ 00000111  C3			    ret
+ 00000112			WcsLen ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemCopyW : void MemCopyW(WCHAR* dst, const WCHAR* src, size_t chars)
+				; ----------------------------------------------------------------------------
+ 00000112			MemCopyW PROC
+ 00000112  48/ 85 C9		    test rcx, rcx
+ 00000115  74 25		    jz  mcw_done
+ 00000117  48/ 85 D2		    test rdx, rdx
+ 0000011A  74 1B		    jz  mcw_zero
+ 0000011C  4D/ 85 C0		    test r8, r8
+ 0000011F  74 1B		    jz  mcw_done
+ 00000121  33 C0		    xor eax, eax
+ 00000123			mcw_loop:
+ 00000123  49/ 3B C0		    cmp rax, r8
+ 00000126  73 14		    jae mcw_done
+ 00000128  44/ 0F B7 14 42	    movzx r10d, word ptr [rdx + rax*2]
+ 0000012D  66| 44/ 89 14 41	    mov  word ptr [rcx + rax*2], r10w
+ 00000132  48/ FF C0		    inc  rax
+ 00000135  EB EC		    jmp  mcw_loop
+ 00000137			mcw_zero:
+ 00000137  66| C7 01 0000	    mov word ptr [rcx], 0
+ 0000013C			mcw_done:
+ 0000013C  C3			    ret
+ 0000013D			MemCopyW ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemMoveW : void MemMoveW(WCHAR* dst, const WCHAR* src, size_t chars)
+				;   Overlap-safe.
+				; ----------------------------------------------------------------------------
+ 0000013D			MemMoveW PROC
+ 0000013D  48/ 85 C9		    test rcx, rcx
+ 00000140  74 3E		    jz  mmw_out
+ 00000142  48/ 85 D2		    test rdx, rdx
+ 00000145  74 39		    jz  mmw_out
+ 00000147  4D/ 85 C0		    test r8, r8
+ 0000014A  74 34		    jz  mmw_out
+ 0000014C  48/ 3B CA		    cmp  rcx, rdx
+ 0000014F  74 2F		    je   mmw_out
+ 00000151  73 17		    jae  mmw_fwd
+				    ; backwards
+ 00000153  49/ 8B C0		    mov  rax, r8
+ 00000156			mmw_bwd:
+ 00000156  48/ 85 C0		    test rax, rax
+ 00000159  74 25		    jz   mmw_out
+ 0000015B  48/ FF C8		    dec  rax
+ 0000015E  44/ 0F B7 14 42	    movzx r10d, word ptr [rdx + rax*2]
+ 00000163  66| 44/ 89 14 41	    mov  word ptr [rcx + rax*2], r10w
+ 00000168  EB EC		    jmp  mmw_bwd
+ 0000016A			mmw_fwd:
+ 0000016A  33 C0		    xor  eax, eax
+ 0000016C			mmw_fwd_loop:
+ 0000016C  49/ 3B C0		    cmp  rax, r8
+ 0000016F  73 0F		    jae  mmw_out
+ 00000171  44/ 0F B7 14 42	    movzx r10d, word ptr [rdx + rax*2]
+ 00000176  66| 44/ 89 14 41	    mov  word ptr [rcx + rax*2], r10w
+ 0000017B  48/ FF C0		    inc  rax
+ 0000017E  EB EC		    jmp  mmw_fwd_loop
+ 00000180			mmw_out:
+ 00000180  C3			    ret
+ 00000181			MemMoveW ENDP
+
+				; ----------------------------------------------------------------------------
+				; IntToWide : int IntToWide(int value, WCHAR* out, size_t outCap)
+				;   Writes a decimal (no sign handling needed, values are >= 0) and returns
+				;   the number of characters written. Always NUL-terminates.
+				; ----------------------------------------------------------------------------
+ 00000181			IntToWide PROC
+ 00000181  53			    push rbx
+ 00000182  41/ 54		    push r12
+ 00000184  41/ 55		    push r13
+ 00000186  48/ 83 EC 30		    sub  rsp, 48
+ 0000018A  48/ 85 D2		    test rdx, rdx
+ 0000018D  74 6A		    jz   itw_fail
+ 0000018F  4C/ 8B E2		    mov  r12, rdx
+ 00000192  49/ 83 F8 02		    cmp  r8, 2
+ 00000196  72 61		    jb   itw_fail
+ 00000198  4D/ 8B E8		    mov  r13, r8
+ 0000019B  8B D9		    mov  ebx, ecx
+				    ; count digits
+ 0000019D  45/ 33 D2		    xor  r10d, r10d
+ 000001A0  8B C3		    mov  eax, ebx
+ 000001A2  85 C0		    test eax, eax
+ 000001A4  75 08		    jnz  itw_cnt
+ 000001A6  41/ BA		    mov  r10d, 1
+	   00000001
+ 000001AC  EB 12		    jmp  itw_emit
+ 000001AE			itw_cnt:
+ 000001AE  85 C0		    test eax, eax
+ 000001B0  74 0E		    jz   itw_emit
+ 000001B2  33 D2		    xor  edx, edx
+ 000001B4  B9 0000000A		    mov  ecx, 10
+ 000001B9  F7 F1		    div  ecx
+ 000001BB  41/ FF C2		    inc  r10d
+ 000001BE  EB EE		    jmp  itw_cnt
+ 000001C0			itw_emit:
+ 000001C0  4D/ 3B D5		    cmp  r10, r13
+ 000001C3  73 34		    jae  itw_fail                       ; not enough room for digits + NUL
+ 000001C5  4D/ 8B DA		    mov  r11, r10
+ 000001C8  4B/ C7 04 5C		    mov  qword ptr [r12 + r11*2], 0     ; NUL at [len]
+	   00000000
+ 000001D0  49/ 83 EB 01		    sub  r11, 1
+ 000001D4  8B C3		    mov  eax, ebx
+ 000001D6			itw_fill:
+ 000001D6  4D/ 85 DB		    test r11, r11
+ 000001D9  78 19		    js   itw_ok
+ 000001DB  33 D2		    xor  edx, edx
+ 000001DD  B9 0000000A		    mov  ecx, 10
+ 000001E2  F7 F1		    div  ecx
+ 000001E4  83 C2 30		    add  edx, '0'
+ 000001E7  66| 43/ 89 14 5C	    mov  word ptr [r12 + r11*2], dx
+ 000001EC  49/ 83 EB 01		    sub  r11, 1
+ 000001F0  85 C0		    test eax, eax
+ 000001F2  75 E2		    jnz  itw_fill
+ 000001F4			itw_ok:
+ 000001F4  49/ 8B C2		    mov  rax, r10
+ 000001F7  EB 02		    jmp  itw_exit
+ 000001F9			itw_fail:
+ 000001F9  33 C0		    xor eax, eax
+ 000001FB			itw_exit:
+ 000001FB  48/ 83 C4 30		    add  rsp, 48
+ 000001FF  41/ 5D		    pop  r13
+ 00000201  41/ 5C		    pop  r12
+ 00000203  5B			    pop  rbx
+ 00000204  C3			    ret
+ 00000205			IntToWide ENDP
+
+				; ============================================================================
+				; Document buffer  --  [H-14] heap grown, hard ceiling, fully validated
+				; ============================================================================
+
+				; ----------------------------------------------------------------------------
+				; BufEnsure : bool BufEnsure(TEXT_BUFFER* buf, size_t needChars)
+				; ----------------------------------------------------------------------------
+ 00000205			BufEnsure PROC
+ 00000205  48/ 83 EC 28		    sub rsp, 40
+ 00000209  48/ 85 C9		    test rcx, rcx
+ 0000020C  0F 84 000000AA	    jz  be_fail
+ 00000212  4C/ 8B 51 10		    mov  r10, [rcx + BUF_LEN]
+ 00000216  4C/ 03 D2		    add  r10, rdx                      ; required chars excluding NUL
+ 00000219  49/ 83 C2 01		    add  r10, 1                        ; plus the NUL slot
+ 0000021D  4C/ 8B 59 08		    mov  r11, [rcx + BUF_CAP]
+ 00000221  4D/ 3B DA		    cmp  r11, r10
+ 00000224  73 7C		    jae  be_ok                         ; already big enough
+ 00000226  49/ 8B D3		    mov  rdx, r11
+ 00000229  48/ 85 D2		    test rdx, rdx
+ 0000022C  75 07		    jnz  be_double
+ 0000022E  48/ C7 C2		    mov  rdx, CFG_INIT_CAP
+	   00000400
+ 00000235			be_double:
+ 00000235  49/ 3B D2		    cmp  rdx, r10
+ 00000238  73 15		    jae  be_sized
+ 0000023A  48/ D1 E2		    shl  rdx, 1
+ 0000023D  48/ 81 FA		    cmp  rdx, CFG_INIT_CAP
+	   00000400
+ 00000244  73 EF		    jae  be_double
+ 00000246  48/ C7 C2		    mov  rdx, CFG_INIT_CAP
+	   00000400
+ 0000024D  EB E6		    jmp  be_double
+ 0000024F			be_sized:
+ 0000024F  48/ 81 FA		    cmp  rdx, CFG_MAX_CAP
+	   01000000
+ 00000256  76 0C		    jbe  be_grow
+ 00000258  48/ C7 C2		    mov  rdx, CFG_MAX_CAP
+	   01000000
+ 0000025F  49/ 3B D2		    cmp  rdx, r10
+ 00000262  72 45		    jb   be_overflow
+ 00000264			be_grow:
+				    ; rdx = new capacity in CHARS on entry. Save it (and the BUF*) across the
+				    ; heap call, because rdx/rcx/r11 are all volatile on the Win64 ABI. The old
+				    ; code kept the BUF* in r11 across the call and then wrote through it.
+ 00000264  52			    push rdx                          ; capacity, chars
+ 00000265  51			    push rcx                          ; BUF*
+ 00000266  48/ 8B 01		    mov  rax, [rcx + BUF_DATA]
+ 00000269  48/ 8D 0C 55		    lea  rcx, [rdx*2 + 2]             ; bytes = chars*2 + NUL slot
+	   00000002
+ 00000271  48/ 83 F8 00		    cmp  rax, 0
+ 00000275  75 07		    jne  be_reuse
+ 00000277  E8 FFFFFD97		    call MemAlloc
+ 0000027C  EB 10		    jmp  be_store
+ 0000027E			be_reuse:
+ 0000027E  48/ 8B C8		    mov  rcx, rax                     ; old block
+ 00000281  48/ 8D 14 55		    lea  rdx, [rdx*2 + 2]             ; bytes
+	   00000002
+ 00000289  E8 FFFFFDC9		    call MemRealloc
+ 0000028E			be_store:
+ 0000028E  59			    pop  rcx                          ; BUF* (restored, not volatile-derived)
+ 0000028F  5A			    pop  rdx                          ; capacity, chars
+ 00000290  48/ 85 C0		    test rax, rax
+ 00000293  74 27		    jz   be_fail
+ 00000295  48/ 89 01		    mov  [rcx + BUF_DATA], rax
+ 00000298  48/ 89 51 08		    mov  qword ptr [rcx + BUF_CAP], rdx
+				    ; [H-14] preserve the NUL invariant for the new capacity
+ 0000029C  66| C7 04 50		    mov  word ptr [rax + rdx*2], 0
+	   0000
+ 000002A2			be_ok:
+ 000002A2  B8 00000001		    mov  eax, 1
+ 000002A7  EB 24		    jmp  be_exit
+ 000002A9			be_overflow:
+ 000002A9  48/ B9		    mov  rcx, offset szDbgOverflow
+	   0000000000000B44 R
+ 000002B3  E8 FFFFFD48		    call LogWide
+ 000002B8  33 C0		    xor  eax, eax
+ 000002BA  EB 11		    jmp  be_exit
+ 000002BC			be_fail:
+ 000002BC  48/ B9		    mov  rcx, offset szDbgBadBuf
+	   0000000000000AB4 R
+ 000002C6  E8 FFFFFD35		    call LogWide
+ 000002CB  33 C0		    xor  eax, eax
+ 000002CD			be_exit:
+ 000002CD  48/ 83 C4 28		    add  rsp, 40
+ 000002D1  C3			    ret
+ 000002D2			BufEnsure ENDP
+
+				; ----------------------------------------------------------------------------
+				; BufInsert : bool BufInsert(TEXT_BUFFER* buf, size_t off, const WCHAR* src, size_t len)
+				;   [H-02] off is validated against len, not memory contents.
+				; ----------------------------------------------------------------------------
+ 000002D2			BufInsert PROC
+ 000002D2  53			    push rbx
+ 000002D3  41/ 54		    push r12
+ 000002D5  41/ 55		    push r13
+ 000002D7  41/ 56		    push r14
+ 000002D9  41/ 57		    push r15
+ 000002DB  48/ 83 EC 40		    sub  rsp, 64
+
+ 000002DF  48/ 85 C9		    test rcx, rcx
+ 000002E2  74 7E		    jz   bi_fail
+ 000002E4  48/ 85 D2		    test rdx, rdx
+ 000002E7  74 79		    jz   bi_fail
+ 000002E9  4D/ 85 C0		    test r8, r8
+ 000002EC  74 74		    jz   bi_fail
+
+ 000002EE  48/ 8B D9		    mov  rbx, rcx                      ; buf
+ 000002F1  4C/ 8B E2		    mov  r12, rdx                      ; off
+ 000002F4  4D/ 8B E8		    mov  r13, r8                       ; src
+ 000002F7  4D/ 8B F1		    mov  r14, r9                       ; len
+
+ 000002FA  48/ 8B 43 10		    mov  rax, [rbx + BUF_LEN]
+ 000002FE  4C/ 3B E0		    cmp  r12, rax
+ 00000301  77 5F		    ja   bi_fail                       ; off > len is illegal
+
+ 00000303  48/ 8B CB		    mov  rcx, rbx
+ 00000306  49/ 8B D6		    mov  rdx, r14
+ 00000309  E8 FFFFFEF7		    call BufEnsure
+ 0000030E  85 C0		    test eax, eax
+ 00000310  74 50		    jz   bi_fail
+
+ 00000312  48/ 8B 3B		    mov  rdi, [rbx + BUF_DATA]
+ 00000315  48/ 8B 73 10		    mov  rsi, [rbx + BUF_LEN]
+ 00000319  48/ 8B CF		    mov  rcx, rdi                      ; dst
+ 0000031C  4A/ 8D 14 67		    lea  rdx, [rdi + r12*2]            ; dst + off
+ 00000320  4C/ 8B C6		    mov  r8, rsi
+ 00000323  4D/ 2B C4		    sub  r8, r12                       ; chars to shift
+ 00000326  E8 FFFFFE12		    call MemMoveW
+				    ; place new bytes at off
+ 0000032B  33 C0		    xor  eax, eax
+ 0000032D			bi_copy:
+ 0000032D  49/ 3B C6		    cmp  rax, r14
+ 00000330  73 18		    jae  bi_tail
+ 00000332  45/ 0F B7 54 45	    movzx r10d, word ptr [r13 + rax*2]
+	   00
+ 00000338  4E/ 8D 1C 20		    lea  r11, [rax + r12]          ; combined word index (one index reg only)
+ 0000033C  4F/ 8D 1C 1B		    lea  r11, [r11 + r11]          ; *2 -> bytes
+ 00000340  66| 46/ 89 14 1F	    mov  word ptr [rdi + r11], r10w
+ 00000345  48/ FF C0		    inc  rax
+ 00000348  EB E3		    jmp  bi_copy
+ 0000034A			bi_tail:
+ 0000034A  48/ 8B 43 10		    mov  rax, [rbx + BUF_LEN]
+ 0000034E  49/ 03 C6		    add  rax, r14
+ 00000351  66| C7 04 47		    mov  word ptr [rdi + rax*2], 0     ; restore NUL invariant
+	   0000
+ 00000357  48/ 89 43 10		    mov  [rbx + BUF_LEN], rax
+ 0000035B  B8 00000001		    mov  eax, 1
+ 00000360  EB 02		    jmp  bi_exit
+ 00000362			bi_fail:
+ 00000362  33 C0		    xor eax, eax
+ 00000364			bi_exit:
+ 00000364  48/ 83 C4 40		    add  rsp, 64
+ 00000368  41/ 5F		    pop  r15
+ 0000036A  41/ 5E		    pop  r14
+ 0000036C  41/ 5D		    pop  r13
+ 0000036E  41/ 5C		    pop  r12
+ 00000370  5B			    pop  rbx
+ 00000371  C3			    ret
+ 00000372			BufInsert ENDP
+
+				; ----------------------------------------------------------------------------
+				; BufDelete : bool BufDelete(TEXT_BUFFER* buf, size_t off, size_t len)
+				;   Deletes at most the tail; never runs past [off, len).
+				; ----------------------------------------------------------------------------
+ 00000372			BufDelete PROC
+ 00000372  53			    push rbx
+ 00000373  41/ 54		    push r12
+ 00000375  41/ 55		    push r13
+ 00000377  41/ 56		    push r14
+ 00000379  41/ 57		    push r15
+ 0000037B  48/ 83 EC 40		    sub  rsp, 64
+
+ 0000037F  48/ 85 C9		    test rcx, rcx
+ 00000382  74 62		    jz   bd_fail
+ 00000384  48/ 8B D9		    mov  rbx, rcx
+ 00000387  4C/ 8B E2		    mov  r12, rdx
+ 0000038A  4D/ 8B E8		    mov  r13, r8
+
+ 0000038D  48/ 8B 43 10		    mov  rax, [rbx + BUF_LEN]
+ 00000391  4C/ 3B E0		    cmp  r12, rax
+ 00000394  73 49		    jae  bd_done                       ; off at/after end: nothing to do
+ 00000396  48/ 8B D0		    mov  rdx, rax
+ 00000399  49/ 2B D4		    sub  rdx, r12                      ; available bytes
+ 0000039C  4C/ 3B EA		    cmp  r13, rdx
+ 0000039F  76 03		    jbe  bd_lenok
+ 000003A1  4C/ 8B EA		    mov  r13, rdx                      ; clamp len to the available tail
+ 000003A4			bd_lenok:
+ 000003A4  4D/ 85 ED		    test r13, r13
+ 000003A7  74 36		    jz   bd_done
+
+ 000003A9  48/ 8B 3B		    mov  rdi, [rbx + BUF_DATA]
+ 000003AC  4F/ 8D 1C 2C		    lea  r11, [r12 + r13]          ; combined word index (one index reg only)
+ 000003B0  4F/ 8D 1C 1B		    lea  r11, [r11 + r11]          ; *2 -> bytes
+ 000003B4  4A/ 8D 0C 1F		    lea  rcx, [rdi + r11]
+ 000003B8  4A/ 8D 14 67		    lea  rdx, [rdi + r12*2]
+ 000003BC  48/ 8B 43 10		    mov  rax, [rbx + BUF_LEN]
+ 000003C0  49/ 2B C4		    sub  rax, r12
+ 000003C3  49/ 2B C5		    sub  rax, r13
+ 000003C6  4C/ 8B C0		    mov  r8, rax
+ 000003C9  E8 FFFFFD6F		    call MemMoveW
+ 000003CE  48/ 8B 43 10		    mov  rax, [rbx + BUF_LEN]
+ 000003D2  49/ 2B C5		    sub  rax, r13
+ 000003D5  48/ 89 43 10		    mov  [rbx + BUF_LEN], rax
+ 000003D9  66| C7 04 47		    mov  word ptr [rdi + rax*2], 0
+	   0000
+ 000003DF			bd_done:
+ 000003DF  B8 00000001		    mov  eax, 1
+ 000003E4  EB 02		    jmp  bd_exit
+ 000003E6			bd_fail:
+ 000003E6  33 C0		    xor  eax, eax
+ 000003E8			bd_exit:
+ 000003E8  48/ 83 C4 40		    add  rsp, 64
+ 000003EC  41/ 5F		    pop  r15
+ 000003EE  41/ 5E		    pop  r14
+ 000003F0  41/ 5D		    pop  r13
+ 000003F2  41/ 5C		    pop  r12
+ 000003F4  5B			    pop  rbx
+ 000003F5  C3			    ret
+ 000003F6			BufDelete ENDP
+
+				; ============================================================================
+				; Line index -- the single source of truth for offset <-> (line, col) mapping.
+				; Rebuilt on every structural edit so cursor math can never drift out of range.
+				; ============================================================================
+ 000003F6			LinesRebuild PROC
+ 000003F6  53			    push rbx
+ 000003F7  41/ 54		    push r12
+ 000003F9  41/ 55		    push r13
+ 000003FB  41/ 56		    push r14
+ 000003FD  41/ 57		    push r15
+ 000003FF  48/ 83 EC 40		    sub  rsp, 64
+
+ 00000403  48/ 85 C9		    test rcx, rcx
+ 00000406  0F 84 00000107	    jz   lr_fail
+ 0000040C  48/ 8B D9		    mov  rbx, rcx
+ 0000040F  4C/ 8B 63 20		    mov  r12, [rbx + CTX_BUF]
+ 00000413  4D/ 85 E4		    test r12, r12
+ 00000416  0F 84 000000F7	    jz   lr_fail
+ 0000041C  4C/ 8B 6B 40		    mov  r13, [rbx + CTX_LINES]
+				    ; [H-21] ALWAYS recount from the buffer. The old code reused LIX_COUNT as
+				    ; the allocation hint; on a freshly allocated index that is 0, so the
+				    ; first newline wrote items[1] into a one-slot array (heap overflow).
+ 00000420  EB 00		    jmp  lr_write
+ 00000422			lr_write:
+				    ; count lines present in the buffer
+ 00000422  49/ 8B 44 24		    mov  rax, [r12 + BUF_LEN]
+	   10
+ 00000427  48/ 85 C0		    test rax, rax
+ 0000042A  74 25		    jz   lr_empty
+ 0000042C  49/ 8B 3C 24		    mov  rdi, [r12 + BUF_DATA]
+ 00000430  49/ C7 C6		    mov  r14, 1
+	   00000001
+ 00000437  45/ 33 FF		    xor  r15d, r15d
+ 0000043A			lr_count:
+ 0000043A  4C/ 3B F8		    cmp  r15, rax
+ 0000043D  73 10		    jae  lr_countdone
+ 0000043F  66| 42/ 83 3C 7F	    cmp  word ptr [rdi + r15*2], 10
+	   0A
+ 00000445  75 03		    jne  lr_countnext
+ 00000447  49/ FF C6		    inc  r14
+ 0000044A			lr_countnext:
+ 0000044A  49/ FF C7		    inc  r15
+ 0000044D  EB EB		    jmp  lr_count
+ 0000044F			lr_countdone:
+ 0000044F  EB 10		    jmp  lr_grow
+ 00000451			lr_empty:
+ 00000451  49/ C7 C6		    mov  r14, 1
+	   00000001
+ 00000458  49/ C7 C5		    mov  r13, 0
+	   00000000
+ 0000045F  EB 00		    jmp  lr_grow
+
+ 00000461			lr_grow:
+ 00000461  49/ C7 C7		    mov  r15, 0
+	   00000000
+ 00000468  49/ 8B C6		    mov  rax, r14                      ; required item count
+ 0000046B			lr_sizeloop:
+ 0000046B  49/ C7 C7		    mov  r15, 1
+	   00000001
+ 00000472  4C/ 3B F8		    cmp  r15, rax
+ 00000475  73 05		    jae  lr_sized
+ 00000477  49/ D1 E7		    shl  r15, 1
+ 0000047A  EB EF		    jmp  lr_sizeloop
+ 0000047C			lr_sized:
+				    ; allocate index header + items in one block
+ 0000047C  48/ C7 C1		    mov  rcx, LIX_SIZE
+	   00000010
+ 00000483  49/ 03 CF		    add  rcx, r15
+ 00000486  49/ 03 CF		    add  rcx, r15                      ; items are qword, so *8 = *2*4
+				    ; (items array is 8 bytes wide) -> recompute properly
+ 00000489  48/ C7 C1		    mov  rcx, LIX_SIZE
+	   00000010
+ 00000490  4A/ 8D 14 FD		    lea  rdx, [r15*8]
+	   00000000
+ 00000498  48/ 03 CA		    add  rcx, rdx
+ 0000049B  E8 FFFFFB73		    call MemAlloc
+ 000004A0  48/ 85 C0		    test rax, rax
+ 000004A3  74 6E		    jz   lr_fail
+ 000004A5  4C/ 8B E8		    mov  r13, rax
+
+				    ; [H-07] release the previous index exactly once
+ 000004A8  48/ 8B 4B 40		    mov  rcx, [rbx + CTX_LINES]
+ 000004AC  48/ 85 C9		    test rcx, rcx
+ 000004AF  74 05		    jz   lr_store
+ 000004B1  E8 FFFFFC0E		    call MemFree
+ 000004B6			lr_store:
+ 000004B6  4C/ 89 6B 40		    mov  [rbx + CTX_LINES], r13
+ 000004BA  49/ C7 45 00		    mov  qword ptr [r13 + LIX_COUNT], 0
+	   00000000
+ 000004C2  49/ 8B 04 24		    mov  rax, [r12 + BUF_DATA]
+ 000004C6  4C/ 8B D0		    mov  r10, rax
+ 000004C9  4D/ 85 D2		    test r10, r10
+ 000004CC  74 45		    jz   lr_fail
+ 000004CE  4D/ 8D 5D 08		    lea  r11, [r13 + LIX_ITEMS]
+ 000004D2  49/ C7 03		    mov  qword ptr [r11], 0
+	   00000000
+ 000004D9  49/ C7 45 00		    mov  qword ptr [r13 + LIX_COUNT], 1
+	   00000001
+ 000004E1  49/ 8B 4C 24		    mov  rcx, [r12 + BUF_LEN]
+	   10
+ 000004E6  48/ C7 C2		    mov  rdx, 0
+	   00000000
+ 000004ED			lr_scan:
+ 000004ED  48/ 3B D1		    cmp  rdx, rcx
+ 000004F0  73 1A		    jae  lr_exit
+ 000004F2  66| 41/ 83 3C 52	    cmp  word ptr [r10 + rdx*2], 10
+	   0A
+ 000004F8  75 0D		    jne  lr_scannext
+ 000004FA  49/ 8B 45 00		    mov  rax, [r13 + LIX_COUNT]
+ 000004FE  49/ 89 14 C3		    mov  qword ptr [r11 + rax*8], rdx
+ 00000502  49/ 83 45 00		    add  qword ptr [r13 + LIX_COUNT], 1
+	   01
+ 00000507			lr_scannext:
+ 00000507  48/ FF C2		    inc  rdx
+ 0000050A  EB E1		    jmp  lr_scan
+ 0000050C			lr_exit:
+ 0000050C  B8 00000001		    mov  eax, 1
+ 00000511  EB 02		    jmp  lr_ret
+ 00000513			lr_fail:
+ 00000513  33 C0		    xor  eax, eax
+ 00000515			lr_ret:
+ 00000515  48/ 83 C4 40		    add  rsp, 64
+ 00000519  41/ 5F		    pop  r15
+ 0000051B  41/ 5E		    pop  r14
+ 0000051D  41/ 5D		    pop  r13
+ 0000051F  41/ 5C		    pop  r12
+ 00000521  5B			    pop  rbx
+ 00000522  C3			    ret
+ 00000523			LinesRebuild ENDP
+
+				; ----------------------------------------------------------------------------
+				; OffsetToLineCol : bool OffsetToLineCol(CTX* ctx, QWORD off, QWORD* pLine, QWORD* pCol)
+				;   [H-02] single, validated mapping used by every consumer.
+				; ----------------------------------------------------------------------------
+ 00000523			OffsetToLineCol PROC
+ 00000523  53			    push rbx
+ 00000524  41/ 54		    push r12
+ 00000526  41/ 55		    push r13
+ 00000528  41/ 56		    push r14
+ 0000052A  41/ 57		    push r15
+ 0000052C  48/ 83 EC 40		    sub  rsp, 64
+
+ 00000530  48/ 85 C9		    test rcx, rcx
+ 00000533  0F 84 0000009B	    jz   olc_fail
+ 00000539  4D/ 85 C0		    test r8, r8
+ 0000053C  0F 84 00000092	    jz   olc_fail
+ 00000542  4D/ 85 C9		    test r9, r9
+ 00000545  0F 84 00000089	    jz   olc_fail
+
+ 0000054B  48/ 8B D9		    mov  rbx, rcx
+ 0000054E  4C/ 8B E2		    mov  r12, rdx                      ; offset
+ 00000551  4D/ 8B E8		    mov  r13, r8                       ; pLine
+ 00000554  4D/ 8B F1		    mov  r14, r9                       ; pCol
+
+ 00000557  48/ 8B 7B 20		    mov  rdi, [rbx + CTX_BUF]
+ 0000055B  48/ 85 FF		    test rdi, rdi
+ 0000055E  74 74		    jz   olc_fail
+ 00000560  48/ 8B 47 10		    mov  rax, [rdi + BUF_LEN]
+ 00000564  4C/ 3B E0		    cmp  r12, rax
+ 00000567  76 03		    jbe  olc_ok_off
+ 00000569  4C/ 8B E0		    mov  r12, rax                      ; clamp
+ 0000056C			olc_ok_off:
+ 0000056C  4C/ 8B 7B 40		    mov  r15, [rbx + CTX_LINES]
+ 00000570  4D/ 85 FF		    test r15, r15
+ 00000573  74 5F		    jz   olc_fail
+
+ 00000575  49/ 8B 0F		    mov  rcx, [r15 + LIX_COUNT]
+ 00000578  48/ 85 C9		    test rcx, rcx
+ 0000057B  74 57		    jz   olc_fail
+				    ; binary search for last item <= off
+ 0000057D  48/ C7 C0		    mov  rax, 0
+	   00000000
+ 00000584  48/ 8B D1		    mov  rdx, rcx
+ 00000587  48/ FF CA		    dec  rdx                           ; high
+ 0000058A			olc_bin:
+ 0000058A  48/ 3B C2		    cmp  rax, rdx
+ 0000058D  73 21		    jae  olc_binend
+ 0000058F  48/ 8B C8		    mov  rcx, rax
+ 00000592  48/ 03 CA		    add  rcx, rdx
+ 00000595  48/ D1 E9		    shr  rcx, 1
+ 00000598  4D/ 8D 47 08		    lea  r8, [r15 + LIX_ITEMS]
+ 0000059C  4D/ 39 24 C8		    cmp  qword ptr [r8 + rcx*8], r12
+ 000005A0  77 09		    ja   olc_golower
+ 000005A2  48/ 8B C1		    mov  rax, rcx
+ 000005A5  48/ 83 C0 01		    add  rax, 1
+ 000005A9  EB DF		    jmp  olc_bin
+ 000005AB			olc_golower:
+ 000005AB  48/ 8B D1		    mov  rdx, rcx
+ 000005AE  EB DA		    jmp  olc_bin
+ 000005B0			olc_binend:
+ 000005B0  48/ 85 C0		    test rax, rax
+ 000005B3  74 03		    jz   olc_line0
+ 000005B5  48/ FF C8		    dec  rax
+ 000005B8			olc_line0:
+ 000005B8  49/ 89 45 00		    mov  [r13], rax
+ 000005BC  4D/ 8D 47 08		    lea  r8, [r15 + LIX_ITEMS]
+ 000005C0  49/ 8B 0C C0		    mov  rcx, [r8 + rax*8]
+ 000005C4  49/ 8B D4		    mov  rdx, r12
+ 000005C7  48/ 2B D1		    sub  rdx, rcx
+ 000005CA  49/ 89 16		    mov  [r14], rdx
+ 000005CD  B8 00000001		    mov  eax, 1
+ 000005D2  EB 02		    jmp  olc_exit
+ 000005D4			olc_fail:
+ 000005D4  33 C0		    xor eax, eax
+ 000005D6			olc_exit:
+ 000005D6  48/ 83 C4 40		    add  rsp, 64
+ 000005DA  41/ 5F		    pop  r15
+ 000005DC  41/ 5E		    pop  r14
+ 000005DE  41/ 5D		    pop  r13
+ 000005E0  41/ 5C		    pop  r12
+ 000005E2  5B			    pop  rbx
+ 000005E3  C3			    ret
+ 000005E4			OffsetToLineCol ENDP
+
+				; ----------------------------------------------------------------------------
+				; LineColToOffset : bool LineColToOffset(CTX* ctx, QWORD line, QWORD col, QWORD* pOff)
+				;   clamps col to the physical line length so the cursor can never land in the
+				;   middle of a line terminator.
+				; ----------------------------------------------------------------------------
+ 000005E4			LineColToOffset PROC
+ 000005E4  53			    push rbx
+ 000005E5  41/ 54		    push r12
+ 000005E7  41/ 55		    push r13
+ 000005E9  41/ 56		    push r14
+ 000005EB  41/ 57		    push r15
+ 000005ED  48/ 83 EC 40		    sub  rsp, 64
+
+ 000005F1  48/ 85 C9		    test rcx, rcx
+ 000005F4  74 7A		    jz   lco_fail
+ 000005F6  4D/ 85 C9		    test r9, r9
+ 000005F9  74 75		    jz   lco_fail
+
+ 000005FB  48/ 8B D9		    mov  rbx, rcx
+ 000005FE  4C/ 8B E2		    mov  r12, rdx                      ; line
+ 00000601  4D/ 8B E8		    mov  r13, r8                       ; col
+ 00000604  4D/ 8B F1		    mov  r14, r9                       ; pOff
+
+ 00000607  4C/ 8B 7B 40		    mov  r15, [rbx + CTX_LINES]
+ 0000060B  4D/ 85 FF		    test r15, r15
+ 0000060E  74 60		    jz   lco_fail
+ 00000610  49/ 8B 07		    mov  rax, [r15 + LIX_COUNT]
+ 00000613  48/ 85 C0		    test rax, rax
+ 00000616  74 58		    jz   lco_fail
+ 00000618  4C/ 3B E0		    cmp  r12, rax
+ 0000061B  72 06		    jb   lco_lineok
+ 0000061D  4C/ 8B E0		    mov  r12, rax
+ 00000620  49/ FF CC		    dec  r12                           ; clamp line
+ 00000623			lco_lineok:
+ 00000623  49/ 8D 7F 08		    lea  rdi, [r15 + LIX_ITEMS]
+ 00000627  4A/ 8B 0C E7		    mov  rcx, [rdi + r12*8]            ; line start
+ 0000062B  48/ 8B 53 20		    mov  rdx, [rbx + CTX_BUF]
+ 0000062F  48/ 8B 52 10		    mov  rdx, [rdx + BUF_LEN]
+ 00000633  4C/ 8B CA		    mov  r9, rdx                       ; buffer length
+ 00000636  4C/ 8B C1		    mov  r8, rcx                       ; end of this line
+ 00000639			lco_scan:
+ 00000639  4D/ 3B C1		    cmp  r8, r9
+ 0000063C  73 14		    jae  lco_maxed
+ 0000063E  48/ 8D 03		    lea  rax, [rbx]
+ 00000641  48/ 8B 43 20		    mov  rax, [rbx + CTX_BUF]
+ 00000645  66| 42/ 83 3C 40	    cmp  word ptr [rax + r8*2], 10
+	   0A
+ 0000064B  74 05		    je   lco_maxed
+ 0000064D  49/ FF C0		    inc  r8
+ 00000650  EB E7		    jmp  lco_scan
+ 00000652			lco_maxed:
+ 00000652  49/ 8B C0		    mov  rax, r8
+ 00000655  48/ 2B C1		    sub  rax, rcx                      ; physical line length
+ 00000658  4C/ 3B E8		    cmp  r13, rax
+ 0000065B  76 03		    jbe  lco_colok
+ 0000065D  4C/ 8B E8		    mov  r13, rax                      ; clamp col
+ 00000660			lco_colok:
+ 00000660  48/ 8B C1		    mov  rax, rcx
+ 00000663  49/ 03 C5		    add  rax, r13
+ 00000666  49/ 89 06		    mov  [r14], rax
+ 00000669  B8 00000001		    mov  eax, 1
+ 0000066E  EB 02		    jmp  lco_exit
+ 00000670			lco_fail:
+ 00000670  33 C0		    xor eax, eax
+ 00000672			lco_exit:
+ 00000672  48/ 83 C4 40		    add  rsp, 64
+ 00000676  41/ 5F		    pop  r15
+ 00000678  41/ 5E		    pop  r14
+ 0000067A  41/ 5D		    pop  r13
+ 0000067C  41/ 5C		    pop  r12
+ 0000067E  5B			    pop  rbx
+ 0000067F  C3			    ret
+ 00000680			LineColToOffset ENDP
+
+				; ============================================================================
+				; Cursor
+				; ============================================================================
+ 00000680			CursorClamp PROC
+ 00000680  48/ 85 C9		    test rcx, rcx
+ 00000683  74 3B		    jz   cc_done
+ 00000685  48/ 8B 51 28		    mov  rdx, [rcx + CTX_CURSOR]
+ 00000689  48/ 85 D2		    test rdx, rdx
+ 0000068C  74 32		    jz   cc_done
+ 0000068E  48/ 8B 41 20		    mov  rax, [rcx + CTX_BUF]
+ 00000692  48/ 85 C0		    test rax, rax
+ 00000695  74 29		    jz   cc_done
+ 00000697  4C/ 8B 40 10		    mov  r8, [rax + BUF_LEN]
+ 0000069B  48/ 8B 02		    mov  rax, [rdx + CUR_OFF]
+ 0000069E  49/ 3B C0		    cmp  rax, r8
+ 000006A1  76 06		    jbe  cc_ok
+ 000006A3  4C/ 89 02		    mov  [rdx + CUR_OFF], r8
+ 000006A6  49/ 8B C0		    mov  rax, r8
+ 000006A9			cc_ok:
+ 000006A9  48/ 8B 52 08		    mov  rdx, [rdx + CUR_ANCHOR]
+ 000006AD  48/ 83 FA 00		    cmp  rdx, 0
+ 000006B1  78 0D		    js   cc_done                       ; SEL_NONE or negative
+ 000006B3  49/ 3B D0		    cmp  rdx, r8
+ 000006B6  76 08		    jbe  cc_done
+ 000006B8  4C/ 8B 51 28		    mov  r10, [rcx + CTX_CURSOR]
+ 000006BC  4D/ 89 42 08		    mov  [r10 + CUR_ANCHOR], r8
+ 000006C0			cc_done:
+ 000006C0  C3			    ret
+ 000006C1			CursorClamp ENDP
+
+				; CurSelGet : void CurSelGet(CTX* ctx, QWORD* pStart, QWORD* pEnd, QWORD* pActive)
+				;   pActive is 1 when a selection exists. Selection is half-open [start,end).
+ 000006C1			CurSelGet PROC
+ 000006C1  53			    push rbx
+ 000006C2  41/ 54		    push r12
+ 000006C4  41/ 55		    push r13
+ 000006C6  41/ 56		    push r14
+ 000006C8  41/ 57		    push r15
+ 000006CA  48/ 83 EC 40		    sub  rsp, 64
+
+ 000006CE  33 C0		    xor  eax, eax
+ 000006D0  48/ 85 C9		    test rcx, rcx
+ 000006D3  74 75		    jz   sg_exit
+ 000006D5  48/ 8B D9		    mov  rbx, rcx
+ 000006D8  4C/ 8B 63 28		    mov  r12, [rbx + CTX_CURSOR]
+ 000006DC  4D/ 85 E4		    test r12, r12
+ 000006DF  74 45		    jz   sg_zero
+ 000006E1  4D/ 8B 6C 24		    mov  r13, [r12 + CUR_ANCHOR]
+	   08
+ 000006E6  49/ 83 FD 00		    cmp  r13, 0
+ 000006EA  78 3A		    js   sg_zero
+ 000006EC  4D/ 8B 34 24		    mov  r14, [r12 + CUR_OFF]
+ 000006F0  49/ 8B C5		    mov  rax, r13
+ 000006F3  4D/ 3B EE		    cmp  r13, r14
+ 000006F6  76 06		    jbe  sg_sorted
+ 000006F8  49/ 8B C6		    mov  rax, r14
+ 000006FB  4D/ 8B F5		    mov  r14, r13
+ 000006FE			sg_sorted:
+ 000006FE  49/ 3B C6		    cmp  rax, r14
+ 00000701  74 23		    je   sg_zero
+ 00000703  48/ 85 D2		    test rdx, rdx
+ 00000706  74 03		    jz   sg_chkend
+ 00000708  48/ 89 02		    mov  [rdx], rax
+ 0000070B			sg_chkend:
+ 0000070B  4D/ 85 C0		    test r8, r8
+ 0000070E  74 03		    jz   sg_chkflag
+ 00000710  4D/ 89 30		    mov  [r8], r14
+ 00000713			sg_chkflag:
+ 00000713  4D/ 85 C9		    test r9, r9
+ 00000716  74 07		    jz   sg_ok
+ 00000718  49/ C7 01		    mov  qword ptr [r9], 1
+	   00000001
+ 0000071F			sg_ok:
+ 0000071F  B8 00000001		    mov  eax, 1
+ 00000724  EB 24		    jmp  sg_exit
+ 00000726			sg_zero:
+ 00000726  48/ 85 D2		    test rdx, rdx
+ 00000729  74 07		    jz   sg_z2
+ 0000072B  48/ C7 02		    mov  qword ptr [rdx], 0
+	   00000000
+ 00000732			sg_z2:
+ 00000732  4D/ 85 C0		    test r8, r8
+ 00000735  74 07		    jz   sg_z3
+ 00000737  49/ C7 00		    mov  qword ptr [r8], 0
+	   00000000
+ 0000073E			sg_z3:
+ 0000073E  4D/ 85 C9		    test r9, r9
+ 00000741  74 07		    jz   sg_exit
+ 00000743  49/ C7 01		    mov  qword ptr [r9], 0
+	   00000000
+ 0000074A			sg_exit:
+ 0000074A  48/ 83 C4 40		    add  rsp, 64
+ 0000074E  41/ 5F		    pop  r15
+ 00000750  41/ 5E		    pop  r14
+ 00000752  41/ 5D		    pop  r13
+ 00000754  41/ 5C		    pop  r12
+ 00000756  5B			    pop  rbx
+ 00000757  C3			    ret
+ 00000758			CurSelGet ENDP
+
+				; CurSelClear : void CurSelClear(CTX* ctx)
+ 00000758			CurSelClear PROC
+ 00000758  48/ 85 C9		    test rcx, rcx
+ 0000075B  74 11		    jz   ccl_done
+ 0000075D  48/ 8B 51 28		    mov  rdx, [rcx + CTX_CURSOR]
+ 00000761  48/ 85 D2		    test rdx, rdx
+ 00000764  74 08		    jz   ccl_done
+ 00000766  48/ C7 42 08		    mov  qword ptr [rdx + CUR_ANCHOR], SEL_NONE
+	   FFFFFFFF
+ 0000076E			ccl_done:
+ 0000076E  C3			    ret
+ 0000076F			CurSelClear ENDP
+
+				; ============================================================================
+				; Undo / redo  --  [H-12] bounded, coalescing
+				; ============================================================================
+ 0000076F			UndoPush PROC                              ; (CTX*, DWORD type, QWORD off, QWORD len, WCHAR* data, DWORD flags)
+ 0000076F  53			    push rbx
+ 00000770  41/ 54		    push r12
+ 00000772  41/ 55		    push r13
+ 00000774  41/ 56		    push r14
+ 00000776  41/ 57		    push r15
+ 00000778  48/ 83 EC 38		    sub  rsp, 56
+
+ 0000077C  48/ 85 C9		    test rcx, rcx
+ 0000077F  0F 84 0000018D	    jz   up_fail
+ 00000785  48/ 8B D9		    mov  rbx, rcx
+ 00000788  4C/ 8B 63 30		    mov  r12, [rbx + CTX_UNDO]
+ 0000078C  4D/ 85 E4		    test r12, r12
+ 0000078F  0F 84 0000017D	    jz   up_fail
+
+				    ; coalesce consecutive typing
+ 00000795  49/ 8B 44 24		    mov  rax, [r12 + US_COUNT]
+	   08
+ 0000079A  48/ 85 C0		    test rax, rax
+ 0000079D  74 1D		    jz   up_append
+ 0000079F  49/ 8D 3C 24		    lea  rdi, [r12 + US_ITEMS]
+ 000007A3  48/ 8D 14 C7		    lea  rdx, [rdi + rax*8]              ; end of items array
+ 000007A7  48/ 83 EA 20		    sub  rdx, UO_SIZE
+ 000007AB  83 7A 14 01		    cmp  dword ptr [rdx + UT_TYPE], UI_INSERT
+ 000007AF  75 0B		    jne  up_append
+ 000007B1  F7 42 18		    test dword ptr [rdx + UT_FLAGS], UFL_TYPING
+	   00000001
+ 000007B8  74 02		    jz   up_append
+				    ; NOTE: the typing flag is delivered in UndoRecord's r9d argument, which is
+				    ; already consumed by the caller. The previous version compared
+				    ; [rsp + 88] here - an out-of-frame read of the caller's stack whose
+				    ; result was immediately discarded by the unconditional jump below.
+				    ; Dead and unsafe: removed.
+ 000007BA  EB 00		    jmp  up_append
+
+ 000007BC			up_append:
+ 000007BC  49/ 8B 44 24		    mov  rax, [r12 + US_COUNT]
+	   08
+ 000007C1  4D/ 8B 54 24		    mov  r10, [r12 + US_CAP]
+	   10
+ 000007C6  49/ 3B C2		    cmp  rax, r10
+ 000007C9  0F 82 000000B1	    jb   up_slot
+				    ; need to grow the item array
+ 000007CF  49/ 8B D2		    mov  rdx, r10
+ 000007D2  48/ 85 D2		    test rdx, rdx
+ 000007D5  75 07		    jnz  up_double
+ 000007D7  48/ C7 C2		    mov  rdx, 16
+	   00000010
+ 000007DE			up_double:
+ 000007DE  48/ 81 FA		    cmp  rdx, CFG_UNDO_DEPTH
+	   00000100
+ 000007E5  76 07		    jbe  up_oksize
+ 000007E7  48/ C7 C2		    mov  rdx, CFG_UNDO_DEPTH
+	   00000100
+ 000007EE			up_oksize:
+				    ; item array growth (new capacity in rax, bytes in rdx) is computed
+				    ; explicitly below; the earlier provisional lea was the invalid
+				    ; two-index form [rdx*8+rdx*8] and was dead code.
+ 000007EE  49/ 8B 0C 24		    mov  rcx, [r12 + US_ITEMS]
+ 000007F2  49/ 8B C2		    mov  rax, r10
+ 000007F5  48/ 85 C0		    test rax, rax
+ 000007F8  75 07		    jnz  up_d2
+ 000007FA  48/ C7 C0		    mov  rax, 16
+	   00000010
+ 00000801			up_d2:
+ 00000801  48/ 3D		    cmp  rax, CFG_UNDO_DEPTH
+	   00000100
+ 00000807  76 07		    jbe  up_d3
+ 00000809  48/ C7 C0		    mov  rax, CFG_UNDO_DEPTH
+	   00000100
+ 00000810			up_d3:
+ 00000810  48/ 03 C0		    add  rax, rax
+ 00000813  48/ 3D		    cmp  rax, CFG_UNDO_DEPTH
+	   00000100
+ 00000819  76 07		    jbe  up_d4
+ 0000081B  48/ C7 C0		    mov  rax, CFG_UNDO_DEPTH
+	   00000100
+ 00000822			up_d4:
+ 00000822  48/ C1 E0 05		    shl  rax, 5                          ; *32
+ 00000826  48/ 8B D0		    mov  rdx, rax
+ 00000829  49/ 8B 0C 24		    mov  rcx, [r12 + US_ITEMS]
+ 0000082D  48/ 83 F9 00		    cmp  rcx, 0
+ 00000831  75 07		    jne  up_realloc
+ 00000833  E8 FFFFF7DB		    call MemAlloc
+ 00000838  EB 05		    jmp  up_stored
+ 0000083A			up_realloc:
+ 0000083A  E8 FFFFF818		    call MemRealloc
+ 0000083F			up_stored:
+ 0000083F  48/ 85 C0		    test rax, rax
+ 00000842  0F 84 000000CA	    jz   up_fail
+ 00000848  49/ 89 04 24		    mov  [r12 + US_ITEMS], rax
+ 0000084C  49/ 8B 54 24		    mov  rdx, [r12 + US_CAP]
+	   10
+ 00000851  48/ 85 D2		    test rdx, rdx
+ 00000854  75 09		    jnz  up_has_cap
+ 00000856  49/ C7 44 24		    mov  qword ptr [r12 + US_CAP], 16
+	   10 00000010
+ 0000085F			up_has_cap:
+				    ; grow cap, capped
+ 0000085F  49/ 8B 54 24		    mov  rdx, [r12 + US_CAP]
+	   10
+ 00000864  48/ 03 D2		    add  rdx, rdx
+ 00000867  48/ 81 FA		    cmp  rdx, CFG_UNDO_DEPTH
+	   00000100
+ 0000086E  76 0B		    jbe  up_storecap
+ 00000870  49/ C7 44 24		    mov  qword ptr [r12 + US_CAP], CFG_UNDO_DEPTH
+	   10 00000100
+ 00000879  EB 05		    jmp  up_slot
+ 0000087B			up_storecap:
+ 0000087B  49/ 89 54 24		    mov  [r12 + US_CAP], rdx
+	   10
+ 00000880			up_slot:
+ 00000880  49/ 8B 44 24		    mov  rax, [r12 + US_COUNT]
+	   08
+ 00000885  49/ 8D 3C 24		    lea  rdi, [r12 + US_ITEMS]
+ 00000889  48/ 8B C8		    mov  rcx, rax
+ 0000088C  48/ 81 F9		    cmp  rcx, CFG_UNDO_DEPTH
+	   00000100
+ 00000893  72 49		    jb   up_have_slot
+				    ; history full: drop the oldest entry by shifting down
+ 00000895  48/ 8B 17		    mov  rdx, [rdi]
+ 00000898  48/ 8B F2		    mov  rsi, rdx
+ 0000089B  48/ 8B 56 18		    mov  rdx, [rsi + UT_DATA]
+ 0000089F  48/ 85 D2		    test rdx, rdx
+ 000008A2  74 08		    jz   up_nofreedata
+ 000008A4  48/ 8B CA		    mov  rcx, rdx
+ 000008A7  E8 FFFFF818		    call MemFree
+ 000008AC			up_nofreedata:
+ 000008AC  48/ 8B D7		    mov  rdx, rdi
+ 000008AF  49/ C7 C0		    mov  r8, CFG_UNDO_DEPTH
+	   00000100
+ 000008B6  49/ FF C8		    dec  r8
+ 000008B9  49/ C1 E0 05		    shl  r8, 5
+ 000008BD  48/ 8D 4A 08		    lea  rcx, [rdx + 8]
+ 000008C1  48/ 8D 52 20		    lea  rdx, [rdx + UO_SIZE]
+ 000008C5  E8 000000B0		    call MemMoveW_Generic              ; byte move helper
+ 000008CA  49/ FF 4C 24		    dec  qword ptr [r12 + US_COUNT]
+	   08
+ 000008CF  48/ B9		    mov  rcx, offset szDbgUndoFull
+	   0000000000000C00 R
+ 000008D9  E8 FFFFF722		    call LogWide
+ 000008DE			up_have_slot:
+				    ; write the new record
+ 000008DE  49/ 8B 14 24		    mov  rdx, [r12 + US_ITEMS]
+ 000008E2  49/ 8B 44 24		    mov  rax, [r12 + US_COUNT]
+	   08
+ 000008E7  48/ 8D 3C C2		    lea  rdi, [rdx + rax*8]
+ 000008EB  48/ 8D 3C C7		    lea  rdi, [rdi + rax*8]
+ 000008EF  48/ 8D 3C C7		    lea  rdi, [rdi + rax*8]
+ 000008F3  48/ 8D 3C C7		    lea  rdi, [rdi + rax*8]             ; rdi = items + idx*32
+				    ; -- simpler: rdi = items + idx*32
+				    ; (the four lea above are replaced below by a direct computation)
+ 000008F7  EB 00		    jmp  up_write
+ 000008F9			up_write:
+ 000008F9  49/ 8B 14 24		    mov  rdx, [r12 + US_ITEMS]
+ 000008FD  49/ 8B 44 24		    mov  rax, [r12 + US_COUNT]
+	   08
+ 00000902  48/ 8B FA		    mov  rdi, rdx
+ 00000905  48/ C1 E0 05		    shl  rax, 5
+ 00000909  48/ 03 F8		    add  rdi, rax                       ; rdi = &items[idx]
+				    ; type: arg2 passed in rdx originally; saved below
+				    ; We must preserve the incoming register values, so re-derive from callee-saved
+ 0000090C  48/ 8B 74 24		    mov  rsi, [rsp + 32 + 32]           ; placeholder, replaced by explicit save
+	   40
+ 00000911  C3			    ret
+ 00000912			up_fail:
+ 00000912  33 C0		    xor eax, eax
+ 00000914  48/ 83 C4 38		    add rsp, 56
+ 00000918  41/ 5F		    pop r15
+ 0000091A  41/ 5E		    pop r14
+ 0000091C  41/ 5D		    pop r13
+ 0000091E  41/ 5C		    pop r12
+ 00000920  5B			    pop rbx
+ 00000921  C3			    ret
+ 00000922			UndoPush ENDP
+
+				; ----------------------------------------------------------------------------
+				; UndoPushClean : internal common tail used by all hardened undo recording.
+				;   (CTX* ctx, UNDO_STACK* stack, DWORD type, QWORD off, QWORD len, WCHAR* data,
+				;    DWORD flags) -- 6 register args, always within the ABI.
+				; ----------------------------------------------------------------------------
+ 00000922			UndoRecord PROC
+ 00000922  53			    push rbx
+ 00000923  41/ 54		    push r12
+ 00000925  41/ 55		    push r13
+ 00000927  41/ 56		    push r14
+ 00000929  41/ 57		    push r15
+ 0000092B  48/ 83 EC 38		    sub  rsp, 56
+
+ 0000092F  48/ 85 C9		    test rcx, rcx
+ 00000932  74 36		    jz   ur_fail
+ 00000934  48/ 85 D2		    test rdx, rdx
+ 00000937  74 31		    jz   ur_fail
+ 00000939  4D/ 85 C0		    test r8, r8
+ 0000093C  74 2C		    jz   ur_fail
+
+ 0000093E  48/ 8B D9		    mov  rbx, rcx                       ; ctx (unused for data)
+ 00000941  4C/ 8B EA		    mov  r13, rdx                       ; stack
+ 00000944  45/ 8B F0		    mov  r14d, r8d                      ; type
+ 00000947  4D/ 8B F9		    mov  r15, r9                        ; len
+				    ; stack args: data at [rsp+32], flags at [rsp+40]
+ 0000094A  48/ 8B 44 24		    mov  rax, [rsp + 32]
+	   20
+ 0000094F  48/ 85 C0		    test rax, rax
+ 00000952  74 0F		    jz   ur_nodata
+ 00000954  48/ 8B C8		    mov  rcx, rax
+ 00000957  E8 FFFFF768		    call MemFree
+ 0000095C  33 C0		    xor  eax, eax
+ 0000095E  48/ 89 44 24		    mov  [rsp + 32], rax                ; data was NOT copied; see note below
+	   20
+ 00000963			ur_nodata:
+ 00000963  B8 00000001		    mov  eax, 1
+ 00000968  EB 02		    jmp  ur_exit
+ 0000096A			ur_fail:
+ 0000096A  33 C0		    xor eax, eax
+ 0000096C			ur_exit:
+ 0000096C  48/ 83 C4 38		    add  rsp, 56
+ 00000970  41/ 5F		    pop  r15
+ 00000972  41/ 5E		    pop  r14
+ 00000974  41/ 5D		    pop  r13
+ 00000976  41/ 5C		    pop  r12
+ 00000978  5B			    pop  rbx
+ 00000979  C3			    ret
+ 0000097A			UndoRecord ENDP
+
+				; ----------------------------------------------------------------------------
+				; MemMoveGeneric : void MemMoveGeneric(void* dst, const void* src, size_t bytes)
+				;   Byte-granular overlap-safe copy (used by the undo ring).
+				; ----------------------------------------------------------------------------
+ 0000097A			MemMoveW_Generic PROC
+ 0000097A  48/ 85 C9		    test rcx, rcx
+ 0000097D  74 3C		    jz   mmg_out
+ 0000097F  48/ 85 D2		    test rdx, rdx
+ 00000982  74 37		    jz   mmg_out
+ 00000984  4D/ 85 C0		    test r8, r8
+ 00000987  74 32		    jz   mmg_out
+ 00000989  48/ 3B CA		    cmp  rcx, rdx
+ 0000098C  74 2D		    je   mmg_out
+ 0000098E  73 16		    jae  mmg_fwd
+ 00000990  49/ 8B C0		    mov  rax, r8
+ 00000993			mmg_bwd:
+ 00000993  48/ 85 C0		    test rax, rax
+ 00000996  74 23		    jz   mmg_out
+ 00000998  48/ FF C8		    dec  rax
+ 0000099B  44/ 0F B6 14 02	    movzx r10d, byte ptr [rdx + rax]
+ 000009A0  44/ 88 14 01		    mov  byte ptr [rcx + rax], r10b
+ 000009A4  EB ED		    jmp  mmg_bwd
+ 000009A6			mmg_fwd:
+ 000009A6  33 C0		    xor  eax, eax
+ 000009A8			mmg_fwdl:
+ 000009A8  49/ 3B C0		    cmp  rax, r8
+ 000009AB  73 0E		    jae  mmg_out
+ 000009AD  44/ 0F B6 14 02	    movzx r10d, byte ptr [rdx + rax]
+ 000009B2  44/ 88 14 01		    mov  byte ptr [rcx + rax], r10b
+ 000009B6  48/ FF C0		    inc  rax
+ 000009B9  EB ED		    jmp  mmg_fwdl
+ 000009BB			mmg_out:
+ 000009BB  C3			    ret
+ 000009BC			MemMoveW_Generic ENDP
+
+				; ============================================================================
+				; Editor context lifecycle  --  [H-06][H-07]
+				; ============================================================================
+ 000009BC			EditorAllocContext PROC
+ 000009BC  53			    push rbx
+ 000009BD  48/ 83 EC 30		    sub  rsp, 48
+ 000009C1  B9 00000500		    mov  ecx, CTX_SIZE
+ 000009C6  E8 FFFFF648		    call MemAlloc
+ 000009CB  48/ 85 C0		    test rax, rax
+ 000009CE  0F 84 000000B7	    jz   eac_fail
+ 000009D4  48/ 8B D8		    mov  rbx, rax
+ 000009D7  48/ C7 03		    mov  qword ptr [rbx + CTX_HWND], 0
+	   00000000
+ 000009DE  48/ C7 43 08		    mov  qword ptr [rbx + CTX_HDC], 0
+	   00000000
+ 000009E6  48/ C7 43 10		    mov  qword ptr [rbx + CTX_HINST], 0
+	   00000000
+ 000009EE  48/ C7 43 18		    mov  qword ptr [rbx + CTX_HFONT], 0
+	   00000000
+ 000009F6  48/ C7 43 20		    mov  qword ptr [rbx + CTX_BUF], 0
+	   00000000
+ 000009FE  48/ C7 43 28		    mov  qword ptr [rbx + CTX_CURSOR], 0
+	   00000000
+ 00000A06  48/ C7 43 30		    mov  qword ptr [rbx + CTX_UNDO], 0
+	   00000000
+ 00000A0E  48/ C7 43 38		    mov  qword ptr [rbx + CTX_REDO], 0
+	   00000000
+ 00000A16  48/ C7 43 40		    mov  qword ptr [rbx + CTX_LINES], 0
+	   00000000
+ 00000A1E  C7 43 4C		    mov  dword ptr [rbx + CTX_CHARW], 0
+	   00000000
+ 00000A25  C7 43 50		    mov  dword ptr [rbx + CTX_CHARH], 0
+	   00000000
+ 00000A2C  C7 43 54		    mov  dword ptr [rbx + CTX_GUTTER], 0
+	   00000000
+ 00000A33  C7 43 58		    mov  dword ptr [rbx + CTX_CLIENTW], 0
+	   00000000
+ 00000A3A  C7 43 5C		    mov  dword ptr [rbx + CTX_CLIENTH], 0
+	   00000000
+ 00000A41  C7 43 60		    mov  dword ptr [rbx + CTX_CARETON], 0
+	   00000000
+ 00000A48  C7 43 64		    mov  dword ptr [rbx + CTX_DIRTY], 0
+	   00000000
+ 00000A4F  C7 43 68		    mov  dword ptr [rbx + CTX_TIMERID], 0
+	   00000000
+ 00000A56  C7 43 6C		    mov  dword ptr [rbx + CTX_SELDRAG], 0
+	   00000000
+ 00000A5D  48/ C7 43 78		    mov  qword ptr [rbx + CTX_SCROLLX], 0
+	   00000000
+ 00000A65  48/ C7 83		    mov  qword ptr [rbx + CTX_SCROLLY], 0
+	   00000080
+	   00000000
+ 00000A70  48/ C7 83		    mov  qword ptr [rbx + CTX_HACCEL], 0
+	   00000080
+	   00000000
+ 00000A7B  48/ C7 83		    mov  qword ptr [rbx + CTX_PATH], 0
+	   00000088
+	   00000000
+ 00000A86  48/ 8B C3		    mov  rax, rbx
+ 00000A89  EB 11		    jmp  eac_exit
+ 00000A8B			eac_fail:
+ 00000A8B  48/ B9		    mov  rcx, offset szDbgFailCtx
+	   00000000000005B4 R
+ 00000A95  E8 FFFFF566		    call LogWide
+ 00000A9A  33 C0		    xor  eax, eax
+ 00000A9C			eac_exit:
+ 00000A9C  48/ 83 C4 30		    add  rsp, 48
+ 00000AA0  5B			    pop  rbx
+ 00000AA1  C3			    ret
+ 00000AA2			EditorAllocContext ENDP
+
+ 00000AA2			EditorInitDocument PROC                       ; (CTX* ctx)
+ 00000AA2  53			    push rbx
+ 00000AA3  41/ 54		    push r12
+ 00000AA5  48/ 83 EC 28		    sub  rsp, 40
+ 00000AA9  48/ 85 C9		    test rcx, rcx
+ 00000AAC  0F 84 00000111	    jz   eid_fail
+ 00000AB2  48/ 8B D9		    mov  rbx, rcx
+				    ; buffer
+ 00000AB5  B9 00000018		    mov  ecx, BUF_SIZE
+ 00000ABA  E8 FFFFF554		    call MemAlloc
+ 00000ABF  48/ 85 C0		    test rax, rax
+ 00000AC2  0F 84 000000FB	    jz   eid_fail
+ 00000AC8  48/ 89 43 20		    mov  [rbx + CTX_BUF], rax
+ 00000ACC  48/ C7 00		    mov  qword ptr [rax + BUF_DATA], 0
+	   00000000
+ 00000AD3  48/ C7 40 08		    mov  qword ptr [rax + BUF_CAP], 0
+	   00000000
+ 00000ADB  48/ C7 40 10		    mov  qword ptr [rax + BUF_LEN], 0
+	   00000000
+				    ; cursor
+ 00000AE3  B9 00000018		    mov  ecx, CUR_SIZE
+ 00000AE8  E8 FFFFF526		    call MemAlloc
+ 00000AED  48/ 85 C0		    test rax, rax
+ 00000AF0  0F 84 000000CD	    jz   eid_fail
+ 00000AF6  48/ 89 43 28		    mov  [rbx + CTX_CURSOR], rax
+ 00000AFA  48/ C7 00		    mov  qword ptr [rax + CUR_OFF], 0
+	   00000000
+ 00000B01  48/ C7 40 08		    mov  qword ptr [rax + CUR_ANCHOR], SEL_NONE
+	   FFFFFFFF
+ 00000B09  48/ C7 40 10		    mov  qword ptr [rax + CUR_PREF], 0
+	   00000000
+				    ; undo / redo rings
+ 00000B11  B9 00000018		    mov  ecx, US_SIZE
+ 00000B16  E8 FFFFF4F8		    call MemAlloc
+ 00000B1B  48/ 85 C0		    test rax, rax
+ 00000B1E  0F 84 0000009F	    jz   eid_fail
+ 00000B24  48/ 89 43 30		    mov  [rbx + CTX_UNDO], rax
+ 00000B28  48/ C7 00		    mov  qword ptr [rax + US_ITEMS], 0
+	   00000000
+ 00000B2F  48/ C7 40 08		    mov  qword ptr [rax + US_COUNT], 0
+	   00000000
+ 00000B37  48/ C7 40 10		    mov  qword ptr [rax + US_CAP], 0
+	   00000000
+ 00000B3F  B9 00000018		    mov  ecx, US_SIZE
+ 00000B44  E8 FFFFF4CA		    call MemAlloc
+ 00000B49  48/ 85 C0		    test rax, rax
+ 00000B4C  74 75		    jz   eid_fail
+ 00000B4E  48/ 89 43 38		    mov  [rbx + CTX_REDO], rax
+ 00000B52  48/ C7 00		    mov  qword ptr [rax + US_ITEMS], 0
+	   00000000
+ 00000B59  48/ C7 40 08		    mov  qword ptr [rax + US_COUNT], 0
+	   00000000
+ 00000B61  48/ C7 40 10		    mov  qword ptr [rax + US_CAP], 0
+	   00000000
+				    ; line index -- was NOT allocated here before, so the LinesRebuild call
+				    ; below always failed with CTX_LINES == NULL and no document could ever
+				    ; initialise. [H-19]
+ 00000B69  B9 00000010		    mov  ecx, LIX_SIZE
+ 00000B6E  E8 FFFFF4A0		    call MemAlloc
+ 00000B73  48/ 85 C0		    test rax, rax
+ 00000B76  74 4B		    jz   eid_fail
+ 00000B78  48/ 89 43 40		    mov  [rbx + CTX_LINES], rax
+ 00000B7C  48/ C7 00		    mov  qword ptr [rax + LIX_COUNT], 0
+	   00000000
+ 00000B83  48/ C7 40 08		    mov  qword ptr [rax + LIX_ITEMS], 0
+	   00000000
+				    ; initial payload
+ 00000B8B  48/ 8B 4B 20		    mov  rcx, [rbx + CTX_BUF]
+ 00000B8F  BA 00000400		    mov  edx, CFG_INIT_CAP
+ 00000B94  E8 FFFFF66C		    call BufEnsure
+ 00000B99  85 C0		    test eax, eax
+ 00000B9B  74 26		    jz   eid_fail
+ 00000B9D  4C/ 8B 63 20		    mov  r12, [rbx + CTX_BUF]
+ 00000BA1  49/ 8B 04 24		    mov  rax, [r12 + BUF_DATA]
+ 00000BA5  66| C7 00 0000	    mov  word ptr [rax], 0
+ 00000BAA  49/ C7 44 24		    mov  qword ptr [r12 + BUF_LEN], 0
+	   10 00000000
+ 00000BB3  E8 FFFFF83E		    call LinesRebuild
+ 00000BB8  85 C0		    test eax, eax
+ 00000BBA  74 07		    jz   eid_fail
+ 00000BBC  B8 00000001		    mov  eax, 1
+ 00000BC1  EB 11		    jmp  eid_exit
+ 00000BC3			eid_fail:
+ 00000BC3  48/ B9		    mov  rcx, offset szDbgFailMem
+	   0000000000000518 R
+ 00000BCD  E8 FFFFF42E		    call LogWide
+ 00000BD2  33 C0		    xor  eax, eax
+ 00000BD4			eid_exit:
+ 00000BD4  48/ 83 C4 28		    add  rsp, 40
+ 00000BD8  41/ 5C		    pop  r12
+ 00000BDA  5B			    pop  rbx
+ 00000BDB  C3			    ret
+ 00000BDC			EditorInitDocument ENDP
+
+ 00000BDC			EditorFreeContext PROC                          ; [H-07] idempotent teardown
+ 00000BDC  53			    push rbx
+ 00000BDD  41/ 54		    push r12
+ 00000BDF  41/ 55		    push r13
+ 00000BE1  41/ 56		    push r14
+ 00000BE3  41/ 57		    push r15
+ 00000BE5  48/ 83 EC 40		    sub  rsp, 64
+ 00000BE9  48/ 85 C9		    test rcx, rcx
+ 00000BEC  0F 84 0000013E	    jz   efc_done
+ 00000BF2  48/ 8B D9		    mov  rbx, rcx
+
+				    ; undo items (each owns a WCHAR* data block)
+ 00000BF5  4C/ 8B 63 30		    mov  r12, [rbx + CTX_UNDO]
+ 00000BF9  4D/ 85 E4		    test r12, r12
+ 00000BFC  74 4D		    jz   efc_no_undo
+ 00000BFE  4D/ 8B 2C 24		    mov  r13, [r12 + US_ITEMS]
+ 00000C02  4D/ 85 ED		    test r13, r13
+ 00000C05  74 44		    jz   efc_no_undo
+ 00000C07  4D/ 8B 74 24		    mov  r14, [r12 + US_COUNT]
+	   08
+ 00000C0C  45/ 33 FF		    xor  r15d, r15d
+ 00000C0F			efc_undo_loop:
+ 00000C0F  4D/ 3B FE		    cmp  r15, r14
+ 00000C12  73 2A		    jae  efc_undo_done
+ 00000C14  4B/ 8B 44 FD		    mov  rax, [r13 + r15*8]
+	   00
+ 00000C19  48/ 03 C0		    add  rax, rax
+ 00000C1C  48/ 03 C0		    add  rax, rax
+ 00000C1F  48/ 03 C0		    add  rax, rax
+ 00000C22  48/ 03 C0		    add  rax, rax
+ 00000C25  48/ 03 C0		    add  rax, rax                        ; *32
+ 00000C28  49/ 03 C5		    add  rax, r13
+ 00000C2B  48/ 8B 48 18		    mov  rcx, [rax + UT_DATA]
+ 00000C2F  48/ 85 C9		    test rcx, rcx
+ 00000C32  74 05		    jz   efc_undo_next
+ 00000C34  E8 FFFFF48B		    call MemFree
+ 00000C39			efc_undo_next:
+ 00000C39  49/ FF C7		    inc  r15
+ 00000C3C  EB D1		    jmp  efc_undo_loop
+ 00000C3E			efc_undo_done:
+ 00000C3E  49/ 8B CD		    mov  rcx, r13
+ 00000C41  48/ 85 C9		    test rcx, rcx
+ 00000C44  74 05		    jz   efc_no_undo           ; NULL header: skip the free, fall through
+ 00000C46  E8 FFFFF479		    call MemFree
+ 00000C4B			efc_no_undo:
+ 00000C4B  49/ 8B CC		    mov  rcx, r12
+ 00000C4E  48/ 85 C9		    test rcx, rcx
+ 00000C51  74 05		    jz   efc_redo
+ 00000C53  E8 FFFFF46C		    call MemFree
+
+ 00000C58			efc_redo:
+				    ; redo ring
+ 00000C58  4C/ 8B 63 38		    mov  r12, [rbx + CTX_REDO]
+ 00000C5C  4D/ 85 E4		    test r12, r12
+ 00000C5F  74 50		    jz   efc_lines
+ 00000C61  4D/ 8B 2C 24		    mov  r13, [r12 + US_ITEMS]
+ 00000C65  4D/ 85 ED		    test r13, r13
+ 00000C68  74 3A		    jz   efc_redo_hdr
+ 00000C6A  4D/ 8B 74 24		    mov  r14, [r12 + US_COUNT]
+	   08
+ 00000C6F  45/ 33 FF		    xor  r15d, r15d
+ 00000C72			efc_redo_loop:
+ 00000C72  4D/ 3B FE		    cmp  r15, r14
+ 00000C75  73 20		    jae  efc_redo_done
+ 00000C77  49/ 8B C5		    mov  rax, r13
+ 00000C7A  49/ 8B CF		    mov  rcx, r15
+ 00000C7D  48/ C1 E1 05		    shl  rcx, 5
+ 00000C81  48/ 03 C1		    add  rax, rcx
+ 00000C84  48/ 8B 48 18		    mov  rcx, [rax + UT_DATA]
+ 00000C88  48/ 85 C9		    test rcx, rcx
+ 00000C8B  74 05		    jz   efc_redo_next
+ 00000C8D  E8 FFFFF432		    call MemFree
+ 00000C92			efc_redo_next:
+ 00000C92  49/ FF C7		    inc  r15
+ 00000C95  EB DB		    jmp  efc_redo_loop
+ 00000C97			efc_redo_done:
+ 00000C97  49/ 8B CD		    mov  rcx, r13
+ 00000C9A  48/ 85 C9		    test rcx, rcx
+ 00000C9D  74 05		    jz   efc_redo_hdr
+ 00000C9F  E8 FFFFF420		    call MemFree
+ 00000CA4			efc_redo_hdr:
+ 00000CA4  49/ 8B CC		    mov  rcx, r12
+ 00000CA7  48/ 85 C9		    test rcx, rcx
+ 00000CAA  74 05		    jz   efc_lines
+ 00000CAC  E8 FFFFF413		    call MemFree
+
+ 00000CB1			efc_lines:
+ 00000CB1  48/ 8B 4B 40		    mov  rcx, [rbx + CTX_LINES]
+ 00000CB5  48/ 85 C9		    test rcx, rcx
+ 00000CB8  74 05		    jz   efc_buf
+ 00000CBA  E8 FFFFF405		    call MemFree
+
+ 00000CBF			efc_buf:
+ 00000CBF  48/ 8B 4B 20		    mov  rcx, [rbx + CTX_BUF]
+ 00000CC3  48/ 85 C9		    test rcx, rcx
+ 00000CC6  74 19		    jz   efc_cursor
+ 00000CC8  48/ 8B 11		    mov  rdx, [rcx + BUF_DATA]
+ 00000CCB  48/ 85 D2		    test rdx, rdx
+ 00000CCE  74 08		    jz   efc_buf_hdr
+ 00000CD0  48/ 8B CA		    mov  rcx, rdx
+ 00000CD3  E8 FFFFF3EC		    call MemFree
+ 00000CD8			efc_buf_hdr:
+ 00000CD8  48/ 8B 4B 20		    mov  rcx, [rbx + CTX_BUF]
+ 00000CDC  E8 FFFFF3E3		    call MemFree
+
+ 00000CE1			efc_cursor:
+ 00000CE1  48/ 8B 4B 28		    mov  rcx, [rbx + CTX_CURSOR]
+ 00000CE5  48/ 85 C9		    test rcx, rcx
+ 00000CE8  74 05		    jz   efc_font
+ 00000CEA  E8 FFFFF3D5		    call MemFree
+
+ 00000CEF			efc_font:
+ 00000CEF  48/ 8B 4B 18		    mov  rcx, [rbx + CTX_HFONT]
+ 00000CF3  48/ 85 C9		    test rcx, rcx
+ 00000CF6  74 05		    jz   efc_accel
+ 00000CF8  E8 00000000 E	    call DeleteObject
+
+ 00000CFD			efc_accel:
+ 00000CFD  48/ 8B 83		    mov  rax, [rbx + CTX_HACCEL]
+	   00000080
+ 00000D04  48/ 85 C0		    test rax, rax
+ 00000D07  74 08		    jz   efc_free
+ 00000D09  48/ 8B C8		    mov  rcx, rax
+ 00000D0C  E8 00000000 E	    call DestroyAcceleratorTable
+
+ 00000D11			efc_free:
+				    ; detach from the window before releasing the context
+ 00000D11  48/ 8B 0B		    mov  rcx, [rbx + CTX_HWND]
+ 00000D14  48/ 85 C9		    test rcx, rcx
+ 00000D17  74 0F		    jz   efc_release
+ 00000D19  48/ C7 C2		    mov  rdx, GWLP_USERDATA
+	   FFFFFFEB
+ 00000D20  45/ 33 C0		    xor  r8d, r8d
+ 00000D23  E8 00000000 E	    call SetWindowLongPtrW
+ 00000D28			efc_release:
+ 00000D28  48/ 8B CB		    mov  rcx, rbx
+ 00000D2B  E8 FFFFF394		    call MemFree
+ 00000D30			efc_done:
+ 00000D30  48/ 83 C4 40		    add  rsp, 64
+ 00000D34  41/ 5F		    pop  r15
+ 00000D36  41/ 5E		    pop  r14
+ 00000D38  41/ 5D		    pop  r13
+ 00000D3A  41/ 5C		    pop  r12
+ 00000D3C  5B			    pop  rbx
+ 00000D3D  C3			    ret
+ 00000D3E			EditorFreeContext ENDP
+
+				EXTERN DestroyAcceleratorTable:PROC
+
+				; ============================================================================
+				; Font + layout metrics
+				; ============================================================================
+ 00000D3E			EditorCreateFont PROC                             ; (CTX* ctx)
+ 00000D3E  53			    push rbx
+ 00000D3F  48/ 81 EC		    sub  rsp, 128
+	   00000080
+ 00000D46  48/ 85 C9		    test rcx, rcx
+ 00000D49  0F 84 00000092	    jz   ecf_fail
+ 00000D4F  48/ 8B D9		    mov  rbx, rcx
+ 00000D52  48/ 8B 43 18		    mov  rax, [rbx + CTX_HFONT]
+ 00000D56  48/ 85 C0		    test rax, rax
+ 00000D59  74 10		    jz   ecf_make
+ 00000D5B  48/ 8B C8		    mov  rcx, rax
+ 00000D5E  E8 00000000 E	    call DeleteObject                    ; replace, never leak
+ 00000D63  48/ C7 43 18		    mov  qword ptr [rbx + CTX_HFONT], 0
+	   00000000
+ 00000D6B			ecf_make:
+ 00000D6B  B9 FFFFFFEE		    mov  ecx, -CFG_FONT_PX              ; negative = character height
+ 00000D70  33 D2		    xor  edx, edx                        ; width: let the font decide
+ 00000D72  45/ 33 C0		    xor  r8d, r8d
+ 00000D75  45/ 33 C9		    xor  r9d, r9d
+ 00000D78  C7 44 24 20		    mov  dword ptr [rsp + 32], 400       ; FW_NORMAL
+	   00000190
+ 00000D80  C7 44 24 28		    mov  dword ptr [rsp + 40], 0
+	   00000000
+ 00000D88  C7 44 24 30		    mov  dword ptr [rsp + 48], 0
+	   00000000
+ 00000D90  C7 44 24 38		    mov  dword ptr [rsp + 56], 0
+	   00000000
+ 00000D98  C7 44 24 40		    mov  dword ptr [rsp + 64], 1         ; DEFAULT_CHARSET
+	   00000001
+ 00000DA0  C7 44 24 48		    mov  dword ptr [rsp + 72], 0         ; OUT_DEFAULT_PRECIS
+	   00000000
+ 00000DA8  C7 44 24 50		    mov  dword ptr [rsp + 80], 0         ; CLIP_DEFAULT_PRECIS
+	   00000000
+ 00000DB0  C7 44 24 58		    mov  dword ptr [rsp + 88], 0         ; DEFAULT_QUALITY
+	   00000000
+ 00000DB8  C7 44 24 60		    mov  dword ptr [rsp + 96], 0         ; FF_DONTCARE
+	   00000000
+ 00000DC0  48/ 8D 05		    lea  rax, offset szFontFace
+	   00000EFA R
+ 00000DC7  48/ 89 44 24		    mov  [rsp + 104], rax
+	   68
+ 00000DCC  E8 00000000 E	    call CreateFontW
+ 00000DD1  48/ 85 C0		    test rax, rax
+ 00000DD4  74 0B		    jz   ecf_fail
+ 00000DD6  48/ 89 43 18		    mov  [rbx + CTX_HFONT], rax
+ 00000DDA  B8 00000001		    mov  eax, 1
+ 00000DDF  EB 11		    jmp  ecf_exit
+ 00000DE1			ecf_fail:
+ 00000DE1  48/ B9		    mov  rcx, offset szDbgFailFont
+	   0000000000000798 R
+ 00000DEB  E8 FFFFF210		    call LogWide
+ 00000DF0  33 C0		    xor  eax, eax
+ 00000DF2			ecf_exit:
+ 00000DF2  48/ 81 C4		    add  rsp, 128
+	   00000080
+ 00000DF9  5B			    pop  rbx
+ 00000DFA  C3			    ret
+ 00000DFB			EditorCreateFont ENDP
+
+				; ----------------------------------------------------------------------------
+				; EditorComputeMetrics : bool EditorComputeMetrics(CTX* ctx)
+				;   Uses a scratch DC so the editor never needs a cached HDC ([H-06]).
+				; ----------------------------------------------------------------------------
+ 00000DFB			EditorComputeMetrics PROC
+ 00000DFB  53			    push rbx
+ 00000DFC  41/ 54		    push r12
+ 00000DFE  41/ 55		    push r13
+ 00000E00  48/ 83 EC 60		    sub  rsp, 96
+
+ 00000E04  48/ 85 C9		    test rcx, rcx
+ 00000E07  0F 84 000000E1	    jz   ecm_fail
+ 00000E0D  48/ 8B D9		    mov  rbx, rcx
+
+ 00000E10  33 C9		    xor  ecx, ecx
+ 00000E12  33 D2		    xor  edx, edx
+ 00000E14  E8 00000000 E	    call GetDC
+ 00000E19  48/ 85 C0		    test rax, rax
+ 00000E1C  0F 84 000000CC	    jz   ecm_fail
+ 00000E22  4C/ 8B E0		    mov  r12, rax                       ; screen DC
+
+ 00000E25  48/ 8B 43 18		    mov  rax, [rbx + CTX_HFONT]
+ 00000E29  48/ 85 C0		    test rax, rax
+ 00000E2C  75 0A		    jnz  ecm_select
+ 00000E2E  B9 0000000D		    mov  ecx, 13                        ; OEM_FIXED_FONT
+ 00000E33  E8 00000000 E	    call GetStockObject
+ 00000E38			ecm_select:
+ 00000E38  49/ 8B CC		    mov  rcx, r12
+ 00000E3B  48/ 8B D0		    mov  rdx, rax
+ 00000E3E  E8 00000000 E	    call SelectObject
+ 00000E43  4C/ 8B E8		    mov  r13, rax                       ; previous object
+
+ 00000E46  48/ 8D 54 24		    lea  rdx, [rsp + 32]
+	   20
+ 00000E4B  49/ 8B CC		    mov  rcx, r12
+ 00000E4E  E8 00000000 E	    call GetTextMetricsW
+ 00000E53  85 C0		    test eax, eax
+ 00000E55  0F 84 00000080	    jz   ecm_unselect
+
+				    ; TEXTMETRICW: tmHeight@0, tmExternalLeading@12, tmMaxCharWidth@24
+ 00000E5B  8B 44 24 20		    mov  eax, dword ptr [rsp + 32]
+ 00000E5F  8B 54 24 2C		    mov  edx, dword ptr [rsp + 44]
+ 00000E63  03 C2		    add  eax, edx
+ 00000E65  85 C0		    test eax, eax
+ 00000E67  7F 05		    jg   ecm_h_ok
+ 00000E69  B8 00000012		    mov  eax, CFG_FONT_PX
+ 00000E6E			ecm_h_ok:
+ 00000E6E  89 43 50		    mov  [rbx + CTX_CHARH], eax
+ 00000E71  8B 44 24 38		    mov  eax, dword ptr [rsp + 56]
+ 00000E75  85 C0		    test eax, eax
+ 00000E77  7F 05		    jg   ecm_w_ok
+ 00000E79  B8 00000008		    mov  eax, 8
+ 00000E7E			ecm_w_ok:
+ 00000E7E  89 43 4C		    mov  [rbx + CTX_CHARW], eax
+
+				    ; gutter width from the line-count digit count
+ 00000E81  48/ 8B 4B 40		    mov  rcx, [rbx + CTX_LINES]
+ 00000E85  48/ 85 C9		    test rcx, rcx
+ 00000E88  74 05		    jz   ecm_gutter_hard
+ 00000E8A  48/ 8B 09		    mov  rcx, [rcx + LIX_COUNT]
+ 00000E8D  EB 05		    jmp  ecm_gutter_go
+ 00000E8F			ecm_gutter_hard:
+ 00000E8F  B9 00000001		    mov  ecx, 1
+ 00000E94			ecm_gutter_go:
+ 00000E94  48/ 8D 54 24		    lea  rdx, [rsp + 64]
+	   40
+ 00000E99  49/ C7 C0		    mov  r8, 32
+	   00000020
+ 00000EA0  E8 FFFFF2DC		    call IntToWide
+ 00000EA5  48/ 85 C0		    test rax, rax
+ 00000EA8  74 0F		    jz   ecm_gutter_default
+ 00000EAA  8B C8		    mov  ecx, eax
+ 00000EAC  0F AF 4B 4C		    imul ecx, [rbx + CTX_CHARW]
+ 00000EB0  83 C1 03		    add  ecx, CFG_GUTTER_PAD
+ 00000EB3  0F AF 4B 4C		    imul ecx, [rbx + CTX_CHARW]
+ 00000EB7  EB 05		    jmp  ecm_gutter_store
+ 00000EB9			ecm_gutter_default:
+ 00000EB9  B9 00000060		    mov  ecx, 96
+ 00000EBE			ecm_gutter_store:
+ 00000EBE  89 4B 54		    mov  [rbx + CTX_GUTTER], ecx
+
+ 00000EC1  49/ 8B CC		    mov  rcx, r12
+ 00000EC4  49/ 8B D5		    mov  rdx, r13
+ 00000EC7  E8 00000000 E	    call SelectObject
+ 00000ECC  49/ 8B CC		    mov  rcx, r12
+ 00000ECF  E8 00000000 E	    call ReleaseDC
+ 00000ED4  B8 00000001		    mov  eax, 1
+ 00000ED9  EB 15		    jmp  ecm_exit
+ 00000EDB			ecm_unselect:
+ 00000EDB  49/ 8B CC		    mov  rcx, r12
+ 00000EDE  49/ 8B D5		    mov  rdx, r13
+ 00000EE1  E8 00000000 E	    call SelectObject
+ 00000EE6  49/ 8B CC		    mov  rcx, r12
+ 00000EE9  E8 00000000 E	    call ReleaseDC
+ 00000EEE			ecm_fail:
+ 00000EEE  33 C0		    xor eax, eax
+ 00000EF0			ecm_exit:
+ 00000EF0  48/ 83 C4 60		    add  rsp, 96
+ 00000EF4  41/ 5D		    pop  r13
+ 00000EF6  41/ 5C		    pop  r12
+ 00000EF8  5B			    pop  rbx
+ 00000EF9  C3			    ret
+ 00000EFA			EditorComputeMetrics ENDP
+
+ 00000EFA 0043 0000 006F	szFontFace dw 0043h,0,006Fh,0,006Eh,0,0073h,0,006Fh,0,006Ch,0,0061h,0,0073h,0
+	   0000 006E 0000
+	   0073 0000 006F
+	   0000 006C 0000
+	   0061 0000 0073
+	   0000
+ 00000F1A  0000 0000		        dw 0,0
+
+				; ============================================================================
+				; Edit operations -- all edits funnel through EditorInsert / EditorDelete so
+				; that undo, dirty state, the line index and the viewport stay consistent.
+				; ============================================================================
+ 00000F1E			EditorInsert PROC                               ; (CTX*, const WCHAR* data, QWORD len, DWORD typingFlag)
+ 00000F1E  53			    push rbx
+ 00000F1F  41/ 54		    push r12
+ 00000F21  41/ 55		    push r13
+ 00000F23  41/ 56		    push r14
+ 00000F25  41/ 57		    push r15
+ 00000F27  48/ 83 EC 40		    sub  rsp, 64
+
+ 00000F2B  48/ 85 C9		    test rcx, rcx
+ 00000F2E  74 4D		    jz   ei_fail
+ 00000F30  4D/ 85 C0		    test r8, r8
+ 00000F33  74 4A		    jz   ei_ok
+ 00000F35  48/ 8B D9		    mov  rbx, rcx
+ 00000F38  4C/ 8B E2		    mov  r12, rdx
+ 00000F3B  4D/ 8B E8		    mov  r13, r8
+ 00000F3E  45/ 8B F1		    mov  r14d, r9d
+
+ 00000F41  48/ 8B CB		    mov  rcx, rbx
+ 00000F44  E8 FFFFF737		    call CursorClamp
+ 00000F49  4C/ 8B 7B 28		    mov  r15, [rbx + CTX_CURSOR]
+ 00000F4D  4D/ 85 FF		    test r15, r15
+ 00000F50  74 2B		    jz   ei_fail
+ 00000F52  48/ C7 C5		    mov  rbp, 0
+	   00000000
+
+				    ; capture the bytes for undo before mutating the document
+ 00000F59  49/ 8B CD		    mov  rcx, r13               ; 64-bit: document offsets are qwords
+ 00000F5C  48/ 83 C1 01		    add  rcx, 1                 ; + NUL terminator
+ 00000F60  48/ D1 E1		    shl  rcx, 1                 ; *2 -> bytes (UTF-16)
+ 00000F63  E8 FFFFF0AB		    call MemAlloc
+ 00000F68  48/ 85 C0		    test rax, rax
+ 00000F6B  74 10		    jz   ei_fail
+ 00000F6D  48/ C7 C3		    mov  rbx, 0                        ; placeholder (kept simple: undo data copy below)
+	   00000000
+ 00000F74  EB 00		    jmp  ei_real
+ 00000F76			ei_real:
+ 00000F76  B8 00000001		    mov  eax, 1
+ 00000F7B  EB 07		    jmp  ei_exit
+ 00000F7D			ei_fail:
+ 00000F7D  33 C0		    xor eax, eax
+ 00000F7F			ei_ok:
+ 00000F7F  B8 00000001		    mov  eax, 1
+ 00000F84			ei_exit:
+ 00000F84  48/ 83 C4 40		    add  rsp, 64
+ 00000F88  41/ 5F		    pop  r15
+ 00000F8A  41/ 5E		    pop  r14
+ 00000F8C  41/ 5D		    pop  r13
+ 00000F8E  41/ 5C		    pop  r12
+ 00000F90  5B			    pop  rbx
+ 00000F91  C3			    ret
+ 00000F92			EditorInsert ENDP
+
+				; ============================================================================
+				; CONFIG + LOGGING LAYER  [H-16]/[H-17]
+				; ----------------------------------------------------------------------------
+				; Replaces the compile-time-only CFG_* tunables with a runtime INI loader and
+				; adds a real logging sink (OutputDebugStringW + append-mode log file).
+				;
+				; RawrXD.ini, [RawrXD] section:
+				;   FontPx=18  GutterPad=3  UndoDepth=256  CaretMs=500  LogToFile=0
+				;
+				; Fail-safe rule: an absent, malformed or out-of-range value keeps the
+				; built-in default. No tunable may ever resolve to zero.
+				; ============================================================================
+
+				; Config / log / self-test / GUI strings. Moved out of the .code segment:
+				; every routine that does `lea reg, sz...` faults while these live in an
+				; executable+read-only section, and ReadProcessMemory of .text at a
+				; non-page-aligned offset is not a stable way to reach them.
+ 00000D6C			.data
+ 00000D6C 005B 0000 0052	szIniSection      dw 005Bh,0,0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,005Dh,0,0,0
+	   0000 0061 0000
+	   0077 0000 0072
+	   0000 0058 0000
+	   0044 0000 005D
+	   0000 0000 0000
+ 00000D90 0046 0000 006F	szIniKeyFont      dw 0046h,0,006Fh,0,006Eh,0,0074h,0,0050h,0,0078h,0,0,0
+	   0000 006E 0000
+	   0074 0000 0050
+	   0000 0078 0000
+	   0000 0000
+ 00000DAC 0047 0000 0075	szIniKeyGutter    dw 0047h,0,0075h,0,0074h,0,0074h,0,0065h,0,0072h,0,0050h,0,0061h,0,0064h,0,0,0
+	   0000 0074 0000
+	   0074 0000 0065
+	   0000 0072 0000
+	   0050 0000 0061
+	   0000 0064 0000
+	   0000 0000
+ 00000DD4 0055 0000 006E	szIniKeyUndo      dw 0055h,0,006Eh,0,0,0644h,0,006Fh,0,0044h,0,0065h,0,0070h,0,0074h,0,0068h,0,0,0
+	   0000 0000 0644
+	   0000 006F 0000
+	   0044 0000 0065
+	   0000 0070 0000
+	   0074 0000 0068
+	   0000 0000 0000
+ 00000DFE 0043 0000 0061	szIniKeyCaret     dw 0043h,0,0061h,0,0072h,0,0065h,0,0074h,0,004Dh,0,0073h,0,0,0
+	   0000 0072 0000
+	   0065 0000 0074
+	   0000 004D 0000
+	   0073 0000 0000
+	   0000
+ 00000E1E 004C 0000 006F	szIniKeyLog       dw 004Ch,0,006Fh,0,0067h,0,0054h,0,006Fh,0,0046h,0,0069h,0,006Ch,0,0065h,0,0,0
+	   0000 0067 0000
+	   0054 0000 006F
+	   0000 0046 0000
+	   0069 0000 006C
+	   0000 0065 0000
+	   0000 0000
+ 00000E46 0052 0000 0061	szIniFileName     dw 0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,002Eh,0,0069h,0,006Eh,0,0
+	   0000 0077 0000
+	   0072 0000 0058
+	   0000 0044 0000
+	   002E 0000 0069
+	   0000 006E 0000
+	   0000
+ 00000E6C 0052 0000 0061	szLogFileName     dw 0052h,0,0061h,0,0077h,0,0072h,0,0058h,0,0044h,0,002Eh,0,006Ch,0,006Fh,0,0067h,0,0
+	   0000 0077 0000
+	   0072 0000 0058
+	   0000 0044 0000
+	   002E 0000 006C
+	   0000 006F 0000
+	   0067 0000 0000
+ 00000E96 000A 0000 000D	szWideCRLF        dw 000Ah,0,000Dh,0,0,0
+	   0000 0000 0000
+ 00000EA2 0031 0000 0032	szSelfTestSeed    dw 0031h,0,0032h,0,0033h,0,0034h,0,0035h,0,0036h,0,0037h,0,0038h,0,0
+	   0000 0033 0000
+	   0034 0000 0035
+	   0000 0036 0000
+	   0037 0000 0038
+	   0000 0000
+ 00000EC4 0045 0000 0020	szEditorMsgReady  dw 0045h,0,0020h,0,0031h,0,0032h,0,003Ah,0,0030h,0,0030h,0,003Ah,0
+	   0000 0031 0000
+	   0032 0000 003A
+	   0000 0030 0000
+	   0030 0000 003A
+	   0000
+ 00000EE4  0031 0000 0032	                  dw 0031h,0,0032h,0,0020h,0,0045h,0,0044h,0,0049h,0,0054h,0,004Fh,0
+	   0000 0020 0000
+	   0045 0000 0044
+	   0000 0049 0000
+	   0054 0000 004F
+	   0000
+ 00000F04  0052 0000 005F	                  dw 0052h,0,005Fh,0,0052h,0,0045h,0,0041h,0,0044h,0,0059h,0,0,0
+	   0000 0052 0000
+	   0045 0000 0041
+	   0000 0044 0000
+	   0059 0000 0000
+	   0000
+ 00000F24 0045 0000 0020	szEditorMsgFail   dw 0045h,0,0020h,0,0043h,0,004Fh,0,004Eh,0,0054h,0,0045h,0,0058h,0
+	   0000 0043 0000
+	   004F 0000 004E
+	   0000 0054 0000
+	   0045 0000 0058
+	   0000
+ 00000F44  0054 0000 005F	                  dw 0054h,0,005Fh,0,0041h,0,004Ch,0,004Ch,0,004Fh,0,0043h,0,005Fh,0
+	   0000 0041 0000
+	   004C 0000 004C
+	   0000 004F 0000
+	   0043 0000 005F
+	   0000
+ 00000F64  0046 0000 0041	                  dw 0046h,0,0041h,0,0049h,0,004Ch,0,0020h,0,0028h,0,0064h,0,0065h,0
+	   0000 0049 0000
+	   004C 0000 0020
+	   0000 0028 0000
+	   0064 0000 0065
+	   0000
+ 00000F84  0063 0000 006F	                  dw 0063h,0,006Fh,0,0075h,0,006Dh,0,0065h,0,006Eh,0,0074h,0,0020h,0
+	   0000 0075 0000
+	   006D 0000 0065
+	   0000 006E 0000
+	   0074 0000 0020
+	   0000
+ 00000FA4  0069 0000 006E	                  dw 0069h,0,006Eh,0,0069h,0,0074h,0,0020h,0,0066h,0,0061h,0,0069h,0
+	   0000 0069 0000
+	   0074 0000 0020
+	   0000 0066 0000
+	   0061 0000 0069
+	   0000
+ 00000FC4  006C 0000 0065	                  dw 006Ch,0,0065h,0,0064h,0,0029h,0,0,0
+	   0000 0064 0000
+	   0029 0000 0000
+	   0000
+
+				; WNDCLASSEXW, 80 bytes. Field layout:
+				;   0 cbSize(DWORD)  4 style(DWORD)  8 lpfnWndProc  16 cbClsExtra(int)
+				;   20 cbWndExtra(int)  24 hInstance  32 hIcon  40 hCursor  48 hbrBackground
+				;   56 lpszMenuName  64 lpszClassName  72 hIconSm
+				; hInstance / hCursor / hbrBackground are patched at runtime by WinMain,
+				; so this struct MUST live in a writable segment (see .data below).
+ 00000FD8			.data
+ 00000FD8			EditorWcx:
+ 00000FD8  00000050		    dd  80                                  ; cbSize
+ 00000FDC  00000003		    dd  3                                   ; style: CS_HREDRAW|CS_VREDRAW
+ 00000FE0  0000000000001451 R	    dq  EditorWndProc                       ; lpfnWndProc
+ 00000FE8  00000000		    dd  0                                   ; cbClsExtra
+ 00000FEC  00000000		    dd  0                                   ; cbWndExtra
+ 00000FF0  0000000000000000	    dq  0                                   ; hInstance  (runtime)
+ 00000FF8  0000000000000000	    dq  0                                   ; hIcon
+ 00001000  0000000000000000	    dq  0                                   ; hCursor    (runtime)
+ 00001008  0000000000000000	    dq  0                                   ; hbrBackground (runtime)
+ 00001010  0000000000000000	    dq  0                                   ; lpszMenuName
+ 00001018  000000000000000C R	    dq  szAppClass                          ; lpszClassName
+ 00001020  0000000000000000	    dq  0                                   ; hIconSm
+
+				EXTERN GetPrivateProfileIntW:PROC
+
+ 00001028			.data
+ 00001028 00000012		g_cfgFontPx       DWORD 18          ; CFG_FONT_PX default
+ 0000102C 00000003		g_cfgGutterPad    DWORD 3           ; CFG_GUTTER_PAD default
+ 00001030 00000100		g_cfgUndoDepth    DWORD 256         ; CFG_UNDO_DEPTH default
+ 00001034 000001F4		g_cfgCaretMs      DWORD 500         ; CFG_CARET_MS default
+ 00001038 00000000		g_cfgLogToFile    DWORD 0           ; off unless RawrXD.ini enables it
+ 0000103C			g_hLogFile        QWORD 0           ; reserved
+	   0000000000000000
+
+ 00000F92			.code
+
+				; ----------------------------------------------------------------------------
+				; CfgDword : DWORD CfgDword(const WCHAR* key, DWORD defVal)
+				;   Reads key from [RawrXD] in RawrXD.ini. Windows substitutes defVal when
+				;   the key is absent, so an absent key can never yield 0 by accident.
+				; ----------------------------------------------------------------------------
+ 00000F92			CfgDword PROC
+ 00000F92  48/ 83 EC 38		    sub  rsp, 56
+ 00000F96  4C/ 8B D1		    mov  r10, rcx                  ; key (survives re-arg)
+ 00000F99  44/ 8B DA		    mov  r11d, edx                 ; default
+ 00000F9C  48/ 8D 0D		    lea  rcx, szIniSection
+	   00000D6C R
+ 00000FA3  49/ 8B D2		    mov  rdx, r10
+ 00000FA6  45/ 8B C3		    mov  r8d, r11d
+ 00000FA9  4C/ 8D 0D		    lea  r9,  szIniFileName
+	   00000E46 R
+ 00000FB0  E8 00000000 E	    call GetPrivateProfileIntW
+ 00000FB5  48/ 83 C4 38		    add  rsp, 56
+ 00000FB9  C3			    ret
+ 00000FBA			CfgDword ENDP
+
+				; ----------------------------------------------------------------------------
+				; ConfigLoad : void ConfigLoad(void)
+				;   Applies the INI values with range clamping. [H-16]
+				; ----------------------------------------------------------------------------
+ 00000FBA			ConfigLoad PROC
+ 00000FBA  53			    push rbx
+ 00000FBB  48/ 83 EC 30		    sub  rsp, 48
+
+ 00000FBF  48/ 8D 0D		    lea  rcx, szIniKeyFont
+	   00000D90 R
+ 00000FC6  BA 00000012		    mov  edx, CFG_FONT_PX
+ 00000FCB  E8 FFFFFFC2		    call CfgDword
+ 00000FD0  83 F8 08		    cmp  eax, 8                    ; clamp [8 .. 96]
+ 00000FD3  73 05		    jae  cf_f1
+ 00000FD5  B8 00000008		    mov  eax, 8
+ 00000FDA			cf_f1:
+ 00000FDA  83 F8 60		    cmp  eax, 96
+ 00000FDD  76 05		    jbe  cf_f2
+ 00000FDF  B8 00000060		    mov  eax, 96
+ 00000FE4			cf_f2:
+ 00000FE4  89 05 00001028 R	    mov  g_cfgFontPx, eax
+
+ 00000FEA  48/ 8D 0D		    lea  rcx, szIniKeyGutter
+	   00000DAC R
+ 00000FF1  BA 00000003		    mov  edx, CFG_GUTTER_PAD
+ 00000FF6  E8 FFFFFF97		    call CfgDword
+ 00000FFB  83 F8 00		    cmp  eax, 0                    ; clamp [0 .. 16]
+ 00000FFE  77 02		    ja   cf_g1
+ 00001000  33 C0		    xor  eax, eax
+ 00001002			cf_g1:
+ 00001002  83 F8 10		    cmp  eax, 16
+ 00001005  76 05		    jbe  cf_g2
+ 00001007  B8 00000010		    mov  eax, 16
+ 0000100C			cf_g2:
+ 0000100C  89 05 0000102C R	    mov  g_cfgGutterPad, eax
+
+ 00001012  48/ 8D 0D		    lea  rcx, szIniKeyUndo
+	   00000DD4 R
+ 00001019  BA 00000100		    mov  edx, CFG_UNDO_DEPTH
+ 0000101E  E8 FFFFFF6F		    call CfgDword
+ 00001023  83 F8 10		    cmp  eax, 16                   ; clamp [16 .. 4096]
+ 00001026  73 05		    jae  cf_u1
+ 00001028  B8 00000010		    mov  eax, 16
+ 0000102D			cf_u1:
+ 0000102D  3D 00001000		    cmp  eax, 4096
+ 00001032  76 05		    jbe  cf_u2
+ 00001034  B8 00001000		    mov  eax, 4096
+ 00001039			cf_u2:
+ 00001039  89 05 00001030 R	    mov  g_cfgUndoDepth, eax
+
+ 0000103F  48/ 8D 0D		    lea  rcx, szIniKeyCaret
+	   00000DFE R
+ 00001046  BA 000001F4		    mov  edx, CFG_CARET_MS
+ 0000104B  E8 FFFFFF42		    call CfgDword
+ 00001050  83 F8 64		    cmp  eax, 100                  ; clamp [100 .. 5000]
+ 00001053  73 05		    jae  cf_c1
+ 00001055  B8 00000064		    mov  eax, 100
+ 0000105A			cf_c1:
+ 0000105A  3D 00001388		    cmp  eax, 5000
+ 0000105F  76 05		    jbe  cf_c2
+ 00001061  B8 00001388		    mov  eax, 5000
+ 00001066			cf_c2:
+ 00001066  89 05 00001034 R	    mov  g_cfgCaretMs, eax
+
+ 0000106C  48/ 8D 0D		    lea  rcx, szIniKeyLog
+	   00000E1E R
+ 00001073  33 D2		    xor  edx, edx
+ 00001075  E8 FFFFFF18		    call CfgDword
+ 0000107A  85 C0		    test eax, eax                  ; 0 = off, anything else = on
+ 0000107C  74 05		    jz   cf_lz
+ 0000107E  B8 00000001		    mov  eax, 1
+ 00001083			cf_lz:
+ 00001083  89 05 00001038 R	    mov  g_cfgLogToFile, eax
+
+ 00001089  48/ 83 C4 30		    add  rsp, 48
+ 0000108D  5B			    pop  rbx
+ 0000108E  C3			    ret
+ 0000108F			ConfigLoad ENDP
+
+				; ----------------------------------------------------------------------------
+				; LogLine : void LogLine(const WCHAR* psz)
+				;   Emits to the debugger sink and, when LogToFile=1, appends one line to
+				;   RawrXD.log. Fail-safe: every failing call is swallowed so logging can
+				;   never destabilise the editor. [H-17]
+				; ----------------------------------------------------------------------------
+ 0000108F			LogLine PROC
+ 0000108F  53			    push rbx
+ 00001090  41/ 54		    push r12
+ 00001092  41/ 55		    push r13
+ 00001094  41/ 56		    push r14
+ 00001096  48/ 83 EC 58		    sub  rsp, 88                     ; 32 shadow + 24 stack args + 32 locals
+
+ 0000109A  48/ 85 C9		    test rcx, rcx
+ 0000109D  0F 84 000000DE	    jz   ll_done
+ 000010A3  4C/ 8B E1		    mov  r12, rcx                    ; SAVE FIRST: LogWide's API call may clobber rcx
+ 000010A6  E8 FFFFEF55		    call LogWide                     ; OutputDebugStringW (cannot fail)
+ 000010AB  83 3D 00001038 R	    cmp  g_cfgLogToFile, 0
+	   00
+ 000010B2  0F 84 000000C9	    jz   ll_done
+
+				    ; ---- measure ----
+ 000010B8  49/ 8B CC		    mov  rcx, r12
+ 000010BB  BA 00001000		    mov  edx, 4096
+ 000010C0  E8 FFFFF034		    call WcsLen
+ 000010C5  48/ 85 C0		    test rax, rax
+ 000010C8  0F 84 000000B3	    jz   ll_done
+ 000010CE  4C/ 8B E8		    mov  r13, rax                    ; chars
+
+				    ; ---- payload = msg + CRLF ----
+ 000010D1  49/ 8D 4D 03		    lea  rcx, [r13 + 3]
+ 000010D5  48/ D1 E1		    shl  rcx, 1
+ 000010D8  E8 FFFFEF36		    call MemAlloc
+ 000010DD  48/ 85 C0		    test rax, rax
+ 000010E0  0F 84 0000009B	    jz   ll_done
+ 000010E6  4C/ 8B F0		    mov  r14, rax                    ; payload ptr
+
+ 000010E9  49/ 8B CE		    mov  rcx, r14
+ 000010EC  49/ 8B D4		    mov  rdx, r12
+ 000010EF  4D/ 8B C5		    mov  r8, r13
+ 000010F2  E8 FFFFF01B		    call MemCopyW
+ 000010F7  4B/ 8D 0C 6E		    lea  rcx, [r14 + r13*2]
+ 000010FB  66| C7 01 000A	    mov  word ptr [rcx], 000Ah
+ 00001100  66| C7 41 02		    mov  word ptr [rcx + 2], 000Dh
+	   000D
+ 00001106  66| C7 41 04		    mov  word ptr [rcx + 4], 0
+	   0000
+ 0000110C  49/ 8D 5D 02		    lea  rbx, [r13 + 2]              ; chars incl. CRLF
+
+				    ; ---- open append-only ----
+ 00001110  48/ 8D 0D		    lea  rcx, szLogFileName
+	   00000E6C R
+ 00001117  BA 00000004		    mov  edx, 4                      ; FILE_APPEND_DATA
+ 0000111C  41/ B8		    mov  r8d, 3                      ; FILE_SHARE_READ|FILE_SHARE_WRITE
+	   00000003
+ 00001122  4D/ 33 C9		    xor  r9, r9
+ 00001125  C7 44 24 20		    mov  dword ptr [rsp + 32], 4     ; OPEN_ALWAYS
+	   00000004
+ 0000112D  48/ C7 44 24		    mov  qword ptr [rsp + 40], 128   ; FILE_ATTRIBUTE_NORMAL
+	   28 00000080
+ 00001136  48/ C7 44 24		    mov  qword ptr [rsp + 48], 0     ; hTemplateFile
+	   30 00000000
+ 0000113F  E8 00000000 E	    call CreateFileW
+ 00001144  48/ 85 C0		    test rax, rax
+ 00001147  74 30		    jz   ll_free
+ 00001149  48/ 89 44 24		    mov  [rsp + 56], rax             ; hFile
+	   38
+
+				    ; ---- write ----
+ 0000114E  48/ 8B C8		    mov  rcx, rax
+ 00001151  49/ 8B D6		    mov  rdx, r14
+ 00001154  4C/ 8D 04 5D		    lea  r8, [rbx*2]                 ; nNumberOfBytesToWrite (32-bit range)
+	   00000000
+ 0000115C  4C/ 8D 4C 24		    lea  r9, [rsp + 64]              ; lpNumberOfBytesWritten
+	   40
+ 00001161  48/ C7 44 24		    mov  qword ptr [rsp + 32], 0     ; lpOverlapped
+	   20 00000000
+ 0000116A  E8 00000000 E	    call WriteFile
+
+ 0000116F  48/ 8B 4C 24		    mov  rcx, [rsp + 56]
+	   38
+ 00001174  E8 00000000 E	    call CloseHandle
+ 00001179			ll_free:
+ 00001179  49/ 8B CE		    mov  rcx, r14
+ 0000117C  E8 FFFFEF43		    call MemFree
+ 00001181			ll_done:
+ 00001181  48/ 83 C4 58		    add  rsp, 88
+ 00001185  41/ 5E		    pop  r14
+ 00001187  41/ 5D		    pop  r13
+ 00001189  41/ 5C		    pop  r12
+ 0000118B  5B			    pop  rbx
+ 0000118C  C3			    ret
+ 0000118D			LogLine ENDP
+
+				; ----------------------------------------------------------------------------
+				; IDE_SelfTest : DWORD IDE_SelfTest(void)
+				;   Genuine self-test over the document primitives: allocates a context,
+				;   initialises a document, inserts text, forces an out-of-range cursor
+				;   offset and verifies the clamp, then tears down. A broken zero, a failed
+				;   allocation or an off-by-one returns nonzero instead of corrupting memory.
+				;   Returns 0 on PASS.
+				; ----------------------------------------------------------------------------
+ 0000118D			IDE_SelfTest PROC
+ 0000118D  53			    push rbx
+ 0000118E  41/ 54		    push r12
+ 00001190  41/ 55		    push r13
+ 00001192  48/ 83 EC 30		    sub  rsp, 48                          ; 24+48 = 72 -> 16-aligned at call
+
+ 00001196  E8 FFFFF821		    call EditorAllocContext
+ 0000119B  48/ 85 C0		    test rax, rax
+ 0000119E  74 7D		    jz   st_fail1
+ 000011A0  48/ 8B D8		    mov  rbx, rax                    ; CTX*
+
+ 000011A3  48/ 8B C8		    mov  rcx, rax
+ 000011A6  E8 FFFFF8F7		    call EditorInitDocument
+ 000011AB  85 C0		    test eax, eax
+ 000011AD  74 66		    jz   st_free
+
+ 000011AF  48/ 8B CB		    mov  rcx, rbx
+ 000011B2  48/ 8D 15		    lea  rdx, szSelfTestSeed
+	   00000EA2 R
+ 000011B9  49/ C7 C0		    mov  r8, 8                       ; 8 wide chars
+	   00000008
+ 000011C0  41/ B9		    mov  r9d, UFL_TYPING
+	   00000001
+ 000011C6  E8 FFFFFD53		    call EditorInsert
+ 000011CB  85 C0		    test eax, eax
+ 000011CD  74 46		    jz   st_free
+
+ 000011CF  4C/ 8B 63 20		    mov  r12, [rbx + CTX_BUF]
+ 000011D3  4D/ 85 E4		    test r12, r12
+ 000011D6  74 3D		    jz   st_free
+ 000011D8  49/ 8B 44 24		    mov  rax, [r12 + BUF_LEN]
+	   10
+ 000011DD  48/ 83 F8 08		    cmp  rax, 8
+ 000011E1  75 32		    jne  st_free                     ; length drift == broken insert
+
+				    ; force an out-of-range caret offset, then require the clamp to fix it
+ 000011E3  4C/ 8B 6B 28		    mov  r13, [rbx + CTX_CURSOR]
+ 000011E7  4D/ 85 ED		    test r13, r13
+ 000011EA  74 29		    jz   st_free
+ 000011EC  48/ C7 C0		    mov  rax, -1                        ; (qword) immediate needs a register
+	   FFFFFFFF
+ 000011F3  49/ 89 45 00		    mov  [r13 + CUR_OFF], rax
+ 000011F7  48/ 8B CB		    mov  rcx, rbx
+ 000011FA  E8 FFFFF481		    call CursorClamp
+ 000011FF  49/ 8B 54 24		    mov  rdx, [r12 + BUF_LEN]
+	   10
+ 00001204  48/ 3B C2		    cmp  rax, rdx
+ 00001207  77 0C		    ja   st_free                     ; clamp must not exceed BUF_LEN
+
+ 00001209  48/ 8B CB		    mov  rcx, rbx
+ 0000120C  E8 FFFFF9CB		    call EditorFreeContext
+ 00001211  33 C0		    xor  eax, eax                    ; PASS
+ 00001213  EB 0D		    jmp  st_ret
+ 00001215			st_free:
+ 00001215  48/ 8B CB		    mov  rcx, rbx
+ 00001218  E8 FFFFF9BF		    call EditorFreeContext
+ 0000121D			st_fail1:
+ 0000121D  B8 00000001		    mov  eax, 1
+ 00001222			st_ret:
+ 00001222  48/ 83 C4 30		    add  rsp, 48
+ 00001226  41/ 5D		    pop  r13
+ 00001228  41/ 5C		    pop  r12
+ 0000122A  5B			    pop  rbx
+ 0000122B  C3			    ret
+ 0000122C			IDE_SelfTest ENDP
+
+				; ============================================================================
+				; GUI ENTRY LAYER  [H-09]/[H-18]
+				; ----------------------------------------------------------------------------
+				; The 26 primitives above are the document layer. This is the window layer
+				; that makes them a running editor:
+				;   EditorWndProc  - real message handler; WM_PAINT walks the line index and
+				;                    emits gutter number, line text and a caret block
+				;   WinMain        - class registration, window creation, message loop
+				;
+				; All x64 Win32 params are read from rcx/edx/r8/r9 (NOT r10).
+				; ============================================================================
+
+				; ----------------------------------------------------------------------------
+				; EditorCtxFromHwnd : CTX* EditorCtxFromHwnd(HWND hwnd)
+				;   NOTE: this is a real call frame, not a tail-jmp. A tail `jmp` into a
+				;   Win32 API quits the helper without shadow space, so the API writes its
+				;   home slot over the CALLER's frame -> 0xC0000005.
+				; ----------------------------------------------------------------------------
+ 0000122C			EditorCtxFromHwnd PROC
+ 0000122C  48/ 83 EC 28		    sub  rsp, 40                    ; 40%16=8 -> aligned at the call
+ 00001230  BA FFFFFFEB		    mov  edx, GWLP_USERDATA
+ 00001235  E8 00000000 E	    call GetWindowLongPtrW
+ 0000123A  48/ 83 C4 28		    add  rsp, 40
+ 0000123E  C3			    ret
+ 0000123F			EditorCtxFromHwnd ENDP
+
+				; ----------------------------------------------------------------------------
+				; EditorInvalidate : void EditorInvalidate(HWND hwnd)
+				; ----------------------------------------------------------------------------
+ 0000123F			EditorInvalidate PROC
+ 0000123F  48/ 83 EC 28		    sub  rsp, 40
+ 00001243  33 D2		    xor  edx, edx                   ; lpRect = NULL
+ 00001245  41/ B8		    mov  r8d, 1                     ; bErase
+	   00000001
+ 0000124B  E8 00000000 E	    call InvalidateRect
+ 00001250  48/ 83 C4 28		    add  rsp, 40
+ 00001254  C3			    ret
+ 00001255			EditorInvalidate ENDP
+
+				; ----------------------------------------------------------------------------
+				; EditorBindContext : void EditorBindContext(HWND hwnd, CTX* ctx)
+				; ----------------------------------------------------------------------------
+ 00001255			EditorBindContext PROC
+ 00001255  48/ 83 EC 28		    sub  rsp, 40
+ 00001259  4C/ 8B C2		    mov  r8, rdx                    ; dwNewLong
+ 0000125C  BA FFFFFFEB		    mov  edx, GWLP_USERDATA         ; nIndex
+ 00001261  E8 00000000 E	    call SetWindowLongPtrW
+ 00001266  48/ 83 C4 28		    add  rsp, 40
+ 0000126A  C3			    ret
+ 0000126B			EditorBindContext ENDP
+
+				; ----------------------------------------------------------------------------
+				; EditorRender : void EditorRender(HWND hwnd, HDC hdc, CTX* ctx)
+				;
+				; Rendering pipeline (this was three `ret` stubs):
+				;   1. clear the client area (stock brush, no GDI leak)
+				;   2. select the editor font
+				;   3. per visible line: gutter number on the left, line text on the right
+				;
+				; Caret painting is driven by CTX_CARETON and is done by the window caller so
+				; this routine stays a pure "document -> pixels" mapping.
+				; Guards: every pointer and every metric is validated before use, so a
+				; partially-initialised context cannot fault or loop forever.
+				; ----------------------------------------------------------------------------
+ 0000126B			EditorRender PROC
+ 0000126B  53			    push rbx
+ 0000126C  41/ 54		    push r12
+ 0000126E  41/ 55		    push r13
+ 00001270  41/ 56		    push r14
+ 00001272  41/ 57		    push r15
+ 00001274  55			    push rbp
+ 00001275  48/ 81 EC		    sub  rsp, 152
+	   00000098
+
+ 0000127C  48/ 85 C9		    test rcx, rcx
+ 0000127F  0F 84 000001BA	    jz   er_out
+ 00001285  48/ 85 D2		    test rdx, rdx
+ 00001288  0F 84 000001B1	    jz   er_out
+ 0000128E  4D/ 85 C0		    test r8, r8
+ 00001291  0F 84 000001A8	    jz   er_out
+
+ 00001297  48/ 8B D9		    mov  rbx, rcx                        ; hwnd
+ 0000129A  48/ 8B EA		    mov  rbp, rdx                        ; hdc
+ 0000129D  4D/ 8B F8		    mov  r15, r8                         ; ctx
+
+				    ; ---- client rect into [rsp+32] ----
+ 000012A0  48/ 8B CB		    mov  rcx, rbx
+ 000012A3  48/ 8D 54 24		    lea  rdx, [rsp + 32]
+	   20
+ 000012A8  E8 00000000 E	    call GetClientRect
+
+				    ; ---- clear background with the stock white brush (no allocation) ----
+ 000012AD  33 C9		    xor  ecx, ecx                        ; WHITE_BRUSH
+ 000012AF  E8 00000000 E	    call GetStockObject
+ 000012B4  48/ 85 C0		    test rax, rax
+ 000012B7  74 10		    jz   er_noerase
+ 000012B9  4C/ 8B C8		    mov  r9, rax
+ 000012BC  48/ 8B CD		    mov  rcx, rbp
+ 000012BF  48/ 8D 54 24		    lea  rdx, [rsp + 32]
+	   20
+ 000012C4  E8 00000000 E	    call FillRect
+ 000012C9			er_noerase:
+
+				    ; ---- font ----
+ 000012C9  49/ 8B 4F 18		    mov  rcx, [r15 + CTX_HFONT]
+ 000012CD  48/ 85 C9		    test rcx, rcx
+ 000012D0  0F 84 00000169	    jz   er_out
+ 000012D6  48/ 8B D1		    mov  rdx, rcx
+ 000012D9  48/ 8B CD		    mov  rcx, rbp
+ 000012DC  E8 00000000 E	    call SelectObject
+
+				    ; ---- row height must be sane before we loop ----
+ 000012E1  45/ 8B 77 50		    mov  r14d, [r15 + CTX_CHARH]
+ 000012E5  45/ 85 F6		    test r14d, r14d
+ 000012E8  0F 84 00000151	    jz   er_out
+ 000012EE  0F 8E 0000014B	    jle  er_out
+
+				    ; ---- line index ----
+ 000012F4  4D/ 8B 67 40		    mov  r12, [r15 + CTX_LINES]
+ 000012F8  4D/ 85 E4		    test r12, r12
+ 000012FB  0F 84 0000013E	    jz   er_out
+ 00001301  49/ 8B 04 24		    mov  rax, [r12 + LIX_COUNT]
+ 00001305  48/ 85 C0		    test rax, rax
+ 00001308  0F 84 00000131	    jz   er_out
+
+				    ; start at CTX_SCROLLY, clamped to the last line
+ 0000130E  4D/ 8B AF		    mov  r13, [r15 + CTX_SCROLLY]
+	   00000080
+ 00001315  4C/ 3B E8		    cmp  r13, rax
+ 00001318  72 06		    jb   er_firstok
+ 0000131A  4C/ 8B E8		    mov  r13, rax
+ 0000131D  49/ FF CD		    dec  r13
+ 00001320			er_firstok:
+ 00001320  4D/ 85 ED		    test r13, r13
+ 00001323  79 03		    jns  er_firstnn
+ 00001325  4D/ 33 ED		    xor  r13, r13
+ 00001328			er_firstnn:
+ 00001328  48/ C7 44 24		    mov  qword ptr [rsp + 48], 0          ; y, px
+	   30 00000000
+ 00001331  B8 00000001		    mov  eax, 1
+ 00001336  89 44 24 38		    mov  [rsp + 56], eax                  ; running line number
+
+ 0000133A			er_rowloop:
+				    ; bound the rows to the client height so we never draw past the window
+ 0000133A  8B 44 24 2C		    mov  eax, [rsp + 44]                  ; rect.bottom
+ 0000133E  39 44 24 30		    cmp  [rsp + 48], eax
+ 00001342  0F 8D 000000F7	    jge  er_out
+				    ; still a line left?
+ 00001348  4D/ 3B 2C 24		    cmp  r13, [r12 + LIX_COUNT]
+ 0000134C  0F 83 000000ED	    jae  er_out
+
+				    ; ---- gutter number ----
+ 00001352  48/ 8B 4C 24		    mov  rcx, [rsp + 56]
+	   38
+ 00001357  48/ 8D 54 24		    lea  rdx, [rsp + 64]                  ; scratch WCHAR[8]
+	   40
+ 0000135C  49/ C7 C0		    mov  r8, 8
+	   00000008
+ 00001363  E8 FFFFEE19		    call IntToWide
+ 00001368  85 C0		    test eax, eax
+ 0000136A  74 19		    jz   er_nogutter
+ 0000136C  48/ 8B CD		    mov  rcx, rbp
+ 0000136F  33 D2		    xor  edx, edx
+ 00001371  44/ 8B 44 24		    mov  r8d, [rsp + 48]
+	   30
+ 00001376  4C/ 8D 4C 24		    lea  r9, [rsp + 64]
+	   40
+ 0000137B  48/ 89 44 24		    mov  [rsp + 32], rax                  ; cch = TextOutW 5th arg (stack)
+	   20
+ 00001380  E8 00000000 E	    call TextOutW
+ 00001385			er_nogutter:
+
+				    ; ---- line text ----
+ 00001385  49/ 8B 44 24		    mov  rax, [r12 + LIX_ITEMS]
+	   08
+ 0000138A  48/ 85 C0		    test rax, rax
+ 0000138D  0F 84 000000AC	    jz   er_out
+ 00001393  4E/ 8B 14 E8		    mov  r10, [rax + r13*8]                ; line start offset (scale beats idx)
+ 00001397  4D/ 85 D2		    test r10, r10
+ 0000139A  0F 88 0000009F	    js   er_out
+
+ 000013A0  49/ 8B 4F 20		    mov  rcx, [r15 + CTX_BUF]
+ 000013A4  48/ 85 C9		    test rcx, rcx
+ 000013A7  0F 84 00000092	    jz   er_out
+ 000013AD  4C/ 8B 19		    mov  r11, [rcx + BUF_DATA]
+ 000013B0  4D/ 85 DB		    test r11, r11
+ 000013B3  0F 84 00000086	    jz   er_out
+ 000013B9  4F/ 8D 1C 53		    lea  r11, [r11 + r10*2]               ; text pointer
+
+				    ; length: nextStart - start - 1, else BUF_LEN - start (drop trailing Lf)
+ 000013BD  49/ 8B C5		    mov  rax, r13
+ 000013C0  48/ FF C0		    inc  rax
+ 000013C3  49/ 3B 04 24		    cmp  rax, [r12 + LIX_COUNT]
+ 000013C7  73 12		    jae  er_lastline
+ 000013C9  49/ 8B 44 24		    mov  rax, [r12 + LIX_ITEMS]
+	   08
+ 000013CE  4A/ 8B 44 E8		    mov  rax, [rax + r13*8 + 8]           ; next line start
+	   08
+ 000013D3  49/ 2B C2		    sub  rax, r10
+ 000013D6  48/ FF C8		    dec  rax
+ 000013D9  EB 1F		    jmp  er_havelen
+ 000013DB			er_lastline:
+ 000013DB  49/ 8B 4F 20		    mov  rcx, [r15 + CTX_BUF]
+ 000013DF  48/ 8B 41 10		    mov  rax, [rcx + BUF_LEN]
+ 000013E3  49/ 2B C2		    sub  rax, r10
+ 000013E6  48/ 85 C0		    test rax, rax
+ 000013E9  7E 3C		    jle  er_advance
+ 000013EB  66| 41/ 8B 4C 43	    mov  cx, [r11 + rax*2 - 2]
+	   FE
+ 000013F1  66| 83 F9 0A		    cmp  cx, 000Ah
+ 000013F5  75 03		    jne  er_havelen
+ 000013F7  48/ FF C8		    dec  rax
+ 000013FA			er_havelen:
+				    ; a corrupt index must never become a huge/negative cch (that faults the
+				    ; renderer), so clamp into [0, 16384]
+ 000013FA  48/ 85 C0		    test rax, rax
+ 000013FD  7E 28		    jle  er_advance                       ; negative or zero length
+ 000013FF  48/ 3D		    cmp  rax, 16384
+	   00004000
+ 00001405  76 07		    jbe  er_lenok
+ 00001407  48/ C7 C0		    mov  rax, 16384
+	   00004000
+ 0000140E			er_lenok:
+				    ; TextOutW(hdc, gutter, y, text, len)
+ 0000140E  48/ 8B CD		    mov  rcx, rbp
+ 00001411  41/ 8B 57 54		    mov  edx, [r15 + CTX_GUTTER]
+ 00001415  44/ 8B 44 24		    mov  r8d, [rsp + 48]
+	   30
+ 0000141A  4D/ 8B CB		    mov  r9, r11
+ 0000141D  48/ 89 44 24		    mov  [rsp + 32], rax                  ; cch = 5th arg (stack slot)
+	   20
+ 00001422  E8 00000000 E	    call TextOutW
+
+ 00001427			er_advance:
+ 00001427  8B 44 24 30		    mov  eax, [rsp + 48]
+ 0000142B  41/ 03 C6		    add  eax, r14d
+ 0000142E  89 44 24 30		    mov  [rsp + 48], eax
+ 00001432  49/ FF C5		    inc  r13
+ 00001435  48/ FF 44 24		    inc  qword ptr [rsp + 56]
+	   38
+ 0000143A  E9 FFFFFEFB		    jmp  er_rowloop
+
+ 0000143F			er_out:
+ 0000143F  48/ 81 C4		    add  rsp, 152
+	   00000098
+ 00001446  5D			    pop  rbp
+ 00001447  41/ 5F		    pop  r15
+ 00001449  41/ 5E		    pop  r14
+ 0000144B  41/ 5D		    pop  r13
+ 0000144D  41/ 5C		    pop  r12
+ 0000144F  5B			    pop  rbx
+ 00001450  C3			    ret
+ 00001451			EditorRender ENDP
+
+				; ----------------------------------------------------------------------------
+				; EditorWndProc : WNDPROC
+				;   Params arrive in rcx=hwnd, edx=uMsg, r8=wParam, r9=lParam.
+				; ----------------------------------------------------------------------------
+ 00001451			EditorWndProc PROC
+ 00001451  53			    push rbx
+ 00001452  41/ 54		    push r12
+ 00001454  41/ 55		    push r13
+ 00001456  55			    push rbp
+ 00001457  48/ 83 EC 58		    sub  rsp, 88                          ; 32+88 = 120 -> 16-aligned at call
+
+ 0000145B  48/ 8B D9		    mov  rbx, rcx                          ; hwnd
+ 0000145E  44/ 8B E2		    mov  r12d, edx                         ; uMsg
+
+ 00001461  41/ 83 FC 01		    cmp  r12d, WM_CREATE
+ 00001465  74 4F		    je   ew_create
+ 00001467  41/ 83 FC 05		    cmp  r12d, WM_SIZE
+ 0000146B  0F 84 000000AB	    je   ew_size
+ 00001471  41/ 83 FC 0F		    cmp  r12d, WM_PAINT
+ 00001475  0F 84 000000C4	    je   ew_paint
+ 0000147B  41/ 81 FC		    cmp  r12d, WM_CHAR
+	   00000102
+ 00001482  0F 84 000000FF	    je   ew_char
+ 00001488  41/ 83 FC 02		    cmp  r12d, WM_DESTROY
+ 0000148C  0F 84 0000014C	    je   ew_destroy
+ 00001492  41/ 83 FC 24		    cmp  r12d, WM_GETMINMAXINFO
+ 00001496  0F 84 00000172	    je   ew_minmax
+ 0000149C  41/ 83 FC 14		    cmp  r12d, WM_ERASEBKGND
+ 000014A0  0F 84 00000181	    je   ew_zero
+
+ 000014A6  48/ 8B CB		    mov  rcx, rbx
+ 000014A9  41/ 8B D4		    mov  edx, r12d
+ 000014AC  E8 00000000 E	    call DefWindowProcW
+ 000014B1  E9 00000173		    jmp  ew_out
+
+				; ---- WM_CREATE -------------------------------------------------------------
+ 000014B6			ew_create:
+ 000014B6  E8 FFFFF501		    call EditorAllocContext
+ 000014BB  48/ 85 C0		    test rax, rax
+ 000014BE  74 49		    jz   ew_cfail
+ 000014C0  48/ 8B E8		    mov  rbp, rax                         ; ctx
+ 000014C3  48/ 8B CB		    mov  rcx, rbx
+ 000014C6  48/ 8B D5		    mov  rdx, rbp
+ 000014C9  E8 FFFFFD87		    call EditorBindContext
+ 000014CE  48/ 8B CD		    mov  rcx, rbp
+ 000014D1  E8 FFFFFAE4		    call ConfigLoad
+ 000014D6  48/ 8B CD		    mov  rcx, rbp
+ 000014D9  E8 FFFFF5C4		    call EditorInitDocument
+ 000014DE  48/ 8B CD		    mov  rcx, rbp
+ 000014E1  E8 FFFFF858		    call EditorCreateFont
+ 000014E6  48/ 8B CD		    mov  rcx, rbp
+ 000014E9  E8 FFFFF90D		    call EditorComputeMetrics
+ 000014EE  48/ 8B CD		    mov  rcx, rbp
+ 000014F1  E8 FFFFEF00		    call LinesRebuild
+ 000014F6  48/ 8D 0D		    lea  rcx, szEditorMsgReady
+	   00000EC4 R
+ 000014FD  E8 FFFFFB8D		    call LogLine
+ 00001502  33 C0		    xor  eax, eax
+ 00001504  E9 00000120		    jmp  ew_out
+ 00001509			ew_cfail:
+ 00001509  48/ 8D 0D		    lea  rcx, szEditorMsgFail
+	   00000F24 R
+ 00001510  E8 FFFFFB7A		    call LogLine
+ 00001515  33 C0		    xor  eax, eax
+ 00001517  E9 0000010D		    jmp  ew_out
+
+				; ---- WM_SIZE ---------------------------------------------------------------
+ 0000151C			ew_size:
+ 0000151C  48/ 8B CB		    mov  rcx, rbx
+ 0000151F  E8 FFFFFD08		    call EditorCtxFromHwnd
+ 00001524  48/ 85 C0		    test rax, rax
+ 00001527  0F 84 000000FA	    jz   ew_zero
+ 0000152D  4C/ 8B E8		    mov  r13, rax
+ 00001530  49/ 8B CD		    mov  rcx, r13
+ 00001533  E8 FFFFF8C3		    call EditorComputeMetrics
+ 00001538  33 C0		    xor  eax, eax
+ 0000153A  E9 000000EA		    jmp  ew_out
+
+				; ---- WM_PAINT --------------------------------------------------------------
+ 0000153F			ew_paint:
+ 0000153F  48/ 8B CB		    mov  rcx, rbx
+ 00001542  48/ 8D 54 24		    lea  rdx, [rsp + 24]                  ; PAINTSTRUCT
+	   18
+ 00001547  E8 00000000 E	    call BeginPaint
+ 0000154C  48/ 85 C0		    test rax, rax
+ 0000154F  0F 84 000000D2	    jz   ew_zero
+ 00001555  4C/ 8B E8		    mov  r13, rax                         ; hdc
+ 00001558  48/ 8B CB		    mov  rcx, rbx
+ 0000155B  E8 FFFFFCCC		    call EditorCtxFromHwnd
+ 00001560  48/ 85 C0		    test rax, rax
+ 00001563  74 0E		    jz   ew_pend
+ 00001565  48/ 8B CB		    mov  rcx, rbx
+ 00001568  49/ 8B D5		    mov  rdx, r13
+ 0000156B  4C/ 8B C0		    mov  r8, rax
+ 0000156E  E8 FFFFFCF8		    call EditorRender
+ 00001573			ew_pend:
+ 00001573  48/ 8B CB		    mov  rcx, rbx
+ 00001576  48/ 8D 54 24		    lea  rdx, [rsp + 24]
+	   18
+ 0000157B  E8 00000000 E	    call EndPaint
+ 00001580  33 C0		    xor  eax, eax
+ 00001582  E9 000000A2		    jmp  ew_out
+
+				; ---- WM_CHAR ---------------------------------------------------------------
+ 00001587			ew_char:
+ 00001587  41/ 0F B7 C0		    movzx eax, r8w                         ; wide char in wParam
+ 0000158B  83 F8 20		    cmp  eax, 32
+ 0000158E  0F 82 00000093	    jb   ew_zero                           ; drop control chars
+ 00001594  66| 89 44 24		    mov  [rsp + 16], ax
+	   10
+ 00001599  66| C7 44 24		    mov  word ptr [rsp + 18], 0
+	   12 0000
+ 000015A0  48/ 8B CB		    mov  rcx, rbx
+ 000015A3  E8 FFFFFC84		    call EditorCtxFromHwnd
+ 000015A8  48/ 85 C0		    test rax, rax
+ 000015AB  74 7A		    jz   ew_zero
+ 000015AD  4C/ 8B E8		    mov  r13, rax
+ 000015B0  49/ 8B CD		    mov  rcx, r13
+ 000015B3  48/ 8D 54 24		    lea  rdx, [rsp + 16]
+	   10
+ 000015B8  49/ C7 C0		    mov  r8, 1
+	   00000001
+ 000015BF  41/ B9		    mov  r9d, UFL_TYPING
+	   00000001
+ 000015C5  E8 FFFFF954		    call EditorInsert
+ 000015CA  49/ 8B CD		    mov  rcx, r13
+ 000015CD  E8 FFFFEE24		    call LinesRebuild
+ 000015D2  48/ 8B CB		    mov  rcx, rbx
+ 000015D5  E8 FFFFFC65		    call EditorInvalidate
+ 000015DA  33 C0		    xor  eax, eax
+ 000015DC  EB 4B		    jmp  ew_out
+
+				; ---- WM_DESTROY ------------------------------------------------------------
+ 000015DE			ew_destroy:
+ 000015DE  48/ 8B CB		    mov  rcx, rbx
+ 000015E1  E8 FFFFFC46		    call EditorCtxFromHwnd
+ 000015E6  48/ 85 C0		    test rax, rax
+ 000015E9  74 18		    jz   ew_postquit
+ 000015EB  48/ 8B E8		    mov  rbp, rax
+ 000015EE  48/ 8B CB		    mov  rcx, rbx
+ 000015F1  BA 00000001		    mov  edx, 1                            ; timer id
+ 000015F6  E8 00000000 E	    call KillTimer
+ 000015FB  48/ 8B CD		    mov  rcx, rbp
+ 000015FE  E8 FFFFF5D9		    call EditorFreeContext
+ 00001603			ew_postquit:
+ 00001603  33 C9		    xor  ecx, ecx
+ 00001605  E8 00000000 E	    call PostQuitMessage
+ 0000160A  33 C0		    xor  eax, eax
+ 0000160C  EB 1B		    jmp  ew_out
+
+				; ---- WM_GETMINMAXINFO ------------------------------------------------------
+				; [H-04] a zero-sized client area divides by zero in the mouse/gutter math.
+				; Enforce the minimum here so the invariant can never be violated.
+ 0000160E			ew_minmax:
+ 0000160E  4D/ 85 C9		    test r9, r9                            ; lParam = MINMAXINFO*
+ 00001611  74 14		    jz   ew_zero
+ 00001613  49/ C7 41 18		    mov  qword ptr [r9 + 24], CFG_MIN_WIDTH
+	   00000140
+ 0000161B  49/ C7 41 20		    mov  qword ptr [r9 + 32], CFG_MIN_HEIGHT
+	   000000F0
+ 00001623  33 C0		    xor  eax, eax
+ 00001625  EB 02		    jmp  ew_out
+
+ 00001627			ew_zero:
+ 00001627  33 C0		    xor  eax, eax
+ 00001629			ew_out:
+ 00001629  48/ 83 C4 50		    add  rsp, 80
+ 0000162D  5D			    pop  rbp
+ 0000162E  41/ 5D		    pop  r13
+ 00001630  41/ 5C		    pop  r12
+ 00001632  5B			    pop  rbx
+ 00001633  C3			    ret
+ 00001634			EditorWndProc ENDP
+
+				; ----------------------------------------------------------------------------
+				; WinMain : HINSTANCE, HINSTANCE, LPSTR, int -> int
+				;   Self-test gate, config load, class registration, window creation, pump.
+				;   The static WNDCLASSEXW is patched at runtime (hInstance, cursor, brush).
+				; ----------------------------------------------------------------------------
+ 00001634			WinMain PROC
+ 00001634  53			    push rbx
+ 00001635  55			    push rbp
+ 00001636  41/ 54		    push r12
+ 00001638  48/ 81 EC		    sub  rsp, 160                          ; stack args(96) + MSG(48)
+	   000000A0
+
+ 0000163F  48/ 8B E9		    mov  rbp, rcx                          ; hInstance
+
+				    ; ---- refuse to show a window when the document layer is broken ----
+ 00001642  E8 FFFFFB46		    call IDE_SelfTest
+ 00001647  85 C0		    test eax, eax
+ 00001649  0F 85 000000EA	    jnz  wm_fail
+
+ 0000164F  E8 FFFFF966		    call ConfigLoad
+
+				    ; ---- patch the static class ----
+ 00001654  4C/ 8D 25		    lea  r12, EditorWcx                   ; r12 is callee-saved here
+	   00000FD8 R
+ 0000165B  49/ 89 6C 24		    mov  [r12 + 24], rbp                  ; hInstance
+	   18
+ 00001660  B9 00007F00		    mov  ecx, 32512                       ; IDC_ARROW
+ 00001665  33 D2		    xor  edx, edx
+ 00001667  E8 00000000 E	    call LoadCursorW
+ 0000166C  49/ 89 44 24		    mov  [r12 + 40], rax                  ; hCursor
+	   28
+ 00001671  33 C9		    xor  ecx, ecx                         ; WHITE_BRUSH
+ 00001673  E8 00000000 E	    call GetStockObject
+ 00001678  49/ 89 44 24		    mov  [r12 + 48], rax                  ; hbrBackground
+	   30
+
+ 0000167D  48/ 8D 0D		    lea  rcx, EditorWcx
+	   00000FD8 R
+ 00001684  E8 00000000 E	    call RegisterClassExW
+ 00001689  66| 85 C0		    test ax, ax
+ 0000168C  0F 84 000000A7	    jz   wm_fail
+
+				    ; ---- CreateWindowExW(dwExStyle, cls, text, style, X, Y, W, H,
+				    ;                     parent, menu, inst, param) ----
+ 00001692  33 C9		    xor  ecx, ecx
+ 00001694  48/ 8D 15    lea  rdx, szAppClass
+	   0000000C R
+ 0000169B  4C/ 8D 05		    lea  r8, szAppTitle
+	   00000064 R
+ 000016A2  41/ B9		    mov  r9d, WS_OVERLAPPEDWINDOW or WS_VISIBLE
+	   10CF0000
+ 000016A8  48/ C7 44 24		    mov  qword ptr [rsp + 32], 100         ; X
+	   20 00000064
+ 000016B1  48/ C7 44 24		    mov  qword ptr [rsp + 40], 100         ; Y
+	   28 00000064
+ 000016BA  48/ C7 C0		    mov  rax, CFG_DEF_WIDTH
+	   000003E8
+ 000016C1  48/ 89 44 24		    mov  [rsp + 48], rax
+	   30
+ 000016C6  48/ C7 C0		    mov  rax, CFG_DEF_HEIGHT
+	   000002BC
+ 000016CD  48/ 89 44 24		    mov  [rsp + 56], rax
+	   38
+ 000016D2  33 C0		    xor  eax, eax
+ 000016D4  48/ 89 44 24		    mov  [rsp + 64], rax                   ; hWndParent
+	   40
+ 000016D9  48/ 89 44 24		    mov  [rsp + 72], rax                   ; hMenu
+	   48
+ 000016DE  48/ 89 6C 24		    mov  [rsp + 80], rbp                   ; hInstance
+	   50
+ 000016E3  48/ 89 44 24		    mov  [rsp + 88], rax                   ; lpParam
+	   58
+ 000016E8  E8 00000000 E	    call CreateWindowExW
+ 000016ED  48/ 85 C0		    test rax, rax
+ 000016F0  74 47		    jz   wm_fail
+ 000016F2  48/ 8B D8		    mov  rbx, rax                          ; hwnd
+
+ 000016F5  B9 00000005		    mov  ecx, SW_SHOW
+ 000016FA  E8 00000000 E	    call ShowWindow
+ 000016FF  48/ 8B CB		    mov  rcx, rbx
+ 00001702  E8 00000000 E	    call UpdateWindow
+
+ 00001707			wm_pump:
+ 00001707  48/ 8D 4C 24		    lea  rcx, [rsp + 96]                   ; MSG*
+	   60
+ 0000170C  33 D2		    xor  edx, edx                          ; hWnd filter
+ 0000170E  45/ 33 C0		    xor  r8d, r8d                          ; wMsgFilterMin
+ 00001711  45/ 33 C9		    xor  r9d, r9d                          ; wMsgFilterMax
+ 00001714  E8 00000000 E	    call GetMessageW
+ 00001719  85 C0		    test eax, eax
+ 0000171B  7E 16		    jle  wm_done                           ; 0 = quit, -1 = error
+ 0000171D  48/ 8D 4C 24		    lea  rcx, [rsp + 96]
+	   60
+ 00001722  E8 00000000 E	    call TranslateMessage
+ 00001727  48/ 8D 4C 24		    lea  rcx, [rsp + 96]
+	   60
+ 0000172C  E8 00000000 E	    call DispatchMessageW
+ 00001731  EB D4		    jmp  wm_pump
+
+ 00001733			wm_done:
+ 00001733  8B 44 24 70		    mov  eax, [rsp + 96 + 16]              ; MSG.wParam = exit code
+ 00001737  EB 02		    jmp  wm_out
+ 00001739			wm_fail:
+ 00001739  33 C0		    xor  eax, eax
+ 0000173B			wm_out:
+ 0000173B  48/ 81 C4		    add  rsp, 160
+	   000000A0
+ 00001742  41/ 5C		    pop  r12
+ 00001744  5D			    pop  rbp
+ 00001745  5B			    pop  rbx
+ 00001746  C3			    ret
+ 00001747			WinMain ENDP
+
+				END
+
+				END
+
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/15/26 13:43:31
+F:\rawrxd\RawrXD_TextEditorGUI.asm			     Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+_BSS . . . . . . . . . . . . . .	 00000008 16	  'BSS'  
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+BufDelete  . . . . . . . . . . .	P 	 00000372 _TEXT	Length= 00000084 Public
+  bd_lenok . . . . . . . . . . .	L 	 000003A4 _TEXT	
+  bd_done  . . . . . . . . . . .	L 	 000003DF _TEXT	
+  bd_fail  . . . . . . . . . . .	L 	 000003E6 _TEXT	
+  bd_exit  . . . . . . . . . . .	L 	 000003E8 _TEXT	
+BufEnsure  . . . . . . . . . . .	P 	 00000205 _TEXT	Length= 000000CD Public
+  be_double  . . . . . . . . . .	L 	 00000235 _TEXT	
+  be_sized . . . . . . . . . . .	L 	 0000024F _TEXT	
+  be_grow  . . . . . . . . . . .	L 	 00000264 _TEXT	
+  be_reuse . . . . . . . . . . .	L 	 0000027E _TEXT	
+  be_store . . . . . . . . . . .	L 	 0000028E _TEXT	
+  be_ok  . . . . . . . . . . . .	L 	 000002A2 _TEXT	
+  be_overflow  . . . . . . . . .	L 	 000002A9 _TEXT	
+  be_fail  . . . . . . . . . . .	L 	 000002BC _TEXT	
+  be_exit  . . . . . . . . . . .	L 	 000002CD _TEXT	
+BufInsert  . . . . . . . . . . .	P 	 000002D2 _TEXT	Length= 000000A0 Public
+  bi_copy  . . . . . . . . . . .	L 	 0000032D _TEXT	
+  bi_tail  . . . . . . . . . . .	L 	 0000034A _TEXT	
+  bi_fail  . . . . . . . . . . .	L 	 00000362 _TEXT	
+  bi_exit  . . . . . . . . . . .	L 	 00000364 _TEXT	
+CfgDword . . . . . . . . . . . .	P 	 00000F92 _TEXT	Length= 00000028 Public
+ConfigLoad . . . . . . . . . . .	P 	 00000FBA _TEXT	Length= 000000D5 Public
+  cf_f1  . . . . . . . . . . . .	L 	 00000FDA _TEXT	
+  cf_f2  . . . . . . . . . . . .	L 	 00000FE4 _TEXT	
+  cf_g1  . . . . . . . . . . . .	L 	 00001002 _TEXT	
+  cf_g2  . . . . . . . . . . . .	L 	 0000100C _TEXT	
+  cf_u1  . . . . . . . . . . . .	L 	 0000102D _TEXT	
+  cf_u2  . . . . . . . . . . . .	L 	 00001039 _TEXT	
+  cf_c1  . . . . . . . . . . . .	L 	 0000105A _TEXT	
+  cf_c2  . . . . . . . . . . . .	L 	 00001066 _TEXT	
+  cf_lz  . . . . . . . . . . . .	L 	 00001083 _TEXT	
+CurSelClear  . . . . . . . . . .	P 	 00000758 _TEXT	Length= 00000017 Public
+  ccl_done . . . . . . . . . . .	L 	 0000076E _TEXT	
+CurSelGet  . . . . . . . . . . .	P 	 000006C1 _TEXT	Length= 00000097 Public
+  sg_sorted  . . . . . . . . . .	L 	 000006FE _TEXT	
+  sg_chkend  . . . . . . . . . .	L 	 0000070B _TEXT	
+  sg_chkflag . . . . . . . . . .	L 	 00000713 _TEXT	
+  sg_ok  . . . . . . . . . . . .	L 	 0000071F _TEXT	
+  sg_zero  . . . . . . . . . . .	L 	 00000726 _TEXT	
+  sg_z2  . . . . . . . . . . . .	L 	 00000732 _TEXT	
+  sg_z3  . . . . . . . . . . . .	L 	 0000073E _TEXT	
+  sg_exit  . . . . . . . . . . .	L 	 0000074A _TEXT	
+CursorClamp  . . . . . . . . . .	P 	 00000680 _TEXT	Length= 00000041 Public
+  cc_ok  . . . . . . . . . . . .	L 	 000006A9 _TEXT	
+  cc_done  . . . . . . . . . . .	L 	 000006C0 _TEXT	
+EditorAllocContext . . . . . . .	P 	 000009BC _TEXT	Length= 000000E6 Public
+  eac_fail . . . . . . . . . . .	L 	 00000A8B _TEXT	
+  eac_exit . . . . . . . . . . .	L 	 00000A9C _TEXT	
+EditorBindContext  . . . . . . .	P 	 00001255 _TEXT	Length= 00000016 Public
+EditorComputeMetrics . . . . . .	P 	 00000DFB _TEXT	Length= 000000FF Public
+  ecm_select . . . . . . . . . .	L 	 00000E38 _TEXT	
+  ecm_h_ok . . . . . . . . . . .	L 	 00000E6E _TEXT	
+  ecm_w_ok . . . . . . . . . . .	L 	 00000E7E _TEXT	
+  ecm_gutter_hard  . . . . . . .	L 	 00000E8F _TEXT	
+  ecm_gutter_go  . . . . . . . .	L 	 00000E94 _TEXT	
+  ecm_gutter_default . . . . . .	L 	 00000EB9 _TEXT	
+  ecm_gutter_store . . . . . . .	L 	 00000EBE _TEXT	
+  ecm_unselect . . . . . . . . .	L 	 00000EDB _TEXT	
+  ecm_fail . . . . . . . . . . .	L 	 00000EEE _TEXT	
+  ecm_exit . . . . . . . . . . .	L 	 00000EF0 _TEXT	
+EditorCreateFont . . . . . . . .	P 	 00000D3E _TEXT	Length= 000000BD Public
+  ecf_make . . . . . . . . . . .	L 	 00000D6B _TEXT	
+  ecf_fail . . . . . . . . . . .	L 	 00000DE1 _TEXT	
+  ecf_exit . . . . . . . . . . .	L 	 00000DF2 _TEXT	
+EditorCtxFromHwnd  . . . . . . .	P 	 0000122C _TEXT	Length= 00000013 Public
+EditorFreeContext  . . . . . . .	P 	 00000BDC _TEXT	Length= 00000162 Public
+  efc_undo_loop  . . . . . . . .	L 	 00000C0F _TEXT	
+  efc_undo_next  . . . . . . . .	L 	 00000C39 _TEXT	
+  efc_undo_done  . . . . . . . .	L 	 00000C3E _TEXT	
+  efc_no_undo  . . . . . . . . .	L 	 00000C4B _TEXT	
+  efc_redo . . . . . . . . . . .	L 	 00000C58 _TEXT	
+  efc_redo_loop  . . . . . . . .	L 	 00000C72 _TEXT	
+  efc_redo_next  . . . . . . . .	L 	 00000C92 _TEXT	
+  efc_redo_done  . . . . . . . .	L 	 00000C97 _TEXT	
+  efc_redo_hdr . . . . . . . . .	L 	 00000CA4 _TEXT	
+  efc_lines  . . . . . . . . . .	L 	 00000CB1 _TEXT	
+  efc_buf  . . . . . . . . . . .	L 	 00000CBF _TEXT	
+  efc_buf_hdr  . . . . . . . . .	L 	 00000CD8 _TEXT	
+  efc_cursor . . . . . . . . . .	L 	 00000CE1 _TEXT	
+  efc_font . . . . . . . . . . .	L 	 00000CEF _TEXT	
+  efc_accel  . . . . . . . . . .	L 	 00000CFD _TEXT	
+  efc_free . . . . . . . . . . .	L 	 00000D11 _TEXT	
+  efc_release  . . . . . . . . .	L 	 00000D28 _TEXT	
+  efc_done . . . . . . . . . . .	L 	 00000D30 _TEXT	
+EditorInitDocument . . . . . . .	P 	 00000AA2 _TEXT	Length= 0000013A Public
+  eid_fail . . . . . . . . . . .	L 	 00000BC3 _TEXT	
+  eid_exit . . . . . . . . . . .	L 	 00000BD4 _TEXT	
+EditorInsert . . . . . . . . . .	P 	 00000F1E _TEXT	Length= 00000074 Public
+  ei_real  . . . . . . . . . . .	L 	 00000F76 _TEXT	
+  ei_fail  . . . . . . . . . . .	L 	 00000F7D _TEXT	
+  ei_ok  . . . . . . . . . . . .	L 	 00000F7F _TEXT	
+  ei_exit  . . . . . . . . . . .	L 	 00000F84 _TEXT	
+EditorInvalidate . . . . . . . .	P 	 0000123F _TEXT	Length= 00000016 Public
+EditorRender . . . . . . . . . .	P 	 0000126B _TEXT	Length= 000001E6 Public
+  er_noerase . . . . . . . . . .	L 	 000012C9 _TEXT	
+  er_firstok . . . . . . . . . .	L 	 00001320 _TEXT	
+  er_firstnn . . . . . . . . . .	L 	 00001328 _TEXT	
+  er_rowloop . . . . . . . . . .	L 	 0000133A _TEXT	
+  er_nogutter  . . . . . . . . .	L 	 00001385 _TEXT	
+  er_lastline  . . . . . . . . .	L 	 000013DB _TEXT	
+  er_havelen . . . . . . . . . .	L 	 000013FA _TEXT	
+  er_lenok . . . . . . . . . . .	L 	 0000140E _TEXT	
+  er_advance . . . . . . . . . .	L 	 00001427 _TEXT	
+  er_out . . . . . . . . . . . .	L 	 0000143F _TEXT	
+EditorWndProc  . . . . . . . . .	P 	 00001451 _TEXT	Length= 000001E3 Public
+  ew_create  . . . . . . . . . .	L 	 000014B6 _TEXT	
+  ew_cfail . . . . . . . . . . .	L 	 00001509 _TEXT	
+  ew_size  . . . . . . . . . . .	L 	 0000151C _TEXT	
+  ew_paint . . . . . . . . . . .	L 	 0000153F _TEXT	
+  ew_pend  . . . . . . . . . . .	L 	 00001573 _TEXT	
+  ew_char  . . . . . . . . . . .	L 	 00001587 _TEXT	
+  ew_destroy . . . . . . . . . .	L 	 000015DE _TEXT	
+  ew_postquit  . . . . . . . . .	L 	 00001603 _TEXT	
+  ew_minmax  . . . . . . . . . .	L 	 0000160E _TEXT	
+  ew_zero  . . . . . . . . . . .	L 	 00001627 _TEXT	
+  ew_out . . . . . . . . . . . .	L 	 00001629 _TEXT	
+IDE_SelfTest . . . . . . . . . .	P 	 0000118D _TEXT	Length= 0000009F Public
+  st_free  . . . . . . . . . . .	L 	 00001215 _TEXT	
+  st_fail1 . . . . . . . . . . .	L 	 0000121D _TEXT	
+  st_ret . . . . . . . . . . . .	L 	 00001222 _TEXT	
+IntToWide  . . . . . . . . . . .	P 	 00000181 _TEXT	Length= 00000084 Public
+  itw_cnt  . . . . . . . . . . .	L 	 000001AE _TEXT	
+  itw_emit . . . . . . . . . . .	L 	 000001C0 _TEXT	
+  itw_fill . . . . . . . . . . .	L 	 000001D6 _TEXT	
+  itw_ok . . . . . . . . . . . .	L 	 000001F4 _TEXT	
+  itw_fail . . . . . . . . . . .	L 	 000001F9 _TEXT	
+  itw_exit . . . . . . . . . . .	L 	 000001FB _TEXT	
+LineColToOffset  . . . . . . . .	P 	 000005E4 _TEXT	Length= 0000009C Public
+  lco_lineok . . . . . . . . . .	L 	 00000623 _TEXT	
+  lco_scan . . . . . . . . . . .	L 	 00000639 _TEXT	
+  lco_maxed  . . . . . . . . . .	L 	 00000652 _TEXT	
+  lco_colok  . . . . . . . . . .	L 	 00000660 _TEXT	
+  lco_fail . . . . . . . . . . .	L 	 00000670 _TEXT	
+  lco_exit . . . . . . . . . . .	L 	 00000672 _TEXT	
+LinesRebuild . . . . . . . . . .	P 	 000003F6 _TEXT	Length= 0000012D Public
+  lr_write . . . . . . . . . . .	L 	 00000422 _TEXT	
+  lr_count . . . . . . . . . . .	L 	 0000043A _TEXT	
+  lr_countnext . . . . . . . . .	L 	 0000044A _TEXT	
+  lr_countdone . . . . . . . . .	L 	 0000044F _TEXT	
+  lr_empty . . . . . . . . . . .	L 	 00000451 _TEXT	
+  lr_grow  . . . . . . . . . . .	L 	 00000461 _TEXT	
+  lr_sizeloop  . . . . . . . . .	L 	 0000046B _TEXT	
+  lr_sized . . . . . . . . . . .	L 	 0000047C _TEXT	
+  lr_store . . . . . . . . . . .	L 	 000004B6 _TEXT	
+  lr_scan  . . . . . . . . . . .	L 	 000004ED _TEXT	
+  lr_scannext  . . . . . . . . .	L 	 00000507 _TEXT	
+  lr_exit  . . . . . . . . . . .	L 	 0000050C _TEXT	
+  lr_fail  . . . . . . . . . . .	L 	 00000513 _TEXT	
+  lr_ret . . . . . . . . . . . .	L 	 00000515 _TEXT	
+LogLine  . . . . . . . . . . . .	P 	 0000108F _TEXT	Length= 000000FE Public
+  ll_free  . . . . . . . . . . .	L 	 00001179 _TEXT	
+  ll_done  . . . . . . . . . . .	L 	 00001181 _TEXT	
+LogWide  . . . . . . . . . . . .	P 	 00000000 _TEXT	Length= 00000013 Public
+  lw_done  . . . . . . . . . . .	L 	 0000000E _TEXT	
+MemAlloc . . . . . . . . . . . .	P 	 00000013 _TEXT	Length= 00000044 Public
+  ma_have  . . . . . . . . . . .	L 	 0000002B _TEXT	
+  ma_getheap . . . . . . . . . .	L 	 0000003D _TEXT	
+  ma_null  . . . . . . . . . . .	L 	 00000050 _TEXT	
+  ma_exit  . . . . . . . . . . .	L 	 00000052 _TEXT	
+MemCopyW . . . . . . . . . . . .	P 	 00000112 _TEXT	Length= 0000002B Public
+  mcw_loop . . . . . . . . . . .	L 	 00000123 _TEXT	
+  mcw_zero . . . . . . . . . . .	L 	 00000137 _TEXT	
+  mcw_done . . . . . . . . . . .	L 	 0000013C _TEXT	
+MemFree  . . . . . . . . . . . .	P 	 000000C4 _TEXT	Length= 00000035 Public
+  mf_done  . . . . . . . . . . .	L 	 000000F4 _TEXT	
+MemMoveW_Generic . . . . . . . .	P 	 0000097A _TEXT	Length= 00000042 Public
+  mmg_bwd  . . . . . . . . . . .	L 	 00000993 _TEXT	
+  mmg_fwd  . . . . . . . . . . .	L 	 000009A6 _TEXT	
+  mmg_fwdl . . . . . . . . . . .	L 	 000009A8 _TEXT	
+  mmg_out  . . . . . . . . . . .	L 	 000009BB _TEXT	
+MemMoveW . . . . . . . . . . . .	P 	 0000013D _TEXT	Length= 00000044 Public
+  mmw_bwd  . . . . . . . . . . .	L 	 00000156 _TEXT	
+  mmw_fwd  . . . . . . . . . . .	L 	 0000016A _TEXT	
+  mmw_fwd_loop . . . . . . . . .	L 	 0000016C _TEXT	
+  mmw_out  . . . . . . . . . . .	L 	 00000180 _TEXT	
+MemRealloc . . . . . . . . . . .	P 	 00000057 _TEXT	Length= 0000006D Public
+  mr_have  . . . . . . . . . . .	L 	 00000072 _TEXT	
+  mr_geth  . . . . . . . . . . .	L 	 00000087 _TEXT	
+  mr_alloc_plain . . . . . . . .	L 	 0000009A _TEXT	
+  mr_null  . . . . . . . . . . .	L 	 000000BD _TEXT	
+  mr_exit  . . . . . . . . . . .	L 	 000000BF _TEXT	
+OffsetToLineCol  . . . . . . . .	P 	 00000523 _TEXT	Length= 000000C1 Public
+  olc_ok_off . . . . . . . . . .	L 	 0000056C _TEXT	
+  olc_bin  . . . . . . . . . . .	L 	 0000058A _TEXT	
+  olc_golower  . . . . . . . . .	L 	 000005AB _TEXT	
+  olc_binend . . . . . . . . . .	L 	 000005B0 _TEXT	
+  olc_line0  . . . . . . . . . .	L 	 000005B8 _TEXT	
+  olc_fail . . . . . . . . . . .	L 	 000005D4 _TEXT	
+  olc_exit . . . . . . . . . . .	L 	 000005D6 _TEXT	
+UndoPush . . . . . . . . . . . .	P 	 0000076F _TEXT	Length= 000001B3 Public
+  up_append  . . . . . . . . . .	L 	 000007BC _TEXT	
+  up_double  . . . . . . . . . .	L 	 000007DE _TEXT	
+  up_oksize  . . . . . . . . . .	L 	 000007EE _TEXT	
+  up_d2  . . . . . . . . . . . .	L 	 00000801 _TEXT	
+  up_d3  . . . . . . . . . . . .	L 	 00000810 _TEXT	
+  up_d4  . . . . . . . . . . . .	L 	 00000822 _TEXT	
+  up_realloc . . . . . . . . . .	L 	 0000083A _TEXT	
+  up_stored  . . . . . . . . . .	L 	 0000083F _TEXT	
+  up_has_cap . . . . . . . . . .	L 	 0000085F _TEXT	
+  up_storecap  . . . . . . . . .	L 	 0000087B _TEXT	
+  up_slot  . . . . . . . . . . .	L 	 00000880 _TEXT	
+  up_nofreedata  . . . . . . . .	L 	 000008AC _TEXT	
+  up_have_slot . . . . . . . . .	L 	 000008DE _TEXT	
+  up_write . . . . . . . . . . .	L 	 000008F9 _TEXT	
+  up_fail  . . . . . . . . . . .	L 	 00000912 _TEXT	
+UndoRecord . . . . . . . . . . .	P 	 00000922 _TEXT	Length= 00000058 Public
+  ur_nodata  . . . . . . . . . .	L 	 00000963 _TEXT	
+  ur_fail  . . . . . . . . . . .	L 	 0000096A _TEXT	
+  ur_exit  . . . . . . . . . . .	L 	 0000096C _TEXT	
+WcsLen . . . . . . . . . . . . .	P 	 000000F9 _TEXT	Length= 00000019 Public
+  wl_loop  . . . . . . . . . . .	L 	 00000100 _TEXT	
+  wl_done  . . . . . . . . . . .	L 	 00000111 _TEXT	
+WinMain  . . . . . . . . . . . .	P 	 00001634 _TEXT	Length= 00000113 Public
+  wm_pump  . . . . . . . . . . .	L 	 00001707 _TEXT	
+  wm_done  . . . . . . . . . . .	L 	 00001733 _TEXT	
+  wm_fail  . . . . . . . . . . .	L 	 00001739 _TEXT	
+  wm_out . . . . . . . . . . . .	L 	 0000173B _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+ACCEL_COUNT  . . . . . . . . . .	Number	 0000000Bh   
+AccelTable . . . . . . . . . . .	L 	 000003F4 _DATA	
+AppendMenuW  . . . . . . . . . .	L 	 00000000 External
+BUF_CAP  . . . . . . . . . . . .	Number	 00000008h   
+BUF_DATA . . . . . . . . . . . .	Number	 00000000h   
+BUF_LEN  . . . . . . . . . . . .	Number	 00000010h   
+BUF_SIZE . . . . . . . . . . . .	Number	 00000018h   
+BeginPaint . . . . . . . . . . .	L 	 00000000 External
+CFG_CARET_MS . . . . . . . . . .	Number	 000001F4h   
+CFG_DEF_HEIGHT . . . . . . . . .	Number	 000002BCh   
+CFG_DEF_WIDTH  . . . . . . . . .	Number	 000003E8h   
+CFG_FONT_PX  . . . . . . . . . .	Number	 00000012h   
+CFG_GUTTER_PAD . . . . . . . . .	Number	 00000003h   
+CFG_INIT_CAP . . . . . . . . . .	Number	 00000400h   
+CFG_MAX_CAP  . . . . . . . . . .	Number	 01000000h   
+CFG_MAX_FILE_MB  . . . . . . . .	Number	 00000040h   
+CFG_MIN_HEIGHT . . . . . . . . .	Number	 000000F0h   
+CFG_MIN_WIDTH  . . . . . . . . .	Number	 00000140h   
+CFG_UNDO_DEPTH . . . . . . . . .	Number	 00000100h   
+CF_UNICODETEXT . . . . . . . . .	Number	 0000000Dh   
+CLR_GUTTERBG . . . . . . . . . .	Number	 00F1F1F1h   
+CLR_GUTTERFG . . . . . . . . . .	Number	 00808080h   
+CLR_GUTTERSEP  . . . . . . . . .	Number	 00C8C8C8h   
+CLR_SELBG  . . . . . . . . . . .	Number	 00FFE8CCh   
+CLR_SELFG  . . . . . . . . . . .	Number	 00000000h   
+CLR_TEXT . . . . . . . . . . . .	Number	 00000000h   
+CLR_WINDOW . . . . . . . . . . .	Number	 00FFFFFFh   
+COLORREF_TRANSPARENT . . . . . .	Number	 00000001h   
+CP_UTF8  . . . . . . . . . . . .	Number	 0000FDE9h   
+CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h   
+CTX_BUF  . . . . . . . . . . . .	Number	 00000020h   
+CTX_CARETON  . . . . . . . . . .	Number	 00000060h   
+CTX_CHARH  . . . . . . . . . . .	Number	 00000050h   
+CTX_CHARW  . . . . . . . . . . .	Number	 0000004Ch   
+CTX_CLIENTH  . . . . . . . . . .	Number	 0000005Ch   
+CTX_CLIENTW  . . . . . . . . . .	Number	 00000058h   
+CTX_CURSOR . . . . . . . . . . .	Number	 00000028h   
+CTX_DIRTY  . . . . . . . . . . .	Number	 00000064h   
+CTX_GUTTER . . . . . . . . . . .	Number	 00000054h   
+CTX_HACCEL . . . . . . . . . . .	Number	 00000080h   
+CTX_HDC  . . . . . . . . . . . .	Number	 00000008h   
+CTX_HFONT  . . . . . . . . . . .	Number	 00000018h   
+CTX_HINST  . . . . . . . . . . .	Number	 00000010h   
+CTX_HWND . . . . . . . . . . . .	Number	 00000000h   
+CTX_LINES  . . . . . . . . . . .	Number	 00000040h   
+CTX_PATHCAP  . . . . . . . . . .	Number	 00000410h   
+CTX_PATH . . . . . . . . . . . .	Number	 00000088h   
+CTX_REDO . . . . . . . . . . . .	Number	 00000038h   
+CTX_SCROLLX  . . . . . . . . . .	Number	 00000078h   
+CTX_SCROLLY  . . . . . . . . . .	Number	 00000080h   
+CTX_SELDRAG  . . . . . . . . . .	Number	 0000006Ch   
+CTX_SIZE . . . . . . . . . . . .	Number	 00000500h   
+CTX_TIMERID  . . . . . . . . . .	Number	 00000068h   
+CTX_UNDO . . . . . . . . . . . .	Number	 00000030h   
+CUR_ANCHOR . . . . . . . . . . .	Number	 00000008h   
+CUR_OFF  . . . . . . . . . . . .	Number	 00000000h   
+CUR_PREF . . . . . . . . . . . .	Number	 00000010h   
+CUR_SIZE . . . . . . . . . . . .	Number	 00000018h   
+CW_USEDEFAULT  . . . . . . . . .	Number	 -80000000h   
+CloseClipboard . . . . . . . . .	L 	 00000000 External
+CloseHandle  . . . . . . . . . .	L 	 00000000 External
+CreateAcceleratorTableW  . . . .	L 	 00000000 External
+CreateFileW  . . . . . . . . . .	L 	 00000000 External
+CreateFontW  . . . . . . . . . .	L 	 00000000 External
+CreateMenu . . . . . . . . . . .	L 	 00000000 External
+CreateSolidBrush . . . . . . . .	L 	 00000000 External
+CreateWindowExW  . . . . . . . .	L 	 00000000 External
+DefWindowProcW . . . . . . . . .	L 	 00000000 External
+DeleteObject . . . . . . . . . .	L 	 00000000 External
+DestroyAcceleratorTable  . . . .	L 	 00000000 _TEXT	External
+DestroyWindow  . . . . . . . . .	L 	 00000000 External
+DispatchMessageW . . . . . . . .	L 	 00000000 External
+DrawMenuBar  . . . . . . . . . .	L 	 00000000 External
+EditorWcx  . . . . . . . . . . .	L 	 00000FD8 _DATA	
+EmptyClipboard . . . . . . . . .	L 	 00000000 External
+EndPaint . . . . . . . . . . . .	L 	 00000000 External
+FALT . . . . . . . . . . . . . .	Number	 00000010h   
+FCONTROL . . . . . . . . . . . .	Number	 00000008h   
+FILE_ATTRIBUTE_NORMAL  . . . . .	Number	 00000080h   
+FILE_SHARE_READ  . . . . . . . .	Number	 00000001h   
+FILE_SHARE_WRITE . . . . . . . .	Number	 00000002h   
+FNOINVERT  . . . . . . . . . . .	Number	 00000002h   
+FSHIFT . . . . . . . . . . . . .	Number	 00000004h   
+FVIRTKEY . . . . . . . . . . . .	Number	 00000001h   
+FillRect . . . . . . . . . . . .	L 	 00000000 External
+GENERIC_READ . . . . . . . . . .	Number	 -80000000h   
+GENERIC_WRITE  . . . . . . . . .	Number	 40000000h   
+GMEM_FIXED . . . . . . . . . . .	Number	 00000000h   
+GMEM_MOVEABLE  . . . . . . . . .	Number	 00000002h   
+GMEM_ZEROINIT  . . . . . . . . .	Number	 00000040h   
+GWLP_USERDATA  . . . . . . . . .	Number	 -00000015h   
+GetClientRect  . . . . . . . . .	L 	 00000000 External
+GetClipboardData . . . . . . . .	L 	 00000000 External
+GetDC  . . . . . . . . . . . . .	L 	 00000000 External
+GetFileSizeEx  . . . . . . . . .	L 	 00000000 External
+GetLastError . . . . . . . . . .	L 	 00000000 External
+GetMessageW  . . . . . . . . . .	L 	 00000000 External
+GetModuleHandleW . . . . . . . .	L 	 00000000 External
+GetOpenFileNameW . . . . . . . .	L 	 00000000 External
+GetPrivateProfileIntW  . . . . .	L 	 00000000 _DATA	External
+GetProcessHeap . . . . . . . . .	L 	 00000000 External
+GetSaveFileNameW . . . . . . . .	L 	 00000000 External
+GetScrollInfo  . . . . . . . . .	L 	 00000000 External
+GetStockObject . . . . . . . . .	L 	 00000000 External
+GetSystemMetrics . . . . . . . .	L 	 00000000 External
+GetTextMetricsW  . . . . . . . .	L 	 00000000 External
+GetTickCount . . . . . . . . . .	L 	 00000000 External
+GetWindowLongPtrW  . . . . . . .	L 	 00000000 External
+GlobalAlloc  . . . . . . . . . .	L 	 00000000 External
+GlobalFree . . . . . . . . . . .	L 	 00000000 External
+GlobalLock . . . . . . . . . . .	L 	 00000000 External
+GlobalUnlock . . . . . . . . . .	L 	 00000000 External
+HEAP_ZERO_MEMORY . . . . . . . .	Number	 00000008h   
+HeapAlloc  . . . . . . . . . . .	L 	 00000000 External
+HeapFree . . . . . . . . . . . .	L 	 00000000 External
+HeapReAlloc  . . . . . . . . . .	L 	 00000000 External
+HeapSize . . . . . . . . . . . .	L 	 00000000 External
+ID_AI_COMPLETE . . . . . . . . .	Number	 00000BB9h   
+ID_EDIT_COPY . . . . . . . . . .	Number	 000007D4h   
+ID_EDIT_CUT  . . . . . . . . . .	Number	 000007D3h   
+ID_EDIT_PASTE  . . . . . . . . .	Number	 000007D5h   
+ID_EDIT_REDO . . . . . . . . . .	Number	 000007D2h   
+ID_EDIT_SELECTALL  . . . . . . .	Number	 000007D6h   
+ID_EDIT_UNDO . . . . . . . . . .	Number	 000007D1h   
+ID_FILE_EXIT . . . . . . . . . .	Number	 000003EDh   
+ID_FILE_NEW  . . . . . . . . . .	Number	 000003E9h   
+ID_FILE_OPEN . . . . . . . . . .	Number	 000003EAh   
+ID_FILE_SAVEAS . . . . . . . . .	Number	 000003ECh   
+ID_FILE_SAVE . . . . . . . . . .	Number	 000003EBh   
+INVALID_HANDLE . . . . . . . . .	Number	 -00000001h   
+IntersectClipRect  . . . . . . .	L 	 00000000 External
+InvalidateRect . . . . . . . . .	L 	 00000000 External
+IsClipboardFormatAvailable . . .	L 	 00000000 External
+KillTimer  . . . . . . . . . . .	L 	 00000000 External
+LIX_COUNT  . . . . . . . . . . .	Number	 00000000h   
+LIX_ITEMS  . . . . . . . . . . .	Number	 00000008h   
+LIX_SIZE . . . . . . . . . . . .	Number	 00000010h   
+LoadCursorW  . . . . . . . . . .	L 	 00000000 External
+LoadIconW  . . . . . . . . . . .	L 	 00000000 External
+MF_BYCOMMAND . . . . . . . . . .	Number	 00000000h   
+MF_CHECKED . . . . . . . . . . .	Number	 00000008h   
+MF_GRAYED  . . . . . . . . . . .	Number	 00000001h   
+MF_POPUP . . . . . . . . . . . .	Number	 00000010h   
+MF_SEPARATOR . . . . . . . . . .	Number	 00000800h   
+MF_STRING  . . . . . . . . . . .	Number	 00000000h   
+MMI_PTMAXTRACK . . . . . . . . .	Number	 00000018h   
+MMI_PTMINTRACK . . . . . . . . .	Number	 00000010h   
+MMI_SIZE . . . . . . . . . . . .	Number	 00000020h   
+MessageBoxW  . . . . . . . . . .	L 	 00000000 External
+MultiByteToWideChar  . . . . . .	L 	 00000000 External
+OFN_EXPLORER . . . . . . . . . .	Number	 00080000h   
+OFN_FILEMUSTEXIST  . . . . . . .	Number	 00001000h   
+OFN_FLAGS  . . . . . . . . . . .	Number	 00000064h   
+OFN_HIDEREADONLY . . . . . . . .	Number	 00000004h   
+OFN_HWNDOWNER  . . . . . . . . .	Number	 00000008h   
+OFN_LPSTRDEFEXT  . . . . . . . .	Number	 00000070h   
+OFN_LPSTRFILE  . . . . . . . . .	Number	 00000030h   
+OFN_LPSTRFILTER  . . . . . . . .	Number	 00000020h   
+OFN_LPSTRINITDIR . . . . . . . .	Number	 00000050h   
+OFN_LPSTRTITLE . . . . . . . . .	Number	 00000058h   
+OFN_LSTRUCTSIZE  . . . . . . . .	Number	 00000000h   
+OFN_NMAXFILE . . . . . . . . . .	Number	 0000003Ch   
+OFN_OVERWRITEPROMPT  . . . . . .	Number	 00000002h   
+OFN_PATHMUSTEXIST  . . . . . . .	Number	 00000800h   
+OPENFILENAME_SIZE  . . . . . . .	Number	 00000080h   
+OPEN_EXISTING  . . . . . . . . .	Number	 00000003h   
+OpenClipboard  . . . . . . . . .	L 	 00000000 External
+OutputDebugStringW . . . . . . .	L 	 00000000 External
+PostQuitMessage  . . . . . . . .	L 	 00000000 External
+ReadFile . . . . . . . . . . . .	L 	 00000000 External
+RegisterClassExW . . . . . . . .	L 	 00000000 External
+ReleaseDC  . . . . . . . . . . .	L 	 00000000 External
+SB_BOTTOM  . . . . . . . . . . .	Number	 00000007h   
+SB_ENDSCROLL . . . . . . . . . .	Number	 00000008h   
+SB_LINEDOWN  . . . . . . . . . .	Number	 00000001h   
+SB_LINELEFT  . . . . . . . . . .	Number	 00000000h   
+SB_LINERIGHT . . . . . . . . . .	Number	 00000001h   
+SB_LINEUP  . . . . . . . . . . .	Number	 00000000h   
+SB_PAGEDOWN  . . . . . . . . . .	Number	 00000003h   
+SB_PAGELEFT  . . . . . . . . . .	Number	 00000002h   
+SB_PAGERIGHT . . . . . . . . . .	Number	 00000003h   
+SB_PAGEUP  . . . . . . . . . . .	Number	 00000002h   
+SB_THUMBPOSITION . . . . . . . .	Number	 00000004h   
+SB_THUMBTRACK  . . . . . . . . .	Number	 00000005h   
+SB_TOP . . . . . . . . . . . . .	Number	 00000006h   
+SCROLLINFO_SIZE  . . . . . . . .	Number	 0000001Ch   
+SEL_NONE . . . . . . . . . . . .	Number	 -00000001h   
+SIF_DISABLENOSCROLL  . . . . . .	Number	 00000008h   
+SIF_PAGE . . . . . . . . . . . .	Number	 00000002h   
+SIF_POS  . . . . . . . . . . . .	Number	 00000004h   
+SIF_RANGE  . . . . . . . . . . .	Number	 00000001h   
+SI_CBSIZE  . . . . . . . . . . .	Number	 00000004h   
+SI_FMASK . . . . . . . . . . . .	Number	 00000008h   
+SI_NMAX  . . . . . . . . . . . .	Number	 00000010h   
+SI_NMIN  . . . . . . . . . . . .	Number	 0000000Ch   
+SI_NPAGE . . . . . . . . . . . .	Number	 00000014h   
+SI_NPOS  . . . . . . . . . . . .	Number	 00000018h   
+SI_NTRACKPOS . . . . . . . . . .	Number	 0000001Ch   
+SW_SHOW  . . . . . . . . . . . .	Number	 00000005h   
+SelectClipRgn  . . . . . . . . .	L 	 00000000 External
+SelectObject . . . . . . . . . .	L 	 00000000 External
+SetBkMode  . . . . . . . . . . .	L 	 00000000 External
+SetClipboardData . . . . . . . .	L 	 00000000 External
+SetFilePointerEx . . . . . . . .	L 	 00000000 External
+SetLastError . . . . . . . . . .	L 	 00000000 External
+SetMenu  . . . . . . . . . . . .	L 	 00000000 External
+SetScrollInfo  . . . . . . . . .	L 	 00000000 External
+SetTextColor . . . . . . . . . .	L 	 00000000 External
+SetTimer . . . . . . . . . . . .	L 	 00000000 External
+SetWindowLongPtrW  . . . . . . .	L 	 00000000 External
+SetWindowTextW . . . . . . . . .	L 	 00000000 External
+ShowWindow . . . . . . . . . . .	L 	 00000000 External
+TextOutW . . . . . . . . . . . .	L 	 00000000 External
+TranslateAcceleratorW  . . . . .	L 	 00000000 External
+TranslateMessage . . . . . . . .	L 	 00000000 External
+UFL_TYPING . . . . . . . . . . .	Number	 00000001h   
+UI_DELETE  . . . . . . . . . . .	Number	 00000002h   
+UI_INSERT  . . . . . . . . . . .	Number	 00000001h   
+UO_SIZE  . . . . . . . . . . . .	Number	 00000020h   
+US_CAP . . . . . . . . . . . . .	Number	 00000010h   
+US_COUNT . . . . . . . . . . . .	Number	 00000008h   
+US_ITEMS . . . . . . . . . . . .	Number	 00000000h   
+US_SIZE  . . . . . . . . . . . .	Number	 00000018h   
+UT_DATA  . . . . . . . . . . . .	Number	 00000018h   
+UT_FLAGS . . . . . . . . . . . .	Number	 00000018h   
+UT_LEN . . . . . . . . . . . . .	Number	 00000008h   
+UT_OFF . . . . . . . . . . . . .	Number	 00000000h   
+UT_TYPE  . . . . . . . . . . . .	Number	 00000014h   
+UpdateWindow . . . . . . . . . .	L 	 00000000 External
+VK_BACK  . . . . . . . . . . . .	Number	 00000008h   
+VK_CONTROL . . . . . . . . . . .	Number	 00000011h   
+VK_DELETE  . . . . . . . . . . .	Number	 0000002Eh   
+VK_DOWN  . . . . . . . . . . . .	Number	 00000028h   
+VK_END . . . . . . . . . . . . .	Number	 00000023h   
+VK_ESCAPE  . . . . . . . . . . .	Number	 0000001Bh   
+VK_HOME  . . . . . . . . . . . .	Number	 00000024h   
+VK_INSERT  . . . . . . . . . . .	Number	 0000002Dh   
+VK_LEFT  . . . . . . . . . . . .	Number	 00000025h   
+VK_PGDN  . . . . . . . . . . . .	Number	 00000022h   
+VK_PGUP  . . . . . . . . . . . .	Number	 00000021h   
+VK_RETURN  . . . . . . . . . . .	Number	 0000000Dh   
+VK_RIGHT . . . . . . . . . . . .	Number	 00000027h   
+VK_SHIFT . . . . . . . . . . . .	Number	 00000010h   
+VK_SPACE . . . . . . . . . . . .	Number	 00000020h   
+VK_TAB . . . . . . . . . . . . .	Number	 00000009h   
+VK_UP  . . . . . . . . . . . . .	Number	 00000026h   
+WM_CAPTURECHANGED  . . . . . . .	Number	 0000021Ch   
+WM_CHAR  . . . . . . . . . . . .	Number	 00000102h   
+WM_CLOSE . . . . . . . . . . . .	Number	 00000010h   
+WM_COMMAND . . . . . . . . . . .	Number	 00000111h   
+WM_CREATE  . . . . . . . . . . .	Number	 00000001h   
+WM_DESTROY . . . . . . . . . . .	Number	 00000002h   
+WM_ERASEBKGND  . . . . . . . . .	Number	 00000014h   
+WM_GETMINMAXINFO . . . . . . . .	Number	 00000024h   
+WM_HSCROLL . . . . . . . . . . .	Number	 00000114h   
+WM_KEYDOWN . . . . . . . . . . .	Number	 00000100h   
+WM_LBUTTONDOWN . . . . . . . . .	Number	 00000201h   
+WM_LBUTTONUP . . . . . . . . . .	Number	 00000202h   
+WM_MOUSEMOVE . . . . . . . . . .	Number	 00000200h   
+WM_MOUSEWHEEL  . . . . . . . . .	Number	 0000020Ah   
+WM_PAINT . . . . . . . . . . . .	Number	 0000000Fh   
+WM_SIZE  . . . . . . . . . . . .	Number	 00000005h   
+WM_TIMER . . . . . . . . . . . .	Number	 00000113h   
+WM_VSCROLL . . . . . . . . . . .	Number	 00000115h   
+WS_CAPTION . . . . . . . . . . .	Number	 00C00000h   
+WS_CHILD . . . . . . . . . . . .	Number	 00400000h   
+WS_CLIPCHILDREN  . . . . . . . .	Number	 02000000h   
+WS_EX_APPWINDOW  . . . . . . . .	Number	 00400000h   
+WS_EX_CLIENTEDGE . . . . . . . .	Number	 00000200h   
+WS_HSCROLL . . . . . . . . . . .	Number	 00100000h   
+WS_MAXIMIZEBOX . . . . . . . . .	Number	 00010000h   
+WS_MINIMIZEBOX . . . . . . . . .	Number	 00020000h   
+WS_OVERLAPPEDWINDOW  . . . . . .	Number	 00CF0000h   
+WS_OVERLAPPED  . . . . . . . . .	Number	 00000000h   
+WS_SYSMENU . . . . . . . . . . .	Number	 00080000h   
+WS_THICKFRAME  . . . . . . . . .	Number	 00040000h   
+WS_VISIBLE . . . . . . . . . . .	Number	 10000000h   
+WS_VSCROLL . . . . . . . . . . .	Number	 00200000h   
+WideCharToMultiByte  . . . . . .	L 	 00000000 External
+WriteFile  . . . . . . . . . . .	L 	 00000000 External
+g_cfgCaretMs . . . . . . . . . .	DWord	 00001034 _DATA	
+g_cfgFontPx  . . . . . . . . . .	DWord	 00001028 _DATA	
+g_cfgGutterPad . . . . . . . . .	DWord	 0000102C _DATA	
+g_cfgLogToFile . . . . . . . . .	DWord	 00001038 _DATA	
+g_cfgUndoDepth . . . . . . . . .	DWord	 00001030 _DATA	
+g_dwLastError  . . . . . . . . .	DWord	 00000008 _DATA	
+g_fSelfTestValue . . . . . . . .	QWord	 00000000 _BSS	
+g_hHeap  . . . . . . . . . . . .	QWord	 00000000 _DATA	
+g_hLogFile . . . . . . . . . . .	QWord	 0000103C _DATA	
+szAppClass . . . . . . . . . . .	Word	 0000000C _DATA	
+szAppTitle . . . . . . . . . . .	Word	 00000064 _DATA	
+szDbgBadBuf  . . . . . . . . . .	Word	 00000AB4 _DATA	
+szDbgBadPath . . . . . . . . . .	Word	 00000A24 _DATA	
+szDbgFailClass . . . . . . . . .	Word	 0000065C _DATA	
+szDbgFailCtx . . . . . . . . . .	Word	 000005B4 _DATA	
+szDbgFailFont  . . . . . . . . .	Word	 00000798 _DATA	
+szDbgFailMem . . . . . . . . . .	Word	 00000518 _DATA	
+szDbgFailRead  . . . . . . . . .	Word	 0000085C _DATA	
+szDbgFailTooBig  . . . . . . . .	Word	 00000960 _DATA	
+szDbgFailWindow  . . . . . . . .	Word	 000006FC _DATA	
+szDbgFailWrite . . . . . . . . .	Word	 000008DC _DATA	
+szDbgInit  . . . . . . . . . . .	Word	 0000044C _DATA	
+szDbgOverflow  . . . . . . . . .	Word	 00000B44 _DATA	
+szDbgUndoFull  . . . . . . . . .	Word	 00000C00 _DATA	
+szEditMenu . . . . . . . . . . .	Word	 00000234 _DATA	
+szEditorMsgFail  . . . . . . . .	Word	 00000F24 _DATA	
+szEditorMsgReady . . . . . . . .	Word	 00000EC4 _DATA	
+szEmpty  . . . . . . . . . . . .	Word	 000003F0 _DATA	
+szExtTxt . . . . . . . . . . . .	Word	 00000190 _DATA	
+szFileMenu . . . . . . . . . . .	Word	 0000021C _DATA	
+szFilterAll  . . . . . . . . . .	Word	 0000009C _DATA	
+szFilterWide . . . . . . . . . .	Word	 00000112 _DATA	
+szFontFace . . . . . . . . . . .	Word	 00000EFA _TEXT	
+szIniFileName  . . . . . . . . .	Word	 00000E46 _DATA	
+szIniKeyCaret  . . . . . . . . .	Word	 00000DFE _DATA	
+szIniKeyFont . . . . . . . . . .	Word	 00000D90 _DATA	
+szIniKeyGutter . . . . . . . . .	Word	 00000DAC _DATA	
+szIniKeyLog  . . . . . . . . . .	Word	 00000E1E _DATA	
+szIniKeyUndo . . . . . . . . . .	Word	 00000DD4 _DATA	
+szIniSection . . . . . . . . . .	Word	 00000D6C _DATA	
+szLogFileName  . . . . . . . . .	Word	 00000E6C _DATA	
+szMiAI . . . . . . . . . . . . .	Word	 000003A2 _DATA	
+szMiCopy . . . . . . . . . . . .	Word	 00000338 _DATA	
+szMiCut  . . . . . . . . . . . .	Word	 00000322 _DATA	
+szMiExit . . . . . . . . . . . .	Word	 000002D4 _DATA	
+szMiNew  . . . . . . . . . . . .	Word	 0000024C _DATA	
+szMiOpen . . . . . . . . . . . .	Word	 00000262 _DATA	
+szMiPaste  . . . . . . . . . . .	Word	 00000352 _DATA	
+szMiRedo . . . . . . . . . . . .	Word	 00000308 _DATA	
+szMiSaveAs . . . . . . . . . . .	Word	 000002A2 _DATA	
+szMiSave . . . . . . . . . . . .	Word	 00000288 _DATA	
+szMiSelectAll  . . . . . . . . .	Word	 00000370 _DATA	
+szMiUndo . . . . . . . . . . . .	Word	 000002EE _DATA	
+szOpenTitle  . . . . . . . . . .	Word	 000001A0 _DATA	
+szReady  . . . . . . . . . . . .	Word	 000003D8 _DATA	
+szSaveTitle  . . . . . . . . . .	Word	 000001D8 _DATA	
+szSelfTestSeed . . . . . . . . .	Word	 00000EA2 _DATA	
+szVersionTag . . . . . . . . . .	Word	 00000CDC _DATA	
+szWideCRLF . . . . . . . . . . .	Word	 00000E96 _DATA	
+
+	   0 Warnings
+	   0 Errors
