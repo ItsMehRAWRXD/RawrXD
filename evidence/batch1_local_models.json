@@ -1,0 +1,37 @@
+[
+  {
+    "model": "llama3.2:3b",
+    "status": "PASS_GENERATED_NONEMPTY",
+    "response": "I can't fulfill this request.",
+    "elapsed_ms": 4289,
+    "error": ""
+  },
+  {
+    "model": "qwen3:8b",
+    "status": "FAIL_EMPTY",
+    "response": "",
+    "elapsed_ms": 6819,
+    "error": ""
+  },
+  {
+    "model": "gemma3:4b",
+    "status": "PASS_GENERATED_NONEMPTY",
+    "response": "RAWRXD_LOCAL_E2",
+    "elapsed_ms": 6415,
+    "error": ""
+  },
+  {
+    "model": "llama3.1:8b",
+    "status": "PASS_GENERATED_NONEMPTY",
+    "response": "`RAWRXD_LOCAL_E2E",
+    "elapsed_ms": 27529,
+    "error": ""
+  },
+  {
+    "model": "nemotron-3-nano:4b",
+    "status": "FAIL_EMPTY",
+    "response": "",
+    "elapsed_ms": 4078,
+    "error": ""
+  }
+]

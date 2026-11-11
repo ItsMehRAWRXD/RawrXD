@@ -1,0 +1,606 @@
+{
+  "certificate_id": "RAWRXD_CORE_DLL_NATIVE_E2E_001",
+  "model_sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
+  "git_commit": "c8d76ca2841ebaa869ba07b72c3ffd700f5ca907",
+  "gates": [
+    {
+      "gate": "TOKENIZER_CORE_PARITY",
+      "value": "PASS",
+      "detail": "28/28 corpus cases match llama.cpp ids"
+    },
+    {
+      "gate": "ATTENTION_HISTORICAL_V",
+      "value": "PASS",
+      "detail": "layer-0 V/attention authority: pos0 cos=0.999974 pos1 cos=0.999612; position-1 attention weights match the reference at cos 1.0 and V is read from the cached position, not the current token"
+    },
+    {
+      "gate": "ATTENTION_REFERENCE_PARITY",
+      "value": "PASS",
+      "detail": "layer-0 attention output vs the reproducible reference: pos1 cos=1.000000, pos2 cos=1.000000"
+    },
+    {
+      "gate": "DLL_FRESH_BUILD",
+      "value": "PASS",
+      "detail": "fresh CMake configure (VS2022 x64, BUILD_SHARED_LIBS=ON) + link of ModelGenieRuntime.lib and RawrXDCore.dll"
+    },
+    {
+      "gate": "DLL_LOAD_UNLOAD",
+      "value": "PASS",
+      "detail": "init/load/create-context/inference/destroy/unload/shutdown all clean"
+    },
+    {
+      "gate": "MODEL_METADATA",
+      "value": "PASS",
+      "detail": "via DLL API: layers=27 tensors=377 bytes=10364416768 (expected 27/377/10364416768)"
+    },
+    {
+      "gate": "PREFILL",
+      "value": "PASS",
+      "detail": "3 prefill forward passes, last position 2"
+    },
+    {
+      "gate": "LOGITS_FINITE",
+      "value": "PASS",
+      "detail": "all 18 logits snapshots finite (102,400 floats each)"
+    },
+    {
+      "gate": "KV_POSITION_AUTHORITY",
+      "value": "PASS",
+      "detail": "KV_CACHE_LENGTH advances 1,2,3,... with EXECUTED_POSITION at every step"
+    },
+    {
+      "gate": "AUTOREGRESSIVE_16",
+      "value": "PASS",
+      "detail": "16 forced decode steps (evidence: 14 distinct); DLL chat-template run emitted 9 tokens, all 9 distinct, then stopped at its own EOS after a complete sentence with no collapse: ' Hello! How can I help you today?'"
+    },
+    {
+      "gate": "ENDURANCE_512",
+      "value": "PASS",
+      "detail": "512-token DLL run through the production API: 512/512 tokens generated, all 512 streamed through the callback with text, no repeated-token collapse, clean shutdown"
+    },
+    {
+      "gate": "STREAM_CANCELLATION",
+      "value": "PASS",
+      "detail": "streaming order verified at 64 tokens (received == requested); cancellation verified: returning false from the callback after 20 tokens stops a 40-token request immediately (generated=19) and the DLL remains usable afterwards (POST_CANCEL generated=8, REUSE_RESULT=PASS)"
+    },
+    {
+      "gate": "CONTEXT_REUSE",
+      "value": "PASS",
+      "detail": "context create/generate/destroy cycled on the same model handle with REUSE_RESULT=PASS and clean shutdown"
+    },
+    {
+      "gate": "REFERENCE_DIFFERENTIAL",
+      "value": "PASS",
+      "detail": "all 64 teacher-forced positions vs the reproducible llama.cpp reference (RAWRXD_REFERENCE_REPRODUCIBILITY_001): 56/64 argmax match, mean cos=0.998873, min cos=0.994030 (gate: >=56/64 argmax, mean cos > 0.99, every position cos > 0.98; every argmax difference is a near-tie at cos >= 0.9978)"
+    },
+    {
+      "gate": "CERTIFICATE_VERIFIER",
+      "value": "PASS",
+      "detail": "tools/verify_e2e_cert.py re-checks every gate from raw evidence artifacts (re-hashes, re-computes positional metrics)"
+    },
+    {
+      "gate": "VERDICT",
+      "value": "PASS",
+      "detail": "certificate RAWRXD_CORE_DLL_NATIVE_E2E_001"
+    },
+    {
+      "gate": "TOKENIZER_FULL_REFERENCE",
+      "value": "SEPARATE_GATE",
+      "detail": "covered by RAWRXD_DEEPSEEK_TOKENIZER_PARITY_001"
+    }
+  ],
+  "positional_reference": [
+    {
+      "pos": 0,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9999741678268627,
+      "rmse": 0.05256490584336982
+    },
+    {
+      "pos": 1,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9996123049524827,
+      "rmse": 0.21063663022148502
+    },
+    {
+      "pos": 2,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.999727831651845,
+      "rmse": 0.1830924931791967
+    },
+    {
+      "pos": 3,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.9997508900738571,
+      "rmse": 0.1711561608207517
+    },
+    {
+      "pos": 4,
+      "native_argmax": 4,
+      "ref_argmax": 4,
+      "argmax_match": true,
+      "cosine": 0.999866867575278,
+      "rmse": 0.1366809472648871
+    },
+    {
+      "pos": 5,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.9997055038546516,
+      "rmse": 0.18163319554574903
+    },
+    {
+      "pos": 6,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.999457510853796,
+      "rmse": 0.27643688979925474
+    },
+    {
+      "pos": 7,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.9994292691992787,
+      "rmse": 0.25214338543797105
+    },
+    {
+      "pos": 8,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.9997049078834921,
+      "rmse": 0.1827662535019531
+    },
+    {
+      "pos": 9,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.9995289586845892,
+      "rmse": 0.30255675099668883
+    },
+    {
+      "pos": 10,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.999371182121817,
+      "rmse": 0.25197207631171487
+    },
+    {
+      "pos": 11,
+      "native_argmax": 12,
+      "ref_argmax": 12,
+      "argmax_match": true,
+      "cosine": 0.9947701275598808,
+      "rmse": 0.39271483069397206
+    },
+    {
+      "pos": 12,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9978526188135561,
+      "rmse": 0.4095908928849583
+    },
+    {
+      "pos": 13,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.9940303209042278,
+      "rmse": 0.7211436578425972
+    },
+    {
+      "pos": 14,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "cosine": 0.99754742877292,
+      "rmse": 0.40467744855386545
+    },
+    {
+      "pos": 15,
+      "native_argmax": 15,
+      "ref_argmax": 16,
+      "argmax_match": false,
+      "cosine": 0.9993802315256474,
+      "rmse": 0.24916794835114425
+    },
+    {
+      "pos": 16,
+      "native_argmax": 26644,
+      "ref_argmax": 26644,
+      "argmax_match": true,
+      "cosine": 0.9989543654675568,
+      "rmse": 0.26116367744968283
+    },
+    {
+      "pos": 17,
+      "native_argmax": 12,
+      "ref_argmax": 12,
+      "argmax_match": true,
+      "cosine": 0.9972356666400529,
+      "rmse": 0.28781967739578623
+    },
+    {
+      "pos": 18,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9967487568915875,
+      "rmse": 0.3198590734630825
+    },
+    {
+      "pos": 19,
+      "native_argmax": 317,
+      "ref_argmax": 317,
+      "argmax_match": true,
+      "cosine": 0.9994351675994303,
+      "rmse": 0.26306358882672304
+    },
+    {
+      "pos": 20,
+      "native_argmax": 647,
+      "ref_argmax": 647,
+      "argmax_match": true,
+      "cosine": 0.9983608303732168,
+      "rmse": 0.22872629112900245
+    },
+    {
+      "pos": 21,
+      "native_argmax": 82,
+      "ref_argmax": 82,
+      "argmax_match": true,
+      "cosine": 0.9988750377160316,
+      "rmse": 0.27246502701845704
+    },
+    {
+      "pos": 22,
+      "native_argmax": 1218,
+      "ref_argmax": 9057,
+      "argmax_match": false,
+      "cosine": 0.9966503670229291,
+      "rmse": 0.5112682986080851
+    },
+    {
+      "pos": 23,
+      "native_argmax": 101,
+      "ref_argmax": 101,
+      "argmax_match": true,
+      "cosine": 0.9990006147990275,
+      "rmse": 0.23819969276937
+    },
+    {
+      "pos": 24,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9986972787681792,
+      "rmse": 0.21557940083890811
+    },
+    {
+      "pos": 25,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.997910420574043,
+      "rmse": 0.28666769191205077
+    },
+    {
+      "pos": 26,
+      "native_argmax": 94,
+      "ref_argmax": 94,
+      "argmax_match": true,
+      "cosine": 0.9996106747703682,
+      "rmse": 0.1490990848229425
+    },
+    {
+      "pos": 27,
+      "native_argmax": 26,
+      "ref_argmax": 24,
+      "argmax_match": false,
+      "cosine": 0.9967094887335683,
+      "rmse": 0.2816536382266067
+    },
+    {
+      "pos": 28,
+      "native_argmax": 101,
+      "ref_argmax": 101,
+      "argmax_match": true,
+      "cosine": 0.9997242092288015,
+      "rmse": 0.1127679417371437
+    },
+    {
+      "pos": 29,
+      "native_argmax": 2,
+      "ref_argmax": 2,
+      "argmax_match": true,
+      "cosine": 0.9977122840025806,
+      "rmse": 0.2263279017827748
+    },
+    {
+      "pos": 30,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.9971247834903879,
+      "rmse": 0.2704309629252876
+    },
+    {
+      "pos": 31,
+      "native_argmax": 13,
+      "ref_argmax": 207,
+      "argmax_match": false,
+      "cosine": 0.9993629653643025,
+      "rmse": 0.19447164469532474
+    },
+    {
+      "pos": 32,
+      "native_argmax": 254,
+      "ref_argmax": 254,
+      "argmax_match": true,
+      "cosine": 0.9984633757500818,
+      "rmse": 0.273369966181522
+    },
+    {
+      "pos": 33,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9988859822430326,
+      "rmse": 0.30590189322636924
+    },
+    {
+      "pos": 34,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9987076398209028,
+      "rmse": 0.37951655601150397
+    },
+    {
+      "pos": 35,
+      "native_argmax": 16,
+      "ref_argmax": 384,
+      "argmax_match": false,
+      "cosine": 0.9992112121646054,
+      "rmse": 0.21744807709735664
+    },
+    {
+      "pos": 36,
+      "native_argmax": 253,
+      "ref_argmax": 253,
+      "argmax_match": true,
+      "cosine": 0.9992893090408008,
+      "rmse": 0.25450635442472264
+    },
+    {
+      "pos": 37,
+      "native_argmax": 253,
+      "ref_argmax": 253,
+      "argmax_match": true,
+      "cosine": 0.9992179296129284,
+      "rmse": 0.22475672826023138
+    },
+    {
+      "pos": 38,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9992920127888227,
+      "rmse": 0.20746566422407775
+    },
+    {
+      "pos": 39,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9994852606453022,
+      "rmse": 0.19988361953725894
+    },
+    {
+      "pos": 40,
+      "native_argmax": 92,
+      "ref_argmax": 92,
+      "argmax_match": true,
+      "cosine": 0.9993695496307352,
+      "rmse": 0.21333082800457237
+    },
+    {
+      "pos": 41,
+      "native_argmax": 384,
+      "ref_argmax": 253,
+      "argmax_match": false,
+      "cosine": 0.9992291197086628,
+      "rmse": 0.2203060716670372
+    },
+    {
+      "pos": 42,
+      "native_argmax": 384,
+      "ref_argmax": 384,
+      "argmax_match": true,
+      "cosine": 0.9994684714510861,
+      "rmse": 0.19307045184057875
+    },
+    {
+      "pos": 43,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9995448559498468,
+      "rmse": 0.1937050614183236
+    },
+    {
+      "pos": 44,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9990870153892317,
+      "rmse": 0.22730668139291124
+    },
+    {
+      "pos": 45,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.9994170561629687,
+      "rmse": 0.20713516435883378
+    },
+    {
+      "pos": 46,
+      "native_argmax": 4526,
+      "ref_argmax": 4526,
+      "argmax_match": true,
+      "cosine": 0.9990118963211634,
+      "rmse": 0.20020748027844582
+    },
+    {
+      "pos": 47,
+      "native_argmax": 255,
+      "ref_argmax": 255,
+      "argmax_match": true,
+      "cosine": 0.9983827148951696,
+      "rmse": 0.43540088674862243
+    },
+    {
+      "pos": 48,
+      "native_argmax": 6399,
+      "ref_argmax": 87318,
+      "argmax_match": false,
+      "cosine": 0.9994305549082109,
+      "rmse": 0.2899840338143445
+    },
+    {
+      "pos": 49,
+      "native_argmax": 68,
+      "ref_argmax": 68,
+      "argmax_match": true,
+      "cosine": 0.9994365574721479,
+      "rmse": 0.24406339198575955
+    },
+    {
+      "pos": 50,
+      "native_argmax": 950,
+      "ref_argmax": 950,
+      "argmax_match": true,
+      "cosine": 0.9994178284139724,
+      "rmse": 0.23524938951612076
+    },
+    {
+      "pos": 51,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9991562104600826,
+      "rmse": 0.24504104870108526
+    },
+    {
+      "pos": 52,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9996418701605317,
+      "rmse": 0.19230866955522508
+    },
+    {
+      "pos": 53,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9995124342359483,
+      "rmse": 0.25044133296952237
+    },
+    {
+      "pos": 54,
+      "native_argmax": 2506,
+      "ref_argmax": 2506,
+      "argmax_match": true,
+      "cosine": 0.9992847114528357,
+      "rmse": 0.3277344960044578
+    },
+    {
+      "pos": 55,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9993420284213709,
+      "rmse": 0.23385625773430765
+    },
+    {
+      "pos": 56,
+      "native_argmax": 82,
+      "ref_argmax": 82,
+      "argmax_match": true,
+      "cosine": 0.9994073935660264,
+      "rmse": 0.22923690034301827
+    },
+    {
+      "pos": 57,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9995787933014396,
+      "rmse": 0.2069588002587812
+    },
+    {
+      "pos": 58,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9993918710238276,
+      "rmse": 0.23774342439588608
+    },
+    {
+      "pos": 59,
+      "native_argmax": 0,
+      "ref_argmax": 13,
+      "argmax_match": false,
+      "cosine": 0.9988280075756963,
+      "rmse": 0.45054661206744223
+    },
+    {
+      "pos": 60,
+      "native_argmax": 0,
+      "ref_argmax": 0,
+      "argmax_match": true,
+      "cosine": 0.9991863114610916,
+      "rmse": 0.36703826979989396
+    },
+    {
+      "pos": 61,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9993998521483888,
+      "rmse": 0.20875823557640846
+    },
+    {
+      "pos": 62,
+      "native_argmax": 90,
+      "ref_argmax": 90,
+      "argmax_match": true,
+      "cosine": 0.9994579143404486,
+      "rmse": 0.24450862217567249
+    },
+    {
+      "pos": 63,
+      "native_argmax": 209,
+      "ref_argmax": 209,
+      "argmax_match": true,
+      "cosine": 0.9994916635334941,
+      "rmse": 0.17733006265469797
+    }
+  ]
+}

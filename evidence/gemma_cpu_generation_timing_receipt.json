@@ -1,0 +1,15 @@
+{
+  "model": "F:\\OllamaModels\\gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf",
+  "load_ms": 15531.9,
+  "prefill_ms": 129391.9,
+  "decode_ms": 185894.5,
+  "generated_tokens": 1,
+  "logit_count": 262144,
+  "all_finite": true,
+  "token_ids": [
+    123258
+  ],
+  "generated_text": " racional",
+  "decode_tps": 0.005379395302174083,
+  "receipt_source": "F:\\rawrxd\\evidence\\gemma_timing_runtime_one_decode.log"
+}

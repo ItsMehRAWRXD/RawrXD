@@ -1,0 +1,13 @@
+﻿{
+    "schema":  "RAWRXD_SOVEREIGN_REGRESSION_RESULTS",
+    "linker_sha256":  "08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436",
+    "corpus_19_19_fresh_execution":  true,
+    "corpus_generated_utc":  "2026-10-27T09:13:26.4968068Z",
+    "baseline_linker_sha256":  "37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca",
+    "p1_linker_sha256":  "c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225",
+    "note":  "Fresh corpus execution SHA is authoritative; baseline/P1 hashes retained for history.",
+    "WINDOWS_RUNTIME_CERT":  0,
+    "FIVE_OS_CERTIFIED":  false,
+    "PROMOTE":  0,
+    "ENTRY_STUB":  "CLOSED"
+}

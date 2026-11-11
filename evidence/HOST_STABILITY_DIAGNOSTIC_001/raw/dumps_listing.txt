@@ -1,0 +1,24 @@
+=== Minidump ===
+MISSING_OR_EMPTY
+=== CrashDumps ===
+
+Name                          LastWriteTime             Length
+----                          -------------             ------
+explorer.exe.8160.dmp         11/2/2026 5:20:26 AM    20576639
+Taskmgr.exe.21028.dmp         11/2/2026 5:18:28 AM     7218227
+RawrXD-Win32IDE.exe.24408.dmp 11/2/2026 3:22:35 AM   298010767
+dllhost.exe.19488.dmp         10/31/2026 3:55:35 PM     902275
+clinfo.exe.33568.dmp          10/31/2026 3:45:09 PM    5891656
+dllhost.exe.18036.dmp         10/31/2026 3:34:55 PM     902467
+dllhost.exe.7904.dmp          10/31/2026 1:17:39 PM     905555
+dllhost.exe.14312.dmp         10/31/2026 12:01:25 AM    903043
+deep2_bench_tps.exe.35672.dmp 10/30/2026 10:26:20 AM  11459969
+deep2_bench_tps.exe.35228.dmp 10/30/2026 10:19:43 AM  11466155
+Malwarebytes                  10/10/2026 9:24:29 AM           
+
+
+
+=== WER ReportArchive ===
+MISSING
+=== WER ReportQueue ===
+MISSING

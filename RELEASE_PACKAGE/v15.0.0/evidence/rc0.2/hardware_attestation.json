@@ -1,0 +1,38 @@
+{
+  "timestamp": 1785442992,
+  "attestation_version": "1.0",
+  "system_info": {
+    "os_version": "Windows 11",
+    "os_build_number": 22631,
+    "total_physical_memory_mb": 65536,
+    "available_physical_memory_mb": 49152,
+    "number_of_processors": 16
+  },
+  "gpus": [
+    {
+      "device_name": "AMD Radeon AI PRO R9700",
+      "vendor_id": 4098,
+      "device_id": 29772,
+      "dedicated_video_memory_mb": 32768,
+      "feature_level": "12_2",
+      "vulkan": true,
+      "hip": true,
+      "driver_version": "31.0.24000.0",
+      "pci_slot": 0
+    },
+    {
+      "device_name": "AMD Radeon RX 7800 XT",
+      "vendor_id": 4098,
+      "device_id": 29822,
+      "dedicated_video_memory_mb": 16384,
+      "feature_level": "12_2",
+      "vulkan": true,
+      "hip": true,
+      "driver_version": "31.0.24000.0",
+      "pci_slot": 1
+    }
+  ],
+  "total_vram_mb": 49152,
+  "matches_target_configuration": true,
+  "validation_status": "PASS"
+}

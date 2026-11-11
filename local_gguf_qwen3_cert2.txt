@@ -1,0 +1,88 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-26008-151820618469000 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[stage] ingest done in 130015.0 ms: arch=qwen3 blocks=36 vocab=151936 bos=151643 eos=151645
+[stage] model ships a chat template (3127 bytes):
+{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='', is_first_sp=true, is_last_user=false) %}{%- for message in messages %}{%- if message['role'] == 'system' %}{%- if ns.is_first_sp %}{% set ns.system_prompt = ns.system_prompt + message['content'] %}{% set ns.is_first_sp = false %}{%- else %}{% set ns.system_prompt = ns.system_prompt + '
+
+' + message['content'] %}{%- endif %}{%- endif %}{%- endfor %}{{ bos_token }}{{ ns.system_prompt }}{%- for message in messages %}{% set content = message['content'] %}{%- if message['role'] == 'user' %}{%- set ns.is_tool = false -%}{%- set ns.is_first = false -%}{%- set ns.is_last_user = true -%}{{'<｜User｜>' + content + '<｜Assistant｜>'}}{%- endif %}{%- if message['role'] == 'assistant' %}{% if '</think>' in content %}{% set content = content.split('</think>')[-1] %}{% endif %}{% endif %}{%- if message['role'] == 'assistant' and message['tool_calls'] is defined and message['tool_calls'] is not none %}{%- set ns.is_last_user = false -%}{%- if ns.is_tool %}{{'<｜tool▁outputs▁end｜>'}}{%- endif %}{%- set ns.is_first = false %}{%- set ns.is_tool = false -%}{%- set ns.is_output_first = true %}{%- for tool in message['tool_calls'] %}{%- if not ns.is_first %}{%- if content is none %}{{'<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
+' + '```json' + '
+' + tool['function']['arguments'] + '
+' + '```' + '<｜tool▁call▁end｜>'}}{%- else %}{{content + '<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
+' + '```json' + '
+' + tool['function']['arguments'] + '
+' + '```' + '<｜tool▁call▁end｜>'}}{%- endif %}{%- set ns.is_first = true -%}{%- else %}{{'
+' + '<｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '
+' + '```json' + '
+' + tool['function']['arguments'] + '
+' + '```' + '<｜tool▁call▁end｜>'}}{%- endif %}{%- endfor %}{{'<｜tool▁calls▁end｜><｜end▁of▁sentence｜>'}}{%- endif %}{%- if message['role'] == 'assistant' and (message['tool_calls'] is not defined or message['tool_calls'] is none)%}{%- set ns.is_last_user = false -%}{%- if ns.is_tool %}{{'<｜tool▁outputs▁end｜>' + content + '<｜end▁of▁sentence｜>'}}{%- set ns.is_tool = false -%}{%- else %}{{content + '<｜end▁of▁sentence｜>'}}{%- endif %}{%- endif %}{%- if message['role'] == 'tool' %}{%- set ns.is_last_user = false -%}{%- set ns.is_tool = true -%}{%- if ns.is_output_first %}{{'<｜tool▁outputs▁begin｜><｜tool▁output▁begin｜>' + content + '<｜tool▁output▁end｜>'}}{%- set ns.is_output_first = false %}{%- else %}{{'
+<｜tool▁output▁begin｜>' + content + '<｜tool▁output▁end｜>'}}{%- endif %}{%- endif %}{%- endfor -%}{% if ns.is_tool %}{{'<｜tool▁outputs▁end｜>'}}{% endif %}{% if add_generation_prompt and not ns.is_last_user and not ns.is_tool %}{{'<｜Assistant｜>'}}{% endif %}
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=507 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\agent_e2e_fixture_small
+[flight] Executor recorder started: F:\rawrxd\agent_e2e_fixture_small\deep2_flight.jsonl
+[stage] chat markers: template user='<｜User｜>' asst='<｜Assistant｜>' gen='<｜Assistant｜>' bos_in_template=1
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=calc.cpp transaction=F:\rawrxd\agent_e2e_fixture_small\.rawrxd\agent_transactions\txn_151761299790800
+[ESP] seq=1 req=1 agent=0 model_load        F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf value=0
+[ESP] seq=2 req=1 agent=0 tokenizer_check   PASS value=0
+[ESP] seq=3 req=1 agent=0 prefill_start     tokens=0 ctx=0 value=0
+[ESP] seq=4 req=1 agent=0 prefill_start     tokens=218 ctx=0 value=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +218 tokens (ctx=218 tokens) in 280439 ms (batched)
+[ESP] seq=5 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":218,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":280443.270,"decode_ms":0.000,"task_ms":280443.280,"gpu_dispatches":56700,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=6 req=1 agent=0 prefill_end       elapsed_ms=280443.319200 value=280443
+[ESP] seq=7 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":218,"context":218,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.777,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":280443.319,"decode_ms":0.000,"task_ms":280443.417,"gpu_dispatches":56700,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=9 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":1,"prefill_tokens":218,"context":218,"rolling_tps":1167.406,"decode_tps":1167.406,"prefill_tps":0.777,"task_tps":0.004,"ttft_ms":280444.288,"prefill_ms":280443.319,"decode_ms":0.857,"task_ms":280444.291,"gpu_dispatches":56700,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 0/64: 
+[ESP] seq=15 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":218,"context":218,"rolling_tps":0.800,"decode_tps":0.733,"prefill_tps":0.777,"task_tps":0.021,"ttft_ms":280444.288,"prefill_ms":280443.319,"decode_ms":8182.101,"task_ms":288625.535,"gpu_dispatches":57966,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=21 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":11,"prefill_tokens":218,"context":218,"rolling_tps":0.800,"decode_tps":0.682,"prefill_tps":0.777,"task_tps":0.037,"ttft_ms":280444.288,"prefill_ms":280443.319,"decode_ms":16128.430,"task_ms":296571.864,"gpu_dispatches":59231,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 10/64: policy   ol  task
+[step 1] SNAP pre-decode stop: reason=7 tokens=13 deadline exceeded
+[step 1] generated 13 tokens / 27 chars in 21163 ms (0.614 tok/s) snap=7
+[ESP] seq=24 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":13,"prefill_tokens":218,"context":218,"rolling_tps":0.400,"decode_tps":0.614,"prefill_tps":0.777,"task_tps":0.043,"ttft_ms":280444.288,"prefill_ms":280443.319,"decode_ms":21162.745,"task_ms":301606.180,"gpu_dispatches":59737,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=27 text="     policy   ol  task     "
+[SNAP OUT META] eos_id=151645
+[SNAP OUT TOKENS] n=13 ids=262,220,4842,220,220,8328,220,220,8202,220,220,256,220
+[step 1] INVALID OUTPUT (snap reason=7 deadline exceeded); no complete command
+[SNAP REJECT RAW] bytes=27 text="     policy   ol  task     "
+[SNAP REJECT META] eos_id=151645
+[SNAP REJECT TOKENS] n=13 ids=262,220,4842,220,220,8328,220,220,8202,220,220,256,220
+
+=== RETRY BUDGET EXHAUSTED ===
+[ESP] seq=25 req=1 agent=0 error             model_output_invalid value=0
+Attempts: 1/3, Tokens: 13/8192, Time: 301s/300s, Stalled: NO
+[kv] committed KV stream DIVERGES FROM the current render (218 of 292 ids common; incremental=231 fresh=292)
+[kv] FIRST DIVERGENCE at position 218: incremental=262 ('   ') fresh=414 ('     ')
+[kv] window [214..223): incremental='Assistant｜>     policy  '
+[kv] window [214..223): fresh     ='Assistant｜>     policy   ol  '
+[kv] ADMISSION GUARD: committed KV is not a prefix of the current prompt; refusing to decode
+[verification] running build command: cl /nologo /EHsc calc.cpp /Fe:calc.exe
+[verification] build succeeded
+
+=== verification (harness-run, independent of the model) ===
+MODEL_SAID_FINISH      no
+SOURCE_PATCHED         FAIL (matches the exact expected source)
+BUILD_ARTIFACT         attempted (MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe))
+TEST_EXECUTION         FAIL (calc.cpp exit=1 out=)
+TOOL_RESULT_FEEDBACK   6 steps completed
+KV_PREFIX_CONSISTENT   FAIL
+MODEL_REQUESTED_TOOL   NO (tool_calls=0)
+FINAL_VERDICT          FAIL
+[ESP] seq=26 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"error","generated":13,"prefill_tokens":218,"context":218,"rolling_tps":0.000,"decode_tps":0.492,"prefill_tps":0.777,"task_tps":0.042,"ttft_ms":280444.288,"prefill_ms":280443.319,"decode_ms":26427.667,"task_ms":306871.102,"gpu_dispatches":59737,"cpu_fallbacks":0,"tool_calls":0,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=27 req=1 agent=0 finished          FAIL value=1

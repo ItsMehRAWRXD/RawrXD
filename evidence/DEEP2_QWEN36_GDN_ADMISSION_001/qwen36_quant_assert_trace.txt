@@ -1,0 +1,72 @@
+BENCH model=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf decode=2 runs=1 backend=cpu-pinned prefill=serial ExecuteToken wide_dot_batch=0
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf ...
+arch=qwen35moe blocks=40 embd=2048 heads=16 kv=2 rope_dim=64 experts=256 used=8
+bound ops=603 (bind 61398.3 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant] w=blk.0.attn_qkv.weight kind=1 n_in=2048 n_out=8192 n_blk=8 rb=1680 wbytes=13762560 need=13762560
+[quant] w=blk.0.attn_gate.weight kind=0 n_in=2048 n_out=4096 n_blk=8 rb=1152 wbytes=4718592 need=4718592
+[quant] w=blk.0.ssm_alpha.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+[quant] w=blk.0.ssm_beta.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+GDN_ADMISSION_DIAG block=0 qkv_tensor=blk.0.attn_qkv.weight gate_tensor=blk.0.attn_gate.weight A=blk.0.ssm_a alpha=blk.0.ssm_alpha.weight beta=blk.0.ssm_beta.weight conv=blk.0.ssm_conv1d.weight dt=blk.0.ssm_dt.bias norm=blk.0.ssm_norm.weight out=blk.0.ssm_out.weight qkv_width=8192 gate_width=4096 key_heads=16 value_heads=32 head_dim=128 channels=4096 state_size=128 groups=16 tokens=1 stride=4096 spec_inner=4096 spec_state=128 spec_groups=16
+GDN_OPERAND_DIAG block=0 mixed=8192 beta=32 alpha=32 gate=4096 a_log=32 dt_bias=32 norm=128 state=524288 expected_channels=4096 expected_state=524288 generic_state=8388608
+[quant] w=blk.0.ssm_out.weight kind=0 n_in=4096 n_out=2048 n_blk=16 rb=2304 wbytes=4718592 need=4718592
+[exec] Linear block=0 bName='blk.0.ffn_gate_shexp.weight' bSlot=11 aName='ffn_norm' outName='shared_gate' xi=2048
+[quant] w=blk.0.ffn_gate_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=0 bName='blk.0.ffn_up_shexp.weight' bSlot=13 aName='ffn_norm' outName='shared_up' xi=2048
+[quant] w=blk.0.ffn_up_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=0 bName='blk.0.ffn_down_shexp.weight' bSlot=7 aName='shared_swiglu' outName='shared_out' xi=512
+[quant] w=blk.0.ffn_down_shexp.weight kind=1 n_in=512 n_out=2048 n_blk=2 rb=420 wbytes=860160 need=860160
+[quant] w=blk.1.attn_qkv.weight kind=1 n_in=2048 n_out=8192 n_blk=8 rb=1680 wbytes=13762560 need=13762560
+[quant] w=blk.1.attn_gate.weight kind=0 n_in=2048 n_out=4096 n_blk=8 rb=1152 wbytes=4718592 need=4718592
+[quant] w=blk.1.ssm_alpha.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+[quant] w=blk.1.ssm_beta.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+GDN_ADMISSION_DIAG block=1 qkv_tensor=blk.1.attn_qkv.weight gate_tensor=blk.1.attn_gate.weight A=blk.1.ssm_a alpha=blk.1.ssm_alpha.weight beta=blk.1.ssm_beta.weight conv=blk.1.ssm_conv1d.weight dt=blk.1.ssm_dt.bias norm=blk.1.ssm_norm.weight out=blk.1.ssm_out.weight qkv_width=8192 gate_width=4096 key_heads=16 value_heads=32 head_dim=128 channels=4096 state_size=128 groups=16 tokens=1 stride=4096 spec_inner=4096 spec_state=128 spec_groups=16
+GDN_OPERAND_DIAG block=1 mixed=8192 beta=32 alpha=32 gate=4096 a_log=32 dt_bias=32 norm=128 state=524288 expected_channels=4096 expected_state=524288 generic_state=8388608
+[quant] w=blk.1.ssm_out.weight kind=0 n_in=4096 n_out=2048 n_blk=16 rb=2304 wbytes=4718592 need=4718592
+[exec] Linear block=1 bName='blk.1.ffn_gate_shexp.weight' bSlot=30 aName='ffn_norm' outName='shared_gate' xi=2048
+[quant] w=blk.1.ffn_gate_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=1 bName='blk.1.ffn_up_shexp.weight' bSlot=32 aName='ffn_norm' outName='shared_up' xi=2048
+[quant] w=blk.1.ffn_up_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=1 bName='blk.1.ffn_down_shexp.weight' bSlot=26 aName='shared_swiglu' outName='shared_out' xi=512
+[quant] w=blk.1.ffn_down_shexp.weight kind=1 n_in=512 n_out=2048 n_blk=2 rb=420 wbytes=860160 need=860160
+[quant] w=blk.2.attn_qkv.weight kind=1 n_in=2048 n_out=8192 n_blk=8 rb=1680 wbytes=13762560 need=13762560
+[quant] w=blk.2.attn_gate.weight kind=0 n_in=2048 n_out=4096 n_blk=8 rb=1152 wbytes=4718592 need=4718592
+[quant] w=blk.2.ssm_alpha.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+[quant] w=blk.2.ssm_beta.weight kind=0 n_in=2048 n_out=32 n_blk=8 rb=1152 wbytes=36864 need=36864
+GDN_ADMISSION_DIAG block=2 qkv_tensor=blk.2.attn_qkv.weight gate_tensor=blk.2.attn_gate.weight A=blk.2.ssm_a alpha=blk.2.ssm_alpha.weight beta=blk.2.ssm_beta.weight conv=blk.2.ssm_conv1d.weight dt=blk.2.ssm_dt.bias norm=blk.2.ssm_norm.weight out=blk.2.ssm_out.weight qkv_width=8192 gate_width=4096 key_heads=16 value_heads=32 head_dim=128 channels=4096 state_size=128 groups=16 tokens=1 stride=4096 spec_inner=4096 spec_state=128 spec_groups=16
+GDN_OPERAND_DIAG block=2 mixed=8192 beta=32 alpha=32 gate=4096 a_log=32 dt_bias=32 norm=128 state=524288 expected_channels=4096 expected_state=524288 generic_state=8388608
+[quant] w=blk.2.ssm_out.weight kind=0 n_in=4096 n_out=2048 n_blk=16 rb=2304 wbytes=4718592 need=4718592
+[exec] Linear block=2 bName='blk.2.ffn_gate_shexp.weight' bSlot=49 aName='ffn_norm' outName='shared_gate' xi=2048
+[quant] w=blk.2.ffn_gate_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=2 bName='blk.2.ffn_up_shexp.weight' bSlot=51 aName='ffn_norm' outName='shared_up' xi=2048
+[quant] w=blk.2.ffn_up_shexp.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=2 bName='blk.2.ffn_down_shexp.weight' bSlot=45 aName='shared_swiglu' outName='shared_out' xi=512
+[quant] w=blk.2.ffn_down_shexp.weight kind=1 n_in=512 n_out=2048 n_blk=2 rb=420 wbytes=860160 need=860160
+[exec] Linear block=3 bName='blk.3.attn_q.weight' bSlot=64 aName='attn_norm' outName='q' xi=2048
+[quant] w=blk.3.attn_q.weight kind=0 n_in=2048 n_out=8192 n_blk=8 rb=1152 wbytes=9437184 need=9437184
+[exec] Linear block=3 bName='blk.3.attn_k.weight' bSlot=60 aName='attn_norm' outName='k' xi=2048
+[quant] w=blk.3.attn_k.weight kind=0 n_in=2048 n_out=512 n_blk=8 rb=1152 wbytes=589824 need=589824
+[exec] Linear block=3 bName='blk.3.attn_v.weight' bSlot=66 aName='attn_norm' outName='v' xi=2048
+[quant] w=blk.3.attn_v.weight kind=1 n_in=2048 n_out=512 n_blk=8 rb=1680 wbytes=860160 need=860160
+[attn-enter] block=3 pos=0 aName='q' hidden_=512
+[attn-inputs] qv=8192 kv=512 vv=512 kvcache=0,0
+[attn-nan] block=3 pos=0 qnn=0 knn=0 vnn=0
+[attn] block=3 pos=0 q=8192 k=512 v=512 H=16 hk=2 kl=256 vl=256 kvcache=0,0
+[attn-geom] block=3 GQA: H=16 hk=2 group=8 qPerHead=256 kPerHead=256 vPerHead=256
+[attn-geom-witness] block=3 ATTN_Q_WIDTH=4096 ATTN_K_WIDTH=512 ATTN_V_WIDTH=512 ATTN_OUTPUT_WIDTH=4096 ATTN_PROJECTION_INPUT=4096 proj=blk.3.attn_output.weight H=16 qPerHead=256 vPerHead=256 isMla=0
+[attn-rope] block=3 ATTN_POSITION=0 ATTN_ROPE_TYPE= ATTN_ROPE_ELEMENTS=64 ATTN_ROPE_FREQ_BASE=10000000 ATTN_ROPE_FACTOR=1.000000 ATTN_ROPE_ORIG_CTX=0 ATTN_SCORE_SCALE=0.062500000 (plain 1/sqrt(256)=0.062500000)
+[exec] Linear block=3 bName='blk.3.attn_output.weight' bSlot=63 aName='attn_out' outName='attn_proj' xi=4096
+[quant] w=blk.3.attn_output.weight kind=0 n_in=4096 n_out=2048 n_blk=16 rb=2304 wbytes=4718592 need=4718592
+Assertion failed: k % QK_K == 0, file F:\rawrxd\3rdparty\ggml\src\ggml-quants.c, line 1353

@@ -1,0 +1,132 @@
+[
+ {
+  "pos": 7,
+  "ref_top1": 29871,
+  "ref_top2": 278,
+  "ref_top3": 529,
+  "gpu_argmax": 278,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.034850120544433594,
+  "maxabs": 0.7466549873352051
+ },
+ {
+  "pos": 10,
+  "ref_top1": 310,
+  "ref_top2": 29892,
+  "ref_top3": 29889,
+  "gpu_argmax": 29892,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.04389381408691406,
+  "maxabs": 0.524739146232605
+ },
+ {
+  "pos": 14,
+  "ref_top1": 1689,
+  "ref_top2": 15361,
+  "ref_top3": 13794,
+  "gpu_argmax": 13794,
+  "gpu_argmax_rank_in_ref": 2,
+  "ref_margin_top1_top2": 0.045174598693847656,
+  "maxabs": 0.5292763710021973
+ },
+ {
+  "pos": 15,
+  "ref_top1": 14848,
+  "ref_top2": 29871,
+  "ref_top3": 816,
+  "gpu_argmax": 29871,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.31671619415283203,
+  "maxabs": 0.6959855556488037
+ },
+ {
+  "pos": 22,
+  "ref_top1": 29874,
+  "ref_top2": 29882,
+  "ref_top3": 344,
+  "gpu_argmax": 29882,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.029890060424804688,
+  "maxabs": 0.5666320323944092
+ },
+ {
+  "pos": 41,
+  "ref_top1": 29879,
+  "ref_top2": 375,
+  "ref_top3": 29877,
+  "gpu_argmax": 29877,
+  "gpu_argmax_rank_in_ref": 2,
+  "ref_margin_top1_top2": 0.03706026077270508,
+  "maxabs": 0.6623921394348145
+ },
+ {
+  "pos": 49,
+  "ref_top1": 2880,
+  "ref_top2": 29899,
+  "ref_top3": 30064,
+  "gpu_argmax": 30064,
+  "gpu_argmax_rank_in_ref": 2,
+  "ref_margin_top1_top2": 0.07804250717163086,
+  "maxabs": 0.3649632930755615
+ },
+ {
+  "pos": 56,
+  "ref_top1": 29875,
+  "ref_top2": 292,
+  "ref_top3": 29899,
+  "gpu_argmax": 292,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.13277626037597656,
+  "maxabs": 0.4332857131958008
+ },
+ {
+  "pos": 59,
+  "ref_top1": 29947,
+  "ref_top2": 29899,
+  "ref_top3": 29941,
+  "gpu_argmax": 29899,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.12136363983154297,
+  "maxabs": 0.46457648277282715
+ },
+ {
+  "pos": 86,
+  "ref_top1": 310,
+  "ref_top2": 29871,
+  "ref_top3": 22187,
+  "gpu_argmax": 29871,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.02593994140625,
+  "maxabs": 0.4282788038253784
+ },
+ {
+  "pos": 91,
+  "ref_top1": 18386,
+  "ref_top2": 375,
+  "ref_top3": 29887,
+  "gpu_argmax": 375,
+  "gpu_argmax_rank_in_ref": 1,
+  "ref_margin_top1_top2": 0.009721755981445312,
+  "maxabs": 0.6858811378479004
+ },
+ {
+  "pos": 102,
+  "ref_top1": 29879,
+  "ref_top2": 4866,
+  "ref_top3": 29871,
+  "gpu_argmax": 29871,
+  "gpu_argmax_rank_in_ref": 2,
+  "ref_margin_top1_top2": 0.03315544128417969,
+  "maxabs": 0.5334995985031128
+ },
+ {
+  "pos": 119,
+  "ref_top1": 20184,
+  "ref_top2": 29846,
+  "ref_top3": 13574,
+  "gpu_argmax": 13574,
+  "gpu_argmax_rank_in_ref": 2,
+  "ref_margin_top1_top2": 0.017610549926757812,
+  "maxabs": 0.5427484512329102
+ }
+]

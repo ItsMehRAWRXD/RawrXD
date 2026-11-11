@@ -1,0 +1,5 @@
+cmd_exit status=PASS exit=7 stdout_bytes=0 stderr_bytes=0
+cmd_stdout status=PASS exit=0 stdout_bytes=11 stderr_bytes=0
+ps_exit status=PASS exit=7 stdout_bytes=0 stderr_bytes=0
+ps_stdout status=PASS exit=0 stdout_bytes=11 stderr_bytes=0
+ps_stderr status=PASS exit=7 stdout_bytes=0 stderr_bytes=12

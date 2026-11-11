@@ -1,0 +1,4 @@
+{
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/gate2_manifest_consistency.ps1 -BuildDir F:/rawrxd/build_gate_recovery_20261013 -CliExe F:/rawrxd/_eval_harness/rawr_rebuilt.exe -RepoRoot F:/rawrxd -EvidenceDir F:/rawrxd/evidence/FULL_IDE/gate2_provenance/current_consistency",
+  "exit_code": 0
+}

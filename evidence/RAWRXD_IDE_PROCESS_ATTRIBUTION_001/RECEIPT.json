@@ -1,0 +1,46 @@
+﻿{
+  "gate": "RAWRXD_IDE_PROCESS_ATTRIBUTION_001",
+  "checkout": "F:\\rawrxd",
+  "checkout_head_at_record": "a7b14a9f8c61c239c3834b1028274a1060170b92",
+  "head_is_compile_commit": false,
+  "exe": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "exe_sha256": "0AE84A16263ABCD69DCD423BA53BB4A2AA97B5A7D4B1EFD4512FC2BD52F3ABCE",
+  "exe_bytes": 1491968,
+  "exe_mtime": "2026-10-26T02:24:18.1677525-04:00",
+  "g_results_transferred": false,
+  "work_mode_capture": "PENDING",
+  "e2e_gui": "PENDING",
+  "promote": 0,
+  "preexisting": {
+    "note": "Already running before this launch. Same path. Not PID 17548.",
+    "process_id": 30860,
+    "executable_path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "command_line": "\"F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe\" ",
+    "creation_time": "2026-10-26T06:00:22.5253780-04:00",
+    "main_hwnd": "0x7B20D80",
+    "class": "RawrXD_IDE_Window",
+    "title": "RawrXD IDE  -  Untitled  -  Workspace",
+    "visible": true,
+    "width": 1377,
+    "height": 849
+  },
+  "launched": {
+    "process_id": 32868,
+    "executable_path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "command_line": "\"F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe\" ",
+    "creation_time": "2026-10-26T06:01:32.3052320-04:00",
+    "immediate_sample": {
+      "delay_ms": 400,
+      "main_hwnd": "0x0",
+      "title": ""
+    },
+    "followup_sample": {
+      "main_hwnd": "0x1A45073C",
+      "class": "RawrXD_IDE_Window",
+      "title": "RawrXD IDE  -  Untitled  -  Workspace",
+      "visible": true,
+      "width": 1280,
+      "height": 800
+    }
+  }
+}

@@ -1,0 +1,38 @@
+SPLIT blocks [0,32) -> ctx device 2 ; blocks [0,0) -> primary
+dump dir=F:\rawrxd\evidence\DUAL_GPU_FORWARD_20261028\secondary_only
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 2
+Selected device: AMD Radeon RX 7800 XT
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon RX 7800 XT
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+GENSTREAM: 18189 18189
+RESULT gpu_calls=195 cpu_calls=0 fallback=<none> nonfinite=0 finite=yes
+DEVICE_DISPATCH primary submits=4 weight_misses=1 evictions=0 upload=77.1 MiB live=77.2 MiB
+DEVICE_DISPATCH secondary(dev 2) submits=256 weight_misses=64 evictions=0 prefetches=0 prefetch_hits=0 upload=650.4 MiB live=648.0 MiB
+VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Released all tensors
+Vulkan resources cleaned up successfully
