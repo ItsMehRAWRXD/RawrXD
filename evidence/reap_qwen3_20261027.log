@@ -1,0 +1,6 @@
+rawr-reap inspect <first-shard.gguf>
+rawr-reap plan <first-shard.gguf> --size <B|MB|GB|TB>
+rawr-reap topology <first-shard.gguf> [--output <topology.json>]
+rawr-reap capabilities <model-file-or-directory>
+rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]
+rawr-reap reap <first-shard.gguf> --target-size <B|MB|GB|TB> --active-experts <N> --expert-budget <B|MB|GB|TB> --quality-floor <0..1> [--calibration <receipt.json>] [--selection-output <selection.json>] [--output-model <dir>] [--authorize-rewrite] [--output <plan.json>]

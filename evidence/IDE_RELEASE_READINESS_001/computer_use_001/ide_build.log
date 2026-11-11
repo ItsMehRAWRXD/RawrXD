@@ -1,0 +1,197 @@
+[0/2] Re-checking globbed directories...
+[1/65] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-alloc.c.obj
+[2/65] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-threading.cpp.obj
+[3/65] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[4/65] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.c.obj
+[5/65] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-backend.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+[6/65] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-opt.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(24): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(25): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(669): warning C4457: declaration of 'loss' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(657): note: see declaration of 'loss'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[7/65] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[8/65] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-quants.c.obj
+[9/65] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\gguf.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(276): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(526): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[10/65] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[11/65] Linking CXX static library 3rdparty\ggml\src\ggml-base.lib
+[12/65] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ComputerUse.cpp.obj
+[13/65] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\AgentMode.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\AgentMode.cpp(15): warning C4505: 'RawrXD::Agent::AuthorityForRisk': unreferenced function with internal linkage has been removed
+[14/65] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ScreenCapture.cpp.obj
+[15/65] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ComputerUseBridge.cpp.obj
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[16/65] Building CXX object src\computer_use\CMakeFiles\rawrxd_computer_use.dir\ComputerUseParse.cpp.obj
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[17/65] Completed 'vulkan-shaders-gen'
+[18/65] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\WorkspaceToolHost.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\WorkspaceToolHost.cpp(107): warning C4100: 'bad_path': unreferenced parameter
+F:\rawrxd\src\agentic\WorkspaceToolHost.cpp(306): warning C4100: 'timeout_minutes': unreferenced parameter
+[19/65] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\StructuredAction.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\StructuredAction.cpp(52): warning C4100: 'depth': unreferenced parameter
+F:\rawrxd\src\agentic\StructuredAction.cpp(62): warning C4100: 'depth': unreferenced parameter
+F:\rawrxd\src\agentic\StructuredAction.cpp(69): warning C4834: discarding return value of function with [[nodiscard]] attribute
+[20/65] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\AgentSession.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+[21/65] Building RC object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.rc.res
+[22/65] Linking CXX static library src\computer_use\rawrxd_computer_use.lib
+[23/65] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\agentic\SelfRepairLoop.cpp.obj
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\ToolCallBridge.h(57): warning C4100: 'registry': unreferenced parameter
+F:\rawrxd\src\agentic\SelfRepairLoop.cpp(793): warning C4100: 'keep_last_n': unreferenced parameter
+[24/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[25/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(155): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(155): warning C4100: 'hPrevInstance': unreferenced parameter
+[26/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(489): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(710): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[27/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32TerminalManager.cpp.obj
+[28/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+[29/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1155): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1156): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1284): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1278): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1272): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1457): warning C4100: 'wParam': unreferenced parameter
+[30/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[31/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(381): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1183): warning C4100: 'wholeWord': unreferenced parameter
+[32/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ComputerUse.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_ComputerUse.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DENABLE_VULKAN=1 -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_GGML=1 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_HAS_AGENT_SESSION=1 -DRAWRXD_HAS_COMPUTER_USE=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_debug_rel\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IF:\rawrxd\src\production -IF:\rawrxd\src\computer_use -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ComputerUse.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\Win32IDE_ComputerUse.cpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(27): error C3083: 'tools': the symbol to the left of a '::' must be a type
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(27): error C2039: 'Registry': is not a member of 'rawrxd'
+F:\rawrxd\src\computer_use\AgentAdapter.h(4): note: see declaration of 'rawrxd'
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(289): error C2664: 'void rawrxd_register_computer_use_tools(Registry &)': cannot convert argument 1 from 'rawrxd::tools::Registry' to 'Registry &'
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(27): note: see declaration of 'rawrxd_register_computer_use_tools'
+F:\rawrxd\src\computer_use\../agentic/tool_core.hpp(289): note: while trying to match the argument list '(rawrxd::tools::Registry)'
+[33/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[34/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_AgentCommands.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DENABLE_VULKAN=1 -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_GGML=1 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_HAS_AGENT_SESSION=1 -DRAWRXD_HAS_COMPUTER_USE=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_debug_rel\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IF:\rawrxd\src\production -IF:\rawrxd\src\computer_use -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\agentic\tool_core.hpp(27): error C3083: 'tools': the symbol to the left of a '::' must be a type
+F:\rawrxd\src\agentic\tool_core.hpp(27): error C2039: 'Registry': is not a member of 'rawrxd'
+F:\rawrxd\src\deep2\ExecutionTraceEmit.hpp(24): note: see declaration of 'rawrxd'
+F:\rawrxd\src\agentic\tool_core.hpp(102): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\agentic\tool_core.hpp(289): error C2664: 'void rawrxd_register_computer_use_tools(Registry &)': cannot convert argument 1 from 'rawrxd::tools::Registry' to 'Registry &'
+F:\rawrxd\src\agentic\tool_core.hpp(27): note: see declaration of 'rawrxd_register_computer_use_tools'
+F:\rawrxd\src\agentic\tool_core.hpp(289): note: while trying to match the argument list '(rawrxd::tools::Registry)'
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1411): warning C4456: declaration of 'forceLocalAgentic' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1218): note: see declaration of 'forceLocalAgentic'
+[35/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(91): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(81): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(101): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(111): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(121): warning C4189: 'btnStop': local variable is initialized but not referenced
+[36/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32NativeDebugBackend.cpp.obj
+[37/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(355): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(358): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1222): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1168): note: see declaration of 'restored'
+[38/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(35): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(289): warning C4100: 'timeoutMs': unreferenced parameter
+[39/65] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1644): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3402): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4889): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5096): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(5043): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5952): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5961): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5981): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5994): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(7295): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(7298): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+ninja: build stopped: subcommand failed.
+BUILD_EXIT=0  

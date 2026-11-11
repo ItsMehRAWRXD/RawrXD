@@ -1,0 +1,10 @@
+
+RawrXD Local Agent
+Model:   llama3.2:3b
+Backend: ollama
+Mode:    code
+Root:    F:\rawrxd
+
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[error] tool denied: runInTerminal
+[StreamEngine] Shutdown

@@ -1,0 +1,30 @@
+[!] The engine for AMD cards is used, now and next time. `strata launch --backend auto` goes back to the PC's own choice.
+Main: GPU 1 (--gpu 0) AI PRO R9700. Off: GPU 2 (--gpu 1) RX 7800 XT, GPU 3 (--gpu 2) Radeon(TM) Graphics.
+    Checking the engine for this computer…
+    Engine 0.1.59 (hip) is installed.
+    qwen36 UD-Q4_K_XL is already installed with these choices.
+    Writing this launch's settings…
+    Settings are saved.
+    Starting the engine and loading the model. The first start can take a few minutes.
+    Loading the model… 15 s
+    Loading the model… 30 s
+    Loading the model… 45 s
+    Loading the model… 60 s
+    Loading the model… 90 s
+    Loading the model… 105 s
+    Loading the model… 120 s
+    Loading the model… 135 s
+    Loading the model… 150 s
+    Loading the model… 165 s
+    Loading the model… 180 s
+    The model is loaded and answering.
+    Ready: http://127.0.0.1:8080
+    Strata is serving.
+
+Strata is serving.
+  This computer  http://127.0.0.1:8080/v1
+  Anthropic apps http://127.0.0.1:8080   (Claude Code: ANTHROPIC_BASE_URL, no /v1 at the end)
+  Engine log     C:\Users\Garrett\AppData\Local\Strata\launch\ud-q4_k_xl-32k.engine.log   (follow it: strata logs --follow)
+  Watch it:    strata monitor --url http://127.0.0.1:8080
+  Connect an app:  strata connect opencode      Stop:  strata launch --stop
+  To keep these settings for next time, add --save-preset NAME.

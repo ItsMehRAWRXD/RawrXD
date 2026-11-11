@@ -1,0 +1,1488 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ModelFit] KV budget caps context: requested=262144 fit=244682 (kv_bytes_per_token=7686)
+[MLA_ALLOC] hidden=7168 heads=64 headDim=576 qLora=1536 kv_a=576 k_scratch=40960 v_b=8192
+[deep2-engine] rawrxd_deep2_engine starting
+[deep2-engine] loading model: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=1 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=18432 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=512 qkRope=64 vHeadDim=128 headDim=576
+[Deep2Engine] MLA multi-shard production stream available; certification deferred to live MlaAttentionComplete
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=163840 bos=163584 eos=163586 (Spm::encode)
+[Deep2Engine] Layer topology: 0 attention, 0 SSM, 61 unknown of 61 total
+[Deep2Engine] KV cache sized for 0 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[Deep2Engine] ResidencyManager: this=0000026E372E71C0  registered=0 tensors  bytes=0  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6BD050370 dequant=00007FF6BD052FC0 GetGEMV(12)=00007FF6BD050370 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=244682 heads=1 dim=576
+[KVCache] HOT_BYTES=2248704 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 61 layers x 244682 positions x 1 heads x 576 dim = 65591.02 MB
+[Deep2Engine] Model loaded successfully (1096 tensors)
+[Deep2Engine] MoE model: 384 experts, top-8, 1 shared
+[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache
+[Deep2Engine] Created 61 per-layer routers (multi-shard)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+DEEP2_DEVICE_COUNT_DETECTED=4
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000018DFE
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000018DFE
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+T
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:000000000001BE9D
+DEEP2_DEVICE_1_VRAM_BYTES=16962809856
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_DEVICE_2_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:13C0:000000000001ECB5
+DEEP2_DEVICE_2_VRAM_BYTES=2119970816
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_3_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_3_VENDOR=AMD
+DEEP2_DEVICE_3_STABLE_ID=1002:164E:0000000000000000
+DEEP2_DEVICE_3_VRAM_BYTES=0
+DEEP2_DEVICE_3_SCORE=0
+DEEP2_DEVICE_3_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_3_PROBLEM_CODE=0
+DEEP2_DEVICE_3_HEALTHY=1
+DEEP2_DEVICE_3_RESET_ATTEMPTED=0
+DEEP2_DEVICE_3_RESET_OK=0
+DEEP2_DEVICE_3_RESET_SKIPPED=0
+DEEP2_DEVICE_3_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_3_ACCESS_DENIED=0
+DEEP2_DEVICE_3_INSTANCE_ID=PCI\VEN_1002&DEV_164E&SUBSYS_364E1849&REV_CB\4&16012499&0&0041
+DEEP2_COST_T_BEST=0.000000
+DEEP2_COST_CUT=31
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-30
+DEEP2_COST_SLOT1_LAYERS=31-60
+DEEP2_COST_VRAM_GATE=0
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-30 kind=GPU
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=31-60 kind=GPU
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=1 devices=2
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=61
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:0000000000018DFE
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-30
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=4294967295
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:747E:000000000001BE9D
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=31-60
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=4294967295
+DEEP2_LAYER_0_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:7551:HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+0000000000018DFE
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_25_EXECUTED=0
+DEEP2_LAYER_26_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_26_EXECUTED=0
+DEEP2_LAYER_27_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_27_EXECUTED=0
+DEEP2_LAYER_28_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_28_EXECUTED=0
+DEEP2_LAYER_29_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_29_EXECUTED=0
+DEEP2_LAYER_30_DEVICE=1002:7551:0000000000018DFE
+DEEP2_LAYER_30_EXECUTED=0
+DEEP2_LAYER_31_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_31_EXECUTED=0
+DEEP2_LAYER_32_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_32_EXECUTED=0
+DEEP2_LAYER_33_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_33_EXECUTED=0
+DEEP2_LAYER_34_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_34_EXECUTED=0
+DEEP2_LAYER_35_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_35_EXECUTED=0
+DEEP2_LAYER_36_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_36_EXECUTED=0
+DEEP2_LAYER_37_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_37_EXECUTED=0
+DEEP2_LAYER_38_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_38_EXECUTED=0
+DEEP2_LAYER_39_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_39_EXECUTED=0
+DEEP2_LAYER_40_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_40_EXECUTED=0
+DEEP2_LAYER_41_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_41_EXECUTED=0
+DEEP2_LAYER_42_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_42_EXECUTED=0
+DEEP2_LAYER_43_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_43_EXECUTED=0
+DEEP2_LAYER_44_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_44_EXECUTED=0
+DEEP2_LAYER_45_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_45_EXECUTED=0
+DEEP2_LAYER_46_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_46_EXECUTED=0
+DEEP2_LAYER_47_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_47_EXECUTED=0
+DEEP2_LAYER_48_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_48_EXECUTED=0
+DEEP2_LAYER_49_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_49_EXECUTED=0
+DEEP2_LAYER_50_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_50_EXECUTED=0
+DEEP2_LAYER_51_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_51_EXECUTED=0
+DEEP2_LAYER_52_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_52_EXECUTED=0
+DEEP2_LAYER_53_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_53_EXECUTED=0
+DEEP2_LAYER_54_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_54_EXECUTED=0
+DEEP2_LAYER_55_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_55_EXECUTED=0
+DEEP2_LAYER_56_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_56_EXECUTED=0
+DEEP2_LAYER_57_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_57_EXECUTED=0
+DEEP2_LAYER_58_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_58_EXECUTED=0
+DEEP2_LAYER_59_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_59_EXECUTED=0
+DEEP2_LAYER_60_DEVICE=1002:747E:000000000001BE9D
+DEEP2_LAYER_60_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=0
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[deep2-engine] model loaded
+[deep2-engine] prompt: Hello
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+[K2_DBG] entry depth=61 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=61
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/1
+STREAM_HEARTBEAT STEP=0/1 TEARDOWN_WITNESS=0
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=1
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=2
+LIVE_K2_MOE_BACKEND layer=1 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=1 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=1 stage=after_shape
+LIVE_K2_MOE_STAGE layer=1 stage=after_assign
+LIVE_K2_MOE_STAGE layer=1 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=1 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=0 nEx=4 pin_clock=12 pin_bytes=114229248 buf=00000340507606F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b613beca179f7d08 post_hash=a837b59395eb2658 CLASS=D2H_OK ex=[8,62,64,127]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=1 nEx=4 pin_clock=12 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b613beca179f7d08 post_hash=cd47bd7bf4989927 CLASS=D2H_OK ex=[0,167,324,327]
+LIVE_K2_MOE_STAGE layer=1 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=1 env=0000026E0DB4692E
+[L1_DIAG] layer=1 native_vs_cpu maxDiff=2.253251150e-04 at idx=2353 nonFinite=0
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=3
+LIVE_K2_MOE_BACKEND layer=2 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=2 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=2 stage=after_shape
+LIVE_K2_MOE_STAGE layer=2 stage=after_assign
+LIVE_K2_MOE_STAGE layer=2 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=2 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=0 nEx=4 pin_clock=24 pin_bytes=114229248 buf=000003405D5CA770 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a990ef5ceadbbd99 post_hash=a753d8f9312308f8 CLASS=D2H_OK ex=[19,26,197,357]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=1 nEx=4 pin_clock=24 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a990ef5ceadbbd99 post_hash=a8b41753fb12093a CLASS=D2H_OK ex=[73,81,85,140]
+LIVE_K2_MOE_STAGE layer=2 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=2 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=4
+LIVE_K2_MOE_BACKEND layer=3 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=3 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=3 stage=after_shape
+LIVE_K2_MOE_STAGE layer=3 stage=after_assign
+LIVE_K2_MOE_STAGE layer=3 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=3 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=0 nEx=4 pin_clock=36 pin_bytes=114229248 buf=00000340507618F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=09ff92ebc4e96aa5 post_hash=0ea4cda888711fb5 CLASS=D2H_OK ex=[119,209,268,283]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=1 nEx=4 pin_clock=36 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=09ff92ebc4e96aa5 post_hash=182a80f7585fab45 CLASS=D2H_OK ex=[7,164,260,315]
+LIVE_K2_MOE_STAGE layer=3 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=3 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=5
+LIVE_K2_MOE_BACKEND layer=4 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=4 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=4 stage=after_shape
+LIVE_K2_MOE_STAGE layer=4 stage=after_assign
+LIVE_K2_MOE_STAGE layer=4 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=4 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=0 nEx=4 pin_clock=48 pin_bytes=114229248 buf=000003405D5FE780 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8a53518405e16f05 post_hash=0ff817f92dea46c6 CLASS=D2H_OK ex=[10,45,162,357]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=1 nEx=4 pin_clock=48 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8a53518405e16f05 post_hash=da983c45c6b59acb CLASS=D2H_OK ex=[3,5,185,363]
+LIVE_K2_MOE_STAGE layer=4 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=4 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=6
+LIVE_K2_MOE_BACKEND layer=5 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=5 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=5 stage=after_shape
+LIVE_K2_MOE_STAGE layer=5 stage=after_assign
+LIVE_K2_MOE_STAGE layer=5 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=5 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=0 nEx=4 pin_clock=60 pin_bytes=114229248 buf=000003405D5FF400 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=74304d32a3b8c844 post_hash=36a45941aa681000 CLASS=D2H_OK ex=[39,91,164,362]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=1 nEx=4 pin_clock=60 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=74304d32a3b8c844 post_hash=5db5c72f577864c7 CLASS=D2H_OK ex=[125,224,351,369]
+LIVE_K2_MOE_STAGE layer=5 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=5 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=7
+LIVE_K2_MOE_BACKEND layer=6 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=6 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=6 stage=after_shape
+LIVE_K2_MOE_STAGE layer=6 stage=after_assign
+LIVE_K2_MOE_STAGE layer=6 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=6 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=1 nEx=4 pin_clock=72 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=cfc9612a80a04c8c post_hash=b27305ccd926d690 CLASS=D2H_OK ex=[118,131,259,275]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=0 nEx=4 pin_clock=72 pin_bytes=114229248 buf=000003405D601900 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=cfc9612a80a04c8c post_hash=ed854f075c3ca73f CLASS=D2H_OK ex=[85,170,172,313]
+LIVE_K2_MOE_STAGE layer=6 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=6 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=8
+LIVE_K2_MOE_BACKEND layer=7 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=7 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=7 stage=after_shape
+LIVE_K2_MOE_STAGE layer=7 stage=after_assign
+LIVE_K2_MOE_STAGE layer=7 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=7 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=1 nEx=4 pin_clock=84 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5af785b276e3c432 post_hash=2254c756102dee82 CLASS=D2H_OK ex=[197,300,341,353]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=0 nEx=4 pin_clock=84 pin_bytes=99090432 buf=000003405D600880 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5af785b276e3c432 post_hash=c9f2fd0ffe6107ee CLASS=D2H_OK ex=[15,84,104,121]
+LIVE_K2_MOE_STAGE layer=7 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=7 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=9
+LIVE_K2_MOE_BACKEND layer=8 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=8 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=8 stage=after_shape
+LIVE_K2_MOE_STAGE layer=8 stage=after_assign
+LIVE_K2_MOE_STAGE layer=8 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=8 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=1 nEx=4 pin_clock=96 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2a80af2e6984092d post_hash=5693ae8fd72bae8d CLASS=D2H_OK ex=[34,156,248,360]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=0 nEx=4 pin_clock=96 pin_bytes=99090432 buf=000003405D600880 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2a80af2e6984092d post_hash=a955edc894dfa393 CLASS=D2H_OK ex=[174,192,209,366]
+LIVE_K2_MOE_STAGE layer=8 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=8 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=10
+LIVE_K2_MOE_BACKEND layer=9 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=9 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=9 stage=after_shape
+LIVE_K2_MOE_STAGE layer=9 stage=after_assign
+LIVE_K2_MOE_STAGE layer=9 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=9 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=0 nEx=4 pin_clock=108 pin_bytes=114229248 buf=000003405D63EBA0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c606ce9a7036917f post_hash=ff6d538ff3aa9018 CLASS=D2H_OK ex=[36,97,245,365]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=1 nEx=4 pin_clock=108 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c606ce9a7036917f post_hash=e61992bacb4d9ffc CLASS=D2H_OK ex=[87,173,194,236]
+LIVE_K2_MOE_STAGE layer=9 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=9 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=11
+LIVE_K2_MOE_BACKEND layer=10 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=10 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=10 stage=after_shape
+LIVE_K2_MOE_STAGE layer=10 stage=after_assign
+LIVE_K2_MOE_STAGE layer=10 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=10 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=1 nEx=4 pin_clock=120 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=acac6ce956b2270e post_hash=f2b34b66d8d239bc CLASS=D2H_OK ex=[49,127,234,377]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=0 nEx=4 pin_clock=120 pin_bytes=99090432 buf=000003405D642220 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=acac6ce956b2270e post_hash=d7f7e9d7d895f029 CLASS=D2H_OK ex=[21,214,215,330]
+LIVE_K2_MOE_STAGE layer=10 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=10 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=12
+LIVE_K2_MOE_BACKEND layer=11 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=11 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=11 stage=after_shape
+LIVE_K2_MOE_STAGE layer=11 stage=after_assign
+LIVE_K2_MOE_STAGE layer=11 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=11 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=0 nEx=4 pin_clock=132 pin_bytes=99090432 buf=000003405D6420A0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=60cf693edf6c1d6c post_hash=a721ca8412749aa4 CLASS=D2H_OK ex=[86,158,216,288]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=1 nEx=4 pin_clock=132 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=60cf693edf6c1d6c post_hash=2913cd378df06bfa CLASS=D2H_OK ex=[51,70,291,305]
+LIVE_K2_MOE_STAGE layer=11 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=11 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=13
+LIVE_K2_MOE_BACKEND layer=12 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=12 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=12 stage=after_shape
+LIVE_K2_MOE_STAGE layer=12 stage=after_assign
+LIVE_K2_MOE_STAGE layer=12 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=12 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=0 nEx=4 pin_clock=144 pin_bytes=114229248 buf=000003405D641F20 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=eb46733044351375 post_hash=1320081887e42a01 CLASS=D2H_OK ex=[65,113,127,224]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=1 nEx=4 pin_clock=144 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=eb46733044351375 post_hash=725cecb7c386c9cd CLASS=D2H_OK ex=[105,164,258,304]
+LIVE_K2_MOE_STAGE layer=12 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=12 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=14
+LIVE_K2_MOE_BACKEND layer=13 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=13 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=13 stage=after_shape
+LIVE_K2_MOE_STAGE layer=13 stage=after_assign
+LIVE_K2_MOE_STAGE layer=13 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=13 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=13 stick=0 nEx=4 pin_clock=156 pin_bytes=99090432 buf=000003405D734AD0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ec579059a6677613 post_hash=574ea76e36756c84 CLASS=D2H_OK ex=[215,263,334,352]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=13 stick=1 nEx=4 pin_clock=156 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ec579059a6677613 post_hash=5de8debabf5535a9 CLASS=D2H_OK ex=[40,50,172,267]
+LIVE_K2_MOE_STAGE layer=13 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=13 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=15
+LIVE_K2_MOE_BACKEND layer=14 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=14 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=14 stage=after_shape
+LIVE_K2_MOE_STAGE layer=14 stage=after_assign
+LIVE_K2_MOE_STAGE layer=14 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=14 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=14 stick=0 nEx=4 pin_clock=168 pin_bytes=99090432 buf=000003405D734AD0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=69d3156b13f4190a post_hash=d358e38ad546a815 CLASS=D2H_OK ex=[51,176,269,280]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=14 stick=1 nEx=4 pin_clock=168 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=69d3156b13f4190a post_hash=bbb8130c3edfbe9e CLASS=D2H_OK ex=[125,129,242,307]
+LIVE_K2_MOE_STAGE layer=14 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=14 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=16
+LIVE_K2_MOE_BACKEND layer=15 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=15 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=15 stage=after_shape
+LIVE_K2_MOE_STAGE layer=15 stage=after_assign
+LIVE_K2_MOE_STAGE layer=15 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=15 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=15 stick=1 nEx=4 pin_clock=180 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4dd03d013e42cbc9 post_hash=bd61ad15ae5f159c CLASS=D2H_OK ex=[19,51,58,375]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=15 stick=0 nEx=4 pin_clock=180 pin_bytes=114229248 buf=000003405D732750 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4dd03d013e42cbc9 post_hash=850074c6c61d9678 CLASS=D2H_OK ex=[10,194,234,378]
+LIVE_K2_MOE_STAGE layer=15 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=15 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=17
+LIVE_K2_MOE_BACKEND layer=16 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=16 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=16 stage=after_shape
+LIVE_K2_MOE_STAGE layer=16 stage=after_assign
+LIVE_K2_MOE_STAGE layer=16 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=16 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=16 stick=1 nEx=4 pin_clock=192 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c3770d6f8019284d post_hash=b54b97b6f14517a3 CLASS=D2H_OK ex=[17,55,67,362]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=16 stick=0 nEx=4 pin_clock=192 pin_bytes=99090432 buf=000003405D733550 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c3770d6f8019284d post_hash=690dd2d7a195dfa7 CLASS=D2H_OK ex=[64,100,129,312]
+LIVE_K2_MOE_STAGE layer=16 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=16 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=18
+LIVE_K2_MOE_BACKEND layer=17 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=17 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=17 stage=after_shape
+LIVE_K2_MOE_STAGE layer=17 stage=after_assign
+LIVE_K2_MOE_STAGE layer=17 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=17 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=17 stick=1 nEx=4 pin_clock=204 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=d3d1e0695b09ff58 post_hash=003f5692929ad73b CLASS=D2H_OK ex=[68,91,125,163]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=17 stick=0 nEx=4 pin_clock=204 pin_bytes=99090432 buf=000003405D7340D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=d3d1e0695b09ff58 post_hash=f77909bf9ef11113 CLASS=D2H_OK ex=[117,122,278,373]
+LIVE_K2_MOE_STAGE layer=17 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=17 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=19
+LIVE_K2_MOE_BACKEND layer=18 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=18 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=18 stage=after_shape
+LIVE_K2_MOE_STAGE layer=18 stage=after_assign
+LIVE_K2_MOE_STAGE layer=18 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=18 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=18 stick=1 nEx=4 pin_clock=216 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=08352834f8b4679c post_hash=bed4ee2e04bac580 CLASS=D2H_OK ex=[20,22,105,293]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=18 stick=0 nEx=4 pin_clock=216 pin_bytes=114229248 buf=000003405D71F360 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=08352834f8b4679c post_hash=ce03d80d3a14ac97 CLASS=D2H_OK ex=[123,288,294,373]
+LIVE_K2_MOE_STAGE layer=18 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=18 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=20
+LIVE_K2_MOE_BACKEND layer=19 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=19 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=19 stage=after_shape
+LIVE_K2_MOE_STAGE layer=19 stage=after_assign
+LIVE_K2_MOE_STAGE layer=19 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=19 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=19 stick=1 nEx=4 pin_clock=228 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b6c27dfb42a62170 post_hash=b4de367f809b1bcb CLASS=D2H_OK ex=[97,117,281,343]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=19 stick=0 nEx=4 pin_clock=228 pin_bytes=99090432 buf=000003405D71EEE0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b6c27dfb42a62170 post_hash=1f7b7d86b9cfc7a2 CLASS=D2H_OK ex=[13,65,286,312]
+LIVE_K2_MOE_STAGE layer=19 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=19 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=21
+LIVE_K2_MOE_BACKEND layer=20 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=20 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=20 stage=after_shape
+LIVE_K2_MOE_STAGE layer=20 stage=after_assign
+LIVE_K2_MOE_STAGE layer=20 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=20 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=20 stick=1 nEx=4 pin_clock=240 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0e8e179bacb9cbc7 post_hash=afd1cb25d95c3e8f CLASS=D2H_OK ex=[16,67,73,282]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=20 stick=0 nEx=4 pin_clock=240 pin_bytes=99090432 buf=000003405D71BCE0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0e8e179bacb9cbc7 post_hash=ab39167a7277c06e CLASS=D2H_OK ex=[2,84,122,381]
+LIVE_K2_MOE_STAGE layer=20 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=20 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=22
+LIVE_K2_MOE_BACKEND layer=21 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=21 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=21 stage=after_shape
+LIVE_K2_MOE_STAGE layer=21 stage=after_assign
+LIVE_K2_MOE_STAGE layer=21 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=21 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=21 stick=0 nEx=4 pin_clock=252 pin_bytes=114229248 buf=000003405D71BCE0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=06447e4fdbd08782 post_hash=7a934cb22b2162be CLASS=D2H_OK ex=[59,197,317,342]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=21 stick=1 nEx=4 pin_clock=252 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=06447e4fdbd08782 post_hash=230ce3580f5d88e2 CLASS=D2H_OK ex=[0,259,280,325]
+LIVE_K2_MOE_STAGE layer=21 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=21 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=23
+LIVE_K2_MOE_BACKEND layer=22 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=22 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=22 stage=after_shape
+LIVE_K2_MOE_STAGE layer=22 stage=after_assign
+LIVE_K2_MOE_STAGE layer=22 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=22 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=22 stick=0 nEx=4 pin_clock=264 pin_bytes=99090432 buf=000003405D71CF60 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=eb6471a03172fbdf post_hash=691cfded50061e0b CLASS=D2H_OK ex=[95,195,211,371]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=22 stick=1 nEx=4 pin_clock=264 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=eb6471a03172fbdf post_hash=6b3b1b79d3a0e47a CLASS=D2H_OK ex=[33,39,243,259]
+LIVE_K2_MOE_STAGE layer=22 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=22 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=24
+LIVE_K2_MOE_BACKEND layer=23 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=23 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=23 stage=after_shape
+LIVE_K2_MOE_STAGE layer=23 stage=after_assign
+LIVE_K2_MOE_STAGE layer=23 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=23 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=23 stick=0 nEx=4 pin_clock=276 pin_bytes=99090432 buf=000003405D8321B0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=919a43953ac53b6a post_hash=f1216e3c6bf3406e CLASS=D2H_OK ex=[32,40,259,382]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=23 stick=1 nEx=4 pin_clock=276 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=919a43953ac53b6a post_hash=f74b91db1edb2664 CLASS=D2H_OK ex=[37,125,249,280]
+LIVE_K2_MOE_STAGE layer=23 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=23 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=25
+LIVE_K2_MOE_BACKEND layer=24 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=24 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=24 stage=after_shape
+LIVE_K2_MOE_STAGE layer=24 stage=after_assign
+LIVE_K2_MOE_STAGE layer=24 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=24 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=24 stick=1 nEx=4 pin_clock=288 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=33cc1df7d49adced post_hash=c08b2cbf9a4fbaad CLASS=D2H_OK ex=[235,293,314,325]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=24 stick=0 nEx=4 pin_clock=288 pin_bytes=114229248 buf=000003405D833DB0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=33cc1df7d49adced post_hash=db0f7e11197951a2 CLASS=D2H_OK ex=[18,124,323,349]
+LIVE_K2_MOE_STAGE layer=24 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=24 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=26
+LIVE_K2_MOE_BACKEND layer=25 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=25 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=25 stage=after_shape
+LIVE_K2_MOE_STAGE layer=25 stage=after_assign
+LIVE_K2_MOE_STAGE layer=25 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=25 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=25 stick=1 nEx=4 pin_clock=300 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5e20eb8b42ea7d50 post_hash=8ee05ce25057cc83 CLASS=D2H_OK ex=[202,272,273,349]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=25 stick=0 nEx=4 pin_clock=300 pin_bytes=99090432 buf=000003405D834C30 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5e20eb8b42ea7d50 post_hash=d923ed1d62a48181 CLASS=D2H_OK ex=[225,311,341,381]
+LIVE_K2_MOE_STAGE layer=25 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=25 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=27
+LIVE_K2_MOE_BACKEND layer=26 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=26 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=26 stage=after_shape
+LIVE_K2_MOE_STAGE layer=26 stage=after_assign
+LIVE_K2_MOE_STAGE layer=26 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=26 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=26 stick=1 nEx=4 pin_clock=312 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ecf307d42325062b post_hash=66ff596d2703f1e5 CLASS=D2H_OK ex=[37,124,223,323]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=26 stick=0 nEx=4 pin_clock=312 pin_bytes=99090432 buf=000003405D82F630 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ecf307d42325062b post_hash=03daf3b68340779a CLASS=D2H_OK ex=[135,145,224,326]
+LIVE_K2_MOE_STAGE layer=26 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=26 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=28
+LIVE_K2_MOE_BACKEND layer=27 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=27 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=27 stage=after_shape
+LIVE_K2_MOE_STAGE layer=27 stage=after_assign
+LIVE_K2_MOE_STAGE layer=27 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=27 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=27 stick=1 nEx=4 pin_clock=324 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8094bac17799b890 post_hash=f51b4bd896ced148 CLASS=D2H_OK ex=[59,155,216,304]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=27 stick=0 nEx=4 pin_clock=324 pin_bytes=114229248 buf=000003405D82EFB0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8094bac17799b890 post_hash=a78768e8b37ba929 CLASS=D2H_OK ex=[74,112,187,260]
+LIVE_K2_MOE_STAGE layer=27 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=27 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=29
+LIVE_K2_MOE_BACKEND layer=28 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=28 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=28 stage=after_shape
+LIVE_K2_MOE_STAGE layer=28 stage=after_assign
+LIVE_K2_MOE_STAGE layer=28 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=28 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=28 stick=1 nEx=4 pin_clock=336 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=545609d98cf9595e post_hash=e37a4bb72a32e657 CLASS=D2H_OK ex=[172,219,299,348]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=28 stick=0 nEx=4 pin_clock=336 pin_bytes=99090432 buf=000003405D830530 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=545609d98cf9595e post_hash=d3abddf0b512888e CLASS=D2H_OK ex=[73,247,338,361]
+LIVE_K2_MOE_STAGE layer=28 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=28 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=30
+LIVE_K2_MOE_BACKEND layer=29 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=29 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=29 stage=after_shape
+LIVE_K2_MOE_STAGE layer=29 stage=after_assign
+LIVE_K2_MOE_STAGE layer=29 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=29 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=29 stick=1 nEx=4 pin_clock=348 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0c2757d6ba02a931 post_hash=d6bbfece0b708285 CLASS=D2H_OK ex=[12,38,44,285]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=29 stick=0 nEx=4 pin_clock=348 pin_bytes=99090432 buf=000003405D832030 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0c2757d6ba02a931 post_hash=c0ea26237f24db52 CLASS=D2H_OK ex=[211,299,325,337]
+LIVE_K2_MOE_STAGE layer=29 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=29 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=31
+LIVE_K2_MOE_BACKEND layer=30 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=30 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=30 stage=after_shape
+LIVE_K2_MOE_STAGE layer=30 stage=after_assign
+LIVE_K2_MOE_STAGE layer=30 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=30 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=30 stick=1 nEx=4 pin_clock=360 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=40cd6b8f40bb9f78 post_hash=c47e9ce81be9dcbd CLASS=D2H_OK ex=[41,108,351,357]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=30 stick=0 nEx=4 pin_clock=360 pin_bytes=114229248 buf=000003405D8300B0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=40cd6b8f40bb9f78 post_hash=39f9a216af031b50 CLASS=D2H_OK ex=[10,114,145,329]
+LIVE_K2_MOE_STAGE layer=30 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=30 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=32
+LIVE_K2_MOE_BACKEND layer=31 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=31 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=31 stage=after_shape
+LIVE_K2_MOE_STAGE layer=31 stage=after_assign
+LIVE_K2_MOE_STAGE layer=31 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=31 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=31 stick=1 nEx=4 pin_clock=372 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=81feb17c8e7803d3 post_hash=6a1e69b1d6fdd98a CLASS=D2H_OK ex=[28,38,80,251]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=31 stick=0 nEx=4 pin_clock=372 pin_bytes=99090432 buf=000003405D5FEE00 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=81feb17c8e7803d3 post_hash=c5a4edf25c689f29 CLASS=D2H_OK ex=[141,145,250,272]
+LIVE_K2_MOE_STAGE layer=31 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=31 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=33
+LIVE_K2_MOE_BACKEND layer=32 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=32 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=32 stage=after_shape
+LIVE_K2_MOE_STAGE layer=32 stage=after_assign
+LIVE_K2_MOE_STAGE layer=32 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=32 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=32 stick=1 nEx=4 pin_clock=384 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2d4e553bfa986ebe post_hash=8c94920f7875b496 CLASS=D2H_OK ex=[22,56,208,286]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=32 stick=0 nEx=4 pin_clock=384 pin_bytes=99090432 buf=000003405D601380 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2d4e553bfa986ebe post_hash=794dd0e5f70e2753 CLASS=D2H_OK ex=[7,207,225,349]
+LIVE_K2_MOE_STAGE layer=32 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=32 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=34
+LIVE_K2_MOE_BACKEND layer=33 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=33 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=33 stage=after_shape
+LIVE_K2_MOE_STAGE layer=33 stage=after_assign
+LIVE_K2_MOE_STAGE layer=33 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=33 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=33 stick=1 nEx=4 pin_clock=396 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3d5e95db19337c3b post_hash=56e1eaf63109787f CLASS=D2H_OK ex=[173,263,276,304]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=33 stick=0 nEx=4 pin_clock=396 pin_bytes=114229248 buf=000003405D5C9470 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3d5e95db19337c3b post_hash=439563342c07ec14 CLASS=D2H_OK ex=[35,134,169,299]
+LIVE_K2_MOE_STAGE layer=33 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=33 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=35
+LIVE_K2_MOE_BACKEND layer=34 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=34 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=34 stage=after_shape
+LIVE_K2_MOE_STAGE layer=34 stage=after_assign
+LIVE_K2_MOE_STAGE layer=34 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=34 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=34 stick=1 nEx=4 pin_clock=408 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=861df9ed91ab1907 post_hash=7d1b54e75e31f0fc CLASS=D2H_OK ex=[86,125,184,357]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=34 stick=0 nEx=4 pin_clock=408 pin_bytes=99090432 buf=000003405D63EF20 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=861df9ed91ab1907 post_hash=be1db6ab8c85d4c6 CLASS=D2H_OK ex=[28,76,286,303]
+LIVE_K2_MOE_STAGE layer=34 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=34 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=36
+LIVE_K2_MOE_BACKEND layer=35 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=35 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=35 stage=after_shape
+LIVE_K2_MOE_STAGE layer=35 stage=after_assign
+LIVE_K2_MOE_STAGE layer=35 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=35 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=35 stick=0 nEx=4 pin_clock=420 pin_bytes=99090432 buf=0000034050761A70 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ac031c577063c25e post_hash=53953a15e035bb6d CLASS=D2H_OK ex=[35,145,236,369]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=35 stick=1 nEx=4 pin_clock=420 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ac031c577063c25e post_hash=2f7e59477b78b4f8 CLASS=D2H_OK ex=[159,169,184,201]
+LIVE_K2_MOE_STAGE layer=35 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=35 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=37
+LIVE_K2_MOE_BACKEND layer=36 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=36 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=36 stage=after_shape
+LIVE_K2_MOE_STAGE layer=36 stage=after_assign
+LIVE_K2_MOE_STAGE layer=36 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=36 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=36 stick=1 nEx=4 pin_clock=432 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=bff36d2d27a0f526 post_hash=c92af51254569a92 CLASS=D2H_OK ex=[40,99,296,323]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=36 stick=0 nEx=4 pin_clock=432 pin_bytes=114229248 buf=000003405D600180 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=bff36d2d27a0f526 post_hash=c101ad1fa36e3cfb CLASS=D2H_OK ex=[73,217,308,328]
+LIVE_K2_MOE_STAGE layer=36 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=36 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=38
+LIVE_K2_MOE_BACKEND layer=37 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=37 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=37 stage=after_shape
+LIVE_K2_MOE_STAGE layer=37 stage=after_assign
+LIVE_K2_MOE_STAGE layer=37 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=37 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=37 stick=1 nEx=4 pin_clock=444 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ab8200d98300cead post_hash=95d027df93a53d6a CLASS=D2H_OK ex=[15,179,323,347]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=37 stick=0 nEx=4 pin_clock=444 pin_bytes=99090432 buf=000003405D600980 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ab8200d98300cead post_hash=c36799478f976008 CLASS=D2H_OK ex=[46,217,284,334]
+LIVE_K2_MOE_STAGE layer=37 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=37 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=39
+LIVE_K2_MOE_BACKEND layer=38 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=38 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=38 stage=after_shape
+LIVE_K2_MOE_STAGE layer=38 stage=after_assign
+LIVE_K2_MOE_STAGE layer=38 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=38 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=38 stick=1 nEx=4 pin_clock=456 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3e252aa58638a7ed post_hash=331ee70a9bab4927 CLASS=D2H_OK ex=[199,283,322,376]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=38 stick=0 nEx=4 pin_clock=456 pin_bytes=99090432 buf=000003405D601600 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3e252aa58638a7ed post_hash=8a1d3b5600e72487 CLASS=D2H_OK ex=[6,163,232,313]
+LIVE_K2_MOE_STAGE layer=38 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=38 env=0000026E0DB4692E
+T0_L39_ENTER
+CUMULATIVE_LAST tok=0 layer=39 stage=ENTER
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=40
+T0_L39_NORM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[124,127,204,35,38,208,126,134]
+LIVE_K2_MOE_BACKEND layer=39 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=39 stage=after_place count=8
+L39_PLACE_DONE hits=0 misses=8
+LIVE_K2_MOE_STAGE layer=39 stage=after_shape
+LIVE_K2_MOE_STAGE layer=39 stage=after_assign
+LIVE_K2_MOE_STAGE layer=39 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=39 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=39 stick=1 nEx=4 pin_clock=468 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=602cbbbb00e43629 post_hash=3abe8c303cdad825 CLASS=D2H_OK ex=[38,124,126,208]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=39 stick=0 nEx=4 pin_clock=468 pin_bytes=114229248 buf=000003405D7353D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=602cbbbb00e43629 post_hash=35a5370c7fa4e20d CLASS=D2H_OK ex=[35,127,134,204]
+LIVE_K2_MOE_STAGE layer=39 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+T0_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=ROUTED_ACCUM_DONE
+T0_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_BEGIN
+T0_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_ACQUIRE
+T0_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_DOWN_DONE
+T0_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_ACCUM_DONE
+[L1_DIAG_PROBE] layer=39 env=0000026E0DB4692E
+T0_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=RESIDUAL_DONE
+T0_L39_EXIT
+CUMULATIVE_LAST tok=0 layer=39 stage=EXIT
+LIVE_K2_MOE_ENTER layer=40 decode=1 ctr=41
+LIVE_K2_MOE_BACKEND layer=40 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=40 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=40 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=40 stage=after_shape
+LIVE_K2_MOE_STAGE layer=40 stage=after_assign
+LIVE_K2_MOE_STAGE layer=40 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=40 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=40 stick=0 nEx=4 pin_clock=480 pin_bytes=99090432 buf=000003405D7328D0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=9ad630d55fa11948 post_hash=e8f40dfa9a887765 CLASS=D2H_OK ex=[82,303,319,368]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=40 stick=1 nEx=4 pin_clock=480 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=9ad630d55fa11948 post_hash=147b84fd212ddd5b CLASS=D2H_OK ex=[16,117,230,270]
+LIVE_K2_MOE_STAGE layer=40 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=40 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=41 decode=1 ctr=42
+LIVE_K2_MOE_BACKEND layer=41 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=41 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=41 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=41 stage=after_shape
+LIVE_K2_MOE_STAGE layer=41 stage=after_assign
+LIVE_K2_MOE_STAGE layer=41 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=41 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=41 stick=0 nEx=4 pin_clock=492 pin_bytes=99090432 buf=000003405D733A50 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a151616a47233e53 post_hash=0ffcb26018795b01 CLASS=D2H_OK ex=[48,76,216,382]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=41 stick=1 nEx=4 pin_clock=492 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a151616a47233e53 post_hash=227f26c519c22a18 CLASS=D2H_OK ex=[29,110,365,368]
+LIVE_K2_MOE_STAGE layer=41 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=41 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=42 decode=1 ctr=43
+LIVE_K2_MOE_BACKEND layer=42 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=42 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=42 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=42 stage=after_shape
+LIVE_K2_MOE_STAGE layer=42 stage=after_assign
+LIVE_K2_MOE_STAGE layer=42 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=42 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=42 stick=1 nEx=4 pin_clock=504 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5d97e9c05fb23378 post_hash=0b0b218efeb76874 CLASS=D2H_OK ex=[30,66,137,147]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=42 stick=0 nEx=4 pin_clock=504 pin_bytes=114229248 buf=000003405D733A50 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5d97e9c05fb23378 post_hash=41f7a79d575da3f9 CLASS=D2H_OK ex=[74,116,306,371]
+LIVE_K2_MOE_STAGE layer=42 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=42 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=43 decode=1 ctr=44
+LIVE_K2_MOE_BACKEND layer=43 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=43 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=43 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=43 stage=after_shape
+LIVE_K2_MOE_STAGE layer=43 stage=after_assign
+LIVE_K2_MOE_STAGE layer=43 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=43 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=43 stick=1 nEx=4 pin_clock=516 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=593d57c8583c4b05 post_hash=2ee88d7881212958 CLASS=D2H_OK ex=[99,114,196,242]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=43 stick=0 nEx=4 pin_clock=516 pin_bytes=99090432 buf=000003405D71E960 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=593d57c8583c4b05 post_hash=defc23cb64b9a087 CLASS=D2H_OK ex=[66,110,184,193]
+LIVE_K2_MOE_STAGE layer=43 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=43 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=44 decode=1 ctr=45
+LIVE_K2_MOE_BACKEND layer=44 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=44 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=44 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=44 stage=after_shape
+LIVE_K2_MOE_STAGE layer=44 stage=after_assign
+LIVE_K2_MOE_STAGE layer=44 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=44 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=44 stick=1 nEx=4 pin_clock=528 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0f1ee3ecef25d4eb post_hash=05b764e47e6cf325 CLASS=D2H_OK ex=[74,109,174,347]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=44 stick=0 nEx=4 pin_clock=528 pin_bytes=99090432 buf=000003405D71E2E0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0f1ee3ecef25d4eb post_hash=b473ac8a458698df CLASS=D2H_OK ex=[105,117,147,155]
+LIVE_K2_MOE_STAGE layer=44 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=44 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=45 decode=1 ctr=46
+LIVE_K2_MOE_BACKEND layer=45 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=45 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=45 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=45 stage=after_shape
+LIVE_K2_MOE_STAGE layer=45 stage=after_assign
+LIVE_K2_MOE_STAGE layer=45 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=45 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=45 stick=1 nEx=4 pin_clock=540 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2facf08c65929e54 post_hash=6a4e4dde73143298 CLASS=D2H_OK ex=[59,106,287,376]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=45 stick=0 nEx=4 pin_clock=540 pin_bytes=114229248 buf=000003405D71E8E0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2facf08c65929e54 post_hash=f2f61b27ba38e471 CLASS=D2H_OK ex=[13,95,100,157]
+LIVE_K2_MOE_STAGE layer=45 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=45 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=46 decode=1 ctr=47
+LIVE_K2_MOE_BACKEND layer=46 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=46 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=46 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=46 stage=after_shape
+LIVE_K2_MOE_STAGE layer=46 stage=after_assign
+LIVE_K2_MOE_STAGE layer=46 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=46 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=46 stick=0 nEx=4 pin_clock=552 pin_bytes=99090432 buf=000003405D71E8E0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=be1bda81d16a082b post_hash=994b85913d1b0bdf CLASS=D2H_OK ex=[42,173,253,322]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=46 stick=1 nEx=4 pin_clock=552 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=be1bda81d16a082b post_hash=02840f8156d2e2c0 CLASS=D2H_OK ex=[52,122,236,279]
+LIVE_K2_MOE_STAGE layer=46 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=46 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=47 decode=1 ctr=48
+LIVE_K2_MOE_BACKEND layer=47 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=47 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=47 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=47 stage=after_shape
+LIVE_K2_MOE_STAGE layer=47 stage=after_assign
+LIVE_K2_MOE_STAGE layer=47 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=47 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=47 stick=0 nEx=4 pin_clock=564 pin_bytes=99090432 buf=000003405D832130 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4234d98b8c73f043 post_hash=e7f39ea83ae7a0ee CLASS=D2H_OK ex=[83,165,231,378]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=47 stick=1 nEx=4 pin_clock=564 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4234d98b8c73f043 post_hash=cd8f0308ffe64f15 CLASS=D2H_OK ex=[23,91,279,336]
+LIVE_K2_MOE_STAGE layer=47 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=47 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=48 decode=1 ctr=49
+LIVE_K2_MOE_BACKEND layer=48 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=48 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=48 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=48 stage=after_shape
+LIVE_K2_MOE_STAGE layer=48 stage=after_assign
+LIVE_K2_MOE_STAGE layer=48 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=48 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=48 stick=0 nEx=4 pin_clock=576 pin_bytes=114229248 buf=000003405D832630 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e3322a45fb8b0035 post_hash=9fc5ffb97eff3b11 CLASS=D2H_OK ex=[59,172,263,272]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=48 stick=1 nEx=4 pin_clock=576 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e3322a45fb8b0035 post_hash=a11342ac608c06cc CLASS=D2H_OK ex=[13,29,99,344]
+LIVE_K2_MOE_STAGE layer=48 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=48 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=49 decode=1 ctr=50
+LIVE_K2_MOE_BACKEND layer=49 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=49 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=49 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=49 stage=after_shape
+LIVE_K2_MOE_STAGE layer=49 stage=after_assign
+LIVE_K2_MOE_STAGE layer=49 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=49 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=49 stick=1 nEx=4 pin_clock=588 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3f4e81c598993942 post_hash=2cb844f5274fcd09 CLASS=D2H_OK ex=[28,338,375,378]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=49 stick=0 nEx=4 pin_clock=588 pin_bytes=99090432 buf=000003405D8330B0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3f4e81c598993942 post_hash=7bbc97d668dac464 CLASS=D2H_OK ex=[29,216,291,337]
+LIVE_K2_MOE_STAGE layer=49 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=49 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=50 decode=1 ctr=51
+LIVE_K2_MOE_BACKEND layer=50 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=50 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=50 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=50 stage=after_shape
+LIVE_K2_MOE_STAGE layer=50 stage=after_assign
+LIVE_K2_MOE_STAGE layer=50 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=50 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=50 stick=1 nEx=4 pin_clock=600 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=d5410eb6eddd274a post_hash=615efe9c6c2dd857 CLASS=D2H_OK ex=[41,73,193,321]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=50 stick=0 nEx=4 pin_clock=600 pin_bytes=99090432 buf=000003405D641420 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=d5410eb6eddd274a post_hash=6c84086ad17648c9 CLASS=D2H_OK ex=[236,341,363,364]
+LIVE_K2_MOE_STAGE layer=50 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=50 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=51 decode=1 ctr=52
+LIVE_K2_MOE_BACKEND layer=51 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=51 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=51 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=51 stage=after_shape
+LIVE_K2_MOE_STAGE layer=51 stage=after_assign
+LIVE_K2_MOE_STAGE layer=51 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=51 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=51 stick=1 nEx=4 pin_clock=612 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c82b9886cd54a087 post_hash=a3e32189e6a9e2d5 CLASS=D2H_OK ex=[182,201,209,364]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=51 stick=0 nEx=4 pin_clock=612 pin_bytes=114229248 buf=000003405D8332B0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c82b9886cd54a087 post_hash=99c87ebc6be2c065 CLASS=D2H_OK ex=[91,99,126,272]
+LIVE_K2_MOE_STAGE layer=51 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=51 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=52 decode=1 ctr=53
+LIVE_K2_MOE_BACKEND layer=52 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=52 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=52 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=52 stage=after_shape
+LIVE_K2_MOE_STAGE layer=52 stage=after_assign
+LIVE_K2_MOE_STAGE layer=52 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=52 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=52 stick=1 nEx=4 pin_clock=624 pin_bytes=99090432 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5dda7b47a941fe11 post_hash=b299fee6d259f77d CLASS=D2H_OK ex=[29,41,198,325]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=52 stick=0 nEx=4 pin_clock=624 pin_bytes=99090432 buf=000003405D5FFD00 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5dda7b47a941fe11 post_hash=9812fa1d8590ebc2 CLASS=D2H_OK ex=[69,279,301,338]
+LIVE_K2_MOE_STAGE layer=52 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=52 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=53 decode=1 ctr=54
+LIVE_K2_MOE_BACKEND layer=53 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=53 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=53 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=53 stage=after_shape
+LIVE_K2_MOE_STAGE layer=53 stage=after_assign
+LIVE_K2_MOE_STAGE layer=53 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=53 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=53 stick=1 nEx=4 pin_clock=636 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b398bd869cc1a8c5 post_hash=df5acb2fedc8aa41 CLASS=D2H_OK ex=[57,124,154,190]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=53 stick=0 nEx=4 pin_clock=636 pin_bytes=114229248 buf=000003405D5FFA00 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=b398bd869cc1a8c5 post_hash=80443a74469faa21 CLASS=D2H_OK ex=[24,220,259,286]
+LIVE_K2_MOE_STAGE layer=53 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=53 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=54 decode=1 ctr=55
+LIVE_K2_MOE_BACKEND layer=54 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=54 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=54 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=54 stage=after_shape
+LIVE_K2_MOE_STAGE layer=54 stage=after_assign
+LIVE_K2_MOE_STAGE layer=54 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=54 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=54 stick=1 nEx=4 pin_clock=648 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5c536f49ae047d9b post_hash=ec0d538e777d800f CLASS=D2H_OK ex=[3,234,267,338]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=54 stick=0 nEx=4 pin_clock=648 pin_bytes=114229248 buf=000003405D734E50 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5c536f49ae047d9b post_hash=d6dec8e89a91196e CLASS=D2H_OK ex=[6,40,193,296]
+LIVE_K2_MOE_STAGE layer=54 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=54 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=55 decode=1 ctr=56
+LIVE_K2_MOE_BACKEND layer=55 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=55 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=55 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=55 stage=after_shape
+LIVE_K2_MOE_STAGE layer=55 stage=after_assign
+LIVE_K2_MOE_STAGE layer=55 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=55 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=55 stick=1 nEx=4 pin_clock=660 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=9d624628a8e997c5 post_hash=d7b85ae401e46d76 CLASS=D2H_OK ex=[111,152,223,279]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=55 stick=0 nEx=4 pin_clock=660 pin_bytes=114229248 buf=000003405D8301B0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=9d624628a8e997c5 post_hash=380fc1ecb8c79579 CLASS=D2H_OK ex=[68,145,230,339]
+LIVE_K2_MOE_STAGE layer=55 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=55 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=56 decode=1 ctr=57
+LIVE_K2_MOE_BACKEND layer=56 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=56 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=56 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=56 stage=after_shape
+LIVE_K2_MOE_STAGE layer=56 stage=after_assign
+LIVE_K2_MOE_STAGE layer=56 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=56 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=56 stick=1 nEx=4 pin_clock=672 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=66bce13a4f95798d post_hash=450a3e86f451bf90 CLASS=D2H_OK ex=[60,236,336,380]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=56 stick=0 nEx=4 pin_clock=672 pin_bytes=114229248 buf=000003405D5FEF00 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=66bce13a4f95798d post_hash=222dc8321d392627 CLASS=D2H_OK ex=[99,201,202,279]
+LIVE_K2_MOE_STAGE layer=56 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=56 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=57 decode=1 ctr=58
+LIVE_K2_MOE_BACKEND layer=57 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=57 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=57 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=57 stage=after_shape
+LIVE_K2_MOE_STAGE layer=57 stage=after_assign
+LIVE_K2_MOE_STAGE layer=57 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=57 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=57 stick=0 nEx=4 pin_clock=684 pin_bytes=114229248 buf=000003405D600500 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8b51039fb510a187 post_hash=07e8cefcb8066f42 CLASS=D2H_OK ex=[73,124,175,273]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=57 stick=1 nEx=4 pin_clock=684 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8b51039fb510a187 post_hash=31bc153e07f68a9f CLASS=D2H_OK ex=[66,237,320,328]
+LIVE_K2_MOE_STAGE layer=57 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=57 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=58 decode=1 ctr=59
+LIVE_K2_MOE_BACKEND layer=58 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=58 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=58 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=58 stage=after_shape
+LIVE_K2_MOE_STAGE layer=58 stage=after_assign
+LIVE_K2_MOE_STAGE layer=58 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=58 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=58 stick=0 nEx=4 pin_clock=696 pin_bytes=114229248 buf=000003405D6417A0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=26426e6d9628961b post_hash=175950c11a506c5d CLASS=D2H_OK ex=[167,169,198,237]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=58 stick=1 nEx=4 pin_clock=696 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=26426e6d9628961b post_hash=ebffd90757ce5c4d CLASS=D2H_OK ex=[24,28,193,300]
+LIVE_K2_MOE_STAGE layer=58 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=58 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=59 decode=1 ctr=60
+LIVE_K2_MOE_BACKEND layer=59 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=59 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=59 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=59 stage=after_shape
+LIVE_K2_MOE_STAGE layer=59 stage=after_assign
+LIVE_K2_MOE_STAGE layer=59 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=59 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=59 stick=1 nEx=4 pin_clock=708 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5415490caa1259f2 post_hash=ad6a41edbd5477dc CLASS=D2H_OK ex=[14,26,241,304]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=59 stick=0 nEx=4 pin_clock=708 pin_bytes=114229248 buf=000003405D640820 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5415490caa1259f2 post_hash=1bf0ec66c5bdefa4 CLASS=D2H_OK ex=[198,270,306,360]
+LIVE_K2_MOE_STAGE layer=59 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=59 env=0000026E0DB4692E
+LIVE_K2_MOE_ENTER layer=60 decode=1 ctr=61
+LIVE_K2_MOE_BACKEND layer=60 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=60 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=60 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=60 stage=after_shape
+LIVE_K2_MOE_STAGE layer=60 stage=after_assign
+LIVE_K2_MOE_STAGE layer=60 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=60 stage=workers_started
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=60 stick=1 nEx=4 pin_clock=720 pin_bytes=114229248 buf=00000340507604F0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f4ac45b0e16091bc post_hash=49ac983268e1eebd CLASS=D2H_OK ex=[141,150,217,282]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=60 stick=0 nEx=4 pin_clock=720 pin_bytes=114229248 buf=000003405D6406A0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f4ac45b0e16091bc post_hash=fac62873a8a1b898 CLASS=D2H_OK ex=[32,54,72,95]
+LIVE_K2_MOE_STAGE layer=60 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[L1_DIAG_PROBE] layer=60 env=0000026E0DB4692E
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000034050A06040
+FINAL_NORM_DST_PTR=000003405D4D8040
+FINAL_NORM_WEIGHT_PTR=000003405D4E60A0
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=106963.681
+FINAL_NORM_MEAN_SQ=14.9223885
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.25886938
+FINAL_NORM_SRC_0=-1.17360783
+FINAL_NORM_DST_0=-0.327546388
+FINAL_NORM_AFTER_L2=84.648455
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=0/1 LAST_INDEX=7167 LAST_VALUE=-0.0319227241
+HIDDEN_PROBE_ATTEMPT STEP=0/1
+HIDDEN_PROBE STEP=0/1 INDEX=2946 COUNT=7168 VALUE=3.07728624 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=0/1 INDEX=7167 VALUE=-0.0319227241 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=0/1 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=0/1
+LOGITS_ENTRY STEP=0/1 HIDDEN=0000034050A06040 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=0/1 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000340B5586060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=0/1
+LOGITS_PROJECT_END STEP=0/1
+LOGITS_ARGMAX_END STEP=0/1 TOK=220
+LOGITS_RETURN_OK STEP=0/1 TOK=220
+STEP_EXIT STEP=0/1
+STREAM_BYTES_READ_RAW=7702489024
+STREAM_BYTES_RECON_RAW=671717376
+TRANSFER_BYTES_READ_TOTAL=7702489024
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=671717376
+TRANSFER_READ_OPS=918
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=7702489024
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=671717376
+STREAM_READ_OPS=918
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=2
+STREAM_CACHE_MISSES=918
+STREAM_BYTES_PER_TOKEN_INFLATED=7702489024.0
+STREAM_BYTES_PER_TOKEN_MEASURED=7702489024.0
+STREAM_BYTES_PER_TOKEN=50000000.0
+STREAM_NORM_TPS=150.000
+STREAM_REF_BW_BPS=7500000000
+STREAM_TOKENS_PER_BYTE_READ=2.000000000e-08
+STREAM_TPB_REVERSE_BPT=50000000.0
+STREAM_BYTES_PER_LAYER=126270311.9
+STREAM_LINK_BW_BPS=54000000000
+STREAM_LINK_TARGET_TPS=150.000
+STREAM_LINK_BUDGET_BPT=360000000.0
+STREAM_LINK_MEASURED_BPT=0.0
+STREAM_LINK_TPS_CEILING=0.000
+STREAM_LINK_BUDGET_STATUS=PASS
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_ALREADY_LOCAL=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_BYTES_RELOAD_MOE=0
+GPU_WEIGHT_BYTES_RELOAD_MLA=0
+GPU_WEIGHT_BYTES_RELOAD_GENERAL=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=4817186816
+LIVE_CACHE_BYTES_PEAK=4817186816
+LIVE_CACHE_BUDGET=12884901888
+LIVE_CACHE_ENTRY_PEAK=551
+CACHE_HIT_RATE=0.500453
+CACHE_BYTES_SAVED=1926758400
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=4817186816
+TRAMP_OUTPUT_WEIGHT_HITS=2
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=1926758400
+CYCLONE_LAYER_ACQUIRES=549
+CYCLONE_LAYER_HITS=0
+ELASTIC_RESIDENT_HITS=0
+COMBINED_DUPLICATE_ACQUIRES=0
+COMBINED_REDUNDANT_BYTES=0
+COMBINED_WAIT_US=0
+SHARD_OPEN_US=0
+SHARD_READ_US=1354677
+CACHE_LOOKUP_US=0
+CACHE_HIT_US=4
+LAYER_ACQUIRE_WAIT_US=0
+RECONSTRUCT_US=12
+OUTPUT_WEIGHT_US=370249
+MLA_COMPUTE_US=2763129
+LOGITS_US=55735
+SAMPLE_US=0
+STREAM_US=1
+DETOK_US=2
+HOST_CACHE_COPY_US=0
+SHARD_ATTN_US=631548 SHARD_MOE_US=11503355 SHARD_OTHER_US=163132
+NEXT_BEST_MOVE=MLA_ATTN_KV_EXPAND
+NEXT_BEST_MOVE_US=2763129
+RE_MANIFEST=MLA=2763129,LOGITS=55735,OUT_W=370249,SHARD=1354677,COPY=0
+ATTN_RESOLVE_TOTAL=549 ATTN_RESOLVE_CACHE=0 ATTN_RESOLVE_SHARD=549
+ATTN_CACHE_KEY_MISS=549 ATTN_CACHE_GEN_MISS=0 ATTN_CACHE_WS_VETO=0
+ATTN_CACHE_TYPE_MISMATCH=0 ATTN_CACHE_RANGE_MISMATCH=0
+ATTN_BORROW_BYTES=0 ATTN_SHARD_BYTES=3853778944
+ATTN_SHARD_READ_CALLS=549 ATTN_SHARD_REOPEN=0 ATTN_MAPFAULT_CRITICAL=0
+VOCAB_RESOLVE_TOTAL=2 VOCAB_RESOLVE_CACHE=1 VOCAB_RESOLVE_SHARD=1
+VOCAB_SHARD_BYTES=963379200 VOCAB_SHARD_READ_CALLS=1
+Q6K_VOCAB_UPLOAD_TIMED=0 Q6K_RESIDENT_HIT=1
+Q6K_FULL_DEQUANT_BYTES=0 LOGITS_FULL_F32_MATERIALIZE=0
+HOT_ALLOC=0 SHARD_LOGITS_BYTES=0 SHARD_LOGITS_ROWS=0
+ARGMAX_PARITY_CHECKS=1 ARGMAX_PARITY_FAIL=0 ARGMAX_PARITY=1
+LOGITS_PACKED_DOT_ROWS=163840 LOGITS_ARGMAX_CALLS=1
+LOGITS_CALLS=1 VOCAB_ROWS_VISITED=163840 Q6_BLOCKS_VISITED=4587520
+LOGITS_TEMP_BYTES=8176 LOGITS_ALLOC_COUNT=0 LOGITS_THREADS=20
+LOGITS_FULL_MATERIALIZE=0 Q6_FULL_DEQUANT=0
+LOGITS_ROW_ACCESS_MS=0.000 LOGITS_Q6_DECODE_MS=0.000 LOGITS_DOT_MS=55.713
+LOGITS_REDUCE_MS=0.000 LOGITS_MISC_MS=0.022
+ARGMAX_TOKEN=220 ARGMAX_VALUE=9.96948
+LOGITS_SPLIT_AUTO_BAIL_001=1
+LOGITS_CPU_ROWS=0
+LOGITS_GPU_ROWS=0
+LOGITS_CPU_US=0
+LOGITS_GPU_US=0
+LOGITS_JOIN_US=0
+LOGITS_SPLIT_WALL_US=0
+LOGITS_CPU_ONLY_EST_US=0
+LOGITS_SPLIT_PROFITABLE=0
+LOGITS_PATH_SELECTED=CPU_ONLY
+LOGITS_EXPOSED_US=0
+LOGITS_BAIL_HITS=0
+LOGITS_MODE=CPU_ONLY
+LOGITS_ROWS_TOTAL=0 LOGITS_ROW_ACCOUNTING=1
+GPU_LOGITS_FULL_READBACK=0 GPU_ARGMAX_BYTES=0 GPU_RANGE_OUT_BYTES=0
+CPU_ARGMAX_TOKEN=-1 GPU_ARGMAX_TOKEN=-1 FINAL_ARGMAX_TOKEN=-1
+CPU_BRANCH_US=0 GPU_BRANCH_US=0
+CPU_LOGIT_ROWS_PER_US=0.0000 GPU_LOGIT_ROWS_PER_US=0.0000
+MLA_Q_DEVICE_OPS=0 MLA_Q_DEVICE_FAIL=0
+PATHB_ATTEND=NONE
+PATHB_ATTEND_OK=0
+PATHB_ATTEND_FAIL=0
+q_b_d2h_bytes=0
+q_b_vkcopy_d2h_calls=0
+q_b_host_memcpy_bytes=0
+PATHB_QB_D2H_SKIP=0
+QB_HOST_RB_OWNER=QKV_READBACK_DOWNWARD TENSOR=q_b NEXT=HOST:MlaAttentionComplete BEFORE_B=0 AFTER_B=0 REDUCED=0 D2H_LEGAL=1 FENCE_NS=0
+QB_X_OPS=0 QB_X_SHRINK_OPS=0 QB_X_FULL_OPS=0
+QB_X_H2D_HIDDEN_B=0
+QB_X_D2H_TO_HOST_MIRROR_B=0
+QB_X_HOST_MIRROR_MEMCPY_B=0
+QB_X_FENCE_US=0
+QB_X_NOPE=0 QB_X_ROPE=0 QB_X_NOPE_PLUS_ROPE=0
+QB_X_PROD_HEAD=0 QB_X_HOST_HEAD=0
+QB_X_CALLER_ALREADY_NOPE_ROPE=0
+QB_X_BYTE_SHRINK_IMPOSSIBLE=0
+QB_X_DEVICE_ATTENTION_REQUIRED_FOR_Q_B_SHRINK=0
+QB_X_SHRINK_DEAD_REASON=none
+QB_X_MIRROR_GAP=D2H_TO_MIRROR_WAS_WEIGHT_TAGGED|HOST_MEMCPY_NOT_IN_GPU_TRANSFER
+QB_CROSS_SPLIT_OPS=0 QB_CROSS_SPLIT_ATTN_OPS=0
+QB_CROSS_SUBMIT_US=0
+QB_CROSS_FENCE_WAIT_US=0
+QB_CROSS_MAP_INVALIDATE_US=0
+QB_CROSS_HOST_MEMCPY_US=0
+QB_CROSS_HOST_ATTENTION_US=0
+QB_CROSS_LUMP_US=0
+QB_CROSS_FENCE_OWNER=FENCE_WAIT
+QB_CROSS_D2H_COPY_OWNER=INSIDE_FUSED_CB_WITH_FENCE
+QB_CROSS_HOST_CONSUME_OWNER=HOST_ATTENTION
+QB_CROSS_ACTION=KEEP
+QB_CROSS_BYTES_UNCHANGED_ALLOWED=1
+HOST_XCHG_DISCOVER=1
+HOST_XCHG_UNMIRRORED_BYTES=0
+HOST_XCHG_UNMIRRORED_OPS=0
+HOST_XCHG_MISLABELED_IN_MIRROR_BYTES=0
+EXCHANGE_MIRROR_REVERSE=1
+EXCHANGE_SLOT_COUNT=0
+EXCHANGE_OVERFLOW=0
+EXCHANGE_IN_MIRROR=0
+EXCHANGE_NOT_IN_MIRROR=0
+MLA_STAGE_QKV_US=1644326 MLA_STAGE_KV_EXPAND_US=23581 MLA_STAGE_ATTN_US=3272 MLA_STAGE_O_PROJ_US=1090750
+MLA_STAGE_SUM_US=2761929 MLA_COMPUTE_US=2763129 MLA_STAGE_OWNER=QKV_PROJ OWNER_US=1644326
+MLA_QA_US=223041 MLA_QB_US=882283 MLA_KVA_US=538592 MLA_QKV_PROJ_US=1644326
+MLA_QKV_PROJ_OWNER=q_b SUB_OWNER_US=882283 (component; not routing)
+MLA_QKV_CRITICAL_OWNER=Q_BRANCH
+MLA_QKV_UPLOADS=122 MLA_QKV_HITS=61 MLA_QKV_FAIL=61
+Q_BRANCH_US=1105633 KV_BRANCH_US=538662 QKV_JOIN_US=0
+QKV_OVERLAP_US=0 QKV_BUBBLE_US=538682 QKV_WALL_VS_MAX_BRANCH=1.487
+Q_A_GPU_US=222369 Q_A_WAIT_US=34 Q_A_UPLOAD_US=222335 Q_A_KERNEL_US=0
+Q_B_GPU_US=0 Q_B_WAIT_US=0 Q_B_UPLOAD_US=0 Q_B_KERNEL_US=0
+Q_AB_GAP_US=125 Q_BRANCH_PROBE_US=222494
+MLA_Q_CRITICAL_OWNER=q_a SUB_OWNER_US=222369
+QKV_PROJ_WALL_NS=1644327000 QKV_PROJ_KERNEL_NS=0 QKV_PROJ_WAIT_NS=60000 QKV_PROJ_SUBMIT_NS=0 QKV_PROJ_COPY_NS=0 QKV_PROJ_GAP_NS=1644267000 QKV_PROJ_BARRIER_NS=0
+QKV_Q_KERNEL_NS=0 QKV_K_KERNEL_NS=0 QKV_V_KERNEL_NS=0
+QKV_GPU_GEMV_OPS=122 QKV_GPU_GEMV_FAIL=61 QKV_WEIGHT_MISSES=122
+QKV_HOST_WAIT_NS=60000 QKV_READBACK_BYTES=0
+QKV_SUB_OWNER=GAP SUB_OWNER_US=1644267 QKV_KERNEL_FRAC=0.000
+TAG1_SHARED_X=0 TAG2_SHARED_X=0 QB_SHARED_X=0
+KVA_SHARED_X=0 KVA_COL_SPLIT=0 KVA_PARTIAL_REDUCE=0 KVA_ROWS_PER_WG=16 KVA_TOTAL_WG=0
+QKV_SHARED_X_CALLS=0 QKV_SHARED_X_KERNEL_US=0
+CPU_F32_EXPANDS=0 HOST_FORWARD_LAYER_CALLS=0
+O_PROJ_CALLS=61
+O_PROJ_KERNEL_US=0
+O_PROJ_WAIT_US=20
+O_PROJ_GAP_US=1090727
+O_PROJ_UPLOAD_US=0
+O_PROJ_READBACK_US=0
+O_PROJ_SUBMIT_US=20
+O_PROJ_RAW_US=1090747
+O_PROJ_OVERLAPPED_US=0
+O_PROJ_EXPOSED_US=1090747
+O_PROJ_INPUT_UPLOAD_BYTES=0
+O_PROJ_INPUT_READBACK_BYTES=0
+O_PROJ_OUTPUT_READBACK_BYTES=0
+O_PROJ_SUBMITS=61
+O_PROJ_HOST_WAITS=0
+O_PROJ_RESIDUAL_FUSED=0
+O_PROJ_TILE_PIPELINE=1
+O_PROJ_FULL_F32_MATERIALIZE=0
+QUANTIZED_STORAGE_PRESERVED=1
+O_PROJ_SUB_OWNER=GAP SUB_OWNER_US=1090727 O_PROJ_KERNEL_FRAC=0.000
+O_PROJ_TAG6_FASTPATH=0 O_PROJ_TAG6_CALLS=0 O_PROJ_TAG6_ROWS=0 O_PROJ_TAG6_COLS=0 O_PROJ_TAG6_BLOCKS=0 O_PROJ_TAG6_KERNEL_US=0
+O_PROJ_GENERIC_CALLS=0 O_PROJ_GENERIC_FALLBACKS=61
+RAWRXD_SPIN_CLOSE_WALL_ATTRIB_001=1
+KVA_ROWS_CLIMB=SEALED
+DO_NOT_REOPEN=KvaInversion
+QKV_EXPOSED_US=1644326
+KVA_EXPOSED_US=0
+ATTENTION_EXPOSED_US=3272
+O_PROJ_EXPOSED_US=1090747
+LOGITS_EXPOSED_US=55735
+SAMPLE_EXPOSED_US=0
+OTHER_EXPOSED_US=1354677
+AWAIT_EXPOSED_US=20
+SPIN_CLOSE_BLOCKER=QKV
+SPIN_CLOSE_BLOCKER_OWNER=q_b
+SPIN_CLOSE_BLOCKER_US=882283
+SPIN_CLOSE_STAGE_US=1644326
+MEASURED_LARGEST_OWNER=q_b
+NEXT_RUNTIME_ACTION=QKV_EXPOSURE_CUT
+LOGITS_SPLIT_CUT=NOT_LARGEST
+GENERATION_WALL_ACCOUNTING_001
+ACCOUNTING_COMPLETE=0
+TOKEN_COUNT=1
+WALL_NS=19192311000
+MODEL_WEIGHT_ACQUIRE_NS=12000
+SHARD_READ_EXPOSED_NS=1354677000
+HOST_DEQUANT_NS=UNMEASURED
+CPU_GEMV_NS=UNMEASURED
+GPU_GEMV_KERNEL_NS=0
+H2D_TRANSFER_BYTES=12768903168
+H2D_TRANSFER_EXPOSED_NS=UNMEASURED
+GPU_QUEUE_WAIT_NS=410498800
+MLA_EXPOSED_NS=2763129000
+MOE_GPU_WORK_NS=21074610600
+MOE_GPU_WAIT_NS=410478800
+MOE_SHARD_IO_NS=11503355000
+KV_UPDATE_NS=UNMEASURED
+LOGITS_NS=55735000
+SAMPLING_NS=0
+REPORTED_COMPONENT_SUM_NS=5264331000
+OVERLAPPED_NS=0
+UNCLASSIFIED_IF_DISJOINT_NS=13927980000
+SHARD_READ_BYTES=7702489024
+SHARD_READ_OPS=918
+GPU_UPLOAD_BYTES=0
+MLA_STAGE_SUM_NS=2761929000
+GPU_MOE_BACKEND_RECEIPT_001
+DUALSTICK_REQUESTED=0
+DUALSTICK_VC0_BOUND=1
+DUALSTICK_VC1_BOUND=1
+GPU0_EXPERTS=240
+GPU1_EXPERTS=240
+GPU_SUBMITS=120
+GPU_WAITS=120
+H2D_BYTES=12768903168
+D2H_BYTES=3440640
+DEVICE_DOWN_VECTORS=480
+DEVICE_PARTIAL_ACCUMS=480
+D2H_PARTIAL_VECTORS=120
+HOST_EXPERT_DOWN_VECTORS=0
+MOE_GPU_EXECUTION_OBSERVED=1
+MOE_GPU_OUTPUT_PATH_OBSERVED=1
+MOE_DUAL_GPU_ATTESTED=1
+MOE_PRODUCT_BACKEND_ATTESTED=1
+MOE_EXPERT_ACCOUNTING_001
+MOE_ACCOUNTING_ENABLED=0
+NOTES=Inclusive counters are not a critical-path partition; missing CPU/H2D/KV spans remain explicit.
+GENERATION_WALL_NS=19192311000
+GENERATION_BUDGET_NS=200000000
+WALL_EXCESS_NS=18992311000
+WALL_EXCESS_OWNER=O_PROJ
+OWNER_EXPOSED_NS=1090747000
+SHARD_IO_CALLS=2381 SHARD_IO_BYTES=20699846656 SHARD_IO_US=12311086 SHARD_IO_REOPEN=0 SHARD_IO_SEEKS=5652 SHARD_IO_MAPFAULT=0 SHARD_IO_MAPFAULT_US=0
+MLA_GPU_GEMV_OPS=183 MLA_GPU_GEMV_FAIL=61
+[live-path] vacuumArmed=0 trampoline=1/63 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=1 plasmaAbsence=0 enhancements=1
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=61
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+ 
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

@@ -1,0 +1,22 @@
+﻿{"ts_ns":1793718097669568200,"seq":11,"request":50756427142800,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=628 eval_count=92 total_duration_ns=1108948100 load_duration_ns=9403400 prompt_eval_duration_ns=48236000 eval_duration_ns=1046703000 eval_tps=87.8950380385"}
+{"ts_ns":1793718097669576200,"seq":12,"request":50756427142800,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793718097677654300,"seq":13,"request":50756427142800,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793718097677677700,"seq":14,"request":50756427142800,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":50756427142800,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":123.746,\"prefill_tps\":0.000,\"task_tps\":0.076,\"ttft_ms\":13194.645,\"prefill_ms\":0.000,\"decode_ms\":8.081,\"task_ms\":13202.725,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":1,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793718097677678100,"seq":15,"request":50756427142800,"agent":1,"kind":"finished","value":0,"message":"PASS"}
+{"ts_ns":1793718100254704200,"seq":1,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793718100254709600,"seq":2,"request":50772206921300,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793718100255236800,"seq":3,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793718100257822000,"seq":4,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793718100257824200,"seq":5,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793718100257824400,"seq":6,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793718101267612400,"seq":7,"request":50772206921300,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=544 eval_count=82 total_duration_ns=1007943900 load_duration_ns=6702800 prompt_eval_duration_ns=65438999 eval_duration_ns=932030000 eval_tps=87.9800006438"}
+{"ts_ns":1793718101267616200,"seq":8,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"tool_calls_received"}
+{"ts_ns":1793718101267624200,"seq":9,"request":50772206921300,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-0-0 name=editFiles target=F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\AGENT\\workdir\\t15_edit_T15_7bb4df317c.cpp"}
+{"ts_ns":1793718101276218900,"seq":10,"request":50772206921300,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-0-0 name=editFiles target=F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\AGENT\\workdir\\t15_edit_T15_7bb4df317c.cpp status=PASS duration_ms=8 PASS"}
+{"ts_ns":1793718101279037500,"seq":11,"request":50772206921300,"agent":1,"kind":"file_changed","value":0,"message":"F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\AGENT\\workdir\\t15_edit_T15_7bb4df317c.cpp"}
+{"ts_ns":1793718101752685200,"seq":12,"request":50772206921300,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=635 eval_count=38 total_duration_ns=471764100 load_duration_ns=8172400 prompt_eval_duration_ns=41451000 eval_duration_ns=418290000 eval_tps=90.8460637357"}
+{"ts_ns":1793718101752693700,"seq":13,"request":50772206921300,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793718101759427900,"seq":14,"request":50772206921300,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793718101759451500,"seq":15,"request":50772206921300,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":50772206921300,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":148.434,\"prefill_tps\":0.000,\"task_tps\":0.665,\"ttft_ms\":1497.984,\"prefill_ms\":0.000,\"decode_ms\":6.737,\"task_ms\":1504.721,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":1,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793718101759452000,"seq":16,"request":50772206921300,"agent":1,"kind":"finished","value":0,"message":"PASS"}
+

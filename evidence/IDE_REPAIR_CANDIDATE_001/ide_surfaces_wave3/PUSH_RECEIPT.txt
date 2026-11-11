@@ -1,0 +1,13 @@
+IDE_REPAIR_CANDIDATE_001 / ide_surfaces_wave3 / PUSH_RECEIPT
+ASOF_UTC=2026-11-10T08:10:00Z
+LFS_SAFE=1
+METHOD=orphan_text_only_branch
+REMOTE=https://github.com/ItsMehRAWRXD/RawrXD.git
+BRANCH=upload/ide-surfaces-wave3-20261110
+COMMIT=7fd76c30e5f15c616ccf7cd4553675e961021b55
+SCOPE=evidence/IDE_REPAIR_CANDIDATE_001/ide_surfaces_wave3/**
+NO_BINARIES=1
+PROMOTE=0
+RC4_UNTOUCHED=1
+WAVE1_TU_EDIT=0
+PR_HINT=https://github.com/ItsMehRAWRXD/RawrXD/pull/new/upload/ide-surfaces-wave3-20261110

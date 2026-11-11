@@ -1,0 +1,4 @@
+CHAT_SEND_ATTEMPT bytes=4
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+cancel_requested request_id=1
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0

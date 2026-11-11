@@ -1,0 +1,27 @@
+T080_FIXTURE_BUILD_ROUTE_001
+timestamp_utc=pending_rebuild
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+
+CHANGE:
+  Win32IDE_Commands.cpp IDM_TOOLS_BUILD_PROJECT (3014)
+  - Resolve RAWRXD_PROBLEMS_FIXTURE (GetEnvironmentVariableA) BEFORE clearProblems/CMake.
+  - Fixture hit: stop pane -> clearProblems -> open fixture -> cl fixture pipe -> InvalidateRect(1312) -> break.
+  - Fixture fail / no pane: break (no CMake fallthrough).
+  - Production only: clearProblems + CMake after fixture miss.
+
+T15:
+  scripts\T15_Autonomous_Editing.ps1 staged
+  IdePath default = build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+  IDM_EDIT_UNDO=2007 (not 3001)
+  IDM_TOOLS_BUILD_PROJECT=3014
+  IDM_AI_AUTONOMOUS_EDIT=NOT_WIRED (3020=IDM_GIT_STATUS; harness fail-closed)
+  BufferTransaction.h = NOT_LANDED (no EditorDocument API; design-only rejected)
+  Mock PROMOTE=1 / WinRM / Discord / GHA cert sprawl = REJECTED this gate
+
+NEXT:
+  Rebuild tip_ext_host binary from patched Commands.cpp
+  Remeasure ListView 1312 populate on live tip SHA
+  T15 remains BLOCKED until autonomous-edit command ID exists

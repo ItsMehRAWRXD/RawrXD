@@ -1,0 +1,47 @@
+RELAUNCH_START
+ASOF=Mon 11/09/2026  8:26:05.13
+RawrXD-Win32IDE-Native-Ex    41036 Console                    1     32,620 K
+TRACE_TAIL:
+WinMain entered
+"F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp"
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+WinMain entered
+"F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp" 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+RELAUNCH_END

@@ -1,0 +1,225 @@
+[Deep2Engine] Loading model from: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=CPU_ONLY devices=0 kv_per_token=6336 max_ctx_est=2048
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000020609AB86F0  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000020609AB86F0  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000020609AB86F0  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000020609AB86F0  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 8 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF60CA9F2A0 dequant=00007FF60CAA1EA0 GetGEMV(12)=00007FF60CA9F2A0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 22 layers x 2048 positions x 4 heads x 64 dim = 88.00 MB
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[GREEDY] enabled=1 temperature=0.0000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=20
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=16
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=352
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=16
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 4 (patch_18b1f7f152f696c6)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=4
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000002062BDC6580 sizeBytes=36864000 rows=32000 cols=2048
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=2048 pos=16)
+[AGENT] PREFILL_DONE prompt_tokens=20 prefill_ms=6372.025
+[AGENT] DECODE_BEGIN max_out=16
+[DBG] stateNorm=8.882797e+01 finite=1 pos=20
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=13 logit=23.388000
+[GREEDY] selected=13
+[GREEDY] probe comma id=29892 logit=-1.368318
+[GREEDY] probe newline id=13 logit=23.388000
+[GREEDY] probe UE id=4462 logit=-3.750444
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.376278
+[GREEDY] top10: 13:23.388000 29871:13.104966 2:12.009093 14891:10.815619 29903:10.355721 891:9.655583 16564:9.543475 4587:9.234864 3869:9.207436 18585:9.149639
+[DBG] sampled token=13 eosId=2
+[AGENT] TOKEN id=13 piece=\x0A
+[DBG] stateNorm=9.217787e+01 finite=1 pos=21
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=29903 logit=14.636443
+[GREEDY] selected=29903
+[GREEDY] probe comma id=29892 logit=2.146558
+[GREEDY] probe newline id=13 logit=4.753750
+[GREEDY] probe UE id=4462 logit=1.875230
+[GREEDY] probe comma_alt_1919 id=1919 logit=-4.159014
+[GREEDY] top10: 29903:14.636443 29950:14.551551 18567:14.297804 29907:12.546263 29979:12.487069 8241:12.277112 29933:12.139026 29908:12.091756 29956:12.018292 29940:11.925701
+[DBG] sampled token=29903 eosId=2
+[DBG] stateNorm=8.718590e+01 finite=1 pos=22
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=388 logit=15.925006
+[GREEDY] selected=388
+[GREEDY] probe comma id=29892 logit=5.247694
+[GREEDY] probe newline id=13 logit=6.166275
+[GREEDY] probe UE id=4462 logit=2.876800
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.302863
+[GREEDY] top10: 388:15.925006 545:13.608603 29915:12.567965 29891:12.349206 1794:11.683654 29983:11.650525 786:11.606678 381:11.596574 279:11.498756 3818:11.479243
+[DBG] sampled token=388 eosId=2
+[DBG] stateNorm=8.285146e+01 finite=1 pos=23
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=2918 logit=13.165888
+[GREEDY] selected=2918
+[GREEDY] probe comma id=29892 logit=8.448756
+[GREEDY] probe newline id=13 logit=9.439652
+[GREEDY] probe UE id=4462 logit=-2.427720
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.309662
+[GREEDY] top10: 2918:13.165888 7251:11.622804 29901:11.512369 18567:11.395534 6324:10.818447 29889:10.767662 29899:10.554021 29991:10.401982 29882:10.392046 29950:10.160252
+[DBG] sampled token=2918 eosId=2
+[DBG] stateNorm=8.820180e+01 finite=1 pos=24
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=29991 logit=15.506804
+[GREEDY] selected=29991
+[GREEDY] probe comma id=29892 logit=11.178862
+[GREEDY] probe newline id=13 logit=13.075784
+[GREEDY] probe UE id=4462 logit=-5.008273
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.125618
+[GREEDY] top10: 29991:15.506804 29889:14.222603 13:13.075784 29901:12.222585 2:12.033207 29892:11.178862 29893:10.652762 4248:9.880670 29896:9.357935 448:9.302859
+[DBG] sampled token=29991 eosId=2
+[KVCache] page grow 24 -> 32 hot (virtualMax=2048 pos=24)
+[DBG] stateNorm=8.827027e+01 finite=1 pos=25
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[GREEDY] enabled=1
+[GREEDY] argmax=2 logit=15.748522
+[GREEDY] selected=2
+[GREEDY] probe comma id=29892 logit=1.024414
+[GREEDY] probe newline id=13 logit=15.510362
+[GREEDY] probe UE id=4462 logit=-6.677759
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.453199
+[GREEDY] top10: 2:15.748522 13:15.510362 29871:12.920531 14891:12.847550 313:11.144653 584:10.569178 910:10.501511 448:9.961531 450:9.647806 739:9.598310
+[DBG] sampled token=2 eosId=2
+[Deep2Engine] Generation complete: 6 tokens in 9262.59 ms (E2E 0.65 TPS)
+[Deep2Engine] PREFILL: 20 tok in 6372.02 ms (3.14 tok/s) | DECODE: 6 tok in 2890.16 ms (2.08 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 550
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 8431.031
+totalEmbedMs       = 0.257
+totalLogitsMs      = 810.509
+totalAttnMs        = 966.598
+totalFfnMs         = 6810.878
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 15.329
+============================================================
+[live-path] vacuumArmed=0 trampoline=1/557 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=0 plasmaAbsence=0 enhancements=1
+[AGENT] POST_GENERATE generated=6 tokens

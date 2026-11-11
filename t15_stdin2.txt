@@ -1,0 +1,2 @@
+/tools run editFiles path=t15_test.txt oldString=T15_ORIGINAL newString=T15_EDITED_VIA_TOOL
+/quit

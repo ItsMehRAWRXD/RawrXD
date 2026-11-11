@@ -1,0 +1,98 @@
+ASOF_UTC=2026-11-10T11:22:01.9510222Z
+GATE=LAYOUT_CONTROLS_84FE
+DIAG_SHA256=84FE13C8660B5551618E18C188A4B646DBE1F08722908E6DD54B0D5EA1390864
+TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_wmcreate_diag_001\RawrXD-Win32IDE-Native-Ext.exe
+USER_DATA_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_84fe_layout_20261110-062159
+PID=38968
+HAS_EXITED=False
+MAIN_HWND=28378322
+ISOLATED_FROM_2FFDC206=1
+PROMOTE=0
+CERTIFIED=0
+LAUNCH=PASS
+CTRL_1001_PRESENT=True
+CTRL_1001_VISIBLE=True
+CTRL_1001_SIZE=598x371
+CTRL_1002_PRESENT=False
+CTRL_1002_VISIBLE=False
+CTRL_1003_PRESENT=False
+CTRL_1003_VISIBLE=False
+CTRL_1100_PRESENT=True
+CTRL_1100_VISIBLE=True
+CTRL_1100_SIZE=48x399
+CTRL_1200_PRESENT=True
+CTRL_1200_VISIBLE=True
+CTRL_1200_SIZE=356x395
+CTRL_1300_PRESENT=True
+CTRL_1300_VISIBLE=True
+CTRL_1300_SIZE=1260x250
+CTRL_1310_PRESENT=True
+CTRL_1310_VISIBLE=True
+CTRL_1310_SIZE=24x22
+CTRL_1311_PRESENT=True
+CTRL_1311_VISIBLE=True
+CTRL_1311_SIZE=24x22
+CTRL_1312_PRESENT=True
+CTRL_1312_VISIBLE=False
+CTRL_1312_SIZE=1256x220
+CTRL_1400_PRESENT=False
+CTRL_1400_VISIBLE=False
+CTRL_1500_PRESENT=False
+CTRL_1500_VISIBLE=False
+CTRL_1600_PRESENT=False
+CTRL_1600_VISIBLE=False
+MAIN_CLIENT_BEFORE=1260x737
+MAIN_CLIENT_AFTER_RESIZE=1380x837
+DOCK_1300_AFTER_RESIZE_VISIBLE=True
+DOCK_1300_AFTER_RESIZE_SIZE=1380x250
+THEME_CMDS_POSTED=2101,2102,2010,2011
+CHILD_COUNT_SAMPLED=40
+CHILD=id=0 vis=1 cls=ToolbarWindow32 txt= rc=1380x26 hwnd=0x6310D2
+CHILD=id=1018 vis=1 cls=Static txt=Untitled  -  Workspace rc=420x22 hwnd=0x8F0F48
+CHILD=id=1024 vis=1 cls=Button txt=Gear rc=48x22 hwnd=0x951112
+CHILD=id=1030 vis=1 cls=SysTabControl32 txt= rc=1380x26 hwnd=0x871288
+CHILD=id=1100 vis=1 cls=Static txt= rc=48x499 hwnd=0x9E12E2
+CHILD=id=1101 vis=1 cls=Button txt=[] rc=48x48 hwnd=0xC1336
+CHILD=id=1102 vis=1 cls=Button txt=() rc=48x48 hwnd=0x1013AC
+CHILD=id=1103 vis=1 cls=Button txt=<> rc=48x48 hwnd=0xA513D6
+CHILD=id=1104 vis=1 cls=Button txt=> rc=48x48 hwnd=0x2313F8
+CHILD=id=1105 vis=1 cls=Button txt=++ rc=48x48 hwnd=0x4811DC
+CHILD=id=1106 vis=1 cls=Button txt=* rc=48x48 hwnd=0x381150
+CHILD=id=1107 vis=1 cls=Button txt=@ rc=48x48 hwnd=0xAE10AA
+CHILD=id=0 vis=1 cls=Static txt=Sidebar rc=248x497 hwnd=0x12A0F44
+CHILD=id=0 vis=1 cls=Static txt= rc=248x497 hwnd=0x700312
+CHILD=id=0 vis=1 cls=Static txt= rc=248x30 hwnd=0xD30B8E
+CHILD=id=6011 vis=0 cls=Button txt=New rc=45x24 hwnd=0x2A12BA
+CHILD=id=6012 vis=0 cls=Button txt=Folder rc=45x24 hwnd=0x681386
+CHILD=id=6013 vis=0 cls=Button txt=Refresh rc=45x24 hwnd=0x1D10A6
+CHILD=id=6014 vis=0 cls=Button txt=Collapse rc=45x24 hwnd=0x1210C8
+CHILD=id=6010 vis=1 cls=SysTreeView32 txt= rc=244x463 hwnd=0x64037E
+CHILD=id=6020 vis=0 cls=Edit txt= rc=236x21 hwnd=0x20505CC
+CHILD=id=0 vis=0 cls=Static txt= rc=238x78 hwnd=0x580CA2
+CHILD=id=6023 vis=0 cls=Button txt=Regex rc=70x20 hwnd=0x660AB6
+CHILD=id=6024 vis=0 cls=Button txt=Case rc=70x20 hwnd=0x9F0584
+CHILD=id=6025 vis=0 cls=Button txt=Whole rc=70x20 hwnd=0x7A0F62
+CHILD=id=0 vis=0 cls=Static txt=Include: rc=50x20 hwnd=0x8A0F72
+CHILD=id=6026 vis=0 cls=Edit txt=*.ps1,*.cpp rc=156x16 hwnd=0x4810FA
+CHILD=id=0 vis=0 cls=Static txt=Exclude: rc=50x20 hwnd=0xCB083E
+CHILD=id=6027 vis=0 cls=Edit txt=node_modules,bin rc=156x16 hwnd=0x380F80
+CHILD=id=6022 vis=0 cls=ListBox txt= rc=236x464 hwnd=0xA1248
+CHILD=id=0 vis=0 cls=Static txt= rc=250x35 hwnd=0xF124A
+CHILD=id=6031 vis=0 cls=Button txt=Stage rc=50x25 hwnd=0x28124C
+CHILD=id=6032 vis=0 cls=Button txt=Unstage rc=50x25 hwnd=0xA1242
+CHILD=id=6033 vis=0 cls=Button txt=Commit rc=50x25 hwnd=0xB124E
+CHILD=id=6034 vis=0 cls=Button txt=Sync rc=50x25 hwnd=0xB119E
+CHILD=id=0 vis=0 cls=Static txt=Message: rc=60x20 hwnd=0xC1260
+CHILD=id=6035 vis=0 cls=Edit txt= rc=219x56 hwnd=0x2E1284
+CHILD=id=6030 vis=0 cls=SysListView32 txt= rc=219x486 hwnd=0x1E12EC
+CHILD=id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0xAC0EF4
+CHILD=id=0 vis=0 cls=Static txt= rc=250x35 hwnd=0xF1290
+PROCESS_ALIVE_AFTER_LAYOUT=True
+DEFERRED_INIT_BREADCRUMB_EXPECT=finishSession.done
+PANEL_CONTAINER_PRESENT=True
+DOCK_VISIBLE=True
+RESIZE_APPLIED=True
+VERDICT=LAYOUT_PROBE_PASS
+TRACE_SLICE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\startup_trace_84fe_layout_20261110-062159.txt
+LAST_BREADCRUMBS=onCreate:postFinish | onCreate:done | CreateWindowExA succeeded | createWindow succeeded | ShowWindow and UpdateWindow returned | showWindow returned | onCreate:finishDocTabs | onCreate:finishDocTabs.done | onCreate:finishSession | onCreate:finishSession.outputTabs | onCreate:finishSession.dockPlaced | onCreate:finishSession.done
+CREATEPANEL_LINE=createPanel: hwnd=0000000000501314 err=183 parentVis=0

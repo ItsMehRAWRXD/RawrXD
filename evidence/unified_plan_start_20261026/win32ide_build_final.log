@@ -1,0 +1,15 @@
+[0/2] Re-checking globbed directories...
+[1/7] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/7] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_ide/Release/vulkan-shaders-gen.exe
+[3/7] Completed 'vulkan-shaders-gen'
+[4/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\streaming_gguf_loader.cpp.obj
+[5/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cpu_inference_engine_impl.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(41): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(360): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(306): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(655): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(546): note: see declaration of 'v'
+[6/7] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe

@@ -1,0 +1,5 @@
+ninja: Entering directory `F:\rawrxd\build_tip_ext_host_001'
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ExtHostWire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/2] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

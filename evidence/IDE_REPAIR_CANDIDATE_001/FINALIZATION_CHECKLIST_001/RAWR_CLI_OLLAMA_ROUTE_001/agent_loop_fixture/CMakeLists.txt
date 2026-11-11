@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(off_by_one LANGUAGES CXX)
+add_executable(off_by_one off_by_one.cpp)
+enable_testing()
+add_test(NAME off_by_one COMMAND off_by_one)

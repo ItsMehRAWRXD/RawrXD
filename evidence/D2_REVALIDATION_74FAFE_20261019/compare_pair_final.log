@@ -1,0 +1,8 @@
+positions=135 vocab=32000 full_logit_floats=4320000
+bit_identical_rows=135/135 finite_rows=135/135
+device=AMD Radeon AI PRO R9700 cpu_fallbacks=0/0
+submits=21080->12170 reduction=42.27%
+waits=21080->12170 reduction=42.27%
+serial: wall_ms=31142.0 gpu_ms=26422.0 host_submit_call_ms=309.1 fence_wait_wall_ms=27988.0
+batched: wall_ms=29746.5 gpu_ms=25649.9 host_submit_call_ms=190.0 fence_wait_wall_ms=26710.6
+D2_PARITY_VERDICT=PASS

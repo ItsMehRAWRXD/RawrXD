@@ -1,0 +1,4 @@
+=== Deep2 full-forward profile (REAL layers, real weights) ===
+model: F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf
+FATAL: could not load GGUF (unsupported/malformed GGML tensor type or shape: blk.0.ffn_down_exps.weight)
+EXIT_CODE=2

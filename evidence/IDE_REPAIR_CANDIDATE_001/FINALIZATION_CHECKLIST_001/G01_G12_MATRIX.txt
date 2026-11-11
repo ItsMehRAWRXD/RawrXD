@@ -1,0 +1,71 @@
+G01_G12_GUI_FINALIZATION_MATRIX
+ASOF_UTC=2026-11-10T18:56:00Z
+OWNER=G_E
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED
+LAW=9FDE_PASS!=TIP_G_PASS
+LAW=F6E6_FOUR_PANEL!=TIP_G_PASS
+LAW=CHECKLIST_ITEM!=CONFIRMED_DEFECT
+
+TIP_UNDER_TEST=FROZEN_G
+IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+TIP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+BUILD_TIP_EXT_HOST=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+NOTE_TIP_SHA_MATCH=build_tip_ext_host_001 previously measured D56FE6DD (same frozen G identity)
+
+THEME_REPAIR_SHA_37E64080=
+  PRESENT_IN_SCOPED_PATHS=0
+  RUNTIME_VERIFIED=0
+  SOURCE_ONLY_NEQ_PASS=1
+  NOTE=Reported GUI theme repair SHA 37E64080… not located under tip/candidates/G bin this lane; do not claim theme PASS from source-only repair notes
+
+HISTORICAL_ONLY_DO_NOT_INHERIT=
+  9FDEBF09 tip_daily_items710_001 DAILY_DRIVER_9FDE_ITEMS_5_10.txt ITEMS_5_6 theme/dock/tabs/resize PASS; ITEM_9 problems click PASS; ITEM_10 WM_CLOSE/reopen PASS
+  F6E6C067 FOUR_PANEL_1_17_RECEIPT 17/17 PASS (four-panel/dock/problems) — different SHA
+  74AA/4B6C theme-dock source seals — different SHAs
+
+EVIDENCE_PRIMARY_TIP_G=
+  G020=issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt (ALIVE=1 S_01_LAUNCH=PASS_MAIN_HWND)
+  G021=issue49_gui_ollama_qwen3_021 (IDE_EXIT=-1073740791 ALIVE=0) — remasure crash; not GUI theme PASS
+  DAILY_DRIVER=FINALIZATION_CHECKLIST_001\DAILY_DRIVER_9FDE_ITEMS_5_10.txt (HISTORICAL_9FDE)
+
+# ID | STATUS | OBLIGATION | EVIDENCE / NEXT_EXECUTABLE_GATE
+G01=NOT_VERIFIED | Full dark/light theme propagation | HISTORICAL 9FDE ITEMS_5_6 PASS only; 37E64080 binary ABSENT; tip G theme switch runtime NOT_RUN; NEXT=applyTheme dark/light toggle + paint probe on IDE_SHA D56FE6DD userdata
+G02=NOT_VERIFIED | Theme-aware sidebar, chat, and controls | HISTORICAL 9FDE dock RGB(30,30,30) only; tip G full-system theme acceptance NOT_RUN; NEXT=sidebar+chat+ctlcolor visual matrix on D56FE6DD
+G03=NOT_VERIFIED | Recreate/invalidate theme brushes safely | Source repair notes HISTORICAL other-SHA; tip G brush recreate/invalidate runtime NOT_RUN; NEXT=theme toggle without stale brush/leak on D56FE6DD
+G04=NOT_VERIFIED | Four-panel layout and docking | HISTORICAL F6E6 17/17 FOUR_PANEL; tip G four-panel remasure NOT_RUN; NEXT=four_panel_1_17_measure.ps1 bound to D56FE6DD (no F6E6 inherit)
+G05=NOT_VERIFIED | Bottom dock and terminal resizing | HISTORICAL 9FDE item6 resize PASS; tip G dock/terminal resize NOT_RUN; NEXT=drag-resize dock+terminal HWND geometry on D56FE6DD
+G06=NOT_VERIFIED | Problems pane click-to-line | HISTORICAL 9FDE ITEM_9 + F6E6 S_06; tip G click-to-line NOT_RUN; NEXT=Problems item → editor caret line on D56FE6DD
+G07=NOT_VERIFIED | Editor/output background consistency | No tip G visual receipt; NEXT=theme bg compare editor vs output panes on D56FE6DD
+G08=NOT_VERIFIED | Toolbar, menu, tabs, and status bar styling | HISTORICAL 9FDE tabs IDC 1301; tip G chrome styling NOT_RUN; NEXT=toolbar/menu/tab/status theme probe on D56FE6DD
+G09=NOT_VERIFIED | Window resize, minimize, maximize, DPI | No tip G DPI/minmax receipt; NEXT=resize/minmax/DPI smoke on D56FE6DD
+G10=NOT_VERIFIED | Startup and shutdown without layout faults | RUNTIME_PARTIAL: G020 S_01_LAUNCH=PASS_MAIN_HWND on D56FE6DD; G021 remasure EXIT=-1073740791; WM_CLOSE/reopen HISTORICAL 9FDE only; NEXT=clean launch+WM_CLOSE+reopen without layout fault on D56FE6DD (same userdata cycle)
+G11=NOT_VERIFIED | Panel visibility and persistence | No tip G restart panel-restore receipt; NEXT=hide/show panels → restart → restore on D56FE6DD --user-data-dir
+G12=NOT_VERIFIED | Keyboard focus and accessibility | No tip G focus/a11y receipt; NEXT=focus traversal editor/chat/problems/terminal on D56FE6DD
+
+COUNTS=
+  TOTAL=12
+  PASS=0
+  FAIL=0
+  NOT_VERIFIED=12
+  HISTORICAL_NOTES=9FDE_theme_dock;F6E6_four_panel (not transferred)
+
+B07_IMPACT=
+  B07 requires editor+chat+terminal+Git+agent+inference on ONE SHA
+  No tip-G G-lane FAIL demonstrated this turn requiring source repair
+  B07 remains blocked by missing same-SHA G remasure + B01/S13 (owned elsewhere)
+  Do not invent G PASS from 9FDE/F6E6
+
+SOURCE_FIXES_THIS_LANE=0
+REBUILD=0
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+ACCEPTED=0

@@ -1,0 +1,14 @@
+# Cancellation result
+
+```ini
+TRIGGER=PASS
+REQUEST_SENT=PASS
+ESCAPE_ENTRY=PASS
+CANCELLED=PASS
+GENERATION_INVALIDATED=PASS
+PENDING_CLEARED=PASS
+LATE_RESPONSE_REJECTED=PASS
+POST_CANCEL_RENDER=0
+```
+
+This closes the Escape cancellation boundary for the instrumented candidate.

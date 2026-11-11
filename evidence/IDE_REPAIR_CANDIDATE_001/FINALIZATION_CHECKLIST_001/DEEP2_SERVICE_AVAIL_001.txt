@@ -1,0 +1,81 @@
+DEEP2_SERVICE_AVAIL_001
+ASOF_UTC=2026-11-10T18:30:45Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+P04_STATUS=FAIL_CLOSED_BLOCKED
+LAW=NOT_RUN!=PASS
+LAW=HEALTH_MODELS_PASS!=GENERATION_PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED
+TIP_CLIMB=HOLD
+
+GOAL=Server starts; API on :8080 (or documented Deep2 port); load model; one generation via RawrXD/Deep2 path
+
+INVENTORY=
+  DEEP2_NATIVE_DOCUMENTED_PORT=11436
+  DEEP2_NATIVE_SCRIPT=F:\rawrxd\src\deep2\start_deep2_server.bat
+  DEEP2_NATIVE_BINARY=test_api_server.exe MISSING (script expects cwd binary; not present)
+  DEEP2_OPENAI_SOURCES=deep2_openai_server.h PRESENT; deep2_openai_server_main.cpp/cpp MISSING from src\deep2
+  DEEP2_OPENAI_BINARY=F:\rawrxd\build_deep2_cuda\bin\Release\deep2_openai_server.exe MISSING_AT_RUNTIME
+  RAWR_CLI_HTTP_FALLBACK=127.0.0.1:8080 (llama.cpp / OpenAI chat completions)
+  SERVE_USED=F:\rawrxd\tmp_llama-cpp-cpu\llama-server.exe
+  MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  ALIAS=tinyllama-1.1b-chat
+
+SAFE_PROCESS_POLICY=
+  NO_WILDCARD_KILL_RawrXD-Win32IDE-Native=1
+  STOP_METHOD=path+PID scoped only
+  IDE_LEFT_ALIVE=1
+  IDE_PIDS_OBSERVED=40400,41664
+  IDE_PATH=F:\rawrxd\build_ide\bin\RawrXD-Win32IDE-Native.exe
+
+RUN_1=
+  CMD=llama-server.exe -m tinyllama... --host 127.0.0.1 --port 8080 -c 512 -a tinyllama-1.1b-chat --no-warmup
+  PID=22504
+  LISTEN=PASS http://127.0.0.1:8080
+  HEALTH=PASS HTTP_200 {"status":"ok"}
+  V1_MODELS=PASS HTTP_200 id=tinyllama-1.1b-chat
+  GENERATION=/v1/chat/completions
+  GENERATION_RESULT=FAIL client_timeout_120s then cancel; prompt_done then decode stall
+  NOTE=log showed offload 23/23 layers to GPU with only RPC+CPU backends loaded
+
+RUN_2=
+  CMD=same + -ngl 0 -c 256 (CPU-only restart after PID-scoped stop of 22504)
+  PID=24116
+  LISTEN=PASS
+  HEALTH=PASS
+  V1_MODELS=PASS
+  GENERATION=/v1/chat/completions max_tokens=16
+  GENERATION_RESULT=FAIL client_timeout_180s; prompt_done; decode stall; CPU_DELTA=0 during hang
+  COMPLETION_ENDPOINT=/completion n_predict=4
+  COMPLETION_RESULT=FAIL client_timeout_60s; same prompt_done then stall/cancel
+  STOP=PID_SCOPED_24116 path=F:\rawrxd\tmp_llama-cpp-cpu\llama-server.exe
+
+BLOCKERS=
+  1_DEEP2_OPENAI_SERVER_BINARY_MISSING
+  2_DEEP2_NATIVE_11436_BINARY_MISSING (test_api_server.exe)
+  3_LLAMA_SERVER_8080_DECODE_HANG_AFTER_PROMPT (HEALTH/MODELS ok; GENERATION not reached)
+  4_PRIOR_PATTERN_MATCH=prior :8080 failed before usable inference; reproduced fail-closed
+
+NOT_CLAIMED=
+  DEEP2_NATIVE_E2E=0
+  GENERATION_PASS=0
+  STRATA_REUSED_AS_DEEP2=0
+  PROMOTE=0
+
+EVIDENCE_ARTIFACTS=
+  _p04_llama_server_stderr.txt
+  _p04_llama_server_stderr2.txt
+  _p04_llama_server_pid.txt
+  _p04_gen_request.json
+  _p04_gen_response.json (stale/empty on timeout)
+  _p04_completion_request.json
+
+NEXT_EXECUTABLE_GATE=
+  Rebuild or restore deep2_openai_server.exe OR Deep2APIServer/test_api_server for documented port
+  OR repair llama-server decode hang on this host (CPU idle after prompt_done)
+  Then re-probe /v1/models + one /v1/chat/completions with GENERATED_TOKENS>0
+
+DISPOSITION=P04_BLOCKED_FAIL_CLOSED
+PROMOTE=0
+CERTIFIED=0

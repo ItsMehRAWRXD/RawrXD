@@ -1,0 +1,14 @@
+﻿{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  24452,
+    "Model":  "Local models / Ollama / bigdaddyg-productivity-local:latest",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  false,
+    "TranscriptDelta":  "",
+    "Error":  "Cannot find a process with the process identifier 24452."
+}

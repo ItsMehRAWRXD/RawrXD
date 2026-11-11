@@ -1,0 +1,4 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=44456 request_generation=1 prompt_fnv1a=2C3AB433AD2DBAE9 model='bigdaddyg-productivity-local:latest' prompt_len=58 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_DEBUG] generateOllamaModel: pid=6624 request_generation=1 prompt_fnv1a=2C3AB433AD2DBAE9 model='bigdaddyg-productivity-local:latest' prompt_len=58 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434

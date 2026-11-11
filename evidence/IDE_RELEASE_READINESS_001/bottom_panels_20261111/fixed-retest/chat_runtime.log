@@ -1,0 +1,11 @@
+SESSION_OPEN session_id=sid_00008C0C_000000000056D668 run_id=run_unset pid=35852
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=0 creating=1 depth=0 session_id=sid_00008C0C_000000000056D668 run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=0 creating=0 depth=0 session_id=sid_00008C0C_000000000056D6E5 run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=1 creating=0 depth=0 session_id=sid_00008C0C_000000000056D917 run_id=run_unset
+PANEL_LAYOUT phase=complete active=0 body_top=489 body_height=226 dock=1 terminal_panes=1 output_channels=12 active_output=Output debug_hwnd=68224 session_id=sid_00008C0C_000000000056D927 run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=1 creating=0 depth=0 session_id=sid_00008C0C_000000000058136C run_id=run_unset
+PANEL_LAYOUT phase=complete active=1 body_top=489 body_height=226 dock=1 terminal_panes=1 output_channels=12 active_output=Output debug_hwnd=68224 session_id=sid_00008C0C_000000000058137C run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=1 creating=0 depth=0 session_id=sid_00008C0C_00000000005815DD run_id=run_unset
+PANEL_LAYOUT phase=complete active=2 body_top=489 body_height=226 dock=1 terminal_panes=1 output_channels=12 active_output=Output debug_hwnd=68224 session_id=sid_00008C0C_00000000005815ED run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=1 creating=0 depth=0 session_id=sid_00008C0C_00000000005817B2 run_id=run_unset
+PANEL_LAYOUT phase=complete active=3 body_top=489 body_height=226 dock=1 terminal_panes=1 output_channels=12 active_output=Output debug_hwnd=68224 session_id=sid_00008C0C_00000000005817C2 run_id=run_unset

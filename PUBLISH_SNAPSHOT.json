@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/upload/ide-fixes-20261111",
+  "original_commit": "13e3a05d70bbb47e574f40eb7352a772afafc5cb",
+  "worktree": "F:/rawrxd",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/24b2ef94/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}

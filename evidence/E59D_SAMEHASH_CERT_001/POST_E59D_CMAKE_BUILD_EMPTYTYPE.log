@@ -1,0 +1,778 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:437 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:446 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- The ASM compiler identification is MSVC
+CMake Warning (policy) at C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeDetermineASMCompiler.cmake:237 (cmake_policy):
+  Policy CMP0194 is not set: MSVC is not an assembler for language ASM.  Run
+  "cmake --help-policy CMP0194" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  3rdparty/ggml/CMakeLists.txt:2 (project)
+This warning is for project developers.  Use -Wno-author or -Wno-policy to
+suppress it.
+
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: 
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- Found OpenMP_C: -openmp (found version "2.0")
+-- Found OpenMP_CXX: -openmp (found version "2.0")
+-- Found OpenMP: TRUE (found version "2.0")
+-- x86 detected
+-- Performing Test HAS_AVX_1
+-- Performing Test HAS_AVX_1 - Success
+-- Performing Test HAS_AVX2_1
+-- Performing Test HAS_AVX2_1 - Success
+-- Performing Test HAS_FMA_1
+-- Performing Test HAS_FMA_1 - Success
+-- Performing Test HAS_AVX512_1
+-- Performing Test HAS_AVX512_1 - Success
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- Found Vulkan: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib (found version "1.4.357") found components: glslc glslangValidator
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  57f4dd1f05
+-- rawr_run: MSVC security hardening enabled
+-- rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.357
+-- Vulkan header: C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_bench_tps enabled (production timing witness)
+-- deep2_gpu_certify enabled (full-model GPU/CPU logits certification)
+-- deep2_dualgpu_forward enabled (split-device dispatch witness)
+-- deep2_reverse_engineer enabled (native Qwen4Exp contract audit)
+-- deep2_gdn_parity_harness enabled (reference-only GDN contract)
+-- deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)
+-- deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)
+-- deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)
+-- deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)
+-- deep2_enterprise_manifest enabled (source-to-parity closure receipt)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- HexMag cert targets EXCLUDED: required sources not found
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)
+-- q6k_row_differential_test enabled (Q6_K row-level differential test)
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- agentic_loop_bridge_recovery_smoke enabled
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_vulkan_gdn_dispatch_probe enabled (class-level stateful GDN dispatch)
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics
+-- Found Python3: C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python.exe (found version "3.13.15") found components: Interpreter
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference enabled (headless Deep2 inference harness)
+-- Configuring done (6.3s)
+-- Generating done (0.2s)
+-- Build files have been written to: F:/rawrxd/build_post_e59d_candidate
+CMAKE_EXIT=0
+CMAKE_BUILD_TYPE:STRING=
+[0/2] Re-checking globbed directories...
+[1/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-alloc.c.obj
+[2/492] Creating directories for 'vulkan-shaders-gen'
+[3/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-quants.c.obj
+[4/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.cpp.obj
+[5/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.c.obj
+[6/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-threading.cpp.obj
+[7/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.c.obj
+[8/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-backend.cpp.obj
+[9/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\hbm.cpp.obj
+[10/492] No download step for 'vulkan-shaders-gen'
+[11/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-opt.cpp.obj
+[12/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\quants.c.obj
+[13/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\repack.cpp.obj
+[14/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\traits.cpp.obj
+[15/492] No update step for 'vulkan-shaders-gen'
+[16/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\amx.cpp.obj
+[17/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.cpp.obj
+[18/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\gguf.cpp.obj
+[19/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\mmq.cpp.obj
+[20/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\binary-ops.cpp.obj
+[21/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\vec.cpp.obj
+[22/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\unary-ops.cpp.obj
+[23/492] No patch step for 'vulkan-shaders-gen'
+[24/492] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\quants.c.obj
+[25/492] Linking CXX static library 3rdparty\ggml\src\ggml-base.lib
+[26/492] Compiling resident Deep2 Q4/Q6 GEMV shader
+[27/492] Compiling Deep2 fused spec-ops shader
+[28/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ops.cpp.obj
+[29/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\repack.cpp.obj
+[30/492] Generating local/cloud chat route menu from manifest
+generated F:\rawrxd\build_post_e59d_candidate\generated\GeneratedChatRouteMenu.h from F:\rawrxd\.worktrees\e59d_restore\config\chat_model_routes.json
+[31/492] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\secure_buffer.cpp.obj
+[32/492] Linking CXX static library 3rdparty\ggml\src\ggml-cpu.lib
+[33/492] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\input_sanitizer.cpp.obj
+[34/492] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\crash_handler.cpp.obj
+[35/492] Linking CXX static library rawrxd_security.lib
+[36/492] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignReliabilityFaultTolerance.cpp.obj
+[37/492] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignProductionConfig.cpp.obj
+[38/492] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignObservability.cpp.obj
+[39/492] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\ProductionRuntime.cpp.obj
+[40/492] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignSecurityHardening.cpp.obj
+[41/492] Linking CXX static library src\production\rawrxd_production_hardening.lib
+[42/492] Performing configure step for 'vulkan-shaders-gen'
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Enabling coopmat glslc support
+-- Enabling coopmat2 glslc support
+-- Enabling dot glslc support
+-- Enabling bfloat16 glslc support
+-- Configuring done (3.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: F:/rawrxd/build_post_e59d_candidate/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-build
+[43/492] Performing build step for 'vulkan-shaders-gen'
+[1/2] Building CXX object CMakeFiles\vulkan-shaders-gen.dir\vulkan-shaders-gen.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[2/2] Linking CXX executable vulkan-shaders-gen.exe
+[44/492] Performing install step for 'vulkan-shaders-gen'
+-- Install configuration: ""
+-- Installing: F:/rawrxd/build_post_e59d_candidate/vulkan-shaders-gen.exe
+[45/492] Completed 'vulkan-shaders-gen'
+[46/492] Generate vulkan shaders header
+[47/492] Generate vulkan shaders for abs.comp
+[48/492] Generate vulkan shaders for add_id.comp
+[49/492] Generate vulkan shaders for acc.comp
+[50/492] Generate vulkan shaders for argsort.comp
+[51/492] Generate vulkan shaders for argmax.comp
+[52/492] Generate vulkan shaders for clamp.comp
+[53/492] Generate vulkan shaders for concat.comp
+[54/492] Generate vulkan shaders for conv_transpose_1d.comp
+[55/492] Generate vulkan shaders for add.comp
+[56/492] Generate vulkan shaders for conv2d_dw.comp
+[57/492] Generate vulkan shaders for contig_copy.comp
+[58/492] Generate vulkan shaders for copy.comp
+[59/492] Generate vulkan shaders for conv2d_mm.comp
+[60/492] Generate vulkan shaders for copy_from_quant.comp
+[61/492] Generate vulkan shaders for cos.comp
+[62/492] Generate vulkan shaders for count_equal.comp
+[63/492] Generate vulkan shaders for dequant_iq1_m.comp
+[64/492] Generate vulkan shaders for dequant_f32.comp
+[65/492] Generate vulkan shaders for dequant_iq2_s.comp
+[66/492] Generate vulkan shaders for dequant_iq1_s.comp
+[67/492] Generate vulkan shaders for dequant_iq2_xs.comp
+[68/492] Generate vulkan shaders for dequant_iq3_s.comp
+[69/492] Generate vulkan shaders for dequant_iq2_xxs.comp
+[70/492] Generate vulkan shaders for dequant_iq3_xxs.comp
+[71/492] Generate vulkan shaders for dequant_iq4_nl.comp
+[72/492] Generate vulkan shaders for dequant_mxfp4.comp
+[73/492] Generate vulkan shaders for dequant_iq4_xs.comp
+[74/492] Generate vulkan shaders for dequant_q2_k.comp
+[75/492] Generate vulkan shaders for dequant_q3_k.comp
+[76/492] Generate vulkan shaders for copy_to_quant.comp
+[77/492] Generate vulkan shaders for dequant_q4_0.comp
+[78/492] Generate vulkan shaders for dequant_q4_1.comp
+[79/492] Generate vulkan shaders for dequant_q4_k.comp
+[80/492] Generate vulkan shaders for dequant_q5_0.comp
+[81/492] Generate vulkan shaders for dequant_q5_1.comp
+[82/492] Generate vulkan shaders for dequant_q5_k.comp
+[83/492] Generate vulkan shaders for diag_mask_inf.comp
+[84/492] Generate vulkan shaders for dequant_q8_0.comp
+[85/492] Generate vulkan shaders for dequant_q6_k.comp
+[86/492] Generate vulkan shaders for exp.comp
+[87/492] Generate vulkan shaders for div.comp
+[88/492] Generate vulkan shaders for flash_attn_split_k_reduce.comp
+[89/492] Generate vulkan shaders for flash_attn.comp
+[90/492] Generate vulkan shaders for flash_attn_cm1.comp
+[91/492] Generate vulkan shaders for geglu.comp
+[92/492] Generate vulkan shaders for geglu_erf.comp
+[93/492] Generate vulkan shaders for gelu.comp
+[94/492] Generate vulkan shaders for geglu_quick.comp
+[95/492] Generate vulkan shaders for gelu_erf.comp
+[96/492] Generate vulkan shaders for get_rows.comp
+[97/492] Generate vulkan shaders for gelu_quick.comp
+[98/492] Generate vulkan shaders for group_norm.comp
+[99/492] Generate vulkan shaders for hardsigmoid.comp
+[100/492] Generate vulkan shaders for hardswish.comp
+[101/492] Generate vulkan shaders for flash_attn_cm2.comp
+[102/492] Generate vulkan shaders for leaky_relu.comp
+[103/492] Generate vulkan shaders for l2_norm.comp
+[104/492] Generate vulkan shaders for get_rows_quant.comp
+[105/492] Generate vulkan shaders for im2col.comp
+[106/492] Generate vulkan shaders for im2col_3d.comp
+[107/492] Generate vulkan shaders for log.comp
+[108/492] Generate vulkan shaders for mul_mat_split_k_reduce.comp
+[109/492] Generate vulkan shaders for mul.comp
+[110/492] Generate vulkan shaders for mul_mat_vec_iq1_m.comp
+[111/492] Generate vulkan shaders for mul_mat_vec_iq2_s.comp
+[112/492] Generate vulkan shaders for mul_mat_vec_iq1_s.comp
+[113/492] Generate vulkan shaders for mul_mat_vec_iq2_xxs.comp
+[114/492] Generate vulkan shaders for mul_mat_vec_iq2_xs.comp
+[115/492] Generate vulkan shaders for mul_mat_vec_iq3_s.comp
+[116/492] Generate vulkan shaders for mul_mat_vec_iq3_xxs.comp
+[117/492] Generate vulkan shaders for mul_mat_vec_nc.comp
+[118/492] Generate vulkan shaders for mul_mat_vec_p021.comp
+[119/492] Generate vulkan shaders for mul_mat_vec_q2_k.comp
+[120/492] Generate vulkan shaders for mul_mat_vec_q3_k.comp
+[121/492] Generate vulkan shaders for mul_mat_vec_q5_k.comp
+[122/492] Generate vulkan shaders for mul_mat_vec.comp
+[123/492] Generate vulkan shaders for mul_mat_vec_q4_k.comp
+[124/492] Generate vulkan shaders for mul_mat_vec_q6_k.comp
+[125/492] Generate vulkan shaders for mul_mat_vecq.comp
+[126/492] Generate vulkan shaders for multi_add.comp
+[127/492] Generate vulkan shaders for neg.comp
+[128/492] Generate vulkan shaders for norm.comp
+[129/492] Generate vulkan shaders for opt_step_adamw.comp
+[130/492] Generate vulkan shaders for pad.comp
+[131/492] Generate vulkan shaders for opt_step_sgd.comp
+[132/492] Generate vulkan shaders for pool2d.comp
+[133/492] Generate vulkan shaders for quantize_q8_1.comp
+[134/492] Generate vulkan shaders for repeat.comp
+[135/492] Generate vulkan shaders for reglu.comp
+[136/492] Generate vulkan shaders for relu.comp
+[137/492] Generate vulkan shaders for mul_mmq.comp
+[138/492] Generate vulkan shaders for repeat_back.comp
+[139/492] Generate vulkan shaders for rms_norm.comp
+[140/492] Generate vulkan shaders for rms_norm_back.comp
+[141/492] Generate vulkan shaders for rms_norm_partials.comp
+[142/492] Generate vulkan shaders for roll.comp
+[143/492] Generate vulkan shaders for rope_multi.comp
+[144/492] Generate vulkan shaders for rope_vision.comp
+[145/492] Generate vulkan shaders for rope_norm.comp
+[146/492] Generate vulkan shaders for rope_neox.comp
+[147/492] Generate vulkan shaders for scale.comp
+[148/492] Generate vulkan shaders for sigmoid.comp
+[149/492] Generate vulkan shaders for silu.comp
+[150/492] Generate vulkan shaders for silu_back.comp
+[151/492] Generate vulkan shaders for soft_max_back.comp
+[152/492] Generate vulkan shaders for sin.comp
+[153/492] Generate vulkan shaders for sqrt.comp
+[154/492] Generate vulkan shaders for soft_max.comp
+[155/492] Generate vulkan shaders for ssm_conv.comp
+[156/492] Generate vulkan shaders for square.comp
+[157/492] Generate vulkan shaders for sum_rows.comp
+[158/492] Generate vulkan shaders for ssm_scan.comp
+[159/492] Generate vulkan shaders for swiglu.comp
+[160/492] Generate vulkan shaders for sub.comp
+[161/492] Generate vulkan shaders for timestep_embedding.comp
+[162/492] Generate vulkan shaders for tanh.comp
+[163/492] Generate vulkan shaders for swiglu_oai.comp
+[164/492] Generate vulkan shaders for topk_moe.comp
+[165/492] Generate vulkan shaders for mul_mm_cm2.comp
+[166/492] Generate vulkan shaders for upscale.comp
+[167/492] Generate vulkan shaders for wkv6.comp
+[168/492] Generate vulkan shaders for wkv7.comp
+[169/492] Generate vulkan shaders for mul_mm.comp
+[170/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\acc.comp.cpp.obj
+[171/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\abs.comp.cpp.obj
+[172/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\add_id.comp.cpp.obj
+[173/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\argsort.comp.cpp.obj
+[174/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\argmax.comp.cpp.obj
+[175/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\clamp.comp.cpp.obj
+[176/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv2d_dw.comp.cpp.obj
+[177/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\contig_copy.comp.cpp.obj
+[178/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\concat.comp.cpp.obj
+[179/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\add.comp.cpp.obj
+[180/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv_transpose_1d.comp.cpp.obj
+[181/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy.comp.cpp.obj
+[182/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv2d_mm.comp.cpp.obj
+[183/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\cos.comp.cpp.obj
+[184/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy_from_quant.comp.cpp.obj
+[185/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\count_equal.comp.cpp.obj
+[186/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_f32.comp.cpp.obj
+[187/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq1_m.comp.cpp.obj
+[188/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_s.comp.cpp.obj
+[189/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq1_s.comp.cpp.obj
+[190/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_xxs.comp.cpp.obj
+[191/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_xs.comp.cpp.obj
+[192/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq3_xxs.comp.cpp.obj
+[193/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq4_nl.comp.cpp.obj
+[194/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq4_xs.comp.cpp.obj
+[195/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq3_s.comp.cpp.obj
+[196/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_mxfp4.comp.cpp.obj
+[197/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q2_k.comp.cpp.obj
+[198/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q3_k.comp.cpp.obj
+[199/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_0.comp.cpp.obj
+[200/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy_to_quant.comp.cpp.obj
+[201/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_0.comp.cpp.obj
+[202/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_1.comp.cpp.obj
+[203/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_k.comp.cpp.obj
+[204/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_1.comp.cpp.obj
+[205/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_k.comp.cpp.obj
+[206/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q6_k.comp.cpp.obj
+[207/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q8_0.comp.cpp.obj
+[208/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\diag_mask_inf.comp.cpp.obj
+[209/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\exp.comp.cpp.obj
+[210/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\div.comp.cpp.obj
+[211/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_split_k_reduce.comp.cpp.obj
+[212/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn.comp.cpp.obj
+[213/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu_erf.comp.cpp.obj
+[214/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu.comp.cpp.obj
+[215/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu.comp.cpp.obj
+[216/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu_erf.comp.cpp.obj
+[217/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu_quick.comp.cpp.obj
+[218/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_cm1.comp.cpp.obj
+[219/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu_quick.comp.cpp.obj
+[220/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\get_rows.comp.cpp.obj
+[221/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\hardsigmoid.comp.cpp.obj
+[222/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\group_norm.comp.cpp.obj
+[223/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\im2col.comp.cpp.obj
+[224/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\im2col_3d.comp.cpp.obj
+[225/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\hardswish.comp.cpp.obj
+[226/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\l2_norm.comp.cpp.obj
+[227/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\leaky_relu.comp.cpp.obj
+[228/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\get_rows_quant.comp.cpp.obj
+[229/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_split_k_reduce.comp.cpp.obj
+[230/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\log.comp.cpp.obj
+[231/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul.comp.cpp.obj
+[232/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq1_s.comp.cpp.obj
+[233/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_cm2.comp.cpp.obj
+[234/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq1_m.comp.cpp.obj
+[235/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_xxs.comp.cpp.obj
+[236/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_nc.comp.cpp.obj
+[237/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_xs.comp.cpp.obj
+[238/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_s.comp.cpp.obj
+[239/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_p021.comp.cpp.obj
+[240/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq3_xxs.comp.cpp.obj
+[241/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq3_s.comp.cpp.obj
+[242/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q4_k.comp.cpp.obj
+[243/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q2_k.comp.cpp.obj
+[244/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q3_k.comp.cpp.obj
+[245/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q5_k.comp.cpp.obj
+[246/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q6_k.comp.cpp.obj
+[247/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vecq.comp.cpp.obj
+[248/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\multi_add.comp.cpp.obj
+[249/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\neg.comp.cpp.obj
+[250/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\norm.comp.cpp.obj
+[251/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\opt_step_adamw.comp.cpp.obj
+[252/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\opt_step_sgd.comp.cpp.obj
+[253/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\pad.comp.cpp.obj
+[254/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\quantize_q8_1.comp.cpp.obj
+[255/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\pool2d.comp.cpp.obj
+[256/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\reglu.comp.cpp.obj
+[257/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec.comp.cpp.obj
+[258/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\relu.comp.cpp.obj
+[259/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\repeat.comp.cpp.obj
+[260/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\repeat_back.comp.cpp.obj
+[261/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm_back.comp.cpp.obj
+[262/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm_partials.comp.cpp.obj
+[263/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm.comp.cpp.obj
+[264/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\roll.comp.cpp.obj
+[265/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_multi.comp.cpp.obj
+[266/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_neox.comp.cpp.obj
+[267/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_vision.comp.cpp.obj
+[268/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_norm.comp.cpp.obj
+[269/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\scale.comp.cpp.obj
+[270/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sigmoid.comp.cpp.obj
+[271/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mmq.comp.cpp.obj
+[272/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\silu_back.comp.cpp.obj
+[273/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\silu.comp.cpp.obj
+[274/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sin.comp.cpp.obj
+[275/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\soft_max_back.comp.cpp.obj
+[276/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sqrt.comp.cpp.obj
+[277/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\square.comp.cpp.obj
+[278/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\soft_max.comp.cpp.obj
+[279/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ssm_conv.comp.cpp.obj
+[280/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sum_rows.comp.cpp.obj
+[281/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ssm_scan.comp.cpp.obj
+[282/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\swiglu.comp.cpp.obj
+[283/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\swiglu_oai.comp.cpp.obj
+[284/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sub.comp.cpp.obj
+[285/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\tanh.comp.cpp.obj
+[286/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\timestep_embedding.comp.cpp.obj
+[287/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\topk_moe.comp.cpp.obj
+[288/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\wkv7.comp.cpp.obj
+[289/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\upscale.comp.cpp.obj
+[290/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\wkv6.comp.cpp.obj
+[291/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\asm_stubs.cpp.obj
+[292/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\lavapath\GpuDeviceLostReset.cpp.obj
+[293/492] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml.dir\ggml-backend-reg.cpp.obj
+[294/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[295/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\lavapath\GpuDeviceLostReset_Vk.cpp.obj
+[296/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mm_cm2.comp.cpp.obj
+[297/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\gguf_vocab_resolver.cpp.obj
+[298/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\vulkan_compute.cpp.obj
+[299/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\gguf_loader.cpp.obj
+[300/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\utils\Diagnostics.cpp.obj
+[301/492] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\streaming_gguf_loader.cpp.obj
+[302/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ggml-vulkan.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(3911): warning C4003: not enough arguments for function-like macro invocation 'IM2COL'
+F:\rawrxd\.worktrees\e59d_restore\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(4045): warning C4003: not enough arguments for function-like macro invocation 'CREATE_CONVS'
+F:\rawrxd\.worktrees\e59d_restore\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6481): warning C4319: '~': zero extending '_Ty' to 'uint64_t' of greater size
+        with
+        [
+            _Ty=uint32_t
+        ]
+F:\rawrxd\.worktrees\e59d_restore\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7257): warning C4319: '~': zero extending '_Ty' to 'uint64_t' of greater size
+        with
+        [
+            _Ty=uint32_t
+        ]
+F:\rawrxd\.worktrees\e59d_restore\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9541): warning C4319: '~': zero extending 'uint32_t' to 'size_t' of greater size
+[303/492] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mm.comp.cpp.obj
+[304/492] Linking CXX static library 3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.lib
+[305/492] Linking CXX static library 3rdparty\ggml\src\ggml.lib
+[306/492] Linking CXX static library rawrxd_gpu_compute.lib
+[307/492] Assembling VwaRangeLineageX64.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/deep2/vwa/VwaRangeLineageX64.asm
+[308/492] Assembling RuntimeEvidence512_Core.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/asm/RuntimeEvidence512_Core.asm
+[309/492] Assembling KN_O3KKEN.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/deep2/lavapath/KN_O3KKEN.asm
+[310/492] Assembling RuntimeEvidence512_Emit.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/asm/RuntimeEvidence512_Emit.asm
+[311/492] Assembling RuntimeEvidence512_Collect.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/asm/RuntimeEvidence512_Collect.asm
+[312/492] Assembling RuntimeEvidence512_IDEEmit.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/asm/RuntimeEvidence512_IDEEmit.asm
+[313/492] Assembling RuntimeEvidence512_IDECollect.asm with ml64
+ Assembling: F:/rawrxd/.worktrees/e59d_restore/src/asm/RuntimeEvidence512_IDECollect.asm
+[314/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Log.cpp.obj
+[315/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\reap\ReapRuntimePlan.cpp.obj
+[316/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\ChatTemplate.cpp.obj
+[317/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\tool_call_parser.cpp.obj
+[318/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_engine_adapter.cpp.obj
+[319/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\generic_vulkan_matmul.cpp.obj
+[320/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\reap\ReapRuntime.cpp.obj
+[321/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MlaLifecycleAdapter.cpp.obj
+[322/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MlaCertAuthority.cpp.obj
+[323/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2CLIBridge.cpp.obj
+[324/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\CompressedKVCache.cpp.obj
+[325/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2InferenceService.cpp.obj
+[326/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\KVCache.cpp.obj
+[327/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\VwaResolveBlocks.cpp.obj
+[328/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_ModelFit.cpp.obj
+[329/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[330/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\AgentOrchestrator.cpp.obj
+[331/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_subsystems.cpp.obj
+[332/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\NVMeStream.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\NVMeStream.cpp(91): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\NVMeStream.cpp(119): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\NVMeStream.cpp(127): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\NVMeStream.cpp(137): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\NVMeStream.cpp(147): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+[333/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3648): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3693): note: consider using '%zu' in the format string
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3750): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\Deep2Engine.cpp(3750): note: consider using '%zu' in the format string
+[334/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ResidencyManager.cpp.obj
+[335/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\CycloneScheduler.cpp.obj
+[336/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\WarmupScheduler.cpp.obj
+[337/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MARS.cpp.obj
+[338/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\NUFusedPacker.cpp.obj
+[339/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoERouter.cpp.obj
+[340/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[341/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\RouterPrefetchTelemetry.cpp.obj
+[342/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightsLoader.cpp.obj
+[343/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\BP16Streamer.cpp.obj
+[344/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+[345/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Chamber.cpp.obj
+[346/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightProxy.cpp.obj
+[347/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HotPatcher.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(761): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(762): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(763): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(778): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(779): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(780): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(781): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(782): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(783): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\HotPatcher.cpp(785): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252)
+[348/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+[349/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\ReverseHotpatchEngine.cpp(538): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 2 has type 'std::string'
+[350/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy.cpp.obj
+[351/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\VulkanWeightStreamerVulkanBackend.cpp.obj
+[352/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAAttention.cpp.obj
+[353/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\PlasmaGovernor.cpp.obj
+[354/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_GpuGemv.cpp.obj
+[355/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2ShardIo.cpp.obj
+[356/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+[357/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn.cpp.obj
+[358/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2TokenEmbedding.cpp.obj
+[359/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj
+[360/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsSplit.cpp.obj
+[361/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Place.cpp.obj
+[362/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache.cpp.obj
+[363/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache_Emit.cpp.obj
+[364/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsClimb.cpp.obj
+[365/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2WeightResolve.cpp.obj
+[366/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\runtime\QbHostReadbackWindow.cpp.obj
+[367/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB.cpp.obj
+[368/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HostExchangeDiscover.cpp.obj
+[369/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache_Prefetch.cpp.obj
+[370/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2QbHostShrinkD2h.cpp.obj
+[371/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB_Attn.cpp.obj
+[372/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Evict.cpp.obj
+[373/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Table.cpp.obj
+[374/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Attr.cpp.obj
+[375/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Note.cpp.obj
+[376/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice_Emit.cpp.obj
+[377/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Quota.cpp.obj
+[378/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Expert.cpp.obj
+[379/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MoEWeights.cpp.obj
+[380/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Touch.cpp.obj
+[381/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpu.cpp.obj
+[382/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickExpertBundle.cpp.obj
+[383/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Pins.cpp.obj
+[384/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_CostCov.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\lavapath\DualStickImbalance_CostCov.cpp(52): warning C4551: function call missing argument list
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\lavapath\DualStickImbalance_CostCov.cpp(53): warning C4551: function call missing argument list
+[385/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance.cpp.obj
+[386/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Xfer.cpp.obj
+[387/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Steal.cpp.obj
+[388/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Cost.cpp.obj
+[389/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch.cpp.obj
+[390/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Ewma.cpp.obj
+[391/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Observe.cpp.obj
+[392/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_KnO3.cpp.obj
+[393/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Move.cpp.obj
+[394/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Seal.cpp.obj
+[395/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\EndDeviceStep3Diag.cpp.obj
+[396/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Worker.cpp.obj
+[397/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeStreamGate.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+[398/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\GpuDeviceLostReset.cpp.obj
+[399/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEExpertResidencyPlace_Place.cpp.obj
+[400/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEExpertResidencyPlace.cpp.obj
+[401/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Nvme.cpp.obj
+[402/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Vc.cpp.obj
+[403/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_KvExpand_Fused.cpp.obj
+[404/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\GpuDeviceLostReset_Vk.cpp.obj
+[405/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SsmCertProbe.cpp.obj
+[406/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpuLayerPlan.cpp.obj
+[407/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MlaCertProbe.cpp.obj
+[408/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\AttnCertProbe.cpp.obj
+[409/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEPlaceLiveCounters.cpp.obj
+[410/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2DeviceManager.cpp.obj
+[411/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\FusedLiveController.cpp.obj
+[412/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy.cpp.obj
+[413/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticDynamicBudget.cpp.obj
+[414/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\DualGPUHook.cpp.obj
+[415/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenMicroZone.cpp.obj
+[416/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAWeights.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+[417/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GhostCache.cpp.obj
+[418/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath.cpp.obj
+[419/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ElasticResidencyManager.cpp.obj
+[420/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\TrailBrake.cpp.obj
+[421/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumerSpace.cpp.obj
+[422/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicy.cpp.obj
+[423/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyStore.cpp.obj
+[424/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\KimiK2Config.cpp.obj
+[425/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\sampling\advanced_sampler.cpp.obj
+[426/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\PlacementPlan.cpp.obj
+[427/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ollama_blob_parser_impl.cpp.obj
+[428/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QaCritical.cpp.obj
+[429/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\mars\VRAMManager.cpp.obj
+[430/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+[431/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Gate.cpp.obj
+[432/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_FusedQ4KT.cpp.obj
+[433/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2BraidExecutionPolicy.cpp.obj
+[434/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\asm_stubs.cpp.obj
+[435/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice.cpp.obj
+[436/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsLineage.cpp.obj
+[437/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\GpuTransfer_Emit.cpp.obj
+[438/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEEliminate.cpp.obj
+[439/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+[440/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_missing_members.cpp.obj
+[441/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_GpuForward.cpp.obj
+[442/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj
+[443/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj
+[444/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Pinball.cpp.obj
+[445/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePolicy_Apply.cpp.obj
+[446/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2MultiGpu_CostCut.cpp.obj
+[447/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj
+[448/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2C1C9.cpp.obj
+[449/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_link_supplement.cpp.obj
+[450/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Thermal.cpp.obj
+[451/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy_Overlap.cpp.obj
+[452/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_Mech.cpp.obj
+[453/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_adapter_fused.cpp.obj
+[454/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FreeTokenFutureCompletion.cpp.obj
+[455/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2LivePath_MechEnd.cpp.obj
+[456/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamerParity_Post.cpp.obj
+[457/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamEngine.cpp.obj
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(83): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(207): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(354): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(445): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(454): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(478): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(579): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(625): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(626): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(627): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(628): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(629): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(630): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(631): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(632): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(633): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(634): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(635): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(636): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(637): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(638): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(639): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(640): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252)
+F:\rawrxd\.worktrees\e59d_restore\src\deep2\StreamEngine.cpp(641): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252)
+[458/492] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HotPatcherSafety.cpp.obj
+[459/492] Linking CXX static library deep2_engine_lib.lib
+[460/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+[461/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\main_win32.cpp.obj
+[462/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+[463/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+[464/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Logger.cpp.obj
+[465/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+[466/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32TerminalManager.cpp.obj
+[467/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgentStepTimeline.cpp.obj
+[468/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+[469/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+[470/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Commands.cpp.obj
+[471/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE.cpp.obj
+[472/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Autonomy.cpp.obj
+[473/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+[474/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+[475/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+[476/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cloud_api_client.cpp.obj
+[477/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+[478/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+[479/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+[480/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\TransparentRenderer.cpp.obj
+[481/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\gguf_vocab_resolver.cpp.obj
+[482/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\backend\ollama_client.cpp.obj
+[483/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\GGUFLoader.cpp.obj
+[484/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\gguf_loader.cpp.obj
+[485/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+[486/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\win32app\VulkanRenderer.cpp.obj
+[487/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\utils\ErrorReporter.cpp.obj
+[488/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\utils\Diagnostics.cpp.obj
+[489/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\cpu_inference_engine_impl.cpp.obj
+[490/492] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native.dir\src\streaming_gguf_loader.cpp.obj
+[491/492] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe
+BUILD_EXIT=0

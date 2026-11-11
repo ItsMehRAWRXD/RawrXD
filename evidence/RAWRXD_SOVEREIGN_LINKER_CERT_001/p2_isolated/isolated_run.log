@@ -1,0 +1,231 @@
+
+GIT_HEAD=99f02e078cb068bf663860b2d30caf6513da0d4c
+LINKER_TREE_DIRTY=False
+MAIN_TREE_DIRTY_QUICK=True
+main.c
+coff_reader.c
+section_merge.c
+reloc_resolver.c
+pe_writer.c
+entry_stub.c
+ISOLATED_LINKER_SHA256=bc1f3d6b27fa4fd4122e95a56f2b5fb1c1b4b69c2cfa8502d2dec6509d235dbc
+DIFFERS_FROM_CORPUS_EXECUTED=True
+=== 01_minimal_return_zero ===
+test01_minimal_return_zero.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\01_minimal_return_zero_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\01_minimal_return_zero_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=0
+=== 02_exit_sentinel ===
+test02_exit_sentinel.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\02_exit_sentinel_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\02_exit_sentinel_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 03_multi_tu_linking ===
+test03_multi_tu_a.c
+test03_multi_tu_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\03_multi_tu_linking_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\03_multi_tu_linking_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 04_static_library ===
+test04_static_main.c
+test04_static_lib.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\04_static_library_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\04_static_library_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 05_shared_library ===
+test05_shared_main.c
+test05_shared_lib.c
+test05_shared_core.c
+[linker] phase 1 complete: 3 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 2 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\05_shared_library_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\05_shared_library_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 06_undefined_symbol ===
+test06_undefined_symbol.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] .text$mn: unresolved symbol 'undefined_symbol_xyz' at offset 0x2
+[reloc] Applied 0 relocations, 1 errors
+[linker] phase 3 complete: relocation errors=1
+rawrxd_link: failing link (1 unresolved/bad relocation(s))
+PASS link_fail
+=== 07_relocation ===
+test07_relocation_a.c
+test07_relocation_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 2 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x2000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\07_relocation_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\07_relocation_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=100
+=== 08_cross_ref ===
+test08_cross_ref_a.c
+test08_cross_ref_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 5 merged section(s), next RVA=0x6000
+[reloc] Applied 6 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x4000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\08_cross_ref_O2.exe: 4608 bytes, 7 sections, entry=0x7000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\08_cross_ref_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 09_global_init ===
+test09_global_init.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x2000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\09_global_init_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\09_global_init_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 10_bss_zero ===
+test10_bss_zero.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 2 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x2000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\10_bss_zero_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\10_bss_zero_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 11_nested_calls ===
+test11_nested_calls.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1010
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\11_nested_calls_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\11_nested_calls_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 12_rodata_len ===
+test12_rodata_len.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x2000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\12_rodata_len_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\12_rodata_len_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=5
+=== 13_data_roundtrip ===
+test13_data_roundtrip.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x2000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\13_data_roundtrip_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\13_data_roundtrip_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=0
+=== 14_fixed_argc ===
+test14_fixed_argc.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\14_fixed_argc_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\14_fixed_argc_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=3
+=== 15_branch_table ===
+test15_branch_table.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\15_branch_table_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\15_branch_table_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42
+=== 16_debug_release ===
+test16_debug_release.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 5 merged section(s), next RVA=0x6000
+[reloc] Applied 3 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x3000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\16_debug_release_Od.exe: 4608 bytes, 7 sections, entry=0x7000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\16_debug_release_Od.exe written successfully
+[linker] all phases complete (exit 0)
+test16_debug_release.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\16_debug_release_O2.exe: 3584 bytes, 5 sections, entry=0x5000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\16_debug_release_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=42,exit=42
+=== 17_optimization ===
+test17_optimization.c
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 0 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\17_optimization_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\17_optimization_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=4950
+=== 18_incremental_rebuild ===
+test18_incremental_a.c
+test18_incremental_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 2 merged section(s), next RVA=0x3000
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x1000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\18_incremental_rebuild_O2.exe: 3072 bytes, 4 sections, entry=0x4000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\out\18_incremental_rebuild_O2.exe written successfully
+[linker] all phases complete (exit 0)
+PASS exit=7
+=== 19_deliberate_compiler_fail ===
+test19_deliberate_compiler_fail.c
+F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\corpus\test19_deliberate_compiler_fail.c(3): error C2018: unknown character '0x40'
+F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\corpus\test19_deliberate_compiler_fail.c(3): error C2018: unknown character '0x40'
+F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\p2_isolated\corpus\test19_deliberate_compiler_fail.c(3): error C2018: unknown character '0x40'
+PASS
+DONE pass=19 fail=0 sha=bc1f3d6b27fa4fd4122e95a56f2b5fb1c1b4b69c2cfa8502d2dec6509d235dbc

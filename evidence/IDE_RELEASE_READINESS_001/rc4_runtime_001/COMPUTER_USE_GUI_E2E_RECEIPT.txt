@@ -1,0 +1,47 @@
+RC4_RUNTIME_001 / COMPUTER_USE_GUI_E2E
+UTC=2026-11-10T06:35:00Z
+EXE_PATH=F:\rawrxd\release\RawrXD-readiness-rc4\RawrXD-Win32IDE-Native-Ext.exe
+EXE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+PID_TESTED=5892
+USER_DATA_DIR=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\userdata2
+RAWRXD_LOG_DIR=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\logs
+RAWRXD_CHAT_RUN_ID=rc4_runtime_001
+
+SOURCE_WIRED=1
+RUNTIME_REACHED=1
+TOKEN_SURVIVED=PASS
+GUI_TOOL_E2E=FAIL
+
+OBSERVED_LIVE_PATH=
+  1) Window identify: PASS (RawrXD IDE main HWND; PID 5892; SHA match)
+  2) Chat stage via WM_COPYDATA CHIN ('CHIN'/0x4348494E) to secondary sidebar: PASS (COPYDATA=1)
+  3) Explicit Send via WM_COMMAND BN_CLICKED id=1204: PASS
+     evidence: INPUT_EVENT ... BUTTON_CLICK ... HandleCopilotSend path
+     DISPATCH_ID id=1 bytes=117
+     CHAT_SEND_ATTEMPT / CHAT_SEND_ARMED
+  4) Backend generation on live IDE: PASS
+     BACKEND_REQUEST_START model=bigdaddyg-productivity-local:latest
+     RESPONSE_START / RESPONSE_END bytes=1161
+     BACKEND_REQUEST_END success=1
+  5) computer_use.find_window / screenshot / inspect / click / type via IDE agent tool registry: FAIL
+     No computer_use.* tool dispatch lines in chat_runtime.log
+     Model returned prose only; tool-request prompt did not produce tool calls
+  6) Approval allow/deny for Execute-risk CU actions on live IDE agent path: NOT_RUN
+     (blocked by missing tool dispatch)
+  7) Allowed mouse/type on disposable owned window via IDE agent tools: NOT_RUN
+  8) Cancel/deny/recovery: PARTIAL
+     cancel_requested + cancel_acknowledged recorded after RESPONSE_END
+     (Stop/cancel path reached; not a mid-flight CU cancel)
+
+BLOCKER=
+  Live IDE chat/agent path reaches TOKEN_SURVIVED, but Computer Use tools are not
+  invoked on the agent tool-request path in this run. Prior standalone bridge PASS
+  (computer_use_001) is NOT credited as IDE GUI_TOOL_E2E.
+
+STANDALONE_BRIDGE_CREDIT=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+EVIDENCE=
+  logs\chat_runtime.log
+  chat_runtime_keyed.txt
+  gui_chat_samples.json

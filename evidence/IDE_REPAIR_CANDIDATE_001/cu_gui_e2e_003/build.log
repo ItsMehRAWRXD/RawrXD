@@ -1,0 +1,22 @@
+[0/2] Re-checking globbed directories...
+[1/94] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/94] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/94] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libunicode.c.obj
+FAILED: [code=2] CMakeFiles/quickjs_static_tip_ext.dir/3rdparty/quickjs_ng/libunicode.c.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo -DCONFIG_VERSION=\"2024.01.13\" -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -D_WINSOCKAPI_ -IF:\rawrxd\3rdparty\quickjs_ng -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /Zi /O2 /Ob1 /DNDEBUG -std:c11 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /W0 /std:c11 /experimental:c11atomics /O2 /showIncludes /FoCMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libunicode.c.obj /FdCMakeFiles\quickjs_static_tip_ext.dir\quickjs_static_tip_ext.pdb /FS -c F:\rawrxd\3rdparty\quickjs_ng\libunicode.c
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+F:\rawrxd\3rdparty\quickjs_ng\libunicode.c(24): fatal error C1083: Cannot open include file: 'stdlib.h': No such file or directory
+[4/94] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs.c.obj
+FAILED: [code=2] CMakeFiles/quickjs_static_tip_ext.dir/3rdparty/quickjs_ng/quickjs.c.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo -DCONFIG_VERSION=\"2024.01.13\" -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -D_WINSOCKAPI_ -IF:\rawrxd\3rdparty\quickjs_ng -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /Zi /O2 /Ob1 /DNDEBUG -std:c11 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /W0 /std:c11 /experimental:c11atomics /O2 /showIncludes /FoCMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs.c.obj /FdCMakeFiles\quickjs_static_tip_ext.dir\quickjs_static_tip_ext.pdb /FS -c F:\rawrxd\3rdparty\quickjs_ng\quickjs.c
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+F:\rawrxd\3rdparty\quickjs_ng\quickjs.c(27): fatal error C1083: Cannot open include file: 'stdlib.h': No such file or directory
+[5/94] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libregexp.c.obj
+FAILED: [code=2] CMakeFiles/quickjs_static_tip_ext.dir/3rdparty/quickjs_ng/libregexp.c.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo -DCONFIG_VERSION=\"2024.01.13\" -DFORTIFY_SOURCE=2 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -D_WINSOCKAPI_ -IF:\rawrxd\3rdparty\quickjs_ng -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /Zi /O2 /Ob1 /DNDEBUG -std:c11 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /W0 /std:c11 /experimental:c11atomics /O2 /showIncludes /FoCMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libregexp.c.obj /FdCMakeFiles\quickjs_static_tip_ext.dir\quickjs_static_tip_ext.pdb /FS -c F:\rawrxd\3rdparty\quickjs_ng\libregexp.c
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+F:\rawrxd\3rdparty\quickjs_ng\libregexp.c(24): fatal error C1083: Cannot open include file: 'stdlib.h': No such file or directory
+[6/94] Completed 'vulkan-shaders-gen'
+ninja: build stopped: subcommand failed.

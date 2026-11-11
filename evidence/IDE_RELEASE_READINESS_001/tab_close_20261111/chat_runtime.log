@@ -1,0 +1,3 @@
+SESSION_OPEN session_id=sid_00008730_0000000007EEF00B run_id=run_unset pid=34608
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_00008730_0000000007EEF00B run_id=run_unset
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_00008730_0000000007F2CCC0 run_id=run_unset

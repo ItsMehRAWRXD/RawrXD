@@ -1,0 +1,1050 @@
+[0/2] "C:\Program Files\CMake\bin\cmake.exe" -P F:\rawrxd\build_tip_debug_rel\CMakeFiles\VerifyGlobs.cmake
+[1/6] C:\WINDOWS\system32\cmd.exe /C "cd /D F:\rawrxd\build_tip_debug_rel\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build && "C:\Program Files\CMake\bin\cmake.exe" --build . --config RelWithDebInfo"
+ninja: no work to do.
+[2/6] C:\WINDOWS\system32\cmd.exe /C "cd /D F:\rawrxd\build_tip_debug_rel\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build && "C:\Program Files\CMake\bin\cmake.exe" -E env --unset=DESTDIR "C:/Program Files/CMake/bin/cmake.exe" --install . --config RelWithDebInfo"
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/6] C:\WINDOWS\system32\cmd.exe /C "cd /D F:\rawrxd\build_tip_debug_rel\3rdparty\ggml\src\ggml-vulkan && "C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/CMakeFiles && "C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/vulkan-shaders-gen-complete && "C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/vulkan-shaders-gen-done"
+[4/6] C:\WINDOWS\system32\cmd.exe /C "cd /D F:\rawrxd\build_tip_debug_rel\3rdparty\ggml\src\ggml-vulkan && F:\rawrxd\build_tip_debug_rel\RelWithDebInfo\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mm.comp --output-dir F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp && "C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile Ninja gccdepfile F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_tip_debug_rel F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_tip_debug_rel/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp.d F:/rawrxd/build_tip_debug_rel/CMakeFiles/d/580574a0b9206d63cb995c6fcdfe1bb52182ed7e9df127fa2a741fe493c7e75c.d"
+[5/6] "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DENABLE_VULKAN=1 -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DGGML_USE_VULKAN -DHAVE_GGML=1 -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_debug_rel\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IF:\rawrxd\src\production -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\Win32IDE_Commands.cpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+OBJ_RC=0 
+[0/2] Re-checking globbed directories...
+[1/191] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\unary-ops.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[2/191] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\quants.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\quants.c(873): warning C4310: cast truncates constant value
+[3/191] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libunicode.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[4/191] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libregexp.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[5/191] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs-libc.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[6/191] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\dtoa.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[7/191] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ops.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6618): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6671): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): warning C4456: declaration of 'src' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5764): note: see declaration of 'src'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5807): note: see reference to function template instantiation 'void ggml_compute_forward_rope_flt<ggml_fp16_t>(const ggml_compute_params *,ggml_tensor *,const bool)' being compiled
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5787): warning C4456: declaration of 'dst_data' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5765): note: see declaration of 'dst_data'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[8/191] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\secure_buffer.cpp.obj
+[9/191] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[10/191] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\repack.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(338): warning C4456: declaration of 'v0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(305): note: see declaration of 'v0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(339): warning C4456: declaration of 'v1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(306): note: see declaration of 'v1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(340): warning C4456: declaration of 'v2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(307): note: see declaration of 'v2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(341): warning C4456: declaration of 'v3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(308): note: see declaration of 'v3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(344): warning C4456: declaration of 'abs0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(312): note: see declaration of 'abs0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(345): warning C4456: declaration of 'abs1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(313): note: see declaration of 'abs1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(346): warning C4456: declaration of 'abs2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(314): note: see declaration of 'abs2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(347): warning C4456: declaration of 'abs3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(315): note: see declaration of 'abs3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(434): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(290): note: see declaration of 'k'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[11/191] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[12/191] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\crash_handler.cpp.obj
+[13/191] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[14/191] Linking CXX static library 3rdparty\ggml\src\ggml-cpu.lib
+[15/191] Linking C static library quickjs_static_tip_ext.lib
+[16/191] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\input_sanitizer.cpp.obj
+[17/191] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignSecurityHardening.cpp.obj
+[18/191] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignReliabilityFaultTolerance.cpp.obj
+[19/191] Completed 'vulkan-shaders-gen'
+[20/191] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\ProductionRuntime.cpp.obj
+[21/191] Linking CXX static library rawrxd_security.lib
+[22/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\acc.comp.cpp.obj
+[23/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\abs.comp.cpp.obj
+[24/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\add.comp.cpp.obj
+[25/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\argsort.comp.cpp.obj
+[26/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\add_id.comp.cpp.obj
+[27/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\argmax.comp.cpp.obj
+[28/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\clamp.comp.cpp.obj
+[29/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\concat.comp.cpp.obj
+[30/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\contig_copy.comp.cpp.obj
+[31/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv2d_dw.comp.cpp.obj
+[32/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy_from_quant.comp.cpp.obj
+[33/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv_transpose_1d.comp.cpp.obj
+[34/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\conv2d_mm.comp.cpp.obj
+[35/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\cos.comp.cpp.obj
+[36/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy.comp.cpp.obj
+[37/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\count_equal.comp.cpp.obj
+[38/191] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignProductionConfig.cpp.obj
+[39/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_s.comp.cpp.obj
+[40/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\copy_to_quant.comp.cpp.obj
+[41/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_f32.comp.cpp.obj
+[42/191] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignObservability.cpp.obj
+[43/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq1_m.comp.cpp.obj
+[44/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq1_s.comp.cpp.obj
+[45/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_xxs.comp.cpp.obj
+[46/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq2_xs.comp.cpp.obj
+[47/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq3_s.comp.cpp.obj
+[48/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq4_xs.comp.cpp.obj
+[49/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq4_nl.comp.cpp.obj
+[50/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q3_k.comp.cpp.obj
+[51/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_1.comp.cpp.obj
+[52/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_iq3_xxs.comp.cpp.obj
+[53/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_mxfp4.comp.cpp.obj
+[54/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_0.comp.cpp.obj
+[55/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_0.comp.cpp.obj
+[56/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_1.comp.cpp.obj
+[57/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q4_k.comp.cpp.obj
+[58/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q2_k.comp.cpp.obj
+[59/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q8_0.comp.cpp.obj
+[60/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\exp.comp.cpp.obj
+[61/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q5_k.comp.cpp.obj
+[62/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\div.comp.cpp.obj
+[63/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\diag_mask_inf.comp.cpp.obj
+[64/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\dequant_q6_k.comp.cpp.obj
+[65/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_cm1.comp.cpp.obj
+[66/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn.comp.cpp.obj
+[67/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu_quick.comp.cpp.obj
+[68/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu.comp.cpp.obj
+[69/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu_quick.comp.cpp.obj
+[70/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_split_k_reduce.comp.cpp.obj
+[71/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu.comp.cpp.obj
+[72/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\geglu_erf.comp.cpp.obj
+[73/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\get_rows.comp.cpp.obj
+[74/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\flash_attn_cm2.comp.cpp.obj
+[75/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\gelu_erf.comp.cpp.obj
+[76/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\group_norm.comp.cpp.obj
+[77/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\hardsigmoid.comp.cpp.obj
+[78/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\l2_norm.comp.cpp.obj
+[79/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\im2col_3d.comp.cpp.obj
+[80/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\hardswish.comp.cpp.obj
+[81/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\log.comp.cpp.obj
+[82/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\leaky_relu.comp.cpp.obj
+[83/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\im2col.comp.cpp.obj
+[84/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\get_rows_quant.comp.cpp.obj
+[85/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul.comp.cpp.obj
+[86/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_split_k_reduce.comp.cpp.obj
+[87/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq3_s.comp.cpp.obj
+[88/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq3_xxs.comp.cpp.obj
+[89/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_xs.comp.cpp.obj
+[90/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_xxs.comp.cpp.obj
+[91/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_nc.comp.cpp.obj
+[92/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq2_s.comp.cpp.obj
+[93/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq1_s.comp.cpp.obj
+[94/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_iq1_m.comp.cpp.obj
+[95/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_p021.comp.cpp.obj
+[96/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q5_k.comp.cpp.obj
+[97/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q2_k.comp.cpp.obj
+[98/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q4_k.comp.cpp.obj
+[99/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q3_k.comp.cpp.obj
+[100/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec_q6_k.comp.cpp.obj
+[101/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\multi_add.comp.cpp.obj
+[102/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vecq.comp.cpp.obj
+[103/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mat_vec.comp.cpp.obj
+[104/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\neg.comp.cpp.obj
+[105/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\norm.comp.cpp.obj
+[106/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\opt_step_adamw.comp.cpp.obj
+[107/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\pad.comp.cpp.obj
+[108/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\opt_step_sgd.comp.cpp.obj
+[109/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\reglu.comp.cpp.obj
+[110/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\quantize_q8_1.comp.cpp.obj
+[111/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\pool2d.comp.cpp.obj
+[112/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\relu.comp.cpp.obj
+[113/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\repeat.comp.cpp.obj
+[114/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mmq.comp.cpp.obj
+[115/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm.comp.cpp.obj
+[116/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm_partials.comp.cpp.obj
+[117/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rms_norm_back.comp.cpp.obj
+[118/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\repeat_back.comp.cpp.obj
+[119/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\roll.comp.cpp.obj
+[120/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_multi.comp.cpp.obj
+[121/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_neox.comp.cpp.obj
+[122/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_norm.comp.cpp.obj
+[123/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\rope_vision.comp.cpp.obj
+[124/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sigmoid.comp.cpp.obj
+[125/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\scale.comp.cpp.obj
+[126/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\silu.comp.cpp.obj
+[127/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\silu_back.comp.cpp.obj
+[128/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\soft_max.comp.cpp.obj
+[129/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\soft_max_back.comp.cpp.obj
+[130/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ssm_conv.comp.cpp.obj
+[131/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\square.comp.cpp.obj
+[132/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sin.comp.cpp.obj
+[133/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ssm_scan.comp.cpp.obj
+[134/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sqrt.comp.cpp.obj
+[135/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sub.comp.cpp.obj
+[136/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\sum_rows.comp.cpp.obj
+[137/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\swiglu_oai.comp.cpp.obj
+[138/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\swiglu.comp.cpp.obj
+[139/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\tanh.comp.cpp.obj
+[140/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\timestep_embedding.comp.cpp.obj
+[141/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\topk_moe.comp.cpp.obj
+[142/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\upscale.comp.cpp.obj
+[143/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\wkv6.comp.cpp.obj
+[144/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\wkv7.comp.cpp.obj
+[145/191] Building RC object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.rc.res
+[146/191] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml.dir\ggml-backend-reg.cpp.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[147/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mm_cm2.comp.cpp.obj
+[148/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[149/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\ggml-vulkan.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(424): warning C4244: 'return': conversion from 'uint32_t' to 'ggml_fp16_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(698): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(698): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1677): warning C4267: 'return': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1696): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1696): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1697): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1697): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1708): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1708): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1709): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1709): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1873): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1874): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1879): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1990): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1991): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(1993): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2120): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2120): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2132): warning C4267: 'return': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2139): warning C4267: 'return': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2146): warning C4267: 'return': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(3911): warning C4003: not enough arguments for function-like macro invocation 'IM2COL'
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(4045): warning C4003: not enough arguments for function-like macro invocation 'CREATE_CONVS'
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5014): warning C4456: declaration of 'devices' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5007): note: see declaration of 'devices'
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6352): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6352): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6354): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6354): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6416): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6416): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6417): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6417): warning C4244: 'initializing': conversion from 'uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6475): warning C4244: 'argument': conversion from 'const uint64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6475): warning C4244: 'argument': conversion from 'const uint64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6475): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6475): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6478): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6478): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6481): warning C4319: '~': zero extending '_Ty' to 'uint64_t' of greater size
+        with
+        [
+            _Ty=uint32_t
+        ]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6481): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6487): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6487): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6487): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6621): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6627): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6628): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6631): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6635): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6645): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6645): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6645): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6645): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6645): warning C4244: 'argument': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6644): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6644): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6643): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6643): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6643): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6740): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6740): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6740): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6754): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6754): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6754): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6759): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6759): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6759): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6856): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6863): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6864): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6865): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6868): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6872): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6877): warning C4244: 'initializing': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7052): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7052): warning C4244: 'initializing': conversion from 'uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7053): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7053): warning C4244: 'initializing': conversion from 'uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7054): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7054): warning C4244: 'initializing': conversion from 'uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7118): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7118): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7182): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7182): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7183): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7183): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7251): warning C4244: 'argument': conversion from 'const uint64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7251): warning C4244: 'argument': conversion from 'const uint64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7251): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7251): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7254): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7254): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7257): warning C4319: '~': zero extending '_Ty' to 'uint64_t' of greater size
+        with
+        [
+            _Ty=uint32_t
+        ]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7257): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7391): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7397): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7398): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7401): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7405): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7415): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7415): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7415): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7415): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7415): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7414): warning C4244: 'argument': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7413): warning C4244: 'argument': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7559): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7562): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7567): warning C4244: 'initializing': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7719): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7719): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7720): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7720): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7721): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7721): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7723): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7723): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7724): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7724): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7725): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7726): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7726): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7767): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7908): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(7908): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8417): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8417): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8570): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8570): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8571): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8571): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8581): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8581): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8582): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8582): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8592): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8592): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8593): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8593): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8603): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8603): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8604): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8604): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8614): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8614): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8615): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8615): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8616): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8616): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8627): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8627): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8628): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8628): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8943): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8943): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8944): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8944): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8945): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8945): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8958): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8958): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8959): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8959): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8960): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8960): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9057): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9085): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9085): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9086): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9086): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9087): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9087): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9100): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9100): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9101): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9101): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9102): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9102): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9115): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9115): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9116): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9116): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9117): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9117): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9130): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9130): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9131): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9131): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9132): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9132): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9145): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9145): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9146): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9146): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9147): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9147): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9246): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9246): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9247): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9247): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9248): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9248): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9249): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9249): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9250): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9250): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9366): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9366): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9367): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9367): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9368): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9368): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9381): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9381): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9477): warning C4244: '/=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9479): warning C4267: '*=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9481): warning C4267: '*=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9490): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9490): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9491): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9491): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9492): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9492): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9527): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9527): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9541): warning C4319: '~': zero extending 'uint32_t' to 'size_t' of greater size
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9568): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9569): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9598): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9598): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9599): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9599): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9600): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9600): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9633): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9633): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9762): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9762): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9799): warning C4244: 'initializing': conversion from 'int64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9799): warning C4244: 'initializing': conversion from 'int64_t' to 'const int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9800): warning C4244: 'initializing': conversion from 'int64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9800): warning C4244: 'initializing': conversion from 'int64_t' to 'const int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9801): warning C4244: 'initializing': conversion from 'int64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9801): warning C4244: 'initializing': conversion from 'int64_t' to 'const int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9855): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9867): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9868): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9911): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9911): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9912): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9912): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9913): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9913): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9915): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9915): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9916): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9916): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9918): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9918): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9919): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9919): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9921): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9921): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9922): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9922): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9976): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9977): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9978): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9979): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9989): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9990): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9991): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9993): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9994): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9995): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9996): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9997): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9998): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(9999): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10000): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10001): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10002): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10010): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10010): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10057): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10057): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10058): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10058): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10060): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10060): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10062): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10062): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10063): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10063): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10064): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10064): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10176): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10177): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10178): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10179): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10180): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10181): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10182): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10183): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(10184): warning C4244: '=': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(11950): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12070): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12480): warning C4456: declaration of 'mul' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12448): note: see declaration of 'mul'
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12539): warning C4244: 'initializing': conversion from 'const int64_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12539): warning C4244: 'initializing': conversion from 'const int64_t' to 'const int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12832): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12838): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12844): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13229): warning C4244: 'initializing': conversion from '_Ty' to 'int', possible loss of data
+        with
+        [
+            _Ty=uint64_t
+        ]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13337): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13485): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13486): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13733): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13733): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13734): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13734): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13883): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13886): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5630): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5630): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(6165): note: see reference to function template instantiation 'void ggml_vk_dispatch_pipeline<vk_mat_mat_push_constants>(ggml_backend_vk_context *,vk_context &,vk_pipeline &,const std::initializer_list<vk::DescriptorBufferInfo> &,const T &,std::array<uint32_t,3>)' being compiled
+        with
+        [
+            T=vk_mat_mat_push_constants
+        ]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8710): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8710): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8947): note: see reference to function template instantiation 'void ggml_vk_op_f32<vk_op_binary_push_constants>(ggml_backend_vk_context *,vk_context &,const ggml_tensor *,const ggml_tensor *,const ggml_tensor *,const ggml_tensor *,ggml_tensor *,ggml_op,PC &&)' being compiled
+        with
+        [
+            PC=vk_op_binary_push_constants
+        ]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8710): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8755): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8755): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8757): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8757): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8758): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8758): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8760): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8760): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8761): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8761): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8763): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8763): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8771): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8771): warning C4244: 'initializing': conversion from 'uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8773): warning C4244: 'initializing': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8773): warning C4244: 'initializing': conversion from 'const uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8774): warning C4244: 'initializing': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8774): warning C4244: 'initializing': conversion from 'const uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8775): warning C4244: 'initializing': conversion from 'const uint64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8775): warning C4244: 'initializing': conversion from 'const uint64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8777): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8777): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8778): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8778): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8779): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8779): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8799): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8799): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8800): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8800): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8801): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8801): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8802): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8802): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8835): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8838): warning C4244: '/=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8840): warning C4267: '*=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8842): warning C4267: '*=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8849): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8865): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8868): warning C4244: '=': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8884): warning C4244: 'initializing': conversion from 'const int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8884): warning C4244: 'initializing': conversion from 'const int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8885): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8885): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8886): warning C4244: 'initializing': conversion from 'int64_t' to 'uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(8886): warning C4244: 'initializing': conversion from 'int64_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2193): warning C4505: 'ggml_vk_create_binary_semaphore': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2203): warning C4505: 'ggml_vk_create_timeline_semaphore': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2215): warning C4505: 'ggml_vk_create_event': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2442): warning C4505: 'ggml_vk_wait_events': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5640): warning C4505: 'ggml_vk_end_submission': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5708): warning C4505: 'ggml_vk_buffer_write_nc_async': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12113): warning C4505: 'ggml_backend_vk_host_buffer_name': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12206): warning C4505: 'ggml_backend_vk_set_tensor_async': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(12268): warning C4505: 'ggml_backend_vk_cpy_tensor_async': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(13914): warning C4505: 'ggml_vk_instance_portability_enumeration_ext_available': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5531) : warning C4701: potentially uninitialized local variable 'index' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973) : warning C4701: potentially uninitialized local variable 'l_mmq_wg_denoms_k' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973) : warning C4701: potentially uninitialized local variable 'm_mmq_wg_denoms_k' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973) : warning C4701: potentially uninitialized local variable 's_mmq_wg_denoms_k' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997) : warning C4701: potentially uninitialized local variable 'l_mmqid_wg_denoms' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997) : warning C4701: potentially uninitialized local variable 'm_mmqid_wg_denoms' used
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997) : warning C4701: potentially uninitialized local variable 's_mmqid_wg_denoms' used
+[150/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32TerminalManager.cpp.obj
+[151/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(489): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(710): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[152/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(153): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(153): warning C4100: 'hPrevInstance': unreferenced parameter
+[153/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1076): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1077): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1205): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1199): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1193): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1378): warning C4100: 'wParam': unreferenced parameter
+[154/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[155/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32NativeDebugBackend.cpp.obj
+[156/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentStepTimeline.cpp.obj
+[157/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+[158/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(88): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(78): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(98): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(108): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(118): warning C4189: 'btnStop': local variable is initialized but not referenced
+[159/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(381): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1183): warning C4100: 'wholeWord': unreferenced parameter
+[160/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Autonomy.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[161/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(35): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(289): warning C4100: 'timeoutMs': unreferenced parameter
+[162/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+F:\rawrxd\src\win32app\Win32IDE_GhostText.cpp(309): warning C4100: 'wParam': unreferenced parameter
+[163/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\TransparentRenderer.cpp.obj
+[164/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(365): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(368): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1224): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1170): note: see declaration of 'restored'
+[165/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'tokenId': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(408): warning C4100: 'maxTokens': unreferenced parameter
+[166/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1006): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1004): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1334): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1367): warning C4100: 'wParam': unreferenced parameter
+[167/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(646): warning C4100: 'pid': unreferenced parameter
+[168/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[169/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[170/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\GGUFLoader.cpp.obj
+[171/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\ErrorReporter.cpp.obj
+[172/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\gguf_vocab_resolver.cpp.obj
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[173/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\backend\ollama_client.cpp.obj
+F:\rawrxd\src\backend\ollama_client.cpp(512): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(511): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(510): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\backend\ollama_client.cpp(549): warning C4100: 'on_error': unreferenced parameter
+F:\rawrxd\src\backend\ollama_client.cpp(570): warning C4505: 'RawrXD::Backend::MakeOkResponse': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\backend\ollama_client.cpp(582): warning C4505: 'RawrXD::Backend::MakeErrorResponse': unreferenced function with internal linkage has been removed
+[174/191] Building CXX object 3rdparty\ggml\src\ggml-vulkan\CMakeFiles\ggml-vulkan.dir\mul_mm.comp.cpp.obj
+[175/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\Diagnostics.cpp.obj
+[176/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\plugin_signature.cpp.obj
+[177/191] Linking CXX static library 3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.lib
+[178/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\cpu_inference_engine_impl.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(43): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(413): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(350): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(794): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(667): note: see declaration of 'v'
+[179/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_vscode_bindings.cpp.obj
+[180/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\VulkanRenderer.cpp.obj
+[181/191] Linking CXX static library 3rdparty\ggml\src\ggml.lib
+[182/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\extension_polyfill_engine.cpp.obj
+[183/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\quickjs_extension_host.cpp(69): warning C4100: 'manifest': unreferenced parameter
+[184/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ExtHostWire.cpp.obj
+[185/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\streaming_gguf_loader.cpp.obj
+[186/191] Linking CXX static library src\production\rawrxd_production_hardening.lib
+[187/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\js_extension_host.cpp.obj
+F:\rawrxd\3rdparty\quickjs_ng\quickjs.h(379): warning C4244: '=': conversion from 'int64_t' to 'int32_t', possible loss of data
+F:\rawrxd\src\core\js_extension_host.cpp(460): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(474): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(488): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(502): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(519): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(535): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(551): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(561): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(825): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(776): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(833): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(869): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(924): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(963): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(977): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(991): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1054): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1108): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1122): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1134): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1139): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1144): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1100): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1182): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1182): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1204): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1204): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1216): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1216): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1159): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1374): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1256): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1397): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1393): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1442): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1405): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1453): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1502): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1499): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1509): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1506): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1516): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1513): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1520): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1496): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1585): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1544): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1595): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1591): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1605): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1601): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1614): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1611): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1623): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1620): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1632): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1636): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1638): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1629): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1644): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1684): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1694): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1703): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1700): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1713): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1710): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1748): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1744): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1754): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1760): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1770): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1767): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1778): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1775): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1833): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1853): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1876): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1908): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1944): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1941): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2362): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2362): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2367): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2371): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2381): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2381): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2386): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2412): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2412): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(713): warning C4505: 'extHostBreadcrumb': unreferenced function with internal linkage has been removed
+[188/191] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(212): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(239): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(265): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(291): warning C4100: 'placeHolder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(328): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(327): warning C4100: 'canSelectFolders': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(326): warning C4100: 'canSelectMany': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'title': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(468): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'maxTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'outTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(506): warning C4100: 'options': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'maxDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'outDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'excludePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'includePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'maxDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'outDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(758): warning C4100: 'uri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(975): warning C4100: 'folder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'maxBps': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'outBreakpoints': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1039): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'maxTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'outTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1076): warning C4100: 'rootUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warNINJA_RC=-1 

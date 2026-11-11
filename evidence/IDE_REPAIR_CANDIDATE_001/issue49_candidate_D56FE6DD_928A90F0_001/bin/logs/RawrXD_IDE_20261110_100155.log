@@ -1,0 +1,35 @@
+[2026-11-10 10:01:55] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 10:01:55] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_100155.log
+[2026-11-10 10:01:55] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 10:01:55] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 10:01:55] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=-1
+[2026-11-10 10:01:56] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=0
+[2026-11-10 10:01:56] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:02:00] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=0
+[2026-11-10 10:02:00] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 10:02:31] [INFO] [ModelSelector] discovery update deferred while inference running
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:04:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0

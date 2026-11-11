@@ -1,0 +1,3 @@
+bp ntdll!LdrUnloadDll ".echo === LdrUnloadDll HIT ===; k; .echo === ACTIVE THREADS ===; ~*; .echo === THREAD CONTEXTS ===; ~* r; gc"
+g
+qd

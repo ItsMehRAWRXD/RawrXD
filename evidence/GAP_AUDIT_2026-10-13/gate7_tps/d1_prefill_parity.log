@@ -1,0 +1,39 @@
+﻿D1_PARITY model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf tokens=8 max_prefix=8
+ 1 185 278 20606 23808 7936 14336 28416
+ingesting F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ...
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+serial reference complete: 8 positions, 32000 logits each
+prefix k= 2: BIT_EXACT maxabs=0 (673.5 ms)
+prefix k= 3: BIT_EXACT maxabs=0 (806.8 ms)
+prefix k= 4: BIT_EXACT maxabs=0 (990.6 ms)
+prefix k= 5: BIT_EXACT maxabs=0 (1153.6 ms)
+prefix k= 6: BIT_EXACT maxabs=0 (1330.3 ms)
+prefix k= 7: BIT_EXACT maxabs=0 (1469.1 ms)
+prefix k= 8: BIT_EXACT maxabs=0 (1677.8 ms)
+full-sequence final logits: BIT_EXACT maxabs=0
+decode step=0: logits BIT_EXACT maxabs=0 (serial argmax=20606, batched argmax=20606)
+decode step=1: logits BIT_EXACT maxabs=0 (serial argmax=23808, batched argmax=23808)
+decode step=2: logits BIT_EXACT maxabs=0 (serial argmax=7936, batched argmax=7936)
+decode step=3: logits BIT_EXACT maxabs=0 (serial argmax=14336, batched argmax=14336)
+decode step=4: logits BIT_EXACT maxabs=0 (serial argmax=969, batched argmax=969)
+decode step=5: logits BIT_EXACT maxabs=0 (serial argmax=278, batched argmax=278)
+decode step=6: logits BIT_EXACT maxabs=0 (serial argmax=20606, batched argmax=20606)
+decode step=7: logits BIT_EXACT maxabs=0 (serial argmax=23808, batched argmax=23808)
+serial stream: 20606 23808 7936 14336 969 278 20606 23808
+batched stream: 20606 23808 7936 14336 969 278 20606 23808
+D1_PARITY mismatches=0 worst_maxabs=0 (worst prefix k=0)
+D1_PARITY_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

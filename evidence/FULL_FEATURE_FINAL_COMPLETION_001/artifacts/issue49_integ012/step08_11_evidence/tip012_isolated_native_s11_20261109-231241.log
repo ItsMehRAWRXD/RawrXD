@@ -1,0 +1,200 @@
+MOTD_WORKSPACE F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\tip012_s11_isolated_work
+MOTD_STATUS TURN_START session=deep2-agent-12904-33740728707800 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+[stage] ingest done in 10934.1 ms: arch=qwen2 blocks=28 vocab=152064 bos=151643 eos=151645
+[stage] model ships a chat template (2507 bytes):
+{%- if tools %}
+    {{- '<|im_start|>system\n' }}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- messages[0]['content'] }}
+    {%- else %}
+        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}
+    {%- endif %}
+    {{- "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
+    {%- for tool in tools %}
+        {{- "\n" }}
+        {{- tool | tojson }}
+    {%- endfor %}
+    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
+{%- else %}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- '<|im_start|>system\n' + messages[0]['content'] + '<|im_end|>\n' }}
+    {%- else %}
+        {{- '<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n' }}
+    {%- endif %}
+{%- endif %}
+{%- for message in messages %}
+    {%- if (message.role == "user") or (message.role == "system" and not loop.first) or (message.role == "assistant" and not message.tool_calls) %}
+        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}
+    {%- elif message.role == "assistant" %}
+        {{- '<|im_start|>' + message.role }}
+        {%- if message.content %}
+            {{- '\n' + message.content }}
+        {%- endif %}
+        {%- for tool_call in message.tool_calls %}
+            {%- if tool_call.function is defined %}
+                {%- set tool_call = tool_call.function %}
+            {%- endif %}
+            {{- '\n<tool_call>\n{"name": "' }}
+            {{- tool_call.name }}
+            {{- '", "arguments": ' }}
+            {{- tool_call.arguments | tojson }}
+            {{- '}\n</tool_call>' }}
+        {%- endfor %}
+        {{- '<|im_end|>\n' }}
+    {%- elif message.role == "tool" %}
+        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != "tool") %}
+            {{- '<|im_start|>user' }}
+        {%- endif %}
+        {{- '\n<tool_response>\n' }}
+        {{- message.content }}
+        {{- '\n</tool_response>' }}
+        {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}
+            {{- '<|im_end|>\n' }}
+        {%- endif %}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|im_start|>assistant\n' }}
+{%- endif %}
+
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=395 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\tip012_s11_isolated_work
+[stage] chat markers: template user='User: ' asst='Assistant: ' gen='<|im_start|>assistant\n' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\tip012_s11_isolated_work\.rawrxd\agent_transactions\txn_32914410843300
+[step 1] PREFILL_BATCH_BEGIN pos=0 count=128/310
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] PREFILL_BATCH_END pos=0 count=128 ok=true ms=148052
+[step 1] PREFILL_BATCH_BEGIN pos=128 count=128/310
+[step 1] PREFILL_BATCH_END pos=128 count=128 ok=true ms=137222
+[step 1] PREFILL_BATCH_BEGIN pos=256 count=54/310
+[step 1] PREFILL_BATCH_END pos=256 count=54 ok=true ms=58327
+[step 1] prefill +310/310 tokens (ctx=310 tokens) in 343639 ms (batched)
+[step 1] tok 0/512: TO
+[step 1] SNAP protocol=legacy
+[step 1] SNAP STOP: reason=1 tokens=5 after 5 host tokens
+[step 1] generated 5 tokens / 14 chars in 5155 ms (0.970 tok/s) snap=1
+[step 1] MOTD_STATUS ACKNOWLEDGED sha256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[step 1] TOOL read_motd ->  ; observation 3327 bytes; SNAP dispatch transition 112.4382 ms
+MOTD_ACK=1
+MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+---
+description: >-
+  PassiveRoleNotRoleplay MOTD: per-turn Read gate + continue-ensure passive
+  coordinator (Cursor hooks, Deep/Win32/Headless /api/tool). Not roleplay.
+alwaysApply: true
+---
+
+# PassiveRoleNotRoleplay
+
+This file is the **Message of the Day (MOTD)** for Cursor and RawrXD agent execution.
+
+The parent agent is a **passive coordinator**. It does not perform work delegated to a worker. This is execution policy, not character roleplay.
+
+## Per-turn MOTD gate
+
+1. Each new user message: `MOTD_ACK=0`.
+2. Until ack: only `Read` / `read_file` / `read_motd` of this file (`.md` / `.mdc`) is allowed.
+3. After a successful read this turn: `MOTD_ACK=1` — tools unlock for this turn only.
+4. Same gate: Cursor agent tools/hooks/background agents, Deep IDE, Win32IDE, HeadlessIDE, `/api/tool`.
+
+## Continue-ensure triggers
+
+Exact short: `Please continue ensuring`
+
+Exact max: `Please continue ensuring that the streamer is complete and can run agentic`
+
+When either matches:
+
+1. Read this MOTD if not already read this turn.
+2. Follow `StreamerAgenticContinueEnsure.mdc` + `MultitaskMode.mdc`.
+3. Launch **exactly one** background worker with the max E2E brief.
+4. Parent does **not** execute delegated engineering work.
+5. Emit coordinator handoff; **end the parent turn**.
+
+Required: `WORKER_COUNT=1` · `PARENT_EXECUTES_DELEGATED_WORK=0` · `PROMOTE=0`
+
+## Fail-closed law
+
+`SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS`
+
+`NOT_RUN != PASS`. Do not invent PASS. Do not alter sealed certification evidence.
+
+## Coordinator output (continue-ensure only)
+
+```
+CONTINUE_ENSURE=DISPATCHED
+BACKGROUND_WORKERS=1
+PARENT_MODE=PASSIVE_COORDINATOR
+MOTD_ACK=1
+```
+
+## Forbidden
+
+Character roleplay, persona improv, treating "agentic" as fiction/RP, more than one continue-ensure worker, parent continuing delegated work after dispatch.
+
+
+## Agent Handoff as delegation -> NOT completion
+
+Yes. I’ll treat **agent handoff as delegation, not completion**.
+
+For RawrXD/Deep2 work, I’ll keep the governing rule as:
+
+```text
+HANDOFF_TO_AGENT != DONE
+
+IF work is:
+  gapped
+  incomplete
+  partially implemented
+  started but unverified
+  delegated but not landed
+  landed but not wired
+  wired but not exercised
+  exercised but not E2E
+  E2E but not dispositioned
+
+THEN:
+  RESUME_IT
+  TRACE_TO_REAL_OWNER
+  IMPLEMENT_MISSING_PIECES
+  WIRE_REAL_PRODUCT_PATH
+  BUILD
+  RUN
+  VERIFY
+  CLOSE_END_TO_END
+```
+
+That also means I won’t let documentation, a source stub, a smoke witness, an agent result, or an intermediate receipt silently substitute for the actual product path. Existing authority still remains intact—e.g. `R27=LIVE_E2E_PASS`, R28 witness-only/APPLY held, `PROMOTE=0`, and `TIP_CLIMB=HOLD`—unless later real evidence legitimately changes it.
+
+Where I have the necessary repo/files/tools in the current session, I’ll continue the work myself rather than merely describing what another agent should do. Where execution access is absent, I’ll still carry the implementation/review as far as the available artifacts permit and identify the exact remaining executable gate rather than calling the work finished.
+
+RESULT_REINJECTION step=1 tool=read_motd target= observation_bytes=3327 status=PASS
+[step 2] PREFILL_BATCH_BEGIN pos=314 count=128/1283
+[step 2] PREFILL_BATCH_END pos=314 count=128 ok=true ms=139171
+[step 2] PREFILL_BATCH_BEGIN pos=442 count=128/1283
+[step 2] PREFILL_BATCH_END pos=442 count=128 ok=true ms=140283
+[step 2] PREFILL_BATCH_BEGIN pos=570 count=128/1283
+[step 2] PREFILL_BATCH_END pos=570 count=128 ok=true ms=139563
+[step 2] PREFILL_BATCH_BEGIN pos=698 count=128/1283
+[step 2] PREFILL_BATCH_END pos=698 count=128 ok=true ms=142135
+[step 2] PREFILL_BATCH_BEGIN pos=826 count=128/1283
+[step 2] PREFILL_BATCH_END pos=826 count=128 ok=true ms=142937
+[step 2] PREFILL_BATCH_BEGIN pos=954 count=128/1283

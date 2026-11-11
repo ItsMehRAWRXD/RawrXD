@@ -1,0 +1,225 @@
+D015_REMEASURE_CRASH_DIAG_001
+ASOF_UTC=2026-11-10T15:45:00Z
+CANDIDATE=D issue49_candidate_401071_5bac_001
+CONTROLLING=D015 / issue49_gui_ollama_qwen3_015
+IDE_SHA256=401071ADD351A9CF82DD11941E6DB26D10D0DFF6543CD39197772221CF98E7B3
+LOOP_SHA256=5BAC2E7959A5337B350FB81918D158AB500B4077E5CDB59542F3BC5E4F74AB49
+LOOP_SWAP_7774E846=0
+H_022_SUPERSEDES_D015=0
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+NO_INVENT_PASS=1
+NO_BLIND_026=1
+
+========================================================================
+PURPOSE
+Classify remasure regression on sealed D015 (024/025) before any further
+acceptance launch. Fail-closed. Do not reopen Flush/LoadTensorSlice without
+dump evidence; dump now available for 025.
+========================================================================
+
+------------------------------------------------------------------------
+0) CONTROLLING vs REMEASURE SCOREBOARD
+------------------------------------------------------------------------
+015 CONTROLLING:
+  REQUIRED_PASS_HITS=10/11 SOURCE_EDITED=1 ALIVE=1 IDE_EXIT= (empty/alive)
+  S_13=NOT_RUN task_bytes=253 PROMPT_CLASS=SHORT_PRE_STAGED
+  LOOP=5BAC WRITE_COMMIT not required for its SOURCE_EDITED=1 path
+  RECEIPT=issue49_gui_ollama_qwen3_015\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+
+024 REMEASURE (regress, non-controlling):
+  REQUIRED_PASS_HITS=8/11 SOURCE_EDITED=0 ALIVE=0 IDE_EXIT=-1
+  S_13=NOT_RUN WRITE_COMMIT_COUNT=0 task_bytes=746
+  PROMPT_CLASS=ASCII_staged_dual_fault_STEP_A_B
+  OUTPUT_SAMPLE shows step4 TOOL write (a-b kept); mid-run txn rollbacks;
+  final SHA restored to AF4519 baseline
+  RECEIPT=issue49_gui_ollama_qwen3_024\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+  NOTE=S13_REMEASURE_024.txt ; DISPOSITION.txt ATTEMPT_024_*
+
+025 REMEASURE (regress, non-controlling):
+  REQUIRED_PASS_HITS=8/11 SOURCE_EDITED=0 ALIVE=0
+  IDE_EXIT_CODE=-1073740791 (0xC0000409)
+  S_13=NOT_RUN WRITE_COMMIT_COUNT=0 task_bytes=746
+  PROMPT_CLASS=ASCII_staged_dual_fault_STEP_A_B
+  TYPE_ERROR_316_OBSERVED_IN_OUTDIR=0 (DISPOSITION)
+  DIAG_EVIDENCE=0 OUTPUT_SAMPLE empty
+  RECEIPT=issue49_gui_ollama_qwen3_025\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+  DISPOSITION=issue49_gui_ollama_qwen3_025\DISPOSITION.txt
+  CRASH_CLASS_PRIOR=IDE_EXIT_C0000409_MID_SESSION
+
+REMASURE_024_SUPERSEDES_015=0
+REMASURE_025_SUPERSEDES_015=0
+CONTROLLING_REMAINS_D015=1
+
+------------------------------------------------------------------------
+1) DIFF 015 vs 024/025 (prompt / env / userdata / loop / chat_runtime / harness)
+------------------------------------------------------------------------
+TIP binaries (all three): SAME sealed pair 401071 / 5BAC (certutil-matched).
+LOOP spawn: same deep2_agentic_loop.exe beside tip; DEEP2_AGENTIC_LOOP_SPAWNED=1.
+MODEL env: OllamaAgentModel=qwen3:8b ; MODEL_PATH qwen2.5-coder GGUF present.
+ollama_runtime: identical one-liner OLLAMA_REUSE=PASS vulkan for 015/024/025.
+userdata: 015/024/025 outdir userdata empty/absent at seal time
+  (016 alone retains userdata\ide_session.json). Shared bin\.rawrxd\ledger
+  agent_session.json after 025 holds ONLY the staged user prompt; no tool_calls;
+  source_edit_performed=false; termination_reason=running; driver_exit_code=-1.
+
+PROMPT TEXT (decisive delta):
+  015 CHAT_INPUT len / task_bytes = 253  (short pre-staged prompt era)
+  024/025 CHAT_INPUT len / task_bytes = 746
+  Current harness prompt (Invoke-Issue49Live74aa.ps1):
+    ASCII staged STEP A/B dual-fault; first write MUST keep add() as a-b;
+    second write required for a+b / S_13. Comment cites 016 type_error.316 0x97.
+  HARNESS_S13_TIGHTEN_001 SHA=08E5605A... (recorded before 016)
+  HARNESS_SHA_NOW=3D983ADAC1EF779C9F390E3662C6E71C8476D2CCE60E40612A16E12B8FBCEB87
+  => harness advanced after 015; remasures are NOT the same prompt+gate as 015.
+
+LOOP spawn / chat_runtime last lines:
+  015: CREATEPROCESS -> ui_update complete=1 response_bytes=3874 ->
+       TRANSCRIPT_INSERT -> RESPONSE_END bytes=4003 (clean completion; ALIVE=1)
+  024: CREATEPROCESS -> ui_update complete=1 response_bytes=4113 ->
+       TRANSCRIPT_INSERT -> RESPONSE_END bytes=4267
+       then harness IDE_EXIT=-1 (process gone; not captured as 0xC0000409)
+  025: CREATEPROCESS -> ui_update complete=0 response_bytes=25  << LAST LINE
+       NO TRANSCRIPT_INSERT / NO RESPONSE_END
+       launch poll: loopChild 1... then loopChild=0 @10:36:07 then
+       IDE_EXIT=-1073740791 @10:36:10
+  IDE logs (015/024/025): GhostText ollama route only; no LoadTensorSlice /
+       TENSOR_LOOKUP_FAIL lines.
+
+------------------------------------------------------------------------
+2) CLASSIFY 025 0xC0000409
+------------------------------------------------------------------------
+EXIT_CODE=-1073740791
+EXIT_HEX=0xC0000409
+WER_EVENT=BEX64 Application Error Id=1000/1001 @ 2026-11-10 10:36:05/07
+FAULTING_APP=RawrXD-Win32IDE-Native-Ext.exe
+FAULTING_PID=0x6E14 (=28180 decimal; matches chat_runtime pid + dump name)
+FAULT_MODULE=ucrtbase.dll
+EXCEPTION_CODE=c0000409
+EXCEPTION_DATA=0000000000000007   # FAST_FAIL_FATAL_APP_EXIT family
+FAULT_OFFSET_UCRT=0x00000000000a527e
+
+DUMP_NEW=Y
+DUMP_PATH=%LOCALAPPDATA%\CrashDumps\RawrXD-Win32IDE-Native-Ext.exe.28180.dmp
+DUMP_COPIED=
+  issue49_gui_ollama_qwen3_025\dump_025\RawrXD-Win32IDE-Native-Ext.exe.28180.dmp
+WER_REPORT_COPIED=
+  issue49_gui_ollama_qwen3_025\dump_025\Report.wer
+CDB_STACK=NOT_AVAILABLE_THIS_HOST (cdb.exe not present on classic Kits path /
+  WindowsApps cdb not reachable this session)
+
+DUMP_STRING_SCAN (minidump ASCII):
+  nlohmann RTTI PRESENT:
+    .?AVtype_error@detail@json_abi_v3_11_3@nlohmann@@
+  type_error count=1
+  nlohmann count=9
+  abort count=1
+  LoadTensorSlice count=0 / IDX=-1
+  dump_escaped/Flush/saveIdeSession/handleAgenticLoopComplete ASCII names=0
+    (mini-dump; names not required when RTTI type_error object is resident)
+
+OUTDIR_SCAN:
+  type_error.316 string NOT observed in 025 receipt/runlog/chat_runtime
+  (DIAG_EVIDENCE=0; empty OUTPUT_SAMPLE) — expected if IDE dies on UI-thread
+  serialize before harness scrapes loop stdout.
+
+SEALED_EXE_401071_HARDEN_MARKERS:
+  saveIdeSession: type_error.316 =0
+  writing sanitized stub =0
+  error_handler_t =0
+  => frozen 401071 predates tip-source UTF-8 harden now present in tree
+     (AgentSession::Flush uses error_handler_t::replace in current sources;
+      Win32IDE_FileOps::saveIdeSession try/catch + replace — G021 lineage).
+  Those source fixes are NOT in the sealed D015 IDE binary.
+
+PRECEDENT (same exit class, full cdb stack elsewhere — NOT reopened as new work,
+used only as stack-family prior):
+  issue49_candidate_96B6D9F4_928a90f0_001\IDE_C0000409_DIVERGENCE_001.txt
+  FIRST_APP_FRAME=nlohmann serializer::dump_escaped (type_error.316)
+  FIRST_PRODUCT_FRAME=AgentSession::Flush via AppendAssistantMessage via
+    handleAgenticLoopComplete
+  SAME_AS_LOADTENSORSLICE=N
+
+G-path UTF-8 diag (different pair; loop 928A90F0 em-dash 0x97):
+  issue49_candidate_D56FE6DD_928A90F0_001\AGENT_HTTP200_FAIL_DIAG_001.txt
+  CLASS=(B) JSON serialize fail inside deep2_agentic_loop request dump
+  FIXED_LOOP=7774E846 — scoped H_022; does NOT supersede D015; NOT swapped here.
+
+CLASSIFICATION_025=
+  IDE_JSON_TYPE_ERROR_FAILFAST_ON_SESSION_PERSIST
+  (nlohmann::detail::type_error in IDE process -> terminate/abort ->
+   ucrtbase FAST_FAIL_FATAL_APP_EXIT / 0xC0000409 / BEX64)
+NOT_A=LoadTensorSlice / fread / CPU Eval (absent from dump + IDE logs)
+NOT_B=observed loop type_error.316 string in 025 outdir (none; different
+  observation surface than G HTTP200 diag)
+NOT_C=blind proof that 7774E846 alone would heal sealed 401071 IDE flush
+NOT_D=harness-only scoring glitch (SHA_AFTER stayed AF4519; WRITE_COMMIT=0)
+
+Flush_TYPE_ERROR_REOPENED_FOR_D015=CONDITIONAL_ON_NEW_DUMP=Y
+  NEW dump RTTI + WER + timing justify classifying as IDE JSON type_error
+  fail-fast family. Full symbolized stack still desirable when cdb available.
+LoadTensorSlice_REOPENED=0
+
+------------------------------------------------------------------------
+3) WHY REMEASURE CANNOT RECOVER 015 SOURCE_EDITED=1 / ALIVE=1
+------------------------------------------------------------------------
+H1_PROMPT_REGIME_CHANGE (RANK=1; evidence-hard):
+  015 success path used task_bytes=253 short prompt and completed RESPONSE_END
+  with SOURCE_EDITED=1 / ALIVE=1 / after_sha EFF63EF0...
+  024/025 force 746-byte staged STEP A/B that requires rollback-then-second-write.
+  On 5BAC+401071 that path yields WRITE_COMMIT=0 and final SHA=AF4519 baseline.
+  Remeasure is not a same-input replay of 015.
+
+H2_IDE_PERSIST_FAILFAST_ON_SEALED_401071 (RANK=1-tied for ALIVE; dump-hard):
+  025 dies 0xC0000409 at loop exit with type_error RTTI in dump; chat_runtime
+  truncated before RESPONSE_END. Sealed IDE lacks UTF-8 dump harden strings.
+  ALIVE=1 from 015 is not reproducible while session-persist abort remains.
+
+H3_STAGED_WRITES_ROLL_BACK_WITHOUT_COMMIT (RANK=2; 024 transcript-hard):
+  024 OUTPUT_SAMPLE: TOOL write keeps a-b; host rolls back; IDE later exits -1;
+  WRITE_COMMIT_COUNT=0. Even without crash, staged policy + 5BAC verify prevents
+  the single-edit SOURCE_EDITED=1 015 pattern from counting under remasure gates.
+
+H4_HARNESS_S13_TIGHTEN (RANK=3; scoring, not sole cause):
+  Post-015 harness requires rollback→commit / distinct after_sha for S_13;
+  will not invent S_13 from final AGENT_RESULT alone. Explains S_13=NOT_RUN
+  persistence but does not by itself create 0xC0000409.
+
+H5_MODEL_NONDETERMINISM (RANK=4; residual):
+  Same model qwen3:8b may choose different tool bodies; subordinate to H1–H3.
+
+------------------------------------------------------------------------
+4) AUTHORITY / NON-SUPERSEDE
+------------------------------------------------------------------------
+CONTROLLING_ISSUE49_ACCEPTANCE=CANDIDATE_D_015_10_OF_11
+H_022 (D56FE6DD + 7774E846) 11/11 scoped = VALID but does NOT supersede D015
+NO_CROSS_SHA_INHERIT=1
+NO_SWAP_7774E846_INTO_D015_FREEZE=1
+NO_BLIND_LAUNCH_026_ON_UNMODIFIED_401071_5BAC=1
+
+------------------------------------------------------------------------
+5) SINGLE NEXT ACCEPTANCE ACTION (ONE)
+------------------------------------------------------------------------
+NEXT_ACTION=
+  TARGETED_REPAIR_PLUS_NEW_SEALED_PAIR_FROM_D015_LINEAGE
+DETAIL=
+  Do NOT launch 026 against unmodified frozen 401071/5BAC.
+  Build a NEW sealed candidate that ports IDE session-persist UTF-8 harden
+  (AgentSession::Flush replace-handler + saveIdeSession try/catch/replace —
+   already in tip sources / G021 lineage) onto an IDE built for acceptance,
+  keep LOOP policy explicit (either retain 5BAC under fail-closed note OR seal
+  a new loop SHA — never silent-swap 7774E846 into D015 freeze).
+  Remeasure S_13 on that NEW pair only. CONTROLLING remains D015 until the new
+  pair beats 10/11 with ALIVE=1 under explicit supersede review.
+  H_022 stays scoped non-controlling evidence of loop UTF-8 repair + S13 pattern.
+REJECTED_ALTERNATES_THIS_TURN=
+  harness-only fix — cannot stop IDE 0xC0000409 fail-fast
+  controlled H_022 promote-review as sole next step — does not classify/close
+  the sealed D015 remasure crash root on 401071
+
+PROMOTE=0
+CERTIFIED=0
+MATURITY_PCT=82
+MATURITY_UNCHANGED=1
+TIP_CLIMB=HOLD

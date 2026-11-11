@@ -1,0 +1,1 @@
+﻿cmd /c '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 >nul && cl /nologo /c /Fo:"F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.obj" "F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp" > "F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\logs\problems_cl.log" 2>&1'

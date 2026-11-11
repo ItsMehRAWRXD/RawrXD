@@ -1,0 +1,9 @@
+SESSION_OPEN session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705 pid=24768
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000220D16 session=1 pane=copilot_sidebar session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+SESSION_OPEN session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705 pid=24768
+DISPATCH_ID id=1 bytes=74 session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=74 session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=integ_chat_e2e_20261109-163705 run_id=integ_chat_e2e_run_20261109-163705

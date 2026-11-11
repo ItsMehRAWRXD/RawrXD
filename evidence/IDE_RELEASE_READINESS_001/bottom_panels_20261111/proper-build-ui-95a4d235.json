@@ -1,0 +1,14 @@
+{
+  "status": "PARTIAL_UI_VERIFICATION",
+  "tested_executable": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\bottom_panels_20261111\\RawrXD-PanelFixed.exe",
+  "sha256": "A3BB65AD6794FE92F9693F44D07A0CF1F333817512DC27526B3D6E8FB9CF36B9",
+  "observed_utc": "2026-11-11T11:46:16.5474339Z",
+  "output_channels": "VISIBLE_WITH_READY_TEXT",
+  "terminal_surface": "VISIBLE_WITH_READY_TEXT",
+  "debug_console_surface": "VISIBLE_WITH_REAL_RUNTIME_LOG_MESSAGES",
+  "problems_diagnostics": "NOT_YET_VERIFIED_ON_THIS_BINARY",
+  "terminal_command_execution": "NOT_YET_VERIFIED_ON_THIS_BINARY",
+  "native_debuggee_events": "NOT_YET_VERIFIED_ON_THIS_BINARY",
+  "ui_automation": "INTERVENING_INPUT_AND_CONCURRENT_HELPER_REQUESTS",
+  "certification": "NOT_CLAIMED"
+}

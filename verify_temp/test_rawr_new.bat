@@ -1,0 +1,1 @@
+"F:\rawrxd\build_ide\bin\RawrXD-Win32IDE-Native.exe" run nemotron-3-nano:4b "Say hello" --approve-mutations=true --cancel-after-ms 15000

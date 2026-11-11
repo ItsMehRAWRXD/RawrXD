@@ -1,0 +1,3 @@
+[STAGE_DIGEST] side=deep2 key=ARGMAX pos=69 id=236769 logit=19.928020477
+[DBG] sampled token=236769 eosId=1
+[AGENT] TOKEN id=236769 piece=(

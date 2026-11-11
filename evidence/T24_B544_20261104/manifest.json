@@ -1,0 +1,14 @@
+{
+  "candidate_sha256": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+  "generated_utc": "2026-11-04T14:05:56.4854920Z",
+  "source_head": "1657ce73504ae3402fbb2cb03ef0ab936b2ae6b7",
+  "ctest": "PASS: 30 passed, 1 configured skip, 0 failed, 0 not-run; exit 0",
+  "files": [
+    {
+      "path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+      "size": 1886720,
+      "sha256": "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909"
+    }
+  ],
+  "candidate_size": 1886720
+}

@@ -1,0 +1,7 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=14
+[ollama step 1] TOOL=read_motd exit=-1 valid=0 observation=16
+[ollama step 1] result=unsupported tool
+[ollama step 2] response_bytes=17
+[ollama step 2] TOOL=read exit=0 valid=1 observation=307
+[ollama step 2] result=/* Issue #49 product-final fixture: intentional compile bug for agent fix loop.\r\r\n * Do not pre-fix - agent (or measured blocker) must own the repair.\r\r\n */\r\r\nint undeclared_fn(int a);\r\r\n\r\r\nint main() {\r\r\n  int x = undeclared_fn(1, 2); /* error: too many args + may need declaration fix */\r\r\n  return x;\r\r\n}

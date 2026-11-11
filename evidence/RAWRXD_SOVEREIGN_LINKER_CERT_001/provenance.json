@@ -1,0 +1,187 @@
+﻿{
+    "schema":  "RAWRXD_SOVEREIGN_LINKER_PROVENANCE_001",
+    "generated_utc":  "2026-10-27T09:03:56.8659392Z",
+    "git_head":  "99f02e078cb068bf663860b2d30caf6513da0d4c",
+    "dirty_worktree":  true,
+    "dirty_count":  486,
+    "dirty_sample":  [
+                         " M .rawr/projects/proj_a66154bdb6a1ed87/esp.jsonl",
+                         " M .rawr/projects/proj_a66154bdb6a1ed87/history.jsonl",
+                         " M .rawr/projects/proj_a66154bdb6a1ed87/spec.json",
+                         " M .rawr/projects/proj_a66154bdb6a1ed87/state.json",
+                         " M .rawrxd/ledger/agent_session.json",
+                         " M CMakeLists.txt",
+                         " M __linearw_range_trace.txt",
+                         " M agentic_ws/plain_logits.gpu.f32",
+                         " M evidence/gpu_recovery_telemetry.json",
+                         " M include/vulkan_compute.h",
+                         " M src/cpu_inference_engine_impl.cpp",
+                         " M src/deep2/quant_dot_dispatch.cpp",
+                         " M src/deep2/quant_dot_dispatch.hpp",
+                         " M src/deep2/runtime_graph_executor.cpp",
+                         " D src/deep2/shaders/deep2_qgemv.spv",
+                         " D src/deep2/shaders/deep2_qwen4exp_gdn.spv",
+                         " D src/deep2/shaders/deep2_qwen4exp_hc_combine.spv",
+                         " D src/deep2/shaders/deep2_qwen4exp_moe_router.spv",
+                         " D src/deep2/shaders/deep2_qwen4exp_ple.spv",
+                         " D src/deep2/shaders/deep2_qwen4exp_qsa_score.spv",
+                         " M src/deep2/vulkan_compute.cpp",
+                         " M src/streaming_gguf_loader.cpp",
+                         " M src/streaming_gguf_loader.h",
+                         " M src/vulkan_compute.cpp",
+                         " M tools/deep2_bench_tps.cpp",
+                         " D tools/shaders/quant_dot_row4_q2k_specialized.spv",
+                         " D tools/shaders/quant_dot_row4_q3k_specialized.spv",
+                         " D tools/shaders/quant_dot_row4_q4k_specialized.spv",
+                         " D tools/shaders/quant_dot_row4_q5k_specialized.spv",
+                         " D tools/shaders/quant_dot_row4_q6k_specialized.spv",
+                         " D tools/shaders/quant_dot_row8_q2k_specialized.spv",
+                         " D tools/shaders/quant_dot_row8_q3k_specialized.spv",
+                         " D tools/shaders/quant_dot_row8_q4k_specialized.spv",
+                         " D tools/shaders/quant_dot_row8_q5k_specialized.spv",
+                         " D tools/shaders/quant_dot_row8_q6k_specialized.spv",
+                         "?? WorldForge_Drop3/",
+                         "?? WorldForge_Drop4/",
+                         "?? WorldForge_Drop5/",
+                         "?? _flight.jsonl",
+                         "?? agent_e2e_fixture/"
+                     ],
+    "compiler_banner":  "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | Copyright (C) Microsoft Corporation.  All rights reserved. | ",
+    "linker_path":  "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\bin\\rawrxd_link_corpus.exe",
+    "linker_sha256":  "c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225",
+    "baseline_linker_sha256":  "37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca",
+    "corpus_dir":  "F:\\rawrxd\\tests\\sovereign_linker\\corpus",
+    "corpus_inputs":  [
+                          {
+                              "path":  "deep2_proxy_a.c",
+                              "sha256":  "bed5bfa830199302e690ae62d8fffae4c9d7730a9bf5b982238392adc6118c8a"
+                          },
+                          {
+                              "path":  "deep2_proxy_b.c",
+                              "sha256":  "6e91c3627038517edf6144870c555d618b98aab119cbf3e944f0a90f19fd9867"
+                          },
+                          {
+                              "path":  "MANIFEST.json",
+                              "sha256":  "a487261902e5ec3c73204322046d6d8f14c1140ec87bd1c20c8ef6453bb4f39a"
+                          },
+                          {
+                              "path":  "neg_duplicate_a.c",
+                              "sha256":  "253ab4764617c28c7f1c140d4064fed0872cc5461063a092491dbc9b90044fa4"
+                          },
+                          {
+                              "path":  "neg_duplicate_b.c",
+                              "sha256":  "7237b832026492d2bcb10346887af1deba040b691d273842bdf932f3161b4cbb"
+                          },
+                          {
+                              "path":  "test01_minimal_return_zero.c",
+                              "sha256":  "6d4a85361276f0b83fbc651e0ba4b7a8a84c3572abd0eaf06d74187bd4852fbe"
+                          },
+                          {
+                              "path":  "test02_exit_sentinel.c",
+                              "sha256":  "b7a03fe61205bc5fe3dbcc5c101e7ca73770ac96aae9ab9b09a975b983b7a280"
+                          },
+                          {
+                              "path":  "test03_multi_tu_a.c",
+                              "sha256":  "8edeaaeee58fb3ee86193c9bc2d3a707085bf33b18ee96c22eafc593575d6c8d"
+                          },
+                          {
+                              "path":  "test03_multi_tu_b.c",
+                              "sha256":  "9b1782c075542bc5472e3a5e571f45ec8b16f2e065b28883f6cc561ad6b8a125"
+                          },
+                          {
+                              "path":  "test04_static_lib.c",
+                              "sha256":  "02fe8cc742937b0ae82513b8052617ea2bacba7bf2b511085c5b6473ed1d41c4"
+                          },
+                          {
+                              "path":  "test04_static_main.c",
+                              "sha256":  "3697c90d47de84e445e63bb2e946814f644b9cd09fdcc277e2ca31d301890ee7"
+                          },
+                          {
+                              "path":  "test05_shared_core.c",
+                              "sha256":  "d281c40254ccb46f71c0d40434a6d5ce151cb398a1a35c3113f83e869ff05de4"
+                          },
+                          {
+                              "path":  "test05_shared_lib.c",
+                              "sha256":  "91a37797201eb679202405c348227e339f0b5a289f7cc92220c4047ffe6ac5c3"
+                          },
+                          {
+                              "path":  "test05_shared_main.c",
+                              "sha256":  "9ba3bb81bb89779d085892e93ffbd622800854fadb38ad18d9fe23b72c85ba71"
+                          },
+                          {
+                              "path":  "test06_undefined_symbol.c",
+                              "sha256":  "e7a22ebfec587d448e50fdca7e2c37811bca0ec28042f50d5fd57a3e1288d624"
+                          },
+                          {
+                              "path":  "test07_relocation_a.c",
+                              "sha256":  "b0f524ee2100236b814a755436001433851e941ed3188317d917df3f8f79f4b2"
+                          },
+                          {
+                              "path":  "test07_relocation_b.c",
+                              "sha256":  "c82239112366a294459bc3987a161e13dc6929f1c47508c6526a6434509f2f8f"
+                          },
+                          {
+                              "path":  "test08_cross_ref_a.c",
+                              "sha256":  "f749ead5e68ad1ec1330f236af8e2e9d9735e547dd3570711df57243cf596cbd"
+                          },
+                          {
+                              "path":  "test08_cross_ref_b.c",
+                              "sha256":  "1aa2398da5610dd7105619009720d1ab3623bb23c0b370587672e3b36dfe6900"
+                          },
+                          {
+                              "path":  "test09_global_init.c",
+                              "sha256":  "d03e89821fb8c20d68f442455c34f82752fb4cc8c90aa973db84dd155a3fccd5"
+                          },
+                          {
+                              "path":  "test10_bss_zero.c",
+                              "sha256":  "069a67f9fe118f142474c4ecb8f23e2c6af0d527e815e8275ef0b86afb9a2bcf"
+                          },
+                          {
+                              "path":  "test11_nested_calls.c",
+                              "sha256":  "499d6592e7ca1b94cefd9c0d5848d259caba61f6172a55ab49f8d7ef501ead52"
+                          },
+                          {
+                              "path":  "test12_rodata_len.c",
+                              "sha256":  "143bc5b75c4c58a2393bc638179a27d6119e0d57da3651f18bf6318f16f2be4c"
+                          },
+                          {
+                              "path":  "test13_data_roundtrip.c",
+                              "sha256":  "7dea4549667e7e3586a8b5000a137af3684b12a44e62157b3cfa8ab81efb0def"
+                          },
+                          {
+                              "path":  "test14_fixed_argc.c",
+                              "sha256":  "ecae9ae7e009a284b646d88abae555bbbb93643daa50c767bd627811e6341710"
+                          },
+                          {
+                              "path":  "test15_branch_table.c",
+                              "sha256":  "bb35654b3b41919fa7e86a5e59da16ef1eec44e54cc8d20fc778e611723d284d"
+                          },
+                          {
+                              "path":  "test16_debug_release.c",
+                              "sha256":  "519f9a24c3089e21820c7fa1c4fcef0b1141719aa0a2d9890809b8686a0762db"
+                          },
+                          {
+                              "path":  "test17_optimization.c",
+                              "sha256":  "9a286fc528033ad4105e95049085b9b273e4f3beeac5252e15be9b671f37d27f"
+                          },
+                          {
+                              "path":  "test18_incremental_a.c",
+                              "sha256":  "163778752ea392e48412eec8703d07bc751657c4a4583b6b6bbf87699225194f"
+                          },
+                          {
+                              "path":  "test18_incremental_b.c",
+                              "sha256":  "a32c3afa468f9d0bd16c41014e76c24769c62ee313f3c4b6de100af8d9d2bde9"
+                          },
+                          {
+                              "path":  "test19_deliberate_compiler_fail.c",
+                              "sha256":  "095813bd36097b1f701ed5622aabaf62f100a4c2888f428639672c39baaef104"
+                          }
+                      ],
+    "command_lines":  [
+                          "rebuild_only.bat (ninja objs + link /LTCG -\u003e rawrxd_link_corpus.exe)",
+                          "run_corpus.ps1 (19 freestanding tests)",
+                          "run_p1.ps1 (structural + negatives + proxy)"
+                      ],
+    "WINDOWS_RUNTIME_CERT":  0,
+    "PROMOTE":  0
+}

@@ -1,0 +1,9 @@
+0.00.214.875 I srv  llama_server: initializing ...
+0.00.214.887 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.221.532 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.226.027 I srv    load_model: loading model 'F:\rawrxd\gemma3-1b-Q2_K.gguf'
+0.00.529.736 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.737.126 I cmn          init: llama threadpool init, n_threads = 16
+0.00.863.370 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 32768, kv_unified = 'true'
+0.00.879.408 I srv  server_run_i: model loaded
+0.00.879.417 I srv  server_on_li: listening on http://127.0.0.1:18080

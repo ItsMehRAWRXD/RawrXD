@@ -1,0 +1,77 @@
+SESSION_OPEN session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223 pid=13888
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000700E98 session=1 pane=copilot_sidebar session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223
+SESSION_OPEN session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223 pid=13888
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000700E98 session=1 pane=copilot_sidebar session_id=sid_00003640_00000000038859AC run_id=w4_rec01_20261110-061223
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000700E98 session=1 pane=copilot_sidebar session_id=sid_00003640_00000000038859AC run_id=w4_rec01_20261110-061223
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00003640_000000000388599C run_id=w4_rec01_20261110-061223
+SESSION_OPEN session_id=sid_0000AED4_00000000038877C3 run_id=w4_rec01_20261110-061255 pid=44756
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000330E3E session=1 pane=copilot_sidebar session_id=sid_0000AED4_00000000038877C3 run_id=w4_rec01_20261110-061255
+SESSION_OPEN session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255 pid=44756
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000330E3E session=1 pane=copilot_sidebar session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000330E3E session=1 pane=copilot_sidebar session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_0000AED4_00000000038877D2 run_id=w4_rec01_20261110-061255
+SESSION_OPEN session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413 pid=26724
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000191290 session=1 pane=copilot_sidebar session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+SESSION_OPEN session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413 pid=26724
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000191290 session=1 pane=copilot_sidebar session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000191290 session=1 pane=copilot_sidebar session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00006864_000000000392BAC6 run_id=w4_rec01_20261110-062413
+SESSION_OPEN session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705 pid=44456
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000008114EA session=1 pane=copilot_sidebar session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+SESSION_OPEN session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705 pid=44456
+DISPATCH_ID id=1 bytes=58 session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000008114EA session=1 pane=copilot_sidebar session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000008114EA session=1 pane=copilot_sidebar session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_0000ADA8_00000000039D10F4 run_id=w4_rec01_20261110-063705
+SESSION_OPEN session_id=sid_00003C6C_00000000039F6AD2 run_id=w4_rec01_20261110-063935 pid=15468
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000004F15B4 session=1 pane=copilot_sidebar session_id=sid_00003C6C_00000000039F6AD2 run_id=w4_rec01_20261110-063935
+SESSION_OPEN session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935 pid=15468
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000004F15B4 session=1 pane=copilot_sidebar session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000004F15B4 session=1 pane=copilot_sidebar session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00003C6C_00000000039F6AE2 run_id=w4_rec01_20261110-063935
+SESSION_OPEN session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035 pid=34788
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001F307A6 session=1 pane=copilot_sidebar session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+SESSION_OPEN session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035 pid=34788
+DISPATCH_ID id=1 bytes=58 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=kilo-auto/free session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+request_started request_id=1 model=kilo-auto/free session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001F307A6 session=1 pane=copilot_sidebar session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+BACKEND_REQUEST_END request_id=1 success=0 stop=0 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001F307A6 session=1 pane=copilot_sidebar session_id=sid_000087E4_0000000003A6AF4C run_id=w4_rec01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+callback request_id=1 complete=1 response_bytes=108 stop=0 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+ui_update request_id=1 rendered=1 complete=1 response_bytes=108 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+RESPONSE_END request_id=1 session=1 bytes=108 session_id=sid_000087E4_0000000003A6AF3C run_id=w4_rec01_20261110-065035
+SESSION_OPEN session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655 pid=6624
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000BE14D2 session=1 pane=copilot_sidebar session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+SESSION_OPEN session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655 pid=6624
+DISPATCH_ID id=1 bytes=58 session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000BE14D2 session=1 pane=copilot_sidebar session_id=sid_000019E0_0000000003BEF8B4 run_id=w4_rec01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000BE14D2 session=1 pane=copilot_sidebar session_id=sid_000019E0_0000000003BEF8B4 run_id=w4_rec01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_000019E0_0000000003BEF8A4 run_id=w4_rec01_20261110-071655

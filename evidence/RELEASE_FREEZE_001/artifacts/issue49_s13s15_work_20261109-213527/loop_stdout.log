@@ -1,0 +1,21 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=222
+[ollama step 1] result=/* Issue #49 second-edit fixture: reintroduced arity bug after first repair. */\r\n#include <stdio.h>\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  int x = undeclared_fn(1, 2);\r\n  puts("PASS");\r\n  return 0;\r\n}\r\n\r\n
+[ollama step 2] response_bytes=238
+[ollama step 2] TOOL=write exit=0 valid=1 observation=40
+[ollama step 2] result=write committed; build and test verified
+[ollama step 3] response_bytes=9
+[ollama step 3] TOOL=test exit=0 valid=1 observation=31
+[ollama step 3] result=PASS\ntests passed \nFINAL_TEST \n
+[ollama step 4] response_bytes=11
+[ollama step 4] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 4] result=verified completion
+OLLAMA_AGENT_MODEL llama3.1:8b
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 cb74b3f134cbccbb6424db44356ce1c3dc205e106c8d56fe5ed867c74c920cb9
+OLLAMA_AGENT_AFTER_SHA256 3b2b7bead397062fa2aad401bb918d47ace0b86b53b0964f1f30838def13498f
+OLLAMA_AGENT_VERDICT PASS
+

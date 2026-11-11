@@ -1,0 +1,22 @@
+[1/3] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumerSpace.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/lavapath/FutureConsumerSpace.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\FutureConsumerSpace.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(116): error C2653: 'detail': is not a class or namespace name
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(116): error C3861: 'Mu': identifier not found
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(116): error C2280: 'std::lock_guard<std::mutex>::lock_guard(const std::lock_guard<std::mutex> &)': attempting to reference a deleted function
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex(455): note: see declaration of 'std::lock_guard<std::mutex>::lock_guard'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex(455): note: 'std::lock_guard<std::mutex>::lock_guard(const std::lock_guard<std::mutex> &)': function was explicitly deleted
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(117): error C2653: 'detail': is not a class or namespace name
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(117): error C3861: 'Consumers': identifier not found
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(118): error C2653: 'detail': is not a class or namespace name
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(118): error C3861: 'ConsumerN': identifier not found
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(127): error C2653: 'detail': is not a class or namespace name
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(127): error C3861: 'Mu': identifier not found
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(127): error C2280: 'std::lock_guard<std::mutex>::lock_guard(const std::lock_guard<std::mutex> &)': attempting to reference a deleted function
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex(455): note: see declaration of 'std::lock_guard<std::mutex>::lock_guard'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex(455): note: 'std::lock_guard<std::mutex>::lock_guard(const std::lock_guard<std::mutex> &)': function was explicitly deleted
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(128): error C2653: 'detail': is not a class or namespace name
+F:\rawrxd\src\deep2\lavapath\FutureConsumerSpace.cpp(128): error C3861: 'Pages': identifier not found
+ninja: build stopped: subcommand failed.

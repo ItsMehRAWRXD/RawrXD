@@ -1,0 +1,14 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323783080}}
+{"type":"RETRY","entry":2,"payload":{"attempt":2,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323783516}}
+{"type":"RETRY","entry":3,"payload":{"attempt":3,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323783866}}
+{"type":"RETRY","entry":4,"payload":{"attempt":4,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323784232}}
+{"type":"RETRY","entry":5,"payload":{"attempt":5,"reason":"invalid_tool_format","can_continue":false,"timestamp":1794323784532}}
+{"type":"VERIFICATION","entry":6,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794323784532}}
+{"type":"LEDGER_END","entry":7,"payload":{"total_entries":7}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323840275}}
+{"type":"RETRY","entry":2,"payload":{"attempt":2,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794323841050}}
+{"type":"RETRY","entry":3,"payload":{"attempt":3,"reason":"invalid_tool_format","can_continue":false,"timestamp":1794323841662}}
+{"type":"VERIFICATION","entry":4,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794323841662}}
+{"type":"LEDGER_END","entry":5,"payload":{"total_entries":5}}

@@ -1,0 +1,80 @@
+[rawr-cli-dispatch] command=run argc=9 args=7
+[rawr-cli-trace] CmdRun:enter
+RUN_CONFIG_REQUESTED_MAX_TOKENS=512
+[rawr-cli-trace] CmdRun:arguments-parsed
+[rawr-cli-trace] InitBackend:enter
+[rawr-cli-trace] InitBackend:router-initialize
+[rawr-router-trace] Initialize:enter
+[rawr-router-trace] Initialize:deep2-created
+[rawr-router-trace] Initialize:deep2-initialized
+[rawr-router-trace] Initialize:ollama-created
+[rawr-ollama-trace] Initialize:enter
+[rawr-ollama-trace] Initialize:client-created
+[rawr-ollama-trace] Initialize:ready
+[rawr-router-trace] Initialize:ollama-initialized
+[rawr-router-trace] Initialize:ready
+[rawr-cli-trace] InitBackend:router-ready
+RUN_CONFIG_MAX_TOKENS=512
+[rawr-cli-trace] CmdRun:backend-ready
+[rawr-cli-trace] computer-use-tools-ready
+[rawr-cli-trace] CmdRun:tools-ready
+[rawr-cli-trace] CmdRun:permission-gate-construct
+[rawr-cli-trace] CmdRun:permission-gate-ready
+[rawr-cli-trace] CmdRun:ledger-construct
+[rawr-cli-trace] CmdRun:ledger-constructed
+[rawr-cli-trace] CmdRun:ledger-workspace-set
+[rawr-cli-trace] CmdRun:ledger-model-set
+[rawr-cli-trace] CmdRun:ledger-git-set
+[rawr-cli-trace] CmdRun:ledger-mode-set
+[rawr-cli-trace] CmdRun:ledger-ready
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    code
+Root:    F:\rawrxd
+
+[rawr-cli-trace] CmdRun:inference-start
+[rawr-cli-trace] CmdRun:router-chat-sync
+[rawr-router-trace] ChatSync:enter
+[rawr-router-trace] ChatSync:ollama
+[rawr-ollama-trace] ChatSync:request-start
+[rawr-ollama-client-trace] chatSync:request model=qwen3:8b messages=3
+[rawr-ollama-client-trace] chatSync:response bytes=486
+[rawr-ollama-trace] ChatSync:client-returned
+[rawr-ollama-trace] ChatSync:success
+[rawr-router-trace] ChatSync:return
+[rawr-cli-trace] CmdRun:inference-returned
+[rawr-router-trace] ChatSync:enter
+[rawr-router-trace] ChatSync:ollama
+[rawr-ollama-trace] ChatSync:request-start
+[rawr-ollama-client-trace] chatSync:request model=qwen3:8b messages=5
+[rawr-ollama-client-trace] chatSync:response bytes=507
+[rawr-ollama-trace] ChatSync:client-returned
+[rawr-ollama-trace] ChatSync:success
+[rawr-router-trace] ChatSync:return
+[rawr-router-trace] ChatSync:enter
+[rawr-router-trace] ChatSync:ollama
+[rawr-ollama-trace] ChatSync:request-start
+[rawr-ollama-client-trace] chatSync:request model=qwen3:8b messages=7
+[rawr-ollama-client-trace] chatSync:response bytes=605
+[rawr-ollama-trace] ChatSync:client-returned
+[rawr-ollama-trace] ChatSync:success
+[rawr-router-trace] ChatSync:return
+[rawr-router-trace] ChatSync:enter
+[rawr-router-trace] ChatSync:ollama
+[rawr-ollama-trace] ChatSync:request-start
+[rawr-ollama-client-trace] chatSync:request model=qwen3:8b messages=9
+[rawr-ollama-client-trace] chatSync:response bytes=512
+[rawr-ollama-trace] ChatSync:client-returned
+[rawr-ollama-trace] ChatSync:success
+[rawr-router-trace] ChatSync:return
+[error] tool failed: exit=1
+[StreamEngine] Shutdown
+[rawr-router-trace] Shutdown:enter
+[rawr-ollama-trace] Shutdown:enter
+[rawr-ollama-trace] Shutdown:done
+[rawr-router-trace] Shutdown:done
+[rawr-ollama-trace] Shutdown:enter
+[rawr-ollama-trace] Shutdown:done

@@ -1,0 +1,8 @@
+﻿{
+  "args": "{\"config\":\"Debug\",\"dir\":\"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture\"}",
+  "denied": false,
+  "exit_code": 0,
+  "ok": true,
+  "output": "-- Building for: Visual Studio 17 2022\n-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26300.\n-- The CXX compiler identification is MSVC 19.44.35228.0\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (3.3s)\n-- Generating done (0.0s)\n-- Build files have been written to: F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/build\nMSBuild version 17.14.51+25f168cee for .NET Framework\r\n\r\n  1>Checking Build System\r\n  Building Custom Rule F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/CMakeLists.txt\r\n  off_by_one.cpp\r\n  off_by_one.vcxproj -> F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\RAWR_CLI_OLLAMA_ROUTE_001\\agent_loop_fixture\\build\\Debug\\off_by_one.exe\r\n  Building Custom Rule F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/CMakeLists.txt\r\n",
+  "tool": "run_build"
+}

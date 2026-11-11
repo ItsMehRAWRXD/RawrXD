@@ -1,0 +1,10 @@
+17052 [PS_TRACE] WM_COPYDATA cmd_len=2 cmd='ls'
+
+17052 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=2 thread=17052
+
+17052 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=2 thread=17052
+
+17052 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+17052 [PS_TRACE] executePowerShellPanelCommand() EXIT
+

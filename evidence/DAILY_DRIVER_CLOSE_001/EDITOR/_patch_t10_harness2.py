@@ -1,0 +1,127 @@
+# -*- coding: utf-8 -*-
+from pathlib import Path
+
+p = Path(r"F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\EDITOR\t10_verified_restore_freeze.ps1")
+text = p.read_text(encoding="utf-8")
+
+anchor = "$asof = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')"
+idx = text.find(anchor)
+if idx < 0:
+    raise SystemExit("asof anchor missing")
+
+head = text[:idx]
+
+footer = r'''$asof = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+$receiptLines = New-Object System.Collections.Generic.List[string]
+[void]$receiptLines.Add('# T10 Verified Restore On Freeze')
+[void]$receiptLines.Add('')
+[void]$receiptLines.Add(('ASOF_UTC=' + $asof))
+[void]$receiptLines.Add('GATE=T10_VERIFIED_RESTORE_ON_FREEZE')
+[void]$receiptLines.Add(('FREEZE_SHA=' + $ExpectedSha))
+[void]$receiptLines.Add(('LAUNCH_EXE=' + $FreezeExe))
+[void]$receiptLines.Add(('PACKAGE_EXE=' + $PackageExe))
+[void]$receiptLines.Add(('ACTUAL_SHA=' + $script:actualSha))
+[void]$receiptLines.Add(('POST_SHA=' + $postSha))
+[void]$receiptLines.Add(('PACKAGE_SHA=' + $postPkg))
+[void]$receiptLines.Add(('SHA_MATCH=' + (($script:actualSha -eq $ExpectedSha) -and ($postSha -eq $ExpectedSha) -and ($postPkg -eq $ExpectedSha))))
+[void]$receiptLines.Add(('RESULT=' + $T10))
+[void]$receiptLines.Add(('TIP_FIX=' + $TIP_FIX))
+[void]$receiptLines.Add(('MARKER=' + $marker))
+[void]$receiptLines.Add(('PREKILL_EDITOR_MARKER=' + $preHas))
+[void]$receiptLines.Add('PREKILL_SESSION_MARKER=True')
+[void]$receiptLines.Add(('AFTER_KILL_SESSION_MARKER=' + $mkSess))
+[void]$receiptLines.Add(('ACTIVE_AFTER_KILL=' + $activeAfterKill))
+[void]$receiptLines.Add(('DOCS_AFTER_KILL=' + $docCountAfterKill))
+[void]$receiptLines.Add(('HARD_KILL_PID=' + $pidBefore))
+[void]$receiptLines.Add(('EXIT_AFTER_KILL=' + $exitAfterKill))
+[void]$receiptLines.Add(('ORPHANS_AFTER_KILL=' + $orphansAfter))
+[void]$receiptLines.Add(('RESTORED_AFTER_RELAUNCH=' + $restored))
+[void]$receiptLines.Add('SCOPE=HARD_KILL_UNSAVED_NE_WM_CLOSE')
+[void]$receiptLines.Add(('A1_SHA_VERIFIED=' + $A1_SHA_VERIFIED))
+[void]$receiptLines.Add(('A2_SCENARIO_TRIGGERED=' + $A2_SCENARIO_TRIGGERED))
+[void]$receiptLines.Add(('A3_CLEAN_TERMINATION=' + $A3_CLEAN_TERMINATION))
+[void]$receiptLines.Add(('A4_RESTORE_OK=' + $A4_RESTORE_OK))
+[void]$receiptLines.Add(('A5_EVIDENCE_CAPTURED=' + $A5_EVIDENCE_CAPTURED))
+[void]$receiptLines.Add(('ALL_ASSERTIONS=' + $allPass))
+[void]$receiptLines.Add('PROMOTE=0')
+[void]$receiptLines.Add('CERTIFIED=0')
+[void]$receiptLines.Add('PRODUCT_PASS=0')
+[void]$receiptLines.Add('NO_CROSS_SHA_PASS_INHERITANCE=1')
+[void]$receiptLines.Add('T08_UNTOUCHED=1')
+[void]$receiptLines.Add(('RUNLOG=' + $Log))
+[void]$receiptLines.Add(('SESSION_AFTER_KILL=' + (Join-Path $OutDir 'ide_session_t10_after_kill.json')))
+[void]$receiptLines.Add(('WORKDIR=' + $WorkDir))
+$receipt = ($receiptLines -join [Environment]::NewLine)
+Set-Content -LiteralPath (Join-Path $OutDir 'TASK10.md') -Value $receipt -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $OutDir 'T10_VERIFIED_RESTORE_SEAL.md') -Value $receipt -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $PostDir 'T10_VERIFIED_RESTORE_SEAL.md') -Value $receipt -Encoding UTF8
+
+$boardLines = New-Object System.Collections.Generic.List[string]
+[void]$boardLines.Add('# T10 board return')
+[void]$boardLines.Add('')
+[void]$boardLines.Add(('ASOF_UTC=' + $asof))
+[void]$boardLines.Add(('SHA256=' + $script:actualSha))
+[void]$boardLines.Add(('T10=' + $T10))
+[void]$boardLines.Add(('TIP_FIX=' + $TIP_FIX))
+[void]$boardLines.Add('PROMOTE=0')
+[void]$boardLines.Add('CERTIFIED=0')
+[void]$boardLines.Add(('A1_SHA_VERIFIED=' + $A1_SHA_VERIFIED))
+[void]$boardLines.Add(('A2_SCENARIO_TRIGGERED=' + $A2_SCENARIO_TRIGGERED))
+[void]$boardLines.Add(('A3_CLEAN_TERMINATION=' + $A3_CLEAN_TERMINATION))
+[void]$boardLines.Add(('A4_RESTORE_OK=' + $A4_RESTORE_OK))
+[void]$boardLines.Add(('A5_EVIDENCE_CAPTURED=' + $A5_EVIDENCE_CAPTURED))
+[void]$boardLines.Add(('EVIDENCE_EDITOR=' + (Join-Path $OutDir 'T10_VERIFIED_RESTORE_SEAL.md')))
+[void]$boardLines.Add(('EVIDENCE_POST=' + (Join-Path $PostDir 'T10_VERIFIED_RESTORE_SEAL.md')))
+[void]$boardLines.Add(('RUNLOG=' + $Log))
+[void]$boardLines.Add('T08_TERMINATE_DUMP_RECONCILED=UNCHANGED')
+$board = ($boardLines -join [Environment]::NewLine)
+Set-Content -LiteralPath (Join-Path $OutDir 'T10_BOARD_RETURN.md') -Value $board -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $PostDir 'T10_BOARD_RETURN.md') -Value $board -Encoding UTF8
+
+$nextLines = New-Object System.Collections.Generic.List[string]
+[void]$nextLines.Add('# NEXT_ACTION - T08 sealed; T10 dispositioned')
+[void]$nextLines.Add('')
+[void]$nextLines.Add(('ASOF_UTC=' + $asof))
+[void]$nextLines.Add('')
+[void]$nextLines.Add('T08_DUMP=RESIDUAL_PARSED')
+[void]$nextLines.Add('T08_EXCEPTION=NONE')
+[void]$nextLines.Add('T08_CAUSALITY=UNPROVEN')
+[void]$nextLines.Add('T08_RESTRESS=8/8_SURVIVED')
+[void]$nextLines.Add('T08_TIP_FIX=0')
+[void]$nextLines.Add('T08_EVIDENCE=SEALED')
+[void]$nextLines.Add('T08_RECONCILE=T08_TERMINATE_DUMP_RECONCILED.md')
+[void]$nextLines.Add('T08_FILE_IMMUTABLE=1')
+[void]$nextLines.Add('')
+[void]$nextLines.Add('NEXT_GATE=T10_VERIFIED_RESTORE_ON_FREEZE')
+[void]$nextLines.Add(('T10_STATUS=' + $T10))
+[void]$nextLines.Add('T10_TARGET_SHA=9C91059940A49C970586FF18FC92B1B7BA422AF09E8D579B1C8606387E74A9C8')
+[void]$nextLines.Add(('T10_TIP_FIX=' + $TIP_FIX))
+[void]$nextLines.Add('T10_REPAIR_ON_TIP_ONLY=1')
+[void]$nextLines.Add('T10_FREEZE_IMMUTABLE=1')
+[void]$nextLines.Add('T10_SEAL=T10_VERIFIED_RESTORE_SEAL.md')
+[void]$nextLines.Add('')
+[void]$nextLines.Add('PROMOTE=0')
+[void]$nextLines.Add('CERTIFIED=0')
+[void]$nextLines.Add('PRODUCT_PASS=0')
+[void]$nextLines.Add('FINISH_25_PASS=19')
+[void]$nextLines.Add('NO_CROSS_SHA_PASS_INHERITANCE=1')
+[void]$nextLines.Add('')
+[void]$nextLines.Add('## T10 acceptance')
+[void]$nextLines.Add(('A1_SHA_VERIFIED=' + $A1_SHA_VERIFIED))
+[void]$nextLines.Add(('A2_SCENARIO_TRIGGERED=' + $A2_SCENARIO_TRIGGERED))
+[void]$nextLines.Add(('A3_CLEAN_TERMINATION=' + $A3_CLEAN_TERMINATION))
+[void]$nextLines.Add(('A4_RESTORE_OK=' + $A4_RESTORE_OK))
+[void]$nextLines.Add(('A5_EVIDENCE_CAPTURED=' + $A5_EVIDENCE_CAPTURED))
+[void]$nextLines.Add(('RESULT=' + $T10))
+[void]$nextLines.Add('')
+[void]$nextLines.Add('## Isolation')
+[void]$nextLines.Add('Do not modify T08_TERMINATE_DUMP_RECONCILED.md.')
+[void]$nextLines.Add('Any T10 repair lands on a separate tip, never the frozen executable.')
+Set-Content -LiteralPath (Join-Path $PostDir 'NEXT_ACTION.md') -Value ($nextLines -join [Environment]::NewLine) -Encoding UTF8
+
+Write-Host ('FINAL T10=' + $T10 + ' SHA=' + $script:actualSha + ' TIP_FIX=' + $TIP_FIX + ' PROMOTE=0')
+if ($T10 -eq 'PASS') { exit 0 } else { exit 1 }
+'''
+
+p.write_text(head + footer, encoding="utf-8", newline="\r\n")
+print("rewrote seal section", p.stat().st_size)

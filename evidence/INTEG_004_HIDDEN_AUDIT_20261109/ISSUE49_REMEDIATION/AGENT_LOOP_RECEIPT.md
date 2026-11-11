@@ -1,0 +1,57 @@
+# AGENT_LOOP_RECEIPT — Issue #49 remediation
+
+```text
+ASOF_UTC=2026-11-09T18:16:23Z
+MOTD_ACK=1
+GATE=AGENT_LOOP_SPAWN_AND_RESPONSE
+TIP=tip_rc_issue49_001
+CANDIDATE_SHA256=F87B4EE0035DD136FB1C1A2FC2DC6578AD95491FAA007F67F2512EE5B6BE9547
+GIT_HEAD=23ca021d68062539ddb72b7c8e6ff42194780b84
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+E6CF_RESTORE=HELD
+NO_MOCK_AGENT_LOOP=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+INVENT_PASS=0
+```
+
+## Prior measured failure
+
+| Field | Value |
+|-------|-------|
+| Prior SHA | `E6CF5BD2…` |
+| `DEEP2_AGENTIC_LOOP_SPAWNED` | `0` |
+| Step | `S_06_AGENT_READS_PROJECT=BLOCKED_NO_AGENTIC_LOOP_PROCESS` |
+
+## Path notes
+
+- Spawn path: `IDM_AGENTIC_LOOP_RUN` (4106) → `onAgenticLoopRunTask` → `AgenticLoopBridge::StartTask` → `deep2_agentic_loop.exe` beside tip.
+- Loop exe staged from prior `tip_final_integ_010` copy (`DAFEF577…`); **not** rebuilt this attempt.
+- Chat-input assignment on this SHA unblocked spawn (`S_05=PASS`).
+
+## Runtime disposition (SHA-bound)
+
+```text
+AGENT_LOOP=SPAWNED
+DEEP2_AGENTIC_LOOP_BESIDE=1
+DEEP2_AGENTIC_LOOP_SPAWNED=1
+AGENTIC_LOOP_RUN_4106=True
+LOOP_PROCESS_SPAWNED=1
+AGENT_RESPONSE_OBSERVED=PARTIAL_MODEL_LOAD_ONLY
+TOOL_CALL_EVIDENCE=0
+SOURCE_EDIT_HASH_CHANGE=0
+S_06_AGENT_READS_PROJECT=PARTIAL_LOOP_SPAWNED_READ_NOT_PROVEN
+REASON=SPAWN_RECEIPT_PRESENT_TOOL_AND_EDIT_NOT_PROVED
+```
+
+Observed output sample showed MOTD/session start + `loading model ... qwen2.5-coder_1.5b-base.gguf`. No tool-call or source-edit proof on this run.
+
+## Law
+
+```text
+SPAWNED != TOOL_AUTHORITY_PASS
+SPAWNED != SOURCE_EDIT_PASS
+NOT_RUN != PASS
+PROMOTE=0
+```

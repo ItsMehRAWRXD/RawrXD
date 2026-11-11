@@ -1,0 +1,22 @@
+#include "combat/combat.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <limits>
+namespace kartgib::combat {
+double clamp(double x,double a,double b){return std::max(a,std::min(x,b));}
+Vec3 add(Vec3 a,Vec3 b){return {a.x+b.x,a.y+b.y,a.z+b.z};}
+Vec3 scale(Vec3 a,double k){return {a.x*k,a.y*k,a.z*k};}
+double dot(Vec3 a,Vec3 b){return a.x*b.x+a.y*b.y+a.z*b.z;}
+double length(Vec3 v){return std::sqrt(dot(v,v));}
+Vec3 normalize(Vec3 v){double l=length(v);return l>1e-12?scale(v,1/l):Vec3{};}
+bool valid(const Config& c){return std::isfinite(c.speed)&&c.speed>0&&std::isfinite(c.gravity)&&std::isfinite(c.projectileLife)&&c.projectileLife>0&&std::isfinite(c.hitRadius)&&c.hitRadius>0&&std::isfinite(c.damage)&&c.damage>=0&&std::isfinite(c.range)&&c.range>0&&c.maxProjectiles>0&&c.maxParticles>0;}
+uint64_t hash(uint64_t x){x^=x>>30;x*=0xbf58476d1ce4e5b9ULL;x^=x>>27;x*=0x94d049bb133111ebULL;return x^(x>>31);}
+bool fire(World& w,uint64_t owner,Vec3 origin,Vec3 direction,const Config& c){if(!valid(c)||w.projectiles.size()>=c.maxProjectiles||!std::isfinite(length(origin))||!std::isfinite(length(direction))||length(direction)<1e-12)return false;Projectile p;p.id=w.nextId++;p.owner=owner;p.pos=origin;p.vel=scale(normalize(direction),c.speed);p.radius=c.hitRadius;p.life=std::min(c.projectileLife,c.range/c.speed);p.damage=c.damage;w.projectiles.push_back(p);return true;}
+bool segmentSphere(Vec3 a,Vec3 b,Vec3 center,double radius,double& t){if(radius<0)return false;Vec3 d=add(b,scale(a,-1)),m=add(a,scale(center,-1));double aa=dot(d,d);if(dot(m,m)<=radius*radius){t=0;return true;}if(aa<1e-18)return false;double bb=dot(m,d),cc=dot(m,m)-radius*radius,disc=bb*bb-aa*cc;if(disc<0)return false;double hit=(-bb-std::sqrt(disc))/aa;if(hit<0||hit>1)return false;t=hit;return true;}
+std::vector<Hit> advance(World& w,const Config& c,double dt){std::vector<Hit> hits;if(!valid(c)||!std::isfinite(dt)||dt<=0||dt>0.25)return hits;for(auto& p:w.projectiles){if(!p.active)continue;Vec3 old=p.pos,delta=scale(p.vel,dt);delta.y-=0.5*c.gravity*dt*dt;Vec3 end=add(old,delta);p.vel.y-=c.gravity*dt;double best=std::numeric_limits<double>::infinity();Target* target=nullptr;for(auto& t:w.targets){if(!t.alive||t.id==p.owner)continue;double fraction=0;if(segmentSphere(old,end,t.pos,t.radius+p.radius,fraction)&&(fraction<best||(fraction==best&&target&&t.id<target->id))){best=fraction;target=&t;}}if(target){p.pos=add(old,scale(delta,best));p.active=false;target->health=std::max(0.0,target->health-p.damage);target->alive=target->health>0;hits.push_back({p.id,target->id,p.pos,p.damage});}else p.pos=end;p.life-=dt;if(p.life<=0)p.active=false;}w.projectiles.erase(std::remove_if(w.projectiles.begin(),w.projectiles.end(),[](const Projectile& p){return !p.active;}),w.projectiles.end());++w.tick;return hits;}
+std::vector<Hit> explode(World& w,const Explosion& e){std::vector<Hit> hits;if(!std::isfinite(e.radius)||e.radius<=0||!std::isfinite(e.damage)||e.damage<0)return hits;for(auto& t:w.targets){if(!t.alive)continue;double dist=length(add(t.pos,scale(e.pos,-1)));if(dist>e.radius+t.radius)continue;double damage=e.damage*(1-clamp((dist-t.radius)/e.radius,0,1));t.health=std::max(0.0,t.health-damage);t.alive=t.health>0;hits.push_back({0,t.id,t.pos,damage});}return hits;}
+void emitImpact(World& w,Vec3 pos,uint64_t seed,unsigned count){constexpr size_t limit=16384;for(unsigned i=0;i<count&&w.particles.size()<limit;++i){uint64_t h=hash(seed+i);auto u=[&](unsigned shift){return double((h>>shift)&0xffff)/65535.0;};Vec3 v={u(0)*2-1,u(16)*2,u(32)*2-1};w.particles.push_back({pos,scale(normalize(v),2+u(48)*6),0.25+u(0)*0.75,0.04+u(16)*0.1,0xff60c8ff});}}
+void updateParticles(World& w,double dt){if(!std::isfinite(dt)||dt<=0||dt>0.25)return;for(auto& p:w.particles){p.pos=add(p.pos,scale(p.vel,dt));p.vel.y-=9.81*dt;p.life-=dt;}w.particles.erase(std::remove_if(w.particles.begin(),w.particles.end(),[](const Particle& p){return p.life<=0;}),w.particles.end());}
+uint64_t fingerprint(const World& w){uint64_t h=hash(w.tick^w.nextId);auto mix=[&](uint64_t x){h=hash(h^x);};auto number=[&](double d){uint64_t u=0;static_assert(sizeof(u)==sizeof(d));std::memcpy(&u,&d,sizeof(u));mix(u);};for(const auto& p:w.projectiles){mix(p.id);mix(p.owner);number(p.pos.x);number(p.pos.y);number(p.pos.z);number(p.life);}for(const auto& t:w.targets){mix(t.id);number(t.pos.x);number(t.pos.y);number(t.pos.z);number(t.health);mix(t.alive);}for(const auto& p:w.particles){number(p.pos.x);number(p.pos.y);number(p.pos.z);number(p.life);}return h;}
+}

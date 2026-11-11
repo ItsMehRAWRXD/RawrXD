@@ -1,0 +1,36 @@
+[plain] loading F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[plain] path=gpu-first eos_id=2 bos_id=1
+[plain] TOKEN_IDS=1,29966,29989,1792,29989,29958,13,6113,263,3273,315,740,393,12778,1023,11920,29889,2,29966,29989,465,22137,29989,29958
+[plain] DECODED_PROMPT='<s><|user|>\nWrite a short C function that adds two integers.</s><|assistant|>'
+[plain] bound: ops=311
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[plain] prefill 24 tokens in 6560.3 ms (3.658 tok/s) gpu=3720 cpu=0
+[plain] vocab=32000 nonfinite=0 logit_range=[-12.9355, 23.9642]
+[plain] EOS_ID=2 EOS_RANK=3/32000 EOS_LOGIT=12.778649 (top logit=23.964180, gap=11.185531)
+[plain] TOP10: 13(\n)=23.9642 29871( )=13.7014 2(</s>)=12.7786 259(  )=10.5153 2266( Here)=10.2944 268(    )=10.0481 29907(C)=9.7900 18585( Sure)=9.3920 1678(   )=9.3475 29903(S)=9.2400
+PLAIN_FIRST_TOKEN argmax=13 eos_rank=3 vocab=32000 nonfinite=0 top10=13,29871,2,259,2266,268,29907,18585,1678,29903 gpu=3720 cpu=0
+[plain] logits dumped: F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\backends_001/plain_logits.gpu.f32
+[TOKEN_DIAG] t=0 selected=13 argmax=13 vocab=32000 finite=1 sel_logit=23.96418 max=23.96418 min=-12.9354725
+[TOKEN_DIAG] t=1 selected=10605 argmax=10605 vocab=32000 finite=1 sel_logit=17.7212029 max=17.7212029 min=-12.1176262
+[TOKEN_DIAG] t=2 selected=29915 argmax=29915 vocab=32000 finite=1 sel_logit=22.005125 max=22.005125 min=-15.1732054
+[TOKEN_DIAG] t=3 selected=29879 argmax=29879 vocab=32000 finite=1 sel_logit=26.8093204 max=26.8093204 min=-14.5628891
+[TOKEN_DIAG] t=4 selected=263 argmax=263 vocab=32000 finite=1 sel_logit=20.5977287 max=20.5977287 min=-12.1838694
+[TOKEN_DIAG] t=10 selected=1023 argmax=1023 vocab=32000 finite=1 sel_logit=21.0629787 max=21.0629787 min=-17.80439
+[plain] greedy 16 tokens in 3799.3 ms (4.211 tok/s)
+[plain] CONTINUATION='\nHere's a short C function that adds two integers:\n\n```'
+PLAIN_CONTINUATION gpu '\nHere's a short C function that adds two integers:\n\n```'
+PLAIN_VERDICT LOGITS_HEALTHY eos_rank=3 generated=16 nonfinite=0
+Released all tensors
+Vulkan resources cleaned up successfully

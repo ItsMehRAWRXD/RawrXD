@@ -1,0 +1,67 @@
+#version 450
+// gemv_q4k_sharedx.comp — shared-x Q4_K; ROW_TILE via -D (default 64)
+#ifndef ROW_TILE
+#define ROW_TILE 64
+#endif
+layout(local_size_x = ROW_TILE) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+shared float xs[256];
+
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+
+void scmin(uint base, uint j, out uint sc, out uint m) {
+  if (j < 4u) {
+    sc = u8(base + j) & 63u;
+    m = u8(base + j + 4u) & 63u;
+  } else {
+    uint a = u8(base + j + 4u);
+    uint b = u8(base + j - 4u);
+    uint c = u8(base + j);
+    sc = (a & 15u) | ((b >> 6) << 4);
+    m = (a >> 4) | ((c >> 6) << 4);
+  }
+}
+
+void main() {
+  uint lid = gl_LocalInvocationID.x;
+  uint row = gl_WorkGroupID.x * uint(ROW_TILE) + lid;
+  bool rowOk = row < pc.rows;
+  uint nblk = pc.cols >> 8;
+  uint rowOff = rowOk ? (row * nblk * 144u) : 0u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint base = b * 256u;
+    for (uint i = lid; i < 256u; i += uint(ROW_TILE))
+      xs[i] = x[base + i];
+    barrier();
+    if (rowOk) {
+      uint blk = rowOff + b * 144u;
+      float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+      float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
+      uint scb = blk + 4u;
+      uint qbase = blk + 16u;
+      for (uint s = 0u; s < 8u; ++s) {
+        uint sc, m;
+        scmin(scb, s, sc, m);
+        float scale = d * float(sc);
+        float minv = dmin * float(m);
+        uint qo = qbase + s * 16u;
+        uint bi = s * 32u;
+        for (uint k = 0u; k < 16u; ++k) {
+          uint byte = u8(qo + k);
+          sum += (scale * float(byte & 15u) - minv) * xs[bi + k];
+          sum += (scale * float((byte >> 4) & 15u) - minv) * xs[bi + k + 16u];
+        }
+      }
+    }
+    barrier();
+  }
+  if (rowOk) y[row] = sum;
+}

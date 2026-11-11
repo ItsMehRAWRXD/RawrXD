@@ -1,0 +1,36 @@
+[plain] loading F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[plain] path=gpu-first eos_id=128009 bos_id=128000
+[plain] TOKEN_IDS=128000,1502,25,18321,198,27,91,2527,8932,851,91,29,78191,27,91,408,8932,851,91,8616,77,1734
+[plain] DECODED_PROMPT='<|begin_of_text|>User: Reply\n<|start_header_id|>assistant<|end_header_id|>\n\n'
+[plain] bound: ops=395
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline initialized: quantdot
+[plain] prefill 22 tokens in 15372.2 ms (1.431 tok/s) gpu=4334 cpu=0
+[plain] vocab=128256 nonfinite=0 logit_range=[-11.3971, 9.1611]
+[plain] EOS_ID=128009 EOS_RANK=19719/128256 EOS_LOGIT=-1.758931 (top logit=9.161135, gap=10.920066)
+[plain] TOP10: 59(\)=9.1611 5779(\\n)=8.2894 5061(\t)=8.1617 5618(Please)=7.9852 2028(This)=7.9722 334(**)=7.8612 791(The)=7.7442 1734(\n)=7.7200 40(I)=7.5342 14262(Welcome)=7.4698
+PLAIN_FIRST_TOKEN argmax=59 eos_rank=19719 vocab=128256 nonfinite=0 top10=59,5779,5061,5618,2028,334,791,1734,40,14262 gpu=4334 cpu=0
+[plain] logits dumped: agentic_ws/plain_logits.gpu.f32
+[TOKEN_DIAG] t=0 selected=2 argmax=2 vocab=128256 finite=1 sel_logit=4.52505207 max=9.16113472 min=-11.3971186
+[TOKEN_DIAG] t=0 selected=2 argmax=2 vocab=128256 finite=1 sel_logit=4.52505207 max=9.16113472 min=-11.3971186
+[TOKEN_DIAG] t=1 selected=2724 argmax=2724 vocab=128256 finite=1 sel_logit=6.84695292 max=7.04253578 min=-11.401494
+[TOKEN_DIAG] t=1 selected=2724 argmax=2724 vocab=128256 finite=1 sel_logit=6.84695292 max=7.04253578 min=-11.401494
+[TOKEN_DIAG] t=2 selected=374 argmax=374 vocab=128256 finite=1 sel_logit=8.79217339 max=10.4946842 min=-9.40204048
+[TOKEN_DIAG] t=2 selected=374 argmax=374 vocab=128256 finite=1 sel_logit=8.79217339 max=10.4946842 min=-9.40204048
+[TOKEN_DIAG] t=3 selected=10371 argmax=10371 vocab=128256 finite=1 sel_logit=13.1426344 max=13.1426344 min=-8.26355457
+[TOKEN_DIAG] t=3 selected=10371 argmax=10371 vocab=128256 finite=1 sel_logit=13.1426344 max=13.1426344 min=-8.26355457
+[TOKEN_DIAG] t=4 selected=369 argmax=369 vocab=128256 finite=1 sel_logit=16.8790474 max=16.8790474 min=-8.4388361
+[TOKEN_DIAG] t=4 selected=369 argmax=369 vocab=128256 finite=1 sel_logit=16.8790474 max=16.8790474 min=-8.4388361
+[TOKEN_DIAG] t=10 selected=567 argmax=567 vocab=128256 finite=1 sel_logit=9.91127205 max=10.3958673 min=-10.9797173
+[TOKEN_DIAG] t=10 selected=567 argmax=567 vocab=128256 finite=1 sel_logit=9.91127205 max=10.3958673 min=-10.9797173

@@ -1,0 +1,34 @@
+name: Extension headless contract gates
+
+on:
+  push:
+    paths:
+      - 'tools/acceptance/extension_headless_contract.py'
+      - 'tools/acceptance/test_extension_headless_contract.py'
+      - '~dev/rawrxd/src/core/js_extension_host.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
+      - '.github/workflows/extension-headless-contract.yml'
+  pull_request:
+    paths:
+      - 'tools/acceptance/**'
+      - '~dev/rawrxd/src/core/js_extension_host.hpp'
+      - '~dev/rawrxd/src/core/js_extension_host_headless_impl.cpp'
+      - '.github/workflows/extension-headless-contract.yml'
+  workflow_dispatch:
+
+jobs:
+  source-contract:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Contract regression tests (fixture only)
+        run: python -m unittest discover -s tools/acceptance -p test_extension_headless_contract.py -v
+      - name: Actual repository headless source contract (NOT runtime)
+        run: python tools/acceptance/extension_headless_contract.py --json

@@ -1,0 +1,1 @@
+#include <cstdio>\nint add(int a, int b) { return a + b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n

@@ -1,0 +1,282 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+[server] PRODUCT_HOST_DECODE_FLOOR=1 DUALSTICK_ARM=0 GPU_POLICY=CPU WHY=EOS_COLLAPSE_ON_GPU_FORWARD
+D2LOAD_S00_SERVER_LOAD_ENTER
+D2LOAD_S01_ENGINE_EXISTS
+D2LOAD_S02_ENGINE_CREATE_ENTER
+D2LOAD_S03_ENGINE_CREATE_PASS
+[server] Loading model: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+D2LOAD_S04_ENGINE_LOAD_ENTER
+D2LOAD_S04a_MODEL_ENTER
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+D2LOAD_S04b_MODEL_PASS
+[OpenAI] ChatTemplate=phi3 for model=tinyllama-1.1b-chat-v1.0.Q4_K_M
+[OpenAI] MODEL_LOAD=PASS  model=tinyllama-1.1b-chat-v1.0.Q4_K_M
+D2LOAD_S05_ENGINE_LOAD_RETURN ok=1
+D2LOAD_S06_MODEL_LOAD_PASS
+D2LOAD_S07_LISTEN_ENTER port=11436
+[OpenAI] Server listening on http://127.0.0.1:11436
+D2LOAD_S08_LISTEN_PASS
+[server] Ready.   Endpoint: http://127.0.0.1:11436/v1/chat/completions
+[server] Press Ctrl+C to stop.
+[GET /health] 200  18.06 ms
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[L12_DIAG] layer=12 Q_proj norm=1.120641e+01
+[L12_DIAG] layer=12 K_proj norm=6.717815e+00
+[L12_DIAG] layer=12 V_proj norm=5.278572e-01
+[L12_DIAG] layer=12 Q_postRoPE norm=1.120641e+01 K_postRoPE norm=6.717815e+00
+[L12_DIAG] layer=12 wo_proj norm=9.135279e-01
+[L12_DIAG] layer=12 after residual norm=1.884988e+02
+[KV_DIAG] layer=21 writePos=0 kvBytes=1024 kBase=000002A64BF3E020 vBase=000002A656A865A0 currentPos=0
+[L12_DIAG] layer=12 Q_proj norm=4.071599e+01
+[L12_DIAG] layer=12 K_proj norm=3.581130e+01
+[L12_DIAG] layer=12 V_proj norm=3.510707e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.071599e+01 K_postRoPE norm=3.581130e+01
+[L12_DIAG] layer=12 wo_proj norm=1.042034e+00
+[L12_DIAG] layer=12 after residual norm=4.727391e+00
+[KV_DIAG] layer=21 writePos=1 kvBytes=1024 kBase=000002A64BF3E420 vBase=000002A656A869A0 currentPos=1
+[L12_DIAG] layer=12 Q_proj norm=4.285382e+01
+[L12_DIAG] layer=12 K_proj norm=3.820031e+01
+[L12_DIAG] layer=12 V_proj norm=4.189550e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.285382e+01 K_postRoPE norm=3.820031e+01
+[L12_DIAG] layer=12 wo_proj norm=1.716226e+00
+[L12_DIAG] layer=12 after residual norm=5.208398e+00
+[KV_DIAG] layer=21 writePos=2 kvBytes=1024 kBase=000002A64BF3E820 vBase=000002A656A86DA0 currentPos=2
+[L12_DIAG] layer=12 Q_proj norm=3.930440e+01
+[L12_DIAG] layer=12 K_proj norm=3.838764e+01
+[L12_DIAG] layer=12 V_proj norm=3.595818e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=3.930440e+01 K_postRoPE norm=3.838764e+01
+[L12_DIAG] layer=12 wo_proj norm=1.757569e+00
+[L12_DIAG] layer=12 after residual norm=5.104759e+00
+[KV_DIAG] layer=21 writePos=3 kvBytes=1024 kBase=000002A64BF3EC20 vBase=000002A656A871A0 currentPos=3
+[L12_DIAG] layer=12 Q_proj norm=4.218454e+01
+[L12_DIAG] layer=12 K_proj norm=3.922373e+01
+[L12_DIAG] layer=12 V_proj norm=3.836584e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.218454e+01 K_postRoPE norm=3.922373e+01
+[L12_DIAG] layer=12 wo_proj norm=2.015080e+00
+[L12_DIAG] layer=12 after residual norm=4.959015e+00
+[KV_DIAG] layer=21 writePos=4 kvBytes=1024 kBase=000002A64BF3F020 vBase=000002A656A875A0 currentPos=4
+[L12_DIAG] layer=12 Q_proj norm=1.617994e+01
+[L12_DIAG] layer=12 K_proj norm=8.032280e+00
+[L12_DIAG] layer=12 V_proj norm=5.822819e-01
+[L12_DIAG] layer=12 Q_postRoPE norm=1.617994e+01 K_postRoPE norm=8.032280e+00
+[L12_DIAG] layer=12 wo_proj norm=7.538138e-01
+[L12_DIAG] layer=12 after residual norm=2.069503e+02
+[KV_DIAG] layer=21 writePos=5 kvBytes=1024 kBase=000002A64BF3F420 vBase=000002A656A879A0 currentPos=5
+[L12_DIAG] layer=12 Q_proj norm=4.146900e+01
+[L12_DIAG] layer=12 K_proj norm=3.629511e+01
+[L12_DIAG] layer=12 V_proj norm=3.007314e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.146900e+01 K_postRoPE norm=3.629511e+01
+[L12_DIAG] layer=12 wo_proj norm=1.245773e+00
+[L12_DIAG] layer=12 after residual norm=4.620236e+00
+[KV_DIAG] layer=21 writePos=6 kvBytes=1024 kBase=000002A64BF3F820 vBase=000002A656A87DA0 currentPos=6
+[L12_DIAG] layer=12 Q_proj norm=4.319351e+01
+[L12_DIAG] layer=12 K_proj norm=4.169916e+01
+[L12_DIAG] layer=12 V_proj norm=3.380064e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.319351e+01 K_postRoPE norm=4.169916e+01
+[L12_DIAG] layer=12 wo_proj norm=1.184946e+00
+[L12_DIAG] layer=12 after residual norm=4.735053e+00
+[KV_DIAG] layer=21 writePos=7 kvBytes=1024 kBase=000002A64BF3FC20 vBase=000002A656A881A0 currentPos=7
+[L12_DIAG] layer=12 Q_proj norm=4.479680e+01
+[L12_DIAG] layer=12 K_proj norm=4.045241e+01
+[L12_DIAG] layer=12 V_proj norm=3.324204e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.479680e+01 K_postRoPE norm=4.045241e+01
+[L12_DIAG] layer=12 wo_proj norm=1.160670e+00
+[L12_DIAG] layer=12 after residual norm=4.884366e+00
+[KV_DIAG] layer=21 writePos=8 kvBytes=1024 kBase=000002A6564CB9E0 vBase=00000266FB7A60A0 currentPos=8
+[L12_DIAG] layer=12 Q_proj norm=4.491642e+01
+[L12_DIAG] layer=12 K_proj norm=4.006582e+01
+[L12_DIAG] layer=12 V_proj norm=3.813467e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.491642e+01 K_postRoPE norm=4.006582e+01
+[L12_DIAG] layer=12 wo_proj norm=1.246109e+00
+[L12_DIAG] layer=12 after residual norm=5.494107e+00
+[KV_DIAG] layer=21 writePos=9 kvBytes=1024 kBase=000002A6564CBDE0 vBase=00000266FB7A64A0 currentPos=9
+[L12_DIAG] layer=12 Q_proj norm=4.405353e+01
+[L12_DIAG] layer=12 K_proj norm=4.171742e+01
+[L12_DIAG] layer=12 V_proj norm=3.735916e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.405353e+01 K_postRoPE norm=4.171742e+01
+[L12_DIAG] layer=12 wo_proj norm=1.334464e+00
+[L12_DIAG] layer=12 after residual norm=5.312336e+00
+[KV_DIAG] layer=21 writePos=10 kvBytes=1024 kBase=000002A6564CC1E0 vBase=00000266FB7A68A0 currentPos=10
+[L12_DIAG] layer=12 Q_proj norm=4.371663e+01
+[L12_DIAG] layer=12 K_proj norm=3.907601e+01
+[L12_DIAG] layer=12 V_proj norm=4.292684e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.371663e+01 K_postRoPE norm=3.907601e+01
+[L12_DIAG] layer=12 wo_proj norm=1.414586e+00
+[L12_DIAG] layer=12 after residual norm=6.062662e+00
+[KV_DIAG] layer=21 writePos=11 kvBytes=1024 kBase=000002A6564CC5E0 vBase=00000266FB7A6CA0 currentPos=11
+[L12_DIAG] layer=12 Q_proj norm=4.494502e+01
+[L12_DIAG] layer=12 K_proj norm=3.953766e+01
+[L12_DIAG] layer=12 V_proj norm=3.475577e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.494502e+01 K_postRoPE norm=3.953766e+01
+[L12_DIAG] layer=12 wo_proj norm=1.848636e+00
+[L12_DIAG] layer=12 after residual norm=5.019033e+00
+[KV_DIAG] layer=21 writePos=12 kvBytes=1024 kBase=000002A6564CC9E0 vBase=00000266FB7A70A0 currentPos=12
+[L12_DIAG] layer=12 Q_proj norm=4.350327e+01
+[L12_DIAG] layer=12 K_proj norm=3.761819e+01
+[L12_DIAG] layer=12 V_proj norm=2.876707e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.350327e+01 K_postRoPE norm=3.761819e+01
+[L12_DIAG] layer=12 wo_proj norm=9.942298e-01
+[L12_DIAG] layer=12 after residual norm=4.789673e+00
+[KV_DIAG] layer=21 writePos=13 kvBytes=1024 kBase=000002A6564CCDE0 vBase=00000266FB7A74A0 currentPos=13
+[L12_DIAG] layer=12 Q_proj norm=4.761023e+01
+[L12_DIAG] layer=12 K_proj norm=4.500115e+01
+[L12_DIAG] layer=12 V_proj norm=3.579857e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.761023e+01 K_postRoPE norm=4.500115e+01
+[L12_DIAG] layer=12 wo_proj norm=1.232458e+00
+[L12_DIAG] layer=12 after residual norm=4.767755e+00
+[KV_DIAG] layer=21 writePos=14 kvBytes=1024 kBase=000002A6564CD1E0 vBase=00000266FB7A78A0 currentPos=14
+[L12_DIAG] layer=12 Q_proj norm=5.262021e+01
+[L12_DIAG] layer=12 K_proj norm=4.910652e+01
+[L12_DIAG] layer=12 V_proj norm=3.460957e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=5.262021e+01 K_postRoPE norm=4.910652e+01
+[L12_DIAG] layer=12 wo_proj norm=1.163773e+00
+[L12_DIAG] layer=12 after residual norm=4.015072e+00
+[KV_DIAG] layer=21 writePos=15 kvBytes=1024 kBase=000002A6564CD5E0 vBase=00000266FB7A7CA0 currentPos=15
+[L12_DIAG] layer=12 Q_proj norm=5.045903e+01
+[L12_DIAG] layer=12 K_proj norm=4.755257e+01
+[L12_DIAG] layer=12 V_proj norm=3.200239e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=5.045903e+01 K_postRoPE norm=4.755257e+01
+[L12_DIAG] layer=12 wo_proj norm=1.343261e+00
+[L12_DIAG] layer=12 after residual norm=4.440051e+00
+[KV_DIAG] layer=21 writePos=16 kvBytes=1024 kBase=000002A64BCFA380 vBase=00000266FBA24F00 currentPos=16
+[L12_DIAG] layer=12 Q_proj norm=4.830919e+01
+[L12_DIAG] layer=12 K_proj norm=4.554196e+01
+[L12_DIAG] layer=12 V_proj norm=3.865812e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.830919e+01 K_postRoPE norm=4.554196e+01
+[L12_DIAG] layer=12 wo_proj norm=1.328584e+00
+[L12_DIAG] layer=12 after residual norm=5.049075e+00
+[KV_DIAG] layer=21 writePos=17 kvBytes=1024 kBase=000002A64BCFA780 vBase=00000266FBA25300 currentPos=17
+[L12_DIAG] layer=12 Q_proj norm=5.110481e+01
+[L12_DIAG] layer=12 K_proj norm=4.945713e+01
+[L12_DIAG] layer=12 V_proj norm=3.590401e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=5.110481e+01 K_postRoPE norm=4.945713e+01
+[L12_DIAG] layer=12 wo_proj norm=1.602932e+00
+[L12_DIAG] layer=12 after residual norm=4.902567e+00
+[KV_DIAG] layer=21 writePos=18 kvBytes=1024 kBase=000002A64BCFAB80 vBase=00000266FBA25700 currentPos=18
+[L12_DIAG] layer=12 Q_proj norm=5.132277e+01
+[L12_DIAG] layer=12 K_proj norm=4.764410e+01
+[L12_DIAG] layer=12 V_proj norm=3.526681e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=5.132277e+01 K_postRoPE norm=4.764410e+01
+[L12_DIAG] layer=12 wo_proj norm=2.318544e+00
+[L12_DIAG] layer=12 after residual norm=4.903366e+00
+[KV_DIAG] layer=21 writePos=19 kvBytes=1024 kBase=000002A64BCFAF80 vBase=00000266FBA25B00 currentPos=19
+[L12_DIAG] layer=12 Q_proj norm=4.533465e+01
+[L12_DIAG] layer=12 K_proj norm=4.041246e+01
+[L12_DIAG] layer=12 V_proj norm=3.990883e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.533465e+01 K_postRoPE norm=4.041246e+01
+[L12_DIAG] layer=12 wo_proj norm=2.015030e+00
+[L12_DIAG] layer=12 after residual norm=4.680135e+00
+[KV_DIAG] layer=21 writePos=20 kvBytes=1024 kBase=000002A64BCFB380 vBase=00000266FBA25F00 currentPos=20
+[L12_DIAG] layer=12 Q_proj norm=4.738104e+01
+[L12_DIAG] layer=12 K_proj norm=4.249665e+01
+[L12_DIAG] layer=12 V_proj norm=3.100746e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.738104e+01 K_postRoPE norm=4.249665e+01
+[L12_DIAG] layer=12 wo_proj norm=2.118450e+00
+[L12_DIAG] layer=12 after residual norm=4.803017e+00
+[KV_DIAG] layer=21 writePos=21 kvBytes=1024 kBase=000002A64BCFB780 vBase=00000266FBA26300 currentPos=21
+[L12_DIAG] layer=12 Q_proj norm=4.900206e+01
+[L12_DIAG] layer=12 K_proj norm=4.203221e+01
+[L12_DIAG] layer=12 V_proj norm=3.529734e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.900206e+01 K_postRoPE norm=4.203221e+01
+[L12_DIAG] layer=12 wo_proj norm=2.174167e+00
+[L12_DIAG] layer=12 after residual norm=5.522932e+00
+[KV_DIAG] layer=21 writePos=22 kvBytes=1024 kBase=000002A64BCFBB80 vBase=00000266FBA26700 currentPos=22
+[L12_DIAG] layer=12 Q_proj norm=4.803118e+01
+[L12_DIAG] layer=12 K_proj norm=4.008660e+01
+[L12_DIAG] layer=12 V_proj norm=2.864490e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.803118e+01 K_postRoPE norm=4.008660e+01
+[L12_DIAG] layer=12 wo_proj norm=1.599643e+00
+[L12_DIAG] layer=12 after residual norm=4.961927e+00
+[KV_DIAG] layer=21 writePos=23 kvBytes=1024 kBase=000002A64BCFBF80 vBase=00000266FBA26B00 currentPos=23
+[L12_DIAG] layer=12 Q_proj norm=4.669746e+01
+[L12_DIAG] layer=12 K_proj norm=3.931651e+01
+[L12_DIAG] layer=12 V_proj norm=3.498521e+00
+[L12_DIAG] layer=12 Q_postRoPE norm=4.669746e+01 K_postRoPE norm=3.931651e+01
+[L12_DIAG] layer=12 wo_proj norm=1.835850e+00
+[L12_DIAG] layer=12 after residual norm=5.138689e+00
+[KV_DIAG] layer=21 writePos=24 kvBytes=1024 kBase=000002664480C4E0 vBase=000002A64BFF3F40 currentPos=24
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q6_K      calls=    3350  ms=    2798.582  MACs=   21207449600  ms/MAC=0.000000
+  IQ2_XS    calls=     506  ms=    5361.386  MACs=    3407872000  ms/MAC=0.000002
+  TOTAL     calls=       0  ms=    8159.968  MACs=   24615321600
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  blk.20.ffn_down.weight                         25      597.718      288358400       23.909
+  blk.12.ffn_down.weight                         25      522.720      288358400       20.909
+  blk.18.ffn_down.weight                         25      518.808      288358400       20.752
+  blk.4.ffn_down.weight                          25      506.393      288358400       20.256
+  blk.8.ffn_down.weight                          25      487.683      288358400       19.507
+  output.weight                                   6      448.849      393216000       74.808
+  blk.1.ffn_down.weight                          25      426.765      288358400       17.071
+  blk.9.ffn_down.weight                          25      394.488      288358400       15.780
+  blk.7.ffn_down.weight                          25      393.858      288358400       15.754
+  blk.0.ffn_down.weight                          25      375.912      288358400       15.036
+  blk.15.ffn_down.weight                         25      348.598      288358400       13.944
+  blk.0.attn_v.weight                            25       99.471       13107200        3.979
+  blk.2.ffn_down.weight                          25       80.463      288358400        3.219
+  blk.0.ffn_up.weight                            25       71.131      288358400        2.845
+  blk.16.ffn_gate.weight                         25       62.848      288358400        2.514
+  blk.5.ffn_gate.weight                          25       56.447      288358400        2.258
+  blk.9.ffn_gate.weight                          25       55.341      288358400        2.214
+  blk.5.attn_output.weight                       25       54.590      104857600        2.184
+  blk.6.ffn_gate.weight                          25       52.510      288358400        2.100
+  blk.12.ffn_gate.weight                         25       49.442      288358400        1.978
+============================================================
+[AGENT] GENERATION_RECEIPT prompt=20 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[D2_HTTP_SEND] bodySize=292 httpSize=524 content_bytes=7
+[D2_HTTP_SENT] ret=524 wsalasterr=0
+[POST /v1/chat/completions] 200  8427.87 ms

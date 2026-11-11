@@ -1,0 +1,29 @@
+GATE=GEMMA_HEADDIM_RESCALE_REMEASURE_005
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+EXE_SHA=D4342A756A24FF2E4B005AB1457AF906B68C59D13CA5371B6DFAAF3B446F50CA
+CMD=run "F:\rawrxd\gemma3-1b-Q2_K.gguf" ask --fresh-session --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 16
+RAWRXD_ALLOW_GPU=UNSET
+RAWRXD_DEEP2_DEBUG=UNSET
+BOUND_TIMEOUT_S=1800
+WALL_S=1802.026
+KILLED=1
+EXIT=-1
+HEADDIM_OVERRIDE=headDim override from Q tensor (blk.0.attn_q.weight): metadata headDim=288 -> weight headDim=256 (numHeads=4)
+HEADDIM_SYNC=HEADDIM_SYNC config.headDim=256 modelWeights.headDim=256
+HEADDIM_SYNC_POST_BIND=HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+PROMPT_TOKENS=237
+LAST_PAGE_GROW=page grow 480 -> 488 hot (virtualMax=16836 pos=480)
+RESCALE=
+ABORT_COUNT=0
+ATTN_TOPOLOGY_COUNT=0
+L12_DIAG_COUNT=0
+TOKENS_DECODED=0
+AGENT_RESULT_5=False
+STATUS=PARTIAL
+GAP=wall_s=1802.026 tok=0 killed=1 prompt_tokens=237 last=page grow 480 -> 488 hot (virtualMax=16836 pos=480)
+REJECT_SPRAWL=vulkan_matmul_hang + CLI q_head_dim + PWSH VSIX
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+D015=HOLD
+TIP_CLIMB=HOLD

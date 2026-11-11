@@ -1,0 +1,6 @@
+EXE_SHA=A51547A08EA29F22E58DF8607F8917E3A3298530AB01529B305B01BB445CB160
+ARGS=run F:\rawrxd\gemma3-1b-Q2_K.gguf ask --fresh-session --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 32
+RAWRXD_GREEDY=1
+FIX=gemma_template+ask_max_tokens
+START=2026-11-10T18:19:28.2296387-05:00
+PID=4448

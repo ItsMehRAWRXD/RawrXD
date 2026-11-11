@@ -1,0 +1,3 @@
+ISSUE49=NOT_RUN
+REASON=tip_missing
+PROMOTE=0

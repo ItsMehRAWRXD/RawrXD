@@ -1,0 +1,1 @@
+"F:\rawrxd\build_ide\bin-msvc\rawr.exe" run nemotron-3-nano:4b controlled --approve-mutations=true --cancel-after-ms 10000

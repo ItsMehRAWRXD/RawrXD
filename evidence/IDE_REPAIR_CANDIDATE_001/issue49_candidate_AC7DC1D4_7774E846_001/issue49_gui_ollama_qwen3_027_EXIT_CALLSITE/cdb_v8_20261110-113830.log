@@ -1,0 +1,27 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_EXIT_CALLSITE\cdb_v8_20261110-113830.log'
+0:020> .sympath srv*
+Symbol search path is: srv*
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+0:020> .reload /f kernel32.dll
+0:020> .reload /f ntdll.dll
+0:020> bp kernel32!ExitProcess ".echo ===HIT_KERNEL32_ExitProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Couldn't resolve error at 'kernel32!ExitProcess ".echo ===HIT_KERNEL32_ExitProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ntdll!RtlExitUserProcess ".echo ===HIT_RtlExitUserProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+0:020> bp ucrtbase!exit ".echo ===HIT_ucrtbase_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Matched: 00007ffa`37ec1700 ucrtbase!exit (exit)
+Matched: 00007ffa`37ed52a0 ucrtbase!exit (_exit)
+Matched: 00007ffa`37ed52a0 ucrtbase!Exit (_Exit)
+Ambiguous symbol error at 'ucrtbase!exit ".echo ===HIT_ucrtbase_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ucrtbase!_exit ".echo ===HIT_ucrtbase__exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+Couldn't resolve error at 'ucrtbase!_exit ".echo ===HIT_ucrtbase__exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"'
+0:020> bp ucrtbase!quick_exit ".echo ===HIT_ucrtbase_quick_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+0:020> sxd eh
+0:020> sxi ibp
+0:020> bl
+ 0 e 00007ffa`3a5f9d00     0001 (0001)  0:**** ntdll!RtlExitUserProcess ".echo ===HIT_RtlExitUserProcess===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+ 1 e 00007ffa`37ef3450     0001 (0001)  0:**** ucrtbase!quick_exit ".echo ===HIT_ucrtbase_quick_exit===; r rcx; kL 80; lm m RawrXD*; .echo ===STOP_AT_EXITPROCESS===; .logclose"
+0:020> g

@@ -1,0 +1,13 @@
+﻿[OLLAMA_DEBUG] generateOllamaModel: model='qwen3:8b' prompt_len=91 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] MODEL=qwen3:8b MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=199
+[OLLAMA_DEBUG] WinHttpOpen ok
+[OLLAMA_DEBUG] timeouts set; connecting
+[OLLAMA_DEBUG] WinHttpConnect ok
+[OLLAMA_DEBUG] WinHttpOpenRequest ok; sending
+[OLLAMA_DEBUG] ReceiveResponse ok
+[OLLAMA_DEBUG] Raw response length: 517
+[OLLAMA_RUNTIME] MODEL=qwen3:8b PROMPT_ACCEPTED=PASS EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096 GENERATED_TOKENS=7 PROMPT_TOKENS=36 DONE_REASON=stop
+[OLLAMA_DEBUG] Parsed response successfully, answer=13 thinking=0
+

@@ -1,0 +1,74 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  deep2_speculative.cpp
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265,63): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,65): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,45): warning C4100: 'token_index': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,25): warning C4100: 'output_size': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,69): warning C4100: 'input_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,37): warning C4100: 'weight_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,66): warning C4100: 'op_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,40): warning C4100: 'block': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,28): warning C4100: 'op': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364,40): warning C4100: 'bytes': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../src/deep2/deep2_speculative.cpp')
+  
+  deep2_spec_bench.cpp
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265,63): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,65): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,45): warning C4100: 'token_index': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,25): warning C4100: 'output_size': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,69): warning C4100: 'input_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,37): warning C4100: 'weight_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,66): warning C4100: 'op_name': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,40): warning C4100: 'block': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,28): warning C4100: 'op': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364,40): warning C4100: 'bytes': unreferenced parameter [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+  (compiling source file '../tools/deep2_spec_bench.cpp')
+  
+F:\rawrxd\tools\deep2_spec_bench.cpp(484,29): warning C4456: declaration of 'err' hides previous local declaration [F:\rawrxd\build\deep2_spec_bench.vcxproj]
+      F:\rawrxd\tools\deep2_spec_bench.cpp(448,25):
+      see declaration of 'err'
+  
+  Generating code
+  Finished generating code
+  deep2_spec_bench.vcxproj -> F:\rawrxd\build\bin\Release\deep2_spec_bench.exe

@@ -1,0 +1,25 @@
+[0/2] Re-checking globbed directories...
+[1/8] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/8] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_ide/Release/vulkan-shaders-gen.exe
+[3/8] Completed 'vulkan-shaders-gen'
+[4/8] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_GpuForward.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(150): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1084): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(151): warning C4189: 'kvDim': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(213): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1084): note: see declaration of 'Deep2::Deep2Engine::headDim'
+[5/8] Linking CXX static library deep2_engine_lib.lib
+[6/8] Building CXX object CMakeFiles\cpu_engine_e2e.dir\src\cpu_inference_engine_impl.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(42): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(398): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(340): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(700): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(587): note: see declaration of 'v'
+[7/8] Linking CXX executable bin-msvc\cpu_engine_e2e.exe

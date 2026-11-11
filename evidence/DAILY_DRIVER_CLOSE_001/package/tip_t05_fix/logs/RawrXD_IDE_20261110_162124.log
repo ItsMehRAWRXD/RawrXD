@@ -1,0 +1,10 @@
+[2026-11-10 16:21:24] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 16:21:24] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_162124.log
+[2026-11-10 16:21:24] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:21:24] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:21:24] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:21:26] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-10 16:21:26] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:21:31] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-10 16:21:31] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-10 16:21:31] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2

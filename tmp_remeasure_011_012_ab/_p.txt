@@ -1,0 +1,1 @@
+F:\rawrxd\tmp_remeasure_011_012_ab\plain\stdout.txt:[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=1152 l2=1.529587239e+02 max_abs=3.059690285e+01 min=-3.059690285e+01 max=2.948851395e+01 sum=2.507921826e+02 fnv=5b3ef4071162704c nf=0

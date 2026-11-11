@@ -1,0 +1,51 @@
+SHA_FREEZE_TIP_PACKAGE_001
+ASOF_UTC=2026-11-10T18:25:40Z
+OWNER=P09_PACKAGE_BIND_PREP
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+SUPERSEDE=0
+CONTROLLING=D015
+I027_AUTO_TRANSFER=0
+NO_INVENT_PASS=1
+LAW=MEASURED_PAIR_NEQ_RELEASE_PACKAGE_TIP
+LAW=FREEZE_NEQ_PROMOTE
+LAW=NOT_RUN!=PASS
+
+================================================================================
+MEASURED TIP PACKAGE (build_tip_ext_host_001) — FROZEN AS-OF HASH ONLY
+================================================================================
+TIP_CWD=F:\rawrxd\build_tip_ext_host_001\bin
+IDE_PATH=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+IDE_SHA256=AC9B245A1E5AC5D5FCD27E4DA4E3CF340F59AD0C732CBFD348D1D4A38DC92123
+IDE_SHA_PREFIX=AC9B245A
+IDE_SIZE=6697472
+IDE_MTIME_UTC=2026-11-10T17:38:19.9576421Z
+
+LOOP_PATH=F:\rawrxd\build_tip_ext_host_001\bin\deep2_agentic_loop.exe
+LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+LOOP_SHA_PREFIX=928A90F0
+LOOP_SIZE=4244992
+LOOP_MTIME_UTC=2026-11-10T13:56:25.5987328Z
+
+PACKAGE_IDENTITY=IDE_AC9B245A+LOOP_928A90F0
+RELEASE_PACKAGE_TIP_SHA=NOT_FROZEN
+NOTE=This freeze records measured beside-tip binaries only. It does not promote,
+      supersede D015, or claim I027/H022 loop 7774E846 UTF-8 sanitize is present.
+
+STALE_CLAIM_REMOVED=
+  TIP_WORKING_IDE_AUTHORITY no longer claims live tip SHA prefix 89A5F76F.
+  Live measured IDE prefix = AC9B245A.
+
+COPY_7774E846_AT_FREEZE=N
+USER_PATH_SAFE_AT_FREEZE=0
+USER_PATH_BLOCKERS=
+  PID=28380 RawrXD-Win32IDE-Native-Ext PATH=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+  PID=37092 RawrXD-Win32IDE-Native-Ext (path unresolved)
+  Also live non-tip: build_ide\bin\RawrXD-Win32IDE-Native.exe PIDs 40400,41664
+REASON_NO_COPY=Live tip Ext process on user path; do not overwrite beside-tip loop.
+
+RELATED=
+  TIP_WORKING_IDE_AUTHORITY_001.txt
+  PACKAGE_GAP_TIP_VS_I027_LOOP_001.txt
+  CANDIDATE_PACKAGE_CONSOLIDATION_001.txt

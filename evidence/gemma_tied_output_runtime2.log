@@ -1,0 +1,3067 @@
+=== RawrXD CPU Engine End-to-End Test ===
+Model: F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+Prompt: "The capital of France is"
+
+[1/5] Loading model...
+[ZONE_ASSIGN_START] tensor_index_size=720
+[ZONE_ASSIGN] name=blk.0.attn_norm.weight layer=0 zone=layers_0
+[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: 'layers_0'
+[ZONE_ASSIGN] name=blk.1.attn_norm.weight layer=1 zone=layers_0
+[ZONE_ASSIGN] name=blk.10.attn_norm.weight layer=10 zone=layers_1
+[ZONE_ASSIGN] name=blk.11.attn_norm.weight layer=11 zone=layers_1
+[ZONE_ASSIGN] name=blk.12.attn_norm.weight layer=12 zone=layers_1
+[ZONE_ASSIGN] name=blk.13.attn_norm.weight layer=13 zone=layers_1
+[ZONE_ASSIGN] name=blk.14.attn_norm.weight layer=14 zone=layers_1
+[ZONE_ASSIGN] name=blk.15.attn_norm.weight layer=15 zone=layers_1
+[ZONE_ASSIGN] name=blk.16.attn_norm.weight layer=16 zone=layers_2
+[ZONE_ASSIGN] name=blk.17.attn_norm.weight layer=17 zone=layers_2
+[ZONE_ASSIGN] name=blk.18.attn_norm.weight layer=18 zone=layers_2
+[ZONE_ASSIGN] name=blk.19.attn_norm.weight layer=19 zone=layers_2
+[ZONE_ASSIGN] name=blk.2.attn_norm.weight layer=2 zone=layers_0
+[ZONE_ASSIGN] name=blk.20.attn_norm.weight layer=20 zone=layers_2
+[ZONE_ASSIGN] name=blk.21.attn_norm.weight layer=21 zone=layers_2
+[ZONE_ASSIGN] name=blk.22.attn_norm.weight layer=22 zone=layers_2
+[ZONE_ASSIGN] name=blk.23.attn_norm.weight layer=23 zone=layers_2
+[ZONE_ASSIGN] name=blk.24.attn_norm.weight layer=24 zone=layers_3
+[ZONE_ASSIGN] name=blk.25.attn_norm.weight layer=25 zone=layers_3
+[ZONE_ASSIGN] name=blk.26.attn_norm.weight layer=26 zone=layers_3
+[ZONE_ASSIGN] name=blk.27.attn_norm.weight layer=27 zone=layers_3
+[ZONE_ASSIGN] name=blk.28.attn_norm.weight layer=28 zone=layers_3
+[ZONE_ASSIGN] name=blk.29.attn_norm.weight layer=29 zone=layers_3
+[ZONE_ASSIGN] name=blk.3.attn_norm.weight layer=3 zone=layers_0
+[ZONE_ASSIGN] name=blk.30.attn_norm.weight layer=30 zone=layers_3
+[ZONE_ASSIGN] name=blk.31.attn_norm.weight layer=31 zone=layers_3
+[ZONE_ASSIGN] name=blk.32.attn_norm.weight layer=32 zone=layers_4
+[ZONE_ASSIGN] name=blk.33.attn_norm.weight layer=33 zone=layers_4
+[ZONE_ASSIGN] name=blk.34.attn_norm.weight layer=34 zone=layers_4
+[ZONE_ASSIGN] name=blk.35.attn_norm.weight layer=35 zone=layers_4
+[ZONE_ASSIGN] name=blk.36.attn_norm.weight layer=36 zone=layers_4
+[ZONE_ASSIGN] name=blk.37.attn_norm.weight layer=37 zone=layers_4
+[ZONE_ASSIGN] name=blk.38.attn_norm.weight layer=38 zone=layers_4
+[ZONE_ASSIGN] name=blk.39.attn_norm.weight layer=39 zone=layers_4
+[ZONE_ASSIGN] name=blk.4.attn_norm.weight layer=4 zone=layers_0
+[ZONE_ASSIGN] name=blk.40.attn_norm.weight layer=40 zone=layers_5
+[ZONE_ASSIGN] name=blk.41.attn_norm.weight layer=41 zone=layers_5
+[ZONE_ASSIGN] name=blk.5.attn_norm.weight layer=5 zone=layers_0
+[ZONE_ASSIGN] name=blk.6.attn_norm.weight layer=6 zone=layers_0
+[ZONE_ASSIGN] name=blk.7.attn_norm.weight layer=7 zone=layers_0
+[ZONE_ASSIGN] name=blk.8.attn_norm.weight layer=8 zone=layers_1
+[ZONE_ASSIGN] name=blk.9.attn_norm.weight layer=9 zone=layers_1
+
+📊 Zone Assignment Summary:
+   embedding: 2 tensors, 2730 MB
+   layers_0: 128 tensors, 422 MB
+   layers_1: 128 tensors, 395 MB
+   layers_2: 128 tensors, 406 MB
+   layers_3: 128 tensors, 401 MB
+   layers_4: 128 tensors, 415 MB
+   layers_5: 32 tensors, 112 MB
+   misc: 3 tensors, 5 MB
+   output_head: 43 tensors, 137 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+   Tensors: 720
+   Zones: 9
+   Memory (header+index): ~0 MB
+[LOAD] index_size=720
+[TENSOR_LOOKUP_FAIL] name=output.weight len=13 index_size=720 loader=000002573F514FB0
+[INDEX_CANDIDATE] name=blk.0.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.1.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.10.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.11.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.12.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.13.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.14.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.15.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.16.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.17.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.18.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.19.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.2.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.20.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.21.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.22.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.23.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.24.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.25.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.26.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.27.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.28.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.29.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.3.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.30.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.31.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.32.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.33.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.34.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.35.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.36.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.37.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.38.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.39.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.4.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.40.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.41.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.5.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.6.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.7.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.8.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.9.attn_norm.weight len=22
+[GGUF] GetTensorInfo not found: output.weight (index size=720)
+[CPUInferenceEngine] using tied token_embd.weight as output projection
+  Load time: 15571.6 ms
+  Vocab size: 262144
+  Embedding dim: 2560
+  Layers: 42
+  Heads: 8
+
+[2/5] Tokenizing prompt...
+  Token count: 9
+  Token IDs: 818,245237,41626,245237,1340,245237,31756,245237,511
+  Detokenize check: "The capital of France is"
+
+[3/5] Running prefill forward pass...
+📥 Loading zone: layers_0 (422.1 MB)...
+[ZONE_LOOKUP] name=blk.0.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.8.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: layers_0
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.16.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: layers_1
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.16.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.16.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.16.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.17.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.17.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.18.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.18.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.19.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.19.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.20.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.20.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.21.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.21.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.22.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.22.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.23.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.23.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.24.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: layers_2
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.24.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.24.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.24.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.25.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.25.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.26.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.26.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.27.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.27.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.28.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.28.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.29.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.29.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.30.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.30.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.31.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.31.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.32.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: layers_3
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.32.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.32.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.32.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.33.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.33.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.34.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.34.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.35.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.35.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.36.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.36.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.37.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.37.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.38.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.38.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.39.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.39.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.40.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: layers_4
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.40.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.40.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.40.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.41.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.41.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=output_norm.weight len=18 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[TENSOR_LOOKUP_FAIL] name=output.weight len=13 index_size=720 loader=000002573F514FB0
+[INDEX_CANDIDATE] name=blk.0.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.1.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.10.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.11.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.12.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.13.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.14.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.15.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.16.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.17.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.18.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.19.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.2.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.20.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.21.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.22.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.23.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.24.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.25.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.26.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.27.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.28.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.29.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.3.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.30.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.31.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.32.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.33.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.34.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.35.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.36.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.37.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.38.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.39.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.4.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.40.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.41.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.5.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.6.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.7.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.8.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.9.attn_norm.weight len=22
+[GGUF] GetTensorInfo not found: output.weight (index size=720)
+[ZONE_LOOKUP] name=blk.0.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.8.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: layers_0
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.16.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: layers_1
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.16.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.16.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.16.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.16.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.17.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.17.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.17.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.18.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.18.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.18.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.19.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.19.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.19.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.20.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.20.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.20.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.21.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.21.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.21.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.22.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.22.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.22.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_2
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.23.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_2 (406.0 MB)...
+✅ Zone loaded: layers_2 (406.0 MB)
+[ZONE_LOOKUP] name=blk.23.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.23.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+[ZONE_LOOKUP] name=blk.24.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: layers_2
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.24.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.24.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.24.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.24.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.25.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.25.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.25.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.26.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.26.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.26.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.27.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.27.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.27.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.28.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.28.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.28.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.29.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.29.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.29.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.30.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.30.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.30.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_3
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.31.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_3 (401.8 MB)...
+✅ Zone loaded: layers_3 (401.8 MB)
+[ZONE_LOOKUP] name=blk.31.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.31.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_3
+[ZONE_LOOKUP] name=blk.32.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: layers_3
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.32.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.32.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.32.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.32.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.33.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.33.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.33.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.34.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.34.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.34.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.35.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.35.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.35.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.36.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.36.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.36.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.37.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.37.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.37.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.38.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.38.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.38.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_4
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.39.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_4 (415.3 MB)...
+✅ Zone loaded: layers_4 (415.3 MB)
+[ZONE_LOOKUP] name=blk.39.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.39.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_4
+[ZONE_LOOKUP] name=blk.40.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: layers_4
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.40.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.40.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.40.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.40.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.41.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_5 (112.4 MB)...
+✅ Zone loaded: layers_5 (112.4 MB)
+[ZONE_LOOKUP] name=blk.41.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=blk.41.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_5
+[ZONE_LOOKUP] name=output_norm.weight len=18 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_5
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[TENSOR_LOOKUP_FAIL] name=output.weight len=13 index_size=720 loader=000002573F514FB0
+[INDEX_CANDIDATE] name=blk.0.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.1.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.10.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.11.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.12.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.13.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.14.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.15.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.16.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.17.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.18.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.19.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.2.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.20.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.21.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.22.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.23.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.24.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.25.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.26.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.27.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.28.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.29.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.3.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.30.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.31.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.32.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.33.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.34.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.35.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.36.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.37.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.38.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.39.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.4.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.40.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.41.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.5.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.6.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.7.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.8.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.9.attn_norm.weight len=22
+[GGUF] GetTensorInfo not found: output.weight (index size=720)
+[ZONE_LOOKUP] name=blk.0.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.0.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.0.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.1.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.1.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.2.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.2.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.3.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.3.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.4.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.4.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.5.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.5.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.6.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.6.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_0
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_0 (422.1 MB)...
+✅ Zone loaded: layers_0 (422.1 MB)
+[ZONE_LOOKUP] name=blk.7.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.7.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+[ZONE_LOOKUP] name=blk.8.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: layers_0
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.8.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.8.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_v.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_q_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_k_norm.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.attn_output.weight len=24 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_norm.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.9.ffn_gate.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_up.weight len=19 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.9.ffn_down.weight len=21 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.10.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.10.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.11.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.11.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.12.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.12.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.13.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.13.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.14.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.14.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_v.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_q_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_k_norm.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.attn_output.weight len=25 index_size=720
+[ZONE_LOOKUP_OK] zone=output_head
+📤 Zone unloaded: layers_1
+📥 Loading zone: output_head (137.8 MB)...
+✅ Zone loaded: output_head (137.8 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+📤 Zone unloaded: output_head
+📥 Loading zone: layers_1 (395.0 MB)...
+✅ Zone loaded: layers_1 (395.0 MB)
+[ZONE_LOOKUP] name=blk.15.ffn_gate.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_up.weight len=20 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.15.ffn_down.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_1
+[ZONE_LOOKUP] name=blk.16.attn_norm.weight len=23 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_2
+📤 Zone unloaded: layers_1
+📥 Loading zone: layers_2 (406.0 MB)...

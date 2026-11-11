@@ -1,0 +1,48 @@
+﻿=== sibling ODB inventory 2026-10-26T19:14:18.0994433-04:00
+WORKTREE=F:\rawrxd
+  GITDIR=F:\rawrxd\.git
+  OBJECTS=True
+  HAS_ae5bcf93_LOOSE=True
+  PACK_COUNT=15
+---
+WORKTREE=F:\rawrxd-native-agent-001
+  GITDIR=F:\rawrxd\.git\worktrees\rawrxd-native-agent-001
+  OBJECTS=False
+  PACK_COUNT=0
+---
+WORKTREE=F:\rawrxd_stagea
+  GITDIR=F:\rawrxd\.git\worktrees\rawrxd_stagea
+  OBJECTS=False
+  PACK_COUNT=0
+---
+WORKTREE=F:\~dev\rawrxd
+  GITDIR=MISSING_OR_UNREADABLE
+---
+WORKTREE=G:\rawrxd
+  GITDIR=MISSING_OR_UNREADABLE
+---
+WORKTREE=G:\rawrxd-push-tmp
+  GITDIR=MISSING_OR_UNREADABLE
+---
+WORKTREE=G:\~dev\rawrxd
+  GITDIR=G:\~dev\rawrxd\.git
+  OBJECTS=True
+  HAS_ae5bcf93_LOOSE=True
+  PACK_COUNT=37
+---
+WORKTREE=G:\VSC0de\rawrxd
+  GITDIR=MISSING_OR_UNREADABLE
+---
+SEARCH_ROOT=F:\~dev
+  HIT=none
+SEARCH_ROOT=F:\rawrxd\.git\objects
+  HIT=F:\rawrxd\.git\objects\ae\5bcf93cdf1504412826147509691ebc4689a77
+SEARCH_ROOT=G:\~dev
+  HIT=none
+CATFILE F:\rawrxd => commit (exit=0)
+CATFILE F:\rawrxd-native-agent-001 => commit (exit=0)
+CATFILE F:\rawrxd_stagea => commit (exit=0)
+CATFILE F:\~dev\rawrxd => commit (exit=0)
+CATFILE G:\rawrxd => fatal: not a git repository (or any of the parent directories): .git (exit=128)
+CATFILE G:\~dev\rawrxd => commit (exit=0)
+CATFILE G:\VSC0de\rawrxd => fatal: git cat-file: could not get object info (exit=128)

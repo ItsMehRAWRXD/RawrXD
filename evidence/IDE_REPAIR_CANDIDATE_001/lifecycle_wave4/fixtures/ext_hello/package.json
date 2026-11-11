@@ -1,0 +1,12 @@
+﻿{
+  "name": "ext-hello",
+  "displayName": "Ext Hello",
+  "publisher": "rawrxd",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.80.0" },
+  "main": "./extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "commands": [{ "command": "extHello.ping", "title": "Ext Hello Ping" }]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "gate": "RAWR_H01_AUTONOMOUS_REPAIR_001",
+  "model": "deepseek-coder-v2_16b",
+  "test": "H01-02",
+  "initial_source_sha256": "14F8D806DB56DD702ACA6F94044B72E02669857D825EF6DA0EB61FAF104F89C0",
+  "final_source_sha256": "7A4FA267CA09321AFD79FCD8E5E16E1A37857710841D3927DE5FD3118E7501DF",
+  "model_generated_patch": true,
+  "host_applied_patch": true,
+  "compiler_exit_code": 0,
+  "test_exit_code": 0,
+  "regression_exit_code": 0,
+  "tools_executed": 4,
+  "verified": true,
+  "verdict": "PASS",
+  "notes": "Model correctly identified missing null checks and added validation before dereferencing pointers. Agent infrastructure verified; independent host compilation and execution confirmed."
+}

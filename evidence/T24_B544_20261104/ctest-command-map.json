@@ -1,0 +1,142 @@
+[
+  {
+    "Number": "1",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "2",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "3",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "4",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "5",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "6",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "7",
+    "Command": "F:\\rawrxd\\build_ide\\bin\\native_tool_protocol_smoke.exe",
+    "Name": null
+  },
+  {
+    "Number": "8",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "9",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "10",
+    "Command": " \"--blocks\" \"8\" \"--seed\" \"12345\"",
+    "Name": null
+  },
+  {
+    "Number": "11",
+    "Command": " \"--blocks\" \"8\" \"--seed\" \"12345\"",
+    "Name": null
+  },
+  {
+    "Number": "12",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "13",
+    "Command": "\"C:\\Program Files\\CMake\\bin\\cmake.exe\" \"-E\" \"env\" \"POWERSHELL_TELEMETRY_OPTOUT=1\" \"powershell\" \"-ExecutionPolicy\" \"Bypass\" \"-NoProfile\" \"-File\" \"F:/rawrxd/tools/gate2_manifest_consistency.ps1\" \"-BuildDir\" \"F:/rawrxd/build_ide\" \"-CliExe\" \"F:/rawrxd/build_ide/bin-msvc/rawr.exe\" \"-RepoRoot\" \"F:/rawrxd\" \"-EvidenceDir\" \"F:/rawrxd/build_ide/gate2_manifest_evidence\"",
+    "Name": null
+  },
+  {
+    "Number": "14",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "15",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "16",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "17",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "18",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "19",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "20",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "21",
+    "Command": " \"F:/rawrxd/tests/reap_floor_synthetic.tsv\" \"30\" \"8\"",
+    "Name": null
+  },
+  {
+    "Number": "22",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "23",
+    "Command": " \"--help\"",
+    "Name": null
+  },
+  {
+    "Number": "24",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "25",
+    "Command": "F:\\rawrxd\\build_ide\\tools\\rawrxd_parity_final\\rawr_run.exe \"--self-test\"",
+    "Name": null
+  },
+  {
+    "Number": "26",
+    "Command": " \"20000\"",
+    "Name": null
+  },
+  {
+    "Number": "27",
+    "Command": "",
+    "Name": null
+  },
+  {
+    "Number": "28",
+    "Command": "F:\\rawrxd\\build_ide\\tools\\agent_esp\\rawrxd_agent_esp\\agent_esp_test.exe",
+    "Name": null
+  }
+]

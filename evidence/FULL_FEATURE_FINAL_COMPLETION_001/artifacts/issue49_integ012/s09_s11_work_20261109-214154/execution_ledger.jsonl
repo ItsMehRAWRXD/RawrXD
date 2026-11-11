@@ -1,0 +1,3 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read_motd","target":"","observation_bytes":16,"exit_code":-1,"valid":false,"timestamp":1794278532578}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"read","target":"bug.cpp","observation_bytes":307,"exit_code":0,"valid":true,"timestamp":1794278534709}}

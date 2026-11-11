@@ -1,0 +1,42 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_gpu_compute.vcxproj -> F:\rawrxd\build\Release\rawrxd_gpu_compute.lib
+  Deep2Engine_ModelFit.cpp
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+  (compiling source file '../src/deep2/Deep2Engine_ModelFit.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+  (compiling source file '../src/deep2/Deep2Engine_ModelFit.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+  (compiling source file '../src/deep2/Deep2Engine_ModelFit.cpp')
+  
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(573,18): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+      F:\rawrxd\src\Deep2Engine.h(1091,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(574,18): warning C4458: declaration of 'numKVHeads' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+      F:\rawrxd\src\Deep2Engine.h(1092,16):
+      see declaration of 'Deep2::Deep2Engine::numKVHeads'
+  
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(575,18): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+      F:\rawrxd\src\Deep2Engine.h(1093,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(896,18): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+      F:\rawrxd\src\Deep2Engine.h(1093,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(926,24): warning C4458: declaration of 'logits' hides class member [F:\rawrxd\build\deep2_engine_lib.vcxproj]
+      F:\rawrxd\src\Deep2Engine.h(1031,16):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+  deep2_engine_lib.vcxproj -> F:\rawrxd\build\Release\deep2_engine_lib.lib
+  Generating code
+  Finished generating code
+  deep2_h11_prefill_parity.vcxproj -> F:\rawrxd\build\Release\deep2_h11_prefill_parity.exe

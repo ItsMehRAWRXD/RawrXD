@@ -1,0 +1,765 @@
+[1/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-alloc.c.obj
+[2/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.c.obj
+[3/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(114): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(121): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(128): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(138): warning C4100: 'mo': unreferenced parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(453): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(454): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(455): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(2447): warning C4245: '=': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+[4/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[5/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-threading.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[6/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-backend.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+[7/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-quants.c.obj
+[8/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\gguf.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(276): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(526): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[9/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\hbm.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+[10/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ggml-cpu.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(44): warning C4456: declaration of 'bufts' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(43): note: see declaration of 'bufts'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(518): warning C4456: declaration of 'features' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(515): note: see declaration of 'features'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[11/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\repack.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[12/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\traits.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[13/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-base.dir\ggml-opt.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(24): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(25): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(669): warning C4457: declaration of 'loss' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(657): note: see declaration of 'loss'
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[14/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\binary-ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[15/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\quants.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\quants.c(873): warning C4310: cast truncates constant value
+[16/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\amx.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[17/81] Building C object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\quants.c.obj
+[18/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\amx\mmq.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(180): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(208): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(229): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(270): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(297): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-common.h(314): warning C4201: nonstandard extension used: nameless struct/union
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[19/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\unary-ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[20/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\vec.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[21/81] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libregexp.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[22/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\ops.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6618): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6671): warning C4456: declaration of 'batch_n' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599): note: see declaration of 'batch_n'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): warning C4456: declaration of 'src' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5764): note: see declaration of 'src'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5807): note: see reference to function template instantiation 'void ggml_compute_forward_rope_flt<ggml_fp16_t>(const ggml_compute_params *,ggml_tensor *,const bool)' being compiled
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5787): warning C4456: declaration of 'dst_data' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp(5765): note: see declaration of 'dst_data'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[23/81] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\libunicode.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[24/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml-cpu.dir\ggml-cpu\arch\x86\repack.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(338): warning C4456: declaration of 'v0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(305): note: see declaration of 'v0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(339): warning C4456: declaration of 'v1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(306): note: see declaration of 'v1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(340): warning C4456: declaration of 'v2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(307): note: see declaration of 'v2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(341): warning C4456: declaration of 'v3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(308): note: see declaration of 'v3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(344): warning C4456: declaration of 'abs0' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(312): note: see declaration of 'abs0'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(345): warning C4456: declaration of 'abs1' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(313): note: see declaration of 'abs1'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(346): warning C4456: declaration of 'abs2' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(314): note: see declaration of 'abs2'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(347): warning C4456: declaration of 'abs3' hides previous local declaration
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(315): note: see declaration of 'abs3'
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(434): warning C4457: declaration of 'k' hides function parameter
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(290): note: see declaration of 'k'
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(77): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(92): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(145): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(151): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(156): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(161): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(166): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(203): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(272): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(277): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed
+F:\rawrxd\3rdparty\ggml\src\.\ggml-impl.h(298): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed
+[25/81] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[26/81] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\dtoa.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[27/81] Building C object CMakeFiles\quickjs_static_tip_ext.dir\3rdparty\quickjs_ng\quickjs-libc.c.obj
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[28/81] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\secure_buffer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[29/81] Linking CXX static library 3rdparty\ggml\src\ggml-base.lib
+[30/81] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\input_sanitizer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[31/81] Building CXX object 3rdparty\ggml\src\CMakeFiles\ggml.dir\ggml-backend-reg.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/W4' with '/W0'
+[32/81] Generating local/cloud chat route menu from manifest
+generated F:\rawrxd\build_tip_ext_host_001\generated\GeneratedChatRouteMenu.h from F:\rawrxd\config\chat_model_routes.json
+[33/81] Building CXX object CMakeFiles\rawrxd_security.dir\src\utils\crash_handler.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[34/81] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignReliabilityFaultTolerance.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[35/81] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignProductionConfig.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[36/81] Linking C static library quickjs_static_tip_ext.lib
+[37/81] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignObservability.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[38/81] Building RC object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.rc.res
+[39/81] Linking CXX static library 3rdparty\ggml\src\ggml-cpu.lib
+[40/81] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\ProductionRuntime.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[41/81] Building CXX object src\production\CMakeFiles\rawrxd_production_hardening.dir\SovereignSecurityHardening.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[42/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[43/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(18): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(18): warning C4100: 'hPrevInstance': unreferenced parameter
+[44/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32TerminalManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[45/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(380): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1182): warning C4100: 'wholeWord': unreferenced parameter
+[46/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(403): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(554): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[47/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[48/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(847): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(970): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(971): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1099): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1093): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1087): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1272): warning C4100: 'wParam': unreferenced parameter
+[49/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+[50/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentStepTimeline.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[51/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(35): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(289): warning C4100: 'timeoutMs': unreferenced parameter
+[52/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[53/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(83): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(73): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(93): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(103): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(113): warning C4189: 'btnStop': local variable is initialized but not referenced
+[54/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostText.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\win32app\Win32IDE_GhostText.cpp(307): warning C4100: 'wParam': unreferenced parameter
+[55/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Autonomy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[56/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(365): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(368): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1224): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1170): note: see declaration of 'restored'
+[57/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1486): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3244): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4118): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4577): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(4784): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(4731): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5640): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5649): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5669): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5682): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(6983): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(6986): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+[58/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(646): warning C4100: 'pid': unreferenced parameter
+[59/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\gguf_vocab_resolver.cpp(166): warning C4100: 'metadata': unreferenced parameter
+[60/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\GGUFLoader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[61/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\backend\ollama_client.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\backend\ollama_client.cpp(512): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(511): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(510): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\backend\ollama_client.cpp(549): warning C4100: 'on_error': unreferenced parameter
+F:\rawrxd\src\backend\ollama_client.cpp(570): warning C4505: 'RawrXD::Backend::MakeOkResponse': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\backend\ollama_client.cpp(582): warning C4505: 'RawrXD::Backend::MakeErrorResponse': unreferenced function with internal linkage has been removed
+[62/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'tokenId': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(408): warning C4100: 'maxTokens': unreferenced parameter
+[63/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\TransparentRenderer.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[64/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[65/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[66/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(990): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(988): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1318): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1351): warning C4100: 'wParam': unreferenced parameter
+[67/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\cpu_inference_engine_impl.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(43): warning C4100: 'n': unreferenced parameter
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(413): warning C4456: declaration of 'meta' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(350): note: see declaration of 'meta'
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(794): warning C4456: declaration of 'v' hides previous local declaration
+F:\rawrxd\src\cpu_inference_engine_impl.cpp(667): note: see declaration of 'v'
+[68/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\ErrorReporter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[69/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\plugin_signature.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[70/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[71/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[72/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\extension_polyfill_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[73/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\core\js_extension_host.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\3rdparty\quickjs_ng\quickjs.h(379): warning C4244: '=': conversion from 'int64_t' to 'int32_t', possible loss of data
+F:\rawrxd\src\core\js_extension_host.cpp(432): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(446): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(460): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(474): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(491): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(507): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(523): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(533): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(769): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(769): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(769): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(769): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(720): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(777): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(808): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(857): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(896): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(910): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(924): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(987): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1041): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1055): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1067): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1067): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1067): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1067): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1072): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1072): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1072): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1072): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1077): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1077): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1077): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1077): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1082): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1082): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1082): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1082): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1033): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1115): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1115): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1137): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1137): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1149): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1092): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1304): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1304): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1304): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1304): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1186): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1327): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1327): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1327): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1327): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1323): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1323): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1323): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1372): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1372): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1372): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1335): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1383): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1432): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1432): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1432): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1432): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1429): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1429): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1429): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1439): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1439): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1439): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1439): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1436): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1436): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1436): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1446): warning C4100: 'v3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1446): warning C4100: 'a3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1446): warning C4100: 't3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1446): warning C4100: 'c3': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1443): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1443): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1443): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1450): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1450): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1450): warning C4100: 'this2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1450): warning C4100: 'ctx2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1426): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1426): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1426): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1512): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1512): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1512): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1512): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1471): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1522): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1522): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1522): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1522): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1518): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1518): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1518): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1532): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1532): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1532): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1532): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1528): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1528): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1528): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1541): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1541): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1541): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1541): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1538): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1538): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1538): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1550): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1550): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1550): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1550): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1547): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1547): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1547): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1559): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1559): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1559): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1559): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1561): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1561): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1561): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1561): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1563): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1563): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1563): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1563): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1565): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1565): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1565): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1565): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1556): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1556): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1556): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1571): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1571): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1571): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1608): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1608): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1608): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1608): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1618): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1618): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1618): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1618): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1615): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1615): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1615): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1627): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1627): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1627): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1627): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1624): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1624): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1624): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1637): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1637): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1637): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1637): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1634): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1669): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1669): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1669): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1669): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1665): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1665): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1665): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1675): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1675): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1675): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1681): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1681): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1681): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1681): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1691): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1688): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1688): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1688): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1699): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1699): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1699): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1699): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1696): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1696): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1696): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1751): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1751): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1751): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1771): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1794): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1823): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1859): warning C4100: 'av': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1859): warning C4100: 'ac': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1859): warning C4100: 't': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1859): warning C4100: 'c2': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1856): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1856): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(1856): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2272): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2272): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2277): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2277): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2277): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2277): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2281): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2281): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2281): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2291): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2291): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2296): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2296): warning C4100: 'argc': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2296): warning C4100: 'this_val': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2296): warning C4100: 'c': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2322): warning C4100: 'argv': unreferenced parameter
+F:\rawrxd\src\core\js_extension_host.cpp(2322): warning C4100: 'argc': unreferenced parameter
+[74/81] Linking CXX static library rawrxd_security.lib
+[75/81] Linking CXX static library 3rdparty\ggml\src\ggml.lib
+[76/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_ExtHostWire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[77/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_vscode_bindings.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[78/81] Linking CXX static library src\production\rawrxd_production_hardening.lib
+[79/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\quickjs_extension_host.cpp(69): warning C4100: 'manifest': unreferenced parameter
+[80/81] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(212): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(239): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(265): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(291): warning C4100: 'placeHolder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(328): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(327): warning C4100: 'canSelectFolders': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(326): warning C4100: 'canSelectMany': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'title': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(468): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'maxTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'outTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(506): warning C4100: 'options': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'maxDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'outDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'excludePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'includePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'maxDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'outDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(758): warning C4100: 'uri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(975): warning C4100: 'folder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'maxBps': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'outBreakpoints': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1039): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'maxTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'outTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1076): warning C4100: 'rootUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'maxExts': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'outManifests': unreferenced parameter
+[81/81] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

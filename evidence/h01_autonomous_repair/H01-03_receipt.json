@@ -1,0 +1,16 @@
+{
+  "gate": "RAWR_H01_AUTONOMOUS_REPAIR_001",
+  "model": "deepseek-coder-v2_16b",
+  "test": "H01-03",
+  "initial_source_sha256": "2C758A02CF4DD3372FA7FAC0501A3CDEF5A24DE90159C08375B2B4E361CB31CD",
+  "final_source_sha256": "3F0794325E57B765553E7E9EF2ED5E515E5C154EBA84BF68163AB9CDFC686409",
+  "model_generated_patch": true,
+  "host_applied_patch": true,
+  "compiler_exit_code": 0,
+  "test_exit_code": 0,
+  "regression_exit_code": 0,
+  "tools_executed": 4,
+  "verified": true,
+  "verdict": "PASS",
+  "notes": "Model correctly identified and fixed all four arithmetic operators (add: - to +, multiply: + to *, divide: * to /, modulo: / to %). Agent infrastructure verified; independent host compilation and execution confirmed."
+}

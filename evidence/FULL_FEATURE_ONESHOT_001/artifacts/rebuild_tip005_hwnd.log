@@ -1,0 +1,9 @@
+START Mon 11/09/2026  6:18:01.97 
+ERROR: The process "RawrXD-Win32IDE-Native-Ext.exe" not found.
+ERROR: The process "RawrXD-Win32IDE-Native.exe" not found.
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+DONE Mon 11/09/2026  6:18:41.95

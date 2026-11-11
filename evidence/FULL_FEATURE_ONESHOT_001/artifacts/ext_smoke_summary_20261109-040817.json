@@ -1,0 +1,23 @@
+﻿{
+    "STAMP":  "20261109-040817",
+    "TIP_SHA256":  "5EDE4360B5177A12EF1DD43A300CA1A498BB2106BCB842EEFA19D2C340E7255C",
+    "EXT_LOAD":  "FAIL",
+    "INIT_OK":  null,
+    "LOAD_OK":  null,
+    "ACTIVATE_OK":  null,
+    "CMD_OK":  null,
+    "EXTENSION_ID":  null,
+    "DETAIL":  null,
+    "FAULT_ISOLATED":  "1",
+    "MALFORMED_LOAD_OK":  "0",
+    "EXIT_A":  -1073740791,
+    "EXIT_B":  0,
+    "FORCE_KILL_A":  0,
+    "FORCE_KILL_B":  0,
+    "HWND_SURVIVE":  1,
+    "ORPHANS_FINAL":  0,
+    "RUNLOG":  "F:\\rawrxd\\evidence\\FULL_FEATURE_EXTENSIONHOST_001\\logs\\ext_smoke_run_20261109-040817.txt",
+    "HWNDLOG":  "F:\\rawrxd\\evidence\\FULL_FEATURE_EXTENSIONHOST_001\\logs\\ext_smoke_hwnd_20261109-040817.txt",
+    "PROMOTE":  0,
+    "CERTIFIED":  0
+}

@@ -1,0 +1,56 @@
+# REGISTER_DASHBOARD_RECONCILE — local sealed register export for dashboard wire
+
+```
+ASOF_UTC=2026-11-09T18:00:00Z
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+ENGINEERING_MATURITY=82%_UNCHANGED
+MAJOR_INTEGRATED_ACCEPTANCE=NOT_DEMONSTRATED
+A4F_IMMUTABLE=1
+NO_INVENT_ABSENCE=1
+```
+
+## Law
+
+```
+DASHBOARD_FLAG_MISSING ≠ LOCAL_REGISTER_ABSENCE
+HIDDEN_GAP_AUDIT=SEALED (CONTROLLING_HANDOFF)
+AUTHORITATIVE_REGISTER=MASTER_HIDDEN_GAP_REGISTER.md (this lane)
+```
+
+## Export (dashboard wire fields)
+
+| Field | Value |
+|-------|-------|
+| REGISTER_PATH | `F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md` |
+| REGISTER_ASOF_UTC | `2026-11-09T12:56:00Z` (file header) / seal handoff `2026-11-09T13:32:00Z` |
+| HIDDEN_GAP_AUDIT | `SEALED` |
+| CONTROLLING_HANDOFF | `F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\CONTROLLING_HANDOFF.md` |
+| AUDIT_DISPOSITION | `F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\AUDIT_DISPOSITION.md` |
+| AUTHORITY_H01_H60 | `HIDDEN_GAPS_H01_H60.md` |
+| AUTHORITY_H61_H120 | `HIDDEN_GAPS_H61_H120.md` |
+| CONFIRMED_BLOCKER_COUNT | `12` (header rollup) / body seal also lists `CONFIRMED=8` post-W5 — **do not invent**; dashboard must show both until single rollup is reconciled in a later audit turn |
+| CONFIRMED_BLOCKER_IDS_HEADER | `H01,H02,H03,H04,H21,H22,H41,H42,H43,H51,H56,H57` |
+| CONFIRMED_IDS_BODY_SEAL | `H01,H04,H16,H27,H51,H57,H87,H113` |
+| HIDDEN_GAP_ENTRIES | `120` |
+| CONTROLLING_TIP | `CC79` |
+| DASHBOARD_URL | `https://rawrxd-freeze-control.garrettaosborne.chatgpt.site` |
+
+## Machine-readable block
+
+```
+REGISTER_PATH=F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md
+REGISTER_ASOF=2026-11-09T12:56:00Z
+CONFIRMED_BLOCKER_COUNT=12
+HIDDEN_GAP_AUDIT=SEALED
+DASHBOARD_REGISTER_FLAG=WIRE_TO_LOCAL_PATH
+LOCAL_REGISTER_ABSENT=0
+EXHAUSTIVE_CLOSURE_BLOCKED_UNTIL_DASHBOARD_RECONCILE=0_AFTER_WIRE
+PROMOTE=0
+```
+
+## Note
+
+Private dashboard previously flagged register missing. Local sealed audit lane is present and authoritative for this workspace. Wire dashboard at `REGISTER_PATH` + `REGISTER_ASOF` + `CONFIRMED_BLOCKER_COUNT`; do not treat the flag as absence of `MASTER_HIDDEN_GAP_REGISTER.md`.

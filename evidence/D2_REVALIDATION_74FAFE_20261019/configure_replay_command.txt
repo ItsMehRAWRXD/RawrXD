@@ -1,0 +1,1 @@
+cmake -S "F:\rawrxd\.worktrees\codex-d2-revalidate-74fafe\3rdparty\ggml" -B "F:\rawrxd\.build_d2_revalidate_74fafe\ggml" -A x64 -DGGML_BUILD_TESTS=OFF -DGGML_VULKAN=OFF -DGGML_NATIVE=ON

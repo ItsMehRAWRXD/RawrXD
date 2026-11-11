@@ -1,0 +1,4 @@
+EXE_SHA=a94baea7df4090fe8aa063e091e9bbc1bc0d805ab7ac629bbd7e0d662c5aacad 
+ARGS=run F:\rawrxd\gemma3-1b-Q2_K.gguf ask --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 32 
+START=Tue 11/10/2026 18:37:41.74 
+END=Tue 11/10/2026 18:37:41.74 

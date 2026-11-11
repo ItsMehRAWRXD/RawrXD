@@ -1,0 +1,258 @@
+﻿Add-Type -TypeDefinition @'
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class PostE59dEdit {
+  public delegate bool EnumProc(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc lp, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr h, EnumProc lp, IntPtr l);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassNameW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern bool SetWindowTextW(IntPtr h, string s);
+  [DllImport("user32.dll")] public static extern int GetWindowTextLengthW(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll")] public static extern IntPtr SendMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr SendMessageW(IntPtr h, uint m, IntPtr w, string l);
+  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetMenu(IntPtr h);
+  [DllImport("user32.dll")] public static extern int GetMenuState(IntPtr h, uint id, uint flags);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);
+  [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool f);
+  [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+  [DllImport("user32.dll")] public static extern uint SendInput(uint n, INPUT[] i, int cb);
+  [DllImport("user32.dll")] public static extern bool OpenClipboard(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool CloseClipboard();
+  [DllImport("user32.dll")] public static extern bool EmptyClipboard();
+  [DllImport("user32.dll")] public static extern IntPtr SetClipboardData(uint u, IntPtr h);
+  [DllImport("kernel32.dll")] public static extern IntPtr GlobalAlloc(uint u, UIntPtr s);
+  [DllImport("kernel32.dll")] public static extern IntPtr GlobalLock(IntPtr h);
+  [DllImport("kernel32.dll")] public static extern bool GlobalUnlock(IntPtr h);
+  public const uint WM_COMMAND = 0x0111;
+  public const uint WM_SETTEXT = 0x000C;
+  public const uint WM_GETTEXT = 0x000D;
+  public const uint WM_GETTEXTLENGTH = 0x000E;
+  public const uint WM_CLOSE = 0x0010;
+  public const uint WM_NOTIFY = 0x004E;
+  public const uint WM_PASTE = 0x0302;
+  public const uint EM_REPLACESEL = 0x00C2;
+  public const uint EM_SETSEL = 0x00B1;
+  public const uint BM_CLICK = 0x00F5;
+  public const uint TCM_GETCURSEL = 0x130B;
+  public const uint TCM_SETCURSEL = 0x130C;
+  public const uint TCM_GETITEMCOUNT = 0x132C;
+  public const int TCN_SELCHANGE = -551;
+  public const int MF_BYCOMMAND = 0;
+  public const int MF_GRAYED = 0x0001;
+  public const int MF_DISABLED = 0x0002;
+  public const int SW_RESTORE = 9;
+  public const int IDM_FILE_NEW = 2001;
+  public const int IDM_FILE_OPEN = 2002;
+  public const int IDM_FILE_SAVE = 2003;
+  public const int IDM_FILE_SAVEAS = 2004;
+  public const int IDM_TOOLS_BUILD_PROJECT = 3014;
+  public const int IDM_TOOLS_TEST_PROJECT = 3015;
+  public const int IDC_EDITOR = 1001;
+  public const int IDC_DOC_TABS = 1030;
+  [StructLayout(LayoutKind.Sequential)]
+  public struct NMHDR {
+    public IntPtr hwndFrom;
+    public IntPtr idFrom;
+    public int code;
+  }
+  [StructLayout(LayoutKind.Sequential)] public struct INPUT { public uint type; public KEYBDINPUT ki; }
+  [StructLayout(LayoutKind.Sequential)] public struct KEYBDINPUT {
+    public ushort wVk; public ushort wScan; public uint dwFlags; public uint time; public UIntPtr extra;
+  }
+  public static void PressEnter() {
+    var i = new INPUT[2];
+    i[0].type = 1; i[0].ki.wVk = 0x0D;
+    i[1].type = 1; i[1].ki.wVk = 0x0D; i[1].ki.dwFlags = 2;
+    SendInput(2, i, Marshal.SizeOf(typeof(INPUT)));
+  }
+  public static string ClassName(IntPtr h) {
+    var s = new StringBuilder(128); GetClassNameW(h, s, s.Capacity); return s.ToString();
+  }
+  public static string TitleOf(IntPtr h) {
+    var s = new StringBuilder(512); GetWindowTextW(h, s, s.Capacity); return s.ToString();
+  }
+  public static IntPtr FindMain(uint pid) {
+    IntPtr found = IntPtr.Zero;
+    EnumWindows((h, l) => {
+      uint p; GetWindowThreadProcessId(h, out p);
+      if (p != pid) return true;
+      if (ClassName(h) == "RawrXD_IDE_Window") { found = h; return false; }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static IntPtr FindEditor(IntPtr root) {
+    IntPtr found = IntPtr.Zero;
+    EnumChildWindows(root, (h, l) => {
+      string cls = ClassName(h);
+      if (GetDlgCtrlID(h) == IDC_EDITOR && IsWindowVisible(h) && IsWindowEnabled(h) &&
+          (cls.IndexOf("RichEdit", StringComparison.OrdinalIgnoreCase) >= 0 ||
+           cls.Equals("Edit", StringComparison.OrdinalIgnoreCase))) {
+        found = h; return false;
+      }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static IntPtr FindDocTabs(IntPtr root) {
+    IntPtr found = IntPtr.Zero;
+    EnumChildWindows(root, (h, l) => {
+      if (GetDlgCtrlID(h) == IDC_DOC_TABS) { found = h; return false; }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static bool SaveMenuEnabled(IntPtr main) {
+    IntPtr menu = GetMenu(main);
+    if (menu == IntPtr.Zero) return false;
+    int st = GetMenuState(menu, (uint)IDM_FILE_SAVE, (uint)MF_BYCOMMAND);
+    if (st < 0) return false;
+    return (st & (MF_GRAYED | MF_DISABLED)) == 0;
+  }
+  public static void FocusEditor(IntPtr main, IntPtr editor) {
+    ShowWindow(main, SW_RESTORE);
+    SetForegroundWindow(main);
+    uint gui = 0; GetWindowThreadProcessId(main, out gui);
+    uint me = GetCurrentThreadId();
+    bool attached = false;
+    if (gui != me) attached = AttachThreadInput(me, gui, true);
+    SetFocus(editor);
+    if (attached) AttachThreadInput(me, gui, false);
+  }
+  public static IntPtr FindDialogByTitle(uint pid, string mustContain) {
+    IntPtr found = IntPtr.Zero;
+    EnumWindows((h, l) => {
+      uint p; GetWindowThreadProcessId(h, out p);
+      if (p != pid) return true;
+      if (ClassName(h) == "#32770" && IsWindowVisible(h)) {
+        string t = TitleOf(h);
+        if (!string.IsNullOrEmpty(mustContain) &&
+            t.IndexOf(mustContain, StringComparison.OrdinalIgnoreCase) >= 0) {
+          found = h; return false;
+        }
+      }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static IntPtr FindAnyDialog(uint pid) {
+    IntPtr found = IntPtr.Zero;
+    EnumWindows((h, l) => {
+      uint p; GetWindowThreadProcessId(h, out p);
+      if (p != pid) return true;
+      if (ClassName(h) == "#32770" && IsWindowVisible(h)) { found = h; return false; }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static bool DriveFileDialog(IntPtr dlg, string fullPath) {
+    if (dlg == IntPtr.Zero) return false;
+    IntPtr edit = IntPtr.Zero;
+    EnumChildWindows(dlg, (h, l) => {
+      string cls = ClassName(h);
+      int id = GetDlgCtrlID(h);
+      if ((cls == "Edit" || cls.StartsWith("RichEdit")) && (id == 0x47C || id == 0x480)) {
+        if (IsWindowVisible(h) && IsWindowEnabled(h)) { edit = h; return false; }
+      }
+      return true;
+    }, IntPtr.Zero);
+    if (edit == IntPtr.Zero) {
+      EnumChildWindows(dlg, (h, l) => {
+        if (ClassName(h) == "ComboBoxEx32") {
+          EnumChildWindows(h, (c, q) => {
+            if (ClassName(c) == "Edit") { edit = c; return false; }
+            return true;
+          }, IntPtr.Zero);
+          return edit == IntPtr.Zero;
+        }
+        return true;
+      }, IntPtr.Zero);
+    }
+    if (edit == IntPtr.Zero) return false;
+    SetForegroundWindow(dlg);
+    SetWindowTextW(edit, fullPath);
+    SendMessageW(edit, WM_SETTEXT, IntPtr.Zero, fullPath);
+    SetFocus(edit);
+    IntPtr ok = IntPtr.Zero;
+    EnumChildWindows(dlg, (h, l) => {
+      if (GetDlgCtrlID(h) == 1 && ClassName(h) == "Button") { ok = h; return false; }
+      return true;
+    }, IntPtr.Zero);
+    if (ok != IntPtr.Zero) {
+      PostMessageW(dlg, WM_COMMAND, (IntPtr)1, ok);
+      SendMessageW(ok, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+    } else {
+      PostMessageW(dlg, WM_COMMAND, (IntPtr)1, IntPtr.Zero);
+    }
+    // Fallback: Enter key â€” BM_CLICK alone sometimes leaves Save As modal open.
+    System.Threading.Thread.Sleep(150);
+    if (IsWindowVisible(dlg)) PressEnter();
+    return true;
+  }
+  public static string GetEditorText(IntPtr editor) {
+    int len = SendMessageW(editor, WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero).ToInt32();
+    if (len <= 0) len = GetWindowTextLengthW(editor);
+    if (len <= 0) return "";
+    IntPtr buf = Marshal.AllocHGlobal((len + 2) * 2);
+    try {
+      int got = SendMessageW(editor, WM_GETTEXT, (IntPtr)(len + 1), buf).ToInt32();
+      if (got > 0) return Marshal.PtrToStringUni(buf) ?? "";
+      var sb = new StringBuilder(len + 8);
+      GetWindowTextW(editor, sb, sb.Capacity);
+      return sb.ToString();
+    } finally { Marshal.FreeHGlobal(buf); }
+  }
+  public static void SetEditorText(IntPtr editor, string text) {
+    SendMessageW(editor, EM_SETSEL, IntPtr.Zero, (IntPtr)(-1));
+    SendMessageW(editor, EM_REPLACESEL, (IntPtr)1, text ?? "");
+  }
+  public static bool SetClipboardText(string text) {
+    if (!OpenClipboard(IntPtr.Zero)) return false;
+    EmptyClipboard();
+    byte[] bytes = Encoding.Unicode.GetBytes(text + "\0");
+    IntPtr h = GlobalAlloc(0x0002, (UIntPtr)bytes.Length);
+    IntPtr p = GlobalLock(h);
+    Marshal.Copy(bytes, 0, p, bytes.Length);
+    GlobalUnlock(h);
+    bool ok = SetClipboardData(13, h) != IntPtr.Zero;
+    CloseClipboard();
+    return ok;
+  }
+  public static void PasteIntoEditor(IntPtr editor) {
+    SendMessageW(editor, EM_SETSEL, IntPtr.Zero, (IntPtr)(-1));
+    SendMessageW(editor, WM_PASTE, IntPtr.Zero, IntPtr.Zero);
+  }
+  public static bool SelectDocTab(IntPtr main, IntPtr tabs, int index) {
+    if (tabs == IntPtr.Zero) return false;
+    SendMessageW(tabs, TCM_SETCURSEL, (IntPtr)index, IntPtr.Zero);
+    NMHDR nm;
+    nm.hwndFrom = tabs;
+    nm.idFrom = (IntPtr)IDC_DOC_TABS;
+    nm.code = TCN_SELCHANGE;
+    IntPtr p = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NMHDR)));
+    try {
+      Marshal.StructureToPtr(nm, p, false);
+      SendMessageW(main, WM_NOTIFY, (IntPtr)IDC_DOC_TABS, p);
+    } finally { Marshal.FreeHGlobal(p); }
+    return SendMessageW(tabs, TCM_GETCURSEL, IntPtr.Zero, IntPtr.Zero).ToInt32() == index;
+  }
+  public static int TabCount(IntPtr tabs) {
+    if (tabs == IntPtr.Zero) return -1;
+    return SendMessageW(tabs, TCM_GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero).ToInt32();
+  }
+  public static void ClickDialog(IntPtr dlg, int cmd) {
+    if (dlg == IntPtr.Zero) return;
+    PostMessageW(dlg, WM_COMMAND, (IntPtr)cmd, IntPtr.Zero);
+  }
+}
+'@

@@ -1,0 +1,2 @@
+SESSION_OPEN session_id=sid_0000AF10_0000000007F8B591 run_id=run_unset pid=44816
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000AF10_0000000007F8B591 run_id=run_unset

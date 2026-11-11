@@ -1,0 +1,17 @@
+﻿{
+    "tested_utc":  "2026-11-10T06:27:51.0606428Z",
+    "scope":  "Packaged agent subprocess; GUI dispatch requires separate evidence.",
+    "ide_sha256":  "78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596",
+    "agent_sha256":  "6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE",
+    "model":  "llama3.2:3b",
+    "process_id":  41932,
+    "process_exit":  null,
+    "timed_out":  false,
+    "source_changed":  false,
+    "source_after_sha256":  "1A43ED1E463BA61A50C0A3CEB76A3E868D3700B65C7D5202799CCB86EAB0CAFE",
+    "independent_run_exit":  -1,
+    "independent_run_output":  "",
+    "verdict":  "FAIL",
+    "stdout":  "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\rc4_runtime_001\\agent_repair_001\\agent.stdout.log",
+    "stderr":  "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\rc4_runtime_001\\agent_repair_001\\agent.stderr.log"
+}

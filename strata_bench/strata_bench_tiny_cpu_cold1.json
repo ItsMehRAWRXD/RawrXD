@@ -1,0 +1,23 @@
+{
+  "tag": "tiny_cpu_cold1",
+  "model": "D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "mode": "cpu-pinned",
+  "arch": "llama",
+  "blocks": 22,
+  "prefill_tokens": 32,
+  "generate_tokens": 32,
+  "bind_ms": 2491.8,
+  "prefill_ms": 23003.8,
+  "prefill_tps": 1.39,
+  "ttft_ms": 25495.7,
+  "decode_ms": 22467.8,
+  "decode_tps_mean": 1.42,
+  "decode_p50_ms": 675.53,
+  "decode_p95_ms": 911.92,
+  "aggregate_tps": 1.41,
+  "gpu_calls": 0,
+  "cpu_calls": 9920,
+  "fallback": "k-quant dot: force_cpu (weight=blk.0.attn_q.weight)",
+  "nonfinite_logits": 0,
+  "pcie": {"link": "", "theoretical_gbps": 0.00, "h2d_gbps": -1.00, "d2h_gbps": -1.00}
+}

@@ -1,0 +1,70 @@
+ASOF_UTC=2026-11-10T04:05:08Z
+TIP=tip_final_integ_017
+TIP_SHA256=189F809AA161B6A3A5C2ADD8A69EADBB167351666E38C86B8E0193742FF019AB
+LOOP_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+LANE=IDE_EXCLUSIVE_PRODUCT_FINAL_CLEAN_REMEASURE
+HOST_SEED=OFF
+HOST_SEED_SKIPPED=1
+MODEL=F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+WORKSPACE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ017\exclusive_work_tip017
+INVENT_PASS=0
+PROMOTE=0
+TIP_MOVE=0
+CONTROLLING=CC79
+A4F_UNTOUCHED=1
+
+CLEAN_EXCLUSIVE_CLOSED=1
+HARNESS_FREEZE=0
+ANTI_FREEZE=
+  GetText length+text via SendMessageTimeout(SMTO_ABORTIFHUNG)
+  No UI EnumChild/GetText scrape while loopChild>0 (ledger/flight/rtLog only)
+  No Start-Process RedirectStandardOutput tee (prior freeze class)
+  Exclusive lock held; PID-scoped kills; AgentWaitSec=7200
+  Heartbeat file touched each poll
+
+MEASURED_RUN=issue49_product_final_TIP017_20261109-230351.txt
+  CHAT_INPUT=PASS_PROMPT_CTRL_ENTER_SEND
+  LOOP_SPAWNED=1 (tip_final_integ_017\deep2_agentic_loop.exe pid=40712)
+  FLIGHT prefill_batch_P128_at0 units→214 (~39s elapsed in-batch)
+  POLL continuous ~3s cadence until exit (NO harness freeze)
+  23:05:05 loopChild=0 ideDead=0 flight=prefill_batch_progress
+  23:05:08 IDE_EXIT=1
+  ORPHAN_LOOP_EXITED after IDE_EXIT orphanWait=0
+  TOOL=0 EDIT=0 ledger tool_calls=0 termination_reason=running driver_exit=-1
+
+ORPHAN_WAIT_STATUS=
+  CODE_LANDED=1
+  E2E_IDE_DEAD_LOOP_ALIVE_TO_TOOL=0
+  FAIL_CLOSED_REASON=loop died BEFORE IDE exit (orphanWait never armed);
+    harness still observed IDE_EXIT and logged exact ORPHAN_LOOP_EXITED reason
+    (not silent abandon)
+
+KEEPALIVE_STATUS=
+  CODE_LANDED=1 (watchdog task-epoch + fflush + Progress on stdout/PREFILL)
+  IDE_ALIVE_THROUGH_PREFILL_E2E=0 (IDE_EXIT=1 ~70s mid-prefill)
+
+SUSPECT_CONCURRENT=
+  IDE log: GhostText inference route bigdaddyg-productivity-local:latest backend=ollama
+  ollama_runtime OLLAMA_REUSE while Deep2 7B PrefillBatch on GPU — contention candidate
+
+IDE_11_STEP_MATRIX (tip017 clean exclusive; no tip014 inherit)=
+  01 LAUNCH                  PASS_MAIN_HWND
+  02 LOCAL_MODEL_LOAD        MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+  03 GPU_RUNTIME_R9700       NOT_RUN
+  04 OPEN_PROJECT            PASS_ARGV_OPEN_FIXTURE
+  05 AGENT_PROMPT            PASS_PROMPT_CTRL_ENTER_SEND
+  06 AGENT_READS_PROJECT     PARTIAL_LOOP_SPAWNED_READ_NOT_PROVEN
+  07 AGENT_REASONING_GPU     NOT_RUN (flight progress only; not counted PASS)
+  08 TOOL_AUTHORITY          BLOCKED_NO_REAL_TOOL_CALL_EVIDENCE
+  09 RESULT_REINJECTION      NOT_RUN
+  10 REAL_SOURCE_EDIT        NOT_RUN_NO_AGENT_EDIT
+  11 BUILD_FAILURE_RECOVERY  NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+  REQUIRED_PASS_HITS=3/11
+  H57_AGENTSESSION=PASS_SESSION_SPAWNED_RUNTIME (structural; not one of 11)
+
+ISSUE49_PASS_CONJUNCTION=0
+NO_INHERIT_FROM_TIP014_LOOP_08_11=1
+TIP018=NOT_CUT
+NEXT=DISABLE_GHOSTTEXT_OLLAMA_CONTENTION_DURING_7B_PREFILL_THEN_REMEASURE_TOOL_08
+RECEIPT=artifacts/issue49_integ017/ISSUE49_PRODUCT_FINAL_TIP017_RECEIPT.txt
+IDE_EXCLUSIVE_RECEIPT=artifacts/issue49_integ017/ISSUE49_IDE_EXCLUSIVE_TIP017_RECEIPT.txt

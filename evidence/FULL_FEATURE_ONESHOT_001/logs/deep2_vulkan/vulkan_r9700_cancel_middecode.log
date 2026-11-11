@@ -1,0 +1,4 @@
+device-pin requested index=0
+BENCH model=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf decode=128 runs=1 backend=vulkan-native prefill=PrefillBatch wide_dot_batch=1
+prompt tokens: 2: 1 185
+ingesting F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf ...

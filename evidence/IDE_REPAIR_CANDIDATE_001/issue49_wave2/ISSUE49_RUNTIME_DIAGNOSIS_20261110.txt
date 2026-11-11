@@ -1,0 +1,41 @@
+ISSUE49_RUNTIME_DIAGNOSIS
+ASOF_UTC=2026-11-10T12:10:00Z
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+
+MEASURED_LANE=live_628
+TIP_SHA256=628BC8F598304CADC62BD7C1DD1526B0E06F344223B5A14F85826A787C934D9C
+MODEL_USED=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+MODEL_CLASS=BASE_UNRELIABLE
+
+CONFIRMED=
+  AGENT_PROCESS_LAUNCH=PASS
+  MODEL_INITIALIZATION=PASS
+  PREFILL_BATCH_BEGIN=STARTED
+  AGENT_TOOL_EXECUTION=NOT_DEMONSTRATED
+  AGENT_RESULT=5=NOT_SHOWN
+  ISSUE49_11STEP=FAIL_CLOSED
+
+ROOT_CAUSES_ADDRESSED_IN_SOURCE (RUNTIME_ACCEPTED still pending rebuild+remeasure):
+  1. ChatML: ParseChatMarkers now recognizes <|im_start|>/<|im_end|> (Qwen2.5).
+     Empty-template Qwen2.5 paths get CHATML_FALLBACK_APPLIED instead of User:/Assistant:.
+  2. @@ streaming: placeholder first-pair no longer dispatches; second pair required.
+  3. Bridge: exit 0 alone is NOT "Task completed successfully"; requires AGENT_RESULT=5
+     / verified write. Progress text distinguishes process exit vs workflow verified.
+  4. Harness: ModelPath prefers instruct GGUF when present; base only as last resort.
+
+NEXT_EVIDENCE_REQUIRED=
+  Post-rebuild same-SHA log continuing after PREFILL_BATCH_BEGIN with:
+    TOOL=read / TOOL=write / build / test / AGENT_RESULT=5
+  Prefer instruct model identity in receipt.
+
+DISPOSITION=
+  AGENT_PROCESS_LAUNCH=PASS
+  MODEL_INITIALIZATION=PASS
+  AGENT_TOOL_EXECUTION=NOT_DEMONSTRATED
+  ISSUE49_11STEP=FAIL_CLOSED
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD

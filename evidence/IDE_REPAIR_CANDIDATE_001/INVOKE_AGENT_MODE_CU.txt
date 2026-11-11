@@ -1,0 +1,36 @@
+IDE_REPAIR_CANDIDATE_001 / INVOKE_AGENT_MODE_CU
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+
+PURPOSE=
+  Document how to invoke Computer Use E2E without HandleCopilotSend-only
+  (text chat). CU acceptance uses chat → AgentSession → AgenticLoopBridge.
+
+PREREQ=
+  - New candidate package (RawrXD-readiness-rc5), NOT sealed RC4 78E187…
+  - RAWRXD_HAS_COMPUTER_USE linked IDE + packaged rawr.exe (CLI CU registry)
+  - Ollama model that supports tools (e.g. qwen3:8b or tool-capable local)
+
+INVOKE=
+  1) set RAWRXD_AGENT_MODE=ACTIVE
+  2) set RAWRXD_LOG_DIR=<evidence log dir>
+  3) Launch RawrXD-Win32IDE-Native-Ext.exe from the NEW package
+  4) Select an Ollama/tool-capable model in the chat selector
+  5) Stage task in Copilot Chat input, e.g.:
+       Use computer_use.find_window with title containing "RawrXD"
+       then computer_use.screenshot on the returned hwnd.
+  6) Press Send (BN_CLICKED) — with AGENT_MODE active this routes to
+       onAgenticLoopRunTask (NOT HandleCopilotSend text-only).
+     OR: Agent menu → Run Agentic Task (IDM_AGENTIC_LOOP_RUN)
+
+EXPECTED LOG MARKERS (chat_runtime.log / ESP):
+  AGENT_MODE=ACTIVE path=AgenticLoopBridge
+  AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0
+  TOOL_SCHEMA_READY computer_use.find_window=1
+  AGENT_SESSION_SPAWNED ... session_registry=1 tool=computer_use.find_window
+  tool_start / tool_result for computer_use.find_window (or screenshot)
+
+NOT_CREDIT=
+  HandleCopilotSend → BACKEND_REQUEST / RESPONSE prose-only
+  Agent > View Tools MessageBox alone
+  Standalone computer_use_001 bridge PASS
+  Sealed RC4 78E187… runtime receipts

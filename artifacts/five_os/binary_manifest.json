@@ -1,0 +1,65 @@
+{
+  "schema": "RAWRXD_FIVE_OS_BINARY_MANIFEST",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "binaries": [
+    {
+      "name": "cpu_engine_e2e.exe",
+      "path": "build_ide\\bin-msvc\\cpu_engine_e2e.exe",
+      "os": "Windows",
+      "arch": "x86-64",
+      "format": "PE32+",
+      "sha256": "09699D1DA8876AEA83239B74596F27A530E1ED8AFC2C36444D26DE171FB05B58",
+      "size_bytes": "NOT_RECORDED",
+      "status": "LINK_PASS_RUNTIME_PASS"
+    },
+    {
+      "name": "rawr-reap.exe",
+      "path": "build_ide\\bin-msvc\\rawr-reap.exe",
+      "os": "Windows",
+      "arch": "x86-64",
+      "format": "PE32+",
+      "sha256": "NOT_RECORDED",
+      "size_bytes": "NOT_RECORDED",
+      "status": "LINK_PASS_RUNTIME_PASS"
+    },
+    {
+      "name": "rawr.exe",
+      "path": "build_ide\\bin-msvc\\rawr.exe",
+      "os": "Windows",
+      "arch": "x86-64",
+      "format": "PE32+",
+      "sha256": "NOT_RECORDED",
+      "size_bytes": "NOT_RECORDED",
+      "status": "LINK_PASS"
+    },
+    {
+      "name": "qwen_cpu_probe.exe",
+      "path": "build_ide\\bin-msvc\\qwen_cpu_probe.exe",
+      "os": "Windows",
+      "arch": "x86-64",
+      "format": "PE32+",
+      "sha256": "090E828AFD4FCA7554FD9786AC16B13DAB8774C6755723CB438E3032EF14D537",
+      "size_bytes": "NOT_RECORDED",
+      "status": "LINK_PASS_RUNTIME_PASS_STALE"
+    }
+  ],
+  "test_binaries": [
+    {
+      "name": "test01 through test19",
+      "path": "tests\\five_os_corpus\\bin\\",
+      "os": "Windows",
+      "arch": "x86-64",
+      "format": "PE32+",
+      "status": "ALL_PASS"
+    }
+  ],
+  "missing_binaries": [
+    { "os": "Linux", "reason": "no toolchain" },
+    { "os": "macOS", "reason": "no toolchain" },
+    { "os": "Android", "reason": "no NDK" },
+    { "os": "iOS", "reason": "no Xcode" }
+  ]
+}

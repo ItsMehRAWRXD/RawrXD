@@ -1,0 +1,15 @@
+PASS policy_mouse_deny
+PASS policy_launch_deny
+PASS approval_deny
+PASS approval_allow_still_policy
+PASS cancel
+PASS screenshot_own_window
+PASS find_own_window
+PASS mouse_own_window
+PASS type_own_window
+PASS agent_tool_approval_deny
+PASS agent_tools_registered
+PASS agent_tool_policy_deny_launch
+PASS bridge_cancel
+VERIFY PASS
+

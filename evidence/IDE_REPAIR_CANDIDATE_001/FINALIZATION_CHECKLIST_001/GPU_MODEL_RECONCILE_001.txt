@@ -1,0 +1,97 @@
+GPU_MODEL_RECONCILE_001
+ASOF_UTC=2026-11-10T23:06:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+D015_TOUCHED=0
+CLI_OLLAMA_ROUTE_CLAIMED=0
+AUTONOMOUS_REPAIR=0
+P1_SEQUENCE_FIRST=1
+
+ADAPTER_MISMATCH=1
+DISCOVERY_BLOCKER=1
+STALE_MEMORY_INFO=1
+INVENTORY_RECONCILE=1
+UNEXPLAINED_REQUEST_FAILURE=1
+
+# Authority absorbed (user diagnosis) — not invented PASS
+AUTHORITY=FINALIZATION_CHECKLIST_001\GPU_R9700_ADAPTER_MISMATCH_001.txt
+USER_12_25=scheduler+runner both R9700; decode ~99-101 tok/s / 78 tok (short; sustained UNMEASURED)
+USER_12_34=scheduler=7800 XT runner=Radeon(TM) Graphics; decode ~5.2 tok/s
+
+# Log source locate
+LOG_SOURCE_IN_F_EVIDENCE=PARTIAL
+PRIMARY_OLLAMA_LOGS=C:\Users\Garrett\AppData\Local\Ollama\server.log (+server-1..5)
+  NOTE=12:25/12:34 session lines NOT present as fresh append under F:\rawrxd\evidence;
+       AppData server.log last append mtime=2026-11-10T07:36:39 local (hung/non-appending during later serve)
+MISMATCH_PATTERN_ARCHIVED_IN_APPDATA=1
+  EVIDENCE_LINE=sched.go selecting single GPU ... name=Vulkan2 description="AMD Radeon RX 7800 XT"
+  EVIDENCE_LINE=llama_prepare_model_devices: using device Vulkan0 (AMD Radeon(TM) Graphics)
+  EVIDENCE_LINE=runner.go GPU discovery watchdog timed out
+  EVIDENCE_LINE=unable to refresh free memory, using old values
+F_EVIDENCE_DEVICE_MAP=IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\generation_launch_stdout.txt
+  Main: GPU 1 (--gpu 0) AI PRO R9700. Off: GPU 2 (--gpu 1) RX 7800 XT, GPU 3 (--gpu 2) Radeon(TM) Graphics.
+ISSUE49_12_25_DIR=issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027
+  NOTE=IDE receipt S_03_GPU_RUNTIME_R9700=NOT_RUN; does not archive ollama adapter lines
+
+# Host Vulkan order (vulkaninfo --summary proprietary)
+VK_GPU0=AMD Radeon AI PRO R9700 (discrete)
+VK_GPU2=AMD Radeon(TM) Graphics (integrated)
+VK_GPU4=AMD Radeon RX 7800 XT (discrete)
+
+# P5 pin
+INTENDED_GPU=AMD Radeon AI PRO R9700
+PIN_PROPOSED=1
+PIN_FILE=FINALIZATION_CHECKLIST_001\R9700_GPU_PIN_ENV_001.env.txt
+PIN_ENV=OLLAMA_LLM_LIBRARY=vulkan; GGML_VK_VISIBLE_DEVICES=0
+PIN_APPLIED_LIVE=1
+PIN_APPLY_HELD_REASON=CLEARED_BY_GPU_R9700_PIN_REMEASURE_001 (P1 exclusive hold absent; hung serve PID-scoped restarted)
+REMEASURE_GENERATE=HTTP_200
+REMEASURE_MODEL=qwen3:8b
+REMEASURE_EVAL_COUNT=16
+REMEASURE_TPS=102.88
+REMEASURE_ELAPSED_MS=13678
+REMEASURE_RUNNER_PHYSICAL_GPU_LOG=CONFIRMED
+  EVIDENCE=GPU_R9700_PIN_REMEASURE_001.txt / _p5_pin_serve_stderr2.txt
+  SCHED=inference compute name=Vulkan0 description="AMD Radeon AI PRO R9700"
+  RUNNER=llama_prepare_model_devices: using device Vulkan0 (AMD Radeon AI PRO R9700)
+REMEASURE_PASS=1
+  LAW=REMEASURE_PASS!=PROMOTE
+DISCOVERY_WATCHDOG_RESIDUAL=1
+
+# HTTP 500 (AppData server.log)
+HTTP_500_SAMPLES=
+  2026-11-10T07:34:00 /api/generate 500 ~1m30s
+  2026-11-10T07:36:03 /api/generate 500 ~56s
+UNEXPLAINED=1
+
+# P6 model inventory — OLLAMA_MODELS=F:\OllamaModels
+STORE=F:\OllamaModels
+BLOB_FILES_PRESENT=145
+MANIFEST_FILES=172
+COMPLETE_MANIFESTS=43
+INCOMPLETE_MANIFESTS=129
+FS_DISTINCT_MISSING_DIGESTS=338
+  LIST=_missing_blob_hashes_fs_manifest.txt (if present) OR recompute from manifests vs blobs
+LOG_FAILED_DESCRIBE_WARN_LINES_SERVER_LOG=1806
+LOG_FAILED_DESCRIBE_WARN_LINES_ALL_SERVER_LOGS=139187
+LOG_DISTINCT_MISSING_BLOB_HASHES=118
+  LIST=_missing_blob_hashes_from_logs.txt
+  LAW=118 distinct hashes across many repeated warnings (not 2564 missing models)
+SELECTION_ACCURACY=
+  COMPLETE_LOCAL_OK_EXAMPLES=qwen3:8b; llama3.2:3b/latest; bigdaddyg-productivity-local:latest; deepseek-coder-v2:16b; nemotron-3-nano:4b; gpt-oss:20b/120b; qwen3.8:27b; ...
+  INCOMPLETE_STALE_MANIFESTS=majority of library/* bigdaddyg-* / cheetah-* / many cloud tags point at missing F:\OllamaModels\blobs\sha256-*
+  SELECTOR_RISK=Model list surfaces incomplete manifests → discovery spam + wrong load targets
+
+# Disposition
+P05_STATUS=REMEASURED_OPEN
+P06_STATUS=AUDITED_OPEN
+NEXT=
+  1_P1_BUILD_VERIFY_RAWR_CLI_OLLAMA_ROUTE (do not block; pin live on serve PID 32192)
+  2_P5_WATCHDOG_RESIDUAL + AppData server.log append still broken
+  3_P6_PRUNE_OR_RESTORE_118_LOG_HASHES / incomplete manifests
+LAW=R9700_SESSION_PASS!=ADAPTER_SELECTION_FIXED
+LAW=SHORT_DECODE_TPS!=SUSTAINED_THROUGHPUT
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED

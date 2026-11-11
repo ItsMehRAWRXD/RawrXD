@@ -1,0 +1,814 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=262144 fit=244682 (kv_bytes_per_token=7686)
+[MLA_ALLOC] hidden=7168 heads=64 headDim=576 qLora=1536 kv_a=576 k_scratch=40960 v_b=8192
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=1 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=18432 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=512 qkRope=64 vHeadDim=128 headDim=576
+[Deep2Engine] MLA multi-shard production stream available; certification deferred to live MlaAttentionComplete
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=163840 bos=163584 eos=163586 (Spm::encode)
+[Deep2Engine] Layer topology: 0 attention, 0 SSM, 61 unknown of 61 total
+[Deep2Engine] KV cache sized for 0 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[Deep2Engine] ResidencyManager: this=0000011D8B9C5840  registered=0 tensors  bytes=0  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7ED761C00 dequant=00007FF7ED7648F0 GetGEMV(12)=00007FF7ED761C00 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=244682 heads=1 dim=576
+[KVCache] HOT_BYTES=2248704 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 61 layers x 244682 positions x 1 heads x 576 dim = 65591.02 MB
+[Deep2Engine] Model loaded successfully (1096 tensors)
+[Deep2Engine] MoE model: 384 experts, top-8, 1 shared
+[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache
+[Deep2Engine] Created 61 per-layer routers (multi-shard)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000158E2
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000158E2
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BB9F
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_164E&SUBSYS_364E1849&REV_CB\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018A6E
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+[K2_DBG] entry depth=61 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=61
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/1
+STREAM_HEARTBEAT STEP=0/1 TEARDOWN_WITNESS=0
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+GPU_SCALAR_INPUT_CAPTURE layer=1 stick=0 expert=318 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=0 nEx=8 pin_clock=24 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=689ad064ac667465 post_hash=e897b1a53bd73478 CLASS=D2H_OK ex=[0,53,103,158,216,227,232,318]
+GPU_MOE_AGGREGATE_PARITY layer=1 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=1 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=2 stick=0 expert=369 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=0 nEx=8 pin_clock=48 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1dfff447379625b4 post_hash=7fcde0bf7036b6a6 CLASS=D2H_OK ex=[23,24,30,165,238,244,354,369]
+GPU_MOE_AGGREGATE_PARITY layer=2 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=2 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=3 stick=0 expert=371 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=0 nEx=8 pin_clock=72 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1f6d3551b6b7ef9d post_hash=febe0469327e478f CLASS=D2H_OK ex=[43,49,70,144,222,289,337,371]
+GPU_MOE_AGGREGATE_PARITY layer=3 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=3 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=4 stick=0 expert=360 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=0 nEx=8 pin_clock=96 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=dd47da675bfc5ad4 post_hash=6c6ab6033cdd556c CLASS=D2H_OK ex=[90,161,197,252,259,301,316,360]
+GPU_MOE_AGGREGATE_PARITY layer=4 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=4 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=5 stick=0 expert=347 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=0 nEx=8 pin_clock=120 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=bd0579426963d0c8 post_hash=2c25543654994d3c CLASS=D2H_OK ex=[2,85,144,197,273,280,283,347]
+GPU_MOE_AGGREGATE_PARITY layer=5 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=5 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=6 stick=0 expert=381 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=0 nEx=8 pin_clock=144 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=66a543c2b8a5404c post_hash=6180d6fe359a51a0 CLASS=D2H_OK ex=[103,173,182,190,225,241,341,381]
+GPU_MOE_AGGREGATE_PARITY layer=6 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=6 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=7 stick=0 expert=364 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=0 nEx=8 pin_clock=168 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=6945e288d68c3fd7 post_hash=a5af422acc4eda76 CLASS=D2H_OK ex=[93,100,112,170,226,280,309,364]
+GPU_MOE_AGGREGATE_PARITY layer=7 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=7 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=8 stick=0 expert=380 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=0 nEx=8 pin_clock=192 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5753193685940e27 post_hash=257c79e361b28324 CLASS=D2H_OK ex=[83,107,111,146,225,233,243,380]
+GPU_MOE_AGGREGATE_PARITY layer=8 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=8 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=9 stick=0 expert=367 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=0 nEx=8 pin_clock=216 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=ba591527aa759aee post_hash=f83c9f87ec07847e CLASS=D2H_OK ex=[23,45,213,247,255,313,333,367]
+GPU_MOE_AGGREGATE_PARITY layer=9 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=9 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=10 stick=0 expert=361 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=0 nEx=8 pin_clock=240 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=826379d949ff8109 post_hash=3d7ed73b55a27687 CLASS=D2H_OK ex=[16,46,84,145,248,276,331,361]
+GPU_MOE_AGGREGATE_PARITY layer=10 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=10 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=11 stick=0 expert=383 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=0 nEx=8 pin_clock=264 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f2ce882d8f8aee12 post_hash=3214d59c7d7452df CLASS=D2H_OK ex=[45,124,167,229,271,301,382,383]
+GPU_MOE_AGGREGATE_PARITY layer=11 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=11 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=12 stick=0 expert=380 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=0 nEx=8 pin_clock=288 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0df31fb04142985f post_hash=f6984c284718615c CLASS=D2H_OK ex=[7,118,150,172,229,313,364,380]
+GPU_MOE_AGGREGATE_PARITY layer=12 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=12 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=13 stick=0 expert=369 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=13 stick=0 nEx=8 pin_clock=312 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=9bfc33e32d652d1a post_hash=7ae89de6b331fa4c CLASS=D2H_OK ex=[12,71,84,94,116,172,327,369]
+GPU_MOE_AGGREGATE_PARITY layer=13 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=13 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=14 stick=0 expert=327 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=14 stick=0 nEx=8 pin_clock=336 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8dc1268396fd31ed post_hash=9f5153e36118942b CLASS=D2H_OK ex=[53,78,112,179,226,291,311,327]
+GPU_MOE_AGGREGATE_PARITY layer=14 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=14 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=15 stick=0 expert=340 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=15 stick=0 nEx=8 pin_clock=360 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=14dba02ba274db31 post_hash=f65b5608bafa1fec CLASS=D2H_OK ex=[42,112,202,229,259,265,339,340]
+GPU_MOE_AGGREGATE_PARITY layer=15 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=15 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=16 stick=0 expert=309 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=16 stick=0 nEx=8 pin_clock=384 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=28164fd2c3b15882 post_hash=c21793dcc1450efb CLASS=D2H_OK ex=[29,84,86,177,210,253,284,309]
+GPU_MOE_AGGREGATE_PARITY layer=16 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=16 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=17 stick=0 expert=367 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=17 stick=0 nEx=8 pin_clock=408 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=78f036b1952754f5 post_hash=eb2c868198625bca CLASS=D2H_OK ex=[12,18,95,99,112,162,280,367]
+GPU_MOE_AGGREGATE_PARITY layer=17 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=17 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=18 stick=0 expert=286 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=18 stick=0 nEx=8 pin_clock=432 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=774976a94058d2e3 post_hash=68363ea1963dfb4d CLASS=D2H_OK ex=[51,68,151,158,161,184,284,286]
+GPU_MOE_AGGREGATE_PARITY layer=18 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=18 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=19 stick=0 expert=338 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=19 stick=0 nEx=8 pin_clock=456 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=08ea7c1b2cf5e8cb post_hash=4c6d608f0b255d16 CLASS=D2H_OK ex=[1,32,60,205,208,312,337,338]
+GPU_MOE_AGGREGATE_PARITY layer=19 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=19 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=20 stick=0 expert=360 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=20 stick=0 nEx=8 pin_clock=480 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=61e0747f1cbc6ed6 post_hash=4724d7cd5817d1c2 CLASS=D2H_OK ex=[20,100,123,235,282,285,309,360]
+GPU_MOE_AGGREGATE_PARITY layer=20 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=20 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=21 stick=0 expert=341 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=21 stick=0 nEx=8 pin_clock=504 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a7fcd273a078e70c post_hash=d9b43745f7856631 CLASS=D2H_OK ex=[78,117,161,173,215,283,328,341]
+GPU_MOE_AGGREGATE_PARITY layer=21 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=21 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=22 stick=0 expert=309 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=22 stick=0 nEx=8 pin_clock=528 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=d262e356f4be0cc9 post_hash=18bad27d80d34ab2 CLASS=D2H_OK ex=[32,93,158,161,200,241,260,309]
+GPU_MOE_AGGREGATE_PARITY layer=22 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=22 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=23 stick=0 expert=337 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=23 stick=0 nEx=8 pin_clock=552 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=69ec3cd8ba7560ab post_hash=f363c03075fff660 CLASS=D2H_OK ex=[0,7,95,122,143,212,260,337]
+GPU_MOE_AGGREGATE_PARITY layer=23 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=23 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=24 stick=0 expert=319 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=24 stick=0 nEx=8 pin_clock=576 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f9d0d4a4dbcafe7c post_hash=bbb40813b27a370f CLASS=D2H_OK ex=[89,144,160,169,173,179,216,319]
+GPU_MOE_AGGREGATE_PARITY layer=24 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=24 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=25 stick=0 expert=341 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=25 stick=0 nEx=8 pin_clock=600 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=062db0f23a710821 post_hash=b305d3573adb3a1e CLASS=D2H_OK ex=[74,75,154,169,207,274,325,341]
+GPU_MOE_AGGREGATE_PARITY layer=25 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=25 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=26 stick=0 expert=362 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=26 stick=0 nEx=8 pin_clock=624 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=2c7d3f5b8a7fc250 post_hash=857cb46eb1b0e8bf CLASS=D2H_OK ex=[36,70,92,145,166,206,346,362]
+GPU_MOE_AGGREGATE_PARITY layer=26 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=26 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=27 stick=0 expert=276 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=27 stick=0 nEx=8 pin_clock=648 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4167dd24b647d398 post_hash=9add9a8627e3734d CLASS=D2H_OK ex=[0,16,64,80,108,161,266,276]
+GPU_MOE_AGGREGATE_PARITY layer=27 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=27 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=28 stick=0 expert=380 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=28 stick=0 nEx=8 pin_clock=672 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4c1139d57895ed46 post_hash=bd89e5ddbf166b6a CLASS=D2H_OK ex=[34,48,92,159,174,262,371,380]
+GPU_MOE_AGGREGATE_PARITY layer=28 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=28 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=29 stick=0 expert=380 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=29 stick=0 nEx=8 pin_clock=696 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e83cf9dd2fc3f361 post_hash=e3f05356befef3c9 CLASS=D2H_OK ex=[1,102,106,156,317,343,350,380]
+GPU_MOE_AGGREGATE_PARITY layer=29 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=29 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=30 stick=0 expert=339 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=30 stick=0 nEx=8 pin_clock=720 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f18d8b189c5d15dd post_hash=80367203e979692b CLASS=D2H_OK ex=[27,54,140,145,301,318,325,339]
+GPU_MOE_AGGREGATE_PARITY layer=30 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=30 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=31 stick=0 expert=285 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=31 stick=0 nEx=8 pin_clock=744 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1aebdbfd3f3b0159 post_hash=18ae2e72a3cdd6f0 CLASS=D2H_OK ex=[20,43,80,117,179,181,220,285]
+GPU_MOE_AGGREGATE_PARITY layer=31 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=31 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=32 stick=0 expert=374 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=32 stick=0 nEx=8 pin_clock=768 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=dbab057815da59fc post_hash=e61ecf8caff96ef4 CLASS=D2H_OK ex=[58,75,164,205,300,301,330,374]
+GPU_MOE_AGGREGATE_PARITY layer=32 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=32 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=33 stick=0 expert=360 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=33 stick=0 nEx=8 pin_clock=792 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=030c3dbfc434a3cd post_hash=1f960cefbd8bd1ac CLASS=D2H_OK ex=[105,110,175,204,251,264,287,360]
+GPU_MOE_AGGREGATE_PARITY layer=33 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=33 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=34 stick=0 expert=376 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=34 stick=0 nEx=8 pin_clock=816 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=a8f8963b984454bd post_hash=2b9347d29042213d CLASS=D2H_OK ex=[54,105,129,253,300,309,325,376]
+GPU_MOE_AGGREGATE_PARITY layer=34 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=34 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=35 stick=0 expert=359 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=35 stick=0 nEx=8 pin_clock=840 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=72dced931c108ba9 post_hash=2b408bacc3822d8f CLASS=D2H_OK ex=[12,27,48,69,100,239,351,359]
+GPU_MOE_AGGREGATE_PARITY layer=35 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=35 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=36 stick=0 expert=374 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=36 stick=0 nEx=8 pin_clock=864 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0cd29be50ce560aa post_hash=0365ad12572694c2 CLASS=D2H_OK ex=[18,21,99,198,217,301,371,374]
+GPU_MOE_AGGREGATE_PARITY layer=36 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=36 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=37 stick=0 expert=372 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=37 stick=0 nEx=8 pin_clock=888 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8839d418044bba46 post_hash=b2aea626c0cc9834 CLASS=D2H_OK ex=[27,48,85,117,164,187,227,372]
+GPU_MOE_AGGREGATE_PARITY layer=37 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=37 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=38 stick=0 expert=374 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=38 stick=0 nEx=8 pin_clock=912 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=59a2f39f1f20632d post_hash=0b393b7bdfdc85b5 CLASS=D2H_OK ex=[77,105,119,127,128,305,348,374]
+GPU_MOE_AGGREGATE_PARITY layer=38 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=38 env=0000000000000000
+T0_L39_ENTER
+CUMULATIVE_LAST tok=0 layer=39 stage=ENTER
+T0_L39_NORM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[340,167,108,325,143,106,18,105]
+L39_PLACE_DONE hits=0 misses=8
+GPU_MOE_SINGLE_EXPERT status=ISOLATED layer=39 expert=108 routed=8 retained=1
+GPU_SCALAR_INPUT_CAPTURE layer=39 stick=0 expert=108 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=39 stick=0 nEx=1 pin_clock=915 pin_bytes=28557312 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=c7c41bcbddd2503a post_hash=40e7ed24ff0fa17b CLASS=D2H_OK ex=[108]
+GPU_MOE_AGGREGATE_PARITY layer=39 stick=0 experts=1 status=DIAGNOSTIC scope=DIAGNOSTIC_ONLY max_abs=3.866910934e-03 mean_abs=8.548514004e-04 rms_abs=1.068388438e-03 max_rel=6.100746773e+01 cosine=9.998999331e-01 gpu_l2=6.393063074e+00 cpu_l2=6.390802491e+00 finite=7168 nonfinite=0
+GPU_MOE_AGGREGATE_VECTOR_CAPTURE layer=39 stick=0 status=WRITTEN scope=AGGREGATE_ONLY certified=0
+GPU_MOE_LAST_DOWN_PARITY layer=39 stick=0 expert=108 status=DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY scope=DIAGNOSTIC_ONLY max_abs=1.091888547e-02 mean_abs=2.413818217e-03 rms_abs=3.016776328e-03 finite=7168 nonfinite=0
+GPU_MOE_LAST_ACT_PARITY layer=39 stick=0 expert=108 status=DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY scope=DIAGNOSTIC_ONLY max_abs=1.192092896e-06 mean_abs=6.213549214e-08 rms_abs=9.719678927e-08 finite=2048 nonfinite=0
+GPU_EXPERT_OUTPUT_CAPTURE layer=39 stick=0 expert=108 status=WRITTEN scope=POST_DEVICE_COMPLETION completion=K2MoEStickEndDevice
+T0_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=ROUTED_ACCUM_DONE
+T0_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_BEGIN
+T0_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_ACQUIRE
+T0_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_DOWN_DONE
+T0_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_ACCUM_DONE
+[L1_DIAG_PROBE] layer=39 env=0000000000000000
+T0_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=RESIDUAL_DONE
+T0_L39_EXIT
+CUMULATIVE_LAST tok=0 layer=39 stage=EXIT
+GPU_SCALAR_INPUT_CAPTURE layer=40 stick=0 expert=381 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=40 stick=0 nEx=8 pin_clock=939 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=35d7826b66099bb5 post_hash=84ddc6db8008ed48 CLASS=D2H_OK ex=[86,108,139,169,216,228,307,381]
+GPU_MOE_AGGREGATE_PARITY layer=40 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=40 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=41 stick=0 expert=357 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=41 stick=0 nEx=8 pin_clock=963 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=af919d826797fbbd post_hash=460c4473e14dfd35 CLASS=D2H_OK ex=[133,162,193,204,216,225,232,357]
+GPU_MOE_AGGREGATE_PARITY layer=41 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=41 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=42 stick=0 expert=329 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=42 stick=0 nEx=8 pin_clock=987 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=91db4b43e2ba0232 post_hash=4fbf4f88b61825a9 CLASS=D2H_OK ex=[34,154,174,214,243,287,327,329]
+GPU_MOE_AGGREGATE_PARITY layer=42 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=42 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=43 stick=0 expert=380 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=43 stick=0 nEx=8 pin_clock=1011 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=7227561a38d0af32 post_hash=c586f8a36604a403 CLASS=D2H_OK ex=[8,20,42,77,294,340,369,380]
+GPU_MOE_AGGREGATE_PARITY layer=43 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=43 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=44 stick=0 expert=291 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=44 stick=0 nEx=8 pin_clock=1035 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=8dd5d12371914a2b post_hash=b1880ea0cbba9594 CLASS=D2H_OK ex=[20,30,55,112,119,216,244,291]
+GPU_MOE_AGGREGATE_PARITY layer=44 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=44 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=45 stick=0 expert=363 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=45 stick=0 nEx=8 pin_clock=1059 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e52e4725005db9e2 post_hash=646821b80f8bc489 CLASS=D2H_OK ex=[31,48,70,99,106,144,157,363]
+GPU_MOE_AGGREGATE_PARITY layer=45 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=45 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=46 stick=0 expert=312 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=46 stick=0 nEx=8 pin_clock=1083 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=3b91cfd64765213d post_hash=8b6c95f60cfe5eeb CLASS=D2H_OK ex=[34,47,66,168,197,239,311,312]
+GPU_MOE_AGGREGATE_PARITY layer=46 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=46 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=47 stick=0 expert=362 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=47 stick=0 nEx=8 pin_clock=1107 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=5a98ff2b2c4d033b post_hash=96798cbbdc817a1e CLASS=D2H_OK ex=[99,136,150,225,283,344,355,362]
+GPU_MOE_AGGREGATE_PARITY layer=47 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=47 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=48 stick=0 expert=353 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=48 stick=0 nEx=8 pin_clock=1131 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=7f1f63d938bdaf55 post_hash=eb23a555e9999dc6 CLASS=D2H_OK ex=[117,140,155,180,209,226,322,353]
+GPU_MOE_AGGREGATE_PARITY layer=48 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=48 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=49 stick=0 expert=345 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=49 stick=0 nEx=8 pin_clock=1155 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4ceeba6d0ea7d2b5 post_hash=2c8da7142c414ae6 CLASS=D2H_OK ex=[14,83,98,237,271,275,289,345]
+GPU_MOE_AGGREGATE_PARITY layer=49 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=49 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=50 stick=0 expert=286 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=50 stick=0 nEx=8 pin_clock=1179 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=898d01926f169f7c post_hash=905573fac4512904 CLASS=D2H_OK ex=[95,101,106,126,143,167,277,286]
+GPU_MOE_AGGREGATE_PARITY layer=50 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=50 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=51 stick=0 expert=338 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=51 stick=0 nEx=8 pin_clock=1203 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=960cdc63ef222e2e post_hash=1be97137416e239f CLASS=D2H_OK ex=[85,112,123,157,172,223,232,338]
+GPU_MOE_AGGREGATE_PARITY layer=51 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=51 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=52 stick=0 expert=325 status=SKIPPED scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=52 stick=0 nEx=8 pin_clock=1227 pin_bytes=198180864 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=93e9826146f935ff post_hash=a11c57dc7ef4542c CLASS=D2H_OK ex=[48,128,248,269,289,292,321,325]
+GPU_MOE_AGGREGATE_PARITY layer=52 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=52 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=53 stick=0 expert=265 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=53 stick=0 nEx=8 pin_clock=1251 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=e35d7d087b24868b post_hash=a366cfc7f6e32d24 CLASS=D2H_OK ex=[3,23,56,76,123,174,228,265]
+GPU_MOE_AGGREGATE_PARITY layer=53 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=53 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=54 stick=0 expert=350 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=54 stick=0 nEx=8 pin_clock=1275 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=177c61eeb1a46356 post_hash=1d0eaca7acd0d90b CLASS=D2H_OK ex=[82,99,172,239,241,246,345,350]
+GPU_MOE_AGGREGATE_PARITY layer=54 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=54 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=55 stick=0 expert=363 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=55 stick=0 nEx=8 pin_clock=1299 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=12d050059f8efc2c post_hash=3973cb585118add1 CLASS=D2H_OK ex=[117,178,186,214,241,273,340,363]
+GPU_MOE_AGGREGATE_PARITY layer=55 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=55 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=56 stick=0 expert=368 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=56 stick=0 nEx=8 pin_clock=1323 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=0a370dbb56fbaaf9 post_hash=4130a7a26dab7fcb CLASS=D2H_OK ex=[94,140,217,228,320,341,355,368]
+GPU_MOE_AGGREGATE_PARITY layer=56 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=56 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=57 stick=0 expert=325 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=57 stick=0 nEx=8 pin_clock=1347 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=f360b5c6b4db5e11 post_hash=a780ab092bb1e138 CLASS=D2H_OK ex=[28,105,116,175,241,247,252,325]
+GPU_MOE_AGGREGATE_PARITY layer=57 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=57 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=58 stick=0 expert=259 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=58 stick=0 nEx=8 pin_clock=1371 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=4994b4052378f8a1 post_hash=70cf0b0c18c92d4b CLASS=D2H_OK ex=[9,35,54,91,131,162,209,259]
+GPU_MOE_AGGREGATE_PARITY layer=58 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=58 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=59 stick=0 expert=363 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=59 stick=0 nEx=8 pin_clock=1395 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=1fa9268827598ccf post_hash=7241768ad184afa6 CLASS=D2H_OK ex=[145,148,217,230,298,299,325,363]
+GPU_MOE_AGGREGATE_PARITY layer=59 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=59 env=0000000000000000
+GPU_SCALAR_INPUT_CAPTURE layer=60 stick=0 expert=323 status=WRITTEN scope=CPU_INPUTS_ONLY
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=60 stick=0 nEx=8 pin_clock=1419 pin_bytes=228458496 buf=000001AFB7802FC0 bytes=28672 fused=1 d2h=1 vk=0 phase=ok in_hash=44c3c9030f252dbe post_hash=c042b1d614d3085d CLASS=D2H_OK ex=[19,64,77,168,225,241,260,323]
+GPU_MOE_AGGREGATE_PARITY layer=60 stick=0 status=SKIPPED reason=PARITY_LIMIT limit=1 experts=8
+[L1_DIAG_PROBE] layer=60 env=0000000000000000
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=000001AFC6AD4040
+FINAL_NORM_DST_PTR=000001AFB7F44060
+FINAL_NORM_WEIGHT_PTR=000001AFC6ADB060
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=209568.375
+FINAL_NORM_MEAN_SQ=29.2366594
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.184942216
+FINAL_NORM_SRC_0=7.77614784
+FINAL_NORM_DST_0=1.55049253
+FINAL_NORM_AFTER_L2=85.6775327
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=0/1 LAST_INDEX=7167 LAST_VALUE=-0.284378022
+HIDDEN_PROBE_ATTEMPT STEP=0/1
+HIDDEN_PROBE STEP=0/1 INDEX=2946 COUNT=7168 VALUE=-1.28122401 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=0/1 INDEX=7167 VALUE=-0.284378022 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=0/1 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=0/1
+LOGITS_ENTRY STEP=0/1 HIDDEN=000001AFC6AD4040 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=0/1 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=000001B021F48060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=0/1
+LOGITS_PROJECT_END STEP=0/1
+LOGITS_ARGMAX_END STEP=0/1 TOK=42300
+LOGITS_RETURN_OK STEP=0/1 TOK=42300
+STEP_EXIT STEP=0/1
+STREAM_BYTES_READ_RAW=7670261696
+STREAM_BYTES_RECON_RAW=671717376
+TRANSFER_BYTES_READ_TOTAL=7670261696
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=671717376
+TRANSFER_READ_OPS=915
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=7670261696
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=671717376
+STREAM_READ_OPS=915
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=2
+STREAM_CACHE_MISSES=915
+STREAM_BYTES_PER_TOKEN_INFLATED=7670261696.0
+STREAM_BYTES_PER_TOKEN_MEASURED=7670261696.0
+STREAM_BYTES_PER_TOKEN=50000000.0
+STREAM_NORM_TPS=150.000
+STREAM_REF_BW_BPS=7500000000
+STREAM_TOKENS_PER_BYTE_READ=2.000000000e-08
+STREAM_TPB_REVERSE_BPT=50000000.0
+STREAM_BYTES_PER_LAYER=125741995.0
+STREAM_LINK_BW_BPS=54000000000
+STREAM_LINK_TARGET_TPS=150.000
+STREAM_LINK_BUDGET_BPT=360000000.0
+STREAM_LINK_MEASURED_BPT=0.0
+STREAM_LINK_TPS_CEILING=0.000
+STREAM_LINK_BUDGET_STATUS=PASS
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_ALREADY_LOCAL=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_BYTES_RELOAD_MOE=0
+GPU_WEIGHT_BYTES_RELOAD_MLA=0
+GPU_WEIGHT_BYTES_RELOAD_GENERAL=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=4817186816
+LIVE_CACHE_BYTES_PEAK=4817186816
+LIVE_CACHE_BUDGET=12884901888
+LIVE_CACHE_ENTRY_PEAK=551
+CACHE_HIT_RATE=0.500453
+CACHE_BYTES_SAVED=1926758400
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=4817186816
+TRAMP_OUTPUT_WEIGHT_HITS=2
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=1926758400
+CYCLONE_LAYER_ACQUIRES=549
+CYCLONE_LAYER_HITS=0
+ELASTIC_RESIDENT_HITS=0
+COMBINED_DUPLICATE_ACQUIRES=0
+COMBINED_REDUNDANT_BYTES=0
+COMBINED_WAIT_US=0
+SHARD_OPEN_US=0
+SHARD_READ_US=1497124
+CACHE_LOOKUP_US=0
+CACHE_HIT_US=5
+LAYER_ACQUIRE_WAIT_US=0
+RECONSTRUCT_US=22
+OUTPUT_WEIGHT_US=326870
+MLA_COMPUTE_US=773321
+LOGITS_US=104545
+SAMPLE_US=1
+STREAM_US=2
+DETOK_US=2
+HOST_CACHE_COPY_US=0
+SHARD_ATTN_US=717670 SHARD_MOE_US=4478265 SHARD_OTHER_US=259001
+NEXT_BEST_MOVE=SHARD_MOE_IO
+NEXT_BEST_MOVE_US=1497124
+RE_MANIFEST=MLA=773321,LOGITS=104545,OUT_W=326870,SHARD=1497124,COPY=0
+ATTN_RESOLVE_TOTAL=549 ATTN_RESOLVE_CACHE=0 ATTN_RESOLVE_SHARD=549
+ATTN_CACHE_KEY_MISS=549 ATTN_CACHE_GEN_MISS=0 ATTN_CACHE_WS_VETO=0
+ATTN_CACHE_TYPE_MISMATCH=0 ATTN_CACHE_RANGE_MISMATCH=0
+ATTN_BORROW_BYTES=0 ATTN_SHARD_BYTES=3853778944
+ATTN_SHARD_READ_CALLS=549 ATTN_SHARD_REOPEN=0 ATTN_MAPFAULT_CRITICAL=0
+VOCAB_RESOLVE_TOTAL=2 VOCAB_RESOLVE_CACHE=1 VOCAB_RESOLVE_SHARD=1
+VOCAB_SHARD_BYTES=963379200 VOCAB_SHARD_READ_CALLS=1
+Q6K_VOCAB_UPLOAD_TIMED=0 Q6K_RESIDENT_HIT=1
+Q6K_FULL_DEQUANT_BYTES=0 LOGITS_FULL_F32_MATERIALIZE=0
+HOT_ALLOC=0 SHARD_LOGITS_BYTES=0 SHARD_LOGITS_ROWS=0
+ARGMAX_PARITY_CHECKS=1 ARGMAX_PARITY_FAIL=0 ARGMAX_PARITY=1
+LOGITS_PACKED_DOT_ROWS=163840 LOGITS_ARGMAX_CALLS=1
+LOGITS_CALLS=1 VOCAB_ROWS_VISITED=163840 Q6_BLOCKS_VISITED=4587520
+LOGITS_TEMP_BYTES=8176 LOGITS_ALLOC_COUNT=0 LOGITS_THREADS=16
+LOGITS_FULL_MATERIALIZE=0 Q6_FULL_DEQUANT=0
+LOGITS_ROW_ACCESS_MS=0.000 LOGITS_Q6_DECODE_MS=0.000 LOGITS_DOT_MS=104.527
+LOGITS_REDUCE_MS=0.000 LOGITS_MISC_MS=0.018
+ARGMAX_TOKEN=42300 ARGMAX_VALUE=10.035
+LOGITS_SPLIT_AUTO_BAIL_001=1
+LOGITS_CPU_ROWS=0
+LOGITS_GPU_ROWS=0
+LOGITS_CPU_US=0
+LOGITS_GPU_US=0
+LOGITS_JOIN_US=0
+LOGITS_SPLIT_WALL_US=0
+LOGITS_CPU_ONLY_EST_US=0
+LOGITS_SPLIT_PROFITABLE=0
+LOGITS_PATH_SELECTED=CPU_ONLY
+LOGITS_EXPOSED_US=0
+LOGITS_BAIL_HITS=0
+LOGITS_MODE=CPU_ONLY
+LOGITS_ROWS_TOTAL=0 LOGITS_ROW_ACCOUNTING=1
+GPU_LOGITS_FULL_READBACK=0 GPU_ARGMAX_BYTES=0 GPU_RANGE_OUT_BYTES=0
+CPU_ARGMAX_TOKEN=-1 GPU_ARGMAX_TOKEN=-1 FINAL_ARGMAX_TOKEN=-1
+CPU_BRANCH_US=0 GPU_BRANCH_US=0
+CPU_LOGIT_ROWS_PER_US=0.0000 GPU_LOGIT_ROWS_PER_US=0.0000
+MLA_Q_DEVICE_OPS=0 MLA_Q_DEVICE_FAIL=0
+PATHB_ATTEND=NONE
+PATHB_ATTEND_OK=0
+PATHB_ATTEND_FAIL=0
+q_b_d2h_bytes=0
+q_b_vkcopy_d2h_calls=0
+q_b_host_memcpy_bytes=0
+PATHB_QB_D2H_SKIP=0
+QB_HOST_RB_OWNER=QKV_READBACK_DOWNWARD TENSOR=q_b NEXT=HOST:MlaAttentionComplete BEFORE_B=0 AFTER_B=0 REDUCED=0 D2H_LEGAL=1 FENCE_NS=0
+QB_X_OPS=0 QB_X_SHRINK_OPS=0 QB_X_FULL_OPS=0
+QB_X_H2D_HIDDEN_B=0
+QB_X_D2H_TO_HOST_MIRROR_B=0
+QB_X_HOST_MIRROR_MEMCPY_B=0
+QB_X_FENCE_US=0
+QB_X_NOPE=0 QB_X_ROPE=0 QB_X_NOPE_PLUS_ROPE=0
+QB_X_PROD_HEAD=0 QB_X_HOST_HEAD=0
+QB_X_CALLER_ALREADY_NOPE_ROPE=0
+QB_X_BYTE_SHRINK_IMPOSSIBLE=0
+QB_X_DEVICE_ATTENTION_REQUIRED_FOR_Q_B_SHRINK=0
+QB_X_SHRINK_DEAD_REASON=none
+QB_X_MIRROR_GAP=D2H_TO_MIRROR_WAS_WEIGHT_TAGGED|HOST_MEMCPY_NOT_IN_GPU_TRANSFER
+QB_CROSS_SPLIT_OPS=0 QB_CROSS_SPLIT_ATTN_OPS=0
+QB_CROSS_SUBMIT_US=0
+QB_CROSS_FENCE_WAIT_US=0
+QB_CROSS_MAP_INVALIDATE_US=0
+QB_CROSS_HOST_MEMCPY_US=0
+QB_CROSS_HOST_ATTENTION_US=0
+QB_CROSS_LUMP_US=0
+QB_CROSS_FENCE_OWNER=FENCE_WAIT
+QB_CROSS_D2H_COPY_OWNER=INSIDE_FUSED_CB_WITH_FENCE
+QB_CROSS_HOST_CONSUME_OWNER=HOST_ATTENTION
+QB_CROSS_ACTION=KEEP
+QB_CROSS_BYTES_UNCHANGED_ALLOWED=1
+HOST_XCHG_DISCOVER=1
+HOST_XCHG_UNMIRRORED_BYTES=0
+HOST_XCHG_UNMIRRORED_OPS=0
+HOST_XCHG_MISLABELED_IN_MIRROR_BYTES=0
+EXCHANGE_MIRROR_REVERSE=1
+EXCHANGE_SLOT_COUNT=0
+EXCHANGE_OVERFLOW=0
+EXCHANGE_IN_MIRROR=0
+EXCHANGE_NOT_IN_MIRROR=0
+MLA_STAGE_QKV_US=290497 MLA_STAGE_KV_EXPAND_US=37047 MLA_STAGE_ATTN_US=3588 MLA_STAGE_O_PROJ_US=440817
+MLA_STAGE_SUM_US=771949 MLA_COMPUTE_US=773321 MLA_STAGE_OWNER=O_PROJ OWNER_US=440817
+MLA_QA_US=114512 MLA_QB_US=161535 MLA_KVA_US=43169 MLA_QKV_PROJ_US=290497
+MLA_QKV_PROJ_OWNER=q_b SUB_OWNER_US=161535 (component; not routing)
+MLA_QKV_CRITICAL_OWNER=Q_BRANCH
+MLA_QKV_UPLOADS=0 MLA_QKV_HITS=0 MLA_QKV_FAIL=0
+Q_BRANCH_US=0 KV_BRANCH_US=0 QKV_JOIN_US=0
+QKV_OVERLAP_US=0 QKV_BUBBLE_US=0 QKV_WALL_VS_MAX_BRANCH=0.000
+Q_A_GPU_US=0 Q_A_WAIT_US=0 Q_A_UPLOAD_US=0 Q_A_KERNEL_US=0
+Q_B_GPU_US=0 Q_B_WAIT_US=0 Q_B_UPLOAD_US=0 Q_B_KERNEL_US=0
+Q_AB_GAP_US=193 Q_BRANCH_PROBE_US=193
+MLA_Q_CRITICAL_OWNER=gap SUB_OWNER_US=193
+QKV_PROJ_WALL_NS=290502000 QKV_PROJ_KERNEL_NS=0 QKV_PROJ_WAIT_NS=0 QKV_PROJ_SUBMIT_NS=0 QKV_PROJ_COPY_NS=0 QKV_PROJ_GAP_NS=290502000 QKV_PROJ_BARRIER_NS=0
+QKV_Q_KERNEL_NS=0 QKV_K_KERNEL_NS=0 QKV_V_KERNEL_NS=0
+QKV_GPU_GEMV_OPS=0 QKV_GPU_GEMV_FAIL=0 QKV_WEIGHT_MISSES=0
+QKV_HOST_WAIT_NS=0 QKV_READBACK_BYTES=0
+QKV_SUB_OWNER=GAP SUB_OWNER_US=290502 QKV_KERNEL_FRAC=0.000
+TAG1_SHARED_X=0 TAG2_SHARED_X=0 QB_SHARED_X=0
+KVA_SHARED_X=0 KVA_COL_SPLIT=0 KVA_PARTIAL_REDUCE=0 KVA_ROWS_PER_WG=16 KVA_TOTAL_WG=0
+QKV_SHARED_X_CALLS=0 QKV_SHARED_X_KERNEL_US=0
+CPU_F32_EXPANDS=0 HOST_FORWARD_LAYER_CALLS=0
+O_PROJ_CALLS=0
+O_PROJ_KERNEL_US=0
+O_PROJ_WAIT_US=0
+O_PROJ_GAP_US=440816
+O_PROJ_UPLOAD_US=0
+O_PROJ_READBACK_US=0
+O_PROJ_SUBMIT_US=0
+O_PROJ_RAW_US=440816
+O_PROJ_OVERLAPPED_US=0
+O_PROJ_EXPOSED_US=440816
+O_PROJ_INPUT_UPLOAD_BYTES=0
+O_PROJ_INPUT_READBACK_BYTES=0
+O_PROJ_OUTPUT_READBACK_BYTES=0
+O_PROJ_SUBMITS=0
+O_PROJ_HOST_WAITS=0
+O_PROJ_RESIDUAL_FUSED=0
+O_PROJ_TILE_PIPELINE=1
+O_PROJ_FULL_F32_MATERIALIZE=0
+QUANTIZED_STORAGE_PRESERVED=1
+O_PROJ_SUB_OWNER=GAP SUB_OWNER_US=440816 O_PROJ_KERNEL_FRAC=0.000
+O_PROJ_TAG6_FASTPATH=0 O_PROJ_TAG6_CALLS=0 O_PROJ_TAG6_ROWS=0 O_PROJ_TAG6_COLS=0 O_PROJ_TAG6_BLOCKS=0 O_PROJ_TAG6_KERNEL_US=0
+O_PROJ_GENERIC_CALLS=0 O_PROJ_GENERIC_FALLBACKS=0
+RAWRXD_SPIN_CLOSE_WALL_ATTRIB_001=1
+KVA_ROWS_CLIMB=SEALED
+DO_NOT_REOPEN=KvaInversion
+QKV_EXPOSED_US=290497
+KVA_EXPOSED_US=0
+ATTENTION_EXPOSED_US=3588
+O_PROJ_EXPOSED_US=440816
+LOGITS_EXPOSED_US=104545
+SAMPLE_EXPOSED_US=1
+OTHER_EXPOSED_US=1497124
+AWAIT_EXPOSED_US=0
+SPIN_CLOSE_BLOCKER=OTHER
+SPIN_CLOSE_BLOCKER_OWNER=O_PROJ_SERIAL
+SPIN_CLOSE_BLOCKER_US=440816
+SPIN_CLOSE_STAGE_US=1497124
+MEASURED_LARGEST_OWNER=O_PROJ_SERIAL
+NEXT_RUNTIME_ACTION=O_PROJ_OVERLAP
+LOGITS_SPLIT_CUT=NOT_LARGEST
+GENERATION_WALL_ACCOUNTING_001
+ACCOUNTING_COMPLETE=0
+TOKEN_COUNT=1
+WALL_NS=23020948000
+MODEL_WEIGHT_ACQUIRE_NS=22000
+SHARD_READ_EXPOSED_NS=1497124000
+HOST_DEQUANT_NS=UNMEASURED
+CPU_GEMV_NS=UNMEASURED
+GPU_GEMV_KERNEL_NS=0
+H2D_TRANSFER_BYTES=12569001984
+H2D_TRANSFER_EXPOSED_NS=UNMEASURED
+GPU_QUEUE_WAIT_NS=0
+MLA_EXPOSED_NS=773321000
+MOE_GPU_WORK_NS=13544621200
+MOE_GPU_WAIT_NS=0
+MOE_SHARD_IO_NS=4478265000
+KV_UPDATE_NS=UNMEASURED
+LOGITS_NS=104545000
+SAMPLING_NS=1000
+REPORTED_COMPONENT_SUM_NS=2816168000
+OVERLAPPED_NS=0
+UNCLASSIFIED_IF_DISJOINT_NS=20204780000
+SHARD_READ_BYTES=7670261696
+SHARD_READ_OPS=915
+GPU_UPLOAD_BYTES=0
+MLA_STAGE_SUM_NS=771949000
+GPU_MOE_BACKEND_RECEIPT_001
+DUALSTICK_REQUESTED=0
+DUALSTICK_VC0_BOUND=1
+DUALSTICK_VC1_BOUND=0
+GPU0_EXPERTS=473
+GPU1_EXPERTS=0
+GPU_SUBMITS=60
+GPU_WAITS=60
+H2D_BYTES=12569001984
+D2H_BYTES=1720320
+DEVICE_DOWN_VECTORS=473
+DEVICE_PARTIAL_ACCUMS=473
+D2H_PARTIAL_VECTORS=60
+HOST_EXPERT_DOWN_VECTORS=0
+MOE_GPU_EXECUTION_OBSERVED=1
+MOE_GPU_OUTPUT_PATH_OBSERVED=1
+MOE_DUAL_GPU_ATTESTED=0
+MOE_PRODUCT_BACKEND_ATTESTED=0
+MOE_EXPERT_ACCOUNTING_001
+MOE_ACCOUNTING_ENABLED=0
+NOTES=Inclusive counters are not a critical-path partition; missing CPU/H2D/KV spans remain explicit.
+GENERATION_WALL_NS=23020948000
+GENERATION_BUDGET_NS=200000000
+WALL_EXCESS_NS=22820948000
+WALL_EXCESS_OWNER=O_PROJ
+OWNER_EXPOSED_NS=440816000
+SHARD_IO_CALLS=2354 SHARD_IO_BYTES=20439160832 SHARD_IO_US=5444946 SHARD_IO_REOPEN=0 SHARD_IO_SEEKS=5587 SHARD_IO_MAPFAULT=0 SHARD_IO_MAPFAULT_US=0
+[live-path] vacuumArmed=0 trampoline=1/63 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=1 plasmaAbsence=0 enhancements=1
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=61
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+REPLAY_RESPONSE[0]=  flavour
+REPLAY_WINDOWS=1 GENERATED=1 METRICS=480 COMPLETE=1 UTF8=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

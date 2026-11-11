@@ -1,0 +1,24 @@
+﻿strata-device.exe : strata: Windows budgets 15408 of this card's 16368 MiB for this process; free VRAM is counted 
+within that (STRATA_WDDM_BUDGET=0: off)
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-8d9e01dc-06dc-4a13-9537-bbacf62059d7.ps1:102 char:12
++ $out1101 = & "$eng\strata-device.exe" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (strata: Windows..._BUDGET=0: off):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+device 0: AMD Radeon RX 7800 XT
+  HIP arch            gfx1101 wave32 (compiled for gfx1100,gfx1101,gfx1102,gfx1151)
+  multiprocessors     30
+  VRAM total / free   15.984 GiB (17163091968 B) / 14.906 GiB (16004890624 B)
+  driver / runtime    71726391 / 71726391
+  HIP runtime         C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3\amdhip64_7.dll
+
+memory plan  --max-context 20480
+  KV + indexer keys   0.267387 GB
+  recurrent state     0.000000 GB  (GDN recurrence + conv history, NOT evictable)
+  expert cache        5.675613 GB  (4105 slots of 1,382,400 B)
+  VRAM pool           5.943000 GB
+  expert arena (DRAM) 0.000000 GB
+  card free           14.906 GiB (16004890624 B)
+  plan + KV vs free   FITS
+

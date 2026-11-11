@@ -1,0 +1,6 @@
+SESSION_OPEN session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330 pid=29764
+INPUT_EVENT kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330
+SESSION_OPEN session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330 pid=29764
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=13 session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=eo1203_sess_20261109-101330 run_id=eo1203_run_20261109-101330

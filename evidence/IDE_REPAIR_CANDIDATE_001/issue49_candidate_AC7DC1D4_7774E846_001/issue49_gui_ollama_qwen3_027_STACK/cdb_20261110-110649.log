@@ -1,0 +1,25 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_20261110-110649.log'
+0:015> .sympath srv*;.reload /f ntdll.dll
+Symbol search path is: srv*;.reload /f ntdll.dll
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols;.reload /f ntdll.dll
+Error: Execute .sympath(+) command attempts to access '.reload /f ntdll.dll' failed: 0x3 - The system cannot find the path specified.
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Error                                          .reload /f ntdll.dll
+0:015> bp ntdll!RtlExitUserProcess ".echo ===I026_EXITPROCESS===; r rcx; .printf "exitCode=%d (0x%x)\n", @rcx, @rcx; kL 80; lm m RawrXD*; lm m deep2*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd"
+                                                                                ^ Malformed string in 'bp ntdll!RtlExitUserProcess ".echo ===I026_EXITPROCESS===; r rcx; .printf "exitCode=%d (0x%x)\n", @rcx, @rcx; kL 80; lm m RawrXD*; lm m deep2*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd"'
+0:015> bp ntdll!NtTerminateProcess ".echo ===I026_NTTERMINATEPROCESS===; r rcx; r rdx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd"
+0:015> sxe -c ".echo ===I026_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd" av
+0:015> sxe -c ".echo ===I026_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd" eh
+0:015> sxe -c ".echo ===I026_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd" c0000409
+0:015> sxe -c ".echo ===I026_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-110649.dmp; .logclose; qd" c0000005
+0:015> sxi ibp
+0:015> g
+[2026-11-10 11:06:59] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+ModLoad: 00007ffa`35e50000 00007ffa`35f9c000   C:\WINDOWS\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffa`36740000 00007ffa`3674d000   C:\WINDOWS\SYSTEM32\DSPARSE.dll
+ModLoad: 00007ffa`26f20000 00007ffa`26f2b000   C:\Windows\System32\rasadhlp.dll
+ModLoad: 00007ffa`293a0000 00007ffa`29426000   C:\WINDOWS\System32\fwpuclnt.dll
+[2026-11-10 11:07:25] [INFO] [ModelSelector] discovery update deferred while inference running

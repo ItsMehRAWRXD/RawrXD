@@ -1,0 +1,12 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=512
+RUN_CONFIG_MAX_TOKENS=512
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    code
+Root:    F:\rawrxd
+
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[error] tool failed: not a file
+[StreamEngine] Shutdown

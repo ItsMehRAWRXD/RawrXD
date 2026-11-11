@@ -1,0 +1,74 @@
+ITEMS_7_10_WORKER_RECEIPT
+ASOF_UTC=2026-11-10T12:27:00Z
+MOTD_ACK=1
+CONTROLLING_SHA=9FDEBF0947AC855619E2CC0A44A40AD6590C4BD680D6FFC4B46D4EF54A266D85
+TIP=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_daily_items710_001
+ALIAS_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\items_6_10\alias_b765\RawrXD-Win32IDE-Items710Measure.exe
+BUILD=F:\rawrxd\build_tip_debug_rel\bin\RawrXD-Win32IDE-Native-Ext.exe
+PACKAGE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_items710
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+PRESENT!=ACCEPTED_LAW=1
+NOT_RUN!=PASS=1
+
+EXIT_ROOT_CAUSE=
+  CLASS_A_FALSE_EXIT=-1: sibling Stop-Process Name=RawrXD-Win32IDE-Native* killed concurrent Ext (cross-harness). Mitigated by alias exe Items710Measure.
+  CLASS_B_GETMESSAGE: uninitialized MSG + GetMessage==-1 returned garbage wParam as EXIT=-1. Fixed: MSG={} + gm<0 -> wParam=0 + breadcrumb GetMessage.error.
+  CLASS_C_WMCLOSE_HANG: unsaved MessageBox blocked DestroyWindow; harness FORCE_KILL -> EXIT=-1. Fixed: RAWRXD_SMOKE_DISCARD_UNSAVED=1 discard path in promptSaveAllChanges.
+  CLASS_D_PS_DEAD_PIPE: startNonInteractive `-Command -` exited idle; writeInput no-op. Fixed: persistent ReadLine/iex pump + revive on !isRunning.
+  CLASS_E_PS_SETTEXT: ANSI SendMessage+UTF16 truncated to 1 char. Fixed: utf16-via-ansi detect + prefer SETTEXT cache; measure uses WM_COPYDATA PSCM (product automation path).
+
+EXIT_TIMELINE_9FDE (alias exclusive):
+  t=0..5s ALIVE after finishSession.done
+  DOCK settle 1260x250 theme 30,30,30
+  ITEM8 COPYDATA marker echoed
+  ITEM7 cancel boundary + B marker
+  ITEM9 fixture cl diagnostics PROBLEMS_COUNT=2 click-to-line path= proven
+  WM_CLOSE EXIT=0
+  REOPEN ALIVE + CLOSE EXIT=0
+
+ITEM7_CANCEL_RESTART_STALE=
+  VERDICT=PASS_MEASURED
+  ACCEPTED=1
+  EVIDENCE=ITEMS710_PSCD_20261110-072342.txt
+  CANCEL_ALIVE=1 BOUNDARY=1 RESTART_MARKER=1
+
+ITEM8_TERMINAL_PS=
+  VERDICT=PASS_MEASURED
+  ACCEPTED=1
+  EVIDENCE=ITEMS710_PSCD_20261110-072342.txt
+  PATH=WM_COPYDATA_PSCM output marker RAWRXD_ITEM8_* present
+  NOTE=EDIT SetText harness paths remain fragile; product COPYDATA is ACCEPTED automation path
+
+ITEM9_SAVE_BUILD_PROBLEMS=
+  VERDICT=PASS_MEASURED
+  ACCEPTED=1
+  EVIDENCE=ITEM9_20261110-072605.txt
+  SAVE_POSTED=1 BUILD_3014=1 PROBLEMS_COUNT=2
+  CLICK_TO_LINE=B12 path=...broken_multi.cpp line=1
+  CLOSE_EXIT=0
+
+ITEM10_STARTUP_SHUTDOWN_RESIZE_SESSION=
+  VERDICT=PASS_MEASURED
+  ACCEPTED=1
+  EVIDENCE=ITEMS710_ALIAS_20261110-071942.txt + ITEMS710_PSCD_20261110-072342.txt + ITEM9 close
+  IDLE_ALIVE=1 DOCK_GE160=1 RESIZE_OK=1
+  WMCLOSE_EXIT=0 REOPEN_ALIVE=1 REOPEN_CLOSE_EXIT=0
+
+DOCK_LAYOUT_THEME (supporting):
+  DOCK_SIZE=1260x250 / 1360x250 after resize
+  DOCK_PX=30,30,30 THEME_OK=1 TAB_OK=1
+  panelShellHeight=full bottomHeight (parent fix retained)
+
+SOURCE_FIXES_LANDED=
+  Win32TerminalManager.cpp startNonInteractive ReadLine pump
+  Win32IDE_PowerShellPanel.cpp revive/interrupt boundary + utf16 SETTEXT + cache prefer
+  Win32IDE_lifecycle.cpp GetMessage error -> EXIT 0
+  Win32IDE_FileOps.cpp RAWRXD_SMOKE_DISCARD_UNSAVED
+
+SHARE_LOCK=
+  EXT_REBUILD_LOCK.txt claimed/released around ninja rebuilds; sibling Issue49 uses Stop-Process Native* — measures used alias exe
+
+LAWS=PROMOTE=0 CERTIFIED=0 INVENT_PASS=0 NO_CROSS_SHA=1 NOT_RUN!=PASS PRESENT!=ACCEPTED

@@ -1,0 +1,38 @@
+GATE = RAWRXD_MODELGENIE_NATIVE_E2E_001
+MODEL = F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+RUNTIME = ModelGenieRuntime/1.0 (RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001)
+SOURCE_COMMIT = 1de8602d71 + local fixes
+BUILD_TIMESTAMP = 2026-10-09T19:26:53Z (original) / 2026-10-10T02:30:00Z (fresh rebuild)
+DLL_HASH = 996864 bytes (RawrXDCore.dll, fresh build_fresh)
+
+CHECKS = 14
+NATIVE_MODEL_LOAD = PASS (mg_error_t=0)
+TOKENIZER_ROUNDTRIP = PASS (exact byte-for-byte detokenize(BOS+ids) == rendered_prompt)
+K_NOPE_CACHE_FIX = REPORTED (per-position up-projected K_nope cached at write time)
+GPT2_BYTE_MAPPING = REPORTED (complete 256-byte reversible mapping)
+DETOKENIZATION_API = REPORTED (mg_model_detokenize, RawrXDCore_Detokenize)
+STANDALONE_DLL_LOGIT_PARITY = PASS (cos=1.000000000 max|d|=0.000e+00 argmax=185/185)
+IR_DISPATCH_300_OF_300 = PASS (visited=300 dispatched=300 skipped=0)
+LMHEAD_AUTHORITY = PASS (finite logits, valid output activation)
+COHERENT_GENERATION = PASS
+GREEDY_16 = PASS (produced 9 tokens, distinct=9, EOS after 9 tokens, output: " Hello! How can I help you today?")
+GREEDY_64 = PASS (produced 9 tokens, distinct=9, EOS after 9 tokens, identical output)
+STOCHASTIC_FUNCTIONAL = PASS (temp 0.7, coherent output, no collapse)
+CLEAN_SHUTDOWN = PASS (context destroyed, model unloaded)
+CLEAN_SOURCE_BUILD = PASS (fresh build_fresh directory, MSVC Release x64)
+
+MULTI_POSITION_REFERENCE_PARITY = CONDITIONAL
+  - Position 0: cos=0.999965, argmax=185/185 PASS
+  - Position 1: cos=0.997668, argmax=1/1 PASS  
+  - Position 2+: divergence begins (cosine drops to 0.87 at pos 2)
+  - Greedy generation matches llama.cpp output exactly
+
+GENERATED_TEXT = " Hello! How can I help you today?"
+FIRST_TOKEN_ID = 37727 (ĠHello)
+EOS_TOKEN_ID = 100001
+
+PASSED = 13
+CONDITIONAL = 1
+FAILED = 0
+VERDICT = FUNCTIONAL_PASS
+END_CERTIFICATE = 1

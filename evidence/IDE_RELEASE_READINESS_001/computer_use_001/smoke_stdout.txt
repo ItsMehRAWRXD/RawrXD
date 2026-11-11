@@ -1,0 +1,2 @@
+Policy/cancel/validation smoke tests PASS
+EXIT=0  

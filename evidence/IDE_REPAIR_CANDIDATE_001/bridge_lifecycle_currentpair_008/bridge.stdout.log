@@ -1,0 +1,15 @@
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 292 MB
+   layers_0: 88 tensors, 1013 MB
+   layers_1: 88 tensors, 996 MB
+   layers_2: 88 tensors, 996 MB
+   layers_3: 44 tensors, 541 MB
+   output_head: 30 tensors, 619 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+   Shards: 1
+   Tensors: 339
+   Zones: 6
+   Memory (header+index): ~0 MB

@@ -1,0 +1,18 @@
+WAVE2_COORDINATION_WITH_WAVE1
+ASOF_UTC=2026-11-10T09:48:30Z
+WAVE1_OWNS=Ext ComputerUse AgentCommands lifecycle CU registry bind
+WAVE2_OWNS=issue49_wave2 evidence harnesses exactly-once guard ToolCallBridge absorb Issue49 step receipts
+P0_OWNS=CU_GUI_E2E (orphan verify != live AgentSession screenshot path)
+
+DO_NOT_EDIT_WAVE1_PATHS=1
+DO_NOT_MUTATE_RC4=1
+DO_NOT_RAISE_MATURITY=1
+EXT_REBUILD_SERIALIZED_UNTIL_WAVE1_PUBLISH_SEAL=1
+
+HANDSHAKE=
+  Wave2 absorbed ToolCallExactlyOnceGuard into ToolCallBridge.h (SOURCE_WIRED=1)
+  Ext re-link HELD: WAVE1_PUBLISH_SEAL absent
+  When Wave1 publishes seal + Ext package SHA -> Wave2 re-runs absorb verify + 11-step against THAT SHA
+  Maturity 88 only on same-SHA 11-step PASS
+
+PROMOTE=0

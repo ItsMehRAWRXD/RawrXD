@@ -1,0 +1,239 @@
+SESSION_OPEN session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705 pid=12656
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000002D11A2 session=1 pane=copilot_sidebar session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+SESSION_OPEN session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705 pid=12656
+DISPATCH_ID id=1 bytes=58 session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+request_started request_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000002D11A2 session=1 pane=copilot_sidebar session_id=sid_00003170_000000000399E84D run_id=w4_msw01_20261110-063705
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000002D11A2 session=1 pane=copilot_sidebar session_id=sid_00003170_000000000399E84D run_id=w4_msw01_20261110-063705
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00003170_000000000399E83D run_id=w4_msw01_20261110-063705
+SESSION_OPEN session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935 pid=2248
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000001012F0 session=1 pane=copilot_sidebar session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+SESSION_OPEN session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935 pid=2248
+CHAT_SEND_REJECTED blank=1 dispatch_id=1 send_seq=1 session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000001012F0 session=1 pane=copilot_sidebar session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000001012F0 session=1 pane=copilot_sidebar session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_000008C8_00000000039C4E02 run_id=w4_msw01_20261110-063935
+SESSION_OPEN session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035 pid=41044
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+SESSION_OPEN session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035 pid=41044
+DISPATCH_ID id=1 bytes=58 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+request_started request_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=5 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=5 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=3 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=3 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=6 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=6 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=3 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=3 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=6 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=6 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=8 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=8 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=10 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=10 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=8 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=8 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=6 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=6 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=8 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=8 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=6 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=6 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=2 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=2 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=4 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=4 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=10 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=10 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=0 response_bytes=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=0 response_bytes=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+callback request_id=1 complete=1 response_bytes=0 stop=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+RESPONSE_END request_id=1 session=1 bytes=284 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A65881 run_id=w4_msw01_20261110-065035
+DISPATCH_ID id=4 bytes=58 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=58 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=4 pane=copilot_sidebar session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+BACKEND_REQUEST_START request_id=2 dispatch_id=4 model=nemotron-3-nano:4b session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+request_started request_id=2 model=nemotron-3-nano:4b session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=2 session=1 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A65881 run_id=w4_msw01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=5 send_seq=5 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000300EBA session=1 pane=copilot_sidebar session_id=sid_0000A054_0000000003A65881 run_id=w4_msw01_20261110-065035
+CHAT_SEND_REJECTED blank=1 dispatch_id=6 send_seq=6 session_id=sid_0000A054_0000000003A63ECF run_id=w4_msw01_20261110-065035
+SESSION_OPEN session_id=sid_00004220_0000000003BB219C run_id=w4_msw01_20261110-071317 pid=16928
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB219C run_id=w4_msw01_20261110-071317
+SESSION_OPEN session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317 pid=16928
+DISPATCH_ID id=1 bytes=58 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+request_started request_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB21BB run_id=w4_msw01_20261110-071317
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB21CB run_id=w4_msw01_20261110-071317
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB29CA run_id=w4_msw01_20261110-071317
+CHAT_SEND_SUPERSEDE busy=1 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+cancel_requested request_id=1 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+BACKEND_REQUEST_END request_id=1 cancel=1 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+DISPATCH_ID id=4 bytes=58 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=58 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=4 pane=copilot_sidebar session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+BACKEND_REQUEST_START request_id=2 dispatch_id=4 model=nemotron-3-nano:4b session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+request_started request_id=2 model=nemotron-3-nano:4b session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=2 session=1 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB2AA4 run_id=w4_msw01_20261110-071317
+CHAT_SEND_REJECTED blank=1 dispatch_id=5 send_seq=5 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000001070E9C session=1 pane=copilot_sidebar session_id=sid_00004220_0000000003BB2AA4 run_id=w4_msw01_20261110-071317
+CHAT_SEND_REJECTED blank=1 dispatch_id=6 send_seq=6 session_id=sid_00004220_0000000003BB21AC run_id=w4_msw01_20261110-071317
+SESSION_OPEN session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655 pid=33360
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+SESSION_OPEN session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655 pid=33360
+DISPATCH_ID id=1 bytes=58 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=58 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+request_started request_id=1 model=qwen2.5-coder:1.5b-base session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=2 send_seq=2 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=3 send_seq=3 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE9DE2 run_id=w4_msw01_20261110-071655
+CHAT_SEND_SUPERSEDE busy=1 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+cancel_requested request_id=1 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+BACKEND_REQUEST_END request_id=1 cancel=1 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+DISPATCH_ID id=4 bytes=58 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=58 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=4 pane=copilot_sidebar session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+BACKEND_REQUEST_START request_id=2 dispatch_id=4 model=nemotron-3-nano:4b session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+request_started request_id=2 model=nemotron-3-nano:4b session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=2 session=1 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE9DE2 run_id=w4_msw01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=5 send_seq=5 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000411232 session=1 pane=copilot_sidebar session_id=sid_00008250_0000000003BE9DE2 run_id=w4_msw01_20261110-071655
+CHAT_SEND_REJECTED blank=1 dispatch_id=6 send_seq=6 session_id=sid_00008250_0000000003BE95D3 run_id=w4_msw01_20261110-071655

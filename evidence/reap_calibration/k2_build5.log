@@ -1,0 +1,57 @@
+[1/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEExpertResidencyPlace_Place.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_KvExpand_Fused.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEExpertResidencyPlace.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\AttnCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2QbHostShrinkD2h.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2QbHostShrinkD2h.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2QbHostShrinkD2h.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2QbHostShrinkD2h.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2QbHostShrinkD2h.hpp(8): error C2653: 'CPUInference': is not a class or namespace name
+F:\rawrxd\src\deep2\K2QbHostShrinkD2h.cpp(3): fatal error C1083: Cannot open include file: '../runtime/QbHostReadbackWindow.hpp': No such file or directory
+[6/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): error C2664: 'void Deep2::ed3::NoteD2h(int,int,const char *,const float *,size_t)': cannot convert argument 3 from 'uint64_t' to 'const char *'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): note: Conversion from integral type to pointer type requires reinterpret_cast, C-style cast or parenthesized function-style cast
+F:\rawrxd\src\deep2\lavapath/EndDeviceStep3Diag.hpp(35): note: see declaration of 'Deep2::ed3::NoteD2h'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): note: while trying to match the argument list '(const int, uint64_t, uint64_t, float *, size_t)'
+[7/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\SsmCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEPlaceLiveCounters.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MlaCertProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2DeviceManager.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[11/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAWeights.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2MLAWeights.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAWeights.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2MLAWeights.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(754): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(1224): error C2027: use of undefined type 'CPUInference::VulkanCompute'
+F:\rawrxd\src\deep2\K2GpuStreamCopy.hpp(8): note: see declaration of 'CPUInference::VulkanCompute'
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(1483): error C2027: use of undefined type 'CPUInference::VulkanCompute'
+F:\rawrxd\src\deep2\K2GpuStreamCopy.hpp(8): note: see declaration of 'CPUInference::VulkanCompute'
+[12/62] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsClimb.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+ninja: build stopped: subcommand failed.

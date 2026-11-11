@@ -1,0 +1,9 @@
+Test project F:/rawrxd/build_reap
+    Start  9: rawr_reap_cli_contract
+1/2 Test  #9: rawr_reap_cli_contract ...........   Passed    0.03 sec
+    Start 11: reap-floor-audit-smoke
+2/2 Test #11: reap-floor-audit-smoke ...........   Passed    0.03 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   0.12 sec
