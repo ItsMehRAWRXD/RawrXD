@@ -1,0 +1,12 @@
+{ 
+  "version": "15.0.0", 
+  "date": "Thu 07/30/2026", 
+  "status": "RELEASE_CANDIDATE", 
+  "gates": { 
+    "build": "PASS", 
+    "transpiler": "PASS", 
+    "ide": "PASS", 
+    "runtime": "PARTIAL", 
+    "agent": "PASS" 
+  } 
+} 

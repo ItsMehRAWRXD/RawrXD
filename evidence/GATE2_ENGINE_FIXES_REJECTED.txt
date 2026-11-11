@@ -1,0 +1,13 @@
+DEEP2_ENGINE_FIXES_HPP=REJECTED
+FIX1_ALIGN_DENSE_CONTEXT=REJECTED
+FIX1_REASON=pads/truncates prompt to hardcoded 81; inserts Llama-3 BOS 128000 (wrong for deepseek2/Kimi)
+FIX2_STABILIZE_ATTN_K_POST_ROPE=REJECTED
+FIX2_REASON=masks NaN/Inf/subnormals; does not earn finite RoPE; NOT_RUN!=PASS
+FIX3_RESOLVE_MLA_GEOMETRY=REJECTED
+FIX3_REASON=hardcodes MLA ranks; forges MLA-CERT-001 instead of GGUF tensor/meta bind
+VALIDATE_ECOSYSTEM_PS1=DO_NOT_RUN_AS_WRITTEN
+RECEIPT_DRAFT=INVALID (schema_version/model_path/hardcoded prompt_tokens=81)
+UNSAFE_BYPASS=FORBIDDEN
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT=await_vulkan_llama-app then --list-devices then run_k2_oracle_vulkan.bat

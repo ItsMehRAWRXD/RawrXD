@@ -1,0 +1,15 @@
+GATE2=BLOCKED_K2_CAPTURE
+K2_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+CAPTURE=FAILED
+TOKEN_IDS_LEN=0
+RECEIPT=NOT_SEALED
+REPLAY_EXIT=NOT_RUN
+REFERENCE_PARITY=NOT_RUN
+CALIBRATION_COMPLETE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+ENGINE_KIND=llama-completion
+ENGINE=F:\llama.cpp-ref\build\bin\llama-completion.exe
+NOT_RUN!=PASS
+BLOCKER=ORACLE_EXIT=1 HOST_RAM_TOTAL_GB=63.1 HOST_RAM_FREE_GB=35.6 K2_FIRST_SHARD_GB=43.12 PAGEFILE_MAX_MB=4096 STDERR_TAIL=0.00.001.924 I llama_completion: llama backend init | 0.00.003.002 I llama_completion: load the model and apply lora adapter, if any | 0.00.273.997 W common_fit_params: failed to fit params to free device memory: was unable to fit model into system memory by reducing context, abort | 3.12.255.612 E ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 481993850880 | 3.12.255.619 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CPU_REPACK buffer of size 481993850880 | 3.13.920.644 
+NEXT=Provide machine with enough RAM/VRAM or quantized/stream-capable oracle for K2; re-run capture; then continuous --parity --require-mla. Do not weaken MLA-CERT-001.

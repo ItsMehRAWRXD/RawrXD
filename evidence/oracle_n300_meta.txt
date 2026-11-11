@@ -1,0 +1,5 @@
+=== oracle n=300 ignore-eos Mon 10/26/2026 21:11:31.91 
+ENGINE=llama-cli
+START=21:11:31.92
+END=21:11:56.12
+ERR_BYTES=1127669

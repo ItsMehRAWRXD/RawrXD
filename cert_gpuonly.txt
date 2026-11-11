@@ -1,0 +1,288 @@
+=== RAWRXD_DEEP2_REAL_MODEL_GENERATION_001 ===
+model : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+prompt: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+tokens: 16  path: GPU-first
+
+--- [P] real-weight provenance ---
+  gguf_path      : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+  sha256         : 5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+  file_bytes     : 25430738944 (25.43 GB)
+  architecture   : nemotron_h_moe
+  model_name     : Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1
+  tensor_count   : 417
+  token_vocab    : 131072 tokens, 269443 merges
+  tensor_inventory: F32x243 Q5_0x116 Q8_0x26 Q4_Kx31 ?x1
+  [PASS] SHA-256 of the real model file computed
+  [PASS] tensor inventory recorded
+  [PASS] architecture derived from the model's own metadata
+  [PASS] tokenizer read from the model
+
+--- [1] runtime graph binding ---
+  ops_total=767 ops_bound=767 ops_unbound=0 weights_resolved=417
+  [PASS] graph binds to real kernels (fail-closed otherwise)
+  [PASS] no unimplemented operators left unbound
+
+--- [2] tokenizer round-trip ---
+  [PASS] prompt encodes
+  prompt -> 26 tokens: 3149 2229 8897 1044 1289 4244 1010 1260 3004 1261 1867 1289 1010 1010 1035 15131 65975 2295 8091 1010 3149 55884 8897 1044 1289 4244 
+  round-trip: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+  [PASS] prompt produced token ids
+  [PASS] decode(encode(prompt)) == prompt
+
+--- [3] chat template ---
+  template: {% macro render_extra_keys(json_dict, handled_keys) %}
+    {%- if json_dict is mapping %}
+        {%- for json_key in json_dict if json_key not in handled_keys %}
+            {%- if json_dict[json_key] is mapping or (json_dict[json_key] is sequence and json_dict[json_key] is not string) %}
+                {{- '\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}
+            {%- else %}
+                {{-'\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+{% endmacro %}
+{%- set enable_thinking = enable_thinking if enable_thinking is defined else True %}
+{%- set medium_effort = medium_effort if medium_effort is defined else False %}
+{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else True %}
+{%- set ns = namespace(last_user_idx = -1) %}
+{%- set loop_messages = messages %}
+{%- for m in loop_messages %}
+  {%- if m["role"] == "user" %}
+    {%- set ns.last_user_idx = loop.index0 %}
+  {%- endif %}
+{%- endfor %}
+{%- if messages[0]["role"] == "system" %}
+    {%- set system_message = messages[0]["content"] %}
+    {%- set loop_messages = messages[1:] %}
+{%- else %}
+    {%- set system_message = "" %}
+    {%- set loop_messages = messages %}
+{%- endif %}
+{%- if not tools is defined %}
+    {%- set tools = [] %}
+{%- endif %}
+{%- set ns = namespace(last_user_idx = -1) %}
+{%- for m in loop_messages %}
+  {%- if m["role"] == "user" %}
+    {%- set ns.last_user_idx = loop.index0 %}
+  {%- endif %}
+{%- endfor %}
+{%- if system_message is defined %}
+    {{- "<|im_start|>system\n" + system_message }}
+{%- else %}
+    {%- if tools is iterable and tools | length > 0 %}
+        {{- "<|im_start|>system\n" }}
+    {%- endif %}
+{%- endif %}
+{%- if tools is iterable and tools | length > 0 %}
+    {%- if system_message is defined and system_message | length > 0 %}
+        {{- "\n\n" }}
+    {%- endif %}
+    {{- "# Tools\n\nYou have access to the following functions:\n\n" }}
+    {{- "<tools>" }}
+    {%- for tool in tools %}
+        {%- if tool.function is defined %}
+            {%- set tool = tool.function %}
+        {%- endif %}
+        {{- "\n<function>\n<name>" ~ tool.name ~ "</name>" }}
+        {%- if tool.description is defined %}
+            {{- '\n<description>' ~ (tool.description | trim) ~ '</description>' }}
+        {%- endif %}
+        {{- '\n<parameters>' }}
+        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}
+            {%- for param_name, param_fields in tool.parameters.properties|items %}
+                {{- '\n<parameter>' }}
+                {{- '\n<name>' ~ param_name ~ '</name>' }}
+                {%- if param_fields.type is defined %}
+                    {{- '\n<type>' ~ (param_fields.type | string) ~ '</type>' }}
+                {%- endif %}
+                {%- if param_fields.description is defined %}
+                    {{- '\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}
+                {%- endif %}
+                {%- if param_fields.enum is defined %}
+                    {{- '\n<enum>' ~ (param_fields.enum | tojson | safe) ~ '</enum>' }}
+                {%- endif %}
+                {%- set handled_keys = ['name', 'type', 'description', 'enum'] %}
+                {{- render_extra_keys(param_fields, handled_keys) }}
+                {{- '\n</parameter>' }}
+            {%- endfor %}
+        {%- endif %}
+        {% set handled_keys = ['type', 'properties', 'required'] %}
+        {{- render_extra_keys(tool.parameters, handled_keys) }}
+        {%- if tool.parameters is defined and tool.parameters.required is defined %}
+            {{- '\n<required>' ~ (tool.parameters.required | tojson | safe) ~ '</required>' }}
+        {%- endif %}
+        {{- '\n</parameters>' }}
+        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}
+        {{- render_extra_keys(tool, handled_keys) }}
+        {{- '\n</function>' }}
+    {%- endfor %}
+    {{- "\n</tools>" }}
+    {{- '\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>' }}
+{%- endif %}
+{%- if system_message is defined %}
+    {{- '<|im_end|>\n' }}
+{%- else %}
+    {%- if tools is iterable and tools | length > 0 %}
+        {{- '<|im_end|>\n' }}
+    {%- endif %}
+{%- endif %}
+{%- for message in loop_messages %}
+    {%- if message.role == "assistant" %}
+        {%- if message.reasoning_content is defined and message.reasoning_content is string and message.reasoning_content | trim | length > 0 %}
+            {%- set content = "<think>\n" ~ message.reasoning_content ~ "</think>" ~ (message.content | default('', true)) %}
+        {%- else %}
+            {%- set content = message.content | default('', true) %}
+            {%- if content is string -%}
+                {%- if '<think>' not in content and '</think>' not in content -%}
+                    {%- set content = "<think></think>" ~ content -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set content = content -%}
+            {%- endif -%}
+        {%- endif %}
+        {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}
+            {{- '<|im_start|>assistant\n' }}
+                {%- set include_content = not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}
+                {%- if content is string and content | trim | length > 0 %}
+                    {%- if include_content %}
+                        {{- (content | trim) ~ '\n' -}}
+                    {%- else %}
+                        {%- set c = (content | string) %}
+                        {%- if '</think>' in c %}
+                            {%- set c = c.split('</think>')[-1] %}
+                        {%- elif '<think>' in c %}
+                            {%- set c = c.split('<think>')[0] %}
+                        {%- endif %}
+                        {%- set c = "<think></think>" ~ c %}
+                        {%- if c | length > 0 %}
+                            {{- c ~ '\n' -}}
+                        {%- endif %}
+                    {%- endif %}
+                {%- else %}
+                    {{- "<think></think>" -}}
+                {%- endif %}
+                {%- for tool_call in message.tool_calls %}
+                    {%- if tool_call.function is defined %}
+                        {%- set tool_call = tool_call.function %}
+                    {%- endif %}
+                    {{- '<tool_call>\n<function=' ~ tool_call.name ~ '>\n' -}}
+                        {%- if tool_call.arguments is defined %}
+                            {%- for args_name, args_value in tool_call.arguments|items %}
+                                {{- '<parameter=' ~ args_name ~ '>\n' -}}
+                                    {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}
+                                {{- args_value ~ '\n</parameter>\n' -}}
+                            {%- endfor %}
+                        {%- endif %}
+                    {{- '</function>\n</tool_call>\n' -}}
+                {%- endfor %}
+                {{- '<|im_end|>\n' }}
+        {%- else %}
+            {%- if not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}
+                {{- '<|im_start|>assistant\n' ~ (content | default('', true) | string | trim) ~ '<|im_end|>\n' }}
+            {%- else %}
+                {%- set c = (content | default('', true) | string) %}
+                {%- if '<think>' in c and '</think>' in c %}
+                    {%- set c = "<think></think>" ~ c.split('</think>')[-1] %}
+                {%- endif %}
+                {%- set c = c | trim %}
+                {%- if c | length > 0 %}
+                    {{- '<|im_start|>assistant\n' ~ c ~ '<|im_end|>\n' }}
+                {%- else %}
+                    {{- '<|im_start|>assistant\n<|im_end|>\n' }}
+                {%- endif %}
+            {%- endif %}
+        {%- endif %}
+    {%- elif message.role == "user" or message.role == "system" %}
+        {{- '<|im_start|>' + message.role + '\n' }}
+        {%- set content = message.content | string %}
+        {%- if message.role == "user" and loop.index0 == ns.last_user_idx and medium_effort %}
+            {{- content + '\n\n{reasoning effort: efficient}' }}
+        {%- else %}
+            {{- content }}
+        {%- endif %}
+        {{- '<|im_end|>\n' }}
+    {%- elif message.role == "tool" %}
+        {%- if loop.previtem and loop.previtem.role != "tool" %}
+            {{- '<|im_start|>user\n' }}
+        {%- endif %}
+        {{- '<tool_response>\n' }}
+        {{- message.content }}
+        {{- '\n</tool_response>\n' }}
+        {%- if not loop.last and loop.nextitem.role != "tool" %}
+            {{- '<|im_end|>\n' }}
+        {%- elif loop.last %}
+            {{- '<|im_end|>\n' }}
+        {%- endif %}
+    {%- else %}
+        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>\n' }}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {%- if enable_thinking %}
+        {{- '<|im_start|>assistant\n<think>\n' }}
+    {%- else %}
+        {{- '<|im_start|>assistant\n<think></think>' }}
+    {%- endif %}
+{%- endif %}
+  [PASS] model ships a chat template
+
+--- [4] per-position parity (GPU vs independent reference) ---
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 6193152 bytes
+Allocated buffer 1 with 17472 bytes
+Allocated buffer 2 with 10752 bytes
+  gpu fail: linear: no weight
+  [FAIL] both paths execute every decode position
+  [PASS] logits finite at every position
+  positions=0  worst cosine=1.0000000000  worst rel=0.000e+00  worst max_abs=0.000e+00
+  [PASS] cosine >= 0.999999 at EVERY position
+  [PASS] relative error <= 1e-4 at EVERY position
+  [PASS] max absolute error <= 1e-4 at EVERY position
+  [PASS] argmax token matches at EVERY position
+  gpu tokens:
+  ref tokens:
+
+--- [5] generated text ---
+  generated text: ""
+  prompt + text : "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+
+--- [6] repeat generation (independent run) ---
+  [PASS] repeat generation produces identical token ids
+  repeat text  : ""
+  [PASS] repeat generation produces identical text
+
+--- receipts ---
+  GPU_TARGET_FORWARD: gpu_calls=0 cpu_calls=0 fallback='<none>'
+  REFERENCE_FORWARD: gpu_calls=0 cpu_calls=0 fallback='<none>'
+  GPU_ONLY_VERDICT=PASS (GPU_TARGET_FORWARD.cpu_calls=0, fallback='<none>')
+  dispatch_ms=0.000 cold_start_ms=0.000
+
+=== 17 passed, 1 failed ===
+VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully

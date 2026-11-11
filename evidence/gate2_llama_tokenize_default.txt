@@ -1,0 +1,168 @@
+﻿llama-completion.exe : 0.00.002.775 I llama_completion: llama backend init
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-62fac55a-890f-4389-a650-41402f270858.ps1:85 char:233
++ ... FAULT ==="; & $exe -m $model -f $prompt -n 0 --ignore-eos --temp 0 -- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (0.00.002.775 I ...ma backend init:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+0.00.004.775 I llama_completion: load the model and apply lora adapter, if any
+0.01.274.119 I cmn          init: llama threadpool init, n_threads = 8
+0.01.460.500 I 
+0.01.460.528 I system_info: n_threads = 8 (n_threads_batch = 8) / 16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 
+| F16C = 1 | FMA = 1 | AVX512 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.01.460.530 I 
+0.01.460.721 I llama_completion: prompt: ' #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS
+");
+    } else {
+        printf("FAIL add(2,3)=%d
+", add(2, 3));
+    }
+    return 0;
+}'
+0.01.460.724 I llama_completion: number of tokens in prompt = 99
+0.01.460.725 I      1 -> '<s>'
+0.01.460.726 I    259 -> '  '
+0.01.460.727 I  29937 -> '#'
+0.01.460.727 I   3742 -> 'inc'
+0.01.460.728 I   6092 -> 'lu'
+0.01.460.729 I    311 -> 'de'
+0.01.460.729 I    529 -> ' <'
+0.01.460.730 I   2395 -> 'cs'
+0.01.460.730 I   1594 -> 'td'
+0.01.460.731 I    601 -> 'io'
+0.01.460.731 I  29958 -> '>'
+0.01.460.732 I     13 -> '
+'
+0.01.460.732 I    524 -> 'int'
+0.01.460.733 I    788 -> ' add'
+0.01.460.733 I  29898 -> '('
+0.01.460.734 I    524 -> 'int'
+0.01.460.734 I    263 -> ' a'
+0.01.460.735 I  29892 -> ','
+0.01.460.735 I    938 -> ' int'
+0.01.460.735 I    289 -> ' b'
+0.01.460.736 I  29897 -> ')'
+0.01.460.737 I    426 -> ' {'
+0.01.460.737 I     13 -> '
+'
+0.01.460.737 I    268 -> '    '
+0.01.460.738 I   2457 -> 'return'
+0.01.460.738 I    263 -> ' a'
+0.01.460.739 I    718 -> ' +'
+0.01.460.739 I    448 -> ' -'
+0.01.460.740 I  29890 -> 'b'
+0.01.460.740 I  29936 -> ';'
+0.01.460.740 I     13 -> '
+'
+0.01.460.741 I  29913 -> '}'
+0.01.460.741 I     13 -> '
+'
+0.01.460.742 I    524 -> 'int'
+0.01.460.742 I   1667 -> ' main'
+0.01.460.743 I    580 -> '()'
+0.01.460.743 I    426 -> ' {'
+0.01.460.744 I     13 -> '
+'
+0.01.460.744 I    268 -> '    '
+0.01.460.744 I    361 -> 'if'
+0.01.460.745 I    313 -> ' ('
+0.01.460.746 I   1202 -> 'add'
+0.01.460.746 I  29898 -> '('
+0.01.460.747 I  29906 -> '2'
+0.01.460.747 I  29892 -> ','
+0.01.460.747 I  29871 -> ' '
+0.01.460.748 I  29941 -> '3'
+0.01.460.748 I  29897 -> ')'
+0.01.460.749 I   1275 -> ' =='
+0.01.460.749 I  29871 -> ' '
+0.01.460.749 I  29945 -> '5'
+0.01.460.750 I  29897 -> ')'
+0.01.460.750 I    426 -> ' {'
+0.01.460.751 I     13 -> '
+'
+0.01.460.751 I    308 -> '        '
+0.01.460.752 I   8124 -> 'printf'
+0.01.460.752 I    703 -> '("'
+0.01.460.753 I  25711 -> 'PASS'
+0.01.460.753 I     13 -> '
+'
+0.01.460.754 I   1496 -> '");'
+0.01.460.754 I     13 -> '
+'
+0.01.460.754 I    268 -> '    '
+0.01.460.755 I  29913 -> '}'
+0.01.460.755 I   1683 -> ' else'
+0.01.460.756 I    426 -> ' {'
+0.01.460.756 I     13 -> '
+'
+0.01.460.757 I    308 -> '        '
+0.01.460.757 I   8124 -> 'printf'
+0.01.460.757 I    703 -> '("'
+0.01.460.758 I   4519 -> 'FA'
+0.01.460.758 I   6227 -> 'IL'
+0.01.460.759 I    788 -> ' add'
+0.01.460.759 I  29898 -> '('
+0.01.460.759 I  29906 -> '2'
+0.01.460.760 I  29892 -> ','
+0.01.460.760 I  29941 -> '3'
+0.01.460.761 I   3892 -> ')='
+0.01.460.761 I  29995 -> '%'
+0.01.460.762 I  29881 -> 'd'
+0.01.460.762 I     13 -> '
+'
+0.01.460.763 I    613 -> '",'
+0.01.460.763 I    788 -> ' add'
+0.01.460.763 I  29898 -> '('
+0.01.460.764 I  29906 -> '2'
+0.01.460.764 I  29892 -> ','
+0.01.460.764 I  29871 -> ' '
+0.01.460.764 I  29941 -> '3'
+0.01.460.765 I   2483 -> '));'
+0.01.460.765 I     13 -> '
+'
+0.01.460.766 I    268 -> '    '
+0.01.460.766 I  29913 -> '}'
+0.01.460.766 I     13 -> '
+'
+0.01.460.767 I    268 -> '    '
+0.01.460.767 I   2457 -> 'return'
+0.01.460.768 I  29871 -> ' '
+0.01.460.768 I  29900 -> '0'
+0.01.460.768 I  29936 -> ';'
+0.01.460.769 I     13 -> '
+'
+0.01.460.769 I  29913 -> '}'
+0.01.460.769 I 
+
+
+0.01.460.771 I sampler seed: 4294967295
+0.01.460.788 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 1, top_p = 0.950, min_p = 0.050, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, 
+top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.01.460.796 I sampler chain: logits -> logit-bias -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p 
+-> min-p -> ?xtc -> temp-ext -> greedy 
+0.01.460.797 I generate: n_ctx = 2048, n_batch = 2048, n_predict = 0, n_keep = 1
+0.01.460.797 I 
+0.01.460.803 I common_perf_print:    sampling time =       0.00 ms
+0.01.460.804 I common_perf_print:    samplers time =       0.00 ms /     0 tokens
+0.01.460.805 I common_perf_print:        load time =    1322.18 ms
+0.01.460.807 I common_perf_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf 
+tokens per second)
+0.01.460.808 I common_perf_print:        eval time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf 
+tokens per second)
+0.01.460.809 I common_perf_print:       total time =       0.31 ms /     2 tokens
+0.01.460.810 I common_perf_print: unaccounted time =       0.31 ms / 100.0 %      (total - sampling - prompt eval - 
+eval) / (total)
+0.01.460.811 I common_perf_print:    graphs reused =          0
+0.01.460.812 I common_perf_print:   graph reallocs =          0    /     0        (same size) / (changed size)
+PROMPT_TOKENS=99
+GENERATED_TOKEN_IDS=

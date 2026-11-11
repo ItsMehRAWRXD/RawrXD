@@ -1,0 +1,9 @@
+FILE    F:\OllamaModels\blobs\sha256-6be6d66a3f546d8c19b130dc41dc24b2fc159f84ffbc76a0ee0676205083cf5a
+ARCH    gptoss
+GGUF    version 3, 687 tensors, data start 13805472, 65369799840 bytes
+
+MANIFEST  entries=687 bound=687 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES BF16=146 F32=433 MXFP4=108
+
+VERDICT=BOUND_ALL
