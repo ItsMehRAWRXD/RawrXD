@@ -1,0 +1,10 @@
+﻿[FAIL] R1 inspection : model read the defective file - read tool calls=0
+[PASS] R2 edit       : model wrote a candidate fix - write tool calls=12
+[PASS] R3 build      : model invoked a build - bash tool calls=104
+[PASS] R4 test       : model invoked a test/run - run referenced in loop
+[PASS] R5 self-correction : loop iterated beyond a lucky single shot - dispatched steps=8 observed_failure=True
+[FAIL] R6 indep source: defect gone from on-disk source (harness-read) - source changed and contains a + b
+[FAIL] R7 indep build+run: harness-built binary exits 0 and prints PASS - exit=0
+[FAIL] R8 loop verdict: the loop's independent verification passed - loop exit=1
+model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf defect=sign_flip steps=8 loop_exit=1
+FINAL_VERDICT=FAIL

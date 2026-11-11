@@ -1,0 +1,38 @@
+# RawrXD structured-output grammar (GBNF, llama.cpp)
+#
+# This grammar constrains model output to exactly one validated action per
+# response, so a malformed JSON reply becomes impossible rather than merely
+# unlikely. It is the first line of defense; the native controller still
+# enforces tool schemas, workspace path scoping and mode permissions after
+# decoding.
+#
+# Emitted forms:
+#   {"action":"tool",   "tool":"<name>",   "args":{...}}
+#   {"action":"final",  "summary":"...",   "findings":[...], "next_actions":[...]}
+
+root ::= ws (toolcall | finalcall) ws
+
+toolcall ::= "{" ws "\"action\"" ws ":" ws "\"tool\"" ws "," ws "\"tool\"" ws ":" ws tool ws "," ws "\"args\"" ws ":" ws object ws "}"
+
+finalcall ::= "{" ws "\"action\"" ws ":" ws "\"final\"" ws "," ws "\"summary\"" ws ":" ws string ws "," ws "\"findings\"" ws ":" ws array ws "," ws "\"next_actions\"" ws ":" ws array ws "}"
+
+tool ::= "\"list_repo\"" | "\"read_file\"" | "\"search_text\"" | "\"git_status\"" | "\"write_file\"" | "\"run_build\"" | "\"run_tests\""
+
+object ::= "{" ws (pair (ws "," ws pair)*)? ws "}"
+pair ::= string ws ":" ws value
+
+array ::= "[" ws (value (ws "," ws value)*)? ws "]"
+
+value ::= object | array | string | number | "true" | "false" | "null"
+
+string ::= "\"" chars "\""
+chars ::= char*
+char ::= [^"\\\x00-\x1F] | "\\" (["\\/bfnrt] | "u" hex hex hex hex)
+hex ::= [0-9a-fA-F]
+
+number ::= "-"? int frac? exp?
+int ::= "0" | [1-9] [0-9]*
+frac ::= "." [0-9]+
+exp ::= [eE] [+-]? [0-9]+
+
+ws ::= [ \t\n\r]*

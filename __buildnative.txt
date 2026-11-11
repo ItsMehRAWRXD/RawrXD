@@ -1,0 +1,447 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+Build started 10/16/2026 10:16:32 PM.
+
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" on node 1 (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\ZERO_CHECK.vcxproj" (2) on node 1 (default targets).
+     2>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       FinalizeBuildStatus:
+         Deleting file "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+         Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\ZERO_CHECK.lastbuildstate".
+     2>Done Building Project "F:\rawrxd\build\ZERO_CHECK.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\rawrxd_security.vcxproj" (7) on node 7 (default targets).
+     7>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\src\production\rawrxd_production_hardening.vcxproj" (5) on node 5 (default targets).
+     5>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj" (6) on node 4 (default targets).
+     6>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+     7>InitializeBuildStatus:
+         Creating "rawrxd_security.dir\Release\rawrxd_security.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "rawrxd_security.dir\Release\rawrxd_security.tlog\unsuccessfulbuild".
+     6>InitializeBuildStatus:
+         Creating "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+     5>InitializeBuildStatus:
+         Creating "rawrxd_production_hardening.dir\Release\rawrxd_p.7088761A.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "rawrxd_production_hardening.dir\Release\rawrxd_p.7088761A.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+     6>CustomBuild:
+         All outputs are up-to-date.
+     7>CustomBuild:
+         All outputs are up-to-date.
+     6>ClCompile:
+         All outputs are up-to-date.
+     7>ClCompile:
+         All outputs are up-to-date.
+     5>ClCompile:
+         All outputs are up-to-date.
+     6>ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+     7>Lib:
+         All outputs are up-to-date.
+         rawrxd_security.vcxproj -> F:\rawrxd\build\Release\rawrxd_security.lib
+     5>Lib:
+         All outputs are up-to-date.
+         rawrxd_production_hardening.vcxproj -> F:\rawrxd\build\src\production\Release\rawrxd_production_hardening.lib
+     6>ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+     5>FinalizeBuildStatus:
+         Deleting file "rawrxd_production_hardening.dir\Release\rawrxd_p.7088761A.tlog\unsuccessfulbuild".
+         Touching "rawrxd_production_hardening.dir\Release\rawrxd_p.7088761A.tlog\rawrxd_production_hardening.lastbuildstate".
+     5>Done Building Project "F:\rawrxd\build\src\production\rawrxd_production_hardening.vcxproj" (default targets).
+     7>FinalizeBuildStatus:
+         Deleting file "rawrxd_security.dir\Release\rawrxd_security.tlog\unsuccessfulbuild".
+         Touching "rawrxd_security.dir\Release\rawrxd_security.tlog\rawrxd_security.lastbuildstate".
+     7>Done Building Project "F:\rawrxd\build\rawrxd_security.vcxproj" (default targets).
+     6>FinalizeBuildStatus:
+         Deleting file "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+         Touching "ggml-base.dir\Release\ggml-base.tlog\ggml-base.lastbuildstate".
+     6>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-cpu.vcxproj" (9) on node 3 (default targets).
+     9>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+       FinalizeBuildStatus:
+         Deleting file "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+         Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\ggml-cpu.lastbuildstate".
+     9>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-cpu.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml.vcxproj" (8) on node 2 (default targets).
+     8>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "ggml.dir\Release\ggml.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+       FinalizeBuildStatus:
+         Deleting file "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+         Touching "ggml.dir\Release\ggml.tlog\ggml.lastbuildstate".
+     8>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\rawrxd_gpu_compute.vcxproj" (4) on node 6 (default targets).
+     4>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         rawrxd_gpu_compute.vcxproj -> F:\rawrxd\build\Release\rawrxd_gpu_compute.lib
+       FinalizeBuildStatus:
+         Deleting file "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild".
+         Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\rawrxd_gpu_compute.lastbuildstate".
+     4>Done Building Project "F:\rawrxd\build\rawrxd_gpu_compute.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (1) is building "F:\rawrxd\build\deep2_engine_lib.vcxproj" (3) on node 1 (default targets).
+     3>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         deep2_engine_lib.vcxproj -> F:\rawrxd\build\Release\deep2_engine_lib.lib
+       FinalizeBuildStatus:
+         Deleting file "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild".
+         Touching "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\deep2_engine_lib.lastbuildstate".
+     3>Done Building Project "F:\rawrxd\build\deep2_engine_lib.vcxproj" (default targets).
+     1>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Touching "RawrXD-Win32IDE-Native.dir\Release\RawrXD-W.C6383C85.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe /c /IF:\rawrxd\src /IF:\rawrxd\src\win32app /IF:\rawrxd\src\utils /IF:\rawrxd\src\snap /IF:\rawrxd\src\deep2\perf_fix /IF:\rawrxd\src\deep2\watchdog /IF:\rawrxd\3rdparty\ggml\include /IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp /IF:\rawrxd\tools\deep2_snap\deep2_snap /IF:\rawrxd\tools\snap_process_guard /IF:\rawrxd\src\production /IF:\rawrxd\3rdparty\ggml\src\..\include /IF:\rawrxd\src\deep2 /IF:\rawrxd\tools\deep2_debugger /IF:\rawrxd\3rdparty\ggml\src /nologo /W4 /WX- /diagnostics:column /O2 /Ob2 /Ot /GL /D _MBCS /D WIN32 /D _WINDOWS /D NDEBUG /D NOMINMAX /D _WIN32_WINNT=0x0A00 /D _CRT_SECURE_NO_WARNINGS /D _MBCS /D ENABLE_VULKAN=1 /D HAVE_GGML=1 /D HAVE_DEEP2_ENGINE=1 /D RAWRXD_HARDENING=1 /D _FORTIFY_SOURCE=2 /D FORTIFY_SOURCE=2 /D HAVE_VULKAN=1 /D "RAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\"" /D GGML_USE_CPU /D "CMAKE_INTDIR=\"Release\"" /GF /EHsc /MD /GS /guard:cf /Gy /guard:ehcont /std:c++20 /permissive- /Fo"RawrXD-Win32IDE-Native.dir\Release\\" /Fd"RawrXD-Win32IDE-Native.dir\Release\vc143.pdb" /external:W0 /TP /errorReport:queue  /external:I "C:/VulkanSDK/1.4.357.0/include" /external:I "F:/rawrxd/include" /VOLATILE:ISO /Zc:strictStrings /Zc:throwingNew F:\rawrxd\src\win32app\main_win32.cpp F:\rawrxd\src\win32app\Win32IDE.cpp F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp F:\rawrxd\src\win32app\Win32IDE_Logger.cpp F:\rawrxd\src\win32app\Win32TerminalManager.cpp F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp F:\rawrxd\src\win32app\Win32IDE_Commands.cpp F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp F:\rawrxd\src\win32app\Win32IDE_Autonomy.cpp F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp F:\rawrxd\src\win32app\TransparentRenderer.cpp F:\rawrxd\src\gguf_loader.cpp F:\rawrxd\src\GGUFLoader.cpp F:\rawrxd\src\gguf_vocab_resolver.cpp F:\rawrxd\src\streaming_gguf_loader.cpp F:\rawrxd\src\cpu_inference_engine_impl.cpp F:\rawrxd\src\utils\ErrorReporter.cpp F:\rawrxd\src\utils\Diagnostics.cpp F:\rawrxd\src\win32app\VulkanRenderer.cpp
+         main_win32.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/main_win32.cpp')
+         
+     1>F:\rawrxd\src\win32app\main_win32.cpp(68,87): warning C4100: 'nCmdShow': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\main_win32.cpp(68,72): warning C4100: 'lpCmdLine': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\main_win32.cpp(68,51): warning C4100: 'hPrevInstance': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE.cpp')
+         
+     1>F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE.cpp')
+         
+     1>F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE.cpp')
+             F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+             see declaration of 'Deep2::GlobalTensorRef::expertId'
+         
+     1>F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(333,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(2562,17): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(2644,9): warning C4189: 'result': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(2919,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(3126,32): warning C4456: declaration of 'line' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+             F:\rawrxd\src\win32app\Win32IDE.cpp(3073,17):
+             see declaration of 'line'
+         
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(3946,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(3955,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(3975,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(3988,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(5189,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(5192,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE.cpp(5412,70): warning C4100: 'type': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_Sidebar.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Sidebar.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(300,14): warning C4189: 'hwndBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(675,42): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(985,64): warning C4100: 'wholeWord': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_VSCodeUI.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(365,15): warning C4189: 'pThis': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(660,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(783,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(784,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(912,10): warning C4189: 'btnFilter': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(906,10): warning C4189: 'btnPause': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(900,10): warning C4189: 'btnClear': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1024,41): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_PowerShellPanel.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(328,42): warning C4100: 'width': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(436,63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_PowerShell.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(602,60): warning C4100: 'eventName': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_Logger.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+         
+         Win32TerminalManager.cpp
+     1>F:\rawrxd\src\win32app\Win32TerminalManager.cpp(127,53): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_FileOps.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+         
+         Win32IDE_Commands.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Commands.cpp')
+         
+         Win32IDE_Debugger.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Debugger.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75,10): warning C4189: 'btnStepOver': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(65,10): warning C4189: 'btnContinue': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85,10): warning C4189: 'btnStepInto': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95,10): warning C4189: 'btnStepOut': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105,10): warning C4189: 'btnStop': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_AgenticBridge.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgenticBridge.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(33,51): warning C4100: 'frameworkPath': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(258,66): warning C4100: 'timeoutMs': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_AgentCommands.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+         
+     1>F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+         
+     1>F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+             F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+             see declaration of 'Deep2::GlobalTensorRef::expertId'
+         
+     1>F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+         
+     1>F:\rawrxd\src\win32app\ModelConnection.h(407,79): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgentCommands.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(26,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(226,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(224,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(237,18): warning C4189: 'sender': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(353,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(563,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(561,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(752,52): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(762,54): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_Autonomy.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Autonomy.cpp')
+         
+         Win32IDE_Deep2Bridge.cpp
+     1>F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+         
+     1>F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+             F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+             see declaration of 'Deep2::GlobalTensorRef::expertId'
+         
+     1>F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+         
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_Deep2Bridge.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365,71): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365,43): warning C4100: 'tokenId': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_AgenticLoopBridge.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_AgenticLoopBridge.cpp')
+         
+     1>F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(410,52): warning C4100: 'pid': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         Win32IDE_lifecycle.cpp
+     1>F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         (compiling source file '../src/win32app/Win32IDE_lifecycle.cpp')
+         
+         TransparentRenderer.cpp
+         gguf_loader.cpp
+         GGUFLoader.cpp
+         Compiling...
+         gguf_vocab_resolver.cpp
+     1>F:\rawrxd\src\gguf_vocab_resolver.cpp(166,47): warning C4100: 'metadata': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         streaming_gguf_loader.cpp
+     1>F:\rawrxd\src\streaming_gguf_loader.cpp(317,75): warning C4100: 'max_memory_mb': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         cpu_inference_engine_impl.cpp
+     1>F:\rawrxd\src\cpu_inference_engine_impl.cpp(41,66): warning C4100: 'n': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+     1>F:\rawrxd\src\cpu_inference_engine_impl.cpp(579,28): warning C4456: declaration of 'v' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+             F:\rawrxd\src\cpu_inference_engine_impl.cpp(483,38):
+             see declaration of 'v'
+         
+         ErrorReporter.cpp
+         Diagnostics.cpp
+         VulkanRenderer.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\link.exe /OUT:"F:\rawrxd\build\bin\Release\RawrXD-Win32IDE-Native.exe" /INCREMENTAL:NO /NOLOGO comctl32.lib comdlg32.lib shell32.lib user32.lib gdi32.lib ole32.lib oleaut32.lib uuid.lib advapi32.lib d3d11.lib dxgi.lib d3dcompiler.lib d2d1.lib dwrite.lib dxguid.lib dwmapi.lib dcomp.lib psapi.lib src\production\Release\rawrxd_production_hardening.lib Release\rawrxd_security.lib 3rdparty\ggml\src\Release\ggml.lib Release\deep2_engine_lib.lib bcrypt.lib dbghelp.lib Release\rawrxd_gpu_compute.lib 3rdparty\ggml\src\Release\ggml.lib "3rdparty\ggml\src\Release\ggml-cpu.lib" "3rdparty\ggml\src\Release\ggml-base.lib" "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"F:/rawrxd/build/bin/Release/RawrXD-Win32IDE-Native.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /LTCGOUT:"RawrXD-Win32IDE-Native.dir\Release\RawrXD-Win32IDE-Native.iobj" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/rawrxd/build/Release/RawrXD-Win32IDE-Native.lib" /MACHINE:X64 /guard:cf /guard:ehcont  /machine:x64 /HIGHENTROPYVA /guard:cf "RawrXD-Win32IDE-Native.dir\Release\main_win32.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Sidebar.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_VSCodeUI.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_PowerShellPanel.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_PowerShell.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Logger.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32TerminalManager.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_FileOps.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Commands.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Debugger.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_AgenticBridge.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_AgentCommands.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Autonomy.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_Deep2Bridge.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_AgenticLoopBridge.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Win32IDE_lifecycle.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\TransparentRenderer.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\gguf_loader.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\GGUFLoader.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\gguf_vocab_resolver.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\streaming_gguf_loader.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\cpu_inference_engine_impl.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\ErrorReporter.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\Diagnostics.obj"
+         "RawrXD-Win32IDE-Native.dir\Release\VulkanRenderer.obj"
+         Generating code
+         Finished generating code
+         RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\build\bin\Release\RawrXD-Win32IDE-Native.exe
+       FinalizeBuildStatus:
+         Deleting file "RawrXD-Win32IDE-Native.dir\Release\RawrXD-W.C6383C85.tlog\unsuccessfulbuild".
+         Touching "RawrXD-Win32IDE-Native.dir\Release\RawrXD-W.C6383C85.tlog\RawrXD-Win32IDE-Native.lastbuildstate".
+     1>Done Building Project "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (default targets).
+
+Build succeeded.
+
+       "F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj" (default target) (1) ->
+       (ClCompile target) -> 
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\main_win32.cpp(68,87): warning C4100: 'nCmdShow': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\main_win32.cpp(68,72): warning C4100: 'lpCmdLine': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\main_win32.cpp(68,51): warning C4100: 'hPrevInstance': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(333,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(2562,17): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(2644,9): warning C4189: 'result': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(2919,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(3126,32): warning C4456: declaration of 'line' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(3946,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(3955,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(3975,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(3988,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(5189,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(5192,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE.cpp(5412,70): warning C4100: 'type': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(300,14): warning C4189: 'hwndBtn': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(675,42): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(985,64): warning C4100: 'wholeWord': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(365,15): warning C4189: 'pThis': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(660,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(783,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(784,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(912,10): warning C4189: 'btnFilter': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(906,10): warning C4189: 'btnPause': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(900,10): warning C4189: 'btnClear': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1024,41): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(328,42): warning C4100: 'width': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(436,63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(602,60): warning C4100: 'eventName': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32TerminalManager.cpp(127,53): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(75,10): warning C4189: 'btnStepOver': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(65,10): warning C4189: 'btnContinue': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(85,10): warning C4189: 'btnStepInto': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(95,10): warning C4189: 'btnStepOut': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(105,10): warning C4189: 'btnStop': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(33,51): warning C4100: 'frameworkPath': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(258,66): warning C4100: 'timeoutMs': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\ModelConnection.h(407,79): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(26,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(226,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(224,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(237,18): warning C4189: 'sender': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(353,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(563,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(561,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(752,52): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(762,54): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365,71): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(365,43): warning C4100: 'tokenId': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.cpp(410,52): warning C4100: 'pid': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\gguf_vocab_resolver.cpp(166,47): warning C4100: 'metadata': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\streaming_gguf_loader.cpp(317,75): warning C4100: 'max_memory_mb': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\cpu_inference_engine_impl.cpp(41,66): warning C4100: 'n': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+         F:\rawrxd\src\cpu_inference_engine_impl.cpp(579,28): warning C4456: declaration of 'v' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+
+    79 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:11.42
