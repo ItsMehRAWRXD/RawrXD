@@ -553,6 +553,26 @@ inline std::string repairModelJson(const std::string& raw) {
     return out;
 }
 
+/// @brief Read a string field without trusting the model's JSON types.
+///
+/// nlohmann::json::value() throws json.exception.type_error.302 ("type must be
+/// string, but is number") when the key exists but holds a non-string. A 3B
+/// model routinely answers a decision contract with {"action":5} or
+/// {"tool":true}, which used to escape as an unhandled exception and abort the
+/// whole command with exit code 42 after the inference had already succeeded.
+/// Treat any non-string as absent so the existing repair/fallback guards run.
+inline std::string jsonStringOr(const json& j, const char* key,
+                                const std::string& dflt = std::string()) {
+    if (!j.is_object() || !j.contains(key) || !j[key].is_string()) return dflt;
+    return j[key].get<std::string>();
+}
+
+/// @brief Same guard for numeric fields (e.g. "confidence": "0.9").
+inline double jsonNumberOr(const json& j, const char* key, double dflt = 0.0) {
+    if (!j.is_object() || !j.contains(key) || !j[key].is_number()) return dflt;
+    return j[key].get<double>();
+}
+
 /// @brief Which registered tool does this prose most likely mean?
 inline std::string inferToolFromProse(const std::string& text,
                                       const std::string& question) {
@@ -1066,7 +1086,7 @@ public:
             return d;
         }
 
-        std::string kind = toLower(obj.value("kind", obj.value("action", std::string())));
+        std::string kind = toLower(jsonStringOr(obj, "kind", jsonStringOr(obj, "action")));
         if (kind == "tool_call" || kind == "tool" || kind == "action")
             d.kind = DecisionKind::ToolCall;
         else if (kind == "need_clarification" || kind == "clarify")
@@ -1076,11 +1096,11 @@ public:
         else
             d.kind = DecisionKind::FinalAnswer;
 
-        d.answer = obj.value("answer", obj.value("summary", std::string()));
-        d.tool = obj.value("tool", std::string());
+        d.answer = jsonStringOr(obj, "answer", jsonStringOr(obj, "summary"));
+        d.tool = jsonStringOr(obj, "tool");
         if (obj.contains("args") && obj["args"].is_object()) d.args = obj["args"];
-        d.confidence = obj.value("confidence", 0.0);
-        d.rationale = obj.value("rationale", std::string());
+        d.confidence = jsonNumberOr(obj, "confidence");
+        d.rationale = jsonStringOr(obj, "rationale");
         return d;
     }
 
@@ -1223,9 +1243,30 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     ctx.mode = &mode;
     ctx.ws = &ws;
 
+    // A direct output-format instruction ("Reply with exactly: X", "Say
+    // exactly: X") has no dependency on prior conversation. With history
+    // injected, a small model regurgitates the most recent stored assistant turn
+    // instead of obeying the instruction -- which is how "Reply with exactly:
+    // ASK_OK" kept returning a previous answer verbatim. Such a request is
+    // answered with a bare completion and no history.
+    auto isDirectInstruction = [](const std::string& qt) {
+        std::string low = toLower(qt);
+        static const char* cues[] = {
+            "reply with exactly", "say exactly", "respond with exactly",
+            "output exactly", "print exactly", "repeat exactly",
+            "answer with exactly", "return exactly"
+        };
+        for (const char* c : cues)
+            if (low.find(c) != std::string::npos) return true;
+        return false;
+    };
+    const bool directInstruction = isDirectInstruction(q.text);
+    Question promptQ = q;
+    if (directInstruction) promptQ.history.clear();
+
     // Fast path: a plain question needs nothing but reasoning.
     InferenceResult first = client.complete(
-        {{{"role", "user"}, {"content", buildUniversalPrompt(q)}}}, 700);
+        {{{"role", "user"}, {"content", buildUniversalPrompt(promptQ)}}}, 700);
     if (!first.ok) {
         resp.kind = ResponseKind::Uncertain;
         resp.text = "Inference unavailable: " + first.error;
@@ -1408,8 +1449,22 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     // from that file, per the H1 policy above).
     const bool toolsAllowed =
         wantsRepositoryEvidence(q.text) || requiresFileEvidence;
-    if (!toolsAllowed)
+
+    // With no tool route available the decision round cannot change anything: it
+    // re-asks the SAME model under a JSON contract whose own text primes it
+    // ("for a question about how many files match something, use search_text"),
+    // and the plain answer already obtained above is then thrown away in favour
+    // of the decision's "answer" field. That is how "Reply with exactly: X"
+    // came back as "There are 0 matching source files." Return the direct
+    // answer instead of paying for a second inference that only adds noise.
+    if (!toolsAllowed) {
         logLine("answer: tool loop disabled by host policy for this question");
+        resp.kind = ResponseKind::Answer;
+        resp.text = gateAnswer(first.content, receipts, usedTools);
+        resp.answerIsGrounded = false;
+        resp.receipts = receipts;
+        return resp;
+    }
 
     // â”€â”€ Tool-execution hygiene (RAWRXD_TOOL_HYGIENE_001) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Three host-side guards the model cannot talk its way past:
@@ -1504,7 +1559,7 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
 
         std::string kind;
         if (obj.is_object())
-            kind = toLower(obj.value("kind", obj.value("action", std::string())));
+            kind = toLower(jsonStringOr(obj, "kind", jsonStringOr(obj, "action")));
 
         // Heuristic fallback: the model wrote a tool call in prose.
         if (kind.empty()) {
@@ -1527,7 +1582,7 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         }
 
         if (kind == "tool_call" || kind == "tool") {
-            std::string tool = obj.value("tool", std::string());
+            std::string tool = jsonStringOr(obj, "tool");
             json args = (obj.contains("args") && obj["args"].is_object())
                             ? obj["args"] : json::object();
             if (args.is_null()) args = json::object();
@@ -1665,15 +1720,15 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         if (kind == "need_clarification") {
             resp.kind = ResponseKind::Clarification;
             resp.text = obj.is_null() ? std::string("Could you clarify your request?")
-                                      : obj.value("answer", std::string("Could you "
-                                                                         "clarify?"));
+                                      : jsonStringOr(obj, "answer",
+                                                     std::string("Could you clarify?"));
             resp.receipts = receipts;
             return resp;
         }
         if (kind == "unable_to_verify") {
             resp.kind = ResponseKind::Uncertain;
             resp.text = obj.is_null() ? first.content
-                                      : obj.value("answer", first.content);
+                                      : jsonStringOr(obj, "answer", first.content);
             resp.receipts = receipts;
             return resp;
         }
@@ -1683,7 +1738,8 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         // no executed receipt is refused (twice) and then answered with the
         // explicit limitation instead of model-generated content.
         if (!answerOrRefuse(
-                obj.is_null() ? first.content : obj.value("answer", first.content),
+                obj.is_null() ? first.content
+                              : jsonStringOr(obj, "answer", first.content),
                 usedTools))
             continue;
         return resp;

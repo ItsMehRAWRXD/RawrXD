@@ -1070,6 +1070,57 @@ static void appendMemory(const std::string& type, const std::string& role,
     f << j.dump() << "\n";
 }
 
+// ---------------------------------------------------------------------------
+// Inference endpoint resolution
+// ---------------------------------------------------------------------------
+// Ollama exposes its OpenAI-compatible surface on 11434; the llama.cpp dev
+// server uses 8080. Several commands carried a literal 8080, so they reported
+// the backup engine as dead while Ollama was healthy. Probe both candidates
+// and use whichever actually answers.
+struct InferenceEndpoint {
+    int port = 8080;
+    const char* label = "llama.cpp";
+    bool live = false;
+    std::string url() const {
+        return "http://127.0.0.1:" + std::to_string(port) + "/v1/chat/completions";
+    }
+};
+
+// ping() performs a real 8-token generation, not a bare TCP connect, so the
+// budget must cover a COLD model load: llama3.2:3b measured 25.25 s from a
+// stopped Ollama. A 5 s budget reported a perfectly healthy backend as dead.
+static InferenceEndpoint probeInferenceEndpoint(int timeoutMs = 60000) {
+    struct Candidate {
+        int port;
+        const char* label;
+        const char* model;
+    };
+    // A ping must name a model the target actually has, or the backend answers
+    // 404 and the probe reports "unreachable" while the engine is perfectly
+    // healthy. The client default "llama3.2-3b" is llama.cpp style; Ollama
+    // publishes the same weights as "llama3.2:3b".
+    const Candidate candidates[] = {
+        {8080, "llama.cpp", "llama3.2-3b"},
+        {11434, "ollama", "llama3.2:3b"},
+    };
+    for (const auto& c : candidates) {
+        InferenceClient client;
+        client.setEndpoint(c.port);
+        client.setModel(c.model);
+        if (client.ping(timeoutMs))
+            return InferenceEndpoint{c.port, c.label, true};
+    }
+    return InferenceEndpoint{};
+}
+
+// The client default model tag is llama.cpp style ("llama3.2-3b"); Ollama
+// publishes the same weights as "llama3.2:3b". Translate when talking to
+// Ollama so `rawr ask` does not 404 on a tag that only exists locally.
+static std::string ollamaModelFor(const std::string& model) {
+    if (model == "llama3.2-3b") return "llama3.2:3b";
+    return model;
+}
+
 static int cmdAsk(const std::vector<std::string>& args) {
     // The universal entry point. The same policy handles physics, code, maths,
     // creative writing and engineering -- the subject changes, the process
@@ -1093,12 +1144,14 @@ static int cmdAsk(const std::vector<std::string>& args) {
     ToolRegistry reg;
     registerDefaultTools(reg, ws);
     InferenceClient client;
-    client.setEndpoint(8080);
+    const InferenceEndpoint ep = probeInferenceEndpoint();
+    client.setEndpoint(ep.port);
+    if (std::string(ep.label) == "ollama") client.setModel(ollamaModelFor(client.model()));
 
     ASK_TRACE("before ping");
     if (!client.ping()) {
         ASK_TRACE("ping returned false");
-        out("ERROR: no local inference backend reachable on 127.0.0.1:8080");
+        out("ERROR: no local inference backend reachable on 127.0.0.1:8080 or 127.0.0.1:11434");
         if (g_json) outJson({{"error", "inference_unavailable"}});
         return EXIT_NO_INFERENCE;
     }
@@ -1627,9 +1680,12 @@ static int cmdReason(const std::vector<std::string>& args) {
     ToolRegistry reg;
     registerDefaultTools(reg, ws);
     InferenceClient client;
-    client.setEndpoint(8080);
+    const InferenceEndpoint reasonEp = probeInferenceEndpoint();
+    client.setEndpoint(reasonEp.port);
+    if (std::string(reasonEp.label) == "ollama")
+        client.setModel(ollamaModelFor(client.model()));
     if (!client.ping()) {
-        out("ERROR: no local inference backend reachable on 127.0.0.1:8080");
+        out("ERROR: no local inference backend reachable on 127.0.0.1:8080 or 127.0.0.1:11434");
         return EXIT_NO_INFERENCE;
     }
 
@@ -1770,16 +1826,19 @@ static int cmdModels(InferenceClient& client) {
         }
     }
     bool live = client.ping();
+    const InferenceEndpoint liveEp = probeInferenceEndpoint();
+    const int shownPort = liveEp.live ? liveEp.port : 8080;
     if (g_json) {
         json arr = json::array();
         for (const auto& m : models) arr.push_back(m);
         outJson({{"inference_reachable", live},
-                 {"port", 8080},
+                 {"port", shownPort},
+                 {"engine", liveEp.live ? liveEp.label : "none"},
                  {"models", arr},
                  {"count", arr.size()}});
         return live ? EXIT_OK : EXIT_NO_INFERENCE;
     }
-    out("Inference backend: 127.0.0.1:8080 (" +
+    out("Inference backend: 127.0.0.1:" + std::to_string(shownPort) + " (" +
         std::string(live ? "reachable" : "NOT reachable") + ")");
     out("Loadable GGUF models (" + std::to_string(models.size()) + "):");
     for (const auto& m : models) out("  " + m);
@@ -1949,10 +2008,12 @@ static int cmdBenchmark(const std::vector<std::string>& args) {
         else if (args[i] == "--json") g_json = true;
     }
     InferenceClient c;
-    c.setEndpoint(8080);
-    c.setModel(model);
+    const InferenceEndpoint benchEp = probeInferenceEndpoint();
+    c.setEndpoint(benchEp.port);
+    if (benchEp.live) c.setModel(ollamaModelFor(model));
+    else c.setModel(model);
     if (!c.ping()) {
-        out("ERROR: inference unreachable on 127.0.0.1:8080");
+        out("ERROR: inference unreachable on 127.0.0.1:8080 or 127.0.0.1:11434");
         return EXIT_NO_INFERENCE;
     }
     std::vector<json> msgs = {{{"role", "user"},
@@ -2001,11 +2062,14 @@ static int cmdDoctor(ToolRegistry& reg, InferenceClient& client) {
         return ok;
     };
 
-    // 1. Inference.
+    // 1. Inference. The endpoint is whichever engine actually answers; a
+    // literal 8080 here reported the healthy Ollama backup as a failure.
     bool live = client.ping();
+    const InferenceEndpoint docEp = probeInferenceEndpoint();
     add("inference_backend", live,
-        live ? "127.0.0.1:8080 answered a completion request"
-             : "no response from 127.0.0.1:8080");
+        live ? ("127.0.0.1:" + std::to_string(docEp.port) + " (" + docEp.label +
+                ") answered a completion request")
+             : "no response from 127.0.0.1:8080 or 127.0.0.1:11434");
 
     // 2. Compiler availability.
     CommandResult cl = runBoundedCommand("cmake --version", WORKSPACE_ROOT, 60000);
@@ -2179,19 +2243,27 @@ static int cmdCheckpoints() {
 
 static int cmdBackendStatus(InferenceClient& client) {
     bool live = client.ping();
+    const InferenceEndpoint ep = probeInferenceEndpoint();
+    const std::string active = live ? (std::string("local GGUF model served by ") +
+                                       ep.label + " on 127.0.0.1:" +
+                                       std::to_string(ep.port))
+                                    : std::string("none reachable");
+    const std::string endpoint =
+        live ? ep.url() : std::string("http://127.0.0.1:8080/v1/chat/completions");
     if (g_json) {
         outJson({{"primary", "deep2"},
                  {"backup", "ollama"},
-                 {"active", "local-gguf-llama-server"},
-                 {"endpoint", "http://127.0.0.1:8080/v1/chat/completions"},
+                 {"active", live ? std::string(ep.label) : "none"},
+                 {"endpoint", endpoint},
+                 {"port", live ? ep.port : 0},
                  {"reachable", live}});
         return live ? EXIT_OK : EXIT_NO_INFERENCE;
     }
     out("Backend router");
     out("  primary     : deep2");
     out("  backup       : ollama");
-    out("  active       : local GGUF model served by llama.cpp on 127.0.0.1:8080");
-    out("  endpoint     : http://127.0.0.1:8080/v1/chat/completions");
+    out("  active       : " + active);
+    out("  endpoint     : " + endpoint);
     out("  reachable    : " + std::string(live ? "yes" : "NO"));
     return live ? EXIT_OK : EXIT_NO_INFERENCE;
 }
@@ -2238,7 +2310,9 @@ static int cmdSwarm(const std::vector<std::string>& args) {
 
     // status
     InferenceClient c;
-    c.setEndpoint(8080);
+    const InferenceEndpoint swarmEp = probeInferenceEndpoint();
+    c.setEndpoint(swarmEp.port);
+    if (swarmEp.live) c.setModel(ollamaModelFor(c.model()));
     bool live = c.ping();
     if (g_json) {
         outJson({{"running", false},
@@ -2378,7 +2452,10 @@ int main(int argc, char** argv) {
     ToolRegistry reg;
     registerDefaultTools(reg, ws);
     InferenceClient client;
-    client.setEndpoint(8080);
+    const InferenceEndpoint mainEp = probeInferenceEndpoint();
+    client.setEndpoint(mainEp.port);
+    if (std::string(mainEp.label) == "ollama")
+        client.setModel(ollamaModelFor(client.model()));
 
     try {
         if (cmd == "run")        return cmdRun(rest);
