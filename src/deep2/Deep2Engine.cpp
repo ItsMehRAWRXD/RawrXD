@@ -3024,7 +3024,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             // Owned by ggufResult (VirtualAlloc / FreeTensorData) — not alignedFree.
             wt.mapped = true;
 
-            if (name == "token_embd.weight")
+            if (name == "token_embd.weight" || name == "token_embeddings.weight")
             {
                 modelWeights.tokenEmbed = wt;
                 // Authoritative vocabSize from embedding tensor, not metadata
@@ -3613,31 +3613,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     {
         auto ggmlTypeToTensorFormat = [](int ggmlType) -> TensorFormat
         {
-            switch (ggmlType)
+            // GGUF tensor types use the canonical IDs from QuantTypeTable.
+            // The previous switch treated removed IDs 4/5 as Q2_K/Q3_K and
+            // shifted the K-quants, causing residency metadata to disagree
+            // with the actual lm-head and embedding formats.
+            switch (static_cast<GGMLType>(ggmlType))
             {
-                case 2:
+                case GGMLType::GGML_TYPE_Q4_0:
                     return TensorFormat::Q4_0;
-                case 3:
+                case GGMLType::GGML_TYPE_Q4_1:
                     return TensorFormat::Q4_1;
-                case 10:
-                    return TensorFormat::Q4_K;
-                case 6:
+                case GGMLType::GGML_TYPE_Q5_0:
                     return TensorFormat::Q5_0;
-                case 7:
+                case GGMLType::GGML_TYPE_Q5_1:
                     return TensorFormat::Q5_1;
-                case 12:
-                    return TensorFormat::Q5_K;
-                case 13:
-                    return TensorFormat::Q6_K;
-                case 8:
+                case GGMLType::GGML_TYPE_Q8_0:
                     return TensorFormat::Q8_0;
-                case 4:
+                case GGMLType::GGML_TYPE_Q2_K:
                     return TensorFormat::Q2_K;
-                case 5:
+                case GGMLType::GGML_TYPE_Q3_K:
                     return TensorFormat::Q3_K;
-                case 1:
+                case GGMLType::GGML_TYPE_Q4_K:
+                    return TensorFormat::Q4_K;
+                case GGMLType::GGML_TYPE_Q5_K:
+                    return TensorFormat::Q5_K;
+                case GGMLType::GGML_TYPE_Q6_K:
+                    return TensorFormat::Q6_K;
+                case GGMLType::GGML_TYPE_F16:
                     return TensorFormat::FP16;
-                case 0:
+                case GGMLType::GGML_TYPE_F32:
                     return TensorFormat::FP32;
                 default:
                     return TensorFormat::Unknown;
@@ -4347,6 +4351,10 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
     const auto* tokenEmbd = bp16Streamer_->find("token_embd.weight");
     if (!tokenEmbd)
     {
+        tokenEmbd = bp16Streamer_->find("token_embeddings.weight");
+    }
+    if (!tokenEmbd)
+    {
         printf("[Deep2Engine] ERROR: BP16 missing token_embd.weight\n");
         bp16Streamer_->close();
         bp16Streamer_.reset();
@@ -4429,6 +4437,10 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
 
     // Map global tensors
     mapTensor("token_embd.weight", modelWeights.tokenEmbed);
+    if (!modelWeights.tokenEmbed.data)
+    {
+        mapTensor("token_embeddings.weight", modelWeights.tokenEmbed);
+    }
     mapTensor("output.weight", modelWeights.lmHead);
     if (!modelWeights.lmHead.data)
     {
@@ -5142,10 +5154,14 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
         return false;
     }
 
-    const auto embedOpt = globalIndex_->Find("token_embd.weight");
+    auto embedOpt = globalIndex_->Find("token_embd.weight");
     if (!embedOpt.has_value())
     {
-        fprintf(stderr, "[MULTISHARD_EMBED] token_embd.weight not found in GlobalTensorIndex\n");
+        embedOpt = globalIndex_->Find("token_embeddings.weight");
+    }
+    if (!embedOpt.has_value())
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] token embedding tensor not found in GlobalTensorIndex\n");
         if (output && config.hiddenDim > 0)
         {
             memset(output, 0, config.hiddenDim * sizeof(float));
@@ -11655,6 +11671,24 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
     {
         // No model loaded - error
         memset(logits, 0, config.vocabSize * sizeof(float));
+        return;
+    }
+
+    // The output projection is the decisive post-forward correctness boundary.
+    // Validate its admitted geometry before LinearW so a missing/tied embedding
+    // cannot silently read the wrong orientation or overrun the hidden state.
+    if (!hiddenState || !logits || modelWeights.lmHead.rows < config.vocabSize ||
+        modelWeights.lmHead.cols != config.hiddenDim)
+    {
+        fprintf(stderr,
+                "[Deep2Engine] LM_HEAD_GEOMETRY_MISMATCH name=%s rows=%zu cols=%zu expected_rows=%zu "
+                "expected_cols=%zu tied=%d\n",
+                modelWeights.lmHead.name.c_str(), modelWeights.lmHead.rows, modelWeights.lmHead.cols,
+                config.vocabSize, config.hiddenDim, modelWeights.tieEmbeddings ? 1 : 0);
+        if (logits)
+        {
+            std::fill(logits, logits + config.vocabSize, 0.0f);
+        }
         return;
     }
 

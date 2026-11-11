@@ -28,8 +28,10 @@
 #include <csignal>
 #include <cctype>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <regex>
+#include <sstream>
 
 using namespace rawr;
 using Deep2::Deep2Engine;
@@ -39,13 +41,16 @@ static const char* WORKSPACE_ROOT = R"(F:\rawrxd)";
 // Ensure the Windows console emits UTF-8 (not CP1252) so detokenized model
 // output and all CLI text render correctly instead of mojibake.
 #if defined(_WIN32)
+#include <io.h>
 #include <windows.h>
 static void initConsoleEncoding() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 }
+static bool stdinIsInteractive() { return _isatty(_fileno(stdin)) != 0; }
 #else
 static void initConsoleEncoding() {}
+static bool stdinIsInteractive() { return true; }
 #endif
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -810,14 +815,26 @@ static int cmdRun(const std::vector<std::string>& args) {
     for (size_t i = 1; i < args.size(); ++i) {
         const std::string a = args[i];
         if (a == "--mode" && i + 1 < args.size()) modeName = args[++i];
+        else if (a.rfind("--mode=", 0) == 0) modeName = a.substr(7);
         else if (a == "--backend" && i + 1 < args.size()) backend = args[++i];
+        else if (a.rfind("--backend=", 0) == 0) backend = a.substr(10);
         else if (a == "--json") g_json = true;
         else if ((a == "--goal" || a == "--prompt" || a == "--task") &&
                  i + 1 < args.size())
             goal = args[++i];
+        else if (a.rfind("--goal=", 0) == 0) goal = a.substr(7);
+        else if (a.rfind("--prompt=", 0) == 0) goal = a.substr(9);
+        else if (a.rfind("--task=", 0) == 0) goal = a.substr(7);
         else if (a == "--max-tokens" && i + 1 < args.size()) {
             try {
                 g_run_max_tokens = (std::max)(1, std::stoi(args[++i]));
+            } catch (...) {
+                out("ERROR: invalid --max-tokens value");
+                return EXIT_FAIL;
+            }
+        } else if (a.rfind("--max-tokens=", 0) == 0) {
+            try {
+                g_run_max_tokens = (std::max)(1, std::stoi(a.substr(13)));
             } catch (...) {
                 out("ERROR: invalid --max-tokens value");
                 return EXIT_FAIL;
@@ -829,6 +846,17 @@ static int cmdRun(const std::vector<std::string>& args) {
         else goal += (goal.empty() ? "" : " ") + a;
     }
     std::fprintf(stderr, "RUN_CONFIG_MAX_TOKENS=%d\n", g_run_max_tokens);
+
+    // A pipe is a one-shot CLI invocation, not an interactive session. Consume
+    // redirected stdin as the goal so `echo task | rawr run model` reaches the
+    // same autonomous path as --prompt instead of blocking in the REPL.
+    if (goal.empty() && !stdinIsInteractive()) {
+        std::ostringstream redirected;
+        redirected << std::cin.rdbuf();
+        goal = redirected.str();
+        while (!goal.empty() && (goal.back() == '\r' || goal.back() == '\n'))
+            goal.pop_back();
+    }
 
     const ModeProfile* mode = findMode(modeName);
     if (!mode) {
