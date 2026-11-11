@@ -1,0 +1,52 @@
+WinMain entered
+--user-data-dir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_alive40_20261110-064801 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000002010B0 err=0 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.loadSession
+onCreate:finishSession.loadSession.done
+onCreate:finishSession.switchTab
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.deferSize
+onCreate:finishSession.done

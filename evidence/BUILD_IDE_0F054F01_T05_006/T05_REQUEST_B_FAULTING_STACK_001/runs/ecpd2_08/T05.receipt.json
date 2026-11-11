@@ -1,0 +1,31 @@
+﻿{
+    "Gate":  "T05_EXITCODE_CAPTURE",
+    "Attempt":  8,
+    "DumpMode":  "procdump",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  36660,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  true,
+    "ProcessAlive":  true,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  true,
+    "TranscriptDelta":  "\r\nAI: RAWRXD_CANCEL_RECOVERY_OK\n\r\n\r\n",
+    "Error":  null,
+    "ExitCodeSigned":  null,
+    "ExitCodeHex":  null,
+    "ExitCodeCaptured":  false,
+    "DeathClass":  null,
+    "DumpPaths":  [
+
+                  ],
+    "ProcdumpLog":  "F:\\rawrxd\\evidence\\BUILD_IDE_0F054F01_T05_006\\T05_REQUEST_B_FAULTING_STACK_001\\runs\\ecpd2_08\\procdump.log",
+    "Timeline":  [
+                     "2026-11-10T16:24:52.7360829Z SPAWNED pid=36660",
+                     "2026-11-10T16:24:52.7498610Z PROCDUMP_ATTACHED pdPid=41080",
+                     "2026-11-10T16:24:55.1463131Z REQUEST_A_SENT",
+                     "2026-11-10T16:24:55.6785311Z CANCEL_CLICKED",
+                     "2026-11-10T16:24:58.6971134Z REQUEST_B_SENT"
+                 ]
+}

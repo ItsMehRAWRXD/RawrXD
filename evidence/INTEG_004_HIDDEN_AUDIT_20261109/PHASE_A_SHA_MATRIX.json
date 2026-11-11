@@ -1,0 +1,178 @@
+{
+  "asof_utc": "2026-11-09T12:42:00Z",
+  "motd_ack": 1,
+  "phase": "A",
+  "mission": "Reverify INTEG_004 cross-subsystem gates on candidate SHA only",
+  "candidate_sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+  "candidate_exe_present": false,
+  "phase_a_overall": "BLOCKED",
+  "promote": 0,
+  "certified": 0,
+  "product_pass": 0,
+  "tip_move_authorized": 0,
+  "tip_climb": "HOLD",
+  "controlling_tip": "CC79",
+  "controlling_tip_sha256": "CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4",
+  "a4f_immutable": 1,
+  "no_cross_sha_pass_inheritance": 1,
+  "invent_pass": 0,
+  "harness_run_this_turn": 0,
+  "substitute_sha_runs": 0,
+  "locate": {
+    "expected_path": "F:\\rawrxd\\evidence\\FULL_FEATURE_FINAL_COMPLETION_001\\candidates\\tip_final_integ_004\\RawrXD-Win32IDE-Native-Ext.exe",
+    "tip004_live_sha256": "35EFA9BAE44AD23F6007AC158E1BF0D6C297A5412C8DEF513434058C6D044351",
+    "build_twin_sha256": "35EFA9BAE44AD23F6007AC158E1BF0D6C297A5412C8DEF513434058C6D044351",
+    "prior_overwrite_sha256_seen": "69FE3D921FECC3DC66DA9E71901B338A045D706717F00C3B587B3B1BDB1268BB",
+    "target_match": false,
+    "locate_log": "logs/phase_a_sha_locate_20261109.txt",
+    "blocker_primary": "CANDIDATE_BINARY_ABSENT_OR_OVERWRITTEN"
+  },
+  "gates": [
+    {
+      "id": 1,
+      "gate": "EXTENSION_HOST",
+      "command": "powershell -NoProfile -File F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ext_smoke_oneshot.ps1",
+      "env": "TIP_EXE=candidate; fixture=FULL_FEATURE_ONESHOT_001\\fixtures\\ext_hello",
+      "expected": "discover/load/activate at minimum; lifecycle if harness; FORCE_KILL=0 clean quit",
+      "observed": "NOT_RUN this turn; candidate EXE absent",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_note": "On 47451F24: EXT_LOAD/ACTIVATE/UNLOAD=PASS; EXT_CLEANUP=FAIL FORCE_KILL=1; EXTENSIONS=FAIL (INTEG004_EXT_REVERIFY_RECEIPT.md)"
+    },
+    {
+      "id": 2,
+      "gate": "CHAT_LOCAL_AI",
+      "command": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\chat_ctrl_enter_verify.ps1 | chat_17_probe_matrix.ps1",
+      "env": "TIP_EXE=candidate; stream/stop/clear",
+      "expected": "stream + stop + clear on candidate SHA",
+      "observed": "NOT_RUN this turn; no prior 47451F24 chat receipt",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_note": "NEEDS_REVERIFY; never measured on candidate"
+    },
+    {
+      "id": 3,
+      "gate": "TERMINAL",
+      "command": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\term_job.ps1",
+      "env": "TIP_EXE=candidate",
+      "expected": "spawn/output/exit on candidate SHA",
+      "observed": "NOT_RUN this turn; CC79 terminal receipts not transferable",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_note": "NEEDS_REVERIFY; never measured on candidate"
+    },
+    {
+      "id": 4,
+      "gate": "OUTPUT",
+      "command": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ide_panels_gui_verify.ps1",
+      "env": "TIP_EXE=candidate",
+      "expected": "diagnostic routing/render on candidate SHA",
+      "observed": "NOT_RUN this turn; historical GUI_OUTPUT_PANEL_E2E=PASS receipt-only",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_note": "Receipt-only OUTPUT_ID1012_LEN=-1 / GUI_OUTPUT_PANEL_E2E=PASS on 47451F24; not re-verified"
+    },
+    {
+      "id": 5,
+      "gate": "DEBUG_HEADLESS",
+      "command": "debug_backend_verify + debuggee_fixture (candidate-bound)",
+      "env": "TIP_EXE=candidate",
+      "expected": "launch/BP/step/cleanup on candidate SHA",
+      "observed": "NOT_RUN this turn; CC79 debug receipts not transferable",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_note": "NEEDS_REVERIFY; never measured on candidate"
+    },
+    {
+      "id": 6,
+      "gate": "PROBLEMS_UI",
+      "command": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ide_panels_gui_verify.ps1",
+      "env": "RAWRXD_PROBLEMS_FIXTURE=broken_multi.cpp; VS_UNICODE_OUTPUT scrubbed",
+      "expected": "PROBLEMS_ITEMS=3 AND POSTED_NM_DBLCLK AND ACTUAL_EDITOR_CARET_NAVIGATION (separate evidence)",
+      "observed": "NOT_RUN this turn; candidate EXE absent",
+      "exit": null,
+      "sha256": "47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+      "disposition": "BLOCKED",
+      "historical_subchecks": {
+        "items_3": {
+          "value": "PROBLEMS_ID1312_ITEMS=3",
+          "status": "historical_receipt_only"
+        },
+        "posted_nm_dblclk": {
+          "value": "CLICK_TO_LINE=POSTED_NM_DBLCLK",
+          "status": "historical_receipt_only",
+          "equals_actual_caret_nav": false
+        },
+        "actual_editor_caret_navigation": {
+          "value": null,
+          "status": "NOT_EVIDENCED",
+          "required_for_full_pass": true
+        }
+      },
+      "law": "POSTED_NM_DBLCLK != ACTUAL_EDITOR_CARET_NAVIGATION"
+    }
+  ],
+  "vs_unicode_output_evidence": {
+    "preserved": true,
+    "isolated_receipt": "receipts/COMPILER_CAPTURE_ISOLATED_RECEIPT.txt",
+    "root_cause": "receipts/COMPILER_ROOT_CAUSE_001.txt",
+    "poison": "diag=False out_len=74",
+    "scrub": "diag=True out_len=887",
+    "authorizes_tip_move": false
+  },
+  "non_candidate_images": [
+    {
+      "role": "CONTROLLING_CC79",
+      "sha256": "CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4",
+      "may_inherit_candidate_pass": false
+    },
+    {
+      "role": "tip_004_live",
+      "sha256": "35EFA9BAE44AD23F6007AC158E1BF0D6C297A5412C8DEF513434058C6D044351",
+      "may_inherit_candidate_pass": false
+    },
+    {
+      "role": "tip_004_prior_overwrite",
+      "sha256": "69FE3D921FECC3DC66DA9E71901B338A045D706717F00C3B587B3B1BDB1268BB",
+      "may_inherit_candidate_pass": false
+    },
+    {
+      "role": "tip_003_live",
+      "sha256": "DD60FFB8CFB5133ADC0C6E59124C4E4A199E26F310FD00C6A55EC9F7D8A9497C",
+      "may_inherit_candidate_pass": false
+    },
+    {
+      "role": "frozen_A4F",
+      "sha256": "A4F083DFB9CCD1F78036E1CDCDCA9AF881EF10B3E34170B68C4610D51AC6EF4E",
+      "may_inherit_candidate_pass": false,
+      "immutable": true
+    }
+  ],
+  "blockers": [
+    "CANDIDATE_BINARY_ABSENT_OR_OVERWRITTEN: no EXE with SHA 47451F241262A7F4471D60C3D12454A93EF1C333273BEFF828B9A69F23DC274F",
+    "All six Phase A gates BLOCKED — no bindable candidate image",
+    "Historical Problems seal lacks independent ACTUAL_EDITOR_CARET_NAVIGATION evidence",
+    "Historical EXTENSIONS=FAIL on 47451F24 (EXT_CLEANUP/FORCE_KILL) must be remade after restore"
+  ],
+  "harnesses_inventoried_not_run": [
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ext_smoke_oneshot.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ide_panels_gui_verify.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\chat_ctrl_enter_verify.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\chat_17_probe_matrix.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\term_job.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\ea5d_output_problems_hwnd.ps1",
+    "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\harness\\problems_gui_measure_007.ps1"
+  ],
+  "next": "RESTORE_OR_REPRODUCE_47451F24_THEN_RERUN_GATES",
+  "artifacts": {
+    "matrix_md": "PHASE_A_SHA_MATRIX.md",
+    "matrix_json": "PHASE_A_SHA_MATRIX.json",
+    "pending_note": "PHASE_A_PENDING.md",
+    "locate_log": "logs/phase_a_sha_locate_20261109.txt"
+  }
+}

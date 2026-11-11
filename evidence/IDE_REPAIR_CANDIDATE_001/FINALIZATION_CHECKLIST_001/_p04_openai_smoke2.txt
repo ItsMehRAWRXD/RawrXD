@@ -1,0 +1,12 @@
+LISTEN_STDERR_MARKER=True
+NETSTAT=
+HEALTH_OK=True
+HEALTH_CODE=200
+HEALTH_BODY={"model_id":"tinyllama-1.1b-chat-v1.0.Q4_K_M","model_loaded":true,"status":"ok"}
+MODELS_CODE=200
+MODELS_BODY={"data":[{"created":1794338841,"id":"tinyllama-1.1b-chat-v1.0.Q4_K_M","object":"model","owned_by":"deep2-local"}],"object":"list"}
+PID=33780
+EXE=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+SHA256=FA42C75BA6762BF0C0248D23718D4535E028B3010B5F9CFD3BA52FE02CBAA97B
+PROMOTE=0
+GENERATION_NOT_CLAIMED=1

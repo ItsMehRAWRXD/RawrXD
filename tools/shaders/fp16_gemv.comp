@@ -1,0 +1,83 @@
+#version 450
+
+// fp16_gemv.comp -- RAWRXD_DEEP2_F16_QUANT_DOT_CLOSURE
+//
+// FP16 weight x FP32 activation dot product, one invocation per output row.
+//
+// Several model families (qwen3: 36 x blk.N.attn_v.weight [4096,1024] F16)
+// ship FP16 projections among otherwise k-quantised weights. Without a kernel
+// those matmuls run on the CPU (216 CPU calls on a 3-token qwen3:8b
+// certification), which breaks the GPU-only gate. The kernel reads the packed
+// fp16 weights as uint32 word pairs, converts with the same fp16->fp32
+// routine the quant-dot shader uses, and dots them against the RAW float
+// activation -- no quantisation, so the CPU reference and this kernel agree to
+// fp32 rounding.
+//
+// Host contract:
+//   * n_in must be even (two fp16 per uint32 word; odd n_in stays on the CPU
+//     path so alignment never has to be assumed).
+//   * binding 0: float  activation[n_in]
+//   * binding 1: uint32 weights[n_out * n_in / 2]
+//   * binding 2: float  output[n_out]
+//   * push constants: n_out, n_in
+
+layout (local_size_x = 1) in;
+
+layout(set = 0, binding = 0, std430) readonly  buffer InF { float in_f[]; };
+layout(set = 0, binding = 1, std430) readonly  buffer W16 { uint w16[]; };
+layout(set = 0, binding = 2, std430) writeonly buffer Out { float out_f[]; };
+
+layout(push_constant) uniform PushConstants {
+    uint n_out;
+    uint n_in;
+};
+
+// IEEE 754 binary16 -> binary32 (the fp16 decode quant_dot.comp also uses, so
+// both kernels round identically). The sign is applied ONCE, at the end: the
+// normal path leaves it out of the bit pattern and the subnormal path starts
+// from an unsigned magnitude, so a sign in the pattern must not be applied
+// again there (that bug flipped every negative weight positive).
+float half_to_float(uint u) {
+    uint sign = (u >> 15) & 1u;
+    int  exp  = int((u >> 10) & 0x1Fu);
+    uint frac = u & 0x3FFu;   // binary16 has a TEN-bit mantissa, not six
+    float f;
+    if (exp == 0) {
+        if (frac == 0u) {
+            f = 0.0;
+        } else {
+            // subnormal half: frac * 2^-24
+            f = float(frac) * (1.0f / 16777216.0f);
+        }
+    } else if (exp == 31) {
+        f = frac == 0u ? uintBitsToFloat(0x7F800000u) : uintBitsToFloat(0x7FC00000u);
+    } else {
+        uint e = uint(exp - 15 + 127);
+        f = uintBitsToFloat((e << 23) | (frac << 13));
+    }
+    return sign == 1u ? -f : f;
+}
+
+uint pack_u16(uint byte_offset) {
+    uint word = w16[byte_offset >> 2];
+    uint shift = 8u * (byte_offset & 3u);
+    return (word >> shift) & 0xFFFFu;
+}
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= n_out) return;
+    // Row r's fp16 words start at byte offset r * n_in * 2. n_in is even and
+    // that offset is 4-aligned, so elements i and i+1 are the two halves of
+    // ONE uint32 word (read the word, not a uint16: a uint16 has no high half).
+    uint base = row * n_in * 2u;
+    float sumf = 0.0;
+    for (uint i = 0u; i < n_in; i += 2u) {
+        uint word = w16[(base + i * 2u) >> 2];
+        float w0 = half_to_float(word & 0xFFFFu);
+        float w1 = half_to_float(word >> 16);
+        sumf += w0 * in_f[i];
+        sumf += w1 * in_f[i + 1u];
+    }
+    out_f[row] = sumf;
+}

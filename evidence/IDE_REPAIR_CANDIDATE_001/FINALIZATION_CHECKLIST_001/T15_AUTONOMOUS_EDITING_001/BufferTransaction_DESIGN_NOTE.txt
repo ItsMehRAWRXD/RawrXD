@@ -1,0 +1,10 @@
+BufferTransaction_DESIGN_NOTE
+ASOF_UTC=2026-11-10T18:48:55.5254062Z
+PROMOTE=0
+STATUS=DESIGN_ONLY
+REASON=No EditorDocument / BufferTransaction symbols in F:\rawrxd\src\win32app
+DO_NOT_FAKE_CLASSES=1
+SUGGESTED_FUTURE_SURFACE=If/when a real document transaction API lands on the editor
+  (begin/commit/rollback around RichEdit id=1001 or document model), introduce
+  BufferTransaction.h as a thin native wrapper over that API ??? not a mock.
+RELATED_IDS=IDC_EDITOR=1001 IDM_EDIT_UNDO=2007

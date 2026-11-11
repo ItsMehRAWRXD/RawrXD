@@ -1,0 +1,9 @@
+﻿_0000516C_0000000004554E2D run_id=run_unset pid=20844
+ui_update request_id=0 rendered=1 complete=0 response_bytes=135 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=38812 exe=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\deep2_agentic_loop.exe workdir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures
+ui_update request_id=0 rendered=1 complete=0 response_bytes=25 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+ui_update request_id=0 rendered=1 complete=1 response_bytes=3763 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=0 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+RESPONSE_END request_id=0 session=1 bytes=3923 session_id=sid_0000516C_0000000004554E2D run_id=run_unset
+

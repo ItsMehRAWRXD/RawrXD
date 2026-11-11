@@ -1,0 +1,77 @@
+BUILD_REQUEST fixture=F:\rawrxd\T080_test_bad.cpp
+PROCESS_CREATE cmdline=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"
+CWD=F:\rawrxd
+CL_EXE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+FORCE_PIPE=1
+SCRUB=VS_UNICODE_OUTPUT
+NO_VCVARS_IN_PIPE=1
+PROCESS_STARTED pid=5640 transport=1
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE T080_test_bad.cpp
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=5640 exit=0 disposition=success transport=1 stdout_bytes=92 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=32736 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35436 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=5304 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21900 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=100 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=39708 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=30868 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=26448 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=18368 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25536 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=4648 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=15588 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25836 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=38460 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=32872 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25904 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7436 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=42104 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=45128 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=45236 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=28040 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21544 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21120 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=316 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=31104 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25392 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35148 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7928 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=18412 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35800 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=3592 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=24400 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success

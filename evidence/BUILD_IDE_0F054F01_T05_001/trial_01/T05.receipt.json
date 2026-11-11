@@ -1,0 +1,9 @@
+﻿{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "CancelObserved":  false,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  true,
+    "Error":  null
+}

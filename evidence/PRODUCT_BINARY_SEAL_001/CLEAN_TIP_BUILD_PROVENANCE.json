@@ -1,0 +1,82 @@
+﻿{
+    "schema":  "PRODUCT_BINARY_SEAL_001/CLEAN_TIP_BUILD_PROVENANCE",
+    "asof_utc":  "2026-11-02T13:03:53.4127945Z",
+    "BUILD_SCOPE":  "CANDIDATE_ONLY",
+    "SOURCE_AUTHORITY":  "a5ae60efecac790598e2e46d9e499eb8ac7287af",
+    "worktree_path":  "F:\\rawrxd\\.worktrees\\product_seal_clean_a5ae60ef",
+    "worktree_head":  "a5ae60efecac790598e2e46d9e499eb8ac7287af",
+    "worktree_head_match":  true,
+    "worktree_diff_name_count":  0,
+    "worktree_untracked_count":  1,
+    "CLEAN_TIP_WORKTREE_OK":  false,
+    "build_dir":  "F:\\rawrxd\\.worktrees\\product_seal_clean_a5ae60ef_build",
+    "target":  "RawrXD-Win32IDE-Native",
+    "cmake_options":  [
+                          "-G Ninja",
+                          "-DCMAKE_BUILD_TYPE=Release",
+                          "-DRAWRXD_BUILD_WIN32IDE=ON",
+                          "-DRAWRXD_BUILD_WIN32IDE_QT=OFF",
+                          "-DRAWRXD_BUILD_TESTS=OFF",
+                          "-DRAWRXD_BUILD_BENCHMARKS=OFF"
+                      ],
+    "cmake_generator":  "CMAKE_GENERATOR:INTERNAL=Ninja",
+    "cmake_build_type":  "CMAKE_BUILD_TYPE:STRING=Release",
+    "cmake_cxx_compiler":  "CMAKE_CXX_COMPILER:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+    "cmake_version_line":  "cmake version 4.4.2",
+    "ninja_version":  "1.13.2",
+    "vs_prompt":  "Visual Studio 2022 Developer Command Prompt v17.14.39",
+    "vs_install":  "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools",
+    "msvc_cl":  "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+    "candidate_exe":  "F:\\rawrxd\\.worktrees\\product_seal_clean_a5ae60ef_build\\bin\\RawrXD-Win32IDE-Native.exe",
+    "candidate_sha256":  "CB34EF4E1A3C964ADEC18F02ABBE605B85CB83F10961BCA6A9DB2D812FC0C6FB",
+    "candidate_bytes":  1608192,
+    "candidate_mtime_utc":  "2026-11-02T12:57:56.3310309Z",
+    "build_log":  "F:\\rawrxd\\evidence\\PRODUCT_BINARY_SEAL_001\\CLEAN_TIP_BUILD.log",
+    "build_exit":  0,
+    "flags_make":  [
+
+                   ],
+    "compiler_flags":  {
+                           "CMAKE_CXX_FLAGS":  "/DWIN32 /D_WINDOWS /EHsc",
+                           "CMAKE_CXX_FLAGS_RELEASE":  "/O2 /Ob2 /DNDEBUG",
+                           "observed_cl_override_warning":  "D9025 overriding /EHs with /EHa (and reverse) on many TUs"
+                       },
+    "dependencies":  {
+                         "VulkanSDK":  "1.4.357.0",
+                         "Vulkan_LIBRARY":  "C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib",
+                         "MSVC_tools":  "14.44.35207",
+                         "WindowsSDK_mt":  "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe",
+                         "WindowsSDK_version":  "10.0.26100.0",
+                         "CMake":  "4.4.2",
+                         "Ninja":  "1.13.2"
+                     },
+    "note_untracked":  "worktree_untracked_count=1 path=src/deep2/shaders/deep2_qgemv.spv classified BUILD_GENERATED (glslc from deep2_qgemv.comp via build.ninja). Not source mutation. CLEAN_TIP_WORKTREE_OK=false while untracked remains (do not invent CLEAN).",
+    "AUTHORITY_PRODUCT_BINARY":  "NOT_VERIFIED",
+    "PRODUCTION_BINARY_MUTATION":  0,
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "TIP_CLIMB":  "HOLD",
+    "untracked_paths":  [
+                            {
+                                "classification":  "BUILD_GENERATED",
+                                "path":  "src/deep2/shaders/deep2_qgemv.spv",
+                                "rationale":  "glslc custom command in build.ninja writes SPIR-V beside deep2_qgemv.comp into source tree; magic 0x07230203; mtime aligns with candidate build; not a hand-edited source mutation",
+                                "bytes":  18528,
+                                "created_utc":  "2026-11-02T12:56:03Z"
+                            }
+                        ],
+    "untracked_is_source_mutation":  false,
+    "untracked_is_build_generated":  true,
+    "CLEAN_TIP_WORKTREE_NOTE":  "Untracked build artifact remains; CLEAN_TIP_WORKTREE_OK stays false (do not invent CLEAN)",
+    "provenance_stage67_utc":  "2026-11-02T13:10:49.3680596Z",
+    "host_prereq":  {
+                        "f_free_gb":  483.32,
+                        "HOST_STABILITY_PREREQ":  "OK_FOR_CANDIDATE_RUNTIME",
+                        "free_phys_mb":  39336.5,
+                        "rawrxd_win32ide_ui_procs":  0,
+                        "total_phys_mb":  63094.3,
+                        "crash_dumps_noted":  [
+                                                  "RawrXD-Win32IDE.exe.24408.dmp @ 2026-11-02T03:22:35 local (prior Qt/non-candidate; noted only)"
+                                              ]
+                    }
+}

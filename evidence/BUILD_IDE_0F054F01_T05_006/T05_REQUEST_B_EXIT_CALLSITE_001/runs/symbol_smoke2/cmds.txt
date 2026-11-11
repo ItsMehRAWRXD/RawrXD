@@ -1,0 +1,10 @@
+.logopen F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_EXIT_CALLSITE_001\runs\symbol_smoke2\cdb.log
+.sympath srv*
+.reload /f ntdll.dll
+.reload /f kernel32.dll
+.reload /f kernelbase.dll
+lm m kernel*
+x kernelbase!*Exit*
+x kernel32!*Exit*
+u ntdll!RtlExitUserProcess L3
+q

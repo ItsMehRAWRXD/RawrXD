@@ -1,0 +1,3 @@
+state=recovered
+target=bug.cpp
+backup=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\.rawrxd\agent_transactions\txn_62556126742700\before.bin

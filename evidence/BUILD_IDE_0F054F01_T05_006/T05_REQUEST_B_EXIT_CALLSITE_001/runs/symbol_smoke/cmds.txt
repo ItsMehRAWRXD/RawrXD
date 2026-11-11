@@ -1,0 +1,7 @@
+.logopen F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_EXIT_CALLSITE_001\runs\symbol_smoke\cdb.log
+x kernel32!ExitProcess
+x kernelbase!ExitProcess
+x ntdll!RtlExitUserProcess
+x ucrtbase!exit
+x ucrtbase!_exit
+q

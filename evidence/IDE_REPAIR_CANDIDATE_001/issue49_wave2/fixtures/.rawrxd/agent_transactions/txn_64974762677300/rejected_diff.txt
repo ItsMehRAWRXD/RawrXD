@@ -1,0 +1,8 @@
+BEFORE_BYTES=292
+AFTER_BYTES=282
+ERROR=compile failed (exit 2 raw=2): bug.cpp
+bug.cpp(8): error C2660: 'undeclared_fn': function does not take 2 arguments
+bug.cpp(4): note: see declaration of 'undeclared_fn'
+bug.cpp(8): note: while trying to match the argument list '(int, int)'
+
+AFTER_HEAD_HEX=23696E636C756465203C63737464696F3E0A0A2F2F2049737375652023343920576176653220666978747572653A20636F6D70696C652D6661696C202B206172

@@ -1,0 +1,65 @@
+{
+  "certified": false,
+  "gpu_expert_witness": "ABSENT",
+  "identity": {
+    "experts": [
+      [
+        0,
+        0.320001
+      ],
+      [
+        53,
+        0.361316
+      ],
+      [
+        103,
+        0.348622
+      ],
+      [
+        158,
+        0.361753
+      ],
+      [
+        216,
+        0.340821
+      ],
+      [
+        227,
+        0.366748
+      ],
+      [
+        232,
+        0.379366
+      ],
+      [
+        318,
+        0.348372
+      ]
+    ],
+    "layer": 1,
+    "rows": 7168,
+    "stick": 0
+  },
+  "inputs_sha256": {
+    "cpu": "d662081f336f230e8608d7e384ef2fa366bb6880fd3436272eff59d53066ae53",
+    "gpu": "23486ad1ded19e881fc58a817ea8b3cd433708037c96a147c5dc122c635a2dd4",
+    "manifest": "3b29a75808fb0a121455ce33d2eca2a4085cf62246a6829a071e2bbc09e23de4"
+  },
+  "metrics": {
+    "elements": 7168,
+    "max_abs": 0.00019650708999999992,
+    "mean_abs": 4.261386885366039e-05,
+    "rms_abs": 5.34669992432931e-05,
+    "within_threshold": true,
+    "worst_index": 4774
+  },
+  "note": "Aggregate-only CPU vs GPU diagnostic; no per-expert provenance",
+  "promote": 0,
+  "schema": "DEEP2_KIMI_AGGREGATE_VECTOR_AUDIT_001/v1",
+  "scope": "AGGREGATE_ONLY_NOT_PER_EXPERT_PARITY",
+  "status": "PASS_DIAGNOSTIC",
+  "thresholds": {
+    "max_abs": 1.0,
+    "max_rms": 0.2
+  }
+}

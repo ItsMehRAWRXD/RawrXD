@@ -1,0 +1,17 @@
+﻿{
+    "Attempt":  2,
+    "PID":  37392,
+    "Cancel":  true,
+    "SentB":  true,
+    "Alive":  true,
+    "ExitHex":  null,
+    "Hit":  "NONE",
+    "Stack":  false,
+    "Err":  null,
+    "Timeline":  [
+                     "SPAWNED 37392",
+                     "REQUEST_A_SENT",
+                     "CANCEL",
+                     "REQUEST_B_SENT"
+                 ]
+}

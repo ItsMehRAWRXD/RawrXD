@@ -1,0 +1,1 @@
+﻿REQUEST_B_EXIT_HIT attempt=5 exitHex=0xFFFFFFFF signed=-1 dumps=0 sent=False

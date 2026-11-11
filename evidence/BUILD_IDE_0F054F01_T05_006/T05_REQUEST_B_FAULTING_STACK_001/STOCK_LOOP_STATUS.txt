@@ -1,0 +1,1 @@
+STOCK_CRASH_HIT=True

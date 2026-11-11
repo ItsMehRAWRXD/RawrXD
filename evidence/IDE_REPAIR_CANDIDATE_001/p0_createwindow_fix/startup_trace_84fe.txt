@@ -1,0 +1,1246 @@
+WinMain entered
+--user-data-dir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_tip_2ffd 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000731164 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_tip_2ffd_b 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000741164 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_2ffd_e2e_061154 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000003E0F30 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--ext-dir F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\fixtures\ext_hello --ext-cmd extHello.ping --ext-quit 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000771164 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+ext-host wire load OK
+ext-quit DestroyWindow
+ext-quit PostQuitMessage re-armed
+entering message loop
+runMessageLoop entered
+ext-quit ExitProcess
+WinMain entered
+--ext-malformed F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\fixtures\ext_malformed --ext-quit 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000570A6A err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+ext-host wire load FAIL/SKIP
+ext-quit DestroyWindow
+ext-quit PostQuitMessage re-armed
+entering message loop
+runMessageLoop entered
+ext-quit ExitProcess
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\can01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000FF06CA err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--ext-dir F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\fixtures\ext_hello --ext-cmd extHello.ping --ext-quit 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000620312 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+ext-host wire load OK
+ext-quit DestroyWindow
+ext-quit PostQuitMessage re-armed
+entering message loop
+runMessageLoop entered
+ext-quit ExitProcess
+WinMain entered
+--ext-malformed F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\fixtures\ext_malformed --ext-quit 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000001F14AC err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+ext-host wire load FAIL/SKIP
+ext-quit DestroyWindow
+ext-quit PostQuitMessage re-armed
+entering message loop
+runMessageLoop entered
+ext-quit ExitProcess
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\can01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000004413F2 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\msw01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000C110CC err=183 parentVis=0
+onCreate:chatPanel
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\msw01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:powerShellPanel
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000710E9E err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+WinMain command line empty
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000012F0ABC err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+WinMain entered
+WinMain command line empty
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000001210580 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\per01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=000000000042136E err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\per01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000001B0FD0 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+WinMain entered
+WinMain command line empty
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000CB08EC err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\per01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=000000000002119A err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\per02" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000001D0F84 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\per01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000000A132E err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+runMessageLoop entered
+runMessageLoop entered
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\per02" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000000510B8 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\rec01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000C30AD0 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061223\rec01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+runMessageLoop entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000100F16 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\rec01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=00000000002A14A2 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+runMessageLoop entered
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir="F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\userdata_20261110-061255\rec01" 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000001A40672 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp 
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000271358 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+initial document opened
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done
+WinMain entered
+--user-data-dir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_diag_84fe 
+user-data-dir bound
+before Win32IDE constructor
+Win32IDE constructor body entered
+before CPUInferenceEngine constructor
+after CPUInferenceEngine constructor
+before logger initialization
+before initializeAgenticBridge
+after initializeAgenticBridge
+after TransparentRenderer creation
+before initializePowerShellState
+after initializePowerShellState
+before resetToDefaultTheme
+after resetToDefaultTheme
+before loadCodeSnippets
+after loadCodeSnippets
+after Win32IDE constructor
+createWindow entered
+RegisterClassExA succeeded
+onCreate:documentTabs
+onCreate:docTabs.create
+onCreate:docTabs.hwndReady
+onCreate:docTabs.doneLite
+onCreate:activityBar
+onCreate:primarySidebar
+onCreate:statusBar
+onCreate:outputTabsDeferred
+onCreate:panel
+createPanel: hwnd=0000000000091274 err=183 parentVis=0
+onCreate:chatPanel
+onCreate:powerShellPanel
+onCreate:editorSurface
+onCreate:ghostText
+onCreate:fileSafety
+onCreate:postFinish
+onCreate:done
+CreateWindowExA succeeded
+createWindow succeeded
+ShowWindow and UpdateWindow returned
+showWindow returned
+entering message loop
+onCreate:finishDocTabs
+onCreate:finishDocTabs.done
+onCreate:finishSession
+onCreate:finishSession.outputTabs
+onCreate:finishSession.dockPlaced
+onCreate:finishSession.done

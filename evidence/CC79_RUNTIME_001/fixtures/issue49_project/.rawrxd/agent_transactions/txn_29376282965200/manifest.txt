@@ -1,0 +1,3 @@
+state=recovered
+target=bug.cpp
+backup=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_29376282965200\before.bin

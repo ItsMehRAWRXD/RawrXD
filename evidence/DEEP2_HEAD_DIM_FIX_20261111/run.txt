@@ -1,0 +1,283 @@
+RUN_CONFIG_MAX_TOKENS=240
+Loading model via Deep2 engine: F:\rawrxd\gemma3-1b-Q2_K.gguf
+[Deep2Engine] Loading model from: F:\rawrxd\gemma3-1b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\gemma3-1b-Q2_K.gguf mode=GPU_MULTI devices=2 kv_per_token=8424 max_ctx_est=16836
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[MOE_KEYS_DIAG] Scanning 27 metadata keys for expert/moe keys
+[Deep2Engine] GGUF architecture: 'gemma3'  hidden=1152 layers=26 heads=4 kvHeads=1 inter=6912 vocab=262144
+[Deep2Engine] GEMMA_NUMERIC logitSoftCap=0.0 attnSoftCap=0.0 embedScale=sqrt(hidden) rmsNorm=plain(baked+1) geGlu=1 sandwich=1 swaPattern=6 swaWindow=512 ropeLocal=10000 ropeGlobal=1000000 ropeGlobalScale=1.000
+[Deep2Engine] Context length from metadata: 32768 tokens
+[Deep2Engine] Tokenizer loaded: vocab=262144 bos=2 eos=1 (Spm::encode)
+[Deep2Engine] Layer topology: 26 attention, 0 SSM, 0 unknown of 26 total
+[Deep2Engine] KV cache sized for 26 attention layers (SSM layers excluded)
+[Deep2Engine] headDim post-bind override: was model=288 config=288 -> bound=256 (wq.rows=1024 heads=4)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+[Deep2Engine] GEMMA_QK_NORM q=1 bytes=1024 k=1 bytes=1024 attnPost=1 ffnPost=1 ffnNorm=1
+[Deep2Engine] GEMMA_NORM_BAKE meanAbs8=5.156250 rmsNorm=plain w0=5.093750 w1=5.375000 w2=3.875000 w3=5.000000
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000002C089A4C710  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=1  registeredBytes=663552  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000002C089A4C710  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=100  registeredBytes=153868032  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000002C089A4C710  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=165888  |  registry_size=200  registeredBytes=307238400  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000002C089A4C710  registered=236 tensors  bytes=682988544  max=536870912
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=262144\n[REAP_TOKENIZER] merges=514906\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[ModelFit] KV budget caps context: requested=32768 fit=16836 (kv_bytes_per_token=8424)
+[Deep2Engine] ThreadPool (loadModel): 8 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7DFDCA590 dequant=00007FF7DFDC6F00 GetGEMV(12)=00007FF7DFDCA590 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=26 page=8 virtualMax=16836 heads=1 dim=256
+[KVCache] HOT_BYTES=425984 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 26 layers x 16836 positions x 1 heads x 256 dim = 854.95 MB
+[Deep2Engine] Model loaded successfully (340 tensors)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018F42
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_COST_T_BEST=0.000000
+DEEP2_COST_CUT=13
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-12
+DEEP2_COST_SLOT1_LAYERS=13-25
+DEEP2_COST_VRAM_GATE=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-12 kind=GPU
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 vram=34174009344 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon(TM) Graphics layers=13-25 kind=GPU
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=1 devices=2
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=26
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-12
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=4294967295
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=13-25
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=4294967295
+DEEP2_LAYER_0_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:13C0:000000000001BC10
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+DEEP2_LAYER_25_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=0
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+Deep2 model loaded: F:\rawrxd\gemma3-1b-Q2_K.gguf  hidden=1152  vocab=262144
+RawrXD Local Agent (Deep2 backend)
+Model:    F:\rawrxd\gemma3-1b-Q2_K.gguf
+Backend:  deep2 (in-process GGUF inference)
+Mode:     code - Default agent: inspect, modify, build and test
+Root:     F:\rawrxd
+Edits:    allowed by policy
+Execute:  allowed by policy
+Tools:    9 registered
+
+Interactive session. Enter a goal and press Enter.
+Slash commands: /mode <name>  /status  /tools  /checkpoint  /exit
+
+rawr> 
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[Deep2Engine] Unloading model...
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=26
+[LIFE] unloadModel FreeTensorData ggufResult (340 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[Deep2Engine] Model unloaded.
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[ResidencyManager] Shutdown complete
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown

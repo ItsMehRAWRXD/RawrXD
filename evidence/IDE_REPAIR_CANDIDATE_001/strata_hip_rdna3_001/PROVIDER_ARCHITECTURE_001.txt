@@ -1,0 +1,45 @@
+RAWRXD_INFERENCE_PROVIDER_ARCHITECTURE
+ASOF_UTC=2026-11-10T13:10:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+ISSUE49_COMPLETION=NOT_ACCEPTED
+
+# Target architecture (experimental; not product default)
+LAYER_IDE=RawrXD Native IDE (instructions, context, evidence)
+LAYER_AGENT=AgentSession + ToolCallBridge (plan, schemas, cancel, reinject)
+LAYER_PRIMARY_EXPERIMENTAL=Strata + Qwen3.8-Flash-Next (or Qwen3.6-35B-A3B first)
+LAYER_FALLBACK_VERIFIED=Ollama + qwen3:8b
+LAYER_TOOLS=CPU Tool Authority (read→edit→build→test→review→commit)
+
+LAW=STRATA_IS_INFERENCE_PROVIDER_NOT_AGENT_ORCHESTRATOR
+LAW=RAWRXD_RETAINS_TOOL_PERMISSIONS_EDITS_VERIFICATION
+LAW=OLLAMA_FALLBACK_MUST_REMAIN_INTACT
+LAW=TPS != AGENTIC_QUALITY
+LAW=STRATA_SUCCESS != ISSUE49_PASS_SUBSTITUTE
+
+# Benchmark ladder (identical Issue #49 coding fixtures)
+BENCH_1=Ollama + qwen3:8b (existing baseline)
+BENCH_2=Strata + Qwen3.6-35B-A3B Q4 (compat + agent; lower download)
+BENCH_3=Strata + Qwen3.8-Flash-Next Coder|Q2 (high-capability target)
+
+# Metrics (not TPS alone)
+METRIC_TOOL_CALL_SUCCESS=
+METRIC_FIRST_PASS_FIX=
+METRIC_BUILD_FAILURE_RECOVERY=
+METRIC_AUTONOMOUS_TASK_COMPLETION=
+METRIC_WALL_CLOCK=
+METRIC_GPU_UTIL=
+METRIC_TPS_SECONDARY=
+
+# Sequencing (updated after HIP RDNA3 verify)
+BLOCKER=Installed hip-rdna3 rejects gfx1201 (R9700); BUILD archs gfx1100/1101/1102/1151 only
+NEXT=Install official release asset strata-engine-*-hip-rx9070 (gfx1201 class) OR validate on gfx1101
+THEN=Confirm device accept on intended GPU (explicit arch in logs)
+THEN=Qwen36 UD-Q4_K_XL --plan DONE (exit0 claimed cached; FS only 12.7/21.3 GiB — incomplete)
+BLOCKER2=Do not launch inference on partial pack; finish download only after gfx path chosen
+THEN=Controlled resume/download to full UD-Q4_K_XL + Local API + token generation
+THEN=Wire Strata as optional provider behind same ToolCallBridge
+THEN=Issue #49 E2E comparison on frozen IDE/loop SHA
+NEVER=Replace Ollama wholesale before Strata agentic reliability proven
+NEVER=Claim R9700 Strata inference from hip-rdna3 selection alone

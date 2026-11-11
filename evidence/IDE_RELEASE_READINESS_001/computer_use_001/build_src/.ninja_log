@@ -1,0 +1,16 @@
+# ninja log v7
+19	602	8159910395786222	CMakeFiles/rawrxd_computer_use.dir/ScreenCapture.cpp.obj	3de1479eb5ff6ce1
+30	1101	8159910395907613	CMakeFiles/rawrxd_computer_use_tests.dir/tests/ComputerUseTests.cpp.obj	b3122f414b289715
+13	1668	8159910395740476	CMakeFiles/rawrxd_computer_use.dir/ComputerUse.cpp.obj	5683f41e3c577229
+22	2110	8159910395837349	CMakeFiles/rawrxd_computer_use.dir/ComputerUseBridge.cpp.obj	fe93c66da332ee4
+27	2178	8159910395882519	CMakeFiles/rawrxd_computer_use.dir/ComputerUseParse.cpp.obj	79add1658ac1696a
+34	2557	8159910395947823	CMakeFiles/rawrxd_computer_use_ide_verify.dir/tests/ComputerUseIdeVerify.cpp.obj	1a145873a6060f6f
+2178	2562	8159910417390968	rawrxd_computer_use.lib	ae860d7ae65ee2ba
+2562	2863	8159910421233716	rawrxd_computer_use_tests.exe	53dcb2edf67af87c
+2568	2882	8159910421292089	rawrxd_computer_use_ide_verify.exe	1a6c7c8ad9e879cc
+26	1576	8159910515043007	CMakeFiles/rawrxd_computer_use.dir/ComputerUseParse.cpp.obj	79add1658ac1696a
+18	1685	8159910514962596	CMakeFiles/rawrxd_computer_use.dir/ComputerUseBridge.cpp.obj	fe93c66da332ee4
+31	1938	8159910515098204	CMakeFiles/rawrxd_computer_use_ide_verify.dir/tests/ComputerUseIdeVerify.cpp.obj	1a145873a6060f6f
+1685	2017	8159910531631780	rawrxd_computer_use.lib	ae860d7ae65ee2ba
+2017	2368	8159910534949803	rawrxd_computer_use_tests.exe	53dcb2edf67af87c
+2023	2444	8159910535011947	rawrxd_computer_use_ide_verify.exe	1a6c7c8ad9e879cc

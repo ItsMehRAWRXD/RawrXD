@@ -1,0 +1,30 @@
+﻿STRATA_HIP_RDNA3_INFERENCE_ATTEMPT
+TIMESTAMP=2026-11-10T08:12:14.0653437-05:00
+FAIL_CLOSED=1
+
+ATTEMPT_1_DEVICE=default GPU0 AMD Radeon AI PRO R9700 gfx1201
+COMMAND=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3\strata.exe --pack <missing> --tokens 1,2,3 --max-new 4
+RESULT=FAIL
+EXACT_STDERR_TAIL=
+strata generate: GPU 0 (AMD Radeon AI PRO R9700, gfx1201) is not an architecture this Strata engine was compiled for (gfx1100,gfx1101,gfx1102,gfx1151); compile it for this card (./setup.sh --backend hip, or -DCMAKE_HIP_ARCHITECTURES=gfx1201, docs/AMD_HIP.md) or choose another GPU with HIP_VISIBLE_DEVICES
+CAPTURE_FILE=INFERENCE_ATTEMPT_gfx1201_stderr.txt
+ALSO=strata-device.exe same arch rejection (gfx1201_device_stderr.txt)
+NOTE=engine printed gfx12 (RDNA4) default-switch banners before arch hard-fail; selection!=compile-support
+
+ATTEMPT_2_DEVICE=HIP_VISIBLE_DEVICES=1 => AMD Radeon RX 7800 XT gfx1101
+DEVICE_PROBE=PASS (strata-device lists gfx1101 wave32; compiled-for includes gfx1101; plan FITS)
+COMMAND=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3\strata.exe --pack <missing> --tokens 1,2,3 --max-new 4
+RESULT=FAIL_BEFORE_LOAD (no Strata model pack present on disk)
+EXACT_STDERR=
+strata generate: --ple-gguf is required; --no-ple explicitly enables a diagnostic ablation
+CAPTURE_FILE=INFERENCE_ATTEMPT_gfx1101_missing_pack_stderr.txt
+
+MODEL_PACK_SEARCH=NO_STRATA_PACK_FOUND
+CHECKED=%LOCALAPPDATA%\Strata, %APPDATA%\Strata, Documents, C:\Strata, F:\Strata, evidence roots
+OLLAMA_FLASH_NEXT_PRESENT_READ_ONLY=F:\OllamaModels\Qwen3.8-Flash-Next-GGUF (~85GB 2-shard GGUF) — NOT used (not a Strata --pack; do not modify F:\OllamaModels)
+STRATA_API=NOT_RUN (Terminal/app absent; no --serve started; no listening Strata port; no pack to serve)
+TOKENS_GENERATED=0
+LATENCY_MS=N/A
+HTTP_STATUS=N/A
+GFX1201_INFERENCE=FAIL
+GFX1101_SELECTABLE=1 (easy via HIP_VISIBLE_DEVICES=1; dual-GPU stress NOT forced)

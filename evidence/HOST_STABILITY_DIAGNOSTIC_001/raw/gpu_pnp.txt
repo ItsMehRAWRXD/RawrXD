@@ -1,0 +1,400 @@
+
+
+Status       : OK
+Class        : Display
+FriendlyName : Virtual Display Driver
+InstanceId   : ROOT\DISPLAY\0000
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon(TM) Graphics
+InstanceId   : PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon AI PRO R9700
+InstanceId   : PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon RX 7800 XT
+InstanceId   : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+
+
+
+
+
+
+Status       : OK
+Class        : USB
+FriendlyName : AMD USB 2.0 eXtensible Host Controller - 1.20 (Microsoft)
+InstanceId   : PCI\VEN_1022&DEV_15B8&SUBSYS_15B61849&REV_00\4&2C288D56&0&0043
+
+Status       : OK
+Class        : System
+FriendlyName : AMD GPIO Controller
+InstanceId   : ACPI\AMDIF031\0
+
+Status       : OK
+Class        : System
+FriendlyName : AMD GPIO Controller
+InstanceId   : ACPI\AMDIF031\2
+
+Status       : OK
+Class        : System
+FriendlyName : AMD Controller Emulation
+InstanceId   : ROOT\AMDXE\0000
+
+Status       : OK
+Class        : System
+FriendlyName : AMD GPIO Controller
+InstanceId   : ACPI\AMDI0030\0
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Vulkan User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDVLK&7&ABD0FC3&1
+
+Status       : OK
+Class        : System
+FriendlyName : AMD PCI Express Downstream Switch Port
+InstanceId   : PCI\VEN_1002&DEV_1479&SUBSYS_14791002&REV_24\5&306737B5&0&000009
+
+Status       : OK
+Class        : System
+FriendlyName : AMD SMBUS
+InstanceId   : PCI\VEN_1022&DEV_790B&SUBSYS_790B1849&REV_71\3&11583659&0&A0
+
+Status       : OK
+Class        : USB
+FriendlyName : AMD USB 3.10 eXtensible Host Controller - 1.20 (Microsoft)
+InstanceId   : PCI\VEN_1022&DEV_15B6&SUBSYS_15B61849&REV_00\4&16012499&0&0341
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-OpenCL User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDOCL&5&1B52E527&0
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Dynamic Audio Noise Supression
+InstanceId   : SWD\DRIVERENUM\AMDFDANS&5&1B52E527&0
+
+Status       : OK
+Class        : MEDIA
+FriendlyName : AMD Streaming Audio Device
+InstanceId   : ROOT\AMDSAFD&FUN_01&REV_01\0000
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Dynamic Audio Noise Supression
+InstanceId   : SWD\DRIVERENUM\AMDFDANS&7&ABD0FC3&1
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-OpenCL User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDOCL&7&349E7D26&2
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Dynamic Audio Noise Supression
+InstanceId   : SWD\DRIVERENUM\AMDFDANS&7&349E7D26&2
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Windows Support Components
+InstanceId   : SWD\DRIVERENUM\AMDWIN&5&1B52E527&0
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-OpenGL User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDOGL&7&ABD0FC3&1
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Windows Support Components
+InstanceId   : SWD\DRIVERENUM\AMDWIN&7&ABD0FC3&1
+
+Status       : OK
+Class        : AudioEndpoint
+FriendlyName : 4 - LG ULTRAGEAR (2- AMD High Definition Audio Device)
+InstanceId   : SWD\MMDEVAPI\{0.0.0.00000000}.{C86C7794-E880-4738-A12C-EA623B9C03A6}
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Windows Support Components
+InstanceId   : SWD\DRIVERENUM\AMDWIN&7&349E7D26&2
+
+Status       : OK
+Class        : MEDIA
+FriendlyName : AMD High Definition Audio Device
+InstanceId   : HDAUDIO\FUNC_01&VEN_1002&DEV_AA01&SUBSYS_00AA0100&REV_1008\7&18DC51C&0&0001
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon(TM) Graphics
+InstanceId   : PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+
+Status       : OK
+Class        : USB
+FriendlyName : AMD USB 3.10 eXtensible Host Controller - 1.10 (Microsoft)
+InstanceId   : PCI\VEN_1022&DEV_43FD&SUBSYS_11421B21&REV_01\8&6E1E7A&0&006000400011
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-OpenGL User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDOGL&7&349E7D26&2
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-Vulkan User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDVLK&7&349E7D26&2
+
+Status       : OK
+Class        : SoftwareComponent
+FriendlyName : AMD-OpenCL User Mode Driver
+InstanceId   : SWD\DRIVERENUM\AMDOCL&7&ABD0FC3&1
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\0
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\2
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\3
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\4
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\5
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\6
+
+Status       : OK
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\7
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\8
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\9
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\A
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\B
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\C
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\D
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\E
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\F
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon AI PRO R9700
+InstanceId   : PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+
+Status       : OK
+Class        : System
+FriendlyName : AMD PCI Express Upstream Switch Port
+InstanceId   : PCI\VEN_1002&DEV_1478&SUBSYS_00000000&REV_11\4&ED220C6&0&000B
+
+Status       : OK
+Class        : System
+FriendlyName : AMD PCI Express Downstream Switch Port
+InstanceId   : PCI\VEN_1002&DEV_1479&SUBSYS_14791002&REV_11\5&4D5E49F&0&00000B
+
+Status       : OK
+Class        : SecurityDevices
+FriendlyName : AMD PSP 11.0 Device
+InstanceId   : PCI\VEN_1022&DEV_1649&SUBSYS_16491022&REV_00\4&16012499&0&0241
+
+Status       : OK
+Class        : System
+FriendlyName : AMD Crash Defender
+InstanceId   : ROOT\AMDLOG\0000
+
+Status       : OK
+Class        : System
+FriendlyName : AMD I2C Controller
+InstanceId   : ACPI\AMDI0010\0
+
+Status       : OK
+Class        : System
+FriendlyName : AMD I2C Controller
+InstanceId   : ACPI\AMDI0010\1
+
+Status       : OK
+Class        : USB
+FriendlyName : AMD USB 3.20 eXtensible Host Controller - 1.10 (Microsoft)
+InstanceId   : PCI\VEN_1022&DEV_43FD&SUBSYS_11421B21&REV_01\6&2766D23F&0&00600011
+
+Status       : OK
+Class        : Display
+FriendlyName : AMD Radeon RX 7800 XT
+InstanceId   : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+
+Status       : OK
+Class        : MEDIA
+FriendlyName : AMD High Definition Audio Device
+InstanceId   : HDAUDIO\FUNC_01&VEN_1002&DEV_AA01&SUBSYS_00AA0100&REV_1008\5&28A47E64&0&0001
+
+Status       : OK
+Class        : System
+FriendlyName : AMD PCI Express Upstream Switch Port
+InstanceId   : PCI\VEN_1002&DEV_1478&SUBSYS_14781DA2&REV_24\4&D0BDF66&0&0009
+
+Status       : OK
+Class        : System
+FriendlyName : AMD 3D V-Cache Performance Optimizer
+InstanceId   : ACPI\AMDI0101\0
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\10
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\11
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\12
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\13
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\14
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\15
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\16
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\17
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\18
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\19
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1A
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1B
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1C
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1D
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1E
+
+Status       : Unknown
+Class        : Processor
+FriendlyName : AMD Ryzen 9 9950X3D2 16-Core Processor         
+InstanceId   : ACPI\AUTHENTICAMD_-_AMD64_FAMILY_26_MODEL_68_-_AMD_RYZEN_9_9950X3D2_16-CORE_PROCESSOR_________\1F
+
+Status       : OK
+Class        : USB
+FriendlyName : AMD USB 3.10 eXtensible Host Controller - 1.20 (Microsoft)
+InstanceId   : PCI\VEN_1022&DEV_15B7&SUBSYS_15B61849&REV_00\4&16012499&0&0441
+
+Status       : OK
+Class        : MEDIA
+FriendlyName : AMD High Definition Audio Device
+InstanceId   : HDAUDIO\FUNC_01&VEN_1002&DEV_AA01&SUBSYS_00AA0100&REV_100A\7&4A72B29&0&0001
+
+Status       : OK
+Class        : System
+FriendlyName : AMD Application Compatibility Database
+InstanceId   : ACPI\AMDI0204\2&DABA3FF&0
+
+Status       : OK
+Class        : System
+FriendlyName : AMD Provisioning Packages
+InstanceId   : ACPI\AMDI0052\2&DABA3FF&0
+
+
+
+

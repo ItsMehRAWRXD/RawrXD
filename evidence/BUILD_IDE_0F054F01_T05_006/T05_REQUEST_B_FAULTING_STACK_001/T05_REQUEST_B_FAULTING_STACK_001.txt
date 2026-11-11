@@ -1,0 +1,190 @@
+﻿T05_REQUEST_B_FAULTING_STACK_001
+ASOF_UTC=2026-11-10T16:06:38Z
+LANE=T05_BASELINE_0F054F01
+PROMOTE=0
+CERTIFIED=0
+CRASH_ROOT_CAUSE=UNCONFIRMED
+REPAIR_SHA=NOT_ESTABLISHED
+REPAIR_T05_5_OF_5=NOT_RUN
+COMPARISON_TO_ISSUE49_401071=NOT_STARTED_DO_NOT_MERGE
+FOLLOWUP_002=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\T05_REQUEST_B_FAULTING_STACK_002.txt
+FOLLOWUP_002_NOTE=ExitCode 0xFFFFFFFF (-1) captured on Request-B (ecv3_19); SILENT_EXIT proof; FAULTING_STACK still MISSING; PROMOTE=0
+
+BASELINE_EXE=F:\rawrxd\build_ide\bin\RawrXD-Win32IDE-Native.exe
+BASELINE_SHA256=0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E
+BASELINE_SHA_PREFIX=0F054F01
+EXE_SIZE_BYTES=1484800
+EXE_LASTWRITETIME=2026-11-09T02:05:05.8639342-05:00
+
+CDB_PATH=C:\Users\Garrett\AppData\Local\Microsoft\WindowsApps\cdbX64.exe
+CDB_AVAILABLE=1
+LOCALDUMPS_REGKEY=HKCU\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\RawrXD-Win32IDE-Native.exe
+LOCALDUMPS_FOLDER=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps
+LOCALDUMPS_DUMPTYPE=2
+
+========================================================================
+RESULT_SUMMARY
+========================================================================
+FAULTING_STACK=MISSING
+EXCEPTION_CODE=NOT_CAPTURED
+MODULE_OFFSETS=NOT_CAPTURED
+DUMP_PATH=ABSENT
+PROCESS_EXIT_DURING_REQUEST_B=REPRODUCED
+
+GOT=
+  BASELINE_EXE_LOCATED
+  BASELINE_SHA256_FULL
+  T05_EVIDENCE_TREE
+  REQUEST_B_PROCESS_EXIT_REPRO_THIS_SESSION
+  HISTORICAL_REQUEST_B_EXIT_RECEIPTS_SAME_SHA
+  CDBX64_AVAILABLE
+  LOCALDUMPS_ARMED
+
+MISSING=
+  FAULTING_STACK
+  EXCEPTION_CODE_OR_EXIT_HEX
+  MODULE_OFFSETS
+  DUMP_FILE_FOR_T05_NATIVE_REQUEST_B
+  ROOT_CAUSE
+
+========================================================================
+THIS_SESSION_REPRO
+========================================================================
+STOCK_LOOP_HIT=runs\stock_06
+STOCK_06_RECEIPT=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\stock_06\T05.receipt.json
+STOCK_06_BODY=
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  27656,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  false,
+    "TranscriptDelta":  "",
+    "Error":  "Cannot find a process with the process identifier 27656."
+}
+
+
+STOCK_06_NOTES=
+  SecondRequestSent=true
+  ProcessAlive=false
+  SecondRequestRecovered=false
+  Error=Cannot find a process with the process identifier 27656.
+  LocalDumps_new=0
+  CrashDumps_new=0
+  WER_Native_AppError_in_window=ABSENT
+  Interpretation_fail_closed=process disappeared during Request-B wait without WER/LocalDumps artifact (silent exit or non-WER terminate). NOT claimed as root cause.
+
+CDB_EARLY_ATTACH_ATTEMPTS=6 (repro_attach / attempt_01..06) REQUEST_B_EXIT_HITS=0
+CDB_EXITBP_ATTEMPTS=15 REQUEST_B_EXIT_HITS=0
+CDB_LATEATTACH_AFTER_CANCEL_ATTEMPTS=15+ REQUEST_B_EXIT_HITS=0
+HEISENBUG_NOTE=Intermittent Request-B exit observed under stock harness; not observed while cdb attached (early or late). Do not invent cause.
+
+DUMPS_DIR_COUNT=0
+DUMPS_DIR=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps
+
+========================================================================
+HISTORICAL_SAME_SHA_REQUEST_B_EXITS (SecondRequestSent=true ProcessAlive=false)
+========================================================================
+PATH=F:\rawrxd\evidence\T05_NEW_BINARY_20261110_103314\run1\T05.receipt.json
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  8164,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  false,
+    "TranscriptDelta":  "\r\nAI: RAWRXD_CANCEL_RECOVERY_",
+    "Error":  "Cannot find a process with the process identifier 8164."
+}
+
+---
+PATH=F:\rawrxd\evidence\T05_NEW_BINARY_20261110_102432\run5\T05.receipt.json
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  24452,
+    "Model":  "Local models / Ollama / bigdaddyg-productivity-local:latest",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  false,
+    "TranscriptDelta":  "",
+    "Error":  "Cannot find a process with the process identifier 24452."
+}
+
+---
+PATH=F:\rawrxd\evidence\T05_NEW_BINARY_20261110_101718\run1\T05.receipt.json
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  16132,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  false,
+    "TranscriptDelta":  "",
+    "Error":  "Cannot find a process with the process identifier 16132."
+}
+
+---
+PATH=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_001\trial_05\T05.receipt.json
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "Error":  "Cannot find a process with the process identifier 18944."
+}
+
+---
+PATH=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_002\trial_05\T05.receipt.json
+{
+    "Gate":  "T05",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "CancelObserved":  false,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "Error":  "Cannot find a process with the process identifier 29312."
+}
+
+---
+
+========================================================================
+MISSING_GATE (fail-closed)
+========================================================================
+MISSING_GATE_1=DUMP_ABSENT_FOR_REQUEST_B_EXIT
+  Detail=LocalDumps armed for RawrXD-Win32IDE-Native.exe but no .dmp written on stock_06 PID 27656 exit. No %LOCALAPPDATA%\CrashDumps Native.exe dump contemporaneous with hit. No Application Error event for Native.exe in +/-30m of stock_06 (only Ext/Issue49 BEX64 0xC0000409 — SEPARATE binary; DO NOT MERGE).
+
+MISSING_GATE_2=FAULTING_STACK_NOT_CAPTURED_UNDER_CDB
+  Detail=cdbX64 path known-good; attach-before-trigger and late-attach-after-cancel loops did not reproduce exit while debugger was attached, so no exception break / RtlExitUserProcess break / .dump was obtained for T05 Request-B.
+
+MISSING_GATE_3=EXIT_CODE_NOT_CAPTURED_ON_STOCK_HIT
+  Detail=stock_06 harness observed PID disappearance only. ExitCode/exception hex not recorded for that PID. Later exitcode instrumentation loop (25 runs) did not re-hit; ExitCode remains NOT_CAPTURED.
+
+NEXT_EXECUTABLE_STEP=
+  1) Re-hit stock Request-B exit with Wait-Process ExitCode capture AND/OR procdump -t (procdump not present on host this turn).
+  2) On hit with dump: cdbX64 -z dump -c ".ecxr; kL 50; lm vm RawrXD*; q" -> fill EXCEPTION_CODE + FAULTING_STACK + MODULE_OFFSETS.
+  3) Only then consider repair SHA / T05 5/5. PROMOTE remains 0.
+
+ISSUE49_LANE=NOT_TOUCHED
+COMPARISON_PENDING=BOTH_STACKS_REQUIRED
+LAW=NOT_RUN!=PASS
+LAW=PROCESS_EXIT_REPRO!=FAULTING_STACK
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS

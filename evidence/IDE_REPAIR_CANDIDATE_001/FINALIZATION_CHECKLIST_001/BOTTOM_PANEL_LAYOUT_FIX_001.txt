@@ -1,0 +1,104 @@
+BOTTOM_PANEL_LAYOUT_FIX_001
+ASOF_LOCAL=2026-11-10T13:43:18-05:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+
+================================================================================
+DEFECT
+================================================================================
+Build output + PowerShell occupied the same lower client region.
+Bottom panel covered chat Send/Clear/Stop.
+Console body clipped; panel tabs and splitter not reliably visible.
+
+================================================================================
+ROOT CAUSE
+================================================================================
+Dual bottom-surface ownership:
+
+1) IDC_PANEL_CONTAINER (four-panel TERMINAL/OUTPUT/PROBLEMS/DEBUG) reserved the
+   dock rectangle while peer m_hwndPowerShellPanel remained a full-width sibling
+   that could ShowWindow over the same band (create used WS_VISIBLE; show path
+   forced TabCtrl_SetCurSel(..., 4) = Build, not PowerShell index 12).
+
+2) Legacy m_hwndOutputTabs + Build/Output RichEdit siblings were shown while the
+   four-panel dock was also visible, stacking a second tab strip/body over 1300.
+
+3) finishSession placed 1300 without subtracting status-bar height, so the dock
+   temporarily overlapped the secondary-sidebar chat button row until onSize.
+
+4) layoutPowerShellPanel freely placed the peer at mainHeight-panelH without
+   coordinating the single dock owner, covering chat/splitter/tabs.
+
+LAW: SOURCE_WIRED != RUNTIME_REACHED. This receipt records source fix + tip
+rebuild hash only. Visual GUI re-probe on tip = NOT_RUN (not invented PASS).
+
+================================================================================
+FIX SUMMARY (single owner rectangle)
+================================================================================
+When m_panelVisible / panelDockWanted:
+  - IDC_PANEL_CONTAINER owns ONE bottom rect
+  - Output / Terminal / Problems / Debug share via panel tabs
+  - Peer m_hwndPowerShellPanel forced SW_HIDE; m_powerShellPanelVisible=false
+  - Legacy Output strip hidden
+  - Body siblings (terminal panes / active Output RichEdit) only in dock body
+    (bottomTop+24); panel tabs + splitter raised above body
+
+Exclusive peer PowerShell only when four-panel dock is intentionally off.
+
+showPowerShellPanel: if m_panelVisible → switchPanelTab(Terminal), never stack peer.
+
+================================================================================
+FILES / DIFF SUMMARY
+================================================================================
+Win32IDE_lifecycle.cpp
+  - finishSession: statusH-aware dock place; hide peer PS + legacy strip +
+    terminal/output siblings until onSize
+  - onSize: single-owner bottom layout; exclusive PS only if !panelDockWanted;
+    splitter placed last on dock top edge
+
+Win32IDE_VSCodeUI.cpp
+  - layoutBottomDock: hide peer PS + legacy strip; show splitter above dock
+
+Win32IDE_PowerShellPanel.cpp
+  - create: WS_CHILD without WS_VISIBLE; no SetCurSel(4)
+  - show/hide: panel-visible routes to TERMINAL tab; correct PS tab index 12
+  - layoutPowerShellPanel: no free-float over four-panel dock
+
+Win32IDE.cpp
+  - createOutputTabs: suppress legacy strip when m_panelVisible
+  - splitter drag updates m_panelHeight when panel dock owns height
+
+Win32IDE_Commands.cpp
+  - Problems fixture: set Build channel without showing legacy strip over dock
+
+Win32IDE_AgentCommands.cpp
+  - model dialog usable-area dock prefers m_hwndPanelContainer when visible
+
+================================================================================
+TIP REBUILD
+================================================================================
+TIP_LANE=F:\rawrxd\build_tip_ext_host_001
+TIP_EXE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_SHA256=8EE30F97C6137E250237E01F2535935641690E82B1D48427F326E09CA28DE8B9
+TIP_MTIME_LOCAL=2026-11-10 13:43:18
+BUILD=ninja RawrXD-Win32IDE-Native-Ext (vcvars64)
+PRIOR_TIP_SHA256=AC9B245A1E5AC5D5FCD27E4DA4E3CF340F59AD0C732CBFD348D1D4A38DC92123
+
+OBJ_MTIMES (RelWithDebInfo):
+  Win32IDE_lifecycle.cpp.obj     2026-11-10 13:42:16
+  Win32IDE_PowerShellPanel.cpp.obj 2026-11-10 13:42:01
+  Win32IDE_VSCodeUI.cpp.obj      2026-11-10 13:42:07
+  Win32IDE.cpp.obj               2026-11-10 13:43:14
+  Win32IDE_Commands.cpp.obj      2026-11-10 13:42:06
+  Win32IDE_AgentCommands.cpp.obj 2026-11-10 13:42:41
+
+================================================================================
+DISPOSITION
+================================================================================
+PROMOTE=0
+TIP_CLIMB=HOLD
+VISUAL_GUI_PROBE=NOT_RUN
+NEXT=optional interactive confirm: one bottom rect; tabs+splitter visible;
+     chat buttons unobstructed; Output/Terminal/Problems mutual exclusion

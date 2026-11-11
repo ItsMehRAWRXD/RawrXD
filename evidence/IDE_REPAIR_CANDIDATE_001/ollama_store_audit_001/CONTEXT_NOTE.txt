@@ -1,0 +1,8 @@
+﻿Do NOT claim Issue #49 PASS.
+PROMOTE=0
+CERTIFIED=0
+Vulkan/inference evidence is SEPARATE from Issue49 gates.
+This audit is store consistency only (manifests vs blobs). No deletions performed. qwen3:8b not modified.
+---
+Models requesting context 65536 or 262144 (names only; no rewrite):
+blackgrg26/WORMGPT-14:latest

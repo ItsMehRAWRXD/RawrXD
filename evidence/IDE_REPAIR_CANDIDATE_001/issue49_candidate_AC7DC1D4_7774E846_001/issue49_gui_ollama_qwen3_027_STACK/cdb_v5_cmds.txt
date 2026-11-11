@@ -1,0 +1,11 @@
+.logopen F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_v5_20261110-112025.log
+.sympath srv*
+.reload /f ntdll.dll
+bp ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd"
+bp ntdll!NtTerminateProcess ".echo ===HIT_NTTERMINATE===; r rcx; r rdx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd"
+sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd" av
+sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-112025.dmp; .logclose; qd" c0000409
+sxd eh
+sxi ibp
+bl
+g

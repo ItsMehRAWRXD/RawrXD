@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\s11_agent_owned_20261109-223722\.rawrxd\agent_transactions\txn_31633394072600\before.bin

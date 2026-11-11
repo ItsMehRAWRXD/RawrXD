@@ -1,0 +1,4 @@
+PID=35948
+PATH=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+PORT=11436

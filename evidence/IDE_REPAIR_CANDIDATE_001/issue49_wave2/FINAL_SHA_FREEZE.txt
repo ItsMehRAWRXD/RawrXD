@@ -1,0 +1,12 @@
+FINAL_SHA=1B26A506BB4BC53C71AF3E2D248B5728C751A237B58E4EBD6B5E34A24323F9E9
+TIP_DIR=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_issue49_nomirror_1B26A506
+PACKAGE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_nomirror_1B26A506
+LOOP_BESIDE=1
+RAWR_BESIDE=1
+ASOF_UTC=2026-11-10T12:14:08.6061940Z
+FIX=addChip_no_step_chat_mirror;progress_no_SNAP_chat;setActiveTerminalPane_no_SetFocus;CompleteTask_no_ESP_dump;FilterStructuredEsp_JSON;dock_full_bottomHeight
+MEASURE_LIVE=live_nomirror
+ALIVE_IDLE_30S_PRIOR_779A=1
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0

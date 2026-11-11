@@ -1,0 +1,3 @@
+state=pending
+target=broken_multi.cpp
+backup=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\.rawrxd\agent_transactions\txn_28965785800700\before.bin

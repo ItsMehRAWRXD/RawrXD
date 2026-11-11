@@ -1,0 +1,32 @@
+﻿ASOF_UTC=2026-11-10T16:21:13.9855533Z
+DumpMode=none
+MaxAttempts=24
+HIT_REQUEST_B_EXIT=True
+HIT_DUMP=False
+PROMOTE=0
+CERTIFIED=0
+
+cap=01 mode=none pid=33364 alive=False sent=False recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=SILENT_EXIT_NONZERO dumps=0 err=Cannot convert argument "parent", with value: "", for "FindId" to type "System.IntPtr": "Cannot convert null to type "System.IntPtr"."
+cap=02 mode=none pid=24844 alive=False sent=False recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=SILENT_EXIT_NONZERO dumps=0 err=Cannot convert argument "parent", with value: "", for "FindId" to type "System.IntPtr": "Cannot convert null to type "System.IntPtr"."
+cap=03 mode=none pid=7928 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=04 mode=none pid=624 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=05 mode=none pid=25692 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=06 mode=none pid=38260 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=07 mode=none pid=42176 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=08 mode=none pid=26100 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=09 mode=none pid=26268 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=10 mode=none pid=27488 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=11 mode=none pid=2684 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=12 mode=none pid=35608 alive=False sent=False recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=SILENT_EXIT_NONZERO dumps=0 err=EARLY_EXIT_BEFORE_UI
+cap=13 mode=none pid=36232 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=14 mode=none pid=24936 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=15 mode=none pid=44136 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=16 mode=none pid=38628 alive=False sent=False recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=SILENT_EXIT_NONZERO dumps=0 err=SET_TEXT_VERIFICATION_FAILED
+cap=17 mode=none pid=9172 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=18 mode=none pid=24400 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=19 mode=none pid=14272 alive=False sent=True recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=SILENT_EXIT_NONZERO dumps=0 err=PROCESS_EXIT_DURING_REQUEST_B
+cap=20 mode=none pid=40088 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=21 mode=none pid=25984 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=22 mode=none pid=43800 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=23 mode=none pid=34744 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=24 mode=none pid=39912 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=

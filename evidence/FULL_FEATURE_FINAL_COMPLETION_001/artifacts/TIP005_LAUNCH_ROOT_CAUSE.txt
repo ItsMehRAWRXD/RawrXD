@@ -1,0 +1,35 @@
+TIP005_LAUNCH_ROOT_CAUSE
+ASOF_LOCAL=2026-11-09T08:35:00-05:00
+CONTROLLING_TIP=CC79
+FROZEN_SHA256=27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC
+PROMOTE=0
+INVENT_PASS=0
+
+## VERDICT
+
+NOT ExtHost/CRT/missing-DLL primary. EXE launches; CreateWindowExA succeeds.
+Automation/prove saw empty TITLE / EXIT=-1 because UI was blocked + host wedge.
+
+## EVIDENCE
+
+1) SHA on tip_005 EXE matches frozen 27E2263E (certutil).
+2) startup_trace.log: RegisterClassExA + CreateWindowExA + showWindow returned.
+3) Live enum (PID 41036): MAIN_HWND class=RawrXD_IDE_Window TITLE='RawrXD IDE  -  broken_multi.cpp  -  fixtures' VIS=True
+   PLUS modal #32770 TITLE='Unsaved Changes' VIS=True (nested message loop; openDocument not finished in trace).
+4) %LOCALAPPDATA%\RawrXD\ide_session.json had documents[].modified=true for broken_multi.cpp (empty text) — session restore + openDocument => Unsaved Changes prompt.
+5) Prior prove_ide_compiler_feed.ps1 used Get-CimInstance Win32_Process (WMI) + EnumWindows loops; HOST_SHELL_WEDGE after flood. NOT_RUN != PASS.
+6) tasklist truncates image to RawrXD-Win32IDE-Native-Ex — false ALIVE=0 if matching full Ext.exe string.
+
+## FIX (no EXE overwrite required for this root cause)
+
+- Quarantine/clear ide_session.json modified docs before prove.
+- Prove harness v2: taskkill by image (no WMI); dismiss #32770 Unsaved Changes via PostMessage IDNO; accept HWND even if briefly covered.
+- Remeasure frozen 27E2263E only after host echo OK.
+
+## STATUS AT WRITE
+
+HOST_SHELL_WEDGE may recur after AppData dir /s flood + modal IDE.
+CLICK_TO_LINE / IDE_DEBUG_UI / FOUR_PANEL / VT / CMD_EXEC / RESEAL = NOT_RUN on tip_005 until host reclaim + remeasure.
+TIP_MOVE=0
+A4F_UNTOUCHED=1
+TIP_002_UNTOUCHED=1

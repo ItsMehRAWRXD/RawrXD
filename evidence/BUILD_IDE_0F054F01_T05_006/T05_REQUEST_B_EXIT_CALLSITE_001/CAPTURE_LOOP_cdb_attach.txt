@@ -1,0 +1,8 @@
+﻿ASOF_UTC=2026-11-10T16:49:19.1849646Z
+GOT_STACK=False
+GOT_DEATH_MINUS1=False
+PROMOTE=0
+
+cdb att=01 pid=29124 alive=True sent=True exit= hit=NONE stack=False err=
+cdb att=02 pid=37392 alive=True sent=True exit= hit=NONE stack=False err=
+cdb att=03 pid=4348 alive=True sent=True exit= hit=NONE stack=False err=

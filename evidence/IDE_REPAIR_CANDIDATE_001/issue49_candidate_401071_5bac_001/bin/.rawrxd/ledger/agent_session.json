@@ -1,0 +1,46 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "bug.cpp has TWO separate defects. Follow this exact order - do not fix both in one write: STEP A: Fix ONLY the compile error around undeclared_fn. Keep add() exactly as \"return a - b;\". Do not rewrite the whole file to a simplified version. Then build/test. STEP B: After the tool result shows compile success but AGENT_RESULT is not 5 (or the write was rolled back for wrong output), issue a SECOND write that changes add() to \"return a + b;\" while keeping undeclared_fn fixed. Then build/test until AGENT_RESULT=5. Rules: /WX - no unused parameters. Two writes required. Final independent result must be AGENT_RESULT=5. After a write rolled back, you MUST issue another TOOL write with a different body until write committed and AGENT_RESULT=5.",
+      "role": "user",
+      "timestamp": 1794324819
+    }
+  ],
+  "driver_exit_code": -1,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "qwen3:8b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794324819,
+  "task_id": "ide-agent-1",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\issue49_wave2\\fixtures"
+}

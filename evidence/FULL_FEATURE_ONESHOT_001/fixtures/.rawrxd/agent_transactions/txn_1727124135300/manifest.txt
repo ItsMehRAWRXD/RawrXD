@@ -1,0 +1,3 @@
+state=recovered
+target=broken_multi.cpp
+backup=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\.rawrxd\agent_transactions\txn_1727124135300\before.bin

@@ -1,0 +1,6 @@
+﻿INITIALPATH_ARG=F:\rawrxd\T080_test_bad.cpp
+TITLE=RawrXD IDE  -  T080_test_bad.cpp  -  rawrxd
+TITLE_MATCH_T080=True
+EDITOR_WM_GETTEXTLENGTH=55
+EDITOR_GetWindowTextLength=0
+ALIVE_TO_HWND=True

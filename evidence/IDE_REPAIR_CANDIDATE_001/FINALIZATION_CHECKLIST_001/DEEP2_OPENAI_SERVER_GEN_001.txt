@@ -1,0 +1,75 @@
+DEEP2_OPENAI_SERVER_GEN_001
+ASOF_UTC=2026-11-10T19:38:34Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+TIP_CLIMB=HOLD
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+LAW=HEALTH_MODELS_PASS!=GENERATION_PASS
+LAW=EMPTY_CONTENT!=TOKEN_SURVIVED
+P04_STATUS=PARTIAL
+GENERATION_PASS=0
+P04_PASS=0
+
+GOAL=Remeasure /v1/chat/completions on tip-wired deep2_openai_server :11436. Fail-closed. Prove tokens or hang.
+
+EXE=
+  PATH=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+  SHA256=FA42C75BA6762BF0C0248D23718D4535E028B3010B5F9CFD3BA52FE02CBAA97B
+  MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  CMD=deep2_openai_server.exe --model tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --port 11436
+  PID=9744
+  STOP_POLICY=PID_SCOPED_ONLY (no Name=* IDE kill)
+  PRE_START_LISTEN=NO_LISTENER
+  POST_START_LISTEN=127.0.0.1:11436 OwningProcess=9744
+
+SMOKE=
+  GET_/health=HTTP_200 (prior tip-wire + this session stderr shows [GET /health] 200)
+  GET_/v1/models=HTTP_200
+
+GENERATION=
+  POST=http://127.0.0.1:11436/v1/chat/completions
+  BODY=_p04_gen001_request.json
+  TIMEOUT_BOUND_S=90
+  HTTP_STATUS=200
+  ELAPSED_MS=23125
+  RESP=_p04_gen001_response.json
+  RESP_LEN=284
+  SAMPLE_CONTENT=""
+  USAGE_prompt_tokens=20
+  USAGE_completion_tokens=1
+  USAGE_total_tokens=21
+  FINISH_REASON=stop
+  STDERR_RECEIPT=[AGENT] GENERATION_RECEIPT prompt=20 generated=1 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+  STDERR_HTTP=[POST /v1/chat/completions] 200  22995.73 ms
+  HANG=0
+  USABLE_TEXT_TOKENS=0
+  TOKEN_SURVIVED=0
+  GENERATION_PASS=0
+  NOTE=HTTP200 + completion_tokens=1 but assistant message.content empty; fail-closed NOT PASS
+
+ARTIFACTS=
+  _p04_gen_serve_pid.txt
+  _p04_gen_serve_stderr.txt
+  _p04_gen_serve_stdout.txt
+  _p04_gen001_request.json
+  _p04_gen001_response.json
+  _p04_gen001_meta.txt
+
+OPEN_REMAINS=
+  EMPTY_ASSISTANT_CONTENT_AFTER_COMPLETED_RECEIPT=1
+  PRIOR_LLAMA_SERVER_8080_GEN_HANG=SEPARATE (DEEP2_8080_HANG_DIAG_001; clearing 8080 alone != P04 PASS)
+  FULL_PRODUCT_OPEN_SESSION_TOKEN_CONJUNCTION=NOT_MET
+
+NOT_CLAIMED=
+  P04_PASS=0
+  GENERATION_PASS=0
+  TOKEN_SURVIVED=0
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD
+
+DISPOSITION=P04_PARTIAL_GEN_HTTP200_EMPTY_CONTENT
+PROMOTE=0

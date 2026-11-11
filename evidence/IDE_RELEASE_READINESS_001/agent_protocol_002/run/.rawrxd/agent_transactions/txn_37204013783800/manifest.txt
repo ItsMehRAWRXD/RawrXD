@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\agent_protocol_002\run\.rawrxd\agent_transactions\txn_37204013783800\before.bin

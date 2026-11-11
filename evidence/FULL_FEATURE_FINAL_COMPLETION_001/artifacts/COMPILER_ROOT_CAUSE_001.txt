@@ -1,0 +1,45 @@
+COMPILER_ROOT_CAUSE=MEASURED
+ASOF_UTC=2026-11-09T12:52:00Z
+CONTROLLING_TIP=CC79
+CANDIDATE_SHA256=35EFA9BAE44AD23F6007AC158E1BF0D6C297A5412C8DEF513434058C6D044351
+CANDIDATE_NOT_PROMOTED=1
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+FROZEN_A4F_UNTOUCHED=1
+
+SYMPTOM=
+  RAWRXD_BUILD_OUTPUT / COMPILER_CAPTURE stopped after FIXTURE_START
+  (sometimes + filename) with PROBLEMS items=0 downstream.
+
+ROOT_CAUSE_1=
+  MSVC cl.exe stalls under redirected non-console pipes when
+  VS_UNICODE_OUTPUT is set/inherited.
+
+ROOT_CAUSE_2=
+  call vcvars64.bat inside the same redirected FORCE_PIPE also stalls
+  after FIXTURE_START (repro WAIT_OK=False; OUT_LEN=34) even when
+  VS_UNICODE_OUTPUT is scrubbed after vcvars.
+
+PROOF_ISOLATED=
+  artifacts\COMPILER_CAPTURE_ISOLATED_RECEIPT.txt (scrub out_len=887)
+  artifacts\_repro_direct_cl_out.txt (absolute cl + scrub; OUT_LEN=887; HAS_ERROR_C)
+
+PRODUCT_FIX_SOURCE=
+  src\win32app\Win32IDE_Commands.cpp
+    NO_VCVARS_IN_PIPE=1; absolute cl.exe candidates; scrub; /FS; 2>&1
+  src\win32app\Win32TerminalManager.cpp/.h (EOF drain; FORCE_PIPE 120s)
+  src\win32app\Win32IDE.cpp (HWND-null safe feed + DIAGNOSTIC_PARSED)
+
+IDE_PROOF_CANDIDATE=
+  artifacts\IDE_COMPILER_FEED_RECEIPT.txt
+  artifacts\COMPILER_CAPTURE_RECEIPT.txt
+  COMPILER_EXECUTION=VERIFIED COMPILER_OUTPUT_CAPTURE=VERIFIED
+  DIAGNOSTIC_PARSED_COUNT=3 PROBLEMS_ID1312_ITEMS=3 BUILD_RESULT=success
+
+LAW=
+  FIXTURE_START_ONLY ≠ successful compilation
+  Fail-closed disposition required: success|failure|cancel|timeout
+  tip_003 / tip_004 must NOT replace CC79 until EXT+chat7/7+term+Output+
+  debug headless re-proven on that SHA
+  NOT_RUN ≠ PASS; PROMOTE=0

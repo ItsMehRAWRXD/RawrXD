@@ -1,0 +1,8 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    ask
+Root:    F:\rawrxd
+
+I'm here! How can I assist you?

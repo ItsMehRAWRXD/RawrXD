@@ -1,0 +1,1 @@
+t=2026-11-10T13:24:09.1750772-05:00 name=cl.exe pid=4708 ppid=13912 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp"  

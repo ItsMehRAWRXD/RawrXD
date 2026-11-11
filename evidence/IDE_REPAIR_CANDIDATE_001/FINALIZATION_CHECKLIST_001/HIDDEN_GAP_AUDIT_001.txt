@@ -1,0 +1,212 @@
+HIDDEN_GAP_AUDIT_001
+ASOF_UTC=2026-11-10T17:50:00Z
+OWNER=P09_P17_AUDIT_PREP
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+TIP_LIVE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_IDE_SHA256=AC9B245A1E5AC5D5FCD27E4DA4E3CF340F59AD0C732CBFD348D1D4A38DC92123
+TIP_LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+NO_INVENT_PASS=1
+NO_NAME_KILL_RAWRXD_WIN32IDE_NATIVE=1
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED
+LAW=STRING_ABSENCE!=LIVE_STUB_FREE
+LAW=HISTORICAL_CONFIRMED!=TIP_PASS
+CROSSWALK_NOTE=Finalization H01-H16 (H01_H16_MATRIX.txt) != historical HIDDEN_GAP_AUDIT_001 register H01-H120
+
+METHOD=
+  On-disk SHA measures of tip + sealed Issue49 bins
+  ASCII string probe of LIVE tip EXE
+  Source static read (g:\~dev\rawrxd\src\win32app) for known defect classes
+  Prior sealed audits: INTEG_004_HIDDEN_AUDIT_20261109; F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\; H01_H16_MATRIX
+
+================================================================================
+TARGET A — Advertised tools / features without runtime registration
+================================================================================
+A1_EXTENSION_HOST_COMPILE_GATE
+  STATUS=FOUND
+  EVIDENCE=g:\~dev\rawrxd\src\win32app\FeatureRegistry.hpp:53-55 IsExtensionHostEnabled(){return false;}
+  TIP_STRING_IsExtensionHostEnabled=NOT_FOUND (name may be inlined/optimized; gate still SOURCE_WIRED)
+  RUNTIME_ON_TIP=NOT_RUN
+  NOTE=Extension Host advertised as product surface historically; compile-time disabled
+
+A2_AUTONOMOUS_FEATURE_GATES_FALSE
+  STATUS=FOUND
+  EVIDENCE=FeatureRegistry.hpp IsOmegaOrchestratorEnabled/IsAutonomousFeatureEngineEnabled/IsAutonomousOrchestratorEnabled/IsAutonomousModelManagerEnabled all return false
+  RUNTIME_ON_TIP=NOT_RUN
+
+A3_GATED_OMIT_AGENTIC_TUS
+  STATUS=FOUND_PRIOR_AUDIT
+  EVIDENCE=INTEG_004 SOURCE_HIDDEN_GAP_AUDIT.md item9; CMake omits Win32IDE_AgenticFeatures / LoRAKernelBridge / AgentBridge_Init / LogpointBridge / SidebarBridge
+  TIP_REVERIFY=NOT_RUN (link-map admission on AC9B245A not re-extracted this pass)
+
+A4_TOOLCALLBRIDGE_STRING
+  STATUS=FOUND
+  EVIDENCE=tip EXE contains "ToolCallBridge"; dual_engine PRODUCT_WIRED=0 IDE_WIRED=0
+  NOTE=String present != IDE agent tool path PASS
+
+================================================================================
+TARGET B — Disconnected UI commands
+================================================================================
+B1_BUILD_STOP_OWNER_ABSENT
+  STATUS=FOUND_PRIOR_AUDIT
+  EVIDENCE=INTEG_004 item13: IDM_BUILD_STOP / Win32IDE_Build.cpp onBuildStop exist in source; Win32IDE_Build.cpp absent from rawrxd CMake admission; BuildRunner admitted instead
+  TIP_STRING_Win32IDE_Build=NOT_FOUND
+  TIP_STRING_goToProblem=FOUND
+  RUNTIME_COMMAND_BIND_ON_TIP=NOT_RUN
+
+B2_PROBLEMS_NAV_DUAL_OWNER
+  STATUS=FOUND_PRIOR_AUDIT
+  EVIDENCE=INTEG_004 items1-3: NM_DBLCLK → goToProblem(m_problems) vs aggregator m_problemsViewCache / navigateToFileLine
+  TIP_STRING_goToProblem=FOUND
+  TIP_RUNTIME_CLICK_TO_LINE=NOT_RUN (T080 Problems rows unmeasured)
+
+B3_FORCE_MULTIPLE_HANDLER_LOTTERY
+  STATUS=FOUND_PRIOR_AUDIT
+  EVIDENCE=INTEG_004 item7 /FORCE:MULTIPLE on Win32IDE link
+  TIP_LINK_FLAGS_REEXTRACT=NOT_RUN
+
+================================================================================
+TARGET C — Placeholders
+================================================================================
+C1_DUAL_ENGINE_WORKTREE_PLACEHOLDERS
+  STATUS=FOUND
+  EVIDENCE=FINALIZATION_CHECKLIST_001\dual_engine_001\STATUS.txt PLACEHOLDERS_ONLY=1 LIVE_GIT_WORKTREES_CREATED=0
+  NOTE=Scaffold placeholders coexist with G1 protocol PASS; IDE adapter not wired
+
+C2_EXPLORER_LOADING_PLACEHOLDER
+  STATUS=FOUND_SOURCE
+  EVIDENCE=Win32IDE_Sidebar.cpp lazy "Loading..." TreeView placeholders (legitimate UX lazy-load; not FEATURE_FICTION)
+  CLASS=BENIGN_UX unless expand never replaces
+
+C3_HOST_PERSISTENCE_TEST_NOTEPAD_EXTENSION
+  STATUS=FOUND_SOURCE
+  EVIDENCE=host_persistence_test.cpp uses notepad.exe as placeholder extension process
+  CLASS=TEST_BYPASS_ADJACENT (see Target F)
+
+C4_TIP_ASCII_placeholder_STRING
+  STATUS=NOT_FOUND
+  EVIDENCE=tip EXE ASCII probe needle "placeholder"=0
+
+================================================================================
+TARGET D — Stale exe paths / SHA drift
+================================================================================
+D1_TIP_AUTHORITY_VS_LIVE
+  STATUS=FOUND
+  EVIDENCE=TIP_WORKING_IDE_AUTHORITY_001.txt claims TIP_SHA_REPORTED_REBUILD=89A5F76F; prior T080=A43B5F6A; LIVE measure AC9B245A
+  DRIFT=1
+
+D2_TIP_VS_ISSUE49_SEALED
+  STATUS=FOUND
+  EVIDENCE=LIVE AC9B245A MATCH_D015=0 MATCH_I027=0 MATCH_H022=0 MATCH_G021=0 MATCH_RC5B=0
+
+D3_TIP_LOOP_STALE_VS_HARDENED
+  STATUS=FOUND
+  EVIDENCE=tip deep2_agentic_loop=928A90F0; I027/H022 loop=7774E846; MATCH=0
+  RISK=Live tip still binds pre-harden loop associated with type_error.316 / G021 class failures
+
+D4_SEALED_CANDIDATE_BINS_AS_LIVE_TIP
+  STATUS=FOUND_POLICY
+  EVIDENCE=TIP_WORKING_IDE_AUTHORITY_001.txt STALE_FOR_LIVE_TIP=issue49_candidate_*\bin\...
+  NOTE=Correctly marked stale for daily tip; still valid as frozen remasure pairs
+
+D5_IRC_AND_FINISH25_STALE_VS_TIP
+  STATUS=FOUND
+  EVIDENCE=IRC_TIP=2FFDC206…; FINISH25=55BE19B7…; neither equals AC9B245A
+
+================================================================================
+TARGET E — Silent backend fallback
+================================================================================
+E1_RAWR_OLLAMA_ROUTE_RUNTIME_PENDING
+  STATUS=FOUND
+  EVIDENCE=REMAINING_WORK_17_001.txt RAWR_OLLAMA_ROUTE=SOURCE_FIXED_RUNTIME_PENDING
+  NOTE=Source fix claimed without runtime reached
+
+E2_OLLAMA_VULKAN_REUSE_LOG
+  STATUS=FOUND
+  EVIDENCE=build_tip_ext_host_001\bin\ollama_runtime.log repeated OLLAMA_REUSE=PASS OLLAMA_BACKEND_POLICY=vulkan; one OLLAMA_START=REFUSED
+  CLASS=BACKEND_POLICY_OBSERVED; silent-fallback proof NOT sealed (need route decision receipt)
+
+E3_GPU_ADAPTER_MISMATCH
+  STATUS=FOUND
+  EVIDENCE=GPU_R9700_ADAPTER_MISMATCH_001.txt scheduler/runner adapter mismatch + discovery timeouts
+  NOTE=Can present as silent wrong-GPU path without fail-closed user signal
+
+E4_TASK_SUCCESS_IGNORES_EXITCODE
+  STATUS=FOUND_SOURCE
+  EVIDENCE=Win32IDE_Tasks.cpp:636 result.success=true after reading exitCode (INTEG_004 item11)
+  CLASS=MISLEADING_SUCCESS / silent pass-adjacent
+
+E5_FEATURE_FICTION_STRINGS_ON_TIP
+  STATUS=NOT_FOUND
+  EVIDENCE=tip ASCII needles FEATURE_FICTION / NOT_PRODUCT_PATH / STUB implementation = 0
+  NOTE=Absence != all fiction paths closed (admission/link order still open)
+
+================================================================================
+TARGET F — Tests bypassing user workflow
+================================================================================
+F1_ISSUE49_HARNESS_VS_GUI
+  STATUS=FOUND
+  EVIDENCE=I027/H022 use Invoke-Issue49Live74aa.ps1 harness path; PRODUCT_PATH_PASS != ISSUE49_11STEP (ledger LAW)
+  NOTE=11/11 harness hits do not auto-certify daily GUI workflow on tip
+
+F2_HOST_GIT_CHEAP_GATES
+  STATUS=FOUND
+  EVIDENCE=P01_P12_MATRIX CHEAP_GATES CLASS=HOST_ONLY; LAW HOST_GIT_STATUS != IDE_GIT_PANEL_PASS
+
+F3_CLEAN_MACHINE_POINTERS
+  STATUS=FOUND
+  EVIDENCE=release_cert_wave6 CLEAN_MACHINE_CHECKLIST product-path rows POINTER to builder receipts; VERDICT=HOST_NOT_INDEPENDENT
+
+F4_NOTEPAD_EXTENSION_PLACEHOLDER_TEST
+  STATUS=FOUND_SOURCE
+  EVIDENCE=host_persistence_test.cpp notepad.exe placeholder extension
+  CLASS=TEST_BYPASSES_REAL_EXTENSION_HOST (Extension Host still disabled)
+
+F5_DAILY_DRIVER_9FDE_CROSS_SHA
+  STATUS=FOUND
+  EVIDENCE=DAILY_DRIVER_9FDE_ITEMS_5_10.txt PASS on 9FDE only; LAW 9FDE_PASS != ISSUE49_D015_PASS
+
+================================================================================
+TARGET G — Cancel + lifecycle (feeds P10)
+================================================================================
+G1_BUILDRUNNER_NO_CANCEL
+  STATUS=FOUND_SOURCE
+  EVIDENCE=Win32IDE_BuildRunner.cpp:127 .detach(); no TerminateProcess/CreateJobObject in TU (INTEG_004 item4)
+G2_DETACHED_THREAD_DESTROY_POLL
+  STATUS=FOUND_PRIOR_AUDIT
+  EVIDENCE=Win32IDE_Core.cpp onDestroy ≤3s poll TODO (INTEG_004 item17)
+G3_DAILY_CANCEL_HISTORICAL
+  STATUS=FOUND_HISTORICAL_ONLY
+  EVIDENCE=9FDE ITEM_7_CANCEL=PASS; tip cancel+lifecycle conjunction NOT_RUN
+G4_T05_LANE
+  STATUS=FOUND_SEPARATE
+  EVIDENCE=VALUATION_PARITY / STANDING_DISPOSITION T05 history; avoid Name=RawrXD-Win32IDE-Native* kills (I026 CLASS_A collateral)
+
+================================================================================
+SCOREBOARD_THIS_PASS
+================================================================================
+FOUND=22
+NOT_FOUND=2
+FOUND_PRIOR_AUDIT=5
+FOUND_SOURCE=5
+FOUND_HISTORICAL_ONLY=1
+RUNTIME_ON_TIP_REMEASURE=0
+PASS_INVENTED=0
+PROMOTE=0
+
+NEXT_EXECUTABLE_GATES=
+  1) Bind tip IDE+loop to one frozen pair; rewrite TIP_WORKING authority to measured SHA
+  2) Tip cancel→stop→second request lifecycle without Name=* killers
+  3) Problems click-to-line on tip after real build (aggregator path)
+  4) TaskManager success==exitCode==0 gate
+  5) Extension Host: either enable+register tools or remove advertise surface
+  6) Independent Finish-25 + clean-machine on frozen package tip only
+
+RELATED_AUTHORITY=
+  F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md
+  g:\~dev\rawrxd\evidence\INTEG_004_HIDDEN_AUDIT_20261109\SOURCE_HIDDEN_GAP_AUDIT.md
+  FINALIZATION_CHECKLIST_001\H01_H16_MATRIX.txt
+  CANDIDATE_PACKAGE_CONSOLIDATION_001.txt

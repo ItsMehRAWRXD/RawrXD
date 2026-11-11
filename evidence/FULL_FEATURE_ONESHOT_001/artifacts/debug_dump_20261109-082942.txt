@@ -1,0 +1,27 @@
+2026-11-09T08:29:43.0562879-05:00 TIP_SHA256=27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC
+2026-11-09T08:29:44.7921361-05:00 MAIN=0x2DD0B44 exited=False
+2026-11-09T08:29:46.8172682-05:00 BEFORE vars=0
+2026-11-09T08:29:46.8290974-05:00 BEFORE_IDS
+ID1011 hwnd=0x0 vis=False <null>
+ID1012 hwnd=0x1570A1A vis=False cls=Edit n=29 'Run and Debug view activated | '
+ID1013 hwnd=0xBC0A20 vis=False cls=Edit n=0 gt=''
+ID1014 hwnd=0x2040A26 vis=False cls=Edit n=0 gt=''
+ID1604 hwnd=0x2420A40 vis=False cls=Edit n=0 gt=''
+ID6043 hwnd=0x1A508DA vis=True cls=SysListView32 n=0 gt=''
+
+2026-11-09T08:29:46.8495597-05:00 START5060=True elapsed_ms=14
+2026-11-09T08:29:48.8809627-05:00 AFTER2 vars=0 childDbg=1 ideExited=False
+2026-11-09T08:29:48.8824830-05:00 AFTER_IDS
+ID1011 hwnd=0x0 vis=False <null>
+ID1012 hwnd=0x1570A1A vis=False cls=Edit n=29 'Run and Debug view activated | '
+ID1013 hwnd=0xBC0A20 vis=False cls=Edit n=0 gt=''
+ID1014 hwnd=0x2040A26 vis=False cls=Edit n=0 gt=''
+ID1604 hwnd=0x2420A40 vis=False cls=Edit n=0 gt=''
+ID6043 hwnd=0x1A508DA vis=True cls=SysListView32 n=0 gt=''
+
+2026-11-09T08:29:48.8912842-05:00 SCAN
+
+2026-11-09T08:29:53.9116902-05:00 AFTER7 vars=0 childDbg=1 ideExited=False
+2026-11-09T08:29:53.9157196-05:00 SCAN2
+
+2026-11-09T08:29:53.9437591-05:00 DONE runlog=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\artifacts\debug_dump_20261109-082942.txt

@@ -1,0 +1,28 @@
+﻿ASOF_UTC=2026-11-10T16:16:09.7682999Z
+DumpMode=none
+MaxAttempts=20
+HIT_REQUEST_B_EXIT=False
+HIT_DUMP=False
+PROMOTE=0
+CERTIFIED=0
+
+cap=01 mode=none pid=2684 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=02 mode=none pid=26700 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=03 mode=none pid=2456 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=04 mode=none pid=25700 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=05 mode=none pid=33104 alive=False sent=False recov=False exitSigned= exitHex= death= dumps=0 err=SET_TEXT_VERIFICATION_FAILED
+cap=06 mode=none pid=19092 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=07 mode=none pid=3004 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=08 mode=none pid=16104 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=09 mode=none pid=6512 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=10 mode=none pid=15860 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=11 mode=none pid=9660 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=12 mode=none pid=34800 alive=False sent=False recov=False exitSigned= exitHex= death= dumps=0 err=SET_TEXT_VERIFICATION_FAILED
+cap=13 mode=none pid=22144 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=14 mode=none pid=1800 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=15 mode=none pid=5988 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=16 mode=none pid=29584 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=17 mode=none pid=10656 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=18 mode=none pid=13804 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=19 mode=none pid=24704 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=
+cap=20 mode=none pid=23980 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=

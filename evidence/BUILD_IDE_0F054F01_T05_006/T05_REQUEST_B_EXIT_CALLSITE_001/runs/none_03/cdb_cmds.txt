@@ -1,0 +1,13 @@
+.logopen F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_EXIT_CALLSITE_001\runs\none_03\cdb.log
+.sympath srv*
+.reload /f ntdll.dll
+.reload /f kernel32.dll
+bp kernel32!ExitProcess ".echo ===HIT_K32_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/BUILD_IDE_0F054F01_T05_006/T05_REQUEST_B_EXIT_CALLSITE_001/dumps/t05_exit_callsite_none_03.dmp; .logclose; qd"
+bp ntdll!RtlExitUserProcess ".echo ===HIT_RTL_EXITUSERPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/BUILD_IDE_0F054F01_T05_006/T05_REQUEST_B_EXIT_CALLSITE_001/dumps/t05_exit_callsite_none_03.dmp; .logclose; qd"
+bp ucrtbase!exit ".echo ===HIT_UCRT_EXIT===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/BUILD_IDE_0F054F01_T05_006/T05_REQUEST_B_EXIT_CALLSITE_001/dumps/t05_exit_callsite_none_03.dmp; .logclose; qd"
+bp ucrtbase!_exit ".echo ===HIT_UCRT__EXIT===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/BUILD_IDE_0F054F01_T05_006/T05_REQUEST_B_EXIT_CALLSITE_001/dumps/t05_exit_callsite_none_03.dmp; .logclose; qd"
+bp ucrtbase!quick_exit ".echo ===HIT_UCRT_QUICKEXIT===; r rcx; kL 80; lm m RawrXD*; .dump /ma F:/rawrxd/evidence/BUILD_IDE_0F054F01_T05_006/T05_REQUEST_B_EXIT_CALLSITE_001/dumps/t05_exit_callsite_none_03.dmp; .logclose; qd"
+sxd eh
+sxi ibp
+bl
+g

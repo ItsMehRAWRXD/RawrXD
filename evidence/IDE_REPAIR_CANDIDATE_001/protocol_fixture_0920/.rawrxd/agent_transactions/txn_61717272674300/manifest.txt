@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\protocol_fixture_0920\.rawrxd\agent_transactions\txn_61717272674300\before.bin

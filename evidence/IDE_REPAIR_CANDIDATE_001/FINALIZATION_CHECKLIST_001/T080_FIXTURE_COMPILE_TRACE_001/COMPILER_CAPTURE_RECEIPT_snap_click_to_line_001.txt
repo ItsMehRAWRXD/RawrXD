@@ -1,0 +1,16 @@
+BUILD_REQUEST fixture=F:\rawrxd\T080_test_bad.cpp
+PROCESS_CREATE cmdline=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"
+CWD=F:\rawrxd
+CL_EXE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+FORCE_PIPE=1
+SCRUB=VS_UNICODE_OUTPUT
+NO_VCVARS_IN_PIPE=1
+EXCLUSIVE_FIXTURE_ROUTE=1
+PROCESS_STARTED pid=14272 transport=1
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE T080_test_bad.cpp
+STDOUT_LINE F:\rawrxd\T080_test_bad.cpp(3): error C2065: 'undeclared_variable_xyz': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\T080_test_bad.cpp line=3 sev=0 msg=C2065: 'undeclared_variable_xyz': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+

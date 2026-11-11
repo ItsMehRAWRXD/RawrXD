@@ -1,0 +1,55 @@
+# EXECUTION: derived machine. Marked holes are UNPROVEN, not absent.
+# evidence model: EXPLICIT=metadata DIRECTORY=tensor SHAPE=dims
+#                    TOPOLOGY=grouping CONTRACT=arch grammar
+
+model DeepSeek-V2-Lite-Chat {
+  architecture deepseek2
+  blocks 27
+  hidden 2048
+  context 163840
+  vocab 102400
+  weights_tied no
+
+  embedding = token_embd
+  repeat block[0..26] {
+    x = rms_norm(x, attn_norm)
+    // ATTENTION = MLA_COMPACT [EXPLICIT kv_lora_rank]
+    latent = linear(x, kv_a)          // compressed KV latent
+    q = linear(x, attn_q)
+    UNKNOWN_OPERATION_MLA {
+      // latent -> full K/V reconstruction
+      // key_length=192 value_length=128 kv_lora_rank=512
+      // UNPROVEN: no kernel in Deep2 performs this expansion
+    }
+    a = attention(q, reconstructed_kv)
+    x = residual(x, linear(a, attn_output))
+    h = rms_norm(x, ffn_norm)
+    // FFN = SPARSE_MOE [EXPLICIT expert_count]
+    h = rms_norm(x, ffn_norm)
+    route = router(h)              // gate_inp
+    UNKNOWN_OPERATION_MLA_ROUTER_PLACEHOLDER;
+    experts = top_k(route, 6)  // of 64
+    moe = execute(experts, h)
+    x = residual(x, moe)
+  }
+
+  x = rms_norm(x, output_norm)
+  logits = lm_head(x)
+}
+
+# DISCOVERY LOG
+DISCOVERY_000 = GGUF_CONTAINER_VALID version=3 tensors=377
+DISCOVERY_001 = ARCH_RAW:deepseek2
+DISCOVERY_002 = BLOCK_COUNT declared=27 directory_max=27 agreement=1
+DISCOVERY_003 = TENSOR_DIRECTORY_PARSED count=377
+DISCOVERY_004 = TYPE_TABLE offset_chain_breaks=0 valid=1
+DISCOVERY_005 = EMBED tensor=token_embd.weight bytes=117964800
+DISCOVERY_006 = LM_HEAD tensor=output.weight tied=0
+DISCOVERY_007 = MOE router_tensors=26 router_bytes=13631488
+DISCOVERY_008 = MOE expert_bytes=9527361536 shared_expert_bytes=0
+DISCOVERY_009 = MOE expert_count=64 active=6 shared=2
+DISCOVERY_010 = ATTENTION q=1 k=1 v=0 kv_latent=1 indexer=0
+DISCOVERY_011 = ATTENTION_KIND=MLA_COMPACT (kv_lora_rank=512 key_len=192 val_len=128)
+
+FIRST_UNPROVEN_BOUNDARY = MLA_DECOMPRESS_FORWARD
+WHY_UNPROVEN            = latent KV cache expansion requires an MLA reconstruction kernel

@@ -1,0 +1,3 @@
+state=rolled_back
+target=fixture.cpp
+backup=F:\rawrxd\evidence\agentic_ollama_fixture\.rawrxd\agent_transactions\txn_271412624421700\before.bin

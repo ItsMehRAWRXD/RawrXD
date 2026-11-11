@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\agent_read_rc5b_qwen3_rebuild\.rawrxd\agent_transactions\txn_54051147190600\before.bin

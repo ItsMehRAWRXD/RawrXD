@@ -1,0 +1,39 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_RUNTIME_PARITY_001",
+  "date": "2026-10-11",
+  "verdict": "FAIL",
+  "harness": "tools/deep2_runtime_dispatch.exe",
+  "harness_sha256": "106B55F482A92E918DAC8ED1BEAC987E91323100EAE041B2B4D652FF0A8F9504",
+  "model": {
+    "path": "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+    "architecture": "deepseek2",
+    "identity": "Same GGUF the certified reference was produced from."
+  },
+  "method": "Fed the EXACT teacher-forced token ids the llama.cpp reference used (1, 185, 16, 15, ...) through the runtime-generated execution graph via the new --token-ids flag, dumped per-position argmax and logits via --dump-logits, and compared against the reference logits in RAWRXD_REFERENCE_REPRODUCIBILITY_001\\ref_teacher_forced.",
+  "results": {
+    "positions_compared": 20,
+    "argmax_match_vs_reference": 0,
+    "argmax_match_rate": 0.0,
+    "note": "0/20. The runtime graph is NOT in parity with llama.cpp on this model."
+  },
+  "real_bugs_fixed_this_session": [
+    "ResidualAdd published attn_proj, so it doubled the attention and dropped the block input entirely (logits were bit-identical across positions).",
+    "The MLA score dotted 192 dims across the no-rope/rope boundary instead of q_nope.k_nope + q_rope.k_rope.",
+    "RoPE inv_freq was indexed by element rather than by pair.",
+    "Publish(resid_in) ran after the attn RmsNorm, so the residual stream was a normalised vector; one dominating element then compounded through all 27 blocks (attn_norm L2 124 with a single 124 element, out_norm max 20.20). After the fix: attn_norm L2 35.38 max 5.74, out_norm L2 28.25 max 3.91."
+  ],
+  "what_parity_gate_was_passing_and_why_that_was_misleading": "The harness's [4] per-position parity compares GPU kernels against a CPU reference INSIDE the same executor. It reported cosine 1.0000000000 at every position because both sides ran the same graph with the same weights. That measures GPU/CPU kernel equivalence, not model correctness. Model correctness requires llama.cpp ground truth, which is what this certificate adds.",
+  "build": {
+    "cmake_configure": "PASS",
+    "production_build_errors": 0,
+    "note": "Zero compiler diagnostics; 210 eliminated this session."
+  },
+  "what_this_does_not_mean": [
+    "It does not mean the three fixes were wrong. They were real defects with measured before/after evidence.",
+    "It does not identify the remaining defect. That requires the first-divergence localisation described below."
+  ],
+  "next_step": {
+    "method": "First-divergence localisation against llama.cpp ground truth. Compare, in execution order and per block: attn_norm, q, kv_latent, k_nope, v, rope-adjusted q/k, scores, softmax, attention output, attn_proj, ffn_norm, gate/up, swiglu, ffn_out, resid. The FIRST tensor whose cosine falls below tolerance is the defect; fix only that.",
+    "why": "Four defects have now been found by exactly this method (measure a tensor, find the one that is wrong, fix only it)."
+  }
+}

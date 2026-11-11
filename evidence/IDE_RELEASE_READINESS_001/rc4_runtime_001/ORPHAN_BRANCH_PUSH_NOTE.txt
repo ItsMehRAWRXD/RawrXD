@@ -1,0 +1,16 @@
+RC4_RUNTIME_001 / ORPHAN_BRANCH_PUSH
+UTC=2026-11-10T06:37:00Z
+TARGET=upload/computer-use-20261110 (text receipts only)
+RESULT=NOT_RUN
+BLOCKER=Local shell/git invocations hung during RC4 runtime session
+         (multiple PowerShell helpers blocked; even trivial git rev-parse did not return).
+TEXT_RECEIPTS_READY_AT=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\
+  IDENTITY_RECEIPT.txt
+  COMPUTER_USE_GUI_E2E_RECEIPT.txt
+  AGENT_REPAIR_RECEIPT.txt
+  G02_G14_MATRIX.txt
+  G15_INDEPENDENT_RECEIPT.txt
+  RC4_RUNTIME_DISPOSITION.txt
+  chat_runtime_keyed.txt
+ACTION_FOR_PARENT=Push the text receipts above to orphan branch when shell/git is healthy;
+                  do not push LFS/binaries.

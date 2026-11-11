@@ -1,0 +1,46 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Find the bug in bug.cpp, fix it, build it and test it.",
+      "role": "user",
+      "timestamp": 1794283438
+    }
+  ],
+  "driver_exit_code": -1,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794283438,
+  "task_id": "ide-agent-1",
+  "termination_reason": "running",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\FULL_FEATURE_FINAL_COMPLETION_001\\artifacts\\issue49_integ017\\exclusive_work_tip017"
+}

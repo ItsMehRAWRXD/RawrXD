@@ -1,0 +1,161 @@
+T05_REQUEST_B_EXIT_CALLSITE_001
+ASOF_UTC=2026-11-10T16:58:00Z
+LANE=T05_BASELINE_0F054F01
+FOLLOWS=T05_REQUEST_B_FAULTING_STACK_002
+TRACE_ONLY=1
+NO_REPAIR=1
+NO_5_OF_5_CLAIM=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+ISSUE49_LANE=SEPARATE_COMPARISON_PENDING_NOTE_ONLY
+
+BASELINE_EXE=F:\rawrxd\build_ide\bin\RawrXD-Win32IDE-Native.exe
+BASELINE_SHA256=0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E
+BASELINE_SHA_PREFIX=0F054F01
+SHA_VERIFIED_THIS_TURN=1
+
+PRIOR_EXITCODE_AUTHORITY=
+  F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\T05_REQUEST_B_FAULTING_STACK_002.txt
+  HIT=ecv3_19 SecondRequestSent=true ExitCodeHex=0xFFFFFFFF ExitCodeSigned=-1
+  DEATH_CLASS=SILENT_EXIT_NONZERO
+  FAULTING_STACK=MISSING (terminate dump !analyze 80000003 is artifact — not claimed as fault)
+
+========================================================================
+RESULT
+========================================================================
+CALLSITE=MISSING
+STACK_AT_EXITPROCESS=MISSING
+EXITCODE_CONFIRMATION=PRIOR_GOT (this-turn Request-B -1 death NOT_REPRODUCED)
+DYNAMIC_BP_HIT=0
+ROOT_CAUSE=UNCONFIRMED
+REPAIR_SHA=NOT_ESTABLISHED
+
+GOT=
+  STATIC_CANDIDATE_LIST (below)
+  BASELINE_SHA256_CONFIRMED
+  PE_IMPORT_SURFACE (TerminateProcess; api-ms-win-crt exit/_exit/abort; NO ExitProcess IAT name)
+  CDB_SYMBOL_FACT: kernel32!ExitProcess does NOT resolve on this host
+  CDB_SYMBOL_FACT: kernel32!ExitProcessImplementation DOES exist
+  CDB_SYMBOL_FACT: ntdll!RtlExitUserProcess resolves and was armed
+  CDB_BP_ARM_PARTIAL (RtlExitUserProcess armed on cdb_01; kernel32!ExitProcess bp FAILED resolve)
+  THIS_TURN_REQUEST_B_PATH_EXERCISED (none/cdb loops: Cancel+Request-B sent; recoveries dominate)
+
+MISSING=
+  CALLSITE_OF_-1_TERMINATION (no proven ExitProcess/exit/TerminateProcess self site)
+  STACK_AT_ExitProcess_ENTRY for Request-B-after-cancel
+  THIS_TURN_REPRO_OF_0xFFFFFFFF_ON_REQUEST_B
+  ROOT_CAUSE
+
+========================================================================
+DYNAMIC (this turn)
+========================================================================
+METHOD_A=DumpMode=none Request-B harness (proven capture_exitcode_procdump_t05.ps1 + child-isolated attempts)
+  ecs1_* host loop: 14 recoveries then host PowerShell FailFast 0xC0000409 (harness crash; NOT IDE exit claim)
+  ecs_child 12x MaxAttempts=1: ALL alive=True sent=True recov=True ExitCode empty
+  CALLSITE capture none 3x earlier: sent=True, no death
+  HIT_REQUEST_B_EXIT_THIS_TURN=False
+
+METHOD_B=cdb attach after spawn; bp intended on ExitProcess; do-not-g-past-hit
+  Script: capture_cdb_exitprocess_t05.ps1
+  Summary: CAPTURE_LOOP_cdb_attach.txt
+  cdb_01..03: SecondRequestSent=true; ProcessAlive=true; Hit=NONE; Stack=False
+  cdb_01 log key lines:
+    bp kernel32!ExitProcess ... -> "Couldn't resolve error at 'kernel32!ExitProcess ..."
+    bp ntdll!RtlExitUserProcess ARMED (bl shows enabled)
+    bp ucrtbase!exit AMBIGUOUS (exit/_exit/_Exit) — not armed
+    Request A+B completed under debugger (OLLAMA REQUEST_GENERATION=2 streamed) — death suppressed or absent
+
+SYMBOL_SMOKE (runs/symbol_smoke*, runs/symbol_smoke2):
+  x kernel32!ExitProcess -> EMPTY
+  x kernelbase!ExitProcess -> EMPTY (no exact ExitProcess export name in x listing)
+  x kernel32!*Exit* includes KERNEL32!ExitProcessImplementation
+  x ntdll!RtlExitUserProcess -> GOT
+  x ucrtbase!exit -> GOT (ambiguous overloads)
+
+INTERPRETATION_FAIL_CLOSED=
+  Cannot claim ExitProcess(-1) callsite without stack at entry.
+  This-turn death did not fire; prior-turn ExitCode 0xFFFFFFFF remains authority for DEATH_CLASS only.
+  Note: Stop-Process -Force / external TerminateProcess is known elsewhere to yield ExitCode=-1
+  (ide_panels_gui_verify.ps1 comment) — EXTERNAL_KILL remains a live alternate class until RtlExit/ExitProcessImplementation stack is captured.
+  I026 Issue49 lane (SEPARATE): death -1 with RtlExitUserProcess bp armed but HIT=0 / No runnable debuggees — consistent with external terminate OR lost debuggee; DO NOT MERGE into T05 root cause.
+
+========================================================================
+STATIC CANDIDATES (file:line) — near cancel / Request / lifecycle / terminate APIs
+========================================================================
+NOTE: No source site found that literally calls ExitProcess(-1) / exit(-1) / TerminateProcess(self,-1).
+Candidates are terminate/exit surfaces relevant to cancel/lifecycle; NOT proven Request-B owners.
+
+A) Explicit ExitProcess in win32app (args are 0/2/rc — not -1):
+  F:\rawrxd\src\win32app\main_win32.cpp:123  ::ExitProcess(pass ? 0u : 2u)   // --term-quit smoke
+  F:\rawrxd\src\win32app\main_win32.cpp:195  ::ExitProcess(termRc ...)       // term-quit fallback
+  F:\rawrxd\src\win32app\main_win32.cpp:302  ::ExitProcess(rc ...)           // --ext-quit only
+  F:\rawrxd\src\win32app\Win32IDE_Core.cpp:5020 ::ExitProcess(0)             // PathB CMD_DIAG body-done (env gated)
+  COMMENT_NEAR: Win32IDE_Core.cpp:5010 mentions FORCE_STOP EXIT=0xFFFFFFFF (harness class note; not a call)
+
+B) Message-loop return becomes process exit code via WinMain return (CRT may call exit/ExitProcess):
+  F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp:1371-1386  GetMessage==-1 fail-closed forces wParam=0
+    (comment: garbage wParam previously observed as EXIT=-1)
+  F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp:1477  return static_cast<int>(msg.wParam);
+  F:\rawrxd\src\win32app\main_win32.cpp:297-304  int rc = ide.runMessageLoop(); return rc;
+  Native links lifecycle.cpp (CMake RAWRXD_NATIVE_IDE_SOURCES) — NOT Win32IDE_Core.cpp runMessageLoop duplicate.
+
+C) PostQuitMessage sites (all PostQuitMessage(0) in win32app grep — none PostQuitMessage(-1)):
+  Win32IDE_lifecycle.cpp:237
+  main_win32.cpp:278
+  Win32IDE_ExtHostWire.cpp:254
+  Win32IDE_Core.cpp:1683,1694,5019,5751
+
+D) Cancel / Request-B lifecycle (stop path — no ExitProcess):
+  Win32IDE_lifecycle.cpp:1028-1031  IDC_COPILOT_STOP_BTN -> HandleCopilotStop
+  Win32IDE.cpp:9248-9299  HandleCopilotStop (stopInference/drain; comment cites prior T05 APPCRASH comctl32/0xC000041D class — different from silent -1)
+  Win32IDE_AgentCommands.cpp:1878-1879  comment: unbounded ESP dumps exited IDE ExitCode=-1 (mitigated by UI cap)
+
+E) TerminateProcess on CHILDREN (not self; exit codes 0/1/0xE001/0xDEAD/259/124 — not 0xFFFFFFFF):
+  Win32IDE_AgenticLoopBridge.cpp:516,789,916,921 (+ TerminateProcessTree:929)
+  Win32IDE_AgenticBridge.cpp:309
+  Win32TerminalManager.cpp:352,412,488
+  Win32NativeDebugBackend.cpp:139
+  main_win32.cpp:118
+  agentic/tool_core.hpp:41
+  agentic/process_win32.hpp:29
+  agentic/RawrLiveTools.cpp:163
+
+F) abort() surfaces (would typically not be clean 0xFFFFFFFF silent exit; listed for completeness):
+  utils/crash_handler.cpp:533,541,547,638
+  deep2/Deep2Engine.cpp:5493,5542,9879,9900,11246
+
+G) PE import surface of baseline exe (dumpbin -> baseline_imports.txt):
+  KERNEL32: TerminateProcess, GetExitCodeProcess (no ExitProcess name in IAT listing)
+  api-ms-win-crt-runtime-l1-1-0: exit, _exit, _c_exit, abort, atexit family
+
+========================================================================
+EXITCODE CONFIRMATION
+========================================================================
+PRIOR_TURN_GOT=
+  ExitCodeHex=0xFFFFFFFF
+  ExitCodeSigned=-1
+  SecondRequestSent=true (ecv3_19)
+  DEATH_CLASS=SILENT_EXIT_NONZERO
+THIS_TURN=
+  No new 0xFFFFFFFF Request-B death captured
+  Do not invent a new ExitCode sample
+
+========================================================================
+NEXT_EXECUTABLE_STEP (TRACE ONLY until stack GOT)
+========================================================================
+1) When Request-B -1 death is live again (DumpMode=none), attach/launch cdb with:
+     bp kernel32!ExitProcessImplementation "r rcx; kL 80; ..."
+     bp ntdll!RtlExitUserProcess "r rcx; kL 80; ..."
+   Do NOT use unresolved kernel32!ExitProcess on this host.
+   Prefer address-form bp for ucrtbase!exit after `x ucrtbase!exit` (avoid ambiguous name).
+2) If death occurs with Rtl/ExitProcessImplementation HIT=0 again, classify EXTERNAL_TERMINATE_PENDING
+   and identify killer PID (not invent owner).
+3) No repair / no PROMOTE until CALLSITE stack is GOT and user-authority allows.
+
+LAW=NOT_RUN!=PASS
+LAW=EXITCODE_CAPTURED!=CALLSITE
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+LAW=HANDOFF_TO_AGENT!=DONE
+PROMOTE=0
+CERTIFIED=0

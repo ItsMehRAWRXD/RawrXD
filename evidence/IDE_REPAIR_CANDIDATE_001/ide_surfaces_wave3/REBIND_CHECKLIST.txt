@@ -1,0 +1,63 @@
+W3_FOUR_PANEL_REBIND_CHECKLIST
+ASOF_UTC=2026-11-10T11:05:00Z
+OWNER=swarm-w3-w5
+MOTD_ACK=1
+PROMOTE=0
+INVENT_PASS=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+RECEIPT_PRESENT_NE_ACCEPTED=1
+AUTHORITATIVE_SRC=F:\rawrxd\src\win32app
+STALE_MIRROR=g:\~dev\rawrxd (do not treat as tip TUs)
+
+================================================================================
+SHA LANES (do not inherit PASS)
+================================================================================
+HISTORICAL_WAVE1=A4B95E4882D5FC38A3D6DAC1C8B43D08591933868C7E1AF74DE3CBB10727D4D7
+HISTORICAL_FOUR_PANEL_PARTIAL=6E59E91A2D23A3BC666345DF5168F66DDCAC1FD1C25F46A64E33773EC78A4C4C  (12/17)
+PRIOR_CREATEWINDOW_FATAL=D93F861C8D324C21EC448A4DD1213125B18F549FC94BCB9B18EE32E7AFB27C9A
+INTERIM_C6E111=C6E11157539A9894130B0C6AB3D978533599C8D73D831F5F22B948A6D99369D1
+P0_NAMED_FINAL_SHA=D376944320A2088416516BB2A0BE3F1C775B7D39E4CB6C7D91263A75BFBC36B6
+PRIOR_604D=604D0856E03C9A5A2D3D334168D2E28E0B038C4CE09614700845F5145A680118
+P0_ACCEPTED=0
+P0_VERDICT=FAIL_NO_HWND EXIT=0xC0000005
+CONTROLLING_FOR_W3_ACCEPT=WAITING_FOR_P0_ACCEPTED=1_SUCCESSOR
+
+================================================================================
+COEXISTENCE SUITE (editor / chat / problems / powershell)
+================================================================================
+E0  Confirm tip EXE SHA == P0 ACCEPTED successor (or IRC CONTROLLING tip)
+E1  Isolated --user-data-dir (never default poisoned profile)
+E2  HWND smoke BEFORE view cmds:
+      require MAIN_HWND + CTRL_1300_PRESENT (visibility may be deferred)
+E3  Post View: 2034,2025,2021 then (safe) 2029 — process must stay alive
+E4  Four-panel 1-17 via Invoke-Rc5FourPanel117.ps1
+      S02 SHOW_PANELS: editor+chat+problems+terminal dock coexist
+      S03 3014 BUILD / PROBLEMS_FIXTURE (IDM_TOOLS_BUILD_PROJECT)
+      S05/S06 Problems list 1312 + NM_DBLCLK nav
+      S07/S08 clear/refill race
+      S12 terminal/output still alive
+      S13-S17 exit/reopen lifecycle
+E5  Explicit PowerShell panel: show/hide must not re-hide IDC_PANEL_CONTAINER
+E6  Seal WORKER_RECEIPT ACCEPTED=1 only if 17/17 on SAME SHA as P0 ACCEPTED tip
+E7  Else ACCEPTED=0 with FIRST_FAILURE_CLASS (no invent)
+
+HARNESS=
+  HWND=ide_surfaces_wave3\harness\Invoke-SurfaceHwndSmoke.ps1
+  FOUR_PANEL=ide_surfaces_wave3\harness\Invoke-Rc5FourPanel117.ps1
+  PRIMARY=FULL_FEATURE_ONESHOT_001\harness\four_panel_1_17_measure.ps1
+  FIXTURES=ide_surfaces_wave3\fixtures\{broken_multi,fixed_multi}.cpp
+
+================================================================================
+SOURCE PREP LANDED (F:\rawrxd — NON_CONTROLLING until rebuilt+remeasured)
+================================================================================
+  Win32IDE_Commands.cpp: IDM_VIEW_TERMINAL → ensurePanelVisible+Terminal tab (no sync createTerminalPane toggle)
+  Win32IDE_VSCodeUI.cpp: ensurePanelVisible no sync layoutBottomDock; layoutBottomDock drops SWP_SHOWWINDOW
+  Win32IDE_lifecycle.cpp: finishSession arms m_panelVisible/m_outputPanelVisible before deferMainSize
+  Prior F: wiring retained: 3014=IDM_TOOLS_BUILD_PROJECT + stop-before-clear + PROBLEMS_FIXTURE; WFDE_BP_HIT emit
+
+================================================================================
+BLOCKERS REMAINING
+================================================================================
+  RB_P0  P0 ACCEPTED=0 (HWND then exit / panel container gate)
+  RB_W3  Four-panel NOT_RUN on ACCEPTED successor SHA
+  RB_CMD View 2034/2025/2021/2029 caused 0xC000041D on 604D binary (source harden unbuilt)

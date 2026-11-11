@@ -1,0 +1,30 @@
+﻿{
+    "Gate":  "T05",
+    "Board":  "BUILD_IDE_0F054F01_T05_002",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaVerifiedPreBoard":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaVerifiedPostBoard":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaMatch":  true,
+    "Exe":  "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "ExeSizeBytes":  1484800,
+    "Trials":  5,
+    "T05CriteriaPassCount":  3,
+    "CombinedPassCount":  0,
+    "FailCount":  5,
+    "FailLoci":  [
+                     "trial_1:SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA",
+                     "trial_2:StaleA=NO_A_STOP_B_PAIR_IN_DELTA",
+                     "trial_3:StaleA=NO_A_STOP_B_PAIR_IN_DELTA",
+                     "trial_4:StaleA=NO_A_STOP_B_PAIR_IN_DELTA",
+                     "trial_5:CancelObserved,SecondRequestRecovered,ProcessAlive,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=Cannot find a process with the process identifier 29312."
+                 ],
+    "AggregateDisposition":  "FAIL",
+    "MarkerBindSha":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "MarkerNote":  "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\CANCEL_RECOVERY_MARKER_OBSERVED.md",
+    "DistinctFromDailyDriverSha":  "9C91059940A49C970586FF18FC92B1B7BA422AF09E8D579B1C8606387E74A9C8",
+    "NOT_RUN_NE_PASS":  true,
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "T25":  "HELD",
+    "ASOF_UTC":  "2026-11-09T07:17:15Z"
+}

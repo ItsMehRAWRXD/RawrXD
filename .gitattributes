@@ -1,0 +1,17 @@
+# Git LFS is intentionally disabled for this branch.
+#
+# The repository's Git LFS budget is exhausted, so any path routed through LFS
+# is stored on the remote as an unreadable pointer file rather than content.
+# Every path below is therefore kept as an ordinary Git blob so that clones and
+# external verification see real bytes.
+#
+# Re-enable LFS only with a verified quota, and renormalize the whole tree
+# before pushing again.
+#
+# *.zip    filter=lfs diff=lfs merge=lfs -text
+# *.tar.gz filter=lfs diff=lfs merge=lfs -text
+# *.dll    filter=lfs diff=lfs merge=lfs -text
+# *.zip.part* filter=lfs diff=lfs merge=lfs -text
+# *.map    filter=lfs diff=lfs merge=lfs -text
+# *.bin    filter=lfs diff=lfs merge=lfs -text
+# *.csv    filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,30 @@
+﻿{
+    "Gate":  "T05_EXITCODE_CAPTURE",
+    "Attempt":  10,
+    "DumpMode":  "none",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  28828,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  true,
+    "ProcessAlive":  true,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  true,
+    "TranscriptDelta":  "\r\nAI: RAWRXD_CANCEL_RECOVERY_OK\n\r\n\r\n",
+    "Error":  null,
+    "ExitCodeSigned":  null,
+    "ExitCodeHex":  null,
+    "ExitCodeCaptured":  false,
+    "DeathClass":  null,
+    "DumpPaths":  [
+
+                  ],
+    "ProcdumpLog":  null,
+    "Timeline":  [
+                     "2026-11-10T16:17:22.9786119Z SPAWNED pid=28828",
+                     "2026-11-10T16:17:24.9500050Z REQUEST_A_SENT",
+                     "2026-11-10T16:17:25.4764582Z CANCEL_CLICKED",
+                     "2026-11-10T16:17:28.4937484Z REQUEST_B_SENT"
+                 ]
+}

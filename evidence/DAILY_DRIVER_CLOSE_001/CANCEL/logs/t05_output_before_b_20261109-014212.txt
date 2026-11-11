@@ -1,0 +1,9 @@
+﻿You: Write a very long detailed essay of at least 2000 words about Windows kernel scheduling. Include the exact marker CANCEL_A_UNIQUE_MARKER_POST_E59D_7F3A somewhere in the essay.
+
+You: Reply with exactly one word: PONG_B_POST_E59D
+
+Copilot: Confirmed.
+
+
+[stopped] generation cancelled
+

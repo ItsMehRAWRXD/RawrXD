@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\agent_workflow_after_slice_fix_20261110\.rawrxd\agent_transactions\txn_68614725414100\before.bin

@@ -1,0 +1,18 @@
+﻿STRATA_HIP_RDNA3_ENGINE_INSTALL
+TIMESTAMP=2026-11-10T08:12:14.0653437-05:00
+FEED_RELEASE=v0.2.13 (https://github.com/Niko1221/Strata/releases/tag/v0.2.13)
+APP_INSTALL=ABSENT (no Strata-0.2.13-windows-x64-setup.exe product under Programs/PATH; no %LOCALAPPDATA%\Strata\terminal)
+CONTROL_INSTALL=ABSENT (install-manifest control zip not unpacked)
+ENGINE_ACTIVE=0.1.59-windows-x86_64-hip-rdna3
+ENGINE_DIR=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3
+ENGINE_INSTALLED_ON_DISK=1
+SETTINGS=%APPDATA%\Strata\settings.json => {"engine_backend":"hip"}
+STATE=%LOCALAPPDATA%\Strata\components\.updates\state.json active=0.1.59-windows-x86_64-hip-rdna3 feed=stable sequence=124 checked_at=2026-11-10T13:04:07Z source=https://github.com/Niko1221/Strata/releases/latest/download history.update-engine ok=true to=0.1.59 binary-only
+BUILD_JSON_ARCHS=gfx1100,gfx1101,gfx1102,gfx1151
+BUILD_JSON_BACKEND=hip platform=windows-x64 version=0.1.59 rocm=10.2.0a20260930 commit=712fec6b4297 source=f-0213-rc
+HIP_DLLS_PRESENT=amdhip64_7.dll,amd_comgr.dll,rocm_kpack.dll (+ MSVC runtime DLLs)
+ROCM_TREE_PRESENT=1 (rocm\bin hipblaslt/rocblas libraries; .kpack blas_lib_gfx1100/1101/1102/1151)
+GFX1201_ON_DISK_FATBIN_HSACO=0 (no *gfx1201* filenames under engine tree)
+GFX1101_ON_DISK=1 (hipblaslt/rocblas/kpack/tuning present)
+NOTE_RELEASE_ASSET_NOT_INSTALLED=strata-engine-0.1.59-windows-x86_64-hip-rx9070.tar.gz exists on v0.2.13 release (gfx1201 class) but signed feed selected/installed hip-rdna3 only; NOT fetched (PROMOTE=0 / no engine modification)
+SELECTED_ENGINE_COMPLETE=1 (binary present; install/ empty; .s empty; no further selected-engine action taken)

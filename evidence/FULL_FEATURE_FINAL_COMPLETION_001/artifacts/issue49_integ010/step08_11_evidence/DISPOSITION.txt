@@ -1,0 +1,21 @@
+ASOF_UTC=2026-11-09T19:10:00Z
+TIP_SHA256=0946C7AA0397C1F400FB7A960D8DBC4AC98A601C128351054EE9857FA5D11BF9
+EXCLUSIVE_RUN=issue49_product_final_tip010_20261109-140707.txt
+
+08_TOOL_AUTHORITY=BLOCKED_NO_REAL_TOOL_CALL_EVIDENCE
+  HARNESS_RAW_HIT=1_RETRACTED
+  REASON=matched chat-template fragment role != "tool" in UI stream; agent_session.acceptance.tool_calls=0; tool_calls=[]
+09_RESULT_REINJECTION=NOT_RUN
+  REASON=no tool result to reinject (depends on 08)
+10_REAL_SOURCE_EDIT=NOT_RUN_HASH_DRIFT_UNCORROBORATED
+  PROJECT_SHA_BEFORE=313DB4ED1089E305BCF947D5A4B669BF4523EC00FCAA557758DF6EEE6B155A81
+  PROJECT_SHA_AFTER=9138F519658753A6DB9C02AE328D23B56B88C7047B9AD7765E41789C7B8D7EF2
+  LEDGER_SOURCE_EDIT_PERFORMED=0
+  LEDGER_FILES_MODIFIED=[]
+  REASON=hash changed during window but no ledger/tool provenance; bug.cpp still contains intentional compile bug
+11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+  IDE_EXIT_DURING_BUILD=-1
+  BUILD_SUBSTRATE=FAIL_NO_BUILD_OUTPUT
+  REASON=IDE force-terminated (exit -1) before agent-owned recovery; substrate not observed
+
+PRODUCT_WIRE_NOTE=deep2_agentic_loop SPAWNED=1 and model RESPONSE_END observed, but runtime tool path not reached (tool_calls=0). Native-Ext contains write_file/tool_call/function_call strings; apply_edit/ToolAuthority absent. Base GGUF may not emit tools without product tool-schema prompt path. tip_011 rebuild held until smallest tool-wire fix identified; PROMOTE=0 TIP_MOVE=0.

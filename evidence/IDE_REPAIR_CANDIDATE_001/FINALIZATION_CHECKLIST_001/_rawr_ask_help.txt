@@ -1,0 +1,2 @@
+ERROR: no local inference backend reachable on 127.0.0.1:8080
+[StreamEngine] Shutdown

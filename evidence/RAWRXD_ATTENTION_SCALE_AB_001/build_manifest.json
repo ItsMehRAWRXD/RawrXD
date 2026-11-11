@@ -1,0 +1,64 @@
+{
+  "certificate_id": "RAWRXD_ATTENTION_SCALE_AB_001",
+  "date": "2026-10-10",
+  "purpose": "A/B attention scale certification for DeepSeek-V2-Lite-Chat",
+  "variants": {
+    "A": {
+      "name": "Certified (mscale² / √192)",
+      "formula": "mscale * mscale / sqrtf(192)",
+      "approximate_scale": 0.114721,
+      "executable": "F:\\rawrxd\\tmp_build_e2e\\rawrxd_modelgenie_ir_executor.exe",
+      "sha256": "487B271FCD0F962F7932A5959B5C58FCA36E0769A6D0ACBDEA39ADCFF171C035",
+      "source_revision": "HEAD (after restoring mscale²)",
+      "compile_flags": "/std:c++20 /W4 /WX- /EHsc /O2"
+    },
+    "B": {
+      "name": "Experimental (1 / √192)",
+      "formula": "1.0f / sqrtf(192)",
+      "approximate_scale": 0.072169,
+      "executable": "F:\\rawrxd\\tmp_build\\modelgenie_ir_executor.exe",
+      "sha256": "FE10C5500612F6A49EAB9F30D5431CE7D5418D6B8FC1BADF48497ED0D15C15D3",
+      "source_revision": "HEAD (with 1/sqrt change)",
+      "compile_flags": "/std:c++20 /W4 /WX- /EHsc /O2"
+    }
+  },
+  "reference": {
+    "identity": "llama.cpp reference (ref_teacher_forced)",
+    "path": "F:\\rawrxd\\evidence\\RAWRXD_REFERENCE_REPRODUCIBILITY_001\\ref_teacher_forced",
+    "model": "DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+    "teacher_forced_tokens": [1, 185, 16, 15, 15, 15, 15, 15, 15, 15, 12, 384, 2, 16, 24, 207, 71955, 1392, 13, 1002, 6, 95, 3882, 124, 2, 16, 146, 24, 151, 384, 37, 1827, 253, 16, 24, 92, 1024, 1827, 253, 16, 24, 92, 12, 22, 738, 30840, 4399, 4633, 15, 23, 0, 626, 726, 1628, 2285, 966, 6, 4, 0, 82, 10, 113, 4647, 1075, 2],
+    "positions_tested": 20
+  },
+  "results": {
+    "positions_compared": 20,
+    "variant_A": {
+      "argmax_matches": 19,
+      "argmax_rate": 0.95,
+      "mean_cosine": 0.99911389,
+      "min_cosine": 0.99616206,
+      "max_rmse": 0.366694
+    },
+    "variant_B": {
+      "argmax_matches": 17,
+      "argmax_rate": 0.85,
+      "mean_cosine": 0.98895103,
+      "min_cosine": 0.93983367,
+      "max_rmse": 1.448973
+    }
+  },
+  "decision": {
+    "promote_B": false,
+    "retain_A": true,
+    "reason": "Variant A meets both cosine thresholds from 64-position certification (mean ≥ 0.998912, min ≥ 0.988517). Variant B fails both. The plain 1/sqrt hypothesis is rejected.",
+    "remaining_mismatch": "Position 1: native token 1 vs reference token 185 (cosine 0.99961049)"
+  },
+  "gates": {
+    "SAME_GGUF_HASH": true,
+    "SAME_TEACHER_FORCED_TOKENS": true,
+    "SAME_REFERENCE_HASH": true,
+    "ISOLATED_SOURCE_DELTA": true,
+    "BOTH_EXECUTABLE_HASHES": true,
+    "FULL_64_POSITION_DIFF": false,
+    "note": "Full 64-position differential pending; only 20 reference positions available"
+  }
+}

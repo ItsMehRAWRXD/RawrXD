@@ -1,0 +1,7 @@
+LISTEN=False
+HEALTH_OK=False
+HEALTH_CODE=0
+HEALTH_BODY=
+MODELS_BODY=
+PID=35948
+EXE=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe

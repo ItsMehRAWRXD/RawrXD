@@ -1,0 +1,8 @@
+.logopen F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\attempt_01\cdb.log
+.sympath srv*
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_request_b_attempt01.dmp; .logclose; qd" av
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_request_b_attempt01.dmp; .logclose; qd" eh
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_request_b_attempt01.dmp; .logclose; qd" c0000409
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_request_b_attempt01.dmp; .logclose; qd" c0000005
+sxi ibp
+g

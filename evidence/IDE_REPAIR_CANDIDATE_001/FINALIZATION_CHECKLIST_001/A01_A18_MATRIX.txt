@@ -1,0 +1,88 @@
+A01_A18_AGENTIC_FINALIZATION_MATRIX
+ASOF_UTC=2026-11-10T15:18:00Z
+OWNER=A01_A18
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+HISTORICAL_ISSUE49_NEQ_PASS=1
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED
+LAW=S_13_OPEN => A09=NOT_VERIFIED_PENDING_B01
+
+TIP_UNDER_TEST=FROZEN_G
+IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+TIP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+LOOP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\deep2_agentic_loop.exe
+OLLAMA_MODEL=qwen3:8b
+S_13=OPEN
+CONTROLLING_GATE=B01_S13_SECOND_EDIT_RECOVERY
+ISSUE49_HISTORICAL_BEST=D_015_10_OF_11_HISTORICAL_ONLY
+TIP_BUILD_9FDEBF09=DAILY_DRIVER_SEPARATE_NEQ_ISSUE49_PAIR
+
+EVIDENCE_PRIMARY=
+  G020=issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt (ALIVE=1 8/11)
+  G021=issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_021\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt (ALIVE=0 IDE_EXIT=-1073740791)
+  EXERCISE=FINALIZATION_CHECKLIST_001\a01_a18_exercise\
+
+# ID | STATUS | OBLIGATION | EVIDENCE
+A01=FAIL | AgentSession lifecycle create/run/cancel/destroy | G020 ALIVE=1 spawn+loop complete; G021 remasure same SHA IDE_EXIT=-1073740791 ALIVE=0; cancel/destroy path NOT re-proven on G; fail-closed remasure crash
+A02=PASS | Model routing provider/model | G020/G021 chat_runtime AGENT_SESSION_SPAWNED model=qwen3:8b; private_loop REQUEST_SEND endpoint=127.0.0.1:11434 model=qwen3:8b (a01_a18_exercise\private_loop_read_reinject2.log)
+A03=PASS | Real file read via tools | G020 READ_EVIDENCE=1 S_06_AGENT_READS_PROJECT=PASS_READ_EVIDENCE on IDE_SHA D56FE6DD; HISTORICAL D_015 read retained HISTORICAL_ONLY
+A04=FAIL | Real source modification independently verified | G020 EDIT_HIT mid-run then WRITE_ROLLBACK_COUNT=1 SOURCE_EDITED=0 PROJECT_SHA_AFTER=BEFORE; committed durable edit NOT demonstrated on G; HISTORICAL D_015 edit NOT inherited
+A05=PASS | Tool authority authorized ops only | G020 S_08_TOOL_AUTHORITY=PASS_TOOL_CALL_EVIDENCE TOOL_CALL_EVIDENCE=1
+A06=PASS | Tool-result reinjection | G020 S_09_RESULT_REINJECTION=PASS_REINJECTION; ledger/agent path RESULT_REINJECTION feedback_bytes observed on G pair
+A07=PASS | Multi-step reasoning after tool results | G020 S_07_AGENT_REASONING_GPU=PASS_REASONING_SIGNAL; multi ollama steps after reinjection on G020 runlog
+A08=PASS | Failure recovery diagnose failed build/test | G020 S_11_BUILD_FAILURE_RECOVERY=PASS_BUILD_RECOVERY_SIGNAL DIAG_EVIDENCE=1 WRITE_ROLLBACK compile diagnostic reinjected
+A09=NOT_VERIFIED | Second edit repair remaining defect | MAPS_TO=S_13/B01; S_13=OPEN S13_PASS=0 G020/G021 S_13_SECOND_EDIT=NOT_RUN; pending B01 ordered first-edit->build/test->second-edit sequence; HISTORICAL D_015 S_13=NOT_RUN
+A10=BLOCKED_BY_B01 | Rollback and commit ordered observable txns | MAPS_TO=S_13/B01; G020 WRITE_ROLLBACK_COUNT=1 WRITE_COMMIT_COUNT=0 ROLLBACK_THEN_COMMIT=0; ordered rollback->commit on same immutable pair requires B01 controlling gate
+A11=NOT_VERIFIED | Cancellation no stale writes/runaways | Cancel receipts HISTORICAL on SHA 74AA (CANCEL_A_STOP_B_PASS=0 / DIED_AFTER_A_SEND); no cancel exercise on D56FE6DD this turn (B01 owns live G IDE); NEXT=cancel_requested/ack mid-agent on G userdata
+A12=NOT_VERIFIED | Tool-call exactly-once no duplicated execution | Selftest PASS + ledger fixture PASS + G absorb PRODUCT_VERIFIED=1 BIN_EXACTLY_ONCE_REJECT/DUP=1 on D56FE6DD (a01_a18_exercise\exactly_once\); live duplicate tool_call_id under agent session NOT_RUN on G; G020 REQUEST_DISPATCH_CORRELATED count=1 only (chat-level); NEXT=live dup tool_call_id admit/reject on G agent path
+A13=NOT_VERIFIED | Computer-use tools live GUI | G020/G021 AGENT_TOOLS_REGISTRY_BOUND computer_use schema ready; live screenshot/find/click/type through GUI NOT exercised on G; NEXT=CU attach E2E on G
+A14=NOT_VERIFIED | Reviewer-agent independent patch review | G020/G021 S_16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER INDEPENDENT_REVIEW=0
+A15=NOT_VERIFIED | Agent evidence reporting accurate receipts | G020/G021 product receipts present; S_17_AGENT_EVIDENCE_REPORT=NOT_RUN; accuracy gate not separately closed
+A16=NOT_VERIFIED | Multi-agent concurrency isolation/limits | NOT_RUN on G tip pair
+A17=NOT_VERIFIED | Session persistence safe restart/recovery | NOT_RUN on G tip pair this turn
+A18=NOT_VERIFIED | Idle timeout 30-second idle-stop | NOT_RUN; no 30s idle-stop receipt on D56FE6DD
+
+HISTORICAL_ONLY_DO_NOT_INHERIT=
+  D_015 issue49_candidate_401071_5bac_001 issue49_gui_ollama_qwen3_015 = 10/11 SOURCE_EDITED=1 read/edit/build/test HISTORICAL
+  exactly_once product absorb on 74AA42F7 HISTORICAL (re-checked absorb on G this turn)
+  cancel_a_stop_b on 74AA42F7 HISTORICAL FAIL
+
+EXERCISE_RUNS_THIS_TURN=
+  exactly_once_selftest EXIT=0 PASS
+  Invoke-ExactlyOnceLedgerTest PASS
+  Invoke-ExactlyOnceProductAbsorbVerify TipExe=G ExpectSha=D56FE6DD PRODUCT_VERIFIED=1
+  private deep2_agentic_loop --provider ollama --model qwen3:8b (routing PASS; forced TOOL read FAIL under ctx=256; file UNCHANGED)
+  B01 Invoke-Issue49Live74aa concurrent on G IDE — A-lane did not kill/steal that process
+
+COUNTS=
+  TOTAL=18
+  PASS=6
+  FAIL=2
+  NOT_VERIFIED=9
+  BLOCKED_BY_B01=1
+
+BLOCKERS=
+  B01_S13_OPEN (A09 NOT_VERIFIED pending; A10 BLOCKED_BY_B01)
+  A01_LIFECYCLE_REMEASURE_CRASH_G021_-1073740791
+  A04_NO_COMMITTED_SOURCE_EDIT_ON_G
+  A11_CANCEL_NOT_REPROVEN_ON_G
+  A12_LIVE_DUP_TOOLCALL_NOT_RUN
+  A13_CU_LIVE_NOT_RUN
+  A14_A18_NOT_RUN
+
+NEXT_EXECUTABLE_GATES=
+  1) B01 close S_13 ordered second-edit recovery on one immutable IDE+loop pair
+  2) Remeasure A01 lifecycle ALIVE through cancel/destroy without -1073740791
+  3) A04 durable SOURCE_EDITED=1 + independent SHA verify on same pair
+  4) A11 cancel mid-tool on G; A12 live dup tool_call_id; A13 CU live
+
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+ACCEPTED=0

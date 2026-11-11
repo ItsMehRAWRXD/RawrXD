@@ -1,0 +1,15 @@
+﻿{
+    "RequestA":  1,
+    "CancelAck":  true,
+    "RequestB":  2,
+    "RequestBStarted":  true,
+    "RequestBComplete":  true,
+    "LateACallbackCount":  0,
+    "LateALines":  [
+
+                   ],
+    "StaleRejectProofCount":  0,
+    "StaleRejectProofLines":  [
+
+                              ]
+}

@@ -1,0 +1,33 @@
+# SHA-256 evidence manifest - RAWRXD Deep2 / UPME 2026-10-14 00:24:13
+# All paths relative to F:\rawrxd\. Originals are unmodified; this manifest records provenance.
+
+66D5F46D8693D7388B2A3C0C3F4577AF84F0ACE49ECD84BBADFA3CB1C0140246  *evidence\BUILD_2026-10-14_UPME_PLAGUE_MEMORY\plague_rom_receipt.log  (5121)
+1A205000E7AFE82C82300FE979CD9AB6BDC1C315349CFCC29010474C2ECBD382  *evidence\gate5_head_repro_2026-10-14\PARITY_RECEIPTS.txt  (10647)
+D4DCF08046DB70702389F71B97B2383C25864CD7A02F7CF776CB70413C93496C  *evidence\gate5_head_repro_2026-10-14\qwen64_gpu_dump.log  (10786)
+BBF31F55CD6B66C60396F1C7527335DB656BB107BBE1245EDFE714AB534B44E1  *evidence\gate5_head_repro_2026-10-14\nemotron64_gpu_dump.log  (10770)
+0F83C9889327AED416262A97AE43C773A5967F0B29AD0A5C543CA1DA45C6B202  *evidence\gate5_head_repro_2026-10-14\nemotron64_cpu_dump.log  (6878)
+5FBEE48808BC6618E415CF3CBE172EBF360172BDFCF7FE2B7E7EA81E4E06F665  *evidence\gate5_head_repro_2026-10-14\deepseek32_gpu_dump.log  (856)
+5B38B12E391488C7AECD8B9370660D53365B770C8D2088A1791995536A86A5E0  *include\plague_memory.hpp  (27995)
+B529C7599ED27D9C504731AE337C91827D1155FD485A57C4901081169C6F1A53  *tools\plague_rom_receipt.cpp  (29924)
+
+# raw dump directory inventories (files counted, sizes):
+gate5_head_repro_2026-10-14\q2k\ref  files=129 bytes=66180096
+gate5_head_repro_2026-10-14\q2k\gpu_nb2  files=129 bytes=66180096
+gate5_head_repro_2026-10-14\q3k\ref  files=129 bytes=66180096
+gate5_head_repro_2026-10-14\q3k\gpu  files=129 bytes=66180096
+gate5_head_repro_2026-10-14\d2_gpu_head  files=129 bytes=16512000
+gate5_head_repro_2026-10-14\ref_head  files=129 bytes=16512000
+# Surviving raw measurement dumps (original, unmodified) - sampled positions:
+C8B58D89542540035699805C52066A65AC01F86012E85E400B6918A3732153B0  *evidence/gate5_head_repro_2026-10-14/q2k/ref/ref_logits_pos0.bin  (513024)
+D0D77E65FE6D5C006308CA671013B764F99D70DB2CE3606F0C16EB51983A70B7  *evidence/gate5_head_repro_2026-10-14/q2k/ref/ref_logits_pos16.bin  (513024)
+AE586CE3B917C2010472C5F6AB67A049DD1DDD82798D12A5180025EDB3906848  *evidence/gate5_head_repro_2026-10-14/q2k/gpu_nb2/d2_logits_pos0.bin  (513024)
+2B2E82B5B8DB165B5A6D50A302FD221B9E5B1750994BA6774AAB9D39CE5582AE  *evidence/gate5_head_repro_2026-10-14/q2k/gpu_nb2/d2_logits_pos16.bin  (513024)
+47E6033780BBDFAF70668747B44FA94B26C51776DC790D03A6F97B376DF3B361  *evidence/gate5_head_repro_2026-10-14/q3k/ref/ref_logits_pos0.bin  (513024)
+AF979BAF5A157535DEE378DDB8C1060C5ED48C570ECE16D0EC8C45F7F0B9DCDC  *evidence/gate5_head_repro_2026-10-14/q3k/gpu/d2_logits_pos0.bin  (513024)
+EE279330F7777D8E383476E8305C62827CFD68F63FC610FC38E5D7DF2E4C5698  *evidence/gate5_head_repro_2026-10-14/d2_gpu_head/d2_logits_pos0.bin  (128000)
+B113498EFBADB2E09AE639567F0F8410912339A371567F9CE5AC8F04965DBDC1  *evidence/gate5_head_repro_2026-10-14/d2_cpu_head/d2_logits_pos0.bin  (128000)
+51C3645C86353F45AA91DD4B84F064C419769CD280180B78A4E51C6321A64B04  *evidence/gate5_head_repro_2026-10-14/ref_head/ref_logits_pos0.bin  (128000)
+
+# NOTE: PARITY_RECEIPTS.txt was accidentally overwritten at 2026-10-14 00:0x and reconstructed;
+# every number in it is reproducible from the raw dumps hashed above via tools/logit_compare.exe.
+# Its SHA above is the manifest of the RECONSTRUCTED file. Append-only from now on.

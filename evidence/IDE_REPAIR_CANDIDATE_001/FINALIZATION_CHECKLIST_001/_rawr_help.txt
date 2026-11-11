@@ -1,0 +1,43 @@
+rawr - RawrXD native CLI
+
+Usage: rawr <command> [args]
+
+Agents
+  rawr run <model> [mode]        Start an agent session (default: code mode)
+  rawr run <model> swarm         Coordinate specialized subagents
+  rawr modes                     List agent modes and their permissions
+  rawr self-audit                Run the verified self-audit loop
+
+Models and backends
+  rawr models                    List loadable local models
+  rawr backend status            Show backend router state
+  rawr benchmark --model M [--tokens N]
+
+Universal question answering
+  rawr ask <question>            Answer ANY question; same policy for
+                                 code, maths, research, writing, debug
+  rawr reason <objective>        Evidence-grounded engineering loop
+
+Tools
+  rawr tools list                List the tool registry
+  rawr tools describe <tool>     Show one tool's schema and capabilities
+
+Engineering
+  rawr build [--config Release]
+  rawr test [--filter RE]
+  rawr diagnostics
+  rawr symbols references <name>
+  rawr parity compare --reference <dir> [--strict]
+  rawr git status | diff
+
+Sessions and orchestration
+  rawr session list | resume <id> | stop <id>
+  rawr swarm status | workers | pause | resume
+  rawr checkpoint list
+  rawr doctor                    Environment and policy health checks
+
+Global flags: --json (machine-readable output)
+
+Exit codes: 0 ok, 1 fail, 2 no inference, 3 denied, 4 parity fail,
+            5 tool failure, 42 driver crash
+[StreamEngine] Shutdown

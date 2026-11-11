@@ -1,0 +1,51 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": true,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "bug.cpp has TWO separate defects. Follow this exact order - do not fix both in one write: STEP A: Fix ONLY the compile error around undeclared_fn. Keep add() exactly as \"return a - b;\". Do not rewrite the whole file to a simplified version. Then build/test. STEP B: After the tool result shows compile success but AGENT_RESULT is not 5 (or the write was rolled back for wrong output), issue a SECOND write that changes add() to \"return a + b;\" while keeping undeclared_fn fixed. Then build/test until AGENT_RESULT=5. Rules: /WX - no unused parameters. Two writes required. Final independent result must be AGENT_RESULT=5. After a write rolled back, you MUST issue another TOOL write with a different body until write committed and AGENT_RESULT=5.",
+      "role": "user",
+      "timestamp": 1794324276
+    },
+    {
+      "content": "OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de\r\n[ollama step 1] request_messages=2 request_bytes_pending model=qwen3:8b\r\n[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=2 payload_bytes=2668 max_tokens=512 ctx=4096\r\n[ollama] REQUEST_SENT elapsed_ms=1639 waiting_response\r\n[ollama] RESPONSE_RECV http=200 body_bytes=338 elapsed_ms=1639\r\n[ollama step 1] response_bytes=17\r\n[ollama step 1] response=TOOL read bug.cpp\r\n[ollama step 1] TOOL=read exit=0 valid=1 observation=492\r\n[ollama step 1] result=#include <cstdio>\\r\\n\\r\\n// Issue #49 Wave2 fixture: two defects for fail-then-fix second edit.\\r\\n// 1) undeclared_fn(1, 2) is a C2660 arity error (must fix call or signature).\\r\\n// 2) add() returns a - b so AGENT_RESULT is wrong until changed to a + b.\\r\\n// Do not leave unused parameters (C4100 under /WX).\\r\\nint undeclared_fn\r\n[ollama step 1] RESULT_REINJECTION feedback_bytes=492\r\n[ollama step 2] request_messages=4 request_bytes_pending model=qwen3:8b\r\n[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=4 payload_bytes=3333 max_tokens=512 ctx=4096\r\n[ollama] REQUEST_SENT elapsed_ms=25507 waiting_response\r\n[ollama] RESPONSE_RECV http=200 body_bytes=568 elapsed_ms=25507\r\n[ollama step 2] response_bytes=220\r\n[ollama step 2] response=TOOL write bug.cpp @@#include <cstdio>\\nint undeclared_fn(int a) { return a; }\\nint add(int a, int b) { return a - b; }\\nint main() {\\n  (void)undeclared_fn(1);\\n  std::printf(\"AGENT_RESULT=%d\\n\", add(2, 3));\\n  return 0;\\n}\\n@@\r\n[ollama] write_body_bytes=196 preview=#include <cstdio>\\nint undeclared_fn(int a) { return a; }\\nint add(int a, int b) { return a - b; }\\nint main() {\\n  (void)undeclared_fn(1);\\n  std::printf(\"AGENT_RESULT=%d\\n\", add(2, 3));\\n  return 0;\\n}\r\n[ollama step 2] TOOL=write exit=1 valid=1 observation=400\r\n[ollama step 2] result=write rolled back: test failed (exit 0): AGENT_RESULT=-1\\n Next action must be a new TOOL write (not finish). Compile succeeded but output was wrong (write rolled back). You MUST issue another TOOL write with a DIFFERENT body: keep the undeclared_fn arity fix and change add() from return a - b; to return a + b; so AGENT\r\n[ollama step 2] RESULT_REINJECTION feedback_bytes=400\r\n[ollama step 3] request_messages=6 request_bytes_pending model=qwen3:8b\r\n[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=6 payload_bytes=4352 max_tokens=512 ctx=4096\r\n[ollama] REQUEST_SENT elapsed_ms=10671 waiting_response\r\n[ollama] RESPONSE_RECV http=200 body_bytes=569 elapsed_ms=10671\r\n[ollama step 3] response_bytes=220\r\n[ollama step 3] response=TOOL write bug.cpp @@#include <cstdio>\\nint undeclared_fn(int a) { return a; }\\nint add(int a, int b) { return a + b; }\\nint main() {\\n  (void)undeclared_fn(1);\\n  std::printf(\"AGENT_RESULT=%d\\n\", add(2, 3));\\n  return 0;\\n}\\n@@\r\n[ollama] write_body_bytes=196 preview=#include <cstdio>\\nint undeclared_fn(int a) { return a; }\\nint add(int a, int b) { return a + b; }\\nint main() {\\n  (void)undeclared_fn(1);\\n  std::printf(\"AGENT_RESULT=%d\\n\", add(2, 3));\\n  return 0;\\n}\r\n[ollama step 3] TOOL=write exit=0 valid=1 observation=119\r\n[ollama step 3] result=write committed; build and test verified; after_sha256=6fcf3ee0bad495af9a4c76cdabd22667417fe0f7538a8356365598d02e47dfa2\r\n[ollama step 3] RESULT_REINJECTION feedback_bytes=119\r\n[ollama step 4] request_messages=8 request_bytes_pending model=qwen3:8b\r\n[ollama] REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b messages=8 payload_bytes=4829 max_tokens=512 ctx=4096\r\n[ollama] REQUEST_SENT elapsed_ms=774 waiting_response\r\n[ollama] RESPONSE_RECV http=200 body_bytes=335 elapsed_ms=774\r\n[ollama step 4] response_bytes=11\r\n[ollama step 4] response=TOOL finish\r\n[ollama step 4] TOOL=finish exit=0 valid=1 observation=19\r\n[ollama step 4] result=verified completion\r\nINDEPENDENT_RUN exit=0 marker=PASS output=AGENT_RESULT=5\\n\r\nAGENT_RESULT=5\r\nOLLAMA_AGENT_MODEL qwen3:8b\r\nOLLAMA_AGENT_READ PASS\r\nOLLAMA_AGENT_EDIT PASS\r\nOLLAMA_AGENT_BUILD_TEST PASS\r\nOLLAMA_AGENT_BEFORE_SHA256 af4519c6af7b60\n...(truncated)",
+      "role": "assistant",
+      "timestamp": 1794324329
+    }
+  ],
+  "driver_exit_code": 0,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "PASS",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "qwen3:8b",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794324276,
+  "task_id": "ide-agent-1",
+  "termination_reason": "model_completed",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\issue49_wave2\\fixtures"
+}

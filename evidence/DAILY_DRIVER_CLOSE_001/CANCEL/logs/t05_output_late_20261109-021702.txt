@@ -1,0 +1,24 @@
+﻿> User: Generate a very long detailed response about C++ build systems. Continue for many paragraphs and do not stop early.
+
+> User: Reply exactly: RAWRXD_CANCEL_RECOVERY_OK
+
+> User: Generate a very long detailed response about C++ build systems. Continue for many paragraphs and do not stop early.
+
+> User: Reply exactly: RAWRXD_CANCEL_RECOVERY_OK
+
+> User: Generate a very long detailed response about C++ build systems. Continue for many paragraphs and do not stop early.
+
+> User: Generate a very long detailed response about C++ build systems. Continue for many paragraphs and do not stop early.
+
+> User: Reply exactly: RAWRXD_CANCEL_RECOVERY_OK
+
+AI:   RAWRXD_CANCEL_RECOVERY_OK
+
+> User: Reply exactly: RAWRXD_CANCEL_RECOVERY_OK
+
+
+[stopped] generation cancelled
+
+AI: T05_B_PONG_8215bc5e
+
+

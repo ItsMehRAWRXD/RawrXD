@@ -1,0 +1,158 @@
+T05_REQUEST_B_FAULTING_STACK_002
+ASOF_UTC=2026-11-10T16:26:00Z
+LANE=T05_BASELINE_0F054F01
+FOLLOWS=T05_REQUEST_B_FAULTING_STACK_001
+PROMOTE=0
+CERTIFIED=0
+CRASH_ROOT_CAUSE=UNCONFIRMED
+REPAIR_SHA=NOT_ESTABLISHED
+REPAIR_T05_5_OF_5=NOT_RUN
+COMPARISON_TO_ISSUE49_401071=NOT_STARTED_DO_NOT_MERGE
+PARITY_RAISE=NOT_DONE
+
+BASELINE_EXE=F:\rawrxd\build_ide\bin\RawrXD-Win32IDE-Native.exe
+BASELINE_SHA256=0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E
+BASELINE_SHA_PREFIX=0F054F01
+CAPTURE_SCRIPT=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\capture_exitcode_procdump_t05.ps1
+PROCDUMP=F:\rawrxd\scripts\procdump_tools\procdump64.exe
+CDB_PATH=C:\Users\Garrett\AppData\Local\Microsoft\WindowsApps\cdbX64.exe
+LOCALDUMPS_ARMED=1 DumpType=2
+LOCALDUMPS_FOLDER=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps
+
+========================================================================
+RESULT_SUMMARY
+========================================================================
+FAULTING_STACK=MISSING
+EXCEPTION_CODE=NOT_PRESENT_ON_TERMINATE_DUMP
+MODULE_OFFSETS=NOT_CAPTURED_AS_FAULT
+DUMP_PATH=PRESENT_TERMINATE_ONLY (cancel-window; SecondRequestSent=false)
+PROCESS_EXIT_DURING_REQUEST_B=REPRODUCED_WITH_EXITCODE
+EXITCODE_CAPTURED=1
+EXITCODE_HEX=0xFFFFFFFF
+EXITCODE_SIGNED=-1
+DEATH_CLASS=SILENT_EXIT_NONZERO
+SILENT_VS_EXCEPTION=SILENT_EXIT (fail-closed evidence below; not a root-cause claim)
+
+GOT=
+  BASELINE_SHA256_CONFIRMED
+  REQUEST_B_EXIT_WITH_EXITCODE (SecondRequestSent=true)
+  EXITCODE_HEX_AND_SIGNED
+  SILENT_EXIT_PROOF (no LocalDumps; procdump Process Exit 0xffffffff; no exception context)
+  TERMINATE_DUMP_ON_CANCEL_WINDOW (procdump -e -t)
+  OPENPROCESS_GETEXITCODEPROCESS_CAPTURE_WITHOUT_CDB
+
+MISSING=
+  FAULTING_STACK (exception/.ecxr)
+  EXCEPTION_RECORD_FOR_REQUEST_B
+  DUMP_WITH_SecondRequestSent=true
+  ROOT_CAUSE
+  MODULE_OFFSETS_AS_FAULT
+
+========================================================================
+PRIMARY_HIT (goal b — ExitCode + silent vs exception)
+========================================================================
+HIT_ID=ecv3_19
+PATH=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecv3_19\T05.receipt.json
+CRASH_HIT=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecv3_19\crash_hit.txt
+DumpMode=none (no cdb / no procdump — non-suppressing)
+
+BODY=
+{
+  "Gate": "T05_EXITCODE_CAPTURE",
+  "Attempt": 19,
+  "DumpMode": "none",
+  "CandidateSHA256": "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+  "PID": 14272,
+  "Model": "Local models / Ollama / gemma3:4b",
+  "CancelObserved": true,
+  "SecondRequestSent": true,
+  "SecondRequestRecovered": false,
+  "ProcessAlive": false,
+  "StopFeedbackObserved": true,
+  "ExitCodeSigned": -1,
+  "ExitCodeHex": "0xFFFFFFFF",
+  "ExitCodeCaptured": true,
+  "DeathClass": "SILENT_EXIT_NONZERO",
+  "DumpPaths": [],
+  "Error": "PROCESS_EXIT_DURING_REQUEST_B",
+  "Timeline": [
+    "SPAWNED pid=14272",
+    "REQUEST_A_SENT",
+    "CANCEL_CLICKED",
+    "REQUEST_B_SENT",
+    "EXIT_DURING_REQUEST_B code=0xFFFFFFFF"
+  ]
+}
+
+INTERPRETATION_FAIL_CLOSED=
+  Process exited during Request-B wait with ExitCode 0xFFFFFFFF (-1).
+  LocalDumps/CrashDumps for Native.exe contemporaneous with hit: ABSENT.
+  ExitCode is NOT an NTSTATUS-style 0xCxxxxxxx exception code.
+  Do NOT invent root cause from ExitCode alone.
+
+LOOP_SUMMARY=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\CAPTURE_LOOP_ecv3_none.txt
+  24 attempts DumpMode=none; HIT_REQUEST_B_EXIT=True; HIT_DUMP=False
+
+========================================================================
+TERMINATE_DUMP HIT (cancel→Request-B text window; sent=false)
+========================================================================
+HIT_ID=ecpd_01
+PATH=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecpd_01\T05.receipt.json
+DUMP=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecpd_01\procdump_2266022660.dmp
+PROCDUMP_LOG=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecpd_01\procdump.log
+CDB_STACK=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecpd_01\cdb_stack.txt
+CDB_THREADS=F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\ecpd_01\cdb_threads.txt
+
+PROCDUMP_LOG_KEY_LINES=
+  [11:22:51]Process Exit: PID 22660, Exit Code 0xffffffff
+  Dump comment: *** Process termination
+  Exception monitor was armed (-e) but dump reason was terminate (-t), not unhandled exception.
+
+CDB_KEY_LINES=
+  Minidump doesn't have an exception context
+  Unable to get exception context, HRESULT 0x80004002
+  !analyze synthesizes EXCEPTION_CODE 80000003 (breakpoint) for terminate dumps — NOT treated as real Request-B faulting exception.
+  Observed thread0 stack: ntdll!NtWaitForWorkViaWorkerFactory / TppWorkerThread (not claimed as faulting stack).
+
+NOTE=
+  ecpd_01 CancelObserved=true SecondRequestSent=false Error=SET_TEXT_VERIFICATION_FAILED
+  (death during Request-B prompt set after cancel). ExitCode still 0xFFFFFFFF.
+  This dump proves silent Process Exit class; it does NOT supply an exception faulting stack.
+  Follow-up procdump loops (ecpd2) recovered without Request-B exit (debugger/procdump heisenbug similar to cdb attach).
+
+========================================================================
+CORROBORATING_SAME_EXITCODE
+========================================================================
+ecfix_05 / ecv3_16: CancelObserved=true SecondRequestSent=false ExitCode=0xFFFFFFFF SET_TEXT_VERIFICATION_FAILED (post-cancel B text)
+ecnone console (pre-fix cast bug): observed raw GetExitCodeProcess value 4294967295 (=0xFFFFFFFF) before signed cast crash
+Multiple early exits also 0xFFFFFFFF (EARLY_EXIT_BEFORE_UI / FindId races) — ExitCode alone is not Request-B-unique; primary claim uses ecv3_19 timeline with SecondRequestSent=true.
+
+========================================================================
+LOCALDUMPS / WER
+========================================================================
+T05 LocalDumps folder new Native.exe dumps this session: 0
+%LOCALAPPDATA%\CrashDumps contemporaneous Native.exe: ABSENT
+(Ext.exe CrashDumps present historically — Issue49/401071 SEPARATE; DO NOT MERGE)
+
+========================================================================
+MISSING_GATE (fail-closed)
+========================================================================
+MISSING_GATE_1=FAULTING_STACK_STILL_MISSING
+  Detail=No .ecxr / exception record for Request-B. Terminate dump has no exception context.
+
+MISSING_GATE_2=DUMP_ABSENT_FOR_SecondRequestSent_true
+  Detail=Primary ExitCode hit ecv3_19 had DumpPaths=[]. Terminate dump ecpd_01 had SecondRequestSent=false.
+
+MISSING_GATE_3=ROOT_CAUSE_UNCONFIRMED
+  Detail=ExitCode 0xFFFFFFFF + silent terminate class is progress vs prior NOT_CAPTURED ExitCode. Not a repair trigger. PROMOTE=0.
+
+NEXT_EXECUTABLE_STEP=
+  1) Optional: more DumpMode=none loops until LocalDumps somehow appears (unlikely for ExitProcess(-1)).
+  2) Optional: capture ExitProcess-calling thread via non-invasive means without suppressing hit.
+  3) Only after real exception faulting stack (if ever): consider repair SHA / T05 5/5. PROMOTE remains 0.
+
+ISSUE49_LANE=NOT_TOUCHED
+LAW=NOT_RUN!=PASS
+LAW=PROCESS_EXIT_REPRO!=FAULTING_STACK
+LAW=EXITCODE_CAPTURED!=ROOT_CAUSE
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS

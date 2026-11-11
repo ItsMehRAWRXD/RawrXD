@@ -1,0 +1,3 @@
+state=committed
+target=bug.cpp
+backup=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\agent_workflow_qwen3_current_002\.rawrxd\agent_transactions\txn_64046824386600\before.bin

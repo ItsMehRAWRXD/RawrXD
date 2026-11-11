@@ -1,0 +1,147 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_GPU_QUANT_DOT_002",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "title": "Native Vulkan quantised dot-product parity on REAL GGUF weights",
+  "scope": "Closes the gap declared in RAWRXD_DEEP2_GPU_QUANT_DOT_001: 'Parity against real GGUF weights. The weights used here are synthetic'. This run loads REAL Q4_K and Q6_K tensor bytes from real GGUF files and compares the GPU kernel against a ggml-dequantised reference.",
+  "kernel_under_test": {
+    "shader": "tools/shaders/quant_dot.comp",
+    "shader_binary": "tools/shaders/quant_dot.spv",
+    "wrapper": "VulkanCompute::ExecuteQuantDot (src/vulkan_compute.cpp)",
+    "formats": ["Q4_K x Q8_K-style", "Q6_K x Q8_K-style"],
+    "device": "AMD Radeon AI PRO R9700",
+    "compute_queue_family": 0
+  },
+  "harness": {
+    "source": "tools/gpu_quant_dot_realweights.cpp",
+    "build": "tools/build_gpu_quant_dot_realweights.bat",
+    "gguf_reader": "self-contained, memory-mapped; GGUF BOOL is 1 byte per the spec",
+    "weights_are_real": true,
+    "activation_source": "row 0 of token_embd.weight dequantised by ggml, then quantised with the Q8_K rule d = amax/127",
+    "note_on_activation_quantiser": "The shader consumes one scale per 256 values (Q8_K style). ggml's Q8_0 uses one fp16 scale per 32 values. The harness therefore quantises with the Q8_K rule and reports the resulting difference vs ggml Q8_0 explicitly rather than silently reinterpreting per-32-scaled Q8_0 bytes."
+  },
+  "references": {
+    "A": "ggml dequantises the real packed weights to F32 (type_traits::to_float) and dots with the same dequantised Q8 activation values the GPU saw. Shares no code with the shader.",
+    "B": "Independent CPU implementation decoding the same block layouts with integer lanes (the RAWRXD_DEEP2_GPU_QUANT_DOT_001 reference). Cross-checks the shader against a third implementation."
+  },
+  "tolerances_declared_before_inspection": {
+    "cosine_min": 0.999999,
+    "relative_rmse_max": 0.0001,
+    "bitwise_required": false
+  },
+  "models": [
+    {
+      "file": "F:/OllamaModels/blobs/sha256-8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1",
+      "bytes": 50351320736,
+      "kind": "MoE model with expert tensors",
+      "tensors_parsed": 807,
+      "q4_k_tensors": 415,
+      "q6_k_tensors": 79
+    },
+    {
+      "file": "F:/OllamaModels/blobs/sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+      "bytes": 25463410912,
+      "kind": "Nemotron-class decoder; same file used by deep2_token_profiler",
+      "tensors_parsed": 723,
+      "embedding_dim": 8192,
+      "vocab": 32000,
+      "emb_quant": "q2_K",
+      "out_quant": "q6_K"
+    }
+  ],
+  "results": [
+    {
+      "label": "moe_q4k_ffn_gate_exps",
+      "model": "sha256-8476acca...",
+      "tensor": "blk.0.ffn_gate_exps.weight",
+      "kind": "Q4_K",
+      "ne": [2048, 512],
+      "rows": 32,
+      "block_bytes": 144,
+      "row_stride": 1152,
+      "cosine_vs_A": 1.0,
+      "rel_vs_A": 2.235e-07,
+      "max_abs_vs_A": 5.006e-09,
+      "cosine_vs_B": 1.0,
+      "rel_vs_B": 2.959e-07,
+      "max_abs_vs_B": 9.895e-09,
+      "finite": true,
+      "verdict": "PASS",
+      "log": "evidence/RAWRXD_DEEP2_GPU_QUANT_DOT_002/moe_q4k_ffn_gate_exps.log"
+    },
+    {
+      "label": "moe_q6k_ffn_down_exps",
+      "model": "sha256-8476acca...",
+      "tensor": "blk.0.ffn_down_exps.weight",
+      "kind": "Q6_K",
+      "ne": [512, 2048],
+      "rows": 32,
+      "block_bytes": 210,
+      "row_stride": 420,
+      "cosine_vs_A": 1.0,
+      "rel_vs_A": 3.432e-08,
+      "max_abs_vs_A": 9.313e-10,
+      "cosine_vs_B": 1.0,
+      "rel_vs_B": 3.991e-08,
+      "max_abs_vs_B": 9.313e-10,
+      "finite": true,
+      "verdict": "PASS",
+      "log": "evidence/RAWRXD_DEEP2_GPU_QUANT_DOT_002/moe_q6k_ffn_down_exps.log"
+    },
+    {
+      "label": "nemotron_q6k_output_weight_dim8192",
+      "model": "sha256-d39f8ddb...",
+      "tensor": "output.weight",
+      "kind": "Q6_K",
+      "ne": [8192, 32000],
+      "rows": 8,
+      "block_bytes": 210,
+      "row_stride": 6720,
+      "cosine_vs_A": 1.0,
+      "rel_vs_A": 2.271e-07,
+      "max_abs_vs_A": 4.366e-11,
+      "cosine_vs_B": 1.0,
+      "rel_vs_B": 1.577e-07,
+      "max_abs_vs_B": 4.366e-11,
+      "finite": true,
+      "verdict": "PASS",
+      "log": "evidence/RAWRXD_DEEP2_GPU_QUANT_DOT_002/nemotron_q6k_output_weight_dim8192.log"
+    }
+  ],
+  "summary": {
+    "cases": "3/3",
+    "formats": ["Q4_K", "Q6_K"],
+    "dims_tested": [2048, 512, 8192],
+    "verdict": "PASS"
+  },
+  "q8_quantiser_cross_check": {
+    "description": "Our per-256 Q8_K-rule quantisation vs ggml's per-32 fp16 Q8_0, compared on dequantised values.",
+    "rel_l2": {
+      "moe_q4k_ffn_gate_exps": 1.642e-02,
+      "moe_q6k_ffn_down_exps": 7.041e-03
+    },
+    "explanation": "Expected, not a defect: one scale per 256 values is coarser than one fp16 scale per 32. The harness fails hard above 0.10 relative L2."
+  },
+  "what_this_establishes": [
+    "The native Vulkan Q4_K and Q6_K kernels reproduce the reference on REAL quantised weights taken byte-for-byte from real GGUF files, not synthetic patterns.",
+    "Parity holds on both MoE expert tensors (Q4_K ffn_gate_exps, Q6_K ffn_down_exps) and a decoder output projection (Q6_K, dim 8192).",
+    "The GPU agrees with two independent references, so the agreement is not an artifact of a shared implementation."
+  ],
+  "what_this_does_not_establish": [
+    "End-to-end Deep2 GPU inference. No executor calls ExecuteQuantDot yet.",
+    "Any performance or TPS claim. One invocation per row with host upload and readback is not a tuned matvec; this is a correctness run only.",
+    "MoE routing or expert-selection behaviour. Only the expert weight tensors were exercised.",
+    "GPU attention, RMSNorm, softmax, V aggregation, or KV-cache operations.",
+    "Numerical parity of a full transformer layer."
+  ],
+  "next": [
+    "Wire ExecuteQuantDot into one ModelGenieExecutor projection and prove intermediate tensor parity end-to-end.",
+    "Extend to a multi-row dispatch (one invocation per tile, not per row) before any TPS measurement.",
+    "Implement the remaining primitives (attention, RMSNorm, softmax, V aggregation) before certifying a GPU-resident layer.",
+    "Only then measure GPU TPS: the weight-bandwidth finding from deep2_token_profiler (97% of decode time in mul_mat) says memory traffic is what must be reduced."
+  ],
+  "reproduction": {
+    "build": "tools/build_gpu_quant_dot_realweights.bat",
+    "run_example": "tools/gpu_quant_dot_realweights.exe --model <model.gguf> --weights <tensor> --rows 32"
+  }
+}

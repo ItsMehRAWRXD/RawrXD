@@ -1,0 +1,42 @@
+﻿{
+    "Gate":  "T05",
+    "Board":  "BUILD_IDE_0F054F01_T05_004",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaVerifiedPreBoard":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaVerifiedPostBoard":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "ShaMatch":  true,
+    "Exe":  "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "ExeSizeBytes":  1484800,
+    "Trials":  5,
+    "T05CriteriaPassCount":  0,
+    "CombinedPassCount":  0,
+    "FailCount":  5,
+    "FailLoci":  [
+                     "trial_1:CancelObserved,SecondRequestSent,SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=STOP_NEVER_ENABLED",
+                     "trial_2:CancelObserved,SecondRequestSent,SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=STOP_NEVER_ENABLED",
+                     "trial_3:CancelObserved,SecondRequestSent,SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=STOP_NEVER_ENABLED",
+                     "trial_4:CancelObserved,SecondRequestSent,SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=STOP_NEVER_ENABLED",
+                     "trial_5:CancelObserved,SecondRequestSent,SecondRequestRecovered,StaleA=NO_A_STOP_B_PAIR_IN_DELTA,Error=STOP_NEVER_ENABLED"
+                 ],
+    "AggregateDisposition":  "FAIL",
+    "MarkerBindSha":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "MarkerNote":  "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\CANCEL_RECOVERY_MARKER_OBSERVED.md",
+    "DistinctFromDailyDriverSha":  "9C91059940A49C970586FF18FC92B1B7BA422AF09E8D579B1C8606387E74A9C8",
+    "HarnessFixes":  [
+                         "StaleA_array_unwrap",
+                         "Transcript_1203_AI_marker_only",
+                         "Cancel_required_before_B",
+                         "WM_SETTEXT_fallback",
+                         "STOP_NEVER_ENABLED_failclosed"
+                     ],
+    "PriorBoards":  [
+                        "BUILD_IDE_0F054F01_T05_001",
+                        "BUILD_IDE_0F054F01_T05_002",
+                        "BUILD_IDE_0F054F01_T05_003"
+                    ],
+    "NOT_RUN_NE_PASS":  true,
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "T25":  "HELD",
+    "ASOF_UTC":  "2026-11-09T07:43:51Z"
+}

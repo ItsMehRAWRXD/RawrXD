@@ -1,0 +1,28 @@
+﻿request_started request_id=1 model=gemma3:4b
+cancel_requested request_id=1
+cancel_acknowledged request_id=1 active_after=0
+request_started request_id=2 model=gemma3:4b
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=6 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=6
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=6 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=6
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=1 response_bytes=0 stop=0
+ui_update request_id=2 rendered=1 complete=1 response_bytes=0

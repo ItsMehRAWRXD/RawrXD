@@ -1,0 +1,19 @@
+﻿{
+    "Gate":  "T05_LATEATTACH",
+    "Attempt":  7,
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  36192,
+    "CancelObserved":  true,
+    "SecondRequestSent":  true,
+    "SecondRequestRecovered":  true,
+    "ProcessAlive":  true,
+    "StopFeedbackObserved":  true,
+    "MarkerExact":  true,
+    "CdbAttached":  true,
+    "ExitCode":  null,
+    "Error":  null,
+    "LiveDump":  "F:\\rawrxd\\evidence\\BUILD_IDE_0F054F01_T05_006\\T05_REQUEST_B_FAULTING_STACK_001\\dumps\\t05_lateattach_attempt07.dmp",
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CdbPid":  34092,
+    "TranscriptDelta":  "\r\nAI: RAWRXD_CANCEL_RECOVERY_OK\n\r\n\r\n"
+}

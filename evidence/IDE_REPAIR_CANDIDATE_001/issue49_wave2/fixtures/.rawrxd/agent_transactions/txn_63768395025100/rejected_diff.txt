@@ -1,0 +1,6 @@
+BEFORE_BYTES=241
+AFTER_BYTES=101
+ERROR=compile failed (exit 2 raw=2): cl : Command line warning D9024 : unrecognized source file type '\bug.cpp\', object file assumed
+LINK : fatal error LNK1181: cannot open input file '\bug.cpp\.obj'
+
+AFTER_HEAD_HEX=23696E636C756465203C63737464696F3E0A696E7420756E6465636C617265645F666E28696E74206129207B2072657475726E20613B207D0A696E74206D6169

@@ -1,0 +1,43 @@
+[?9001h[?1004h[?25l[2J[m[H
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[H]0;C:\WINDOWS\SYSTEM32\cmd.exe[?25hG:\~dev>echo ONESHOT_TERM_HELLO
+[?25lONESHOT_TERM_HELLO[4;1HG:\~dev>[?25h"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /Fe:F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\term_hello.exe F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\term_hello.c > F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\logs\term_conpty_cl.log 2>&1
+]0;C:\WINDOWS\SYSTEM32\cmd.exe - "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /Fe:F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\term_hello.exe F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\term_hello.c ]0;C:\WINDOWS\SYSTEM32\cmd.exe
+G:\~dev>

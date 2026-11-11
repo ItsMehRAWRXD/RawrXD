@@ -1,0 +1,10 @@
+.logopen F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\runs\exitbp_02\cdb.log
+.sympath srv*
+bp ntdll!RtlExitUserProcess ".echo ===T05_RTL_EXIT===; r rcx; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd"
+bp kernelbase!TerminateProcess ".echo ===T05_TERMINATE===; r; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd"
+bp ucrtbase!abort ".echo ===T05_ABORT===; r; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd"
+bp ucrtbase!terminate ".echo ===T05_TERMINATE_CPP===; r; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd"
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd" av
+sxe -c ".echo ===T05_EXCEPTION===; .exr -1; kL 50; lm m RawrXD*; .dump /ma F:\rawrxd\evidence\BUILD_IDE_0F054F01_T05_006\T05_REQUEST_B_FAULTING_STACK_001\dumps\t05_exitbp_attempt02.dmp; .logclose; qd" c0000409
+sxi ibp
+g

@@ -1,0 +1,9 @@
+﻿ASOF_UTC=2026-11-10T16:22:54.9255702Z
+DumpMode=procdump
+MaxAttempts=12
+HIT_REQUEST_B_EXIT=True
+HIT_DUMP=True
+PROMOTE=0
+CERTIFIED=0
+
+cap=01 mode=procdump pid=22660 alive=False sent=False recov=False exitSigned=-1 exitHex=0xFFFFFFFF death=EXCEPTION_OR_DUMPED_TERMINATE dumps=1 err=SET_TEXT_VERIFICATION_FAILED

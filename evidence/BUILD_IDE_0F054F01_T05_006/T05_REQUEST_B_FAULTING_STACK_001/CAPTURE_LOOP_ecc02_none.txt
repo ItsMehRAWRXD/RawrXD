@@ -1,0 +1,9 @@
+﻿ASOF_UTC=2026-11-10T16:44:38.2308269Z
+DumpMode=none
+MaxAttempts=1
+HIT_REQUEST_B_EXIT=False
+HIT_DUMP=False
+PROMOTE=0
+CERTIFIED=0
+
+cap=01 mode=none pid=7048 alive=True sent=True recov=True exitSigned= exitHex= death= dumps=0 err=

@@ -1,0 +1,38 @@
+﻿request_started request_id=1 model=bigdaddyg-productivity-local:latest
+cancel_requested request_id=1
+cancel_acknowledged request_id=1 active_after=0
+request_started request_id=2 model=bigdaddyg-productivity-local:latest
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=3 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=3
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=4 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=4
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=0 response_bytes=3 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=3
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=1 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1
+callback request_id=2 complete=0 response_bytes=2 stop=0
+ui_update request_id=2 rendered=1 complete=0 response_bytes=2
+callback request_id=2 complete=1 response_bytes=0 stop=0
+ui_update request_id=2 rendered=1 complete=1 response_bytes=0

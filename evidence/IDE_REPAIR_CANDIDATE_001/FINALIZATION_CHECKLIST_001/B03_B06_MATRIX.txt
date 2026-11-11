@@ -1,0 +1,74 @@
+﻿B03_B06_MATRIX
+ASOF_UTC=2026-11-10T15:17:00Z
+OWNER=B03_B06
+TIP_CANDIDATE=G_D56FE6DD_928A90F0
+TIP_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+TIP_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001
+LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+LoadTensorSlice_REOPENED=0
+NO_INVENT_PASS=1
+LAW=NOT_RUN!=PASS
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+================================================================================
+ID=B03
+STATUS=FAIL
+GATE=IDE_ALIVE_THROUGH_FULL_AGENT_WORKFLOW_NO_NEG1073740791_OR_EXIT_NEG1
+SUMMARY=020 once stayed ALIVE=1 through Ollama qwen3:8b agent workflow end; 021 remasure (aborted partial + completed receipt) both IDE_EXIT_CODE=-1073740791 ALIVE=0 mid-session. Fail-closed: not proven stable ALIVE.
+EVIDENCE_ALIVE_ONCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+EVIDENCE_ALIVE_ONCE_RUNLOG=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\issue49_product_final_74aa_20261110-094850.txt
+EVIDENCE_CRASH_021=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_021\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+EVIDENCE_CRASH_021_RUNLOG=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_021\issue49_product_final_74aa_20261110-100512.txt
+EVIDENCE_CRASH_021_ABORT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_021\_aborted_partial_001\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+EVIDENCE_POST_FIX=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\POST_FIX_DISPOSITION.txt
+NOTE=SWARM notes 021_ABORTED=IDE_EXIT_-1073740791; remasure confirmed same exit. Do not invent PASS from 020 alone.
+
+================================================================================
+ID=B04
+STATUS=PASS
+GATE=AGENT_ROUTING_ENV_NO_EARLY_EXIT_OLLAMA_QWEN3_8B_NO_GGUF_AS_MODEL
+SUMMARY=Normal launch and harness launch (FORCE_OLLAMA_AGENTIC=1 OLLAMA_AGENT_MODEL=qwen3:8b) both ALIVE_NO_EARLY_EXIT in launch window. chat_runtime model=qwen3:8b with zero .gguf model-path hits; 020 ollama REQUEST_SEND model=qwen3:8b. Source rejects GGUF under FORCE_OLLAMA.
+EVIDENCE_NORMAL=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B04_NORMAL_LAUNCH.txt
+EVIDENCE_HARNESS=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B04_HARNESS_LAUNCH.txt
+EVIDENCE_ROUTING=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B04_ROUTING_RECEIPT.txt
+EVIDENCE_CHAT_MODEL=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\logs_live\chat_runtime.log
+EVIDENCE_OLLAMA_MODEL_IN_020_OUTPUT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+EVIDENCE_PROBE_CHAT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\logs_harness\chat_runtime.log
+NOTE=Mid-session -1073740791 on 021 owned by B03 (not launch EARLY_EXIT). PROMOTE still 0.
+
+================================================================================
+ID=B05
+STATUS=PASS
+GATE=EXACTLY_ONCE_DISPATCH_SEND_ENTER_CTRLENTER_CANCEL_BUSY
+SUMMARY=Enter alone -> ENTER_NEWLINE only, REQUEST_DISPATCH=0. Ctrl+Enter -> single REQUEST_DISPATCH_CORRELATED + single CREATEPROCESS. Busy Ctrl+Enter/4106/button -> AGENT_DISPATCH_BUSY exactly_once=1 with no extra CREATEPROCESS while busy. Cancel path emitted cancel_requested/cancel_acknowledged. Later Send after free started new dispatch_id=2 (not a busy-window duplicate).
+EVIDENCE_MATRIX=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B05_DISPATCH_MATRIX.txt
+EVIDENCE_CHAT_RUNTIME=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B05_chat_runtime.log
+EVIDENCE_CHAT_RUNTIME_LIVE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\logs_harness\chat_runtime.log
+EVIDENCE_ISSUE49_CTRLENTER_ONCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\logs_live\chat_runtime.log
+NOTE=Busy-window duplicate REQUEST_DISPATCH=0. Second REQUEST_DISPATCH only after busy cleared via Send button.
+
+================================================================================
+ID=B06
+STATUS=FAIL
+GATE=TOOL_INTEGRITY_READ_EDIT_BUILD_TEST_ROLLBACK_COMMIT_REINJECTION
+SUMMARY=On G tip 020: READ=1, REINJECTION=1, ROLLBACK=1 with txn manifests state=rolled_back. WRITE_COMMIT=0 SOURCE_EDITED=0 S_18_IDE_GIT_COMMIT=NOT_RUN. Build/test only harness signals (MODEL_DIRECTED_BUILD=0 MODEL_DIRECTED_TEST=0). Full integrity chain incomplete — fail-closed.
+EVIDENCE_RECEIPT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\B03_B06_PROBE_001\B06_TOOL_INTEGRITY_RECEIPT.txt
+EVIDENCE_020=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_020\ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+EVIDENCE_TXN_ROLLBACK=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\..\issue49_wave2\fixtures\.rawrxd\agent_transactions\txn_72903151773000\manifest.txt
+EVIDENCE_TXN_ROLLBACK_ALT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\.rawrxd\agent_transactions\txn_72903151773000\manifest.txt
+MISSING=committed_edit;ide_git_commit;model_directed_build_test_receipts
+
+================================================================================
+SCORECARD
+B03=FAIL
+B04=PASS
+B05=PASS
+B06=FAIL
+PASS_COUNT=2
+FAIL_COUNT=2
+NOT_VERIFIED_COUNT=0
+PROMOTE=0
+CERTIFIED=0
+NEXT=Stabilize B03 mid-session ALIVE on remasure; close B06 commit+lasting edit path (coordinate B01/B02 S13 — do not reopen LoadTensorSlice).

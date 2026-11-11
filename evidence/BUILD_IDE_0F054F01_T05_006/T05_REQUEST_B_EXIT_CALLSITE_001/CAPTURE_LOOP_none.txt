@@ -1,0 +1,11 @@
+﻿ASOF_UTC=2026-11-10T16:36:26.9363437Z
+Mode=none
+MaxAttempts=3
+GOT_EXITPROCESS_STACK=False
+GOT_REQUEST_B_EXIT_MINUS1=False
+PROMOTE=0
+CERTIFIED=0
+
+mode=none att=01 pid=42852 alive=True sent=True exitHex= hit=NONE stack=False err=
+mode=none att=02 pid=36940 alive=True sent=True exitHex= hit=NONE stack=False err=
+mode=none att=03 pid=10856 alive=True sent=True exitHex= hit=NONE stack=False err=

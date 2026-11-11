@@ -1,0 +1,6 @@
+﻿FIXTURE_CL_SPAWNED=True
+MSBUILD_CL_SPAWNED=False
+CL_SIGHTINGS=1
+t=2026-11-10T12:30:27.2950971-05:00 name=cl.exe pid=33944 ppid=40316 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp"  
+FIXTURE_CMD_SIGHTINGS=1
+t=2026-11-10T12:30:27.2875464-05:00 name=cmd.exe pid=40316 ppid=30840 cmd=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"

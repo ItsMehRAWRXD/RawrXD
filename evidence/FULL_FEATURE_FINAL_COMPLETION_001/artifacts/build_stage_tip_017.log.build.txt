@@ -1,0 +1,199 @@
+[0/2] Re-checking globbed directories...
+[1/26] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/26] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/26] Completed 'vulkan-shaders-gen'
+[4/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[5/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(489): warning C4100: 'width': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(710): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+[6/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[7/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1154): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1155): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1283): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1277): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1271): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1456): warning C4100: 'wParam': unreferenced parameter
+[8/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(153): warning C4100: 'nCmdShow': unreferenced parameter
+F:\rawrxd\src\win32app\main_win32.cpp(153): warning C4100: 'hPrevInstance': unreferenced parameter
+[9/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656): warning C4100: 'eventName': unreferenced parameter
+[10/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(365): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(368): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1235): warning C4456: declaration of 'restored' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1181): note: see declaration of 'restored'
+[11/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(381): warning C4189: 'hwndBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Sidebar.cpp(1183): warning C4100: 'wholeWord': unreferenced parameter
+[12/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(91): warning C4189: 'btnStepOver': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(81): warning C4189: 'btnContinue': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(101): warning C4189: 'btnStepInto': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(111): warning C4189: 'btnStepOut': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_Debugger.cpp(121): warning C4189: 'btnStop': local variable is initialized but not referenced
+[13/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[14/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(35): warning C4100: 'frameworkPath': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp(289): warning C4100: 'timeoutMs': unreferenced parameter
+[15/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(372): warning C4100: 'tokenId': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Deep2Bridge.cpp(408): warning C4100: 'maxTokens': unreferenced parameter
+[16/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[17/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[18/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\quickjs_extension_host.cpp(69): warning C4100: 'manifest': unreferenced parameter
+[19/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[20/26] Building CXX object CMakeFiles\deep2_agentic_loop.dir\tools\deep2_agentic_loop.cpp.obj
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'position': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'token_index': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299): warning C4100: 'output_size': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'input_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298): warning C4100: 'weight_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op_name': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'block': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297): warning C4100: 'op': unreferenced parameter
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364): warning C4100: 'bytes': unreferenced parameter
+F:\rawrxd\tools\deep2_agentic_loop.cpp(266): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(275): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(289): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(369): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(384): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(392): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(595): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(597): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1964): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3122): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3913): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3918): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4039): warning C4456: declaration of 'next' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4021): note: see declaration of 'next'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4064): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4217): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4217): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4217): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4224): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4224): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4224): note: the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4272): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3967): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4483): warning C4456: declaration of 'gen' hides previous local declaration
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3967): note: see declaration of 'gen'
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3542): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(3547): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\tools\deep2_agentic_loop.cpp(4021): warning C4189: 'next': local variable is initialized but not referenced
+F:\rawrxd\tools\deep2_agentic_loop.cpp(681): warning C4505: '`anonymous-namespace'::ByteToSymbol': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(1042): warning C4505: '`anonymous-namespace'::FindMerge': unreferenced function with internal linkage has been removed
+F:\rawrxd\tools\deep2_agentic_loop.cpp(2049): warning C4505: '`anonymous-namespace'::DiffRun': unreferenced function with internal linkage has been removed
+[21/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\ModelConnection.h(407): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\agentic\tool_core.hpp(97): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning.
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1009): warning C4189: 'hwndCancel': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1007): warning C4189: 'hwndOk': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1405): warning C4456: declaration of 'forceLocalAgentic' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1212): note: see declaration of 'forceLocalAgentic'
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1685): warning C4100: 'wParam': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp(1718): warning C4100: 'wParam': unreferenced parameter
+[22/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(212): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(239): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(265): warning C4100: 'items': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(291): warning C4100: 'placeHolder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(328): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(327): warning C4100: 'canSelectFolders': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(326): warning C4100: 'canSelectMany': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'defaultUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(370): warning C4100: 'title': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(468): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'maxTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(502): warning C4100: 'outTerminals': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(506): warning C4100: 'options': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'maxDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(690): warning C4100: 'outDocs': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'excludePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(714): warning C4100: 'includePattern': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'maxDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(759): warning C4100: 'outDiags': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(758): warning C4100: 'uri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(975): warning C4100: 'folder': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'maxBps': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1001): warning C4100: 'outBreakpoints': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1039): warning C4100: 'ctx': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'maxTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1059): warning C4100: 'outTasks': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1076): warning C4100: 'rootUri': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'maxExts': unreferenced parameter
+F:\rawrxd\src\modules\vscode_extension_api.cpp(1248): warning C4100: 'outManifests': unreferenced parameter
+[23/26] Linking CXX executable bin\deep2_agentic_loop.exe
+[24/26] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(1644): warning C4101: 'e': unreferenced local variable
+F:\rawrxd\src\win32app\Win32IDE.cpp(3402): warning C4100: 'hwnd': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE.cpp(4889): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5096): warning C4456: declaration of 'line' hides previous local declaration
+F:\rawrxd\src\win32app\Win32IDE.cpp(5043): note: see declaration of 'line'
+F:\rawrxd\src\win32app\Win32IDE.cpp(5952): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5961): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5981): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(5994): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE.cpp(7295): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE.cpp(7298): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced
+[25/26] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

@@ -1,0 +1,45 @@
+﻿#< CLIXML
+[RAWRXD_BUILD_START]
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build/RelWithDebInfo/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_computer_use.vcxproj -> F:\rawrxd\build\src\computer_use\Release\rawrxd_computer_use.lib
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\build\src\production\Release\rawrxd_production_hardening.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build\Release\rawrxd_security.lib
+  Win32IDE_FileOps.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(366,42): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(369,62): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1291,47): warning C4456: declaration of 'restored' hides previous local declaration [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1236,16):
+      see declaration of 'restored'
+  
+  Win32IDE_lifecycle.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_lifecycle.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_lifecycle.cpp')
+  
+

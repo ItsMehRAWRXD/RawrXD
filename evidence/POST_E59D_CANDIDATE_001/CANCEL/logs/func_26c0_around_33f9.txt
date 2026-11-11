@@ -1,0 +1,25 @@
+﻿
+F:\rawrxd\build_post_e59d_candidate\bin\RawrXD-Win32IDE-Native.exe:	file format coff-x86-64
+
+Disassembly of section .text:
+
+0000000140001000 <.text>:
+1400033c0: 00 00                       	add	byte ptr [rax], al
+1400033c2: 48 8b 8c 24 f8 02 00 00     	mov	rcx, qword ptr [rsp + 0x2f8]
+1400033ca: e8 81 c5 00 00              	call	0x14000f950 <.text+0xe950>
+1400033cf: 90                          	nop
+1400033d0: 48 8d 8c 24 e0 09 00 00     	lea	rcx, [rsp + 0x9e0]
+1400033d8: e8 b3 71 00 00              	call	0x14000a590 <.text+0x9590>
+1400033dd: 90                          	nop
+1400033de: 48 8d 8c 24 20 08 00 00     	lea	rcx, [rsp + 0x820]
+1400033e6: e8 a5 71 00 00              	call	0x14000a590 <.text+0x9590>
+1400033eb: 90                          	nop
+1400033ec: 48 8d 8c 24 c0 0b 00 00     	lea	rcx, [rsp + 0xbc0]
+1400033f4: e8 87 c7 12 00              	call	0x14012fb80 <.text+0x12eb80>
+1400033f9: 89 44 24 48                 	mov	dword ptr [rsp + 0x48], eax
+1400033fd: e8 8e c4 00 00              	call	0x14000f890 <.text+0xe890>
+140003402: 48 89 84 24 28 03 00 00     	mov	qword ptr [rsp + 0x328], rax
+14000340a: 8b 54 24 48                 	mov	edx, dword ptr [rsp + 0x48]
+14000340e: 48 8d 8c 24 20 0b 00 00     	lea	rcx, [rsp + 0xb20]
+140003416: e8 e5 e3 00 00              	call	0x140011800 <.text+0x10800>
+14000341b: 48 89 84 24 00 03 00 00     	mov	qword ptr [rsp + 0x300], rax

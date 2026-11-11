@@ -1,0 +1,17 @@
+﻿TARGET=RawrXD-CLI-V2
+ENTRY=src/rawr_cli.cpp
+AUX=src/rawr_core.cpp
+OUTPUT_NAME=rawr
+EXE_PATH=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+EXE_SIZE=6837248
+SHA256=BD130748A2DE1C00E21538BEFAF93EEEB9C10AAC824D6A8F534F1F37E6201AB3
+BUILD_DIR=F:\rawrxd\build_tip_debug_rel
+BUILD_TYPE=RelWithDebInfo
+GENERATOR=Ninja
+CMAKE_WIRE=RawrXD-CLI-V2 prefers src/rawr_cli.cpp when present (was rawrxd_cli_v2.cpp only)
+RUNTIME_FIX=InferenceClient httpClient hoisted to cmdRun scope (dangling capture closed)
+BUILT_UTC=2026-11-10T18:35:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015

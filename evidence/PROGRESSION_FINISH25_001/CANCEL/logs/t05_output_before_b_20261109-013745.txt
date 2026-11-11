@@ -1,0 +1,10 @@
+﻿You: Write a very long detailed essay of at least 2000 words about Windows kernel scheduling. Include exact tokens T05_A_CORR_e73274445c and request_id=CORR_20261109-013624 somewhere in the essay.
+
+You: Reply with exactly one word: T05_B_PONG_1d5c346b
+
+Copilot: Response
+
+
+
+[stopped] generation cancelled
+

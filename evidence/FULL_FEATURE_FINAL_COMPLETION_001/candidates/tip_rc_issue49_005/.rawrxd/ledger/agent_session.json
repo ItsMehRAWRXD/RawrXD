@@ -1,0 +1,76 @@
+{
+  "acceptance": {
+    "agent_turns": 2,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 1,
+    "tool_calls_succeeded": 1
+  },
+  "agent_mode": "code",
+  "agent_turns": 2,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Find the bug in bug.cpp, fix it, build it and test it.",
+      "role": "user",
+      "timestamp": 1794283893
+    },
+    {
+      "args": {
+        "path": "broken_multi.cpp",
+        "seed": "FORCE_LOCAL_HOST_READ"
+      },
+      "content": "int undeclared_fn();\nint main() {\n  int x = y;\n  undeclared_fn(1,2);\n  float f = \"nope\";\n  return x;\n}\r\n",
+      "name": "read",
+      "role": "tool",
+      "timestamp": 1794283893
+    },
+    {
+      "content": "MOTD_WORKSPACE F:\\rawrxd\r\nMOTD_STATUS TURN_START session=deep2-agent-43284-33672224532900 turn=1\r\nMOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de\r\n[stage] loading model F:\\rawrxd\\models\\qwen2.5-coder_1.5b-base.gguf\r\n",
+      "role": "assistant",
+      "timestamp": 1794283895
+    }
+  ],
+  "driver_exit_code": 1,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "FAIL",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "F:\\rawrxd\\models\\qwen2.5-coder_1.5b-base.gguf",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794283893,
+  "task_id": "ide-agent-1",
+  "termination_reason": "driver_exception",
+  "tests_executed": [],
+  "tool_calls": [
+    {
+      "approved": false,
+      "args": {
+        "path": "broken_multi.cpp",
+        "seed": "FORCE_LOCAL_HOST_READ"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "int undeclared_fn();\nint main() {\n  int x = y;\n  undeclared_fn(1,2);\n  float f = \"nope\";\n  return x;\n}\r\n",
+      "timestamp": 1794283893,
+      "tool": "read"
+    }
+  ],
+  "workspace_root": "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\fixtures"
+}

@@ -1,0 +1,1 @@
+{"model":"tinyllama-1.1b-chat","messages":[{"role":"user","content":"Reply with exactly: DEEP2_OK"}],"max_tokens":16,"temperature":0}

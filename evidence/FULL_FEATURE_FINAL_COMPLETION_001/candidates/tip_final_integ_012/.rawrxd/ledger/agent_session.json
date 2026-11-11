@@ -1,0 +1,102 @@
+{
+  "acceptance": {
+    "agent_turns": 3,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": true,
+    "tests_passed": false,
+    "tool_calls": 2,
+    "tool_calls_succeeded": 2
+  },
+  "agent_mode": "code",
+  "agent_turns": 3,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Find the bug in bug.cpp, fix it, build it and test it.",
+      "role": "user",
+      "timestamp": 1794277292
+    },
+    {
+      "args": {
+        "path": "bug.cpp",
+        "seed": "FORCE_LOCAL_HOST_READ"
+      },
+      "content": "/* Issue #49 product-final fixture: intentional compile bug for agent fix loop.\r\n * Do not pre-fix - agent (or measured blocker) must own the repair.\r\n */\r\nint undeclared_fn(int a);\r\n\r\nint main() {\r\n  int x = undeclared_fn(1, 2); /* error: too many args + may need declaration fix */\r\n  return x;\r\n}\r\n\r\n",
+      "name": "read",
+      "role": "tool",
+      "timestamp": 1794277292
+    },
+    {
+      "args": {
+        "path": "bug.cpp",
+        "seed": "FORCE_LOCAL_HOST_WRITE"
+      },
+      "content": "wrote bug.cpp (201 bytes)",
+      "name": "write",
+      "role": "tool",
+      "timestamp": 1794277292
+    },
+    {
+      "content": "MOTD_WORKSPACE F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\r\nMOTD_STATUS TURN_START session=deep2-agent-40544-27071318379400 turn=1\r\nMOTD_SHA256 616d8914644201b84d33f03dc64517f766decc9bce960fca9ce5b41446148f57\r\n[stage] loading model F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf\r\n",
+      "role": "assistant",
+      "timestamp": 1794277295
+    }
+  ],
+  "driver_exit_code": 1,
+  "failure_reasons": [],
+  "files_modified": [
+    "F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\\bug.cpp"
+  ],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "FAIL",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794277292,
+  "task_id": "ide-agent-1",
+  "termination_reason": "driver_exception",
+  "tests_executed": [],
+  "tool_calls": [
+    {
+      "approved": false,
+      "args": {
+        "path": "bug.cpp",
+        "seed": "FORCE_LOCAL_HOST_READ"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "/* Issue #49 product-final fixture: intentional compile bug for agent fix loop.\r\n * Do not pre-fix - agent (or measured blocker) must own the repair.\r\n */\r\nint undeclared_fn(int a);\r\n\r\nint main() {\r\n  int x = undeclared_fn(1, 2); /* error: too many args + may need declaration fix */\r\n  return x;\r\n}\r\n\r\n",
+      "timestamp": 1794277292,
+      "tool": "read"
+    },
+    {
+      "approved": false,
+      "args": {
+        "path": "bug.cpp",
+        "seed": "FORCE_LOCAL_HOST_WRITE"
+      },
+      "denial_reason": "",
+      "elapsed_ms": 0.0,
+      "error": "",
+      "ok": true,
+      "output": "wrote bug.cpp (201 bytes)",
+      "timestamp": 1794277292,
+      "tool": "write"
+    }
+  ],
+  "workspace_root": "F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project"
+}

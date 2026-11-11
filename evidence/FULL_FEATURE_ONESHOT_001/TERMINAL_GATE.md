@@ -1,0 +1,36 @@
+# TERMINAL_GATE — FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T10:22:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+```
+TERMINAL=PASS
+TRANSPORT=ConPTY (CreatePseudoConsole)
+CONPTY_PRODUCT_WIRED=1
+PRODUCT_TERM_SMOKE=PASS
+ALIVE_ECHO=PASS
+OUT_LEN=286
+CONTROLLING_TIP_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+TIP=tip_final_005
+PRIOR_EA5D_TERMINAL=PASS (not inherited; remeasured on CC79)
+FROZEN_A4F_UNTOUCHED=1
+T10_9C91_UNTOUCHED=1
+PROMOTE=0
+```
+
+## Measured this resume (controlling tip only)
+
+| Step | Result | Evidence |
+|------|--------|----------|
+| tip_final_005 SHA | CC79… | Get-FileHash |
+| `--term-smoke --term-quit` | EXIT=0 CONPTY+ALIVE | artifacts\term_smoke_receipt_TIP005.txt |
+| Fresh-install RC term-smoke | PASS EXIT=0 | artifacts\PACKAGING_RECEIPT_TIP005.txt |
+
+```
+NOT_RUN ≠ PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+PROMOTE=0
+```

@@ -1,0 +1,6 @@
+﻿BUILD_COMMAND_ENTRY id=3014
+BUILD_RESOLUTION workspace=F:\rawrxd dir=F:\rawrxd\build target=RawrXD-Win32IDE-Native
+PROBLEMS_FIXTURE_RESOLVE path=F:\rawrxd\T080_test_bad.cpp env_len=27 exists=1 pane=1
+PROBLEMS_FIXTURE_OPEN title_file=F:\rawrxd\T080_test_bad.cpp
+PROBLEMS_FIXTURE_LAUNCH path=F:\rawrxd\T080_test_bad.cpp cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe via=cmd_s_pipe_scrub_novcvars
+

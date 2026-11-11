@@ -1,0 +1,50 @@
+﻿EDIT_COUNT=49
+id=1203 hwnd=0x5A0F04 score=180 cls=Edit len=1513 sample=> User: [dispatch_id=1] RXD_ONCE_8592e16be596451f8fcab65734392729      AI:   Greetings! I'm BigDaddyG Productivity Mode,
+id=1203 hwnd=0x5A0F04 score=180 cls=Edit len=1513 sample=> User: [dispatch_id=1] RXD_ONCE_8592e16be596451f8fcab65734392729      AI:   Greetings! I'm BigDaddyG Productivity Mode,
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=6050 hwnd=0x740E42 score=0 cls=Edit len=0 sample=
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=6020 hwnd=0x29D0BD0 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6020 hwnd=0x29D0BD0 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p￿￿￿￿￿￿鴟ᐼ翿
+id=6035 hwnd=0x1650C26 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=6035 hwnd=0x1650C26 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=6050 hwnd=0x740E42 score=0 cls=Edit len=0 sample=
+id=6050 hwnd=0x740E42 score=0 cls=Edit len=0 sample=
+id=6035 hwnd=0x1650C26 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6020 hwnd=0x29D0BD0 score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=15 sample=潮敤浟摯汵獥戬湩＀￿￿￿鴟ᐼ翿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=15 sample=⸪獰ⰱ⸪灣p戬湩＀￿￿￿鴟ᐼ翿
+id=1202 hwnd=0x590F06 score=0 cls=Edit len=0 sample=
+id=1604 hwnd=0x6C407D0 score=0 cls=Edit len=0 sample=
+id=1015 hwnd=0x39309A6 score=0 cls=Edit len=0 sample=
+id=1605 hwnd=0x38B0A40 score=0 cls=Edit len=0 sample=
+id=1607 hwnd=0x1700ECA score=0 cls=Edit len=0 sample=
+id=1606 hwnd=0x1F10EC4 score=0 cls=Edit len=0 sample=
+id=1013 hwnd=0x28E0C4E score=0 cls=Edit len=0 sample=
+id=6027 hwnd=0x860D10 score=0 cls=Edit len=11 sample=潮敤浟摯汵獥戬湩＀￿
+id=6026 hwnd=0x680CD6 score=0 cls=Edit len=6 sample=⸪獰ⰱ⸪灣p
+id=6035 hwnd=0x1650C26 score=0 cls=Edit len=0 sample=
+id=1012 hwnd=0x3E70E8A score=0 cls=Edit len=65 sample=File opened successfully (104 bytes, sha256=98e1825c8b2a3aa2...) 
+id=6050 hwnd=0x740E42 score=0 cls=Edit len=0 sample=
+id=5002 hwnd=0x870FB4 score=0 cls=Edit len=0 sample=
+id=6020 hwnd=0x29D0BD0 score=0 cls=Edit len=0 sample=
+id=5002 hwnd=0x870FB4 score=0 cls=Edit len=0 sample=
+id=1001 hwnd=0x2A309CC score=0 cls=RICHEDIT50W len=110 sample=int undeclared_fn();  int main() {    int x = y;    undeclared_fn(1,2);    float f = "nope";    return x;  }  
+id=1202 hwnd=0x590F06 score=0 cls=Edit len=0 sample=
+id=1609 hwnd=0x1FF0ED2 score=0 cls=Edit len=0 sample=
+id=1608 hwnd=0x1C40ECC score=0 cls=Edit len=0 sample=
+id=1610 hwnd=0x4310ED4 score=0 cls=Edit len=0 sample=
+id=1611 hwnd=0xC80EE6 score=0 cls=Edit len=0 sample=
+id=5001 hwnd=0x4E0FA0 score=-150 cls=RichEdit20A len=342 sample=[PowerShell session started]      RawrXD Integrated PowerShell Console      PowerShell Version: 5.1.26100.9818    Editio
+id=5001 hwnd=0x4E0FA0 score=-150 cls=RichEdit20A len=342 sample=[PowerShell session started]      RawrXD Integrated PowerShell Console      PowerShell Version: 5.1.26100.9818    Editio
+id=1014 hwnd=0x32F0BB8 score=-700 cls=Edit len=30000 sample=[10:23:46] [2026-11-09 10:23:46] [SYSTEM] === RawrXD IDE Logging Initialized ===[10:23:46] [2026-11-09 10:23:46] [SYSTEM

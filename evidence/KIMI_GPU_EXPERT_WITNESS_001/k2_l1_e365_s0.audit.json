@@ -1,0 +1,85 @@
+{
+  "certified": false,
+  "checks": {
+    "cpu_vs_scalar_down": false,
+    "gpu_vs_cpu": false,
+    "gpu_vs_scalar_down": true
+  },
+  "limitations": [
+    "GPU post-SwiGLU and down vectors are diagnostic post-fence captures; production certification still requires frozen model provenance",
+    "Q6_K unpack must be cross-checked against authoritative GGML fixture",
+    "CPU down vector uses existing optimized CPU GEMV",
+    "No production certification without model provenance and frozen tolerances"
+  ],
+  "limits": {
+    "max_abs": 0.001,
+    "max_rms": 0.0001,
+    "min_cosine": 0.999
+  },
+  "manifest": {
+    "certified": "0",
+    "columns": 2048,
+    "completion_boundary": "K2MoEStickEndDevice",
+    "expert": 365,
+    "ggml_type": 14,
+    "gpu_activation_buffer_id": 1281255725856,
+    "gpu_down_buffer_id": 1281255729440,
+    "gpu_submits": 1,
+    "layer": 1,
+    "rows": 7168,
+    "schema": "DEEP2_KIMI_MOE_EXPERT_CAPTURE_001",
+    "source": "GPU_EXPERT_PARITY_DIAGNOSTIC",
+    "stick": 0,
+    "weight_bytes": 12042240
+  },
+  "metrics": {
+    "cpu_vs_scalar_down": {
+      "cosine_similarity": 0.05305972947550509,
+      "elements": 7168,
+      "max_abs": 0.005620490654087612,
+      "max_relative": 87580.37858812134,
+      "mean_abs": 0.0011624114964938718,
+      "nonfinite": 0,
+      "rms_abs": 0.0014644320043098772,
+      "rms_relative_to_reference": 1.411520261088797,
+      "worst_candidate": 0.00244822609,
+      "worst_index": 912,
+      "worst_reference": -0.003172264564087612
+    },
+    "gpu_vs_cpu": {
+      "cosine_similarity": 0.05315425755442194,
+      "elements": 7168,
+      "max_abs": 0.005632631480000001,
+      "max_relative": 2538.7996650233067,
+      "mean_abs": 0.0011622417629142282,
+      "nonfinite": 0,
+      "rms_abs": 0.0014642823827236307,
+      "rms_relative_to_reference": 1.343324260126235,
+      "worst_candidate": -0.00318440539,
+      "worst_index": 912,
+      "worst_reference": 0.00244822609
+    },
+    "gpu_vs_scalar_down": {
+      "cosine_similarity": 0.9999368460402949,
+      "elements": 7168,
+      "max_abs": 5.805008341351354e-05,
+      "max_relative": 629.187239505332,
+      "mean_abs": 9.287717582962268e-06,
+      "nonfinite": 0,
+      "rms_abs": 1.1659887704809298e-05,
+      "rms_relative_to_reference": 0.011238601511658773,
+      "worst_candidate": 0.00128409523,
+      "worst_index": 6819,
+      "worst_reference": 0.0012260451465864865
+    }
+  },
+  "schema": "DEEP2_KIMI_MOE_CAPTURE_AUDIT_001/v1",
+  "sha256": {
+    "cpu_down": "fe687eb47e5645ed75ae2cdd1b601d7787d71419f0120ba6b8c659b3bb5bb523",
+    "gpu_down": "3a1a13e7f497b958e0bc72309ca278d8e964557faaf15809d09ad8999816c0cf",
+    "manifest": "23b87219232aa6cf7eaafd4c973197e6942a0d79aeaba961531a79958f0d6096",
+    "post_swiglu_cpu": "c36320201e2f2f8bc5b8ff18bb37b7433998f6983426e313bd1394f4fcb682c1",
+    "weights": "0bd6bbd744f31a43e513ff9d167ee625584bfe231a9ab08299fc9c5731959b64"
+  },
+  "status": "FAIL"
+}

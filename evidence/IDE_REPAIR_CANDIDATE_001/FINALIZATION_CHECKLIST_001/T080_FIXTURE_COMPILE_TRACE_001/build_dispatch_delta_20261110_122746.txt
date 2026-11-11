@@ -1,0 +1,5 @@
+﻿BUILD_COMMAND_ENTRY id=3014
+BUILD_RESOLUTION workspace=F:\rawrxd dir=F:\rawrxd\build target=RawrXD-Win32IDE-Native
+BUILD_LAUNCH_ATTEMPT encoded_bytes=3044
+BUILD_LAUNCH_STARTED pid=17248
+

@@ -1,0 +1,5 @@
+WFDE_BP_HIT=1
+STOP_REASON=breakpoint:break_site
+RIP=0x7FF6177E1000
+PID=40648
+API=WaitForDebugEvent

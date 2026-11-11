@@ -1,0 +1,51 @@
+{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "Find the bug in bug.cpp, fix it, build it and test it.",
+      "role": "user",
+      "timestamp": 1794279581
+    },
+    {
+      "content": "MOTD_WORKSPACE F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\r\nMOTD_STATUS TURN_START session=deep2-agent-34864-29360978583900 turn=1\r\nMOTD_SHA256 fec4fed595275f18fcbbcd9114a825abff0e4950dba550e63ec13c4989b9fb2e\r\n[stage] loading model F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf\r\n[stage] ingest done in 11022.1 ms: arch=qwen2 blocks=28 vocab=152064 bos=151643 eos=151645\r\n[stage] model ships a chat template (2507 bytes):\r\n{%- if tools %}\r\n    {{- '<|im_start|>system\\n' }}\r\n    {%- if messages[0]['role'] == 'system' %}\r\n        {{- messages[0]['content'] }}\r\n    {%- else %}\r\n        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}\r\n    {%- endif %}\r\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\r\n    {%- for tool in tools %}\r\n        {{- \"\\n\" }}\r\n        {{- tool | tojson }}\r\n    {%- endfor %}\r\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\r\n{%- else %}\r\n    {%- if messages[0]['role'] == 'system' %}\r\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\r\n    {%- else %}\r\n        {{- '<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n' }}\r\n    {%- endif %}\r\n{%- endif %}\r\n{%- for message in messages %}\r\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\r\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\r\n    {%- elif message.role == \"assistant\" %}\r\n        {{- '<|im_start|>' + message.role }}\r\n        {%- if message.content %}\r\n            {{- '\\n' + message.content }}\r\n        {%- endif %}\r\n        {%- for tool_call in message.tool_calls %}\r\n            {%- if tool_call.function is defined %}\r\n                {%- set tool_call = tool_call.function %}\r\n            {%- endif %}\r\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\r\n            {{- tool_call.name }}\r\n            {{- '\", \"arguments\": ' }}\r\n            {{- tool_call.arguments | tojson }}\r\n            {{- '}\\n</tool_call>' }}\r\n        {%- endfor %}\r\n        {{- '<|im_end|>\\n' }}\r\n    {%- elif message.role == \"tool\" %}\r\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\r\n            {{- '<|im_start|>user' }}\r\n        {%- endif %}\r\n        {{- '\\n<tool_response>\\n' }}\r\n        {{- message.content }}\r\n        {{- '\\n</tool_response>' }}\r\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\r\n            {{- '<|im_end|>\\n' }}\r\n        {%- endif %}\r\n    {%- endif %}\r\n{%- endfor %}\r\n{%- if add_generation_prompt %}\r\n    {{- '<|im_start|>assistant\\n' }}\r\n{%- endif %}\r\n\r\n[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)\r\n[stage] executor bound: ops=395 path=gpu-first\r\n[snap] Job Object created and self-assigned; children will inherit\r\n[snap] Preflight clean: no contention detected\r\n[flight] Executor recorder started: F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\\deep2_flight.jsonl\r\n[flight] Executor flight recorder active: F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\r\n[stage] chat markers: template user='User: ' asst='Assistant: ' gen='<|im_start|>assistant\\n' bos_in_template=0\r\n[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe)\r\n[recovery] RESTORED target=bug.cpp transaction=F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\\.rawrxd\\agent_transactions\\txn_29244185453300\r\n[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf\r\n[ESP] seq=2 req=1 agent=0 kind=tokenizer_check value=0 message=PASS\r\n[step 1] PREFILL_BATCH_BEGIN pos=0 count=8[ESP] /s3e24\r\nq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=324 ctx=0\r\nFound device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)\r\nFound device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)\r\nFound device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)\r\nFound device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)\r\nFound device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)\r\nFound device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)\r\nFound device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)\r\nSelected device: AMD Radeon AI PRO R9700\r\nInitialized command buffer pool with 4 buffers\r\nVulkan initialized successfully on device: AMD Radeon AI PRO R9700\r\nAMD Device: Yes\r\nCompute Queue Family: 0\r\nQuant-dot pipeline and permanent descriptor system initialized successfully\r\n[step 1] PREFILL_BATCH_END pos=0 count=8 ok=true ms=12947\r\n[step 1] PREFILL_BATCH_BEGIN pos=8 count=8/324\r\n[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={\"request\":1,\"agent\":0,\"phase\":\"prefill\",\"generated\":0,\"prefill_tokens\":0,\"context\":8,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":12946.951,\"decode_ms\":0.000,\"task_ms\":12947.881,\"gpu_dispatches\":1680,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":true,\"slow\":false}\r\n[step 1] PREFILL_BATCH_END pos=8 count=8 ok=true ms=8414\r\n[step 1] PREFILL_BATCH_BEGIN pos=16 count=8/324\r\n[ESP] seq=5 req=1 agent=0 kind=heartbeat value=0 message={\"request\":1,\"agent\":0,\"phase\":\"prefill\",\"generated\":0,\"prefill_tokens\":0,\"context\":16,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":21360.849,\"decode_ms\":0.000,\"task_ms\":21361.779,\"gpu_dispatches\":3361,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":true,\"slow\":false}\r\n[step 1] PREFILL_BATCH_END pos=16 count=8 ok=true ms=8719\r\n[step 1] PREFILL_BATCH_BEGIN pos=24 count=8/324\r\n[ESP] seq=6 req=1 agent=0 kind=heartbeat value=0 message={\"request\":1,\"agent\":0,\"phase\":\"prefill\",\"generated\":0,\"prefill_tokens\":0,\"context\":24,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":30079.727,\"decode_ms\":0.000,\"task_ms\":30080.657,\"gpu_dispatches\":5042,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":true,\"slow\":false}\r\n",
+      "role": "assistant",
+      "timestamp": 1794279636
+    }
+  ],
+  "driver_exit_code": 1,
+  "failure_reasons": [],
+  "files_modified": [],
+  "final_answer": {
+    "changes_made": [],
+    "evidence": [],
+    "remaining_work": "",
+    "summary": "",
+    "valid": false,
+    "validation_error": ""
+  },
+  "final_verdict": "FAIL",
+  "git_branch": "",
+  "git_revision": "",
+  "model_identity": "F:\\rawrxd\\models\\qwen2.5-coder-7b-instruct.Q4_K_M.gguf",
+  "schema": "RAWRXD_AGENT_LEDGER/1.0",
+  "session_start": 1794279581,
+  "task_id": "ide-agent-1",
+  "termination_reason": "driver_exception",
+  "tests_executed": [],
+  "tool_calls": [],
+  "workspace_root": "F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project"
+}

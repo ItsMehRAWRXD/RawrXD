@@ -1,0 +1,40 @@
+# Progression candidate 55BE19B7 — FAIL-CLOSED
+
+ASOF_UTC=2026-11-09T00:37:00Z
+PROGRESSION_AUTH=ALL_GRANTED
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+
+```
+SHA256=55BE19B7D594118C9C803D8D7DA3B127E33C0C8C82A62BD50E4956D0AC2298A3
+BASELINE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+PRIOR_CANDIDATE_049F1068=HISTORICAL_NO_NEW_PASS
+T07=FAIL
+T07_BINARY=PASS_SUBTEST
+T07_UNICODE=FAIL_QUESTION_MARK_U+003F
+T08=FAIL
+T08_INTERNAL_TABCTRL=11
+T08_HARNESS_IDC_DOC_TABS=1
+T08_DISCREPANCY=MEASUREMENT_OR_SYNC_UNPROVEN
+T17=PASS
+T10=PASS
+REQUEST_A_SURVIVES=NOT_RUN
+FINISH_25_PASS=19
+FINISH_25_REMAINING=6
+NEXT=INSTRUMENTED_RCA_NOT_BROAD_REBUILD
+```
+
+## T07
+
+Binary reject works. Unicode becomes `?` after load. `t07_wide_trace` suggests UTF-16 correct at one stage.
+Hypothesis (unconfirmed): unintended wide→narrow / ANSI Win32 API.
+Compare code points at: file decoder · document buffer · editor insert · retrieval.
+
+## T08
+
+Internal `tabctrl=11` vs harness `IDC_DOC_TABS=1`. Before changing tab creation: same HWND, control ID, measurement point; active vs stale instance.
+
+## Closed
+
+fad4e87f SEALED_PARTIAL · T15 follow-up · baseline `3B720981…` untouched.

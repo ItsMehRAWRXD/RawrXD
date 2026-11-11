@@ -1,0 +1,3 @@
+term_hello.c
+ONESHOT_TERM_HELLO
+TERM_EXIT_0

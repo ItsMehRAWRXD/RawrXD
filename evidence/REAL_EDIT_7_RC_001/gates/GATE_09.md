@@ -1,0 +1,7 @@
+﻿# GATE_09 â€” External conflict
+ASOF_UTC=2026-11-03T07:25:57Z
+CANDIDATE_SHA256=EFC863F906E5DDF72B8DB87B720ADF5FF28DCCEAABDA393F2788B90A83F512CF
+RESULT=FAIL
+PROMOTE=0
+CERTIFIED=0
+NOTES=disk kept external bytes but product has no conflict detector; Save may have missed path â€” fail-closed (no silent-overwrite protection proven)

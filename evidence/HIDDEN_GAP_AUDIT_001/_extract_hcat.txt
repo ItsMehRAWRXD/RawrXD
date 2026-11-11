@@ -1,0 +1,380 @@
+﻿Additional hidden-blocker categories
+
+These are the areas most likely to be missed by a normal feature checklist.
+
+| Area                      | Hidden failure to investigate                                       | Required proof                            |
+| ------------------------- | ------------------------------------------------------------------- | ----------------------------------------- |
+| Build configuration       | A feature compiles only because its real implementation is excluded | Source-to-target linkage audit            |
+| Duplicate implementations | A stub or fallback shadows the production implementation            | Symbol and dispatch audit                 |
+| Menu dispatch             | Visible commands reach no-op or wrong handlers                      | Invoke every release-scope command        |
+| Extension host            | Extension works once but fails on reload or shutdown                | Repeated lifecycle testing                |
+| HWND lifecycle            | Destroyed controls receive delayed callbacks                        | Window recreation and stale-event tests   |
+| Thread ownership          | Worker threads directly modify UI controls                          | Cross-thread dispatch audit               |
+| Cancellation              | Stop returns while child work continues                             | Process/thread termination evidence       |
+| Pipe handling             | Compiler or terminal hangs under heavy stderr                       | Concurrent output stress test             |
+| Agent tools               | Tool reports success without a durable file change                  | Filesystem before/after verification      |
+| Workspace                 | Save succeeds but reopen loses state                                | Restart and recovery testing              |
+| Model routing             | Selected model differs from the executing backend                   | Backend identity receipts                 |
+| GPU                       | Reported offload differs from actual execution                      | GPU calls, memory and output verification |
+| Error propagation         | Internal failures appear as successful UI operations                | Fault-injection tests                     |
+| Resource ownership        | Repeated operations leak handles or memory                          | Measured resource trends                  |
+| Packaging                 | Development machine works but clean Windows fails                   | Fresh-machine deployment                  |
+| Certification             | PASS evidence belongs to an older executable                        | Exact-SHA evidence reconciliation         |
+
+These are investigation targets, not newly confirmed failures.
+
+## GitHub findings â€” additional major acceptance blockers
+
+The connected GitHub issue and pull-request records reveal several important gaps beyond the original register.
+
+[PR #77 â€” IDE Product Path](https://github.com/ItsMehRAWRXD/RawrXD/pull/77?utm_source=chatgpt.com)
+
+ConPTY start/stop/resize/interrupt, asynchronous inference UI marshaling, Problems aggregation, Output routing, and four-panel regression all require final executable evidence.
+
+OPEN
+
+[PR #78 â€” AgentSession GUI](https://github.com/ItsMehRAWRXD/RawrXD/pull/78?utm_source=chatgpt.com)
+
+Session ownership, start/stop, cancellation, kill/restore, proof paths, orphan-thread prevention, and stale-HWND protection.
+
+OPEN
+
+[PR #79 â€” ExtensionHost Runtime](https://github.com/ItsMehRAWRXD/RawrXD/pull/79?utm_source=chatgpt.com)
+
+Host/worker startup, IPC handshake, real extension execution, shutdown, crash recovery, and resource cleanup.
+
+OPEN
+
+[PR #75 â€” Native Compiler/Linker](https://github.com/ItsMehRAWRXD/RawrXD/pull/75?utm_source=chatgpt.com)
+
+The PR reports 37 local adapter/runner tests passing, but identifies 16 native-linker tests as unexecuted and Windows-specific execution as not certified.
+
+PARTIAL
+
+[PR #76 â€” Deep2 Consolidation](https://github.com/ItsMehRAWRXD/RawrXD/pull/76?utm_source=chatgpt.com)
+
+Branch divergence, merge conflicts, CI failures, and integration correctness require reconciliation before consolidation.
+
+HELD
+
+These PRs are evidence of unfinished acceptance work, not proof that every described implementation is defective.
+
+## GitHub Issue #57 â€” 45 additional acceptance gates
+
+[Issue #57: Native IDE, compiler, GPU and release gates](https://github.com/ItsMehRAWRXD/RawrXD/issues/57?utm_source=chatgpt.com) explicitly records 45 open acceptance gates, divided into three groups of 15.
+
+| Group                | Additional work requiring acceptance                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Native IDE           | CI runners, source inventory, CMake source admission, dependency isolation, feature-to-symbol mapping, clean builds, LSP, GhostText, native browser, debugger, agentic rollback       |
+| Compiler / Slingshot | Binary-format roundtrips, real VRAM allocation, native C/C++ frontends, MASM/NASM interoperability, PE/COFF linking, ELF/Linux, Mach-O/macOS and Android target contracts             |
+| GPU / Release        | Quantization correctness, GPU numerical oracles, multi-GPU synchronization, model matrix, NaN prevention, measured throughput, 500-cell feature matrix, signed reproducible packaging |
+
+These gates may overlap with the 78-item register, so they must be reconciled rather than added arithmetically.
+
+Some also exceed the minimum scope of a Windows daily-driver IDE. Independent compilers for multiple platforms, for example, should be treated as mandatory only if they belong to the approved 100% product specification.
+
+## Hidden dependency â€” the certification ladder
+
+[Issue #50: Certification Ladder](https://github.com/ItsMehRAWRXD/RawrXD/issues/50?utm_source=chatgpt.com) describes an additional 11-layer certification process.
+
+The recorded sequence is:
+
+Layer 0
+
+Provider integration seal
+
+Layer 1
+
+Deep2 integration and runtime closure
+
+Layers 2â€“8
+
+Dependent certification layers requiring their individual gate definitions
+
+Layer 9
+
+Performance closure
+
+Layer 10
+
+Product-final acceptance
+
+The issue reports 32/32 isolated provider tests passing but does not establish the complete integration seal. Layers 2â€“8 must be inspected individually before their requirements can be described exhaustively.
+
+## The definitive end-to-end milestone
+
+[Issue #49: Product-Final Acceptance](https://github.com/ItsMehRAWRXD/RawrXD/issues/49?utm_source=chatgpt.com) provides the strongest concrete definition of completion.
+
+A clean clone must build and launch RawrXD, select a real local model and GPU, open a project, and autonomously complete this workflow:
+
+Local model inference
+
+Agent reads and diagnoses real code
+
+Authorized source edit
+
+Build fails and agent diagnoses failure
+
+Second edit â†’ successful build and tests
+
+Independent reviewer-agent evaluation
+
+Evidence report and Git commit
+
+The final receipt additionally requires real GPU forward execution, finite logits, actual tool calls, result reinjection, agent continuation, functional IDE panels, no production stub fallbacks, reproducible CI, and clean-machine reproducibility.
+
+That is the milestone I would use to judge a major increase in project completion. It tests the product as a system rather than counting isolated components.
+
+## Remaining reverse-engineering audit
+
+To uncover defects that are not already listed, the next source audit should trace five layers:
+
+1. Build graph: Every release-scope feature â†’ CMake target â†’ compiled translation unit â†’ linked symbol.
+2. Command graph: Every visible menu, toolbar, keyboard command, and agent tool â†’ real implementation â†’ observable result.
+3. Lifecycle graph: Every process, thread, HWND, pipe, callback, GPU allocation, and session â†’ ownership â†’ cancellation â†’ destruction.
+4. Failure graph: Every external dependency and operation â†’ timeout, invalid input, crash, retry, rollback, and error reporting.
+5. Acceptance graph: Every mandatory feature â†’ test â†’ executable SHA â†’ receipt â†’ release disposition.
+
+Static reverse engineering can identify unreachable handlers, fallback implementations, and dangerous ownership patterns. It cannot establish a runtime PASS without execution.
+
+## Updated completion decision
+
+Engineering maturity
+
+## 82%
+
+Historical Finish-25\
+19/25
+
+Major integrated acceptance
+
+NOT DEMONSTRATED
+
+Promotion\
+0
+
+The GitHub findings materially expand the acceptance inventory, but they do not justify changing the completion percentage.
+
+Next decisive work: obtain the local INTEG_004 receipts and authoritative Finish-25 ledger; reverify the five cross-subsystem gates; reconcile PRs #77â€“79 against the selected SHA; then execute the product-final scenario from Issue #49.
+
+The connected GitHub records establish more work than the previous list captured. They still cannot establish that every hidden defect has been discovered. That requires the source-to-runtime audit and real execution evidence, with CC79 controlling and A4F immutable until authorization changes their disposition.
+
+# RawrXD â€” Complete Hidden-Gap Investigation Register
+
+November 9, 2026 Â· Engineering maturity estimate: 82% Â· Certification: HELD
+
+The most dangerous remaining gaps are not necessarily missing features. They are features that appear implemented but have not been proven to work together in the actual release executable.
+
+This register covers hidden implementation defects, architectural gaps, runtime failures, acceptance loopholes, and release risks.
+
+Status definitions: CONFIRMED means supported by reported failure evidence; UNVERIFIED means a required behavior has not been demonstrated; INVESTIGATE means a plausible failure mechanism that must be checked rather than assumed to exist.
+
+## 1. Source code and build integrity
+
+| ID  | Hidden gap to investigate                                          |
+| --- | ------------------------------------------------------------------ |
+| H01 | Implemented source files excluded from the production CMake target |
+| H02 | Duplicate implementations with only the older version linked       |
+| H03 | Stub functions silently replacing production functionality         |
+| H04 | Feature flags disabling important components in release builds     |
+| H05 | Missing source dependencies concealed by incremental builds        |
+| H06 | Stale object files producing apparently successful builds          |
+| H07 | Debug and Release configurations behaving differently              |
+| H08 | Incorrect compiler definitions or inherited environment variables  |
+| H09 | Unresolved symbols hidden behind optional build paths              |
+| H10 | Different branches containing incompatible implementations         |
+| H11 | Generated headers or resources missing from clean checkout         |
+| H12 | Non-reproducible binaries despite identical source revisions       |
+
+Acceptance: Clean checkout, complete source inventory, feature-to-symbol mapping, reproducible compilation and executable SHA evidence.
+
+## 2. Win32 GUI and event handling
+
+| ID  | Hidden gap to investigate                                |
+| --- | -------------------------------------------------------- |
+| H13 | Menu commands pointing to missing or incorrect handlers  |
+| H14 | Toolbar buttons displaying but not executing             |
+| H15 | Keyboard shortcuts bypassing the correct command path    |
+| H16 | HWND references surviving after window destruction       |
+| H17 | Worker threads modifying Win32 controls directly         |
+| H18 | Posted messages arriving after session cancellation      |
+| H19 | Reentrant window procedures corrupting application state |
+| H20 | Focus switching between panels breaking keyboard input   |
+| H21 | Incorrect DPI scaling or panel geometry                  |
+| H22 | Resize operations destroying or obscuring controls       |
+| H23 | Modal dialogs blocking active background operations      |
+| H24 | UI thread deadlocks during compiler or model execution   |
+| H25 | Unhandled exceptions inside message dispatch             |
+| H26 | Window recreation losing application state               |
+
+## 3. Compiler, linker and Problems UI
+
+| ID  | Hidden gap to investigate                                                       |
+| --- | ------------------------------------------------------------------------------- |
+| H27 | Compiler subprocess inheriting incompatible environment variables               |
+| H28 | Stdout/stderr pipe backpressure causing deadlocks                               |
+| H29 | Compiler child processes surviving cancellation                                 |
+| H30 | Timeout terminating the parent but not descendants                              |
+| H31 | Diagnostics parsed incorrectly when paths contain spaces                        |
+| H32 | Unicode diagnostic text corrupted                                               |
+| H33 | Compiler warnings mistaken for errors                                           |
+| H34 | Duplicate Problems entries from repeated builds                                 |
+| H35 | Old diagnostics remaining after successful rebuild                              |
+| H36 | Problems click-to-line dispatching without actual navigation                    |
+| H37 | Incorrect line/column offsets                                                   |
+| H38 | Multiple projects mixing diagnostic ownership                                   |
+| H39 | Linker errors missing from Problems                                             |
+| H40 | Failed builds reporting success because artifacts already exist                 |
+| H41 | Native PE/COFF linker accepting malformed relocations                           |
+| H42 | Compiler adapter passing while native compiler functionality remains incomplete |
+
+The inherited `VS_UNICODE_OUTPUT` problem is a confirmed historical failure on CC79 and a reported fix on INTEG_004. It must not be counted as a newly discovered defect.
+
+## 4. ExtensionHost and IPC
+
+| ID  | Hidden gap to investigate                               |
+| --- | ------------------------------------------------------- |
+| H43 | Extension discovery works but activation never executes |
+| H44 | Worker starts without completing IPC handshake          |
+| H45 | IPC messages lack framing or size validation            |
+| H46 | Extension commands execute on the wrong thread          |
+| H47 | Host and worker disagree on protocol version            |
+| H48 | Extension crashes terminate the entire IDE              |
+| H49 | Unloading leaves callbacks registered                   |
+| H50 | Reloading creates duplicate commands or subscriptions   |
+| H51 | Extension process survives IDE shutdown                 |
+| H52 | Crashed workers cannot restart cleanly                  |
+| H53 | Extension filesystem access bypasses permissions        |
+| H54 | Extension event handlers block the UI                   |
+| H55 | Extension state corrupts across projects                |
+| H56 | A test extension passes but real extensions fail        |
+
+## 5. AgentSession and autonomous coding
+
+| ID  | Hidden gap to investigate                                 |
+| --- | --------------------------------------------------------- |
+| H57 | Agent session lifetime not owned by a single controller   |
+| H58 | Cancelled agent continues executing tools                 |
+| H59 | Old tool results injected into a newer conversation       |
+| H60 | Model-generated tool calls parsed incorrectly             |
+| H61 | Tool permission checks bypassed by alternate entry points |
+| H62 | Agent edits wrong workspace or file                       |
+| H63 | Partial writes leave corrupted source                     |
+| H64 | Failed edits cannot be rolled back                        |
+| H65 | Agent reports build success without executable evidence   |
+| H66 | Agent loops indefinitely after repeated failures          |
+| H67 | Tool execution blocks model streaming                     |
+| H68 | Concurrent agents overwrite one another's changes         |
+| H69 | Agent state cannot recover after application restart      |
+| H70 | Review agent approves untested changes                    |
+| H71 | Git commit includes unrelated modifications               |
+| H72 | Agent reports task completion before final tests finish   |
+
+## 6. Local inference, Ollama and Deep2
+
+| ID  | Hidden gap to investigate                                                    |
+| --- | ---------------------------------------------------------------------------- |
+| H73 | Model selector points to wrong model or backend                              |
+| H74 | Ollama streaming parser mishandles fragmented JSON                           |
+| H75 | Inference cancellation leaves active GPU work                                |
+| H76 | Backend shutdown leaks threads or memory                                     |
+| H77 | Model loading succeeds but inference produces invalid output                 |
+| H78 | GPU offload counters differ from actual executed operations                  |
+| H79 | Quantized kernels produce incorrect numerical results                        |
+| H80 | KV-cache rollback corrupts subsequent generations                            |
+| H81 | Long-context allocation exceeds available VRAM/RAM                           |
+| H82 | Multi-GPU partitioning causes incorrect tensor placement                     |
+| H83 | GPU synchronization serializes supposedly parallel execution                 |
+| H84 | Fallback paths silently execute on CPU                                       |
+| H85 | Driver incompatibility is mistaken for a model defect                        |
+| H86 | Model switching retains stale tokenizer or sampler state                     |
+| H87 | GPU device loss cannot be recovered without restarting the IDE               |
+| H88 | Benchmark throughput excludes prefill, waits or transfers without disclosure |
+| H89 | Model-format and GGUF shard validation accepts corrupt data                  |
+| H90 | Local-only operation inadvertently depends on external services              |
+
+## 7. Security, reliability and release integrity
+
+| ID   | Hidden gap to investigate                                        |
+| ---- | ---------------------------------------------------------------- |
+| H91  | Workspace path traversal through agent or extension tools        |
+| H92  | Untrusted model output bypasses tool authorization               |
+| H93  | Shell argument handling allows unintended command execution      |
+| H94  | Sensitive values leak into logs or crash dumps                   |
+| H95  | Extension IPC accepts unauthorized commands                      |
+| H96  | Downloaded or installed extensions lack appropriate validation   |
+| H97  | Security-sensitive production paths use placeholder cryptography |
+| H98  | Release binaries depend on undeclared DLLs                       |
+| H99  | Installer writes outside intended directories                    |
+| H100 | Uninstall or rollback destroys user data                         |
+| H101 | Crash recovery replays unsafe or incomplete operations           |
+| H102 | Build artifacts or test receipts are accepted without provenance |
+| H103 | GitHub Actions reports success without executing mandatory tests |
+| H104 | LFS or branch divergence leaves the release source incomplete    |
+| H105 | Signed artifact differs from the tested executable               |
+| H106 | Final release is certified using evidence from multiple SHAs     |
+
+A historical RawrXDA unfinished-features inventory also documents partial implementations and stub variants involving security, multi-GPU, extension hosting, marketplace integration, and feature registration. These are useful audit leads, not evidence that the same defects exist in today's RawrXD candidate.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://github.com\&sz=32)
+
+GitHub
+
+## 8. Additional hidden product-completion gaps
+
+| ID   | Hidden gap to investigate                                            |
+| ---- | -------------------------------------------------------------------- |
+| H107 | LSP handshake succeeds but diagnostics/completion do not work        |
+| H108 | GhostText appears but accept/cancel edits the wrong range            |
+| H109 | Native browser renders but lacks origin or navigation isolation      |
+| H110 | Git operations modify an unintended repository or branch             |
+| H111 | Snapshot restoration fails after a partially completed edit          |
+| H112 | Settings persist but are not applied to active components            |
+| H113 | Feature registry advertises commands with no real backend            |
+| H114 | Cross-platform functionality is claimed without native execution     |
+| H115 | Performance tests use synthetic kernels instead of real model decode |
+| H116 | Release documentation describes capabilities absent from the binary  |
+| H117 | Acceptance tests omit negative and recovery scenarios                |
+| H118 | Multiple passing components fail when operated simultaneously        |
+| H119 | Test fixtures conceal environment or dependency requirements         |
+| H120 | Final product acceptance omits the complete autonomous coding loop   |
+
+## Major milestone required to change 82%
+
+The next meaningful acceptance milestone is:
+
+One candidate SHA passes all of the following together:
+
+- Real extension lifecycle and recovery.
+- Real Chat streaming and cancellation.
+- Real Terminal, compiler, Problems and Output interaction.
+- Real debugger UI and four-panel operation.
+- Agent edit â†’ build failure â†’ diagnosis â†’ repair â†’ successful build and test.
+- Correct resource cleanup and no stale HWND callbacks.
+- SHA-specific regression evidence and lineage reconciliation.
+
+Only after that milestone is demonstrated should engineering maturity be reassessed.
+
+## Final audit disposition
+
+Hidden-gap investigation entries
+
+# 120
+
+Potential failure mechanisms and verification targets, not 120 confirmed defects.
+
+Engineering estimate\
+82% â€” unchanged
+
+Controlling tip\
+CC79
+
+Promotion / Certification\
+HELD
+
+Next action: reconcile these 120 investigation entries with the 78 existing acceptance entries, GitHub Issues #49, #50 and #57, PRs #75â€“79, and the authoritative local Finish-25 ledger. Deduplicate overlapping requirements, identify actual source-level failures, and retain only evidence-backed defects as confirmed blockers.
+
+That produces an auditable master defect register without inventing failures, double-counting requirements, or changing the completion estimate prematurely.
+
+Use subagents get all of this knocked out properly and make no mitakes and take no shortcuts!
+</user_query>

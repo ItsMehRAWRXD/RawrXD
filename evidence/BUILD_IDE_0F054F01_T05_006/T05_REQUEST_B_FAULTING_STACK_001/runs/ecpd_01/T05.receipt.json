@@ -1,0 +1,30 @@
+﻿{
+    "Gate":  "T05_EXITCODE_CAPTURE",
+    "Attempt":  1,
+    "DumpMode":  "procdump",
+    "CandidateSHA256":  "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+    "PID":  22660,
+    "Model":  "Local models / Ollama / gemma3:4b",
+    "CancelObserved":  true,
+    "SecondRequestSent":  false,
+    "SecondRequestRecovered":  false,
+    "ProcessAlive":  false,
+    "StopFeedbackObserved":  false,
+    "MarkerExact":  false,
+    "TranscriptDelta":  null,
+    "Error":  "SET_TEXT_VERIFICATION_FAILED",
+    "ExitCodeSigned":  -1,
+    "ExitCodeHex":  "0xFFFFFFFF",
+    "ExitCodeCaptured":  true,
+    "DeathClass":  "EXCEPTION_OR_DUMPED_TERMINATE",
+    "DumpPaths":  [
+                      "F:\\rawrxd\\evidence\\BUILD_IDE_0F054F01_T05_006\\T05_REQUEST_B_FAULTING_STACK_001\\runs\\ecpd_01\\procdump_2266022660.dmp"
+                  ],
+    "ProcdumpLog":  "F:\\rawrxd\\evidence\\BUILD_IDE_0F054F01_T05_006\\T05_REQUEST_B_FAULTING_STACK_001\\runs\\ecpd_01\\procdump.log",
+    "Timeline":  [
+                     "2026-11-10T16:22:45.3778628Z SPAWNED pid=22660",
+                     "2026-11-10T16:22:45.3985884Z PROCDUMP_ATTACHED pdPid=36308",
+                     "2026-11-10T16:22:49.8576029Z REQUEST_A_SENT",
+                     "2026-11-10T16:22:50.3924147Z CANCEL_CLICKED"
+                 ]
+}
