@@ -1,0 +1,137 @@
+﻿=== RAWRXD_DEEP2_REAL_MODEL_GENERATION_001 ===
+model : F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+prompt: "Hello"
+tokens: 2  path: GPU-first
+
+--- [P] real-weight provenance ---
+  gguf_path      : F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256         : 9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+  file_bytes     : 668788096 (0.67 GB)
+  architecture   : llama
+  model_name     : tinyllama_tinyllama-1.1b-chat-v1.0
+  tensor_count   : 201
+  token_vocab    : 32000 tokens, 61249 merges
+  tensor_inventory: F32x45 Q4_Kx135 Q6_Kx21
+  [PASS] SHA-256 of the real model file computed
+  [PASS] tensor inventory recorded
+  [PASS] architecture derived from the model's own metadata
+  [PASS] tokenizer read from the model
+
+--- [1] runtime graph binding ---
+  ops_total=311 ops_bound=311 ops_unbound=0 weights_resolved=201
+  [PASS] graph binds to real kernels (fail-closed otherwise)
+  [PASS] no unimplemented operators left unbound
+
+--- [2] tokenizer round-trip ---
+  [PASS] prompt encodes
+  prompt -> 1 tokens: 10994 
+  round-trip: "Hello"
+  [PASS] prompt produced token ids
+  [PASS] decode(encode(prompt)) == prompt
+
+--- [3] chat template ---
+  template: {% for message in messages %}
+{% if message['role'] == 'user' %}
+{{ '<|user|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'system' %}
+{{ '<|system|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'assistant' %}
+{{ '<|assistant|>
+'  + message['content'] + eos_token }}
+{% endif %}
+{% if loop.last and add_generation_prompt %}
+{{ '<|assistant|>' }}
+{% endif %}
+{% endfor %}
+  [PASS] model ships a chat template
+
+--- [4] isolated quant-dot kernel parity (GPU vs independent reference) ---
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+  Q4_K on token_embd.weight: n_out=32000 max_abs_vs_reference=1.74e-07
+  [PASS] Q4_K GPU kernel matches independent reference
+  Q6_K on output.weight: n_out=32000 max_abs_vs_reference=1.67e-07
+  [PASS] Q6_K GPU kernel matches independent reference
+
+--- [5] per-position parity (GPU vs independent reference) ---
+.\deep2_runtime_dispatch.exe : [attn-scores] block=0 pos=0 scale=0.125000000 s0=1.000000
+At line:4 char:24
++ ... d\build_rt; .\deep2_runtime_dispatch.exe --model F:\rawrxd\models\tin ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([attn-scores] b...000 s0=1.000000:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[attn-scores] block=0 pos=0 scale=0.125000000 s0=1.000000
+  pos=0   cos=0.9998657 max_abs=1.698e-01 rel=1.653e-02 gpu_argmax=2760   ref_argmax=2760   first_material_op='-'(blk -1) delta=0.000e+00
+[attn-scores] block=0 pos=1 scale=0.125000000 s0=0.539238 s1=0.460762
+[attn-scores] block=0 pos=1 scale=0.125000000 s0=0.539238 s1=0.460762
+  pos=1   cos=0.9998756 max_abs=3.237e-01 rel=1.586e-02 gpu_argmax=14058  ref_argmax=14058  first_material_op='-'(blk -1) delta=0.000e+00
+  [PASS] both paths execute every decode position
+  [PASS] logits finite at every position
+  positions=2  worst cosine=0.9998656811  worst rel=1.653e-02  worst max_abs=3.237e-01
+  [PASS] cosine >= 0.998 at EVERY position (fp32 envelope; see derivation)
+  [PASS] relative error <= 1e-1 at EVERY position (fp32 envelope; see derivation)
+  [PASS] max absolute error <= 1.0 at EVERY position (fp32 envelope; see derivation)
+  ARGMAX_EXACT_MATCHES=2 ARGMAX_EXPLAINED_FLIPS=0 ARGMAX_UNEXPLAINED_FLIPS=0
+  GENERATION_EXACT_PARITY=PASS
+  [PASS] no UNEXPLAINED argmax flip (flips within tolerated divergence reported)
+  gpu tokens: 2760 14058
+  ref tokens: 2760 14058
+  [logit stats] pos=0 argmax=2760 min=-13.6732 max=8.3772 mean=-0.7650 std=2.1763
+    top5: [2760]=8.3772 [2042]=7.9641 [4211]=7.9248 [10291]=7.5819 [6547]=7.4571
+  [logit stats] pos=1 argmax=14058 min=-14.5546 max=9.7789 mean=-3.6510 std=2.6886
+    top5: [14058]=9.7789 [29889]=9.1707 [29892]=8.8656 [13]=8.8243 [580]=8.7013
+
+--- [5] generated text ---
+  step 1 -> token 2760
+  step 2 -> token 14058
+  generated text: "endedWorld"
+  prompt + text : "HelloendedWorld"
+
+--- [6] repeat generation (independent run) ---
+[attn-scores] block=0 pos=0 scale=0.125000000 s0=1.000000
+[attn-scores] block=0 pos=1 scale=0.125000000 s0=0.539238 s1=0.460762
+  [PASS] repeat generation produces identical token ids
+  repeat text  : "endedWorld"
+  [PASS] repeat generation produces identical text
+
+--- receipts ---
+  GPU_TARGET_FORWARD: gpu_calls=465 cpu_calls=0 fallback='<none>'
+  REFERENCE_FORWARD: gpu_calls=0 cpu_calls=465 fallback='k-quant dot: force_cpu (weight=blk.0.attn_q.weight)'
+  GPU_ONLY_VERDICT=PASS (gpu_calls=465 cpu_calls=0 fallback='<none>')
+  PARITY_VERDICT=PASS
+  dispatch_ms=876.394 cold_start_ms=642.429
+  GPU_KERNEL_MS=950.343 GPU_SUBMIT_MS=11.396 GPU_WAIT_MS=950.343
+  GPU_UPLOAD_BYTES=673489152 GPU_DOWNLOAD_BYTES=7075840
+  DESCRIPTOR_ALLOCATIONS=4 DESCRIPTOR_REUSES=622
+  DESCRIPTOR_ALLOC_ATTEMPTS=1 DESCRIPTOR_ALLOC_FAILURES=0
+  DESCRIPTOR_POOL_CREATES=1 DESCRIPTOR_POOL_RESETS=0
+  DESCRIPTOR_SETS_IN_FLIGHT=0 DESCRIPTOR_SETS_PEAK=1
+  GPU_BUFFER_ALLOCATIONS=158 WEIGHT_CACHE_HITS=466 WEIGHT_CACHE_MISSES=156
+  PEAK_GPU_MEMORY_BYTES=666846752 GPU_BUFFER_SUBMITS=778 GPU_BUFFER_WAITS=778
+  throughput_tokens_total=2
+  throughput_decode_tps=2.28
+  throughput_steady_tps=4.27
+  throughput_first_token_ms=642.429
+  CPU_REGRESSION_VERDICT=PASS
+  GPU_PARITY_VERDICT=PASS
+  GENERATION_EXACT_PARITY=PASS
+  GPU_CERTIFICATION_VERDICT=PASS (mode=gpu-first)
+
+=== 20 passed, 0 failed ===
+VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully
