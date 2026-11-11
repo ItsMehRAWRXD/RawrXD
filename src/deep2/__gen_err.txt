@@ -1,0 +1,5 @@
+[EMBED_DIAG] dequant=00007FF7DB411DF0 type=14
+[EMBED_DIAG] token=9906 rowBytes=2520 first8= 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+[Q4K_DIAG] first output=0 (rows=192 cols=3072)
+[Q6K_ASM_ACCEPT] 8 rows validated  maxAbsErr=0.000000e+00 maxRelErr=0.000000e+00
+[B3_FAIL] hidden state invalid pos=1 norm=0.000000000e+00

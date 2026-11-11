@@ -1,0 +1,159 @@
+﻿{
+    "schema":  "rawr.native.compiler.c12/1",
+    "milestone":  "RAWR_NATIVE_COMPILER_C12_AST_INTEGRATION_001",
+    "generated_utc":  "2026-10-22T05:38:06Z",
+    "acceptance":  {
+                       "RAWR_NATIVE_COMPILER_STAGE1":  "PASS",
+                       "total_checks":  268,
+                       "failed":  0,
+                       "rawr_c_uses_C10_and_C11":  true,
+                       "legacy_front_end":  "src/frontend/c_stage2.cpp is kept for regression comparison and is not the production path",
+                       "clean_git_archive":  "PASS - 268 checks, 0 failures, exit 0, the native linker rebuilt from the exported source"
+                   },
+    "source_revision":  {
+                            "branch":  "feature/native-compiler-stage3",
+                            "commit":  "bdbc0e5f17bafc5b314222c787b6d2d23872b92c"
+                        },
+    "gates":  {
+                  "C01-C08":  161,
+                  "C09 provenance":  6,
+                  "C10 preprocessor":  44,
+                  "C11 parser":  29,
+                  "S2 pipeline":  21,
+                  "S2.1 exit 87":  7,
+                  "total":  268
+              },
+    "ast_to_backend":  [
+                           {
+                               "ast":  "TranslationUnit",
+                               "lowered":  "the file scope: every function becomes a global label, a file scope declaration is a prototype or a diagnostic"
+                           },
+                           {
+                               "ast":  "FunctionDecl",
+                               "lowered":  "global \u003cname\u003e, the prologue, the parameters moved into their slots, the body, the epilogue"
+                           },
+                           {
+                               "ast":  "ParamDecl",
+                               "lowered":  "the parameter\u0027s frame slot, filled from the argument register it arrived in"
+                           },
+                           {
+                               "ast":  "VarDecl (local)",
+                               "lowered":  "the frame slot, and the initialiser stored into it"
+                           },
+                           {
+                               "ast":  "DeclStmt",
+                               "lowered":  "the local declarations, in order"
+                           },
+                           {
+                               "ast":  "CompoundStmt",
+                               "lowered":  "the statements, in order"
+                           },
+                           {
+                               "ast":  "ExprStmt",
+                               "lowered":  "the expression, for its effect"
+                           },
+                           {
+                               "ast":  "IfStmt",
+                               "lowered":  "cmp rax,0; je else; the body; jmp end; else: the else body; end:"
+                           },
+                           {
+                               "ast":  "WhileStmt",
+                               "lowered":  "top: the condition; je end; the body; jmp top; end:"
+                           },
+                           {
+                               "ast":  "DoStmt",
+                               "lowered":  "top: the body; the condition; jne top; end:"
+                           },
+                           {
+                               "ast":  "ForStmt",
+                               "lowered":  "the initialiser; top: the condition; je end; the body; the step; jmp top; end:"
+                           },
+                           {
+                               "ast":  "ReturnStmt",
+                               "lowered":  "the value into rax, and for main the call to ExitProcess with the value in ecx; otherwise a jump to the epilogue"
+                           },
+                           {
+                               "ast":  "IntegerLiteral / CharLiteral / BoolLiteral",
+                               "lowered":  "mov rax, \u003cimmediate\u003e"
+                           },
+                           {
+                               "ast":  "IdentifierExpr",
+                               "lowered":  "mov rax, [rbp - \u003cslot\u003e]"
+                           },
+                           {
+                               "ast":  "BinaryExpr",
+                               "lowered":  "the left operand into a frame slot, the right operand into rax, the operand into r10, the operation"
+                           },
+                           {
+                               "ast":  "AssignExpr",
+                               "lowered":  "the right side into rax, then stored into the slot of the left"
+                           },
+                           {
+                               "ast":  "UnaryExpr",
+                               "lowered":  "! is a compare and two branches; - is neg"
+                           },
+                           {
+                               "ast":  "CallExpr",
+                               "lowered":  "the arguments into frame slots, then into rcx, rdx, r8, r9, then the call"
+                           },
+                           {
+                               "ast":  "ErrorExpr / ErrorStmt",
+                               "lowered":  "a diagnostic from the parser; the lowering never sees one"
+                           }
+                       ],
+    "defects_found":  [
+                          {
+                              "id":  "A-04",
+                              "title":  "idiv did not emit a REX prefix for the extended registers",
+                              "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                              "function":  "the idiv encoding",
+                              "cause":  "the rm field of the ModRM byte only holds the low three bits, so \u0027idiv r10\u0027 was encoded as \u0027idiv rdx\u0027",
+                              "fix":  "the REX prefix is emitted, as the imul path already did",
+                              "found_by":  "the C11 integration, when the lowering moved its scratch register to r10"
+                          },
+                          {
+                              "id":  "A-05",
+                              "title":  "the lowering used a callee saved register as its scratch",
+                              "file":  "compilers/native_compiler/src/frontend/c_ast_lower.cpp",
+                              "function":  "the binary operation lowering",
+                              "cause":  "rbx is callee saved in Win64, so a function that clobbered it broke the rule that a callee preserves it",
+                              "fix":  "r10 is volatile and is used instead; the prologue is unchanged",
+                              "found_by":  "the C12 review of the ABI contract"
+                          }
+                      ],
+    "unsupported_language_features":  [
+                                          "pointers and pointer arithmetic",
+                                          "arrays and subscripting",
+                                          "structs, unions and their member access",
+                                          "enums",
+                                          "typedefs",
+                                          "switch, case and default",
+                                          "break, continue and goto",
+                                          "labels",
+                                          "floating point",
+                                          "variadic functions",
+                                          "sizeof",
+                                          "compound assignment",
+                                          "shifts",
+                                          "the conditional operator",
+                                          "string literals",
+                                          "casts",
+                                          "storage class specifiers",
+                                          "file scope variables",
+                                          "function pointers",
+                                          "nested scopes with the same name"
+                                      ],
+    "unsupported_abi_features":  [
+                                     "arguments are passed in the four integer registers only; a fifth argument would go on the stack, which is not implemented",
+                                     "the caller saved registers are never saved and never restored, because the lowering uses only volatile registers",
+                                     "the stack arguments of a variadic call are not set up",
+                                     "there is no unwind information, so an exception cannot pass through a frame"
+                                 ],
+    "not_claimed":  [
+                        "complete C17",
+                        "complete C++20",
+                        "self-hosting"
+                    ],
+    "source_manifest":  "certification/RAWR_NATIVE_COMPILER_C12_AST_INTEGRATION_001.source_manifest.csv",
+    "log":  "certification/RAWR_NATIVE_COMPILER_C12_AST_INTEGRATION_001.log"
+}

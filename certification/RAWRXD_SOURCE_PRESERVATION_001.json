@@ -1,0 +1,903 @@
+﻿{
+    "schema":  "rawr.source.preservation/1",
+    "objective":  "RAWRXD_SOURCE_PRESERVATION_AND_PROMOTION_001",
+    "generated_utc":  "2026-10-21T20:25:22Z",
+    "state_at_start":  {
+                           "branch":  "local-30b-backend",
+                           "head":  "a12a4c3e2386c16a2d47cb038617644ab5e3085b",
+                           "head_subject":  "rawr: wire native prompt streaming and model alias resolution",
+                           "upstream":  "origin/local-30b-backend",
+                           "worktree_entries":  446,
+                           "modified":  98,
+                           "untracked":  348,
+                           "deleted":  0,
+                           "staged":  0,
+                           "ignored_entries":  48237
+                       },
+    "external_backup":  {
+                            "path":  "F:\\RawrXD_PRESERVATION_20261021",
+                            "sets":  {
+                                         "live_untracked_src":  {
+                                                                    "files":  43,
+                                                                    "bytes":  1043286,
+                                                                    "note":  "every untracked source file under src/"
+                                                                },
+                                         "recovered_linker":  {
+                                                                  "files":  25,
+                                                                  "bytes":  258038,
+                                                                  "note":  "from _pre_merge_backup/toolchain/from_scratch/phase2_linker"
+                                                              },
+                                         "recovered_ref":  {
+                                                               "files":  14,
+                                                               "bytes":  321582,
+                                                               "note":  "from origin/ci/win32ide-link-msbuild (lexer, compiler, crucible)"
+                                                           }
+                                     },
+                            "total_files":  82,
+                            "manifest":  "F:\\RawrXD_PRESERVATION_20261021\\RAWRXD_SOURCE_PRESERVATION_001.manifest.csv",
+                            "byte_fidelity":  {
+                                                  "checked":  82,
+                                                  "mismatches":  0,
+                                                  "method":  "SHA-256 against the live tree and against the git blob for the ref set"
+                                              }
+                        },
+    "branch":  {
+                   "name":  "preservation/source-baseline-20261021",
+                   "base_head":  "a12a4c3e2386c16a2d47cb038617644ab5e3085b",
+                   "commits":  [
+                                   {
+                                       "sha":  "715da05cd57907574ecffbd25b02b0c6fcfc2a4d",
+                                       "subject":  "preserve: protect recovered extension, linker, and compiler source",
+                                       "files":  79,
+                                       "insertions":  40960,
+                                       "additions_only":  true,
+                                       "deletions":  0,
+                                       "modifications_of_existing":  0
+                                   },
+                                   {
+                                       "sha":  "7b80896908cbcedf57da4482e63fb2ab18a74eef",
+                                       "subject":  "certify: add the extension host certification and track the QuickJS runtime",
+                                       "files":  31,
+                                       "additions_only":  true,
+                                       "deletions":  0,
+                                       "modifications_of_existing":  0
+                                   }
+                               ]
+               },
+    "verification":  {
+                         "intended_files":  82,
+                         "present_in_commit":  79,
+                         "not_in_commit":  [
+                                               "toolchain/from_scratch/phase2_linker/build/CMakeFiles/4.4.2/CompilerIdC/CMakeCCompilerId.c",
+                                               "toolchain/from_scratch/phase2_linker/build/CMakeFiles/ShowIncludes/foo.h",
+                                               "toolchain/from_scratch/phase2_linker/build/CMakeFiles/ShowIncludes/main.c"
+                                           ],
+                         "not_in_commit_reason":  "CMake compiler-probe artifacts under a gitignored build/ directory; preserved in the external backup",
+                         "pre_existing_modified_files_untouched":  98,
+                         "destructive_operations_used":  [
+
+                                                         ]
+                     },
+    "files":  [
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/agentic/agent_action.h",
+                      "bytes":  "6369",
+                      "lines":  "142",
+                      "sha256":  "0D37073485B0227F2FDA02B1EE7D2E0A0C09D1A99C706FD0EE02D3CE2742FF49",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/agentic/agent_action.h",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/backend/kilo_gateway_client.cpp",
+                      "bytes":  "22760",
+                      "lines":  "536",
+                      "sha256":  "D085C58DF9F34AC8F609FF80D4564819C19DD85FD8E4E26434F9205440851B9E",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/backend/kilo_gateway_client.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/backend/kilo_gateway_client.h",
+                      "bytes":  "5596",
+                      "lines":  "115",
+                      "sha256":  "147A850A1B69A64B43A9BC9F6AE657833FB58EB24078B8D434E7B137D336A324",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/backend/kilo_gateway_client.h",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/cli/cli_extension_commands.cpp",
+                      "bytes":  "7878",
+                      "lines":  "212",
+                      "sha256":  "150BF7657663412DB483E9B6BA4FF94D20C0EA158A3C2E5212AF08670B2A3A40",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/cli/cli_extension_commands.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/extension_polyfill_engine.cpp",
+                      "bytes":  "67551",
+                      "lines":  "1631",
+                      "sha256":  "7F51706AB0F723A55A40DFAA699326480F9638F2658DF5A636026D6CCB088543",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/extension_polyfill_engine.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/js_extension_host.cpp",
+                      "bytes":  "135350",
+                      "lines":  "2687",
+                      "sha256":  "E137B82ECF0F840FF6A9A8D498E123C54D62C3625DAE253405F23C028B06C7E1",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/js_extension_host.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/js_extension_host.hpp",
+                      "bytes":  "18777",
+                      "lines":  "375",
+                      "sha256":  "A8A82546D6287B7612CFD203435A674D46339C2FA9B7DBE6BBF10E33CF8F7493",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/js_extension_host.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/model_memory_hotpatch.hpp",
+                      "bytes":  "9515",
+                      "lines":  "166",
+                      "sha256":  "1FD3677BBE225D22E24EB3E879F3C28446FD0E6411A04D295E3618EB92C6D4A4",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/model_memory_hotpatch.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/patch_result.hpp",
+                      "bytes":  "1208",
+                      "lines":  "40",
+                      "sha256":  "AC35A9468F001B2CD7D47C57ED504DAD85630956B40A20F753BD0C7EFBAE26C8",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/patch_result.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/core/vscode_marketplace.cpp",
+                      "bytes":  "52880",
+                      "lines":  "1304",
+                      "sha256":  "EE5CB339CB767F4C111F4EE20D6E01CFEBFB12FB164FE5762F6628A80CB30383",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/core/vscode_marketplace.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/deep2/ExecutableRom.hpp",
+                      "bytes":  "15696",
+                      "lines":  "297",
+                      "sha256":  "A20E65E40F2E6091D13254E1F035B48C31F2DF23FE9573BFB84BDC196D46E65B",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/deep2/ExecutableRom.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/deep2/generic_vulkan_matmul.cpp",
+                      "bytes":  "11588",
+                      "lines":  "269",
+                      "sha256":  "5A88013FC7318458DF9D047021D5C7DCE9E16861FBCA7AC6AE371A177F2D63A3",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/deep2/generic_vulkan_matmul.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:49Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/deep2/generic_vulkan_matmul.hpp",
+                      "bytes":  "1708",
+                      "lines":  "40",
+                      "sha256":  "7A69A2A0D221FD283EBC760F8A7B2C3F2A1467E709143E52A15F6340F6DFF78C",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/deep2/generic_vulkan_matmul.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/enterprise_policy_engine.cpp",
+                      "bytes":  "6698",
+                      "lines":  "149",
+                      "sha256":  "9BB9D135C95DC1874C055AA5658D8FD32D0660BF9E09C51BFAD4905ACD125B7B",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/enterprise_policy_engine.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/enterprise_policy_engine.h",
+                      "bytes":  "1801",
+                      "lines":  "43",
+                      "sha256":  "9ACF9563EC84EDAF93E4D0760AF6F95C01A8F3BFBF409CD37304B189FBD37EE8",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/enterprise_policy_engine.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/extension_auto_installer.hpp",
+                      "bytes":  "7819",
+                      "lines":  "176",
+                      "sha256":  "E6C6303D58BD60EE9467C7DA84118FAA4C499BB9668A89DB663C2DF83376A043",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/extension_auto_installer.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/extension_marketplace.cpp",
+                      "bytes":  "51498",
+                      "lines":  "1158",
+                      "sha256":  "FE86E5188093A48BF46257E411C020892DD2DA6A1751C423A83BB3239E6D7F5B",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/extension_marketplace.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/extension_marketplace.hpp",
+                      "bytes":  "15559",
+                      "lines":  "361",
+                      "sha256":  "B6CE70F0D03F54C41608D9D390780F16747AF6B0EBBA9D27D20CBC007AE3A317",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/extension_marketplace.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/extension_marketplace_manager.cpp",
+                      "bytes":  "12002",
+                      "lines":  "332",
+                      "sha256":  "DD2A9C16B7E01E67A3D946409CC22A88B8173C2344C78CE0BD8F7C5F9AE561EC",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/extension_marketplace_manager.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/marketplace_ui_view.cpp",
+                      "bytes":  "18228",
+                      "lines":  "472",
+                      "sha256":  "87857EF2133E49AB537C9CE02A27FF32B1FA0698DF0FE10568B68EC1F6C928AB",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/marketplace_ui_view.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/offline_cache_store.cpp",
+                      "bytes":  "6733",
+                      "lines":  "190",
+                      "sha256":  "901AD682508FB104E84033D945793DDE52EC57940AADA7297F60CC8BE3A1E8F4",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/offline_cache_store.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/offline_cache_store.h",
+                      "bytes":  "1317",
+                      "lines":  "39",
+                      "sha256":  "EAE18F4E0B9B6644ED67AE9924EFCAAFB9EE9E5886347EDD43E237D23DAAD9F2",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/offline_cache_store.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vscode_marketplace.cpp",
+                      "bytes":  "4936",
+                      "lines":  "135",
+                      "sha256":  "F636BBBF2AEB5E63BD34A458DDFF3B1915E69B57DB1ED362D47931137156B46D",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vscode_marketplace.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vscode_marketplace.hpp",
+                      "bytes":  "429",
+                      "lines":  "10",
+                      "sha256":  "244A4D2E917F4B237BB8C4232DF2D10D5C4B9216C0F935FC2EFDD53B5CB78AA7",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vscode_marketplace.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vsix_installer.cpp",
+                      "bytes":  "9142",
+                      "lines":  "212",
+                      "sha256":  "FE414576CD208ED9CA5409C846D3C36AC75D047415F5E065208B06E20F833F3B",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vsix_installer.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vsix_installer.h",
+                      "bytes":  "1578",
+                      "lines":  "37",
+                      "sha256":  "9F954E0E648544678A9AEC5C0395A42DD9011E37C4A4E9A3AE19EE4C549B2550",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vsix_installer.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vsix_loader.cpp",
+                      "bytes":  "16959",
+                      "lines":  "390",
+                      "sha256":  "69B8B965DBB4D72E7CC0FB1A87CD5B8DBB1279FDEDE43FE1368F3AF444044ECA",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vsix_loader.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/marketplace/vsix_loader.h",
+                      "bytes":  "5954",
+                      "lines":  "149",
+                      "sha256":  "2DC294960075617F535FFA0DB41D61B5A0E116CC14535164EBF0A74D4D5CBD5E",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/marketplace/vsix_loader.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/extension_host_bridge.h",
+                      "bytes":  "3309",
+                      "lines":  "79",
+                      "sha256":  "1F36E5A7F1AFC4C46DF72E99A99838D8A63AAAAC7C80269ED4409C4E25B8212D",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/extension_host_bridge.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/quickjs_extension_host.cpp",
+                      "bytes":  "83263",
+                      "lines":  "1721",
+                      "sha256":  "65930D31FAD9C130CEBC95207D36CED260BC3386A3C97E3D15CC2F3F9C1D0D3E",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/quickjs_extension_host.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/quickjs_extension_host.h",
+                      "bytes":  "18625",
+                      "lines":  "375",
+                      "sha256":  "12EBF2D9C84F4A21EF17E4720416FC8163C8DE1E52D49DBD29A7714A17356CE2",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/quickjs_extension_host.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/quickjs_node_shims.cpp",
+                      "bytes":  "35615",
+                      "lines":  "733",
+                      "sha256":  "E5BCEEA48B59E906AA0AE2A045B7D6E3FA5288163E87D42AA4F6FD03C2420F43",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/quickjs_node_shims.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/quickjs_vscode_bindings.cpp",
+                      "bytes":  "87503",
+                      "lines":  "1593",
+                      "sha256":  "E734523B155C88C5AFD42B333AE0CCD7031B6CA9ED75BE8ABDDA6897CBFCD35C",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/quickjs_vscode_bindings.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/vscode_extension_api.cpp",
+                      "bytes":  "119686",
+                      "lines":  "2511",
+                      "sha256":  "D86A55495BF93F2137A846EE382EABC1A89F87CC3883B23DEFA432DCF91FE84B",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/vscode_extension_api.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/vscode_extension_api.h",
+                      "bytes":  "80486",
+                      "lines":  "1621",
+                      "sha256":  "BE9F82750E29697A28EB895E700394ADAF1491D061D793AAC75C812EBBD965FC",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/vscode_extension_api.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/vsix_loader.cpp",
+                      "bytes":  "17693",
+                      "lines":  "526",
+                      "sha256":  "C4584138C8F3741017E2950D89ED9BEBC84DEE20F83FB02ECD12FEE7009F4373",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/vsix_loader.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/vsix_loader.h",
+                      "bytes":  "3522",
+                      "lines":  "94",
+                      "sha256":  "17D114FB38346A7D73AD7BFB6C1E181573E8767C799ABA5D0F9B7E22FBF2928E",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/vsix_loader.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/modules/vsix_loader_win32.cpp",
+                      "bytes":  "12706",
+                      "lines":  "320",
+                      "sha256":  "3CBE6F350787BFAB9191D3BDA1560A68F30970D9004987FFC11F5D781782ABE4",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/modules/vsix_loader_win32.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/overclock_governor.h",
+                      "bytes":  "703",
+                      "lines":  "23",
+                      "sha256":  "9328073AB50C8C7C09C2A0AACA22C7E908FF17FAAECB3961F904D84DB4CF82AF",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/overclock_governor.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/overclock_vendor.h",
+                      "bytes":  "360",
+                      "lines":  "11",
+                      "sha256":  "47888756855D339896A51BFB27FB37C7401EA8CF5284556E7A5BC813A26C6384",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/overclock_vendor.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/ui/tool_action_status.h",
+                      "bytes":  "21362",
+                      "lines":  "432",
+                      "sha256":  "36465EE71E10F741141D78D2D391D77C4CD6D7169CD35F5F6616E56A937FCD14",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/ui/tool_action_status.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/win32app/VSIXInstaller.hpp",
+                      "bytes":  "17444",
+                      "lines":  "348",
+                      "sha256":  "E271A02753DD0A290AFFE0F6169D7E7D2CE5B027CD56B6FFED33692A46CC1B44",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/win32app/VSIXInstaller.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "live_untracked_src",
+                      "path":  "src/win32app/Win32IDE_VSCodeExtAPI.cpp",
+                      "bytes":  "23480",
+                      "lines":  "481",
+                      "sha256":  "73B2B527860FAC6D7EDE4520437EB7CE531B160C06A397E834E63C4CBC197741",
+                      "git_blob_sha1":  "",
+                      "origin":  "LIVE:src/win32app/Win32IDE_VSCodeExtAPI.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "CMakeLists.txt",
+                      "bytes":  "2063",
+                      "lines":  "45",
+                      "sha256":  "914454EA7D8255BFBEFDCC4950D3DC0226E5FFE0C54325EE10CEB34862EBDB0E",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/CMakeLists.txt",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "coff_reader.c",
+                      "bytes":  "21697",
+                      "lines":  "460",
+                      "sha256":  "BA5A1E38C9506FBE88AC3896D043B1205DC308509C86D096E931213C01C18304",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/coff_reader.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "coff_reader.h",
+                      "bytes":  "6399",
+                      "lines":  "130",
+                      "sha256":  "B19C32117A9B3FB54D71DE7AEFBECF972AE1AFF7A59426A97A81E6DC1AB58E8B",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/coff_reader.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "entry_stub.c",
+                      "bytes":  "4286",
+                      "lines":  "79",
+                      "sha256":  "7057E23E169A86B22B9E135FAC9C6B8E0218D21E0074DDF1D57C60348DA33BD6",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/entry_stub.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "export_gen.c",
+                      "bytes":  "6937",
+                      "lines":  "159",
+                      "sha256":  "4C46F8AA71CF900F1B6954A09E81374CA39E18F9719F68A64ABB92B96BBE9470",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/export_gen.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "export_gen.h",
+                      "bytes":  "2898",
+                      "lines":  "70",
+                      "sha256":  "7196181EDA3E57E57A741621120476FA876D633EEAB84F8CE668D0A9FB814DA5",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/export_gen.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "import_gen.c",
+                      "bytes":  "24959",
+                      "lines":  "569",
+                      "sha256":  "A758D2D7E551B3785132701D4F9566B4DEEF194CE648574564E9C16065F942FE",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/import_gen.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "import_gen.h",
+                      "bytes":  "4943",
+                      "lines":  "111",
+                      "sha256":  "AD9F987082D3CCFBF8422AC08BBB41A5F408A5223D2DDDB2346638C2526E1CA5",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/import_gen.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "known_imports.c",
+                      "bytes":  "25212",
+                      "lines":  "623",
+                      "sha256":  "5040893A1B3B4E9C53277A8640B4F13BF9597EFB7EDEF4BD8E47486DBBDDA3F4",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/known_imports.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "known_imports.h",
+                      "bytes":  "301",
+                      "lines":  "9",
+                      "sha256":  "FED5F068A43D389A6BA64403351565A9A8CAA218353BC4CBE9659A091E4AFBD8",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/known_imports.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "main.c",
+                      "bytes":  "16771",
+                      "lines":  "391",
+                      "sha256":  "76F6F4BF69B6FF3BD8AA3EA3C403F31CAB5C5041381BE84C81FE74E284873469",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/main.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "pe_writer.c",
+                      "bytes":  "19856",
+                      "lines":  "472",
+                      "sha256":  "22A40F9867D8C15F7BDF1A87500AC97C46514D3704E9910A97358709684CA60B",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/pe_writer.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "pe_writer.h",
+                      "bytes":  "4431",
+                      "lines":  "97",
+                      "sha256":  "96B7462797640920BE63D70688A538334298DEA45904B1B41E5B33389D80CB15",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/pe_writer.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "rawrxd_check.c",
+                      "bytes":  "7131",
+                      "lines":  "160",
+                      "sha256":  "806C90E3D5D0BB0608203DB9D9E9F829B93A14D33A31158924607C4C63D39E9F",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/rawrxd_check.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "reloc_gen.c",
+                      "bytes":  "6071",
+                      "lines":  "148",
+                      "sha256":  "0CA31E96B3CB4F5B3FDD48B77B5581FEC6149F545C86F577189414229657BA05",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/reloc_gen.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "reloc_gen.h",
+                      "bytes":  "2613",
+                      "lines":  "63",
+                      "sha256":  "764FA7870AA7516A5F5FD4B5029DBD5DE4C653C669E9EFE2F896C910169E05F0",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/reloc_gen.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "reloc_resolver.c",
+                      "bytes":  "13771",
+                      "lines":  "310",
+                      "sha256":  "931DDC86E64AAFF5552DA90ED7D4B928F7772EA636D502CF8B38FBD7120FA9A6",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/reloc_resolver.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "section_merge.c",
+                      "bytes":  "20717",
+                      "lines":  "463",
+                      "sha256":  "B099C829530E9E588DF194D91B064A06CEBB046ACA5B496AF3CC8B7A4AB83A5F",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/section_merge.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "section_merge.h",
+                      "bytes":  "4725",
+                      "lines":  "89",
+                      "sha256":  "C968B243E6765F0A1A3C7079F31EAE6055F67108BED06952E1184C492161B33A",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/section_merge.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "build\\CMakeFiles\\4.4.2\\CompilerIdC\\CMakeCCompilerId.c",
+                      "bytes":  "29974",
+                      "lines":  "783",
+                      "sha256":  "6B712B317574A51D1D4F3A69F0722D9EF310910570FD191501CDD45655E061D3",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/build\\CMakeFiles\\4.4.2\\CompilerIdC\\CMakeCCompilerId.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "build\\CMakeFiles\\ShowIncludes\\foo.h",
+                      "bytes":  "2",
+                      "lines":  "0",
+                      "sha256":  "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/build\\CMakeFiles\\ShowIncludes\\foo.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "build\\CMakeFiles\\ShowIncludes\\main.c",
+                      "bytes":  "33",
+                      "lines":  "2",
+                      "sha256":  "CDFAB295FC8E12C3ECFB6982F99058F032EE8284926AD71A829E70EA3BF02549",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/build\\CMakeFiles\\ShowIncludes\\main.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "tests\\CMakeLists.txt",
+                      "bytes":  "1221",
+                      "lines":  "34",
+                      "sha256":  "22C97C2D4B79352D47544DDFA1CD59896C6E439FDEC2DBD05BE63373405C2388",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/tests\\CMakeLists.txt",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "tests\\make_fixtures.c",
+                      "bytes":  "15980",
+                      "lines":  "388",
+                      "sha256":  "4B48BC568F05FA30F32059F2EA1888B33A09D0D97B6365917AD0BFE62FD72A90",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/tests\\make_fixtures.c",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_linker",
+                      "path":  "tests\\run_linker_cert.ps1",
+                      "bytes":  "15047",
+                      "lines":  "324",
+                      "sha256":  "2F2BA3B1E973BEE272E62F236E279F450B053EDFB4608B075CE1E426ED783E17",
+                      "git_blob_sha1":  "",
+                      "origin":  "BACKUP:_pre_merge_backup/toolchain/from_scratch/phase2_linker/tests\\run_linker_cert.ps1",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/RawrXD_Lexer.cpp",
+                      "bytes":  "6441",
+                      "lines":  "187",
+                      "sha256":  "2E1953F4F3A391E248B3D8A74808D3C33FA6E2E11272BE729160996C410110E0",
+                      "git_blob_sha1":  "6b4eed43297d07c947a6ab3914c380cbebade6d2",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/RawrXD_Lexer.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/RawrXD_Lexer.h",
+                      "bytes":  "1684",
+                      "lines":  "54",
+                      "sha256":  "E3E0BFB9B57F97EA6440016E8B90D0D489F72E2AEAB7C8C8A1936D90C8B6B5F0",
+                      "git_blob_sha1":  "5849c7e4a55b5dad90c4cca5bf7d0c6ee71389bb",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/RawrXD_Lexer.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/RawrXD_Lexer_MASM.cpp",
+                      "bytes":  "7592",
+                      "lines":  "212",
+                      "sha256":  "03ED4F870C58345500C45CA29E515AB7134A61BAAA850B1A5C3094F5246FF441",
+                      "git_blob_sha1":  "2a347d8b03d4de690647172d06e1d978c616ae31",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/RawrXD_Lexer_MASM.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/RawrXD_Lexer_MASM.h",
+                      "bytes":  "939",
+                      "lines":  "23",
+                      "sha256":  "8FC79089805ED71FD52BC249C860E0F321EBBA6878ECAF43AAC78EEEC57E283A",
+                      "git_blob_sha1":  "a07d0ceb1f731da735f85247343f884bf4258e64",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/RawrXD_Lexer_MASM.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/RawrXD_Lexer_AVX2.asm",
+                      "bytes":  "20127",
+                      "lines":  "730",
+                      "sha256":  "0B12501608FD977ADE6B1BDE0A2353B675F2D57FD736CDDB299D58A0EB45FBED",
+                      "git_blob_sha1":  "c7624acd04d16528da6f1d0ff70673728b8754c4",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/RawrXD_Lexer_AVX2.asm",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/compiler/compiler_asm_real.cpp",
+                      "bytes":  "12718",
+                      "lines":  "358",
+                      "sha256":  "2FFF417908D4F7F40B475BA2CC2288A89233FB5BB6BC380D18609F22F3540BB5",
+                      "git_blob_sha1":  "b139e4b6c9fb5bba9cd9f1e4d5571ec5adc4bb6e",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/compiler/compiler_asm_real.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/compiler/compiler_cpp_real.cpp",
+                      "bytes":  "18207",
+                      "lines":  "505",
+                      "sha256":  "EAB390426F05BF0D2BFB1791BE88932319C770415546BC8BD65C9C4EB9755433",
+                      "git_blob_sha1":  "fc9ed49296eb80c306977acfab95234e97c52304",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/compiler/compiler_cpp_real.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/compiler/rawrxd_compiler_qt.cpp",
+                      "bytes":  "96653",
+                      "lines":  "2862",
+                      "sha256":  "908DCE70A0E760F6A80ADC2AE7743622C910256FC083FD31752A6AB6B31808D5",
+                      "git_blob_sha1":  "41421f8449ddbb9412ac3add40d72ec3bd23dbc7",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/compiler/rawrxd_compiler_qt.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/compiler/rawrxd_compiler_qt.hpp",
+                      "bytes":  "32749",
+                      "lines":  "951",
+                      "sha256":  "F963DCED70D537572C258678D9017AC5B71FEB65101204EBCF908D0C7B576538",
+                      "git_blob_sha1":  "67b757fd0caecb25044b5a1e8866dcd047b56c3c",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/compiler/rawrxd_compiler_qt.hpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/modules/crucible_engine.cpp",
+                      "bytes":  "75749",
+                      "lines":  "1588",
+                      "sha256":  "BBA37A57D8CA90802878E2E00AD83678DD0CD5872C85DB0DDD4D94171AC568E7",
+                      "git_blob_sha1":  "c41202e86b83ba4e88bfad40e8a4f8b42968bbb0",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/modules/crucible_engine.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/modules/crucible_engine.h",
+                      "bytes":  "14480",
+                      "lines":  "294",
+                      "sha256":  "48A1D52D81E207D0E9201171F30FED55757CE850E9DA84B9D2B542335E558AB4",
+                      "git_blob_sha1":  "5aa99a2748d174c47332c2ed33106d3d6fd09b9f",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/modules/crucible_engine.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/win32app/Win32IDE_CruciblePanel.cpp",
+                      "bytes":  "16456",
+                      "lines":  "324",
+                      "sha256":  "2C5146C5041DA2C3FE99EDE857411D29249222719D1D99D13B497C1992785FFF",
+                      "git_blob_sha1":  "5c8e191cab2b038fe5aa163f5c183b497c6b6504",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/win32app/Win32IDE_CruciblePanel.cpp",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/backup_include/include/crucible_engine.h",
+                      "bytes":  "14480",
+                      "lines":  "294",
+                      "sha256":  "48A1D52D81E207D0E9201171F30FED55757CE850E9DA84B9D2B542335E558AB4",
+                      "git_blob_sha1":  "5aa99a2748d174c47332c2ed33106d3d6fd09b9f",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/backup_include/include/crucible_engine.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  },
+                  {
+                      "set":  "recovered_ref",
+                      "path":  "Full Source/src/backup_include/include/RawrXD_Lexer.h",
+                      "bytes":  "3307",
+                      "lines":  "90",
+                      "sha256":  "E3094005C8B1ED52F2EA3176AAEAC79C53DA5208B33CDEE91E089BF41CF9FA5B",
+                      "git_blob_sha1":  "c0e6ffa957b5133d512056f2c8b7d8b30337a7be",
+                      "origin":  "GIT:origin/ci/win32ide-link-msbuild:Full Source/src/backup_include/include/RawrXD_Lexer.h",
+                      "preserved_utc":  "2026-10-21T18:01:50Z"
+                  }
+              ]
+}

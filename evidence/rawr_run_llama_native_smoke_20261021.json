@@ -1,0 +1,15 @@
+{
+  "agent_mode": false,
+  "backend": "deep2",
+  "error": "",
+  "full_model_certification": "NOT_CERTIFIED",
+  "iterations": 0,
+  "max_tokens": 1,
+  "model": "F:\\models\\gguf\\library__llama3.2__3b.gguf",
+  "motd_sha256": "3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de",
+  "prompt": "Say hello in one sentence.",
+  "response": ".tolist",
+  "response_bytes": 7,
+  "schema": "rawr.run.receipt.v1",
+  "success": true
+}

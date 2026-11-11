@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "routes": [
+    {
+      "id": "local_gguf",
+      "kind": "LocalFile",
+      "breadcrumb": "Local models / GGUF",
+      "runtime": "native-agent",
+      "discovery": "local-drives",
+      "model_id": "{path}",
+      "auth_env": ""
+    },
+    {
+      "id": "ollama_local",
+      "kind": "Ollama",
+      "breadcrumb": "Local models / Ollama",
+      "runtime": "ollama-http",
+      "discovery": "ollama-tags",
+      "model_id": "{tag}",
+      "auth_env": ""
+    },
+    {
+      "id": "kilo_free",
+      "kind": "KiloFree",
+      "breadcrumb": "Cloud models / Kilo",
+      "runtime": "cloud-api",
+      "discovery": "kilo-free-catalog",
+      "model_id": "kilo-auto/free",
+      "display_name": "Auto (free)",
+      "auth_env": "KILO_API_KEY"
+    }
+  ]
+}

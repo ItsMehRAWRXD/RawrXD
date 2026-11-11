@@ -1,0 +1,51 @@
+{
+  "start_head": "843a14c3298ab6aade87fbb597748bd8311f2716",
+  "end_head": "d09d513a2d53da2290ca2b99e18c83cd4b9bc4c8",
+  "source_scope": "working tree with preserved pre-existing modifications; no clean-tip claim",
+  "files": [
+    {
+      "path": "src/deep2/modelgenie/ModelGenomeReader.cpp",
+      "sha256": "988A17C93854663077C14B28910E7624E07BA3C6877E53D99982A0FC042BD6BC"
+    },
+    {
+      "path": "src/deep2/modelgenie/ModelGenomeReader.hpp",
+      "sha256": "6844115EAAA9D458F044EBE7B982BEDA89F228E7413859F26278C36424733DFE"
+    },
+    {
+      "path": "src/deep2/QuantParityRegistry.cpp",
+      "sha256": "09136007338DB8EF51652F0013077AA647EC3EA176FB79DCA53C16814F8A2CF8"
+    },
+    {
+      "path": "src/deep2/modelgenie/tests/ModelGenomeCapabilitiesTests.cpp",
+      "sha256": "298AE465614BD9EBAF453D5ABCA8B456021BB371E99A1A5E490B595FA3C4B4D4"
+    },
+    {
+      "path": "tools/build_deep2_executor_e2e.bat",
+      "sha256": "CEAD2AB7B817366C811C6D80C09FEB63AC4ED332CC471C5CCB1624A07B11A9BE"
+    },
+    {
+      "path": "compile_ir_executor.bat",
+      "sha256": "1F0A0595A0D89EF0CE0838017E7105B7293CAB4DEC47CEEA6D9E31FB67972B16"
+    },
+    {
+      "path": "compile_modelgenie_lib.bat",
+      "sha256": "A373495BDD5CB8BE3B46E3CF26AA49C6F1F00BF9B027BE3A94ACCE52030802C4"
+    },
+    {
+      "path": "evidence/FULL_IDE/gate2_provenance/build/Release/modelgenome_capabilities_tests.exe",
+      "sha256": "2BD1B5ECB38F5EEA1980C2A6B339C917A76C5889C9502CB79D7D11D192E7F557"
+    },
+    {
+      "path": "evidence/FULL_IDE/gate2_provenance/build/Release/gate2_admission_probe.exe",
+      "sha256": "CA1D32E20E656296B3395A45BDC13D9A237F521EAB54EE5A9DFB4F0A42DAF741"
+    },
+    {
+      "path": "evidence/FULL_IDE/gate2_provenance/build/bin-msvc/Release/quant_parity_cert.exe",
+      "sha256": "076ECA92F3C871EBFE19061C93219BA12DED42B5DEBD9C5DC316A3B8E68B4110"
+    },
+    {
+      "path": "evidence/FULL_IDE/gate2_provenance/build/bin-msvc/Release/kquant_dot_parity.exe",
+      "sha256": "6E4D5EEFE724FF7051DBFD19955BDAC8DDB1CA3891B1E60429E66D7409AD525E"
+    }
+  ]
+}

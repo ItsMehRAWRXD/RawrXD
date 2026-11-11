@@ -1,0 +1,118 @@
+﻿{
+    "schema":  "rawr.extension.tracking/1",
+    "generated_utc":  "2026-10-21T20:25:45Z",
+    "ladder":  "RAWRXD_EXTENSION_HOST_001",
+    "source_revision":  {
+                            "branch":  "preservation/source-baseline-20261021",
+                            "commit":  "7b80896908cbcedf57da4482e63fb2ab18a74eef"
+                        },
+    "tracked_files":  {
+                          "extension_and_marketplace_source":  43,
+                          "quickjs_runtime":  30,
+                          "certification":  2,
+                          "note":  "The extension and marketplace subsystem was untracked in its entirety: js_extension_host, quickjs_extension_host, quickjs_vscode_bindings, quickjs_node_shims, extension_polyfill_engine, vscode_extension_api, extension_host_bridge, vsix_loader, and the marketplace/ tree."
+                      },
+    "quickjs":  {
+                    "vendored_path":  "3rdparty/quickjs_ng",
+                    "licence":  "MIT (Fabrice Bellard, Charlie Gordon, Ben Noordhuis)",
+                    "licence_file":  "3rdparty/quickjs_ng/LICENSE",
+                    "integrity":  "verified byte-for-byte against the recovered upstream bundle tip",
+                    "working_tree_blob":  "82155b8ea8b89fb518b52f2ffc5dada992b21e98",
+                    "bundle_tip_blob":  "82155b8ea8b89fb518b52f2ffc5dada992b21e98",
+                    "match":  true,
+                    "build_inputs":  [
+                                         "quickjs.c",
+                                         "quickjs.h",
+                                         "libregexp.c",
+                                         "libunicode.c",
+                                         "dtoa.c",
+                                         "cutils.h"
+                                     ]
+                },
+    "compilation":  {
+                        "built_from":  "tracked source",
+                        "units":  [
+                                      "src/core/js_extension_host.cpp",
+                                      "src/core/extension_polyfill_engine.cpp",
+                                      "src/modules/vscode_extension_api.cpp",
+                                      "3rdparty/quickjs_ng/quickjs.c",
+                                      "3rdparty/quickjs_ng/libregexp.c",
+                                      "3rdparty/quickjs_ng/libunicode.c",
+                                      "3rdparty/quickjs_ng/dtoa.c"
+                                  ],
+                        "build_script":  "tools/ext_host_cert/build_ext_host_cert.bat",
+                        "result":  "BUILD OK",
+                        "standard":  "quickjs-ng requires C11 atomics, so the C units are compiled with /std:c11"
+                    },
+    "result":  {
+                   "passed":  6,
+                   "failed":  2
+               },
+    "gates":  [
+                  {
+                      "name":  "the shared runtime initializes against the ExtensionHostBridge",
+                      "status":  "PASS",
+                      "detail":  "initialize -\u003e VSCodeExtensionAPI initialized"
+                  },
+                  {
+                      "name":  "registerCommand accepts a native command",
+                      "status":  "PASS",
+                      "detail":  "command_count 17 -\u003e 18"
+                  },
+                  {
+                      "name":  "executeCommand runs the native handler",
+                      "status":  "PASS",
+                      "detail":  "handler_ran=yes"
+                  },
+                  {
+                      "name":  "an unknown command fails cleanly",
+                      "status":  "PASS",
+                      "detail":  "errorCode=-1"
+                  },
+                  {
+                      "name":  "a JavaScript extension loads and registers a command",
+                      "status":  "FAIL",
+                      "detail":  "load and activate both succeed, but no command is registered"
+                  },
+                  {
+                      "name":  "the JS-registered command is executable through the same API",
+                      "status":  "FAIL",
+                      "detail":  "executeCommand(cert.js.command) -\u003e command not found"
+                  },
+                  {
+                      "name":  "all seven native commands are registered in the tracked source",
+                      "status":  "PASS",
+                      "detail":  "7/7 found in src/win32app/Win32IDE_VSCodeExtAPI.cpp"
+                  },
+                  {
+                      "name":  "there is one extension runtime, reached through the bridge",
+                      "status":  "PASS",
+                      "detail":  "bridge_included=yes api_definitions=1"
+                  }
+              ],
+    "open_defect":  {
+                        "id":  "EXT-001",
+                        "summary":  "A JavaScript extension cannot reach vscode.commands, so no extension can register a command.",
+                        "diagnosis":  "In the extension\u0027s own context the probe reports typeof vscode = object but typeof vscode.commands = undefined. bindVSCodeAPI creates its own vscode object; each namespace binder looks the object up on the global, attaches its namespace and writes it back; bindVSCodeAPI then overwrites the global with its own empty local object, discarding the populated one.",
+                        "file":  "src/core/js_extension_host.cpp",
+                        "function":  "JSExtensionHost::bindVSCodeAPI",
+                        "attempted_fix":  "Put the shared object on the global before the binders run and drop the redundant trailing assignment. This exposed the namespace but then hit a QuickJS refcount assertion (gc_decref_child, quickjs.c:6826), so it is NOT applied.",
+                        "status":  "OPEN - reported, not claimed as fixed",
+                        "next_step":  "Resolve the QuickJS reference discipline around the shared vscode object, then re-run RAWRXD_EXTENSION_HOST_001 from tracked source."
+                    },
+    "bridge":  {
+                   "header":  "src/modules/extension_host_bridge.h",
+                   "design":  "a narrow view of the host application, so the runtime is shared by the command line and the Win32 GUI and does not depend on the IDE\u0027s own header",
+                   "parallel_runtime_introduced":  false,
+                   "verified_by":  "the certification asserts one class definition and the bridge include"
+               },
+    "native_commands":  [
+                            "rawrxd.openFile",
+                            "rawrxd.saveFile",
+                            "rawrxd.toggleTerminal",
+                            "rawrxd.hotpatchStatus",
+                            "rawrxd.lspStart",
+                            "rawrxd.editorEngineCycle",
+                            "rawrxd.extensionAPIStats"
+                        ]
+}
