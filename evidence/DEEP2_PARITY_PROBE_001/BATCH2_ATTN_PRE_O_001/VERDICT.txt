@@ -1,0 +1,35 @@
+BATCH2_ATTN_PRE_O_001
+V_deep2_vs_llama max_abs=1.862645149230957e-09
+PRE_O_deep2_vs_expand(Vd) max_abs=0
+PRE_O_llama_vs_expand(Vl) max_abs=6.1392784118652344e-06
+PRE_O_deep2_vs_llama max_abs=6.1392784118652344e-06
+PRE_O_deep2_vs_expand(Vl) max_abs=1.862645149230957e-09
+O(expand(Vd)) vs deep2_ATTN_OUT max_abs=0
+O(expand(Vl)) vs deep2_ATTN_OUT max_abs=1.6763806343078613e-08
+O(expand(Vl)) vs llama_ATTN_OUT max_abs=8.446909487247467e-05
+O(llama_PRE_O) vs llama_ATTN_OUT max_abs=9.3132257461547852e-09
+O(deep2_PRE_O) vs deep2_ATTN_OUT max_abs=0
+
+AUTHORITY_RULE @ pos0 (attend=1):
+  ATTN_PRE_O MUST equal GQA_expand(V)
+  Deep2 satisfies exactly.
+  llama ATTN_PRE_O dump does NOT equal expand(llama V) (max_abs~6.14e-6).
+  That dump inconsistency is the sole source of the prior ATTN_OUT FAIL
+  once O_PROJ kernel is exonerated.
+
+CHAIN
+-----
+V PASS @ ~1e-9
+  → Deep2 PRE_O = expand(V) exact          PASS
+  → O_PROJ(Q4_K×Q8_K) on that X            PASS vs engine
+  → llama PRE_O dump ≠ expand(llama V)     ORACLE HYGIENE
+  → O(llama PRE_O dump) == llama ATTN_OUT  (kernel OK on that X)
+  → apparent ATTN_OUT FAIL was X mismatch from inconsistent PRE_O dump
+
+VERDICT=ATTN_PRE_O_DEEP2_PASS
+LLAMA_PRE_O_DUMP=INCONSISTENT_WITH_V (oracle hygiene)
+O_PROJ=EXONERATED
+ATTN_OUT_vs_llama_using_expand(V)_authority=PASS_CLASS (O(expand(Vl)) vs deep2 @ 1.68e-8)
+do_not_reopen=Q/K/V tokenizer Track_A O_PROJ_kernel
+next=fix llama_ref_parity_probe PRE_O dump (kqv_out-0 layout)
+     OR adopt expand(V) as PRE_O/ATTN_OUT authority at pos0 and close Track B boundary

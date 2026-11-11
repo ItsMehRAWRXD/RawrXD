@@ -1,0 +1,17 @@
+﻿# AGENT-FIRST-TOKEN-001 / A_auto
+
+model_loaded=True
+chat_family=phi3
+rendered_prompt_bytes=3565
+token_count=954
+
+prefill_enter=True
+prefill_exit=True
+
+decode_0_enter=True
+decode_0_token=29903
+
+agent_exit=0
+elapsed_ms=110320
+RESULT=PASS
+ROOT_DOMAIN=NONE

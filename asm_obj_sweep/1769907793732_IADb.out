@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(234) : error A2006:undefined symbol : @att_ret
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(262) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(325) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(342) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(354) : error A2006:undefined symbol : MemCpy_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(358) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(372) : error A2006:undefined symbol : MemCpy_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(382) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907793732_IADb.asm(452) : error A2006:undefined symbol : pKV

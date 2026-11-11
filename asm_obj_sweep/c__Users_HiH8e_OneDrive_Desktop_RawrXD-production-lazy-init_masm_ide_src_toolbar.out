@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_toolbar.asm
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_toolbar.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_toolbar.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_toolbar.asm(10) : fatal error A1000:cannot open file : \masm32\include\windows.inc

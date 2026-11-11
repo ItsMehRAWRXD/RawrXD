@@ -1,0 +1,36 @@
+ Assembling: D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1591) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(396) : error A2006:undefined symbol : DllIndex
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(426) : error A2006:undefined symbol : DllIndex
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(445) : error A2006:undefined symbol : ImportCount
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(553) : error A2006:undefined symbol : ImportCount
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(561) : error A2006:undefined symbol : szName
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(580) : error A2006:undefined symbol : DllIndex
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(584) : error A2006:undefined symbol : szName
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(613) : error A2006:undefined symbol : Import_BuildTable
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(653) : error A2006:undefined symbol : PeBuilder_Init
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(664) : error A2006:undefined symbol : PeBuilder_SetImportSection
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(671) : error A2006:undefined symbol : PeBuilder_AddCodeSection
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(674) : error A2006:undefined symbol : PeBuilder_Build
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1308) : error A2006:undefined symbol : szName
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1322) : error A2006:undefined symbol : DllIndex
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1367) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1390) : error A2006:undefined symbol : Emitter_EmitXorRegReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1400) : error A2006:undefined symbol : Emitter_EmitDword
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1444) : error A2006:undefined symbol : Emitter_EmitXorRegReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1451) : error A2006:undefined symbol : Emitter_EmitLeaRipRel
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1457) : error A2006:undefined symbol : Emitter_EmitLeaRipRel
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1481) : error A2006:undefined symbol : Characteristics
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1498) : error A2006:undefined symbol : PeBuilder_Init
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1500) : error A2006:undefined symbol : IMAGE_FILE_DLL
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1513) : error A2006:undefined symbol : PeBuilder_AddCodeSection
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1516) : error A2006:undefined symbol : PeBuilder_Build
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1613) : error A2006:undefined symbol : PeWriter_CreateMinimalExe
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1619) : error A2006:undefined symbol : Emitter_EmitPushReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1620) : error A2006:undefined symbol : Emitter_EmitPopReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1621) : error A2006:undefined symbol : Emitter_EmitMovRegReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1622) : error A2006:undefined symbol : Emitter_EmitXorRegReg
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1623) : error A2006:undefined symbol : Emitter_EmitAddRegImm32
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(1624) : error A2006:undefined symbol : Emitter_EmitSubRegImm32
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(315) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\src\pe_writer_production\RawrXD_Monolithic_PE_Emitter.asm(316) : warning A4014:instructions and initialized data not supported in BSS segments

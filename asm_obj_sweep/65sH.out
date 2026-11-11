@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-1a8c2372\65sH.asm
+D:\rawrxd\history\-1a8c2372\65sH.asm(89) : error A2006:undefined symbol : BinaryAnalysis_ParseELFSections
+D:\rawrxd\history\-1a8c2372\65sH.asm(231) : error A2006:undefined symbol : Network_StartCapture
+D:\rawrxd\history\-1a8c2372\65sH.asm(297) : error A2006:undefined symbol : Fuzz_AnalyzeParameters
+D:\rawrxd\history\-1a8c2372\65sH.asm(309) : error A2006:undefined symbol : Fuzz_GenerateTestCase

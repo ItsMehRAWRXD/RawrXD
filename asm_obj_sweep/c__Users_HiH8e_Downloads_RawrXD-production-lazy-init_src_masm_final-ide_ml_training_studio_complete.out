@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_training_studio_complete.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_training_studio_complete.asm(85) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_training_studio_complete.asm(128) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_training_studio_complete.asm(162) : fatal error A1010:unmatched block nesting : DATASET

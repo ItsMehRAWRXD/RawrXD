@@ -1,0 +1,326 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║              RawrXD Certification System - Final Architecture                ║
+║                         Complete Specification v1.0                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Date: 2026-07-24
+Status: v1.0 CERTIFIED ✅ | v1.1 SPECIFIED 🎯 | v1.2-v1.3 PLANNED 📋
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CERTIFICATION PHILOSOPHY
+
+v1.0: "RawrXD can correctly execute transformer workloads."
+v1.1: "RawrXD can expose execution as a deterministic inference service."
+v1.2: "RawrXD provides product-grade inference lifecycle management."
+v1.3: "RawrXD meets production operational requirements."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ARCHITECTURE: NON-INVASIVE WRAPPER MODEL
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RawrXD Certification v1.0 ✅ CERTIFIED (Immutable)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  • VAL-001 to VAL-047: Core execution correctness                           │
+│  • Certified substrate frozen — no modifications allowed                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+        │
+        │ wraps (non-invasive)
+        ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VAL-063 Gateway Layer (v1.1) 🎯 SPECIFIED                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  • Execution identity (execution_id anchor)                                 │
+│  • Witness generation (13 stage witnesses)                                  │
+│  • Streaming contract (bounded queue + backpressure)                        │
+│  • Replay verification (determinism proof)                                  │
+│  • Operational safety (error boundaries)                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RawrXD CLI Inference Service                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  • User-facing inference API                                                  │
+│  • Deterministic execution guarantee                                          │
+│  • Observable, replayable, attested                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VAL-063: CLI INFERENCE GATEWAY BINDING (v1.1)
+
+13 Subtests:
+
+Core Execution Path (9):
+  VAL-063.1   CLI Gateway
+  VAL-063.2   GGUF Loader Binding
+  VAL-063.3   Tokenizer Binding
+  VAL-063.4   Forward Execution
+  VAL-063.5   Logits Generation
+  VAL-063.6   Sampler Binding
+  VAL-063.7   Token Emission
+  VAL-063.8   Streaming
+  VAL-063.9   Replay Verification
+
+Platform Guarantees (4):
+  VAL-063.10  Witness Chain Correlation
+  VAL-063.11  Error Boundary Validation
+  VAL-063.12  Streaming Contract
+  VAL-063.12A Backpressure Safety ⭐
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CANONICAL EXECUTION WITNESS (v1.1 with configuration_hash)
+
+struct ExecutionWitness {
+    // Identity
+    UUID execution_id;              // v4 UUID — correlation anchor
+    
+    // Input Identity (decomposed)
+    Hash256 prompt_hash;            // SHA256(prompt text)
+    Hash256 configuration_hash;     // SHA256(seed, temp, top_k, etc.)
+    Hash256 input_hash;             // SHA256(prompt + config)
+    
+    // Runtime Identity
+    Hash256 model_hash;             // SHA256(GGUF file)
+    Hash256 runtime_hash;           // SHA256(rawrxd.exe)
+    
+    // Timing
+    uint64_t start_timestamp;       // Unix nanoseconds
+    uint64_t end_timestamp;
+    
+    // Stage Witnesses
+    std::vector<StageWitness> stages;
+    
+    // Output Identity
+    Hash256 final_output_hash;      // SHA256(generated text)
+    
+    // Validation
+    bool deterministic;             // Replay match
+    bool correlated;                // All stages linked
+};
+
+Identity Chain:
+  prompt_hash + configuration_hash + model_hash + runtime_hash = execution identity
+
+This distinguishes:
+  • Same prompt, different sampler → different execution
+  • Same model, different context → different execution
+  • Same runtime, different quant → different execution
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPLEMENTATION GATES
+
+Gate A — Identity Infrastructure ⭐ FIRST
+  Files: execution_types.hpp, execution_witness.hpp, evidence_writer.hpp
+  Primitives: UUID, SHA-256, Timestamp, JSON, Manifest
+  
+Gate B — Gateway Binding
+  Files: inference_gateway.hpp, inference_gateway.cpp
+  Responsibilities: Execute(), witness collection, evidence emission
+  Constraint: No inference logic — only witness generation
+  
+Gate C — Streaming Adapter
+  Files: token_event_queue.hpp, token_event_queue.cpp
+  Features: Bounded buffer, high/low watermarks, backpressure metrics
+  Evidence: VAL-063.12A (zero drops, ordered delivery)
+  
+Gate D — Replay Harness
+  Files: replay_harness.hpp, replay_harness.cpp
+  Function: Replay(original) → deterministic verification
+  Evidence: VAL-063.9 (bitwise output match)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WITNESS CORRELATION (VAL-063.10)
+
+execution_id
+    │
+    ├── cli.json              ← VAL-063.1
+    ├── tensors.json          ← VAL-063.2
+    ├── tokenizer.json        ← VAL-063.3
+    ├── forward.json          ← VAL-063.4
+    ├── logits.json           ← VAL-063.5
+    ├── sampler.json          ← VAL-063.6
+    ├── emission.json         ← VAL-063.7
+    ├── stream.json           ← VAL-063.8
+    ├── replay.json           ← VAL-063.9
+    ├── correlation.json      ← VAL-063.10
+    ├── errors.json           ← VAL-063.11
+    ├── streaming_contract.json ← VAL-063.12
+    └── backpressure.json     ← VAL-063.12A
+
+Correlation Chain:
+  input_hash → model_hash → tensor_hash → token_hash → output_hash
+
+Prevents: Component passing without actual runtime connection
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKPRESSURE SAFETY (VAL-063.12A)
+
+Producer (Inference Thread)
+       │
+       ▼ push(event)
+       │
+       ├── buffer.size() < high_watermark?
+       │       │
+       │       YES → accept, notify consumer
+       │       │
+       │       NO → block on producer_cv_
+       │              (yield producer thread)
+       │
+Consumer (Client)
+       │
+       ▼ pop()
+       │
+       ├── buffer not empty?
+       │       │
+       │       YES → return event
+       │       │
+       │       NO → wait on consumer_cv_
+       │
+       └── buffer.size() <= low_watermark?
+               │
+               YES → notify producer (resume)
+
+Guarantees:
+  • bounded memory growth
+  • ordered delivery
+  • zero token loss
+  • deterministic blocking/yield
+  • measurable overload behavior
+
+Enables: Ghost text, Monaco streaming, Agent loops, Tool invocation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REPLAY VERIFICATION (VAL-063.9)
+
+Original Execution:
+  prompt_hash: sha256("The quick brown fox")
+  configuration_hash: sha256({seed:42, temp:0.0, top_k:1})
+  model_hash: sha256(ministral3_q4_0.gguf)
+  runtime_hash: sha256(rawrxd.exe)
+  output_hash: sha256(" jumps over...")
+
+Replay Execution:
+  Same prompt_hash
+  Same configuration_hash
+  Same model_hash
+  Same runtime_hash
+  → output_hash should match
+
+Result: deterministic = (original_output_hash == replay_output_hash)
+
+This is one of the strongest certification artifacts.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EVIDENCE PACKAGE STRUCTURE
+
+evidence/2026-07-24-/
+│
+├── Core Certification
+│   ├── SYSTEM_SUMMARY.txt          ← This document
+│   ├── CERTIFICATION_SYSTEM.md     ← Full system docs
+│   ├── FINAL_CERTIFICATION.md      ← Human summary
+│   ├── ROADMAP.md                  ← v1.0 → v1.1 → v1.2 → v1.3
+│   ├── PASS_MANIFEST.json          ← Schema v1.0
+│   └── Verify-Certification.ps1    ← Self-verifying replay
+│
+├── VAL063/ (v1.1 Target)
+│   ├── specification.md            ← VAL-063 spec
+│   ├── IMPLEMENTATION_SPEC.md      ← Implementation guide
+│   ├── IMPLEMENTATION_GATES.md     ← Phased implementation
+│   ├── result.json                 ← 13 subtests PENDING
+│   └── witnesses/                  ← (future)
+│       ├── cli.json
+│       ├── tensors.json
+│       ├── tokenizer.json
+│       ├── forward.json
+│       ├── logits.json
+│       ├── sampler.json
+│       ├── emission.json
+│       ├── stream.json
+│       ├── replay.json
+│       ├── correlation.json
+│       ├── errors.json
+│       ├── streaming_contract.json
+│       └── backpressure.json
+│
+└── [v1.0 evidence...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POST-v1.1 ROADMAP
+
+v1.2: Product Grade
+  • VAL-064: API/SDK Contract
+  • VAL-065: Multi-model Lifecycle
+  • VAL-066: Hot Reload / Model Swap
+
+v1.3: Production Ready
+  • VAL-067: Production Observability
+  • VAL-068: Release Candidate Freeze
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CERTIFICATION MATURITY MODEL
+
+Engine (v1.0) → Platform (v1.1) → Product (v1.2) → Production (v1.3)
+     │               │                │                  │
+   Core          Gateway          Lifecycle         Observability
+   Execution     Binding          Management        & Freeze
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+KEY ARCHITECTURAL PROPERTIES
+
+1. Non-Invasive Wrapper
+   VAL-063 wraps v1.0 without modification
+   → Certified Engine + Certified Adapter = Certified Service
+
+2. Execution Identity Anchor
+   execution_id becomes root of trust
+   → All 13 witnesses share single correlation ID
+
+3. Immutable Runtime Boundary
+   v1.0 substrate frozen
+   → Prevents certification drift
+
+4. Witness Chain Completeness
+   13 witnesses cover complete generation lifecycle
+   → Closes gap between kernel proof and user-visible inference
+
+5. Backpressure Safety
+   Bounded queue with deterministic behavior
+   → Streaming becomes contract, not implementation detail
+
+6. Replay Verification
+   Deterministic output hash match
+   → Strongest certification artifact
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REPRODUCIBILITY
+
+Verify v1.0 Certification:
+  cd evidence/2026-07-24-
+  .\Verify-Certification.ps1 -EvidencePath "."
+
+Expected: CERTIFIED ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    RawrXD Certification System
+              Runtime Attestation Layer Architecture
+
+*Date: 2026-07-24*
+*v1.0: CERTIFIED ✅*
+v1.1: SPECIFIED 🎯 (Implementation Ready)

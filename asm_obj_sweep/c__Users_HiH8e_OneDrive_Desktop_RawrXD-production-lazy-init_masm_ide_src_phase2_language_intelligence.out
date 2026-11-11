@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(82) : error A2008:syntax error : dd
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(183) : error A2008:syntax error : tokens
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(211) : error A2008:syntax error : ebx
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(221) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(222) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(223) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase2_language_intelligence.asm(227) : fatal error A1010:unmatched block nesting : LSP_Initialize

@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(19) : error A2008:syntax error : STRUCT
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(22) : error A2008:syntax error : ENDS
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(26) : error A2008:syntax error : items
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(39) : error A2005:symbol redefinition : id
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(44) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(47) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(48) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(57) : error A2005:symbol redefinition : id
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(63) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(66) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(70) : error A2008:syntax error : Option
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(45) : error A2006:undefined symbol : items
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_ai_options.asm(59) : error A2006:undefined symbol : items

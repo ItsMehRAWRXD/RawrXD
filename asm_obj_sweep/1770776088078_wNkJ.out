@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_DiskRecoveryAgent.asm\1770776088078_wNkJ.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DiskRecoveryAgent.asm\1770776088078_wNkJ.asm(211) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DiskRecoveryAgent.asm\1770776088078_wNkJ.asm(247) : error A2006:undefined symbol : STD_OUTPUT_HANDLE
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DiskRecoveryAgent.asm\1770776088078_wNkJ.asm(1074) : error A2006:undefined symbol : FILE_CURRENT
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DiskRecoveryAgent.asm\1770776088078_wNkJ.asm(961) : warning A6004:procedure argument or local not referenced : liZero

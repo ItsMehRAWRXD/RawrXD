@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\hC1f.asm
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(949) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(952) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(953) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(955) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(957) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(967) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(980) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(987) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1034) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1037) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1040) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1042) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1052) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1065) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1072) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1745) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1746) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1752) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1753) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\hC1f.asm(1912) : error A2006:undefined symbol : WS_CHILD

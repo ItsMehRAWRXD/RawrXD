@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(183) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(329) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(442) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(241) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(299) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(341) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621826815_JySE.asm(460) : error A2022:instruction operands must be the same size

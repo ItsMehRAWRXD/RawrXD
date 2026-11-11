@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(52) : error A2006:undefined symbol : TLS_OUT_OF_INDEXES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(115) : warning A6004:procedure argument or local not referenced : hModule
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(115) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(115) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(169) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(230) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(230) : warning A6004:procedure argument or local not referenced : token
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(230) : warning A6004:procedure argument or local not referenced : pos
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(230) : warning A6004:procedure argument or local not referenced : pLogits
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(289) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(289) : warning A6004:procedure argument or local not referenced : token
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(289) : warning A6004:procedure argument or local not referenced : pEmbeddings
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(306) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(306) : warning A6004:procedure argument or local not referenced : pos
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(306) : warning A6004:procedure argument or local not referenced : dim
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(323) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(323) : warning A6004:procedure argument or local not referenced : n_embd
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(323) : warning A6004:procedure argument or local not referenced : pQKV
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(340) : warning A6004:procedure argument or local not referenced : pQ
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(340) : warning A6004:procedure argument or local not referenced : pK
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(340) : warning A6004:procedure argument or local not referenced : pV
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(340) : warning A6004:procedure argument or local not referenced : n_head
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(340) : warning A6004:procedure argument or local not referenced : pOut
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(357) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(357) : warning A6004:procedure argument or local not referenced : n_embd
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(357) : warning A6004:procedure argument or local not referenced : n_ff
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(357) : warning A6004:procedure argument or local not referenced : pOut
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(374) : warning A6004:procedure argument or local not referenced : pInput
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(374) : warning A6004:procedure argument or local not referenced : pOutput
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(374) : warning A6004:procedure argument or local not referenced : n_embd
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_CLEAN.asm\1769634113615_56DN.asm(374) : warning A6004:procedure argument or local not referenced : eps

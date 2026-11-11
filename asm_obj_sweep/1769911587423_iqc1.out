@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769911587423_iqc1.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769911587423_iqc1.asm(672) : error A2006:undefined symbol : g_OutputBuffer
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769911587423_iqc1.asm(683) : error A2006:undefined symbol : g_OutputBuffer

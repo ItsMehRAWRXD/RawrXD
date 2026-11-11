@@ -1,0 +1,50 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(140) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(160) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(172) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(193) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(219) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(240) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(259) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(286) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(299) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(368) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(377) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(435) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(444) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(502) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(510) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(596) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(605) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(662) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(670) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(714) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(723) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(736) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(829) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(837) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(882) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(890) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(915) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(932) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(981) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(996) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(1026) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(1041) : error A2008:syntax error : PUSH_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(1083) : error A2008:syntax error : POP_REGS
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(308) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(362) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(844) : error A2006:undefined symbol : PopLocalTask
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(370) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(437) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(598) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(664) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(716) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(831) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(884) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(917) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(983) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(1028) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week1_WEEK1_DELIVERABLE.asm(1085) : error A2220:Missing .ENDPROLOG

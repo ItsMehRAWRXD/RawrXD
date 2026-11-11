@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(4) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(92) : error A2008:syntax error : lstrlenA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(97) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(108) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(123) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(214) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(234) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(237) : error A2008:syntax error : lstrcatA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(240) : error A2008:syntax error : CreateFileA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(261) : error A2008:syntax error : CloseHandle
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(270) : error A2008:syntax error : lstrlenA
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(275) : error A2008:syntax error : WriteFile
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(312) : error A2001:immediate operand not allowed
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(322) : error A2001:immediate operand not allowed
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(333) : error A2008:syntax error : &
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(334) : error A2008:syntax error : &
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(340) : error A2088:END directive required at end of file
+D:\rawrxd\src\reverse_engineering\omega_suite\v4\OmegaPolyglot_v4_fixed.asm(340) : fatal error A1010:unmatched block nesting : RunFullAnalysis

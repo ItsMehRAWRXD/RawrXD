@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm(71) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm(220) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm(225) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm(241) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0015\d__RawrXD_UDPHolePunch.asm(249) : error A2083:invalid scale value

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\beaconism\streamer.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\beaconism\streamer.asm(5) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\beaconism\streamer.asm(6) : error A2008:syntax error : STACKBASE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\beaconism\streamer.asm(10) : fatal error A1000:cannot open file : intrin.inc

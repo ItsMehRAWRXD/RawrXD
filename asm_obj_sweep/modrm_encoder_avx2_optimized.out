@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(45) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(49) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(53) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(70) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(103) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(24) : error A2006:undefined symbol : invalid_mod
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(26) : error A2006:undefined symbol : invalid_reg
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(28) : error A2006:undefined symbol : invalid_rm
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(46) : error A2006:undefined symbol : FFFFFFFFFFFFFFF9h
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(50) : error A2006:undefined symbol : FFFFFFFFFFFFFFFAH
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(54) : error A2006:undefined symbol : FFFFFFFFFFFFFFFBH
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(66) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(72) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\modrm_encoder_avx2_optimized.asm(101) : error A2006:undefined symbol : batch_loop

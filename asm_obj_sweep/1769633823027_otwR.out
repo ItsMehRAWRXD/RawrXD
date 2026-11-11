@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633823027_otwR.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633823027_otwR.asm(33) : error A2144:cannot nest procedures
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633823027_otwR.asm(33) : error A2005:symbol redefinition : pPath
+
+MASM : fatal error A1016: Internal error

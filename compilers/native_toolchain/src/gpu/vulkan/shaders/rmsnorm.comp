@@ -1,0 +1,58 @@
+#version 450
+
+// RMSNorm compute shader
+// output = input * weight / sqrt(mean(input^2) + epsilon)
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(std430, binding = 1) readonly buffer WeightBuffer {
+    float weight_data[];
+};
+
+layout(std430, binding = 2) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_elements;
+    float epsilon;
+};
+
+shared float shared_sum[256];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    // Calculate sum of squares
+    float local_sum = 0.0;
+    for (uint i = global_id; i < n_elements; i += gl_NumWorkGroups.x * 256) {
+        float val = input_data[i];
+        local_sum += val * val;
+    }
+    
+    shared_sum[local_id] = local_sum;
+    barrier();
+    
+    // Parallel reduction
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_sum[local_id] += shared_sum[local_id + stride];
+        }
+        barrier();
+    }
+    
+    // Calculate RMS
+    float mean_sq = shared_sum[0] / float(n_elements);
+    float rms = sqrt(mean_sq + epsilon);
+    float scale = 1.0 / rms;
+    
+    // Apply normalization
+    for (uint i = global_id; i < n_elements; i += gl_NumWorkGroups.x * 256) {
+        output_data[i] = input_data[i] * scale * weight_data[i];
+    }
+}

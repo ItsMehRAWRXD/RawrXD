@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm(522) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm(525) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm(526) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm(542) : error A2006:undefined symbol : PAGE_READONLY
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907945196_Berg.asm(554) : error A2006:undefined symbol : FILE_MAP_READ

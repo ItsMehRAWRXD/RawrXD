@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\-2d7bc67b\kf2I.asm
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(107) : error A2008:syntax error : db
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(180) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(291) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(141) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(163) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(205) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(229) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(285) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d7bc67b\kf2I.asm(288) : error A2022:instruction operands must be the same size

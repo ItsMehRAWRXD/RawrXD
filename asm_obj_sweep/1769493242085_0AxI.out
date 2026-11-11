@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493242085_0AxI.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493242085_0AxI.asm(848) : error A2005:symbol redefinition : @cycle_complete

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\kQ2D.asm
+D:\rawrxd\history\-29b34fd4\kQ2D.asm(472) : error A2008:syntax error : add
+D:\rawrxd\history\-29b34fd4\kQ2D.asm(630) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\kQ2D.asm(635) : error A2006:undefined symbol : OperationSize

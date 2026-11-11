@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(8) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(97) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(110) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(157) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(481) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(210) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(428) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(465) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(484) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(506) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(752) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(808) : error A2006:undefined symbol : T_EOF
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(810) : error A2006:undefined symbol : K_FN
+D:\rawrxd\history\all_versions\integration_layer.asm\1771274263851_MKRX.asm(120) : error A2206:missing operator in expression

@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(7) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(11) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(65) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(117) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(174) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(198) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(227) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(253) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(70) : error A2006:undefined symbol : sum_loop
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(99) : error A2006:undefined symbol : float_eps
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(128) : error A2006:undefined symbol : norm_loop
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(179) : error A2006:undefined symbol : max_loop
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(210) : error A2006:undefined symbol : exp_loop
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769989574820_1RUM.asm(233) : error A2006:undefined symbol : div_loop

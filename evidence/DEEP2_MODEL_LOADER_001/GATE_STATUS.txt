@@ -1,0 +1,2 @@
+metadata_ok=1 architecture=llama vocab=2048 layers=22 tok=1 loaded=1
+DEEP2_MODEL_LOADER_001=PASS

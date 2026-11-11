@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\backend\rawrxd_backend.asm\1769609396151_kPMm.asm
+D:\rawrxd\history\all_versions\backend\rawrxd_backend.asm\1769609396151_kPMm.asm(876) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\backend\rawrxd_backend.asm\1769609396151_kPMm.asm(383) : warning A6004:procedure argument or local not referenced : fdwCtrlType
+D:\rawrxd\history\all_versions\backend\rawrxd_backend.asm\1769609396151_kPMm.asm(483) : warning A6004:procedure argument or local not referenced : status

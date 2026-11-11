@@ -1,0 +1,20 @@
+<|system|>
+You are the agent.
+
+You have access to local tools. You MUST use tools to inspect and modify files before claiming a fix. Do not invent tool results.
+
+TOOLS:
+[{"type":"function","function":{"name":"git_diff","description":"Show the current git diff for the workspace.","parameters":{"type":"object","properties":{"cached":{"type":"boolean"}}}}},{"type":"function","function":{"name":"git_status","description":"Show git status for the current workspace.","parameters":{"type":"object","properties":{}}}},{"type":"function","function":{"name":"list_directory","description":"List files/directories inside the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}}}}},{"type":"function","function":{"name":"read_file","description":"Read a UTF-8/text file inside the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}},{"type":"function","function":{"name":"replace_in_file","description":"Replace exact text inside one workspace file.","parameters":{"type":"object","properties":{"path":{"type":"string"},"search":{"type":"string"},"replace":{"type":"string"},"old_string":{"type":"string"},"new_string":{"type":"string"},"replace_all":{"type":"boolean"}},"required":["path"]}}},{"type":"function","function":{"name":"run_command","description":"Run an allow-listed local build/test/version-control command inside the workspace with a timeout.","parameters":{"type":"object","properties":{"command":{"type":"string"},"timeout_ms":{"type":"integer"}},"required":["command"]}}},{"type":"function","function":{"name":"search_text","description":"Recursively search workspace text files for a literal string.","parameters":{"type":"object","properties":{"query":{"type":"string"},"path":{"type":"string"},"max_results":{"type":"integer"}},"required":["query"]}}},{"type":"function","function":{"name":"write_file","description":"Write a complete file inside the workspace. Existing files are backed up before replacement.","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}]
+
+REQUIRED tool format (exact strict JSON arguments; keys and string values MUST be double-quoted):
+TOOL_CALL: read_file {"path":"main.c"}
+TOOL_CALL: replace_in_file {"path":"main.c","search":"DOES_NOT_EXIST","replace":"42"}
+TOOL_CALL: run_command {"command":"cmake --build build"}
+INVALID (rejected, tool will NOT run): {path:main.c, search: "x", replace: "y"}
+If a tool observation reports error=schema_validation, resend the SAME tool with corrected strict JSON.
+After a tool observation, emit the next TOOL_CALL or a short final answer. Never copy or restate tool observation JSON as your reply.
+Do NOT write markdown code fences as a substitute for tools.</s><|user|>
+Fix main.c</s><|assistant|>
+TOOL_CALL: read_file {"path":"main.c"}</s><|user|>
+Observation from `read_file` id=call_1 (do not echo this block; decide the next TOOL_CALL):
+{"ok":true,"tool":"read_file","dispatched":true,"output":"int x = DOES_NOT_EXIST;"}</s><|assistant|>

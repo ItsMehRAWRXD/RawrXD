@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(113) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(137) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(141) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(146) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(170) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(219) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(230) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(241) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(250) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(287) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(295) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(315) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(329) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(64) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(106) : error A2006:undefined symbol : bad
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(108) : error A2006:undefined symbol : bad
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(115) : error A2006:undefined symbol : noslot
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(118) : error A2006:undefined symbol : next
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(139) : error A2006:undefined symbol : find_slot
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(160) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(187) : error A2006:undefined symbol : invalid
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(193) : error A2006:undefined symbol : invalid
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(206) : error A2006:undefined symbol : have_slot
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(224) : error A2006:undefined symbol : use_div
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(228) : error A2006:undefined symbol : store_slot
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(266) : error A2006:undefined symbol : none
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(275) : error A2006:undefined symbol : empty_undo
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(308) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(311) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(317) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(327) : error A2006:undefined symbol : loop_prefetch
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(48) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(51) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(52) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(53) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD-Streaming-Orchestrator-Production.asm(55) : warning A4014:instructions and initialized data not supported in BSS segments

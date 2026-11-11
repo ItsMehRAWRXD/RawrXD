@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-2267f472\klT7.asm
+D:\rawrxd\history\-2267f472\klT7.asm(117) : error A2206:missing operator in expression
+D:\rawrxd\history\-2267f472\klT7.asm(70) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\-2267f472\klT7.asm(70) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\-2267f472\klT7.asm(70) : warning A6004:procedure argument or local not referenced : lpReserved

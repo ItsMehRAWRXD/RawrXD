@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-18ad6c3a\2NNI.asm
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(5) : error A2008:syntax error : section
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(6) : error A2008:syntax error : global
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(8) : error A2034:must be in segment block
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(9) : error A2034:must be in segment block
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(10) : error A2034:must be in segment block
+D:\rawrxd\history\-18ad6c3a\2NNI.asm(10) : error A2088:END directive required at end of file

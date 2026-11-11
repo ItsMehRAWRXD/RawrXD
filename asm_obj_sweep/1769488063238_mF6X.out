@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488063238_mF6X.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488063238_mF6X.asm(192) : error A2005:symbol redefinition : _drive_loop
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488063238_mF6X.asm(182) : error A2006:undefined symbol : NVMe_GetTemperature
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488063238_mF6X.asm(188) : error A2006:undefined symbol : NVMe_GetWearLevel

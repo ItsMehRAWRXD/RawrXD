@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_attn_out_7
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=f4d21b63fd82662a
+l2=0.7023279889142775
+seq=1182
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_CLEAN_FFN_ORACLE\llama_TENS_attn_out_7_pos2_layer0_full_n2048_seq1182.bin

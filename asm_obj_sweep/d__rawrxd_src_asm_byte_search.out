@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(30) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(31) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(32) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(33) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(68) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(76) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(180) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(185) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(190) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(195) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(203) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(207) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(211) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(215) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(231) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(245) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(252) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(255) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(266) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(271) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(273) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(275) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(277) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(279) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(281) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(282) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_byte_search.asm(345) : fatal error A1010:unmatched block nesting : find_pattern_asm

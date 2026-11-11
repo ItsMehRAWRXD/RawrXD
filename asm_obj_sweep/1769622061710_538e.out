@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(11) : error A2008:syntax error : short
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(19) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(20) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(189) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(190) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(191) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(251) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(266) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(281) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(296) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(311) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(326) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(442) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(512) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769622061710_538e.asm(593) : error A2006:undefined symbol : g_LockHeartbeat

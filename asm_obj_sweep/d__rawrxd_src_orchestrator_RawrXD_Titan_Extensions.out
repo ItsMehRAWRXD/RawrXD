@@ -1,0 +1,50 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(17) : error A2008:syntax error : WIN64
+D:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(9) : error A2008:syntax error : WIN64
+D:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(54) : error A2008:syntax error : byte
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(139) : error A2189:invalid combination with segment alignment : 128
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(143) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(150) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(277) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(164) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(177) : error A2006:undefined symbol : InitializeSRWLock
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(239) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(250) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(259) : error A2006:undefined symbol : INFINITY_STREAM
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(265) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(304) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(311) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(312) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(313) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(316) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(351) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(355) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(371) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(384) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(456) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(466) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(530) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(542) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(560) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(577) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(578) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(588) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(596) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(607) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(629) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(645) : error A2006:undefined symbol : sz_dstorage_dll
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(646) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(652) : error A2006:undefined symbol : sz_dstorage_getfactory
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(654) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(659) : error A2006:undefined symbol : g_pfnDStorageGetFactory
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(667) : error A2006:undefined symbol : FreeLibrary
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(682) : error A2006:undefined symbol : sz_vulkan_dll
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(683) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(689) : error A2006:undefined symbol : sz_vkCreateInstance
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(691) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(696) : error A2006:undefined symbol : g_pfnVkCreateInstance
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(704) : error A2006:undefined symbol : FreeLibrary
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(721) : error A2006:undefined symbol : g_pfnVkCreateInstance
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(747) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(829) : error A2006:undefined symbol : __imp_AcquireSRWLockShared
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_orchestrator_RawrXD_Titan_Extensions.asm(836) : error A2006:undefined symbol : __imp_ReleaseSRWLockShared

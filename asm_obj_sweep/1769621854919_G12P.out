@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(759) : error A2008:syntax error : WinMain
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(759) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(753) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(753) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(753) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI_Titan.asm\1769621854919_G12P.asm(753) : warning A6004:procedure argument or local not referenced : lParam

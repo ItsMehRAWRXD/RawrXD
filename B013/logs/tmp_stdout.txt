@@ -1,0 +1,2731 @@
+{
+  "experiment": "B013",
+  "scenario": "sustained_run",
+  "model": "F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf",
+  "timestamp": "2026-08-10T00:00:00Z",
+[RawrXD] CPU-only mode (Vulkan disabled)
+[RawrXD] Stage: loader.Load
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=cpu-only result=ok reason=cpu fallback verified
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 1925 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[GGUF] size=2019377376
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=255
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=255 indexed_storage=1.87 GB
+[RawrXD] Data starts at offset 7837664
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=3072, layers=28, heads=24, kv_heads=8, vocab=128256, ctx=131072, experts=0, experts_used=0
+[RawrXD] Tensor names in model (256 total):
+  [  0] type=12 dims=8192 3072 blk.6.ffn_down.weight
+  [  1] type=0 dims=3072 blk.13.ffn_norm.weight
+  [  2] type=12 dims=3072 1024 blk.0.attn_k.weight
+  [  3] type=12 dims=8192 3072 blk.15.ffn_down.weight
+  [  4] type=0 dims=64 rope_freqs.weight
+  [  5] type=14 dims=3072 1024 blk.25.attn_v.weight
+  [  6] type=12 dims=3072 8192 blk.18.ffn_up.weight
+  [  7] type=0 dims=3072 blk.0.ffn_norm.weight
+  [  8] type=14 dims=8192 3072 blk.0.ffn_down.weight
+  [  9] type=14 dims=3072 1024 blk.1.attn_v.weight
+  [ 10] type=0 dims=3072 blk.19.ffn_norm.weight
+  [ 11] type=12 dims=3072 8192 blk.1.ffn_up.weight
+  [ 12] type=12 dims=8192 3072 blk.22.ffn_down.weight
+  [ 13] type=12 dims=3072 3072 blk.19.attn_output.weight
+  [ 14] type=14 dims=3072 128256 token_embd.weight
+  [ 15] type=14 dims=3072 1024 blk.26.attn_v.weight
+  ... (240 more)
+[RawrXD] Config: dim=3072 layers=28 heads=24 kv_heads=8 vocab=128256 hidden=8192 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[RawrXD] Swarm plan: GGUF coalesced (31 slices total=2.17 GiB max=369.22 MiB avg=71.83 MiB)
+[RawrXD] Stage: tokenizer.Load
+[RawrXD] Inference engine READY
+[STREAM] calling Forward() for prefill, tokens=3
+[Forward] GQA: dim=3072 heads=24 kv_heads=8 head_dim=128 kv_dim=1024 hidden=8192
+[MEM] Generation start: avail_phys=38212 MB, avail_virt=134211201 MB
+[MEM] KV footprint: k=224 MB, v=224 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=128256 * row_bytes(Q2_K)=1008 = 123 MB
+[Forward] prefill: tokens=3 layers=28 total_layer_execs=84 est_ms=10920
+[Forward] B009 layer-outer batched prefill: T=3 layers=28
+[STEP] Layer 1/28 (batched T=3)
+[CPU] batched layer=0  560.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=1  545.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=2  471.4 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=3  477.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=4  552.2 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (batched T=3)
+[CPU] batched layer=5  484.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=6  479.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=7  546.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=8  470.9 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=9  480.4 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (batched T=3)
+[CPU] batched layer=10  543.4 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=11  475.2 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=12  481.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=13  545.8 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=14  469.1 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (batched T=3)
+[CPU] batched layer=15  459.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=16  544.1 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=17  488.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=18  477.1 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=19  549.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (batched T=3)
+[CPU] batched layer=20  539.9 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=21  472.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=22  477.8 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=23  546.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=24  539.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (batched T=3)
+[CPU] batched layer=25  542.8 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] batched layer=26  544.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (batched T=3)
+[CPU] batched layer=27  553.1 ms  SLOW (T=3)
+[Forward] B009 batched prefill complete: T=3 layers=28 elapsed_ms=14318.80 ms_per_layer=511.39
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=3 layers=28 execs=84 elapsed_ms=15073.25 ms_per_layer_exec=179.444
+[MEM] Forward end: avail_phys=36729 MB avail_virt=134209273 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() returned, logits.size()=128256
+[STREAM] entering generation loop, maxTokens=32
+[STREAM] generation iteration 0
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=3
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[STEP] Layer 1/28 (pos=3 token=1/1)
+[CPU] token=0 layer=0  200.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  177.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=3 token=1/1)
+[CPU] token=0 layer=5  154.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  157.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=3 token=1/1)
+[CPU] token=0 layer=10  179.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  180.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  152.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=3 token=1/1)
+[CPU] token=0 layer=15  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=3 token=1/1)
+[CPU] token=0 layer=20  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  160.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  176.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  177.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=3 token=1/1)
+[CPU] token=0 layer=25  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=3 token=1/1)
+[CPU] token=0 layer=27  174.5 ms  SLOW
+[CPU] token=0 total_layers=4707.2 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5292.47 ms_per_layer_exec=189.017
+[MEM] Forward end: avail_phys=37156 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 1
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=4
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=4 token=1/1)
+[CPU] token=0 layer=0  172.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  172.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=4 token=1/1)
+[CPU] token=0 layer=5  156.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  180.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  157.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=4 token=1/1)
+[CPU] token=0 layer=10  181.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  177.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=4 token=1/1)
+[CPU] token=0 layer=15  158.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  160.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=4 token=1/1)
+[CPU] token=0 layer=20  174.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  180.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=4 token=1/1)
+[CPU] token=0 layer=25  170.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=4 token=1/1)
+[CPU] token=0 layer=27  175.8 ms  SLOW
+[CPU] token=0 total_layers=4676.9 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5298.03 ms_per_layer_exec=189.215
+[MEM] Forward end: avail_phys=37119 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 2
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=5
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=5 token=1/1)
+[CPU] token=0 layer=0  168.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  153.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  162.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  180.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=5 token=1/1)
+[CPU] token=0 layer=5  157.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  155.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=5 token=1/1)
+[CPU] token=0 layer=10  180.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  161.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  157.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=5 token=1/1)
+[CPU] token=0 layer=15  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=5 token=1/1)
+[CPU] token=0 layer=20  173.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  181.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=5 token=1/1)
+[CPU] token=0 layer=25  170.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  181.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=5 token=1/1)
+[CPU] token=0 layer=27  170.4 ms  SLOW
+[CPU] token=0 total_layers=4679.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5267.82 ms_per_layer_exec=188.137
+[MEM] Forward end: avail_phys=37208 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 3
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=6
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=6 token=1/1)
+[CPU] token=0 layer=0  169.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  183.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=6 token=1/1)
+[CPU] token=0 layer=5  149.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=6 token=1/1)
+[CPU] token=0 layer=10  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  160.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  180.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=6 token=1/1)
+[CPU] token=0 layer=15  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  175.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  157.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  175.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=6 token=1/1)
+[CPU] token=0 layer=20  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  182.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  174.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=6 token=1/1)
+[CPU] token=0 layer=25  174.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=6 token=1/1)
+[CPU] token=0 layer=27  175.3 ms  SLOW
+[CPU] token=0 total_layers=4659.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5241.97 ms_per_layer_exec=187.213
+[MEM] Forward end: avail_phys=37343 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 4
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=7
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=7 token=1/1)
+[CPU] token=0 layer=0  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  176.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=7 token=1/1)
+[CPU] token=0 layer=5  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=7 token=1/1)
+[CPU] token=0 layer=10  176.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  150.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  151.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=7 token=1/1)
+[CPU] token=0 layer=15  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  157.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=7 token=1/1)
+[CPU] token=0 layer=20  176.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  182.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  172.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=7 token=1/1)
+[CPU] token=0 layer=25  175.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=7 token=1/1)
+[CPU] token=0 layer=27  173.4 ms  SLOW
+[CPU] token=0 total_layers=4665.7 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5255.33 ms_per_layer_exec=187.690
+[MEM] Forward end: avail_phys=37351 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 5
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=8
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=8 token=1/1)
+[CPU] token=0 layer=0  169.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  173.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=8 token=1/1)
+[CPU] token=0 layer=5  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=8 token=1/1)
+[CPU] token=0 layer=10  178.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  161.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=8 token=1/1)
+[CPU] token=0 layer=15  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=8 token=1/1)
+[CPU] token=0 layer=20  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  180.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  171.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=8 token=1/1)
+[CPU] token=0 layer=25  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=8 token=1/1)
+[CPU] token=0 layer=27  174.9 ms  SLOW
+[CPU] token=0 total_layers=4669.4 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5253.19 ms_per_layer_exec=187.614
+[MEM] Forward end: avail_phys=37362 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 6
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=9
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=9 token=1/1)
+[CPU] token=0 layer=0  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=9 token=1/1)
+[CPU] token=0 layer=5  155.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  176.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=9 token=1/1)
+[CPU] token=0 layer=10  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  184.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  152.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=9 token=1/1)
+[CPU] token=0 layer=15  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  180.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=9 token=1/1)
+[CPU] token=0 layer=20  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  153.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  181.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  172.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=9 token=1/1)
+[CPU] token=0 layer=25  175.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=9 token=1/1)
+[CPU] token=0 layer=27  170.3 ms  SLOW
+[CPU] token=0 total_layers=4673.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5265.40 ms_per_layer_exec=188.050
+[MEM] Forward end: avail_phys=37418 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 7
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=10
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=10 token=1/1)
+[CPU] token=0 layer=0  167.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  180.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=10 token=1/1)
+[CPU] token=0 layer=5  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  153.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=10 token=1/1)
+[CPU] token=0 layer=10  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  156.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  180.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=10 token=1/1)
+[CPU] token=0 layer=15  160.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  180.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=10 token=1/1)
+[CPU] token=0 layer=20  172.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=10 token=1/1)
+[CPU] token=0 layer=25  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=10 token=1/1)
+[CPU] token=0 layer=27  174.7 ms  SLOW
+[CPU] token=0 total_layers=4673.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5267.22 ms_per_layer_exec=188.115
+[MEM] Forward end: avail_phys=37442 MB avail_virt=134208961 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 8
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=11
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=11 token=1/1)
+[CPU] token=0 layer=0  179.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  153.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=11 token=1/1)
+[CPU] token=0 layer=5  156.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  153.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=11 token=1/1)
+[CPU] token=0 layer=10  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  180.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  153.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=11 token=1/1)
+[CPU] token=0 layer=15  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=11 token=1/1)
+[CPU] token=0 layer=20  173.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  184.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  171.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=11 token=1/1)
+[CPU] token=0 layer=25  172.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=11 token=1/1)
+[CPU] token=0 layer=27  174.3 ms  SLOW
+[CPU] token=0 total_layers=4683.4 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5265.86 ms_per_layer_exec=188.066
+[MEM] Forward end: avail_phys=37487 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 9
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=12
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=12 token=1/1)
+[CPU] token=0 layer=0  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  152.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=12 token=1/1)
+[CPU] token=0 layer=5  154.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  161.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  182.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  152.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=12 token=1/1)
+[CPU] token=0 layer=10  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=12 token=1/1)
+[CPU] token=0 layer=15  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=12 token=1/1)
+[CPU] token=0 layer=20  173.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=12 token=1/1)
+[CPU] token=0 layer=25  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=12 token=1/1)
+[CPU] token=0 layer=27  174.4 ms  SLOW
+[CPU] token=0 total_layers=4681.4 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5269.17 ms_per_layer_exec=188.185
+[MEM] Forward end: avail_phys=37493 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 10
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=13
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=13 token=1/1)
+[CPU] token=0 layer=0  181.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=13 token=1/1)
+[CPU] token=0 layer=5  153.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  180.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=13 token=1/1)
+[CPU] token=0 layer=10  180.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  151.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  180.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=13 token=1/1)
+[CPU] token=0 layer=15  161.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  183.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=13 token=1/1)
+[CPU] token=0 layer=20  171.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  180.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  174.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=13 token=1/1)
+[CPU] token=0 layer=25  174.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=13 token=1/1)
+[CPU] token=0 layer=27  178.8 ms  SLOW
+[CPU] token=0 total_layers=4684.3 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5266.31 ms_per_layer_exec=188.082
+[MEM] Forward end: avail_phys=37487 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 11
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=14
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=14 token=1/1)
+[CPU] token=0 layer=0  171.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  160.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=14 token=1/1)
+[CPU] token=0 layer=5  155.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  157.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=14 token=1/1)
+[CPU] token=0 layer=10  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  157.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  182.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  153.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=14 token=1/1)
+[CPU] token=0 layer=15  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=14 token=1/1)
+[CPU] token=0 layer=20  173.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  181.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  171.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=14 token=1/1)
+[CPU] token=0 layer=25  173.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=14 token=1/1)
+[CPU] token=0 layer=27  176.9 ms  SLOW
+[CPU] token=0 total_layers=4670.7 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5248.20 ms_per_layer_exec=187.436
+[MEM] Forward end: avail_phys=37463 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 12
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=15
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=15 token=1/1)
+[CPU] token=0 layer=0  177.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  173.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  182.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=15 token=1/1)
+[CPU] token=0 layer=5  150.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=15 token=1/1)
+[CPU] token=0 layer=10  182.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  161.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=15 token=1/1)
+[CPU] token=0 layer=15  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  152.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=15 token=1/1)
+[CPU] token=0 layer=20  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  184.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  172.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=15 token=1/1)
+[CPU] token=0 layer=25  172.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=15 token=1/1)
+[CPU] token=0 layer=27  177.8 ms  SLOW
+[CPU] token=0 total_layers=4680.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5262.73 ms_per_layer_exec=187.955
+[MEM] Forward end: avail_phys=37394 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 13
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=16
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=16 token=1/1)
+[CPU] token=0 layer=0  175.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  172.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  153.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  176.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=16 token=1/1)
+[CPU] token=0 layer=5  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  157.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=16 token=1/1)
+[CPU] token=0 layer=10  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=16 token=1/1)
+[CPU] token=0 layer=15  160.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  181.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  154.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  161.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=16 token=1/1)
+[CPU] token=0 layer=20  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  156.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  178.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  174.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=16 token=1/1)
+[CPU] token=0 layer=25  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=16 token=1/1)
+[CPU] token=0 layer=27  173.2 ms  SLOW
+[CPU] token=0 total_layers=4672.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5256.88 ms_per_layer_exec=187.746
+[MEM] Forward end: avail_phys=37345 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 14
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=17
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=17 token=1/1)
+[CPU] token=0 layer=0  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  152.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  181.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=17 token=1/1)
+[CPU] token=0 layer=5  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=17 token=1/1)
+[CPU] token=0 layer=10  179.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=17 token=1/1)
+[CPU] token=0 layer=15  160.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  181.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  151.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  180.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=17 token=1/1)
+[CPU] token=0 layer=20  172.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  173.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=17 token=1/1)
+[CPU] token=0 layer=25  174.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=17 token=1/1)
+[CPU] token=0 layer=27  179.8 ms  SLOW
+[CPU] token=0 total_layers=4680.4 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5263.37 ms_per_layer_exec=187.977
+[MEM] Forward end: avail_phys=37309 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 15
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=18
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=18 token=1/1)
+[CPU] token=0 layer=0  171.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  173.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=18 token=1/1)
+[CPU] token=0 layer=5  155.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  181.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=18 token=1/1)
+[CPU] token=0 layer=10  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  160.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  153.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=18 token=1/1)
+[CPU] token=0 layer=15  157.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  150.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  160.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=18 token=1/1)
+[CPU] token=0 layer=20  174.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=18 token=1/1)
+[CPU] token=0 layer=25  171.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=18 token=1/1)
+[CPU] token=0 layer=27  177.7 ms  SLOW
+[CPU] token=0 total_layers=4675.3 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5262.61 ms_per_layer_exec=187.950
+[MEM] Forward end: avail_phys=37385 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 16
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=19
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=19 token=1/1)
+[CPU] token=0 layer=0  167.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  181.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=19 token=1/1)
+[CPU] token=0 layer=5  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  177.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=19 token=1/1)
+[CPU] token=0 layer=10  181.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  181.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  152.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=19 token=1/1)
+[CPU] token=0 layer=15  160.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  176.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  161.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  180.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=19 token=1/1)
+[CPU] token=0 layer=20  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  153.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  157.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=19 token=1/1)
+[CPU] token=0 layer=25  174.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  172.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=19 token=1/1)
+[CPU] token=0 layer=27  173.8 ms  SLOW
+[CPU] token=0 total_layers=4662.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5264.39 ms_per_layer_exec=188.014
+[MEM] Forward end: avail_phys=37400 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 17
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=20
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=20 token=1/1)
+[CPU] token=0 layer=0  172.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  151.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=20 token=1/1)
+[CPU] token=0 layer=5  153.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  176.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=20 token=1/1)
+[CPU] token=0 layer=10  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=20 token=1/1)
+[CPU] token=0 layer=15  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  157.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  180.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=20 token=1/1)
+[CPU] token=0 layer=20  173.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  157.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=20 token=1/1)
+[CPU] token=0 layer=25  175.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=20 token=1/1)
+[CPU] token=0 layer=27  175.2 ms  SLOW
+[CPU] token=0 total_layers=4664.4 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5251.10 ms_per_layer_exec=187.539
+[MEM] Forward end: avail_phys=37377 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 18
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=21
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=21 token=1/1)
+[CPU] token=0 layer=0  170.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=21 token=1/1)
+[CPU] token=0 layer=5  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=21 token=1/1)
+[CPU] token=0 layer=10  178.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  153.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=21 token=1/1)
+[CPU] token=0 layer=15  160.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  157.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=21 token=1/1)
+[CPU] token=0 layer=20  172.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  174.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=21 token=1/1)
+[CPU] token=0 layer=25  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=21 token=1/1)
+[CPU] token=0 layer=27  175.5 ms  SLOW
+[CPU] token=0 total_layers=4659.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5250.49 ms_per_layer_exec=187.518
+[MEM] Forward end: avail_phys=37354 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 19
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=22
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=22 token=1/1)
+[CPU] token=0 layer=0  182.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=22 token=1/1)
+[CPU] token=0 layer=5  152.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=22 token=1/1)
+[CPU] token=0 layer=10  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  177.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=22 token=1/1)
+[CPU] token=0 layer=15  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=22 token=1/1)
+[CPU] token=0 layer=20  174.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  161.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  178.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=22 token=1/1)
+[CPU] token=0 layer=25  173.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=22 token=1/1)
+[CPU] token=0 layer=27  174.5 ms  SLOW
+[CPU] token=0 total_layers=4681.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5278.20 ms_per_layer_exec=188.507
+[MEM] Forward end: avail_phys=37342 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 20
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=23
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=23 token=1/1)
+[CPU] token=0 layer=0  176.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  157.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=23 token=1/1)
+[CPU] token=0 layer=5  156.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  180.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=23 token=1/1)
+[CPU] token=0 layer=10  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=23 token=1/1)
+[CPU] token=0 layer=15  158.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  176.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=23 token=1/1)
+[CPU] token=0 layer=20  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  180.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=23 token=1/1)
+[CPU] token=0 layer=25  174.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=23 token=1/1)
+[CPU] token=0 layer=27  174.8 ms  SLOW
+[CPU] token=0 total_layers=4682.9 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5268.47 ms_per_layer_exec=188.160
+[MEM] Forward end: avail_phys=37343 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 21
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=24
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=24 token=1/1)
+[CPU] token=0 layer=0  170.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=24 token=1/1)
+[CPU] token=0 layer=5  155.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=24 token=1/1)
+[CPU] token=0 layer=10  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  175.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  153.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=24 token=1/1)
+[CPU] token=0 layer=15  161.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  182.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=24 token=1/1)
+[CPU] token=0 layer=20  174.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  180.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  173.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=24 token=1/1)
+[CPU] token=0 layer=25  169.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=24 token=1/1)
+[CPU] token=0 layer=27  174.4 ms  SLOW
+[CPU] token=0 total_layers=4664.3 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5246.62 ms_per_layer_exec=187.379
+[MEM] Forward end: avail_phys=37334 MB avail_virt=134209269 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 22
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=25
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=25 token=1/1)
+[CPU] token=0 layer=0  171.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  156.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=25 token=1/1)
+[CPU] token=0 layer=5  153.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  157.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  156.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=25 token=1/1)
+[CPU] token=0 layer=10  181.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  153.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  158.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  181.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  152.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=25 token=1/1)
+[CPU] token=0 layer=15  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  160.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=25 token=1/1)
+[CPU] token=0 layer=20  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  153.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=25 token=1/1)
+[CPU] token=0 layer=25  175.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  172.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=25 token=1/1)
+[CPU] token=0 layer=27  172.6 ms  SLOW
+[CPU] token=0 total_layers=4655.7 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5239.56 ms_per_layer_exec=187.127
+[MEM] Forward end: avail_phys=37286 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 23
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=26
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=26 token=1/1)
+[CPU] token=0 layer=0  174.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  153.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  157.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=26 token=1/1)
+[CPU] token=0 layer=5  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  180.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  160.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=26 token=1/1)
+[CPU] token=0 layer=10  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  181.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=26 token=1/1)
+[CPU] token=0 layer=15  158.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  156.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=26 token=1/1)
+[CPU] token=0 layer=20  173.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=26 token=1/1)
+[CPU] token=0 layer=25  176.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=26 token=1/1)
+[CPU] token=0 layer=27  176.2 ms  SLOW
+[CPU] token=0 total_layers=4678.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5284.39 ms_per_layer_exec=188.728
+[MEM] Forward end: avail_phys=37139 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 24
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=27
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=27 token=1/1)
+[CPU] token=0 layer=0  181.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  157.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  180.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=27 token=1/1)
+[CPU] token=0 layer=5  151.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  157.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=27 token=1/1)
+[CPU] token=0 layer=10  177.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=27 token=1/1)
+[CPU] token=0 layer=15  158.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  156.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=27 token=1/1)
+[CPU] token=0 layer=20  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  177.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=27 token=1/1)
+[CPU] token=0 layer=25  174.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=27 token=1/1)
+[CPU] token=0 layer=27  173.9 ms  SLOW
+[CPU] token=0 total_layers=4676.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5265.62 ms_per_layer_exec=188.058
+[MEM] Forward end: avail_phys=37232 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 25
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=28
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=28 token=1/1)
+[CPU] token=0 layer=0  181.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  156.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  176.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=28 token=1/1)
+[CPU] token=0 layer=5  154.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=28 token=1/1)
+[CPU] token=0 layer=10  179.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=28 token=1/1)
+[CPU] token=0 layer=15  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  176.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  157.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=28 token=1/1)
+[CPU] token=0 layer=20  173.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  178.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=28 token=1/1)
+[CPU] token=0 layer=25  175.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  175.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=28 token=1/1)
+[CPU] token=0 layer=27  175.7 ms  SLOW
+[CPU] token=0 total_layers=4679.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5262.81 ms_per_layer_exec=187.958
+[MEM] Forward end: avail_phys=37204 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 26
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=29
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=29 token=1/1)
+[CPU] token=0 layer=0  177.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  178.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=29 token=1/1)
+[CPU] token=0 layer=5  153.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  161.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=29 token=1/1)
+[CPU] token=0 layer=10  178.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  158.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  157.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  176.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=29 token=1/1)
+[CPU] token=0 layer=15  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=29 token=1/1)
+[CPU] token=0 layer=20  176.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  162.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  176.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=29 token=1/1)
+[CPU] token=0 layer=25  180.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  173.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=29 token=1/1)
+[CPU] token=0 layer=27  172.6 ms  SLOW
+[CPU] token=0 total_layers=4684.1 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5269.68 ms_per_layer_exec=188.203
+[MEM] Forward end: avail_phys=37180 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 27
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=30
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=30 token=1/1)
+[CPU] token=0 layer=0  176.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  151.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  158.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=30 token=1/1)
+[CPU] token=0 layer=5  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=30 token=1/1)
+[CPU] token=0 layer=10  185.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  150.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  157.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=30 token=1/1)
+[CPU] token=0 layer=15  160.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  179.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  179.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=30 token=1/1)
+[CPU] token=0 layer=20  177.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=30 token=1/1)
+[CPU] token=0 layer=25  174.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=30 token=1/1)
+[CPU] token=0 layer=27  174.5 ms  SLOW
+[CPU] token=0 total_layers=4682.1 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5266.16 ms_per_layer_exec=188.077
+[MEM] Forward end: avail_phys=37247 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 28
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=31
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=31 token=1/1)
+[CPU] token=0 layer=0  171.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  177.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  159.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=31 token=1/1)
+[CPU] token=0 layer=5  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  158.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  182.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  151.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  158.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=31 token=1/1)
+[CPU] token=0 layer=10  177.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=31 token=1/1)
+[CPU] token=0 layer=15  159.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  180.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  176.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=31 token=1/1)
+[CPU] token=0 layer=20  177.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  153.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  172.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=31 token=1/1)
+[CPU] token=0 layer=25  174.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  172.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=31 token=1/1)
+[CPU] token=0 layer=27  176.9 ms  SLOW
+[CPU] token=0 total_layers=4672.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5252.63 ms_per_layer_exec=187.594
+[MEM] Forward end: avail_phys=37260 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 29
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=32
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=32 token=1/1)
+[CPU] token=0 layer=0  176.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  171.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  155.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  160.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  180.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=32 token=1/1)
+[CPU] token=0 layer=5  152.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  177.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  156.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  159.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=32 token=1/1)
+[CPU] token=0 layer=10  177.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  155.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  159.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  156.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=32 token=1/1)
+[CPU] token=0 layer=15  157.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  181.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  153.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=32 token=1/1)
+[CPU] token=0 layer=20  171.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  158.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  175.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=32 token=1/1)
+[CPU] token=0 layer=25  175.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  176.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=32 token=1/1)
+[CPU] token=0 layer=27  175.6 ms  SLOW
+[CPU] token=0 total_layers=4681.0 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5264.35 ms_per_layer_exec=188.012
+[MEM] Forward end: avail_phys=37262 MB avail_virt=134209271 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 30
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=33
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=33 token=1/1)
+[CPU] token=0 layer=0  173.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  176.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  157.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=33 token=1/1)
+[CPU] token=0 layer=5  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  155.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  157.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=33 token=1/1)
+[CPU] token=0 layer=10  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  156.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  155.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=33 token=1/1)
+[CPU] token=0 layer=15  159.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  180.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  152.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  159.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  181.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=33 token=1/1)
+[CPU] token=0 layer=20  175.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  155.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  159.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  172.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=33 token=1/1)
+[CPU] token=0 layer=25  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  172.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=33 token=1/1)
+[CPU] token=0 layer=27  176.2 ms  SLOW
+[CPU] token=0 total_layers=4675.1 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5260.16 ms_per_layer_exec=187.863
+[MEM] Forward end: avail_phys=37212 MB avail_virt=134208963 MB
+[Forward] returning logits, size=128256
+[STREAM] Forward() decode returned, logits.size()=128256
+[STREAM] invoking callback token=108
+[STREAM] callback returned
+[STREAM] generation iteration 31
+[STREAM] candidate token=108
+[STREAM] calling Forward() for decode, absolutePos=34
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 1/28 (pos=34 token=1/1)
+[CPU] token=0 layer=0  169.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=1  175.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=2  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=3  160.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=4  177.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 6/28 (pos=34 token=1/1)
+[CPU] token=0 layer=5  154.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=6  161.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=7  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=8  152.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=9  157.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 11/28 (pos=34 token=1/1)
+[CPU] token=0 layer=10  184.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=11  152.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=12  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=13  178.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=14  154.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 16/28 (pos=34 token=1/1)
+[CPU] token=0 layer=15  161.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=16  178.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=17  156.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=18  160.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=19  178.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 21/28 (pos=34 token=1/1)
+[CPU] token=0 layer=20  175.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=21  156.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=22  157.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=23  179.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=24  174.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 26/28 (pos=34 token=1/1)
+[CPU] token=0 layer=25  177.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[CPU] token=0 layer=26  174.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001F200000000 (2000+ TPS ready)
+[STEP] Layer 28/28 (pos=34 token=1/1)
+[CPU] token=0 layer=27  176.8 ms  SLOW
+[CPU] token=0 total_layers=4671.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=5253.33 ms_per_layer_exec=187.619
+[MEM] Forward end: avail_phys=37127 MB avail_virt=134208963 MB
+[Forward] returning logits, size=128256

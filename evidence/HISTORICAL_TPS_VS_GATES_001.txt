@@ -1,0 +1,31 @@
+HISTORICAL_TPS_VS_GATES_001 — disposition (2026-09-06)
+======================================================
+
+Do NOT conflate these retained results:
+
+| Claim / memory              | Actual correspondence                                      | Authority today        |
+|----------------------------|------------------------------------------------------------|------------------------|
+| ~85.4 TPS                  | K2.5 2.5B Q8_0 performance sweep (exact cmd unrecovered)   | NOT a Kimi-K2 seal     |
+| Kimi K2 13/13 Q4_K_M       | k2_runtime_validation on F:\...\Kimi-K2...\Q4_K_M (~578.58 GB) | model/runtime gate only |
+| ~14.2 TPS                  | earlier single-R9700 Sovereign/671B operator baseline      | historical             |
+| 14.38 TPS                  | SOVEREIGN_ASYNC_RING_E2E_001 Run C (async ring)            | reopened / not today's |
+| 14.83 TPS                  | no retained witness found                                  | do not cite            |
+| DeepSeek 11/11 Q4_K_M      | F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE                 | source for NEW seal    |
+
+Forbidden rewrite:
+  Kimi-K2 13-shard Q4_K_M = 80+ TPS
+
+GATE_ROADMAP_002 correctly kept:
+  DEEP2_K2_001 / DEEP2_DEEPSEEK_001 as optional/completion gates
+separate from remembered TPS theater.
+
+Fresh seals (modern Deep2 resident/streaming path — no legacy TPS inheritance):
+  DEEP2_K2_LIVE_GEN_PERF_001
+  DEEP2_DEEPSEEK_LIVE_GEN_PERF_001
+
+PASS criteria for live-perf gates:
+  - real shard discovery counts (13 / 11)
+  - real generation tokens > 0
+  - measured e2e tok/s reported honestly
+  - bounded weight window witnesses when GPU path active
+  - NO claim that result must match 85.4 or 14.38

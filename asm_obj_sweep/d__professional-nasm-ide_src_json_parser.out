@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(29) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(30) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(32) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(34) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(41) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(46) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(48) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(50) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(55) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(62) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(65) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(66) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(69) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(77) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(85) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(88) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(96) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(98) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(99) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(102) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(109) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(114) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(118) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(120) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(128) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_json_parser.asm(144) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,42 @@
+BATCH2_ATTN_OUT_LOC — localize ATTN_OUT_0 (2026-08-29)
+=======================================================
+authority=BATCH2_ORACLE_V3
+ids=[1,21521,9312] pos=0 layer=0
+Q/K/V = PASS (do not reopen)
+tokenizer/agent track = separate (TOKENIZER-PARITY-002b-001)
+
+DECOMPOSITION @ pos=0 (causal attend=1 ⇒ softmax×V = V)
+-------------------------------------------------------
+step                         result
+Q·K / scale / mask           PASS (degenerate; single score)
+softmax                      PASS (identity weight 1)
+softmax × V / head concat    PASS
+  proof: deep2 ATTN_OUT == O(GQA_expand(V_deep2))  max_abs=0
+  GQA expand: 32 Q heads × share of 4 KV heads (group=8)
+O_PROJ (blk.0.attn_output)   FIRST MISMATCH
+ATTN_OUT_0                   FAIL (boundary dump = post-O)
+
+ATTN_OUT_0 vs llama
+  shape=2048
+  max_abs_diff=8.446909e-05
+  max_rel_diff=1.736719e+00
+  first_bad_index=0
+  pattern=MANY_TINY_FP_DIFFS
+  buckets: exact=0  <1e-6=378  <1e-5=1582  <1e-4=88  >=1e-4=0
+  PASS/FAIL=FAIL  (>1e-5 gate)
+
+O_PROJ isolation
+  O(expand(deep2V)) vs deep2 ATTN_OUT : max_abs=0          (engine self-consistent)
+  O(expand(deep2V)) vs O(expand(llamaV)): max_abs=1.68e-08 (V gap negligible through O)
+  O(expand(llamaV)) vs llama ATTN_OUT   : max_abs=8.45e-05 (same as ladder FAIL)
+  wo type=Q4_K (12) rows=2048 cols=2048
+  llama also: repack blk.0.attn_output → q4_K_8x8 (zen4 CPU_REPACK)
+  note: attn_q/k also repacked yet Q/K still PASS @ ~1e-7; O gap is larger class
+
+STOP
+  first_genuine_mismatch_inside_ATTN_OUT_box = O_PROJ
+  next_fix_target = attn_output GEMV parity (Q4_K×Q8_K vs llama CPU mul_mat on wo)
+  do_not = reopen Q/K/V; do not broaden past O until O closed or reclassified
+
+instrument_added
+  Deep2 B3_StageDigest ATTN_PRE_O_0 (concat heads, pre-wo) for future ladder rung

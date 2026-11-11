@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901908350_1wYl.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901908350_1wYl.asm(636) : error A2006:undefined symbol : OpType
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901908350_1wYl.asm(641) : error A2006:undefined symbol : OpSize

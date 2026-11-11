@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769492031178_F0Nj.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769492031178_F0Nj.asm(31) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769492031178_F0Nj.asm(66) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769492031178_F0Nj.asm(43) : error A2006:undefined symbol : fail_wait
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769492031178_F0Nj.asm(69) : error A2006:undefined symbol : retry

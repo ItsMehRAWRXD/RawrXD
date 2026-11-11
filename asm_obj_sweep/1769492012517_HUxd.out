@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(35) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(53) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(62) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(99) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(48) : error A2006:undefined symbol : sleep_retry
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(57) : error A2006:undefined symbol : do_write
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(60) : error A2006:undefined symbol : cpy
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(97) : error A2006:undefined symbol : loop_connect
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769492012517_HUxd.asm(102) : error A2006:undefined symbol : loop_connect

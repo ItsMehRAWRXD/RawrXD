@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(41) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(78) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(113) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(136) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(137) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(138) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(139) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(276) : error A2006:undefined symbol : FindPieceAtOffset
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(286) : error A2006:undefined symbol : SplitPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(293) : error A2006:undefined symbol : InsertNewPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(301) : error A2006:undefined symbol : InvalidateLineCacheFrom
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(305) : error A2006:undefined symbol : RebalanceTree
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(366) : error A2006:undefined symbol : FindPieceAtOffset
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(375) : error A2006:undefined symbol : SplitPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(392) : error A2006:undefined symbol : SplitPiece
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(407) : error A2006:undefined symbol : RebalanceTree
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(412) : error A2006:undefined symbol : InvalidateLineCacheFrom
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(492) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(1001) : error A2006:undefined symbol : InvalidateLineCacheFrom
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(1128) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(1141) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(233) : warning A4025:ENDP found before .ENDPROLOG : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(233) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(330) : warning A4025:ENDP found before .ENDPROLOG : BufferInsert
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(330) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_CORE.ASM\1771287458050_2uFo.ASM(506) : warning A4025:ENDP found before .ENDPROLOG : LineColToOffset

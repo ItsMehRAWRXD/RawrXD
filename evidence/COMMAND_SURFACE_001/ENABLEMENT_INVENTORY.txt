@@ -1,0 +1,19 @@
+COMMAND_SURFACE_001 — ENABLEMENT INVENTORY
+Captured: 2026-08-30
+
+Area                          | Path / signal                    | Phase
+------------------------------|----------------------------------|------
+HexMag IDE route              | evidence/HEXMAG_* PASS           | 2
+ApprovalGate                  | HumanInteractionProtocol.hpp     | 3 (local queue first)
+SharedAgentWorkRegistry       | src/agents/SharedAgentWorkRegistry.hpp | 3
+Git panel status              | Win32IDE_GitPanel.cpp            | 3
+AgenticComposerUX             | Win32IDE_AgenticComposerUX.cpp   | 1–2
+Local agent status HTTP       | Win32IDE_LocalServer.cpp         | 5 or disable
+Collab websocket hub          | include/collab/websocket_hub.h   | 5 gated
+IRC remote bridge             | docs/IRC_MIRC_IDE_BRIDGE.md      | default OFF
+ShellLayout terminal phase    | Win32IDE_ShellLayout.cpp         | Work mode
+Phone controller              | absent                           | 5
+CommandEventJournal           | src/command/CommandEventJournal.*| 4
+PairProgrammingAI             | collab AI                        | unrelated
+Deep2SovereignInferenceGateway| src/agentic/                     | 2
+LocalOnlyPolicy               | src/agentic/LocalOnlyPolicy.h    | enforced

@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(234) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(301) : error A2008:syntax error : StreamLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(307) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(309) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(310) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(313) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(314) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(317) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(318) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(319) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(322) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(323) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(324) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(325) : error A2008:syntax error : PatchLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(328) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(329) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(330) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(333) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(334) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(337) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(338) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(339) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(342) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(343) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(344) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(347) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(350) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585035067_gUl2.asm(351) : fatal error A1010:unmatched block nesting : TITAN_ORCHESTRATOR

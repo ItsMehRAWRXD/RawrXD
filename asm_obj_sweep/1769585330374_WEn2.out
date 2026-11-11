@@ -1,0 +1,41 @@
+ Assembling: D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(380) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(381) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(382) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(383) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(541) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(542) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(543) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(544) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(545) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(546) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(547) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(548) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(585) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(586) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(587) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(588) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(589) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(590) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(591) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(592) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(680) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(681) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(682) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(683) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(828) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(829) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(830) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(831) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(873) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(179) : error A2006:undefined symbol : PATCH_FLAG_PREFETCH_HINT
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(183) : error A2006:undefined symbol : PATCH_FLAG_DECOMPRESSION
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(499) : error A2006:undefined symbol : HOST_MAX_ADDRESS
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(503) : error A2006:undefined symbol : HOST_MAX_ADDRESS
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(511) : error A2006:undefined symbol : DEVICE_MIN_ADDRESS
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(524) : error A2006:undefined symbol : CACHE_LINE_SIZE
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(578) : error A2006:undefined symbol : CACHE_LINE_SIZE
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(659) : error A2006:undefined symbol : LARGE_COPY_THRESHOLD
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(769) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(774) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm\1769585330374_WEn2.asm(816) : error A2006:undefined symbol : CACHE_LINE_SIZE

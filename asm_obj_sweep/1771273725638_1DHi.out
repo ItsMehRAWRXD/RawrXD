@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(499) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(501) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(525) : error A2008:syntax error : /content
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(526) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(527) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(144) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(166) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(181) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(190) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(205) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(206) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(207) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(210) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(225) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(288) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(294) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(307) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(308) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(323) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(336) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(339) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(340) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(395) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(467) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(468) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(491) : error A2006:undefined symbol : GlobalMemoryStatusEx
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(400) : warning A4025:ENDP found before .ENDPROLOG : HotpatchTensorOperation
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(400) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771273725638_1DHi.asm(400) : error A2220:Missing .ENDPROLOG

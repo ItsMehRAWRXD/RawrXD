@@ -1,0 +1,696 @@
+// ============================================================================
+// agentic_model_streamer_bridge.cpp
+// ============================================================================
+// Implementation of AgenticModelStreamerBridge
+// Connects AgenticEngine with StreamingGGUFLoader for unified model management
+//
+// Copyright (c) 2025-2026 RawrXD Project
+// ============================================================================
+
+#include "agentic_model_streamer_bridge.h"
+#include <iostream>
+#include <algorithm>
+#include <sstream>
+#include <chrono>
+#include "gguf_loader.h"
+
+namespace RawrXD {
+namespace Agentic {
+
+// Global singleton instance
+static AgenticModelStreamerBridge* g_globalBridge = nullptr;
+
+// Global interrupt flag for stopping generation
+std::atomic<bool> g_interrupt_flag{false};
+
+AgenticModelStreamerBridge* GetGlobalAgenticModelStreamer() {
+    return g_globalBridge;
+}
+
+void SetGlobalAgenticModelStreamer(AgenticModelStreamerBridge* bridge) {
+    g_globalBridge = bridge;
+}
+
+// ============================================================================
+// AgenticModelStreamerBridge Implementation
+// ============================================================================
+
+AgenticModelStreamerBridge::AgenticModelStreamerBridge() 
+    : m_streamingLoader(std::make_unique<StreamingGGUFLoader>()) {
+}
+
+AgenticModelStreamerBridge::~AgenticModelStreamerBridge() {
+    Shutdown();
+}
+
+bool AgenticModelStreamerBridge::Initialize(AgenticEngine* engine) {
+    if (m_initialized) {
+        return true;
+    }
+
+    if (!engine) {
+        std::cerr << "[AgenticModelStreamer] ERROR: No agentic engine provided" << std::endl;
+        return false;
+    }
+
+    m_agenticEngine = engine;
+    
+    // Create and set up the streaming inference engine
+    auto streamingEngine = std::make_shared<StreamingModelInferenceEngine>(this);
+    SetInferenceEngine(streamingEngine);
+    m_agenticEngine->setInferenceEngine(streamingEngine.get());
+
+    // Start the background loading thread
+    m_shutdown = false;
+    m_loadingThread = std::thread(&AgenticModelStreamerBridge::LoadingThreadFunc, this);
+
+    m_initialized = true;
+    SetGlobalAgenticModelStreamer(this);
+    
+    std::cerr << "[AgenticModelStreamer] Initialized successfully" << std::endl;
+    return true;
+}
+
+void AgenticModelStreamerBridge::Shutdown() {
+    if (!m_initialized) {
+        return;
+    }
+
+    m_shutdown = true;
+    m_queueCV.notify_all();
+
+    if (m_loadingThread.joinable()) {
+        m_loadingThread.join();
+    }
+
+    UnloadModel();
+    
+    m_initialized = false;
+    if (g_globalBridge == this) {
+        SetGlobalAgenticModelStreamer(nullptr);
+    }
+    
+    std::cerr << "[AgenticModelStreamer] Shutdown complete" << std::endl;
+}
+
+// ============================================================================
+// Model Loading API
+// ============================================================================
+
+std::string AgenticModelStreamerBridge::QueueModelLoad(const ModelLoadRequest& request) {
+    std::string taskId = "model_load_" + std::to_string(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    
+    ModelLoadRequest req = request;
+    req.taskId = taskId;
+    req.requestTime = std::chrono::steady_clock::now();
+
+    {
+        std::lock_guard<std::mutex> lk(m_queueMutex);
+        m_loadQueue.push(req);
+    }
+    
+    m_queueCV.notify_one();
+    
+    std::cerr << "[AgenticModelStreamer] Queued model load: " << taskId 
+              << " for " << request.modelPath << std::endl;
+    
+    return taskId;
+}
+
+bool AgenticModelStreamerBridge::LoadModelSync(const std::string& modelPath, uint64_t maxMemoryMB) {
+    ModelLoadRequest request;
+    request.modelPath = modelPath;
+    request.maxMemoryMB = maxMemoryMB;
+    request.enableStreaming = true;
+    request.preloadZones = false;
+    
+    std::atomic<bool> completed(false);
+    std::atomic<bool> success(false);
+    std::string error;
+    
+    request.callback = [&completed, &success, &error](bool s, const std::string& e) {
+        success = s;
+        error = e;
+        completed = true;
+    };
+    
+    QueueModelLoad(request);
+    
+    // Wait for completion
+    while (!completed) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    
+    if (!success) {
+        std::cerr << "[AgenticModelStreamer] Model load failed: " << error << std::endl;
+    }
+    
+    return success;
+}
+
+void AgenticModelStreamerBridge::UnloadModel() {
+    std::lock_guard<std::mutex> lk(m_modelMutex);
+    
+    if (m_streamingLoader) {
+        m_streamingLoader->Close();
+    }
+    
+    m_currentModelPath.clear();
+    m_currentMetadata = GGUFMetadata{};
+    
+    {
+        std::lock_guard<std::mutex> statusLk(m_statusMutex);
+        m_status.isLoaded = false;
+        m_status.isLoading = false;
+        m_status.loadedZones.clear();
+        m_status.memoryUsedMB = 0;
+    }
+    
+    NotifyStatusUpdate();
+    
+    std::cerr << "[AgenticModelStreamer] Model unloaded" << std::endl;
+}
+
+bool AgenticModelStreamerBridge::IsModelLoaded() const {
+    std::lock_guard<std::mutex> lk(m_statusMutex);
+    return m_status.isLoaded;
+}
+
+std::string AgenticModelStreamerBridge::GetCurrentModelPath() const {
+    std::lock_guard<std::mutex> lk(m_modelMutex);
+    return m_currentModelPath;
+}
+
+GGUFMetadata AgenticModelStreamerBridge::GetCurrentModelMetadata() const {
+    std::lock_guard<std::mutex> lk(m_modelMutex);
+    return m_currentMetadata;
+}
+
+// ============================================================================
+// Zone Management
+// ============================================================================
+
+bool AgenticModelStreamerBridge::LoadZone(const std::string& zoneName, uint64_t maxMemoryMB) {
+    if (!m_streamingLoader) {
+        return false;
+    }
+    
+    bool success = m_streamingLoader->LoadZone(zoneName, maxMemoryMB);
+    
+    if (success) {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        if (std::find(m_status.loadedZones.begin(), m_status.loadedZones.end(), zoneName) 
+            == m_status.loadedZones.end()) {
+            m_status.loadedZones.push_back(zoneName);
+        }
+        m_status.memoryUsedMB = GetCurrentMemoryUsageMB();
+        NotifyStatusUpdate();
+    }
+    
+    return success;
+}
+
+bool AgenticModelStreamerBridge::UnloadZone(const std::string& zoneName) {
+    if (!m_streamingLoader) {
+        return false;
+    }
+    
+    bool success = m_streamingLoader->UnloadZone(zoneName);
+    
+    if (success) {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        auto it = std::find(m_status.loadedZones.begin(), m_status.loadedZones.end(), zoneName);
+        if (it != m_status.loadedZones.end()) {
+            m_status.loadedZones.erase(it);
+        }
+        m_status.memoryUsedMB = GetCurrentMemoryUsageMB();
+        NotifyStatusUpdate();
+    }
+    
+    return success;
+}
+
+bool AgenticModelStreamerBridge::IsZoneLoaded(const std::string& zoneName) const {
+    std::lock_guard<std::mutex> lk(m_statusMutex);
+    return std::find(m_status.loadedZones.begin(), m_status.loadedZones.end(), zoneName) 
+           != m_status.loadedZones.end();
+}
+
+std::vector<std::string> AgenticModelStreamerBridge::GetLoadedZones() const {
+    std::lock_guard<std::mutex> lk(m_statusMutex);
+    return m_status.loadedZones;
+}
+
+void AgenticModelStreamerBridge::PreloadZonesForInference(const std::vector<std::string>& zoneNames) {
+    for (const auto& zone : zoneNames) {
+        if (!IsZoneLoaded(zone)) {
+            LoadZone(zone, 512); // 512MB default per zone
+        }
+    }
+}
+
+// ============================================================================
+// Status & Monitoring
+// ============================================================================
+
+ModelStreamerStatus AgenticModelStreamerBridge::GetStatus() const {
+    std::lock_guard<std::mutex> lk(m_statusMutex);
+    return m_status;
+}
+
+void AgenticModelStreamerBridge::SetStatusCallback(std::function<void(const ModelStreamerStatus&)> callback) {
+    m_statusCallback = callback;
+}
+
+// ============================================================================
+// Agentic Integration
+// ============================================================================
+
+std::shared_ptr<InferenceEngine> AgenticModelStreamerBridge::GetInferenceEngine() {
+    return m_inferenceEngine;
+}
+
+void AgenticModelStreamerBridge::SetInferenceEngine(std::shared_ptr<InferenceEngine> engine) {
+    m_inferenceEngine = engine;
+}
+
+std::string AgenticModelStreamerBridge::ExecuteAgenticTask(const std::string& task, const std::string& context) {
+    if (!m_agenticEngine) {
+        return "Error: Agentic engine not initialized";
+    }
+    
+    // Check if model is loaded
+    if (!IsModelLoaded()) {
+        return "Error: No model loaded. Please load a model first.";
+    }
+    
+    // Execute the task through the agentic engine
+    std::string fullContext = "Task: " + task + "\nContext: " + context;
+    return m_agenticEngine->chat(fullContext);
+}
+
+// ============================================================================
+// Memory Management
+// ============================================================================
+
+void AgenticModelStreamerBridge::SetMemoryBudget(uint64_t maxMemoryMB) {
+    m_memoryBudgetMB = maxMemoryMB;
+    std::cerr << "[AgenticModelStreamer] Memory budget set to " << maxMemoryMB << " MB" << std::endl;
+}
+
+uint64_t AgenticModelStreamerBridge::GetCurrentMemoryUsageMB() const {
+    if (!m_streamingLoader) {
+        return 0;
+    }
+    return m_streamingLoader->GetCurrentMemoryUsage() / (1024 * 1024);
+}
+
+void AgenticModelStreamerBridge::EmergencyMemoryCleanup() {
+    std::cerr << "[AgenticModelStreamer] Emergency memory cleanup initiated" << std::endl;
+    
+    // Unload all zones except essential ones
+    auto zones = GetLoadedZones();
+    for (const auto& zone : zones) {
+        if (zone != "embedding" && zone != "output") { // Keep essential zones
+            UnloadZone(zone);
+        }
+    }
+    
+    if (m_inferenceEngine) {
+        m_inferenceEngine->ClearCache();
+    }
+}
+
+// ============================================================================
+// Internal Implementation
+// ============================================================================
+
+void AgenticModelStreamerBridge::LoadingThreadFunc() {
+    std::cerr << "[AgenticModelStreamer] Loading thread started" << std::endl;
+    
+    while (!m_shutdown) {
+        ModelLoadRequest request;
+        bool hasRequest = false;
+        
+        {
+            std::unique_lock<std::mutex> lk(m_queueMutex);
+            m_queueCV.wait(lk, [this] { return !m_loadQueue.empty() || m_shutdown; });
+            
+            if (m_shutdown) break;
+            
+            if (!m_loadQueue.empty()) {
+                request = m_loadQueue.front();
+                m_loadQueue.pop();
+                hasRequest = true;
+            }
+        }
+        
+        if (hasRequest) {
+            bool success = ProcessLoadRequest(request);
+            if (request.callback) {
+                request.callback(success, success ? "" : m_status.lastError);
+            }
+        }
+    }
+    
+    std::cerr << "[AgenticModelStreamer] Loading thread stopped" << std::endl;
+}
+
+bool AgenticModelStreamerBridge::ProcessLoadRequest(const ModelLoadRequest& request) {
+    std::cerr << "[AgenticModelStreamer] Processing load request: " << request.modelPath << std::endl;
+    
+    // Update status
+    {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        m_status.isLoading = true;
+        m_status.isLoaded = false;
+        m_status.currentModelPath = request.modelPath;
+        m_status.currentOperation = "parsing_header";
+        m_status.progressPercent = 0.0f;
+        m_status.memoryBudgetMB = request.maxMemoryMB;
+    }
+    NotifyStatusUpdate();
+    
+    // Unload any existing model
+    UnloadModel();
+    
+    // Open the model file
+    if (!m_streamingLoader->Open(request.modelPath)) {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        m_status.isLoading = false;
+        m_status.lastError = "Failed to open model file: " + request.modelPath;
+        NotifyStatusUpdate();
+        return false;
+    }
+    
+    UpdateProgress("loading_metadata", 25.0f);
+    
+    // Get metadata
+    m_currentMetadata = m_streamingLoader->GetMetadata();
+    m_currentModelPath = request.modelPath;
+    
+    UpdateProgress("building_index", 50.0f);
+    
+    // Preload zones if requested
+    if (request.preloadZones && !request.requiredZones.empty()) {
+        UpdateProgress("loading_zones", 75.0f);
+        PreloadZonesForInference(request.requiredZones);
+    }
+    
+    UpdateProgress("ready", 100.0f);
+    
+    // Update final status
+    {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        m_status.isLoading = false;
+        m_status.isLoaded = true;
+        m_status.currentOperation = "ready";
+        m_status.progressPercent = 100.0f;
+        m_status.memoryUsedMB = GetCurrentMemoryUsageMB();
+        m_status.totalBytes = m_streamingLoader->GetTotalFileSize();
+    }
+    NotifyStatusUpdate();
+    
+    std::cerr << "[AgenticModelStreamer] Model loaded successfully: " << request.modelPath << std::endl;
+    std::cerr << "[AgenticModelStreamer]   Layers: " << m_currentMetadata.layer_count << std::endl;
+    std::cerr << "[AgenticModelStreamer]   Context: " << m_currentMetadata.context_length << std::endl;
+    std::cerr << "[AgenticModelStreamer]   Embedding: " << m_currentMetadata.embedding_dim << std::endl;
+    std::cerr << "[AgenticModelStreamer]   Vocab: " << m_currentMetadata.vocab_size << std::endl;
+    
+    return true;
+}
+
+void AgenticModelStreamerBridge::UpdateProgress(const std::string& operation, float percent) {
+    {
+        std::lock_guard<std::mutex> lk(m_statusMutex);
+        m_status.currentOperation = operation;
+        m_status.progressPercent = percent;
+    }
+    NotifyStatusUpdate();
+}
+
+void AgenticModelStreamerBridge::NotifyStatusUpdate() {
+    if (m_statusCallback) {
+        ModelStreamerStatus status;
+        {
+            std::lock_guard<std::mutex> lk(m_statusMutex);
+            status = m_status;
+        }
+        m_statusCallback(status);
+    }
+}
+
+// ============================================================================
+// StreamingModelInferenceEngine Implementation
+// ============================================================================
+
+StreamingModelInferenceEngine::StreamingModelInferenceEngine(AgenticModelStreamerBridge* bridge)
+    : m_bridge(bridge) {
+}
+
+StreamingModelInferenceEngine::~StreamingModelInferenceEngine() {
+}
+
+bool StreamingModelInferenceEngine::LoadModel(const std::string& model_path) {
+    if (!m_bridge) {
+        return false;
+    }
+    bool success = m_bridge->LoadModelSync(model_path);
+    m_modelLoaded = success;
+    return success;
+}
+
+bool StreamingModelInferenceEngine::IsModelLoaded() const {
+    return m_modelLoaded && m_bridge && m_bridge->IsModelLoaded();
+}
+
+std::vector<int32_t> StreamingModelInferenceEngine::Tokenize(const std::string& text) {
+    if (!m_bridge || text.empty()) return {};
+
+    // Prefer real inference engine (CPU/Deep2) when wired — never ASCII fake tokens.
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Tokenize(text);
+    }
+    return {};
+}
+
+std::string StreamingModelInferenceEngine::Detokenize(const std::vector<int32_t>& tokens) {
+    if (tokens.empty()) return "";
+    if (!m_bridge) return "";
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Detokenize(tokens);
+    }
+    return {};
+}
+
+std::vector<int32_t> StreamingModelInferenceEngine::Generate(const std::vector<int32_t>& input_tokens, int max_tokens) {
+    if (!m_bridge || input_tokens.empty() || max_tokens <= 0) return {};
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Generate(input_tokens, max_tokens);
+    }
+
+    // Fail closed: streamer without a real engine must not invent tokens.
+    return {};
+}
+
+std::vector<float> StreamingModelInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) {
+    if (!m_bridge || input_tokens.empty()) return {};
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Eval(input_tokens);
+    }
+    return {};
+}
+
+void StreamingModelInferenceEngine::GenerateStreaming(
+    const std::vector<int32_t>& input_tokens,
+    int max_tokens,
+    std::function<void(const std::string&)> token_callback,
+    std::function<void()> complete_callback,
+    std::function<void(int32_t)> token_id_callback) {
+
+    if (!m_bridge || !token_callback) {
+        if (complete_callback) complete_callback();
+        return;
+    }
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this)) {
+            real->GenerateStreaming(input_tokens, max_tokens, token_callback,
+                                    complete_callback, token_id_callback);
+            return;
+        }
+    }
+
+    // Fail closed — no sleep-simulated fake stream.
+    if (complete_callback) complete_callback();
+}
+
+int StreamingModelInferenceEngine::GetVocabSize() const {
+    if (!m_bridge) return 0;
+    auto metadata = m_bridge->GetCurrentModelMetadata();
+    return static_cast<int>(metadata.vocab_size);
+}
+
+int StreamingModelInferenceEngine::GetEmbeddingDim() const {
+    if (!m_bridge) return 0;
+    auto metadata = m_bridge->GetCurrentModelMetadata();
+    return static_cast<int>(metadata.embedding_dim);
+}
+
+int StreamingModelInferenceEngine::GetNumLayers() const {
+    if (!m_bridge) return 0;
+    auto metadata = m_bridge->GetCurrentModelMetadata();
+    return static_cast<int>(metadata.layer_count);
+}
+
+int StreamingModelInferenceEngine::GetNumHeads() const {
+    // Note: Num heads requires metadata extension
+    // Currently metadata only provides layer_count
+    // Would need to add heads_count to ModelMetadata struct
+    return 0;
+}
+
+void StreamingModelInferenceEngine::SetMaxMode(bool enabled) {
+    m_maxMode = enabled;
+}
+
+void StreamingModelInferenceEngine::SetDeepThinking(bool enabled) {
+    m_deepThinking = enabled;
+}
+
+void StreamingModelInferenceEngine::SetDeepResearch(bool enabled) {
+    m_deepResearch = enabled;
+}
+
+bool StreamingModelInferenceEngine::IsMaxMode() const {
+    return m_maxMode;
+}
+
+bool StreamingModelInferenceEngine::IsDeepThinking() const {
+    return m_deepThinking;
+}
+
+bool StreamingModelInferenceEngine::IsDeepResearch() const {
+    return m_deepResearch;
+}
+
+size_t StreamingModelInferenceEngine::GetMemoryUsage() const {
+    if (!m_bridge) return 0;
+    return m_bridge->GetCurrentMemoryUsageMB() * 1024 * 1024;
+}
+
+void StreamingModelInferenceEngine::ClearCache() {
+    if (m_bridge) {
+        m_bridge->EmergencyMemoryCleanup();
+    }
+}
+
+bool StreamingModelInferenceEngine::EnsureZonesLoaded(const std::vector<std::string>& zoneNames) {
+    if (!m_bridge) return false;
+    
+    // Real implementation: ensure all requested zones are loaded from disk/network
+    bool allLoaded = true;
+    for (const auto& zoneName : zoneNames) {
+        // Check if zone is already loaded
+        auto it = std::find_if(m_loadedZones.begin(), m_loadedZones.end(),
+            [&zoneName](const LoadedZone& z) { return z.name == zoneName; });
+        
+        if (it == m_loadedZones.end()) {
+            // Zone not loaded - load it from disk
+            printf("[StreamingInference] Loading zone: %s\n", zoneName.c_str());
+            
+            // Construct zone file path
+            std::string zonePath = m_zonesBasePath + "/" + zoneName + ".zone";
+            
+            // Open and read zone file
+            std::ifstream zoneFile(zonePath, std::ios::binary | std::ios::ate);
+            if (!zoneFile) {
+                printf("[StreamingInference] ERROR: Failed to open zone file: %s\n", zonePath.c_str());
+                allLoaded = false;
+                continue;
+            }
+            
+            // Get file size
+            size_t fileSize = zoneFile.tellg();
+            zoneFile.seekg(0, std::ios::beg);
+            
+            // Check if we have enough memory
+            if (m_totalMemoryUsed + fileSize > m_maxMemoryAllowed) {
+                // Evict least recently used zones
+                EvictLRUZones(fileSize);
+            }
+            
+            // Read zone data
+            LoadedZone newZone;
+            newZone.name = zoneName;
+            newZone.data.resize(fileSize);
+            newZone.loadedAt = std::chrono::steady_clock::now();
+            newZone.lastAccessed = newZone.loadedAt;
+            newZone.dataSize = fileSize;
+            
+            if (!zoneFile.read(reinterpret_cast<char*>(newZone.data.data()), fileSize)) {
+                printf("[StreamingInference] ERROR: Failed to read zone data: %s\n", zonePath.c_str());
+                allLoaded = false;
+                continue;
+            }
+            
+            // Parse zone header to validate
+            if (fileSize >= sizeof(ZoneHeader)) {
+                ZoneHeader* header = reinterpret_cast<ZoneHeader*>(newZone.data.data());
+                if (header->magic == ZONE_MAGIC) {
+                    newZone.version = header->version;
+                    newZone.numTensors = header->numTensors;
+                    printf("[StreamingInference] Zone '%s' loaded (v%d, %zu tensors, %zu MB)\n",
+                           zoneName.c_str(), header->version, header->numTensors,
+                           fileSize / (1024 * 1024));
+                } else {
+                    printf("[StreamingInference] WARNING: Invalid zone magic for %s\n", zoneName.c_str());
+                }
+            }
+            
+            m_loadedZones.push_back(std::move(newZone));
+            m_totalMemoryUsed += fileSize;
+            
+        } else {
+            // Update last accessed time
+            it->lastAccessed = std::chrono::steady_clock::now();
+        }
+    }
+    
+    return allLoaded;
+}
+
+void StreamingModelInferenceEngine::SetZoneCachePolicy(const std::string& policy) {
+    m_cachePolicy = policy;
+}
+
+void StreamingModelInferenceEngine::EvictLRUZones(size_t requiredBytes) {
+    // Sort zones by last accessed time (oldest first)
+    std::sort(m_loadedZones.begin(), m_loadedZones.end(),
+        [](const LoadedZone& a, const LoadedZone& b) {
+            return a.lastAccessed < b.lastAccessed;
+        });
+    
+    // Evict zones until we have enough memory
+    size_t freedMemory = 0;
+    while (freedMemory < requiredBytes && !m_loadedZones.empty()) {
+        const auto& zone = m_loadedZones.front();
+        printf("[StreamingInference] Evicting zone '%s' (%zu MB)\n",
+               zone.name.c_str(), zone.dataSize / (1024 * 1024));
+        freedMemory += zone.dataSize;
+        m_totalMemoryUsed -= zone.dataSize;
+        m_loadedZones.erase(m_loadedZones.begin());
+    }
+}
+
+} // namespace Agentic
+} // namespace RawrXD
+

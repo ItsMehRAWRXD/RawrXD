@@ -1,0 +1,17 @@
+﻿HEXMAG_IDE_CONTROL_PLANE_ROUTE — F wiring CLOSED (P0C integration seams)
+
+Disposition (prior review): controller-route PASS; F integration was PENDING 5 fixes.
+Status: all 5 applied on cert/deep2-parity-probe-001.
+
+1. HandleCopilotSend → tryHexMagControllerCopilotSend (controller authority name)
+2. WM_HEXMAG_COPILOT_DONE shared header + Core WndProc → RawrXD_FinishHexMagCopilotDone
+3. getStatusBar() accessor (m_hwndStatusBar); free helpers use it
+4. Editor context via getWindowText(m_hwndEditor) + m_currentFile
+5. F-native m_hexmagRouteCopilotPanel (no G settings transplant); RAWR_HAS_MASM gate in route TU
++ PostMessageW failure deletes payload
++ Controller stack-local per send (persistent tuner later)
++ Win32IDE_HexMag.cpp excluded from build (ODR / no UI transplant)
+
+Authority chain:
+  SEND → tryHexMagControllerCopilotSend → HexMagRuntimeController → FinalizePolicy
+       → WM_HEXMAG_COPILOT_DONE → HandleCopilotStreamUpdate

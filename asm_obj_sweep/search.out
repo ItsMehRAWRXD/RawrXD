@@ -1,0 +1,47 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\search.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\search.asm(381) : error A2005:symbol redefinition : output_search_find_next
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\search.asm(435) : fatal error A1010:unmatched block nesting : output_search_find_next
+rXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(185) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(189) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(206) : error A2008:syntax error : PRIVATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(210) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(223) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(233) : error A2008:syntax error : PRIVATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(247) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(260) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(265) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(268) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(269) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(279) : error A2008:syntax error : PRIVATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(298) : error A2008:syntax error : PRIVATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(319) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(322) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(326) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(344) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(363) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(399) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(410) : error A2008:syntax error : PRIVATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(130) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(144) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(158) : error A2006:undefined symbol : search_done
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(167) : error A2006:undefined symbol : no_match_here
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(172) : error A2006:undefined symbol : search_done
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(187) : error A2006:undefined symbol : search_loop
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(191) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(212) : error A2006:undefined symbol : done
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(218) : error A2006:undefined symbol : done
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(221) : error A2006:undefined symbol : copy_loop
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(241) : error A2006:undefined symbol : case_insensitive
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(250) : error A2006:undefined symbol : match_found
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(254) : error A2006:undefined symbol : no_match
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(258) : error A2006:undefined symbol : sensitive_loop
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(263) : error A2006:undefined symbol : match_exit
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(285) : error A2006:undefined symbol : WM_GETTEXTLENGTH
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(288) : error A2006:undefined symbol : SendMessage
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(302) : error A2006:undefined symbol : SendMessage
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(315) : error A2006:undefined symbol : not_found
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(320) : error A2006:undefined symbol : found
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(338) : error A2006:undefined symbol : not_found
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(357) : error A2006:undefined symbol : invalid
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(380) : error A2006:undefined symbol : highlight_fail
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\output\pane\search.asm(416) : error A2006:undefined symbol : SendMessage

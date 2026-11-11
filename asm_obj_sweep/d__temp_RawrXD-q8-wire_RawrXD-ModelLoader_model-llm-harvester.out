@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_model-llm-harvester.asm
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_model-llm-harvester.asm(79) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_model-llm-harvester.asm(117) : error A2022:instruction operands must be the same size

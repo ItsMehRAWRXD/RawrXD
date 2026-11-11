@@ -1,0 +1,69 @@
+=================================================================
+  B015 — WeightResidencyPool Integration Validation
+  RawrXD Local Inference — A/B Benchmark
+=================================================================
+  Model: D:\tinyllama_fresh.gguf
+
+  Prompt: 'Hello' (6 tokens)
+
+
+=================================================================
+  Config: B015_OFF
+  pool_max_bytes=0 MB, prefetch=false
+=================================================================
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=D:\tinyllama_fresh.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 608 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 608 MB at 000001C61C4F0000 (2000+ TPS ready)
+[GGUF] size=637699456
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=201
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=201 indexed_storage=0.59 GB
+[RawrXD] Data starts at offset 1709440
+[RawrXD] Stage: build_tensor_lookup_map
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=2048, layers=22, heads=32, kv_heads=4, vocab=32000, ctx=2048, experts=0, experts_used=0
+[RawrXD] Tensor names in model (201 total):
+  [  0] type=2 dims=2048 5632 blk.0.ffn_gate.weight
+  [  1] type=2 dims=2048 5632 blk.15.ffn_up.weight
+  [  2] type=2 dims=2048 5632 blk.13.ffn_gate.weight
+  [  3] type=14 dims=2048 32000 output.weight
+  [  4] type=2 dims=5632 2048 blk.0.ffn_down.weight
+  [  5] type=2 dims=2048 256 blk.1.attn_v.weight
+  [  6] type=0 dims=2048 blk.19.ffn_norm.weight
+  [  7] type=2 dims=2048 5632 blk.1.ffn_up.weight
+  [  8] type=2 dims=2048 2048 blk.19.attn_output.weight
+  [  9] type=2 dims=2048 32000 token_embd.weight
+  [ 10] type=2 dims=2048 2048 blk.12.attn_output.weight
+  [ 11] type=2 dims=5632 2048 blk.5.ffn_down.weight
+  [ 12] type=2 dims=2048 256 blk.10.attn_k.weight
+  [ 13] type=2 dims=2048 2048 blk.9.attn_output.weight
+  [ 14] type=2 dims=2048 5632 blk.0.ffn_up.weight
+  [ 15] type=2 dims=2048 2048 blk.12.attn_q.weight
+  ... (185 more)
+[RawrXD] KV cache: 11534336 floats (46.1 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[Forward] GQA: dim=2048 heads=32 kv_heads=4 head_dim=64 kv_dim=256 hidden=5632
+[MEM] Generation start: avail_phys=40069 MB, avail_virt=134212841 MB
+[MEM] KV footprint: k=44 MB, v=44 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=32000 * row_bytes(Q2_K)=672 = 20 MB
+[Forward] prefill: tokens=6 layers=22 total_layer_execs=132 est_ms=17160
+[Forward] B009 layer-outer batched prefill: T=6 layers=22
+[RawrXD] WORKAROUND: Force eager load for token_embd.weight (type=2)
+[RawrXD] WORKAROUND: Eager load complete for token_embd.weight (65536000 elements)
+[STEP] Layer 1/22 (batched T=6)

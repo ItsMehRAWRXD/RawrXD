@@ -1,0 +1,81 @@
+ Assembling: D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(119) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(121) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(131) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(159) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(165) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(171) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(175) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(185) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(187) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(240) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(249) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(254) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(255) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(258) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(259) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(262) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(263) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(266) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(267) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(278) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(295) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(296) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(297) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(298) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(299) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(304) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(367) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(376) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(389) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(390) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(391) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(400) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(414) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(416) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(417) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(432) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(445) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(500) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(501) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(518) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(519) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(521) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(537) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(538) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(539) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(542) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(545) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(549) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(550) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(551) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(554) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(557) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(561) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(562) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(563) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(566) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(569) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(573) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(574) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(575) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(578) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(582) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(590) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(592) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(595) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(596) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(597) : error A2008:syntax error : start
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(597) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(134) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(484) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(497) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(123) : warning A6004:procedure argument or local not referenced : pString
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(123) : warning A6004:procedure argument or local not referenced : dwWritten
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(150) : warning A6004:procedure argument or local not referenced : dwRead
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(190) : warning A6004:procedure argument or local not referenced : pFileName
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833854133_88L3.asm(190) : warning A6004:procedure argument or local not referenced : dwHighSize

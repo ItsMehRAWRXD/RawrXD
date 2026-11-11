@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm(844) : error A2005:symbol redefinition : @cycle_complete
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm(689) : error A2006:undefined symbol : lenBestDrive
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm(701) : error A2006:undefined symbol : szNewLine
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm(729) : error A2006:undefined symbol : lenDriveTemp
+D:\rawrxd\history\all_versions\src\thermal\masm\sovereign_stress_governor.asm\1769493231642_gLL7.asm(740) : error A2006:undefined symbol : lenTempSuffix

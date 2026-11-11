@@ -1,0 +1,17 @@
+Historical TPS map — do not rewrite onto GATE_ROADMAP_002
+=========================================================
+Generated: 2026-09-06
+
+~85.4 TPS     K2.5 2.5B Q8_0 performance sweep (exact command not recovered)
+Kimi K2 13/13 k2_runtime_validation.exe on
+              F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+              (~578.58 GB) — model/runtime gate, NOT the 85 TPS result
+~14.2 TPS     earlier single-R9700 Sovereign/671B operator baseline
+14.38 TPS     SOVEREIGN_ASYNC_RING_E2E_001 async-ring Run C
+              (SovereignSweep_X64.exe experimental path, not today's
+              DeepSeek-R1-Q4_K_M-COMPLETE 11/11 generateStream)
+14.83 TPS     no retained witness
+
+Fresh seals (this architecture, these trees):
+  DEEP2_K2_LIVE_GEN_PERF_001
+  DEEP2_DEEPSEEK_LIVE_GEN_PERF_001

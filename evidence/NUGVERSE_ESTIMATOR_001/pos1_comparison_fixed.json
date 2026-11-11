@@ -1,0 +1,16 @@
+{
+  "pos": 1,
+  "native_argmax": 1,
+  "ref_argmax": 185,
+  "argmax_match": false,
+  "max_abs_diff": 3.4639854431152344,
+  "rmse": 0.5630946755409241,
+  "cosine_sim": 0.9971559047698975,
+  "diff_at_185": 0.1519327163696289,
+  "diff_at_93633": 0.33527374267578125,
+  "top10_overlap": 8,
+  "top100_overlap": 78,
+  "mean_abs_diff": 0.44378429651260376,
+  "median_abs_diff": 0.3645308017730713,
+  "p99_abs_diff": 1.5082697868347168
+}

@@ -1,0 +1,45 @@
+ Assembling: D:\rawrxd\history\-11ae1146\rOHQ.asm
+D:\rawrxd\history\-11ae1146\rOHQ.asm(109) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(136) : error A2070:invalid instruction operands
+D:\rawrxd\history\-11ae1146\rOHQ.asm(180) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(184) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(188) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(192) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(196) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(200) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(203) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(261) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(264) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(312) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(317) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(401) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(406) : error A2008:syntax error : .
+D:\rawrxd\history\-11ae1146\rOHQ.asm(100) : error A2206:missing operator in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(106) : error A2006:undefined symbol : coord_init_max_ok
+D:\rawrxd\history\-11ae1146\rOHQ.asm(114) : error A2006:undefined symbol : coord_init_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(119) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ae1146\rOHQ.asm(123) : error A2006:undefined symbol : coord_init_pool_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(129) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ae1146\rOHQ.asm(133) : error A2006:undefined symbol : coord_init_queue_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(139) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ae1146\rOHQ.asm(143) : error A2006:undefined symbol : coord_init_completed_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(151) : error A2006:undefined symbol : coord_init_failed_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(159) : error A2006:undefined symbol : coord_init_metrics_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(171) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(172) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(173) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(174) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(175) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(178) : error A2006:undefined symbol : coord_init_done
+D:\rawrxd\history\-11ae1146\rOHQ.asm(204) : error A2206:missing operator in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(224) : error A2006:undefined symbol : coord_shutdown_invalid
+D:\rawrxd\history\-11ae1146\rOHQ.asm(259) : error A2006:undefined symbol : coord_shutdown_done
+D:\rawrxd\history\-11ae1146\rOHQ.asm(282) : error A2206:missing operator in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(295) : error A2006:undefined symbol : register_agent_full
+D:\rawrxd\history\-11ae1146\rOHQ.asm(303) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(310) : error A2006:undefined symbol : register_agent_done
+D:\rawrxd\history\-11ae1146\rOHQ.asm(318) : error A2206:missing operator in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(380) : error A2006:undefined symbol : create_task_oom
+D:\rawrxd\history\-11ae1146\rOHQ.asm(388) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(390) : error A2009:syntax error in expression
+D:\rawrxd\history\-11ae1146\rOHQ.asm(399) : error A2006:undefined symbol : create_task_done

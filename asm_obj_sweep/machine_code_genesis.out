@@ -1,0 +1,45 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(39) : error A2008:syntax error : machine_code_buffer
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(40) : error A2008:syntax error : machine_code_pos
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(41) : error A2008:syntax error : machine_code_size
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(44) : error A2008:syntax error : instruction_count
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(47) : error A2008:syntax error : label_table
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(48) : error A2008:syntax error : label_count
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(49) : error A2008:syntax error : label_names
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(52) : error A2008:syntax error : relocation_table
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(53) : error A2008:syntax error : relocation_count
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(56) : error A2008:syntax error : current_function
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(57) : error A2008:syntax error : stack_depth
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(58) : error A2008:syntax error : register_usage
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(60) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(61) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(62) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(63) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(64) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(65) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(66) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(67) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(68) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(69) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(70) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(71) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(72) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(73) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(74) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(75) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(76) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(77) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(78) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(79) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(80) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(81) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(82) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(83) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(84) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(85) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(86) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(87) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\machine_code_genesis.asm(90) : fatal error A1009:line too long

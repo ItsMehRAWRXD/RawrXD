@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\RawrXD_Final_Terminal_115.asm
+D:\rawrxd\src\RawrXD_Final_Terminal_115.asm(23) : error A2006:undefined symbol : g_LastLatencyMS
+D:\rawrxd\src\RawrXD_Final_Terminal_115.asm(7) : error A2206:missing operator in expression
+D:\rawrxd\src\RawrXD_Final_Terminal_115.asm(8) : error A2206:missing operator in expression

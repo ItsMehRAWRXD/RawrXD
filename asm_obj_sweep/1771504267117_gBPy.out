@@ -1,0 +1,40 @@
+ Assembling: D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(12) : error A2034:must be in segment block : FP32_TO_FP16
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(46) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(47) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(48) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(56) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504267117_gBPy.asm(59) : fatal error A1010:unmatched block nesting : FP32_TO_FP16

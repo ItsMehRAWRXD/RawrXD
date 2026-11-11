@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\queue\viewer.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\queue\viewer.asm(26) : error A2008:syntax error : mask
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\queue\viewer.asm(59) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\queue\viewer.asm(82) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\queue\viewer.asm(76) : error A2081:missing operand after unary operator

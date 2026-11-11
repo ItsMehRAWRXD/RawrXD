@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-q8-wire\RawrXD-ModelLoader\kernels\deflate\godmode.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-q8-wire\RawrXD-ModelLoader\kernels\deflate\godmode.asm(318) : error A2070:invalid instruction operands
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-q8-wire\RawrXD-ModelLoader\kernels\deflate\godmode.asm(357) : error A2070:invalid instruction operands
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-q8-wire\RawrXD-ModelLoader\kernels\deflate\godmode.asm(116) : error A2029:multiple base registers not allowed
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-q8-wire\RawrXD-ModelLoader\kernels\deflate\godmode.asm(117) : error A2032:invalid use of register

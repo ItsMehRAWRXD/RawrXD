@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(119) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(121) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(131) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(159) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(165) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(171) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(175) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(185) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(187) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(240) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(249) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(254) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(255) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(258) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(259) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(262) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(263) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(266) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(267) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(278) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(295) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(296) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(297) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(298) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(299) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(304) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(367) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(376) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(389) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(390) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(391) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(400) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(414) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(416) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(417) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(432) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(445) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(500) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(501) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(522) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(531) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(542) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(559) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(560) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(563) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(564) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(565) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(569) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(588) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(597) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(608) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(617) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(618) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(619) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(622) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(638) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(651) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(658) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(659) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(660) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(661) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(662) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(665) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(678) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(679) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(681) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(697) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(698) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(699) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(702) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(705) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(709) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(710) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(711) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(714) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(717) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(721) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(722) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(723) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(726) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(729) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(733) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(734) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(735) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(738) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(742) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(750) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(752) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(755) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(756) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(757) : error A2008:syntax error : start
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(757) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(134) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(484) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(497) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(123) : warning A6004:procedure argument or local not referenced : pString
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(123) : warning A6004:procedure argument or local not referenced : dwWritten
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(150) : warning A6004:procedure argument or local not referenced : dwRead
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(190) : warning A6004:procedure argument or local not referenced : pFileName
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(190) : warning A6004:procedure argument or local not referenced : dwHighSize
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(578) : warning A6004:procedure argument or local not referenced : pFuncs
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833903976_JcFE.asm(629) : warning A6004:procedure argument or local not referenced : vaCallback

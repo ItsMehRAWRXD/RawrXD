@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\test_inc.asm
+D:\rawrxd\test_inc.asm(1) : fatal error A1000:cannot open file : win64.inc

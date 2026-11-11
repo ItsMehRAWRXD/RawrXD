@@ -1,0 +1,23 @@
+﻿AGENT-TOOL-SCHEMA-002
+frozen_from=F:\~dev\rawrxd\evidence\AGENT_E2E_002b\01_compile
+frozen_at_utc=2026-08-29T17:49:14Z
+status=FAIL
+
+INVALID_ARGS_REJECTED        True
+INVALID_ARGS_DISPATCHED      True
+VALIDATION_ERROR_TO_MODEL    False
+MODEL_RETRY_OCCURRED         True
+RETRY_SCHEMA_VALID           False
+RETRY_TOOL_DISPATCHED        False
+FILE_BYTES_CHANGED           False
+GOAL_SATISFIED               False
+
+schema_reject_console=3
+schema_accept_console=0
+schema_validation_results=0
+dispatched_true=0
+dispatched_false=0
+before_sha=4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c
+after_sha=4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c
+legacy_missing_string_arg=2
+

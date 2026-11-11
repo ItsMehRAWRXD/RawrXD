@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay.asm
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay.asm(113) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay.asm(358) : fatal error A1010:unmatched block nesting : STUN_ParseBindingResponse

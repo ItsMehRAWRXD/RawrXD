@@ -1,0 +1,73 @@
+ Assembling: D:\rawrxd\RawrXD_BPETokenizer.asm
+D:\rawrxd\RawrXD_BPETokenizer.asm(42) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(43) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(44) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(45) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(46) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(47) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(48) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(62) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(74) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(82) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(87) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(115) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(119) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(134) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(142) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(146) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(173) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(186) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(190) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(204) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(211) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(222) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(223) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(224) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_BPETokenizer.asm(235) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(269) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(273) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(289) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(296) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(314) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_BPETokenizer.asm(323) : error A2044:invalid character in file
+D:\rawrxd\RawrXD_BPETokenizer.asm(31) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(32) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(59) : error A2006:undefined symbol : EncodeDone
+D:\rawrxd\RawrXD_BPETokenizer.asm(65) : error A2006:undefined symbol : StartMerging
+D:\rawrxd\RawrXD_BPETokenizer.asm(72) : error A2006:undefined symbol : InitialByteLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(80) : error A2006:undefined symbol : EncodeDone
+D:\rawrxd\RawrXD_BPETokenizer.asm(84) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(91) : error A2006:undefined symbol : CheckMergeFound
+D:\rawrxd\RawrXD_BPETokenizer.asm(107) : error A2006:undefined symbol : NextPair
+D:\rawrxd\RawrXD_BPETokenizer.asm(110) : error A2006:undefined symbol : NextPair
+D:\rawrxd\RawrXD_BPETokenizer.asm(117) : error A2006:undefined symbol : FindBestPairLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(121) : error A2006:undefined symbol : EncodeDone
+D:\rawrxd\RawrXD_BPETokenizer.asm(136) : error A2006:undefined symbol : ShiftDone
+D:\rawrxd\RawrXD_BPETokenizer.asm(138) : error A2026:constant expected
+D:\rawrxd\RawrXD_BPETokenizer.asm(140) : error A2006:undefined symbol : ShiftLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(144) : error A2006:undefined symbol : MergeIteration
+D:\rawrxd\RawrXD_BPETokenizer.asm(166) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(168) : error A2006:undefined symbol : NoTable
+D:\rawrxd\RawrXD_BPETokenizer.asm(170) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(175) : error A2006:undefined symbol : NoTable
+D:\rawrxd\RawrXD_BPETokenizer.asm(178) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(179) : error A2006:undefined symbol : ContinueScan
+D:\rawrxd\RawrXD_BPETokenizer.asm(180) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(181) : error A2006:undefined symbol : ContinueScan
+D:\rawrxd\RawrXD_BPETokenizer.asm(183) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(188) : error A2006:undefined symbol : ScanLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(201) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(202) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_BPETokenizer.asm(205) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(206) : error A2006:undefined symbol : Next
+D:\rawrxd\RawrXD_BPETokenizer.asm(207) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(208) : error A2006:undefined symbol : Next
+D:\rawrxd\RawrXD_BPETokenizer.asm(209) : error A2083:invalid scale value
+D:\rawrxd\RawrXD_BPETokenizer.asm(213) : error A2006:undefined symbol : ScanLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(237) : error A2006:undefined symbol : DecodeDone
+D:\rawrxd\RawrXD_BPETokenizer.asm(250) : error A2006:undefined symbol : NextToken
+D:\rawrxd\RawrXD_BPETokenizer.asm(271) : error A2006:undefined symbol : DecodeLoop
+D:\rawrxd\RawrXD_BPETokenizer.asm(288) : error A2006:undefined symbol : Done
+D:\rawrxd\RawrXD_BPETokenizer.asm(295) : error A2006:undefined symbol : Loop
+D:\rawrxd\RawrXD_BPETokenizer.asm(306) : error A2006:undefined symbol : ComplexToken
+D:\rawrxd\RawrXD_BPETokenizer.asm(309) : error A2206:missing operator in expression

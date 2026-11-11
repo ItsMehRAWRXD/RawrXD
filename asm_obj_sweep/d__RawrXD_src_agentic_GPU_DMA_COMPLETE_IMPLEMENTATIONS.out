@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(11) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(12) : error A2008:syntax error : FRAME
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(91) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(105) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(106) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(121) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(147) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(154) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(315) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(431) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(513) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(674) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(842) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(874) : error A2006:undefined symbol : dst_addr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(875) : error A2006:undefined symbol : src_addr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(876) : error A2006:undefined symbol : size_bytes
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(878) : error A2006:undefined symbol : DMA_STATUS_SUCCESS
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(885) : error A2006:undefined symbol : dst_addr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(886) : error A2006:undefined symbol : src_addr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(887) : error A2006:undefined symbol : size_bytes
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(889) : error A2006:undefined symbol : DMA_STATUS_SUCCESS

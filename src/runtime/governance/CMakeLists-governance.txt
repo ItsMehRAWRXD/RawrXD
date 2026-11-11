@@ -1,0 +1,13 @@
+# Add these sources to the existing RawrXD runtime target.
+target_sources(<RAWRXD_RUNTIME_TARGET> PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/HardwareCapabilityProbe.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/CapabilityTierMatrix.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/HardwareGovernor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/PressedStateEngine.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/Ensemble58Governor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/TLSInstructionGate.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance/UnifiedTriggerOrchestrator.cpp)
+target_include_directories(<RAWRXD_RUNTIME_TARGET> PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance)
+if(WIN32)
+  target_link_libraries(<RAWRXD_RUNTIME_TARGET> PRIVATE dxgi)
+endif()

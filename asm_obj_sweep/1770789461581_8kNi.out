@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(697) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(844) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(851) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(401) : error A2006:undefined symbol : find_pattern_asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(429) : error A2006:undefined symbol : find_pattern_asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SelfPatch_Agent.asm\1770789461581_8kNi.asm(853) : error A2006:undefined symbol : asm_apply_memory_patch
