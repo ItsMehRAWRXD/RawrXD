@@ -434,7 +434,10 @@ public:
                              double temperature = 0.2);
 
     /// @brief Cheap liveness probe used by `rawr doctor` and session startup.
-    bool ping(int timeoutMs = 30000);
+    /// @param timeoutMs Must cover a COLD model load: ping() performs a real
+    ///        8-token generation, and llama3.2:3b measured 25.25 s from a
+    ///        stopped Ollama. A 30 s default left almost no headroom.
+    bool ping(int timeoutMs = 60000);
 
 private:
     std::string httpPost(const std::string& path, const std::string& body,
