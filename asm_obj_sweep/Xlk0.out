@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\Xlk0.asm
+D:\rawrxd\history\-29b34fd4\Xlk0.asm(447) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\Xlk0.asm(450) : error A2006:undefined symbol : OperationSize
+D:\rawrxd\history\-29b34fd4\Xlk0.asm(463) : error A2006:undefined symbol : OperationSize
+D:\rawrxd\history\-29b34fd4\Xlk0.asm(631) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\Xlk0.asm(636) : error A2006:undefined symbol : OperationSize

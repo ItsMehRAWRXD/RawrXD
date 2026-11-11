@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(122) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(182) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(187) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(261) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(294) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_autonomous_task_executor.asm(298) : error A2006:undefined symbol : CloseHandle

@@ -1,0 +1,36 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\VwqL.asm
+D:\rawrxd\history\-29b34fd4\VwqL.asm(54) : error A2008:syntax error : type
+D:\rawrxd\history\-29b34fd4\VwqL.asm(57) : error A2008:syntax error : size
+D:\rawrxd\history\-29b34fd4\VwqL.asm(220) : error A2008:syntax error : ,
+D:\rawrxd\history\-29b34fd4\VwqL.asm(224) : error A2008:syntax error : ,
+D:\rawrxd\history\-29b34fd4\VwqL.asm(223) : error A2083:invalid scale value
+D:\rawrxd\history\-29b34fd4\VwqL.asm(227) : error A2083:invalid scale value
+D:\rawrxd\history\-29b34fd4\VwqL.asm(228) : error A2083:invalid scale value
+D:\rawrxd\history\-29b34fd4\VwqL.asm(231) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(243) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(296) : error A2083:invalid scale value
+D:\rawrxd\history\-29b34fd4\VwqL.asm(297) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(302) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(303) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(317) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(324) : error A2026:constant expected
+D:\rawrxd\history\-29b34fd4\VwqL.asm(329) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(330) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(331) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(336) : error A2026:constant expected
+D:\rawrxd\history\-29b34fd4\VwqL.asm(340) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(341) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(376) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(379) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(392) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VwqL.asm(437) : error A2206:missing operator in expression
+D:\rawrxd\history\-29b34fd4\VwqL.asm(350) : warning A4025:ENDP found before .ENDPROLOG : Vram_Free
+D:\rawrxd\history\-29b34fd4\VwqL.asm(350) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-29b34fd4\VwqL.asm(350) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-29b34fd4\VwqL.asm(411) : warning A4025:ENDP found before .ENDPROLOG : Vram_SubmitUpload
+D:\rawrxd\history\-29b34fd4\VwqL.asm(458) : warning A4025:ENDP found before .ENDPROLOG : Vram_Defragment
+D:\rawrxd\history\-29b34fd4\VwqL.asm(458) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-29b34fd4\VwqL.asm(458) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-29b34fd4\VwqL.asm(467) : warning A4025:ENDP found before .ENDPROLOG : CalculateFragmentation
+D:\rawrxd\history\-29b34fd4\VwqL.asm(467) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-29b34fd4\VwqL.asm(467) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,9 @@
+message_count=4
+=== msg[0] role=system ===
+You are RawrXD's local coding agent. Tool arguments MUST be strict JSON with double-quoted keys. If a tool observation has error=schema_validation, correct the JSON and retry. Never echo observation JSON. Emit TOOL_CALL or a short final answer.
+=== msg[1] role=user ===
+Read main.c using tools. After a schema_validation error, resend the SAME tool with strict JSON double-quoted keys, e.g. TOOL_CALL: read_file {"path":"main.c"}. Do not invent content. First line MUST be a TOOL_CALL.
+=== msg[2] role=assistant ===
+TOOL_CALL: read_file {path:main.c}
+=== msg[3] role=tool name=read_file tool_call_id=call_1 ===
+{"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}

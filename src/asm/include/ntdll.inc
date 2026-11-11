@@ -1,0 +1,2 @@
+EXTERNDEF RtlZeroMemory:PROC
+

@@ -1,0 +1,52 @@
+ Assembling: D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(192) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(206) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(218) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(239) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(243) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(254) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(275) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(286) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(304) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(316) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(331) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(348) : error A2008:syntax error : queue_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(349) : error A2008:syntax error : stats_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(353) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(371) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(394) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(398) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(411) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(426) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(429) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(442) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(452) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(456) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(477) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(493) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(497) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(531) : error A2008:syntax error : state_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(532) : error A2008:syntax error : topology_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(539) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(561) : error A2005:symbol redefinition : HTTP2_SETTINGS_INITIAL_WINDOW_SIZE
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(590) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(603) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(664) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(673) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(676) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(827) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(832) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(850) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(870) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(879) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(885) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(899) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(908) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(917) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(931) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(940) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(658) : error A2006:undefined symbol : state_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(661) : error A2006:undefined symbol : topology_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(667) : error A2006:undefined symbol : queue_lock
+D:\rawrxd\history\all_versions\src\orchestrator\Phase5_Master_Complete.asm\1769569423887_UEFy.asm(670) : error A2006:undefined symbol : stats_lock

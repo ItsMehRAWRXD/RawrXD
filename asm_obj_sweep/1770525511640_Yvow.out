@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1798) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1805) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1812) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1819) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1895) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(637) : error A2030:multiple index registers not allowed
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(642) : error A2030:multiple index registers not allowed
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(704) : error A2030:multiple index registers not allowed
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(709) : error A2030:multiple index registers not allowed
+D:\rawrxd\history\all_versions\src\asm\inference_core.asm\1770525511640_Yvow.asm(1610) : error A2029:multiple base registers not allowed

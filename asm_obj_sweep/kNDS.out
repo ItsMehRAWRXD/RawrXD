@@ -1,0 +1,46 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\kNDS.asm
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2816) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2818) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2821) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2823) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2825) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2827) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2829) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2831) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2833) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2848) : error A2005:symbol redefinition : szTaskProposalComp
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2848) : error A2088:END directive required at end of file
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(957) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(960) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(961) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(963) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(965) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(975) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(988) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(995) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1042) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1045) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1048) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1050) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1060) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1073) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1080) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1339) : error A2006:undefined symbol : ApplyComponentStyle
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1343) : error A2006:undefined symbol : UpdateComponentAppearance
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1350) : error A2006:undefined symbol : StartStyleAnimation
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1407) : error A2006:undefined symbol : ParseAnimationJson
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1502) : error A2006:undefined symbol : ParseLayoutJson
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1516) : error A2006:undefined symbol : ApplyLayoutProperties
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1520) : error A2006:undefined symbol : RecalculateLayout
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1636) : error A2006:undefined symbol : szJsonStart
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1713) : error A2006:undefined symbol : UpdateAnimation
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1723) : error A2006:undefined symbol : RequestRedraw
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1804) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1805) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1811) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1812) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(1971) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2653) : error A2006:undefined symbol : UpdateComponentAppearance
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2765) : error A2006:undefined symbol : szWKey
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2775) : error A2006:undefined symbol : szHKey
+D:\rawrxd\history\-1bd1bafa\kNDS.asm(2785) : error A2006:undefined symbol : szStyleKey

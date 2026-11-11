@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\RawrXD_Complete_Interconnect.asm
+D:\rawrxd\src\RawrXD_Complete_Interconnect.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\src\RawrXD_Complete_Interconnect.asm(16) : error A2034:must be in segment block : System_InitializePrimitives
+D:\rawrxd\src\RawrXD_Complete_Interconnect.asm(17) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_Complete_Interconnect.asm(18) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_Complete_Interconnect.asm(19) : fatal error A1010:unmatched block nesting : System_InitializePrimitives

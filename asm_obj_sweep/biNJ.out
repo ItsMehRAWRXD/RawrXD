@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-14c30827\biNJ.asm
+D:\rawrxd\history\-14c30827\biNJ.asm(507) : error A2008:syntax error : END8
+D:\rawrxd\history\-14c30827\biNJ.asm(528) : fatal error A1010:unmatched block nesting : ai_orchestration_coordinator_init

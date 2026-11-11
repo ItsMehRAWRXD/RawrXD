@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(321) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(323) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(326) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(331) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(356) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(383) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(385) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(387) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(392) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(395) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(399) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(411) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(445) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(446) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(459) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(463) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(474) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(475) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(499) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(506) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(519) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(541) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(549) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(699) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(704) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(746) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(749) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(787) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(796) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(909) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1067) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1288) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1294) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1295) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1304) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1353) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1362) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1373) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1395) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1407) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1408) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1410) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1433) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1436) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1468) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1470) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1479) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1483) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1508) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1509) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1624) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1632) : error A2008:syntax error : CryptDecodeObjectEx
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1644) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1652) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1656) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1657) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1665) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1669) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1670) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1689) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1690) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1693) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1695) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1696) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1698) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1700) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1701) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1704) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1711) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1712) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1717) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1734) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1738) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1741) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1742) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1746) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1751) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1754) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1755) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1760) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1764) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1765) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1769) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1775) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1775) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(553) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(768) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(915) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1071) : error A2006:undefined symbol : ByteFreq
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579792715_QwIV.asm(1084) : fatal error A1012:error count exceeds 100; stopping assembly

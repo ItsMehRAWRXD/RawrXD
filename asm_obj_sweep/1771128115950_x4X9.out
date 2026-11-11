@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(250) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(258) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(321) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(350) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(479) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(101) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(102) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(103) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(104) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(118) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(119) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(120) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(132) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(135) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(259) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(263) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(400) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(408) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(416) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(426) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(427) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(428) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(429) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(448) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\quantum_autonomous_todo_masm.asm\1771128115950_x4X9.asm(456) : error A2206:missing operator in expression

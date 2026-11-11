@@ -1,0 +1,74 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(97) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(98) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(168) : error A2008:syntax error : cs
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(989) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1097) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1115) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1127) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1133) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1139) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1145) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1151) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1195) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1201) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1207) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1213) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1565) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(242) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(364) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(552) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(553) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(963) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(964) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1021) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1026) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1035) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1063) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1064) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1065) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1066) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1069) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1406) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1407) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1604) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1829) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1837) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1845) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1849) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(260) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(304) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(329) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(334) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(338) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(532) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(611) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(645) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(664) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(754) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(863) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(892) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(937) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1056) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1075) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1270) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1323) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1375) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1449) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1581) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1662) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1688) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1716) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1734) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1747) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1751) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1761) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1798) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1810) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1858) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1868) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_InferenceCore.asm\1769987488893_eUdX.asm(1898) : error A2220:Missing .ENDPROLOG

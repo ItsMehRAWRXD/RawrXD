@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(58) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(181) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(132) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(135) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(138) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(141) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(144) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(147) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(192) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(316) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(376) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(356) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_DecodeUniversal
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(356) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(356) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(390) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_GeneratePolymorphicKey
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(390) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(390) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(424) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_EncodePE
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(424) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(424) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(435) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_MutateEngine
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(435) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(435) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(477) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_ScatterObfuscate
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(477) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(477) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(528) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_Base64EncodeBinary
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(528) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(528) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(546) : warning A4025:ENDP found before .ENDPROLOG : Rawshell_AVX512_BulkTransform
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(546) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_RawrXD_PolymorphicEncoder.asm(546) : error A2220:Missing .ENDPROLOG

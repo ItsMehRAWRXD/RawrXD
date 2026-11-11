@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(227) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(234) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(241) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(271) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(300) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(71) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(71) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716398673_5n8x.asm(71) : warning A6004:procedure argument or local not referenced : lpReserved

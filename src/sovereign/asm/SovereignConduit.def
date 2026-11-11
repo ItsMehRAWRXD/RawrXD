@@ -1,0 +1,4 @@
+LIBRARY SovereignEngineCore
+EXPORTS
+    RouteViaLinearConduitMASM @1
+    CycleWarhammerMoERing @2

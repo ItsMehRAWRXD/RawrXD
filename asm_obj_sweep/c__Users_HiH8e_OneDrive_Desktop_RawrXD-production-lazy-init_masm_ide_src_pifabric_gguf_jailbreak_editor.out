@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_gguf_jailbreak_editor.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_gguf_jailbreak_editor.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_gguf_jailbreak_editor.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_gguf_jailbreak_editor.asm(8) : fatal error A1000:cannot open file : user32.inc

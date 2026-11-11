@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(106) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(138) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(167) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(212) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(278) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(313) : error A2006:undefined symbol : process_handle
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(527) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(797) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(806) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(810) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(813) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(867) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(870) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(871) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(880) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(887) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(890) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(901) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(909) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(914) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(942) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(945) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(946) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(953) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(964) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(970) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(977) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(992) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1012) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1025) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1027) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1031) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1036) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1055) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1062) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1064) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1068) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1073) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1093) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1100) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1102) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1106) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1111) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1114) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1144) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1201) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1212) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1213) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1215) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1216) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1249) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1254) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1256) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1291) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1302) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1303) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1305) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1306) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1336) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1339) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1341) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1377) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1381) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1440) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1449) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1459) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1460) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1462) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1464) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1465) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1491) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1521) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1522) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1524) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1549) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1557) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1594) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1614) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1622) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1679) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1697) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1704) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1726) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1741) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1745) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1787) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1817) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1836) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1838) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1873) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1923) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1936) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(1938) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2023) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2075) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2089) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2090) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2091) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2094) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2095) : error A2006:undefined symbol : RoundRect
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771291905897_uotn.ASM(2101) : fatal error A1012:error count exceeds 100; stopping assembly

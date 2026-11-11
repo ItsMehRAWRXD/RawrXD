@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(187) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(188) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(347) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(349) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(353) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(366) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(367) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(369) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(373) : error A2008:syntax error
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(44) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(52) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(59) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(66) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(78) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(95) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(99) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(103) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(107) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(127) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(133) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(139) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(223) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(239) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(274) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(292) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(303) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(319) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(331) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(335) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(350) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(359) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_theme_system.asm(370) : error A2006:undefined symbol : LeaveCriticalSection

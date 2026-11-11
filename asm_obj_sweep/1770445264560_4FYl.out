@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(29) : error A2006:undefined symbol : Shield_InitializeDefense
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(30) : error A2006:undefined symbol : Shield_CheckHeapFlags
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(31) : error A2006:undefined symbol : Shield_CheckKernelDebug
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(32) : error A2006:undefined symbol : Shield_MurmurHash3_x64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(33) : error A2006:undefined symbol : Shield_DecryptKernelEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD_License_Shield.asm\1770445264560_4FYl.asm(490) : warning A6004:procedure argument or local not referenced : oldProtect

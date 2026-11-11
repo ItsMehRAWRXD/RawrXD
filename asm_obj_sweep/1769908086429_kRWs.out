@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769908086429_kRWs.asm
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769908086429_kRWs.asm(224) : error A2005:symbol redefinition : StartPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769908086429_kRWs.asm(224) : error A2004:symbol type conflict : StartPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769908086429_kRWs.asm(225) : error A2005:symbol redefinition : StopPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769908086429_kRWs.asm(225) : error A2004:symbol type conflict : StopPipeServer

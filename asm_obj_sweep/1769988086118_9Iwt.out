@@ -1,0 +1,51 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(97) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1023) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(236) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(248) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(328) : error A2006:undefined symbol : ReadConsoleInputA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(361) : error A2006:undefined symbol : ReadConsoleInputA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(512) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(546) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(561) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(608) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(612) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(811) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1099) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1197) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1243) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(216) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(282) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(311) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(349) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(372) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(496) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(530) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(573) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(590) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(617) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(632) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(660) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(695) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(700) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(704) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(712) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(718) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(800) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(882) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(892) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(988) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1047) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1082) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1117) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1133) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1161) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1170) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1194) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1198) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1223) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1769988086118_9Iwt.asm(1252) : error A2220:Missing .ENDPROLOG

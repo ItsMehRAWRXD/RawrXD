@@ -1,0 +1,9 @@
+#pragma once
+#include "tools/rawr_file_tool.hpp"
+#include "tools/rawr_search_tool.hpp"
+#include "tools/rawr_patch_tool.hpp"
+#include "tools/rawr_build_tool.hpp"
+#include "tools/rawr_test_tool.hpp"
+#include "tools/rawr_git_tool.hpp"
+#include "tools/rawr_process_tool.hpp"
+#include "tools/rawr_evidence_tool.hpp"

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(27) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(27) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(36) : error A2008:syntax error : esi
+D:\rawrxd\history\all_versions\pifabric_gguf_catalog.asm\1766358087217_Miea.asm(41) : fatal error A1010:unmatched block nesting : GGUF_Catalog_Load

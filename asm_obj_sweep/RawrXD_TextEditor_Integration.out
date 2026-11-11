@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_Integration.asm
+D:\rawrxd\RawrXD_TextEditor_Integration.asm(107) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_TextEditor_Integration.asm(108) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_TextEditor_Integration.asm(160) : fatal error A1010:unmatched block nesting : TextEditor_OpenFile

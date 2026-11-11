@@ -1,0 +1,71 @@
+# ============================================================================
+# Deep2 Benchmark Harness - CMake Configuration
+# Add this to your existing CMakeLists.txt or include as subdirectory
+# ============================================================================
+
+# Benchmark library (can be linked into main executable or standalone)
+add_library(deep2_benchmark_lib STATIC
+    Deep2Benchmark.cpp
+    Deep2Benchmark.h
+)
+
+target_include_directories(deep2_benchmark_lib PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+)
+
+target_link_libraries(deep2_benchmark_lib PUBLIC
+    deep2_engine        # Your existing Deep2 engine library
+    telemetry           # Your telemetry system
+)
+
+# Standalone benchmark executable
+add_executable(deep2_benchmark
+    deep2_benchmark_main.cpp
+)
+
+target_link_libraries(deep2_benchmark PRIVATE
+    deep2_benchmark_lib
+    deep2_engine
+    telemetry
+)
+
+# Set C++ standard
+set_target_properties(deep2_benchmark PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
+# Windows-specific: Link PDH for GPU telemetry
+if(WIN32)
+    target_link_libraries(deep2_benchmark PRIVATE Pdh)
+    target_link_libraries(deep2_benchmark_lib PUBLIC Pdh)
+endif()
+
+# Installation
+install(TARGETS deep2_benchmark
+    RUNTIME DESTINATION bin
+)
+
+install(FILES Deep2Benchmark.h
+    DESTINATION include/deep2
+)
+
+# Optional: Add benchmark to test suite
+if(BUILD_TESTING)
+    add_test(NAME deep2_benchmark_quick
+        COMMAND deep2_benchmark --model ${TEST_MODEL_PATH} --phase single --max-tokens 256 --quiet
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set_tests_properties(deep2_benchmark_quick PROPERTIES
+        LABELS "benchmark;quick"
+        TIMEOUT 300
+    )
+endif()
+
+# Print configuration summary
+message(STATUS "Deep2 Benchmark Harness configured:")
+message(STATUS "  Executable: deep2_benchmark")
+message(STATUS "  Library: deep2_benchmark_lib")
+message(STATUS "  GPU Telemetry: ${CMAKE_SYSTEM_NAME}")

@@ -1,0 +1,57 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\5Dr2.asm
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(159) : error A2008:syntax error : width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2787) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(761) : error A2006:undefined symbol : is_visible
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1000) : error A2006:undefined symbol : is_visible
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1002) : error A2006:undefined symbol : is_visible
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1106) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1109) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1110) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1112) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1114) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1124) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1137) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1144) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1191) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1194) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1197) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1199) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1209) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1222) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1229) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1349) : error A2006:undefined symbol : is_visible
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1354) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1355) : error A2006:undefined symbol : comp_height
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1486) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1599) : error A2006:undefined symbol : style_component_not_found
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1687) : error A2006:undefined symbol : is_visible
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1729) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1732) : error A2006:undefined symbol : SWP_NOZORDER
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1740) : error A2006:undefined symbol : SW_HIDE
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1743) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1763) : error A2006:undefined symbol : g_hMainWnd
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1769) : error A2006:undefined symbol : g_animation_active
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1954) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(1979) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2418) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2425) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2783) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2956) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2960) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2964) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2968) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(2972) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3001) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3005) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3009) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3096) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3100) : error A2006:undefined symbol : comp_height
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3135) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3139) : error A2006:undefined symbol : comp_height
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3221) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3227) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3229) : error A2006:undefined symbol : comp_height
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3802) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(3804) : error A2006:undefined symbol : comp_height
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(4045) : error A2006:undefined symbol : comp_width
+D:\rawrxd\history\-1bd1bafa\5Dr2.asm(4055) : error A2006:undefined symbol : comp_height

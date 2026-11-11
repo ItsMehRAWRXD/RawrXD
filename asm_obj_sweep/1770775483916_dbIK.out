@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(97) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(390) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(408) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(432) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(484) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(601) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(699) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(776) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(822) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(853) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(913) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(947) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(988) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1031) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1073) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1115) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1160) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1198) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1207) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(1216) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(440) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(446) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(451) : error A2006:undefined symbol : version
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(455) : error A2006:undefined symbol : tensor_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(622) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(625) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(631) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(639) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(645) : error A2006:undefined symbol : dtype
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(651) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(657) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(661) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(667) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(708) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(735) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(736) : error A2006:undefined symbol : unknown_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(740) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(741) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(744) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(748) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(749) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(752) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(756) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(757) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(761) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(762) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(792) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(801) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(802) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(803) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(804) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(805) : error A2006:undefined symbol : layer_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(832) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(921) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(922) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770775483916_dbIK.asm(936) : error A2006:undefined symbol : param_count

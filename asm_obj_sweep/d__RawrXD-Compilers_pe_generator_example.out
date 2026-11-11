@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(172) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(218) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(262) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(307) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(351) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(386) : error A2008:syntax error : Main
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_pe_generator_example.asm(386) : error A2088:END directive required at end of file

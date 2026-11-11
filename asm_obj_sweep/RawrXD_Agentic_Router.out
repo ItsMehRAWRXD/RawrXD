@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\RawrXD_Agentic_Router.asm
+D:\rawrxd\src\RawrXD_Agentic_Router.asm(10) : error A2008:syntax error : WIN64
+D:\rawrxd\src\RawrXD_Agentic_Router.asm(12) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

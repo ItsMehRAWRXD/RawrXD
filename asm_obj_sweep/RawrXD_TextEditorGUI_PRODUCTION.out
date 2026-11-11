@@ -1,0 +1,39 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(320) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(321) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(31) : error A2006:undefined symbol : GetWindowLongPtrA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(52) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(53) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(140) : error A2006:undefined symbol : GetStockObject
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(150) : error A2006:undefined symbol : RegisterClassA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(175) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(213) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(222) : error A2006:undefined symbol : SetWindowLongPtrA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(245) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(250) : error A2006:undefined symbol : GlobalAlloc
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(284) : error A2006:undefined symbol : BeginPaintA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(289) : error A2006:undefined symbol : CreateCompatibleDC
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(310) : error A2006:undefined symbol : CreateCompatibleBitmap
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(317) : error A2006:undefined symbol : SelectObject
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(330) : error A2006:undefined symbol : GetStockObject
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(340) : error A2006:undefined symbol : GetStockObject
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(342) : error A2006:undefined symbol : FillRect
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(347) : error A2006:undefined symbol : SetTextColor
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(364) : error A2006:undefined symbol : BitBlt
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(369) : error A2006:undefined symbol : EndPaintA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(523) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(537) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(541) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(758) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(809) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(855) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(898) : error A2006:undefined symbol : GlobalFree
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(906) : error A2006:undefined symbol : GlobalFree
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(911) : error A2006:undefined symbol : GlobalFree
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(915) : error A2006:undefined symbol : PostQuitMessage
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1054) : error A2006:undefined symbol : CreateMenu
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1058) : error A2006:undefined symbol : CreateMenu
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1111) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1161) : error A2006:undefined symbol : GetOpenFileNameA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1208) : error A2006:undefined symbol : GetSaveFileNameA
+D:\rawrxd\RawrXD_TextEditorGUI_PRODUCTION.asm(1240) : error A2006:undefined symbol : CreateWindowExA

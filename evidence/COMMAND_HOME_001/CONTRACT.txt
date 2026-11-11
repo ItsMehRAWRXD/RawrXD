@@ -1,0 +1,56 @@
+COMMAND_HOME_001 / RawrXD ScreenPilot Desktop Preview
+=====================================================
+Gate: COMMAND_HOME_001
+Product: RawrXD ScreenPilot
+Release: Desktop Preview (not remote-control GA)
+Domain: screenpilot.tech (landing — separate deploy; URL unverified)
+
+CORRECTIONS (planning transcript — binding)
+-------------------------------------------
+1. Batching may raise aggregate GPU throughput; per-user latency plateaus then
+   degrades at saturation — never claim inverse latency scaling.
+2. MASM multiplex sample is a ring-buffer sketch only — not a shippable server.
+3. Secure services use OS facilities (Winsock, Schannel) even with "no deps."
+4. Never bind inference/workspace control to 0.0.0.0 on operator PC.
+5. Remote steering = future paired-device authenticated service, not public port.
+6. EGRESS_001 open — no zero-egress or public remote-control claims.
+
+Scope (Phase 1A — frozen)
+-------------------------
+- First paint: Command-home Dark+ surface (not legacy IDE chrome)
+- Local Deep2/GGUF lane only (LOCAL_ONLY_001 certified — do not regress)
+- Workspace + Git binding visible in top context bar
+- Live agent activity strip + Stop control above composer
+- Steering belt: "Remote phone / web — Coming next" (not live)
+- Native model hub: local scan + browse/load — NO ollama pull, NO :8005/:9999
+- Reversible Work Mode via "Open workspace editor"
+- In-process Command broker (session bind, journal, approvals, stop)
+- IControlChannel: fail-closed disabled stub
+- LocalServer (11435) auto-start: SUPPRESSED in Command-home mode
+
+Explicitly rejected from planning transcript
+---------------------------------------------
+- Node models.js / slingshot.js as product backend
+- curl localhost:8005/api/v1/models/list as shipping API
+- TRSS "more users = faster for everyone" dashboard copy
+- Exposing home GPU to public web users
+
+Out of scope
+------------
+- EGRESS_001 closure / "nothing leaves the machine" marketing
+- Phone/web remote steering exposure
+- Cloud model hosting on shared cPanel/static hosts
+- P1_UI_MENU_E2E_001 repair
+
+Frozen baselines — DO NOT TOUCH
+-------------------------------
+- LOCAL_ONLY_001 (7/7 PASS)
+- STREAMER_CERT_001 (~1.3 tok/s baseline)
+
+Evidence paths
+--------------
+- evidence/COMMAND_HOME_001/LAUNCH_ARCHITECTURE.txt
+- src/win32app/Win32IDE_CommandSurface.cpp
+- src/win32app/ScreenPilotModelHub.cpp
+- src/command/{CommandBroker,SessionBinder,CommandEventJournal}.cpp
+- evidence/COMMAND_HOME_001/GATE.txt

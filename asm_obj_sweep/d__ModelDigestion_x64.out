@@ -1,0 +1,42 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(14) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(96) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(102) : error A2034:must be in segment block : InitializeAntiDebug
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(103) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(127) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(131) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__ModelDigestion_x64.asm(136) : fatal error A1010:unmatched block nesting : InitializeAntiDebug

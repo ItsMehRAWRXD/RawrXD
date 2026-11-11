@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\src\asm\SovereignMatMul.asm
+D:\rawrxd\src\asm\SovereignMatMul.asm(107) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\SovereignMatMul.asm(119) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\SovereignMatMul.asm(141) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\SovereignMatMul.asm(268) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\SovereignMatMul.asm(395) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\SovereignMatMul.asm(152) : error A2029:multiple base registers not allowed
+D:\rawrxd\src\asm\SovereignMatMul.asm(155) : error A2029:multiple base registers not allowed
+D:\rawrxd\src\asm\SovereignMatMul.asm(174) : error A2030:multiple index registers not allowed
+D:\rawrxd\src\asm\SovereignMatMul.asm(460) : warning A4025:ENDP found before .ENDPROLOG : SovereignMatMul_Batch
+D:\rawrxd\src\asm\SovereignMatMul.asm(460) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\SovereignMatMul.asm(460) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\asm\SovereignMatMul.asm(470) : warning A4025:ENDP found before .ENDPROLOG : SovereignMatMul_TransposeB
+D:\rawrxd\src\asm\SovereignMatMul.asm(470) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\SovereignMatMul.asm(470) : error A2220:Missing .ENDPROLOG

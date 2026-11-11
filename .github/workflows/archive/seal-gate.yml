@@ -1,0 +1,363 @@
+# RawrXD IDE — Seal Gate CI Pipeline
+# Validates every push: build → smoke tests → Golden Master fingerprint comparison
+# Fails if any step breaks or fingerprints diverge
+
+name: Seal Gate
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Manual trigger for testing
+
+env:
+  BUILD_TYPE: Release
+  SMOKE_TEST_EXE: smoke_test_v3.exe
+  GOLDEN_MASTER_DB: golden_master.db
+  FINGERPRINT_TOLERANCE: 10  # Hamming distance threshold
+
+jobs:
+  # ============================================================================
+  # JOB 1: Build Engine + IDE
+  # ============================================================================
+  build:
+    name: Build Engine & IDE
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0  # Full history for fingerprint baseline
+
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Setup Ninja
+      uses: seanmiddleditch/gha-setup-ninja@master
+      
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          build-master/
+          ~/.cmake/packages
+        key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.h', '**/*.asm') }}
+        restore-keys: |
+          ${{ runner.os }}-build-
+
+    - name: Configure CMake
+      run: |
+        cmake -B build-master -G Ninja `
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+          -DCMAKE_C_COMPILER=cl `
+          -DCMAKE_CXX_COMPILER=cl `
+          -DRAWRXD_ENABLE_LSP=ON `
+          -DRAWRXD_ENABLE_DAP=ON `
+          -DRAWRXD_ENABLE_GHOST_TEXT=ON
+
+    - name: Build Engine
+      run: cmake --build build-master --config ${{ env.BUILD_TYPE }} --target RawrXD_Main
+      
+    - name: Build IDE
+      run: cmake --build build-master --config ${{ env.BUILD_TYPE }} --target RawrXD-Win32IDE
+      
+    - name: Build Smoke Tests
+      run: cmake --build build-master --config ${{ env.BUILD_TYPE }} --target smoke_test_v3
+      
+    - name: Build Benchmark Harness
+      run: cmake --build build-master --config ${{ env.BUILD_TYPE }} --target benchmark
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          build-master/*.exe
+          build-master/*.dll
+          build-master/*.pdb
+        retention-days: 7
+
+  # ============================================================================
+  # JOB 2: Smoke Test Execution (72 Tests)
+  # ============================================================================
+  smoke-tests:
+    name: 72-Test Smoke Suite
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: build-master/
+
+    - name: Run Smoke Tests
+      id: smoke
+      shell: pwsh
+      run: |
+        $output = & .\build-master\${{ env.SMOKE_TEST_EXE }} 2>&1
+        $output | Tee-Object -FilePath smoke_test_output.log
+        
+        # Parse results
+        $passCount = ($output | Select-String "PASS").Count
+        $failCount = ($output | Select-String "FAIL").Count
+        
+        Write-Output "pass_count=$passCount" >> $env:GITHUB_OUTPUT
+        Write-Output "fail_count=$failCount" >> $env:GITHUB_OUTPUT
+        
+        if ($failCount -gt 0) {
+          Write-Error "Smoke tests failed: $failCount failures"
+          exit 1
+        }
+        
+        if ($passCount -lt 72) {
+          Write-Error "Incomplete test run: only $passCount/72 tests passed"
+          exit 1
+        }
+
+    - name: Upload smoke test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-test-results
+        path: smoke_test_output.log
+
+  # ============================================================================
+  # JOB 3: Golden Master Fingerprint Validation
+  # ============================================================================
+  golden-master:
+    name: Golden Master Fingerprint Check
+    needs: [build, smoke-tests]
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: build-master/
+
+    - name: Run Golden Master Validation
+      id: fingerprint
+      shell: pwsh
+      run: |
+        # Check if golden master database exists
+        if (-not (Test-Path "${{ env.GOLDEN_MASTER_DB }}")) {
+          Write-Warning "Golden Master database not found - creating baseline"
+          # First run - create baseline
+          & .\build-master\${{ env.SMOKE_TEST_EXE }} --golden-master-create
+          exit 0
+        }
+        
+        # Run fingerprint comparison
+        $output = & .\build-master\${{ env.SMOKE_TEST_EXE }} --golden-master-compare 2>&1
+        $output | Tee-Object -FilePath fingerprint_output.log
+        
+        # Parse fingerprint results
+        $hammingDistance = 0
+        $regressionDetected = $false
+        
+        foreach ($line in $output) {
+          if ($line -match "Hamming distance:\s*(\d+)") {
+            $hammingDistance = [int]$matches[1]
+          }
+          if ($line -match "REGRESSION DETECTED") {
+            $regressionDetected = $true
+          }
+        }
+        
+        Write-Output "hamming_distance=$hammingDistance" >> $env:GITHUB_OUTPUT
+        Write-Output "regression=$regressionDetected" >> $env:GITHUB_OUTPUT
+        
+        if ($regressionDetected -and $hammingDistance -gt ${{ env.FINGERPRINT_TOLERANCE }}) {
+          Write-Error "Golden Master regression detected! Hamming distance: $hammingDistance (threshold: ${{ env.FINGERPRINT_TOLERANCE }})"
+          exit 1
+        }
+        
+        if ($hammingDistance -gt 0 -and $hammingDistance -le ${{ env.FINGERPRINT_TOLERANCE }}) {
+          Write-Warning "Acceptable variance: Hamming distance $hammingDistance within tolerance"
+        }
+
+    - name: Upload fingerprint results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fingerprint-results
+        path: fingerprint_output.log
+
+  # ============================================================================
+  # JOB 4: Performance Benchmark (Smoke Test)
+  # ============================================================================
+  benchmark:
+    name: Performance Smoke Test
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: build-master/
+
+    - name: Run Benchmark Suite
+      id: benchmark
+      shell: pwsh
+      run: |
+        $output = & .\build-master\benchmark.exe 2>&1
+        $output | Tee-Object -FilePath benchmark_output.log
+        
+        # Parse performance results
+        $opsPerSec = 0
+        foreach ($line in $output) {
+          if ($line -match "(\d+,?\d*)\s*ops/sec") {
+            $opsStr = $matches[1] -replace ",", ""
+            $opsPerSec = [int]$opsStr
+            break
+          }
+        }
+        
+        Write-Output "ops_per_sec=$opsPerSec" >> $env:GITHUB_OUTPUT
+        
+        # Fail if performance drops below 10M ops/sec (conservative threshold)
+        if ($opsPerSec -lt 10000000) {
+          Write-Error "Performance regression: $opsPerSec ops/sec (threshold: 10,000,000)"
+          exit 1
+        }
+
+    - name: Upload benchmark results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: benchmark_output.log
+
+  # ============================================================================
+  # JOB 5: Final Seal Gate Report
+  # ============================================================================
+  seal-gate-report:
+    name: Seal Gate Final Report
+    needs: [build, smoke-tests, golden-master, benchmark]
+    runs-on: windows-latest
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Generate Seal Gate Report
+      id: report
+      shell: pwsh
+      run: |
+        $report = @"
+        # RawrXD IDE Seal Gate Report
+        **Commit:** ${{ github.sha }}
+        **Branch:** ${{ github.ref_name }}
+        **Timestamp:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC")
+        
+        ## Build Status
+        | Component | Status |
+        |-----------|--------|
+        | Engine | ${{ needs.build.result == 'success' && '✅ PASS' || '❌ FAIL' }} |
+        | IDE | ${{ needs.build.result == 'success' && '✅ PASS' || '❌ FAIL' }} |
+        | Smoke Tests | ${{ needs.smoke-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |
+        | Golden Master | ${{ needs.golden-master.result == 'success' && '✅ PASS' || needs.golden-master.result == 'skipped' && '⏭️ SKIP' || '❌ FAIL' }} |
+        | Benchmark | ${{ needs.benchmark.result == 'success' && '✅ PASS' || '❌ FAIL' }} |
+        
+        ## Seal Gate Result
+        ${{ needs.build.result == 'success' && needs.smoke-tests.result == 'success' && needs.benchmark.result == 'success' && '🟢 SEAL GATE PASSED' || '🔴 SEAL GATE FAILED' }}
+        
+        ## Artifacts
+        - Build outputs: `build-artifacts`
+        - Smoke test log: `smoke-test-results/smoke_test_output.log`
+        - Fingerprint log: `fingerprint-results/fingerprint_output.log`
+        - Benchmark log: `benchmark-results/benchmark_output.log`
+        "@
+        
+        $report | Tee-Object -FilePath seal_gate_report.md
+        
+        # Set output for badge
+        if ("${{ needs.build.result }}" -eq "success" -and "${{ needs.smoke-tests.result }}" -eq "success" -and "${{ needs.benchmark.result }}" -eq "success") {
+          Write-Output "seal_status=passing" >> $env:GITHUB_OUTPUT
+        } else {
+          Write-Output "seal_status=failed" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: Upload seal gate report
+      uses: actions/upload-artifact@v4
+      with:
+        name: seal-gate-report
+        path: seal_gate_report.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('seal_gate_report.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });
+
+  # ============================================================================
+  # JOB 6: Create Release (on tag)
+  # ============================================================================
+  release:
+    name: Create Release
+    needs: seal-gate-report
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Create Release Package
+      shell: pwsh
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $zipName = "RawrXD-IDE-$tag-Windows-x64.zip"
+        
+        Compress-Archive -Path "artifacts\build-artifacts\*" -DestinationPath $zipName
+        
+        Write-Output "release_zip=$zipName" >> $env:GITHUB_OUTPUT
+
+    - name: Upload Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: RawrXD-IDE-*-Windows-x64.zip
+        body_path: artifacts/seal-gate-report/seal_gate_report.md
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+
+# ============================================================================
+# WORKFLOW BADGES
+# ============================================================================
+# Add this to your README.md:
+#
+# ![Seal Gate](https://github.com/ItsMehRAWRXD/RawrXD/workflows/Seal%20Gate/badge.svg)
+#
+# Or with status:
+# [![Seal Gate](https://img.shields.io/badge/seal-gate-${{ steps.report.outputs.seal_status == 'passing' && 'passing-brightgreen' || 'failed-red' }})](https://github.com/ItsMehRAWRXD/RawrXD/actions)

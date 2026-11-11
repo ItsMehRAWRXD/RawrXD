@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(28) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(29) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(30) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(79) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(86) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(131) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(159) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(163) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(167) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(170) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(206) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(210) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(213) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(265) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(265) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(47) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(60) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(81) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(84) : error A2006:undefined symbol : loop
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(135) : error A2006:undefined symbol : loop
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(155) : error A2006:undefined symbol : greater
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(156) : error A2006:undefined symbol : less
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(157) : error A2006:undefined symbol : equal
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(161) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(165) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(187) : error A2006:undefined symbol : zero
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(189) : error A2006:undefined symbol : one
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(204) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(208) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\tests\masm\comprehensive_test.asm\1768663846441_xBLN.asm(260) : error A2006:undefined symbol : ExitProcess

@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(70) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(71) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(47) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(74) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(75) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(76) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(77) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(78) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(79) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(80) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(154) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(155) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(548) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(729) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(740) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(820) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(821) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(828) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(856) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(857) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\RawrXD_TextEditorGUI_FIXED.asm(862) : error A2009:syntax error in expression

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_self_modification.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_self_modification.asm(77) : error A2006:undefined symbol : AgentRegistry_Retrieve
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_self_modification.asm(139) : error A2006:undefined symbol : AgentRegistry_Retrieve
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_self_modification.asm(199) : error A2006:undefined symbol : AgentRegistry_Retrieve

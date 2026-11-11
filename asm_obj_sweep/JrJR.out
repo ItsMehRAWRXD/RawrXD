@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\history\-2159e149\JrJR.asm
+D:\rawrxd\history\-2159e149\JrJR.asm(333) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2159e149\JrJR.asm(420) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2159e149\JrJR.asm(423) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2159e149\JrJR.asm(425) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-2159e149\JrJR.asm(26) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\-2159e149\JrJR.asm(34) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2159e149\JrJR.asm(40) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2159e149\JrJR.asm(54) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(99) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(116) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\-2159e149\JrJR.asm(125) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2159e149\JrJR.asm(131) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(159) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2159e149\JrJR.asm(164) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(165) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(170) : error A2006:undefined symbol : CopyFileA
+D:\rawrxd\history\-2159e149\JrJR.asm(174) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(175) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(184) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-2159e149\JrJR.asm(201) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-2159e149\JrJR.asm(207) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-2159e149\JrJR.asm(212) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2159e149\JrJR.asm(224) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(235) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(254) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(263) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(266) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-2159e149\JrJR.asm(279) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\-2159e149\JrJR.asm(285) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\-2159e149\JrJR.asm(290) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2159e149\JrJR.asm(302) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-2159e149\JrJR.asm(308) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-2159e149\JrJR.asm(323) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(339) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(350) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\-2159e149\JrJR.asm(368) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(371) : error A2006:undefined symbol : GetFileAttributesA
+D:\rawrxd\history\-2159e149\JrJR.asm(383) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(384) : error A2206:missing operator in expression
+D:\rawrxd\history\-2159e149\JrJR.asm(389) : error A2006:undefined symbol : CopyFileA
+D:\rawrxd\history\-2159e149\JrJR.asm(394) : error A2206:missing operator in expression

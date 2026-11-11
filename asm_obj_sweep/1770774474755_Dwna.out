@@ -1,0 +1,116 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(117) : error A2008:syntax error : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(137) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(234) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(258) : error A2008:syntax error : DQ
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(625) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(634) : error A2008:syntax error : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(863) : error A2008:syntax error : addr
+ invoke(20): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(863): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(931) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(979) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1035) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1070) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1105) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1140) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1250) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1251) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1292) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1337) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1338) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1379) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1424) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1425) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1466) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1511) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1512) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1553) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1583) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1626) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1661) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1702) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1794) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1868) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1916) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1991) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2043) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2231) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2231): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2236) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2240) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2240): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2245) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(2362) : error A2008:syntax error : prefetch_queue
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(485) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(491) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(497) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(502) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(509) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(516) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(523) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(530) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(540) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(574) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(586) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(598) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(604) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(610) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(647) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(659) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(668) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(698) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(698): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(705) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(705): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(712) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(714) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(716) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(733) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(733): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(743) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(743): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(812) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(860) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(902) : error A2006:undefined symbol : prefetch_queue
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(903) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(904) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(905) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(906) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(907) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(947) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(948) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(954) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(961) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1004) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1005) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1011) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1015) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1020) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1022) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1023) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1024) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1025) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1028) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1042) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1043) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1049) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1053) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1058) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1060) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1063) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1077) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1078) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1084) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1088) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1093) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1095) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1098) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770774474755_Dwna.asm(1112) : fatal error A1012:error count exceeds 100; stopping assembly

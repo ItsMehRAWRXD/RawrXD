@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\-14950ba1\3s5k.asm
+D:\rawrxd\history\-14950ba1\3s5k.asm(162) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(169) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(230) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(237) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(279) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(286) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(311) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(318) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(343) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(350) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(375) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(382) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(425) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(432) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(457) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(464) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(489) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(496) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\history\-14950ba1\3s5k.asm(521) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-14950ba1\3s5k.asm(528) : error A2006:undefined symbol : GetModuleHandleA

@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(854) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(859) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(928) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(940) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(953) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(954) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(977) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(979) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1048) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1053) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1061) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1136) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1161) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1170) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1171) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1172) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1173) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1187) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(1188) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(888) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(905) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(965) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(967) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(827) : warning A4025:ENDP found before .ENDPROLOG : RMSNorm_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(827) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286206188_8itz.asm(827) : error A2220:Missing .ENDPROLOG

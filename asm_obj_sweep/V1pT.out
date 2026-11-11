@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\V1pT.asm
+D:\rawrxd\history\-29b34fd4\V1pT.asm(631) : error A2006:undefined symbol : OpType
+D:\rawrxd\history\-29b34fd4\V1pT.asm(636) : error A2006:undefined symbol : OpSize

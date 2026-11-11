@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(136) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(136) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(152) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(152) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(168) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(176) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(191) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(206) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(221) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(221) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(238) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(242) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(257) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(257) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(274) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(341) : error A2006:undefined symbol : g_Pattern_CompletionEngine
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(342) : error A2006:undefined symbol : g_Pattern_ContextAnalyzer
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(343) : error A2006:undefined symbol : g_Pattern_RewriteEngine
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(344) : error A2006:undefined symbol : g_Pattern_ModelRouter
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(345) : error A2006:undefined symbol : g_Pattern_LSPIntegration
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(346) : error A2006:undefined symbol : g_Pattern_PerformanceOptimizer
+D:\rawrxd\history\all_versions\src\genesis.asm\1771489147757_x4cT.asm(347) : error A2006:undefined symbol : g_Pattern_AdvancedAgent

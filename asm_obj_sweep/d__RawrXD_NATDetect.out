@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__RawrXD_NATDetect.asm
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NATDetect.asm(53) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NATDetect.asm(150) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NATDetect.asm(25) : error A2084:constant value too large

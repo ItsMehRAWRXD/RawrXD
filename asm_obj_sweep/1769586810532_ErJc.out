@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(462) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(470) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(478) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(486) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(714) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(719) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(736) : error A2006:undefined symbol : hdd_file_size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(741) : error A2006:undefined symbol : hdd_file_handle
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(746) : error A2006:undefined symbol : io_completion_port
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(752) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(757) : error A2006:undefined symbol : slots
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(764) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(805) : error A2006:undefined symbol : shutdown_event
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(808) : error A2006:undefined symbol : io_thread_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(825) : error A2006:undefined symbol : io_threads
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1119) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2406) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(578) : warning A4025:ENDP found before .ENDPROLOG : InitCRC32Table
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(578) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(578) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(656) : warning A4025:ENDP found before .ENDPROLOG : Infinity_ClassifyModel
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(671) : warning A4025:ENDP found before .ENDPROLOG : Infinity_GetSlotCount
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(959) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_IOThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1044) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_CheckQuadBuffer
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1202) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_RotateBuffers
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1233) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_HandleYTfnTrap
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1307) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_Shutdown
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1416) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1499) : warning A4025:ENDP found before .ENDPROLOG : WorkerThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1562) : warning A4025:ENDP found before .ENDPROLOG : Worker_GetWork
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1595) : warning A4025:ENDP found before .ENDPROLOG : Worker_PopLocal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1657) : warning A4025:ENDP found before .ENDPROLOG : Worker_StealFrom
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1760) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_SubmitTask
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1790) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_PopGlobal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1867) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(1912) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_RegisterResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2029) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_LockResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2069) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_CheckDeadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2140) : warning A4025:ENDP found before .ENDPROLOG : DFS_Deadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2180) : warning A4025:ENDP found before .ENDPROLOG : DeadlockDetectionThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2303) : warning A4025:ENDP found before .ENDPROLOG : Heartbeat_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586810532_ErJc.asm(2381) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatSendThread

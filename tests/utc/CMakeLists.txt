@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(RawrXD_UTC_Provider_Cert LANGUAGES CXX)
+add_executable(rawrxd_utc_provider_cert
+    utc_provider_cert.cpp
+    ../../src/core/utc_provider.cpp)
+target_include_directories(rawrxd_utc_provider_cert PRIVATE ../../src/core)
+target_compile_features(rawrxd_utc_provider_cert PRIVATE cxx_std_17)
+find_package(Threads REQUIRED)
+target_link_libraries(rawrxd_utc_provider_cert PRIVATE Threads::Threads)
+enable_testing()
+add_test(NAME utc_provider_cert COMMAND rawrxd_utc_provider_cert)
+foreach(mode IN ITEMS 0 1)
+    add_executable(rawrxd_utc_abi_${mode} utc_abi_compile.cpp)
+    target_compile_features(rawrxd_utc_abi_${mode} PRIVATE cxx_std_17)
+    target_include_directories(rawrxd_utc_abi_${mode} PRIVATE ../../src/core)
+    target_compile_definitions(rawrxd_utc_abi_${mode} PRIVATE RAWRXD_LINK_TELEMETRY_KERNEL_ASM=${mode} RAWR_HAS_MASM=${mode})
+    add_test(NAME utc_abi_${mode} COMMAND rawrxd_utc_abi_${mode})
+endforeach()

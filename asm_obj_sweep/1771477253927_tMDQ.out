@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\dequant_simd.asm\1771477253927_tMDQ.asm
+D:\rawrxd\history\all_versions\dequant_simd.asm\1771477253927_tMDQ.asm(100) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\dequant_simd.asm\1771477253927_tMDQ.asm(108) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\dequant_simd.asm\1771477253927_tMDQ.asm(129) : error A2189:invalid combination with segment alignment : 64

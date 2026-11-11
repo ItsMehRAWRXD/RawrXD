@@ -1,0 +1,4 @@
+[Prometheus] Listening on port 9090 for /metrics...
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: D:\rawrxd\build\bin\rawrxd.config.json — using defaults.
+[main_win32] createWindow failed — no interactive window station. Run with --headless for terminal/server mode.

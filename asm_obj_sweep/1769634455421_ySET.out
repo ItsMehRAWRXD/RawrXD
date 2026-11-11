@@ -1,0 +1,86 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(186) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(219) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(230) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(595) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(599) : error A2008:syntax error : g_cacheLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(600) : error A2008:syntax error : g_initOnce
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(610) : error A2008:syntax error : g_queueLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(635) : error A2006:undefined symbol : SYSTEM_INFO
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(635) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(638) : error A2008:syntax error : IF
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(704) : error A2008:syntax error : ELSEIF
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(708) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(713) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(715) : error A2008:syntax error : ELSEIF
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(736) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(806) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(808) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(811) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(813) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(827) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(873) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1009) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1106) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1128) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1155) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1220) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1221) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1222) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1223) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1515) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1766) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1830) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1833) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1836) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1910) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1925) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(1948) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2019) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2020) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2021) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2022) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2124) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2254) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2256) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2427) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2492) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2554) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2556) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2563) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2609) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2681) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2689) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2691) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2715) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2905) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2924) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2943) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(2987) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3008) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3050) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3067) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3124) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3145) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3201) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3218) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3247) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3400) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3401) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3414) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3418) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3422) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3426) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3430) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3434) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3438) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3442) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3446) : warning A6001:no return from procedure
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3453) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3455) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3458) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3460) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3465) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3468) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3513) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769634455421_ySET.asm(3515) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

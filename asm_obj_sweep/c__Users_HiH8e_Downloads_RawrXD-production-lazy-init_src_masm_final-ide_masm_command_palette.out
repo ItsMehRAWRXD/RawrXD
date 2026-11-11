@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(39) : error A2008:syntax error : label
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(167) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(167) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(563) : error A2008:syntax error : label
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(172) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(173) : error A2006:undefined symbol : style
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(175) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(176) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(177) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(178) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(179) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(180) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(181) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(182) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(184) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(185) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_command_palette.asm(705) : error A2009:syntax error in expression

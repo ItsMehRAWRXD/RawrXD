@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(7) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(10) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(11) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(88) : error A2008:syntax error : window_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(89) : error A2008:syntax error : device_context
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(92) : error A2008:syntax error : current_file_index
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(93) : error A2008:syntax error : current_project_index
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(94) : error A2008:syntax error : editor_font_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(95) : error A2008:syntax error : editor_cursor_x
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(96) : error A2008:syntax error : editor_cursor_y
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(97) : error A2008:syntax error : editor_scroll_x
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(98) : error A2008:syntax error : editor_scroll_y
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(101) : error A2008:syntax error : menu_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(102) : error A2008:syntax error : toolbar_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(103) : error A2008:syntax error : sidebar_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(104) : error A2008:syntax error : editor_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(105) : error A2008:syntax error : status_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(108) : error A2008:syntax error : project_tree_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(109) : error A2008:syntax error : file_tree_handle
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(113) : error A2008:syntax error : times
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(114) : error A2008:syntax error : project_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(117) : error A2008:syntax error : times
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(120) : error A2008:syntax error : current_project_name
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(121) : error A2008:syntax error : current_project_path
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(122) : error A2008:syntax error : current_project_type
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(125) : error A2008:syntax error : compiler_initialized
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(126) : error A2008:syntax error : compilation_in_progress
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(129) : error A2008:syntax error : machine_code_buffer
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(130) : error A2008:syntax error : machine_code_size
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(133) : error A2008:syntax error : target_architecture
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(134) : error A2008:syntax error : output_format
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(135) : error A2008:syntax error : optimization_level
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(139) : error A2008:syntax error : times
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(140) : error A2008:syntax error : open_file_count
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(143) : error A2008:syntax error : times
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(144) : error A2008:syntax error : file_sizes
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(145) : error A2008:syntax error : file_modified_flags
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(149) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(150) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(151) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(152) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(154) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(155) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(156) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(157) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(159) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(160) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(161) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(162) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(163) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(164) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(165) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(166) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(168) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(170) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(171) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(172) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(174) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(175) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(176) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(177) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(180) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(181) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(183) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(184) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(187) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(188) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(189) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(190) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(191) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(192) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(195) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(196) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(197) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(198) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(199) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(200) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(201) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(204) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(205) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(206) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(207) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(210) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(211) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(212) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(213) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(216) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(217) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(218) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(221) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(222) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(223) : error A2044:invalid character in file
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(224) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(225) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(227) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(228) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\self_contained_compiler_gui.asm(229) : fatal error A1012:error count exceeds 100; stopping assembly

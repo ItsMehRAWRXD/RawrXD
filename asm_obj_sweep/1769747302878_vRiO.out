@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(487) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(492) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(499) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(502) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(781) : error A2006:undefined symbol : @@free_request
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(834) : error A2006:undefined symbol : g_szOK
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(837) : error A2006:undefined symbol : g_szInternalError
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747302878_vRiO.asm(866) : error A2006:undefined symbol : HTTP_REQUEST

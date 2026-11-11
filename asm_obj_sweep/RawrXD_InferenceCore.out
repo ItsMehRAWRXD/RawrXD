@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\RawrXD_InferenceCore.asm
+D:\rawrxd\src\RawrXD_InferenceCore.asm(490) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\src\RawrXD_InferenceCore.asm(529) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\src\RawrXD_InferenceCore.asm(556) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\src\RawrXD_InferenceCore.asm(580) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\src\RawrXD_InferenceCore.asm(611) : error A2006:undefined symbol : Inference_ReleaseSequence

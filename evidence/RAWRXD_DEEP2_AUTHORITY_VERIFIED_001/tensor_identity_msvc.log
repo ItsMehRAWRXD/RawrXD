@@ -1,0 +1,4 @@
+MSVC x64 /std:c++20 /W4
+cl ... /I include tests\test_tensor_identity.cpp
+run: DEEP2_TENSOR_IDENTITY_76_90_PASS, exit 0
+critical finding: the same numeric Q4_K id differs by header (include/gguf_loader.h=10, common_types.h=16, canonical Deep2::GGMLType=12) - the adapter requires an explicit dialect

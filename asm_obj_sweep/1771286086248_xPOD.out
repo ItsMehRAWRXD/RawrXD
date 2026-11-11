@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_replacement.asm\1771286086248_xPOD.asm
+D:\rawrxd\history\all_versions\src\dumpbin_replacement.asm\1771286086248_xPOD.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_replacement.asm\1771286086248_xPOD.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_replacement.asm\1771286086248_xPOD.asm(16) : fatal error A1000:cannot open file : user32.inc

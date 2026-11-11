@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-287f1d26\q3am.asm
+D:\rawrxd\history\-287f1d26\q3am.asm(446) : error A2088:END directive required at end of file
+D:\rawrxd\history\-287f1d26\q3am.asm(113) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-287f1d26\q3am.asm(122) : error A2006:undefined symbol : EM_SETLIMITTEXT
+D:\rawrxd\history\-287f1d26\q3am.asm(125) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(176) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-287f1d26\q3am.asm(224) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-287f1d26\q3am.asm(269) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-287f1d26\q3am.asm(304) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-287f1d26\q3am.asm(337) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-287f1d26\q3am.asm(369) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(376) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(383) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(390) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(422) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-287f1d26\q3am.asm(429) : error A2006:undefined symbol : SendMessageA

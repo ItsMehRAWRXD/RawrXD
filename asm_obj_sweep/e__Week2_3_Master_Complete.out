@@ -1,0 +1,69 @@
+ Assembling: D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(163) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(174) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(186) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(219) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(222) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(233) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(250) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(253) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(265) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(284) : error A2008:syntax error : recv_ovlp
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(285) : error A2008:syntax error : send_ovlp
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(288) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(321) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(350) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(371) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(374) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(419) : error A2008:syntax error : global_lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(426) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(452) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(508) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(511) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(514) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(923) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(928) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(950) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(966) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(973) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1014) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1020) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1301) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1309) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1316) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1321) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1327) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1497) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1527) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(505) : error A2006:undefined symbol : global_lock
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(780) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(637) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(759) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(817) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(832) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(846) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(892) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1057) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1076) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1088) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1101) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1113) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1126) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1174) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1187) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1201) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1218) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1251) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1265) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1280) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1333) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1372) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1422) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1437) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1455) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1469) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1539) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1590) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1606) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0025\e__Week2_3_Master_Complete.asm(1627) : error A2220:Missing .ENDPROLOG

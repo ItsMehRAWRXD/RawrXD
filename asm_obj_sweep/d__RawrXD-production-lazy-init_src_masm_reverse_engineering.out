@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(181) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(186) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(191) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(223) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(229) : error A2008:syntax error : GetFileSize
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(233) : error A2008:syntax error : CreateFileMappingA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(239) : error A2008:syntax error : MapViewOfFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(259) : error A2008:syntax error : GlobalAlloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(272) : error A2008:syntax error : UnmapViewOfFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(275) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(278) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(335) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(344) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(350) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(373) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(440) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(170) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(172) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(174) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(343) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering.asm(358) : error A2029:multiple base registers not allowed

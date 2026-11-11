@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\Moi4.asm
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(173) : error A2008:syntax error : width
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1874) : error A2008:syntax error : ENDPsi
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1900) : error A2005:symbol redefinition : @show
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1902) : error A2005:symbol redefinition : @set_visibility
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1905) : error A2005:symbol redefinition : @no_window
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1368) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1850) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(1887) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(2112) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(2137) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(2576) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(2583) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(3254) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(3293) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(3385) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(3960) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\Moi4.asm(4203) : error A2081:missing operand after unary operator

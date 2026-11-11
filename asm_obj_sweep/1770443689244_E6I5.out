@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(81) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(186) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(667) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(725) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(738) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(932) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(89) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\all_versions\src\asm\RawrXD_EnterpriseLicense.asm\1770443689244_E6I5.asm(513) : warning A6004:procedure argument or local not referenced : dwHashLen

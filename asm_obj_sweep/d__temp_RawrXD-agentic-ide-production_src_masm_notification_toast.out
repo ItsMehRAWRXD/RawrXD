@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(10) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(11) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(14) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(18) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(23) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(33) : error A2008:syntax error : SetWindowLongPtr
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(36) : error A2008:syntax error : SetTimer
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(38) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_notification_toast.asm(41) : fatal error A1010:unmatched block nesting : Toast_Show

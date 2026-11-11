@@ -1,0 +1,54 @@
+{
+  "gate": "SOURCE_WEIGHT_PROVENANCE_001",
+  "archive_date": "2026-10-07",
+  "status": "OFFICIAL_SOURCE_FINITE_GGUF_CORRUPTION_CONFIRMED",
+  "official_source": {
+    "repo_id": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+    "shard": "model-00001-of-000004.safetensors",
+    "shard_size_gb": 8.0,
+    "tensor_map": {
+      "blk.0.attn_norm.weight": "model.layers.0.input_layernorm.weight",
+      "blk.0.ffn_norm.weight": "model.layers.0.post_attention_layernorm.weight",
+      "output_norm.weight": "model.norm.weight"
+    }
+  },
+  "results": {
+    "blk.0.attn_norm.weight": {
+      "shape": [2048],
+      "dtype": "torch.bfloat16",
+      "nonfinite": 0,
+      "nan": 0,
+      "inf": 0,
+      "min": 0.2197266,
+      "max": 7.625
+    },
+    "blk.0.ffn_norm.weight": {
+      "shape": [2048],
+      "dtype": "torch.bfloat16",
+      "nonfinite": 0,
+      "nan": 0,
+      "inf": 0,
+      "min": 0.01611328,
+      "max": 0.4746094
+    },
+    "output_norm.weight": {
+      "shape": [2048],
+      "dtype": "torch.bfloat16",
+      "nonfinite": 0,
+      "nan": 0,
+      "inf": 0,
+      "min": 0.2773438,
+      "max": 2.609375
+    }
+  },
+  "verdict": {
+    "official_source_weight": "FINITE",
+    "gguf_weight": "NONFINITE",
+    "gguf_nonfinite_details": {
+      "blk.0.attn_norm.weight": "13 NaN",
+      "blk.0.ffn_norm.weight": "8 NaN"
+    },
+    "root_cause_stage": "conversion/quantization/GGUF artifact corruption"
+  },
+  "next_steps": "Option B: Regenerate clean GGUF from official source"
+}

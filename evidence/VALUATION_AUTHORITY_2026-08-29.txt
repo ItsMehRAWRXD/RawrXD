@@ -1,0 +1,100 @@
+# VALUATION_AUTHORITY_2026-08-29 — FROZEN
+
+```text
+CENTRAL_PRE_MONEY      ≈ $35M
+FUNDABLE_RANGE         = $25M–$45M
+TECHNICAL_IP_RANGE     = $10M–$18M
+
+NEXT_PROOF_BAND        = $40M–$75M
+UNSTATIC_PREMIUM       = NOT YET EARNED
+```
+
+## Blocking discounts
+
+```text
+P1_UI_ENCODING_002               = PASS (E3F3BAA4… IDE binary)
+P1_IDE_EXEC_POLICY_LIVE_GGUF_001 = PASS (tinyllama_fresh; POLICY_SHA_AT_SEAM==AFTER)
+REAL_SPEEDUP > 1.00×             = PASS CLOSED (P1_REAL_SPEEDUP_001; median 1.48×)
+                                   MEDIAN_ACCELERATION=PROVEN
+                                   TAIL_LATENCY_SUPERIORITY=NOT PROVEN
+                                   COLD_START_STABILITY=NOT PROVEN
+REPEATABILITY                    = FAIL (_001; S01 2.53× sample; S02 0.59× valid;
+                                   _002 CONTRACT_FROZEN — isolation prerequisite;
+                                   tail still BLOCKED)
+COMMERCIAL_TRACTION              = NOT ESTABLISHED
+
+PRESERVABLE_TECHNICAL_CLAIM=
+RawrXD's production execution policy achieved 1.48× median generate-time
+acceleration against its frozen host-heavy baseline on the same model,
+prompt, token workload, and hardware while preserving the certified
+correctness constraint.
+(Archive: evidence/P1_REAL_SPEEDUP_001/{GATE,AUTHORITY,HASHES,ENVIRONMENT}.txt)
+```
+
+## Historical / non-transferable
+
+```text
+VALUATION_TECHNICAL_2026-08-29 AGENT-E2E snapshots ($90M–$145M)
+  = historical / non-transferable
+  until current product-runtime gates support them
+```
+
+## Promotion ladder (do not skip)
+
+```text
+$35M current mark
+    ↓
+encoding PASS                         ✓
+    ↓
+live GGUF PASS (loader+generate+policy stability) ✓
+    ↓
+REAL_SPEEDUP > 1.00× median             ✓ CLOSED (1.48×; GATE byte-stable)
+    ↓
+REPEATABILITY (>=3 sessions, isolated)  ✗ FAIL (_001); _002 CONTRACT_FROZEN
+    ↓
+TAIL-LATENCY CONTROL                    BLOCKED
+    ↓
+$40M–$75M proof band                    (mark unchanged)
+    ↓
+certified unknown runtime discovery
+    ↓
+reproduced + generalized
+    ↓
+second compounded discovery
+    ↓
+Unstatic valuation premium becomes defensible
+```
+
+## Practical rule
+
+```text
+NO NEW VALUATION PREMIUM
+unless evidence advances the promotion ladder.
+```
+
+Architecture, class stubs, design completeness, and research hypotheses may
+increase **technical confidence** — they do **not** move the canonical mark by
+themselves. Prevents technical progress from being double-counted as market proof.
+
+## Promotion evidence (auditable)
+
+```text
+product gate PASS
+    ↓
+external REAL_SPEEDUP > 1.00×
+    ↓
+certified runtime discovery
+    ↓
+reproducible / generalized discovery
+    ↓
+compounded verified improvement
+    ↓
+commercial traction
+```
+
+## Valuation change rule
+
+Future valuation moves require **evidence on the promotion ladder** — not
+architectural progress, class stubs, or subsystem coherence alone.
+
+Detail: `evidence/VALUATION_EXECUTION_SUBSTRATE_2026-08-29/`

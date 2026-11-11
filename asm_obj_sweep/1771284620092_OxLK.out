@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(132) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(134) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(157) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(170) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(176) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(182) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(186) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(195) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(197) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(275) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(337) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(342) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(343) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(346) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(347) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(352) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(353) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(356) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(357) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(360) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(361) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(366) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(367) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(379) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(396) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(397) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(399) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(400) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(401) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(402) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(403) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(407) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(410) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(411) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(412) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(413) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(417) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(423) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(429) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(437) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(443) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(457) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(460) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(467) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(468) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(471) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(488) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(508) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(521) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(522) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(523) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(532) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(546) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(548) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(549) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(554) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(555) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(566) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(579) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(633) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(634) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(662) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(663) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(665) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(683) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(684) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(685) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(688) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(691) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(692) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(696) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(697) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(698) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(701) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(704) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(705) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(709) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(710) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(711) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(714) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(717) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(718) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(722) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(723) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(724) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(727) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(728) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(732) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(733) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(734) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(737) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(740) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(741) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(745) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(754) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(756) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_final_working.asm\1771284620092_OxLK.asm(760) : fatal error A1012:error count exceeds 100; stopping assembly
