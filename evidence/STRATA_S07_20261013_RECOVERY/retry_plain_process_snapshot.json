@@ -1,0 +1,4 @@
+{
+  "ProcessId": 27604,
+  "CommandLine": "\"F:\\rawrxd\\tools\\deep2_strata_bench.exe\" --model F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --prefill 32 --generate 64 --gpu --int8kv --no-calibrate --tag s07_plain64_retry --outdir F:/rawrxd/evidence/STRATA_S07_20261013_RECOVERY"
+}

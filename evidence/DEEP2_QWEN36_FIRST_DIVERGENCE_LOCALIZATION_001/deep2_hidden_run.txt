@@ -1,0 +1,156 @@
+BENCH model=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf decode=1 runs=1 backend=cpu-pinned prefill=serial ExecuteToken wide_dot_batch=0
+prompt tokens: 1: 9419
+ingesting F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf ...
+arch=qwen35moe blocks=40 embd=2048 heads=16 kv=2 rope_dim=64 experts=256 used=8
+bound ops=603 (bind 54151.3 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[block] blk=0 out=resid1 l2=1.280523 h0=0.014796909 h1=0.009055115
+[block] blk=0 out=moe_out l2=2.518564 h0=0.000249730 h1=-0.059903294
+[block] blk=0 out=resid2 l2=2.668274 h0=0.015046639 h1=-0.050848179
+[block] blk=1 out=resid1 l2=2.670027 h0=0.014324964 h1=-0.045125388
+[block] blk=1 out=moe_out l2=3.643509 h0=-0.012499509 h1=0.046194017
+[block] blk=1 out=resid2 l2=4.233427 h0=0.001825455 h1=0.001068629
+[block] blk=2 out=resid1 l2=4.354218 h0=0.020375170 h1=-0.003073608
+[block] blk=2 out=moe_out l2=14.337743 h0=-0.265409142 h1=-0.308053464
+[block] blk=2 out=resid2 l2=15.417553 h0=-0.245033979 h1=-0.311127067
+[block] blk=3 out=resid1 l2=14.541757 h0=-0.257157505 h1=-0.308224529
+[block] blk=3 out=moe_out l2=23.216116 h0=0.377682537 h1=0.114005633
+[block] blk=3 out=resid2 l2=23.113404 h0=0.120525032 h1=-0.194218904
+[block] blk=4 out=resid1 l2=23.025395 h0=0.122306861 h1=-0.194228917
+[block] blk=4 out=moe_out l2=3.059170 h0=0.092775501 h1=-0.021570385
+[block] blk=4 out=resid2 l2=22.210898 h0=0.215082362 h1=-0.215799302
+[block] blk=5 out=resid1 l2=22.210057 h0=0.219146535 h1=-0.215846062
+[block] blk=5 out=moe_out l2=3.077425 h0=0.000835913 h1=0.053205784
+[block] blk=5 out=resid2 l2=21.937667 h0=0.219982445 h1=-0.162640274
+[block] blk=6 out=resid1 l2=21.882621 h0=0.220339686 h1=-0.164500341
+[block] blk=6 out=moe_out l2=17.393933 h0=0.230691254 h1=-0.106409371
+[block] blk=6 out=resid2 l2=29.337983 h0=0.451030940 h1=-0.270909727
+[block] blk=7 out=resid1 l2=28.344570 h0=0.424980015 h1=-0.267900586
+[block] blk=7 out=moe_out l2=17.025796 h0=-0.209429353 h1=0.166523367
+[block] blk=7 out=resid2 l2=26.293089 h0=0.215550661 h1=-0.101377219
+[block] blk=8 out=resid1 l2=26.413393 h0=0.222506002 h1=-0.095604844
+[block] blk=8 out=moe_out l2=10.070627 h0=0.460830033 h1=0.099671312
+[block] blk=8 out=resid2 l2=28.328276 h0=0.683336020 h1=0.004066467
+[block] blk=9 out=resid1 l2=28.304180 h0=0.678523779 h1=0.009186053
+[block] blk=9 out=moe_out l2=4.059498 h0=0.066246577 h1=-0.000884793
+[block] blk=9 out=resid2 l2=28.749750 h0=0.744770348 h1=0.008301260
+[block] blk=10 out=resid1 l2=28.811986 h0=0.754060984 h1=0.004716226
+[block] blk=10 out=moe_out l2=10.941540 h0=0.018630998 h1=-0.124123946
+[block] blk=10 out=resid2 l2=29.927911 h0=0.772691965 h1=-0.119407721
+[block] blk=11 out=resid1 l2=28.830412 h0=0.617555737 h1=-0.058449559
+[block] blk=11 out=moe_out l2=2.270842 h0=-0.007828013 h1=-0.032420475
+[block] blk=11 out=resid2 l2=28.287726 h0=0.609727740 h1=-0.090870038
+[block] blk=12 out=resid1 l2=28.309756 h0=0.610773087 h1=-0.087510176
+[block] blk=12 out=moe_out l2=1.812854 h0=0.022273311 h1=0.010877619
+[block] blk=12 out=resid2 l2=27.524340 h0=0.633046389 h1=-0.076632559
+[block] blk=13 out=resid1 l2=27.523366 h0=0.641445398 h1=-0.071303010
+[block] blk=13 out=moe_out l2=1.774760 h0=-0.030770781 h1=-0.030287618
+[block] blk=13 out=resid2 l2=26.782158 h0=0.610674620 h1=-0.101590626
+[block] blk=14 out=resid1 l2=26.762971 h0=0.609490871 h1=-0.103122838
+[block] blk=14 out=moe_out l2=2.954545 h0=0.005961318 h1=0.017403411
+[block] blk=14 out=resid2 l2=27.081470 h0=0.615452170 h1=-0.085719429
+[block] blk=15 out=resid1 l2=27.088949 h0=0.601588130 h1=-0.063655540
+[block] blk=15 out=moe_out l2=1.344199 h0=-0.045052074 h1=-0.006738310
+[block] blk=15 out=resid2 l2=26.529049 h0=0.556536078 h1=-0.070393853
+[block] blk=16 out=resid1 l2=26.579906 h0=0.556547940 h1=-0.067770086
+[block] blk=16 out=moe_out l2=1.468987 h0=0.030772623 h1=0.048075475
+[block] blk=16 out=resid2 l2=26.371276 h0=0.587320566 h1=-0.019694611
+[block] blk=17 out=resid1 l2=26.372396 h0=0.587045610 h1=-0.019991942
+[block] blk=17 out=moe_out l2=1.381957 h0=0.014205939 h1=-0.015158631
+[block] blk=17 out=resid2 l2=26.198808 h0=0.601251543 h1=-0.035150573
+[block] blk=18 out=resid1 l2=26.205743 h0=0.600925207 h1=-0.035268404
+[block] blk=18 out=moe_out l2=3.877314 h0=0.129734933 h1=0.078379437
+[block] blk=18 out=resid2 l2=27.379825 h0=0.730660141 h1=0.043111034
+[block] blk=19 out=resid1 l2=27.206626 h0=0.696441531 h1=0.045666005
+[block] blk=19 out=moe_out l2=2.839609 h0=0.060486078 h1=0.031606909
+[block] blk=19 out=resid2 l2=28.015982 h0=0.756927609 h1=0.077272914
+[block] blk=20 out=resid1 l2=28.665541 h0=0.759422779 h1=0.089239255
+[block] blk=20 out=moe_out l2=2.770743 h0=0.070446998 h1=-0.009889056
+[block] blk=20 out=resid2 l2=28.778046 h0=0.829869747 h1=0.079350196
+[block] blk=21 out=resid1 l2=28.784133 h0=0.825920582 h1=0.083088093
+[block] blk=21 out=moe_out l2=1.235852 h0=-0.056921482 h1=-0.009240335
+[block] blk=21 out=resid2 l2=28.227576 h0=0.768999100 h1=0.073847756
+[block] blk=22 out=resid1 l2=28.254466 h0=0.766713560 h1=0.072532274
+[block] blk=22 out=moe_out l2=6.421332 h0=-0.116454683 h1=-0.028069444
+[block] blk=22 out=resid2 l2=31.574724 h0=0.650258899 h1=0.044462830
+[block] blk=23 out=resid1 l2=31.141773 h0=0.635109305 h1=0.034993935
+[block] blk=23 out=moe_out l2=2.351121 h0=0.016741225 h1=-0.044582091
+[block] blk=23 out=resid2 l2=29.994672 h0=0.651850522 h1=-0.009588156
+[block] blk=24 out=resid1 l2=29.903047 h0=0.651887000 h1=-0.006050050
+[block] blk=24 out=moe_out l2=1.566334 h0=0.020838391 h1=-0.000419162
+[block] blk=24 out=resid2 l2=30.421714 h0=0.672725379 h1=-0.006469212
+[block] blk=25 out=resid1 l2=30.422799 h0=0.673149049 h1=-0.005052012
+[block] blk=25 out=moe_out l2=2.143818 h0=-0.075549245 h1=-0.088632785
+[block] blk=25 out=resid2 l2=30.468598 h0=0.597599804 h1=-0.093684800
+[block] blk=26 out=resid1 l2=30.459596 h0=0.596129239 h1=-0.092002623
+[block] blk=26 out=moe_out l2=10.876368 h0=0.038289636 h1=-0.017333137
+[block] blk=26 out=resid2 l2=35.125778 h0=0.634418845 h1=-0.109335758
+[block] blk=27 out=resid1 l2=34.677812 h0=0.632246435 h1=-0.106589898
+[block] blk=27 out=moe_out l2=4.599832 h0=-0.045103807 h1=0.022682765
+[block] blk=27 out=resid2 l2=36.163302 h0=0.587142646 h1=-0.083907135
+[block] blk=28 out=resid1 l2=36.223274 h0=0.593509793 h1=-0.079150826
+[block] blk=28 out=moe_out l2=3.841692 h0=0.081989095 h1=0.027302222
+[block] blk=28 out=resid2 l2=37.282600 h0=0.675498903 h1=-0.051848605
+[block] blk=29 out=resid1 l2=37.285020 h0=0.661650598 h1=-0.056246944
+[block] blk=29 out=moe_out l2=2.730923 h0=-0.055279113 h1=-0.015090941
+[block] blk=29 out=resid2 l2=37.637833 h0=0.606371462 h1=-0.071337886
+[block] blk=30 out=resid1 l2=37.655852 h0=0.609044373 h1=-0.068164125
+[block] blk=30 out=moe_out l2=8.539712 h0=0.126440763 h1=0.059437115
+[block] blk=30 out=resid2 l2=40.744240 h0=0.735485137 h1=-0.008727010
+[block] blk=31 out=resid1 l2=40.344871 h0=0.725902438 h1=0.000213213
+[block] blk=31 out=moe_out l2=7.482708 h0=0.227940306 h1=0.141151756
+[block] blk=31 out=resid2 l2=42.688095 h0=0.953842759 h1=0.141364962
+[block] blk=32 out=resid1 l2=42.651833 h0=0.960573673 h1=0.146009400
+[block] blk=32 out=moe_out l2=3.343734 h0=0.010296498 h1=-0.019100422
+[block] blk=32 out=resid2 l2=41.522037 h0=0.970870197 h1=0.126908973
+[block] blk=33 out=resid1 l2=41.579200 h0=0.977286875 h1=0.121454872
+[block] blk=33 out=moe_out l2=4.779392 h0=0.023951810 h1=-0.001075770
+[block] blk=33 out=resid2 l2=43.802793 h0=1.001238704 h1=0.120379105
+[block] blk=34 out=resid1 l2=43.456136 h0=0.965730131 h1=0.097482033
+[block] blk=34 out=moe_out l2=9.356102 h0=0.030092854 h1=0.140188888
+[block] blk=34 out=resid2 l2=45.197759 h0=0.995822966 h1=0.237670928
+[block] blk=35 out=resid1 l2=45.806132 h0=0.979355097 h1=0.267395139
+[block] blk=35 out=moe_out l2=7.594253 h0=0.014506323 h1=-0.075521767
+[block] blk=35 out=resid2 l2=47.888100 h0=0.993861437 h1=0.191873372
+[block] blk=36 out=resid1 l2=47.801965 h0=0.963000178 h1=0.196036592
+[block] blk=36 out=moe_out l2=4.859344 h0=-0.029944381 h1=0.081068873
+[block] blk=36 out=resid2 l2=47.825178 h0=0.933055818 h1=0.277105451
+[block] blk=37 out=resid1 l2=47.744678 h0=0.927301407 h1=0.284047037
+[block] blk=37 out=moe_out l2=4.307098 h0=-0.165901080 h1=0.029793385
+[block] blk=37 out=resid2 l2=47.200861 h0=0.761400342 h1=0.313840419
+[block] blk=38 out=resid1 l2=47.123287 h0=0.783007026 h1=0.312988281
+[block] blk=38 out=moe_out l2=4.747296 h0=-0.104248792 h1=0.077273518
+[block] blk=38 out=resid2 l2=47.648103 h0=0.678758264 h1=0.390261799
+[block] blk=39 out=resid1 l2=52.062458 h0=0.995626330 h1=0.464666635
+[block] blk=39 out=moe_out l2=2.293424 h0=0.002399209 h1=0.036923464
+[block] blk=39 out=resid2 l2=51.442961 h0=0.998025537 h1=0.501590073
+  prefill pos=0 token=9419 (5047.9 ms)
+RUN1: logits_finite=yes gpu_complete=yes
+RUN1: bind_ms=54151.3 prefill_ms=5047.9 decode_ms=0.0 e2e_ms=5047.9
+RUN1: PREFILL_TPS=0.198 DECODE_TPS=0.000 STEADY_DECODE_TPS=0.000 E2E_TPS=0.198
+RUN1: first_decode_ms=0.0 tokens_in=1 tokens_out=1
+RUN1: gpu_calls=0 cpu_calls=1301 fallback=GDN reference recurrence; Vulkan stateful dispatch unavailable submits=0 waits=0 kernel_ms=0.0 wait_ms=0.0
+RUN1: per_token submits=0.0 waits=0.0 gpu_ms=0.0 submit_ms=0.0 wait_ms=0.0
+RUN1: ACCOUNT positions=1 decode_forward_passes=0 prefill_submits_per_pos=0.0 decode_submits_per_fwd=0.0
+RUN1: gpu_time_share=0.0% of the measured window (gpu 0.0 ms of prefill+decode 5047.9 ms)
+RUN1: BOUNDARY bind_ms=54151.3 (model load+bind, excluded from TPS)
+RUN1: BOUNDARY prefill wall=5047.9 ms gpu=0.0 ms host_wait=0.0 ms submit=0.0 ms submits=0
+RUN1: BOUNDARY decode wall=0.0 ms gpu=0.0 ms host_wait=0.0 ms submit=0.0 ms submits=0
+RUN1: BOUNDARY decode gpu_share=0.0% wall; unaccounted(host+queue)=0.0 ms; kernel_ms is a HOST-WAIT alias, gpu_ms is device timeline
+RUN1: device_bytes_peak=0.0 MB device_bytes_live=0.0 MB weight_cache_hits=0 misses=0 upload=0.0 MB
+RUN1: ram_peak=2124.9 MB ram_cur=2124.9 MB
+RUN1 GENSTREAM: 151353
+RUN1 VERDICT: PASS
+Released all tensors
+Vulkan resources cleaned up successfully

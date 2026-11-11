@@ -1,0 +1,14 @@
+# Source diff scope
+
+Modified source files:
+
+- `src/win32app/Win32IDE_GhostText.cpp`
+
+Instrumentation added:
+
+- `GHOSTTEXT_ESCAPE_ENTRY`
+- `GHOSTTEXT_INVALIDATED`
+- response `generation_current`, `identity_current`, `snapshot_current`
+- `GHOSTTEXT_RENDER_DECISION`
+
+No behavioral repair or routing-policy change was made in this phase.

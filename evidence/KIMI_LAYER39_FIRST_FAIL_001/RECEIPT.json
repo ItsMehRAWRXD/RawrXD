@@ -1,0 +1,111 @@
+{
+  "schema": "DEEP2_KIMI_LAYER39_FIRST_FAIL_001/v1",
+  "asof_utc": "2026-10-28T02:20:00Z",
+  "canonical_head": "d35da627810f3d5a95db3eb4e04ee43b1bfe8c2a",
+  "source_evidence": "F:/rawrxd/evidence/KIMI_LAYER39_SINGLE_002",
+  "offline_contract_artifact": "F:/rawrxd/evidence/KIMI_LAYER39_FIRST_FAIL_001/OFFLINE_Q8K_CONTRACT.json",
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "CERTIFIED": 0,
+  "status": "FAIL_VS_FP32_SCALAR_EXPLAINED_BY_Q8K_CONTRACT",
+  "OFFICIAL_GATES": "0/25 PENDING (ledger not rewritten by this receipt)",
+  "isolation": {
+    "layer": 39,
+    "expert": 108,
+    "stick": 0,
+    "nEx": 1,
+    "ggml_type": 14,
+    "rows": 7168,
+    "columns": 2048,
+    "GPU_MOE_SINGLE_EXPERT": "ISOLATED routed=8 retained=1"
+  },
+  "path_trace": {
+    "enqueue": "K2MoEStickExpertDevice -> RecordExpert",
+    "down_dispatch": "DispatchGemvQuant(dt=14/Q6_K, ArenaFFNAct -> ArenaDown, rows=H=7168, cols=I=2048, pin=DualStickExpertPin layer/expert/3)",
+    "shader": "src/deep2/shaders/deep2_qgemv.comp type==14: per-256-col Q8_K activation quant + packed Q6_K weight",
+    "cpu_oracle_contract": "QuantKernelRegistry gemv_q6_k_scalar -> rxd_q6k_gemv_reference FP32 (VAL-051.11; Q6_K x Q8_K disabled on CPU)",
+    "completion": "EndFusedLayer (gpu_submits+=1) -> K2MoEStickEndDevice DownloadBuf(ArenaFfnW); diagnostic DownloadBuf(ArenaDown/ArenaFFNAct)",
+    "capture_boundary": "K2MoEStickEndDevice / POST_DEVICE_COMPLETION",
+    "production_semantics_changed": false
+  },
+  "first_fail": {
+    "note": "First index exceeding audit max_abs=0.001 vs FP32 scalar; audit peak remains worst_index=5418",
+    "element_index": 0,
+    "gpu": -0.314657986,
+    "scalar_fp32": -0.3176836142082908,
+    "abs_vs_fp32": 0.003025628208290776,
+    "q6k_q8k_oracle": -0.31465795051904955,
+    "abs_vs_q8k": 3.548095045546873e-08,
+    "limits": {
+      "max_abs": 0.001,
+      "max_rms": 0.0001,
+      "min_cosine": 0.999
+    }
+  },
+  "worst_vs_fp32_scalar": {
+    "element_index": 5418,
+    "gpu": 0.279927015,
+    "scalar_fp32": 0.2690081356937987,
+    "max_abs": 0.010918879306201279,
+    "q6k_q8k_oracle": 0.2799269115898119,
+    "abs_vs_q8k": 1.0341018807924485e-07
+  },
+  "checks": {
+    "cpu_vs_scalar_down": true,
+    "gpu_vs_cpu": false,
+    "gpu_vs_scalar_down": false
+  },
+  "metrics_summary": {
+    "cpu_vs_fp32_scalar_max_abs": 4.401140718535146e-08,
+    "gpu_vs_fp32_scalar_max_abs": 0.010918879306201279,
+    "gpu_vs_q6k_q8k_oracle_max_abs": 3.177003051191285e-07,
+    "gpu_vs_cpu_max_abs": 0.01091888499999999,
+    "act_parity_max_abs_replay": 1.192092896e-06,
+    "q8_n_gt_1e-5": 0,
+    "q8_n_gt_1e-6": 0
+  },
+  "sha256": {
+    "cpu_down": "e7b5c18ececd09736fa6d2fdc45615e0d68914ae85d8dc44310244b295758339",
+    "gpu_down": "e84915e16680b5379d0b9a61f06183911e5c95cd4a93f0af9ece13440dc53275",
+    "manifest": "71e1ce774d809aece7601c8247770a70e0af6f532c0d10e7a118fe01e8de97ba",
+    "post_swiglu_cpu": "5722bc39939fc10842e14bda81c1b312ef08ee4128af8dead7022b9641661333",
+    "weights": "83a4217ca4b4590e83ea424c0f8f7268754b2349f155421bc7dabe1b648eb014"
+  },
+  "gpu_completion_provenance": {
+    "completion_boundary": "K2MoEStickEndDevice",
+    "gpu_arena_owner_expert": 108,
+    "gpu_arena_owner_rule": "LAST_SORTED_WORKLIST_EXPERT",
+    "gpu_down_buffer_id": 1854209538368,
+    "gpu_activation_buffer_id": 1854209538240,
+    "gpu_submits": 1,
+    "last_down_status_tag": "DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY",
+    "buffer_identity_proof": "ArenaDown matches independent Q6_K x Q8_K oracle on captured weights+post_swiglu (max_abs~3.18e-7); wrong-buffer would not match"
+  },
+  "hypotheses": {
+    "1_input_divergence": {
+      "verdict": "RULED_OUT",
+      "evidence": "GPU_MOE_LAST_ACT_PARITY max_abs~1.19e-6; weight+act Q8_K oracle reconstructs GPU down"
+    },
+    "2_kernel_arithmetic": {
+      "verdict": "LEADING",
+      "A_vs_B": "A",
+      "refinement": "Not a broken Q6_K unpack. GPU deep2_qgemv.comp implements Q6_K x Q8_K activation quantization; CPU QuantKernelRegistry and Python scalar oracle use FP32 dequant*x. Fail vs scalar is contract mismatch (A)."
+    },
+    "3_buffer_provenance": {
+      "verdict": "RULED_OUT_UNDER_NEX1",
+      "A_vs_B": "B_ruled_out",
+      "evidence": "nEx=1 + owner=108 + gpu_submits=1 + Q8_K oracle match on ArenaDown; formal status tag remains DIAGNOSTIC_UNPROVEN_BUFFER_IDENTITY by policy wording only"
+    },
+    "4_routing_aggregation": {
+      "verdict": "RULED_OUT",
+      "evidence": "GPU_MOE_SINGLE_EXPERT retained=1; LAST_DOWN compares unscaled ArenaDown vs cpuLast"
+    }
+  },
+  "DETERMINISTIC": {
+    "offline_tensor_recompute": "yes",
+    "live_gpu_rerun": "unknown_not_executed",
+    "note": "Recomputing from sealed SINGLE_002 tensors reproduces worst_index=5418 and max_abs=0.010918879306201279 exactly. No new live GPU capture this turn."
+  },
+  "parity_branch_4093f125": "NOT_MERGED",
+  "NOTE": "Disposition strengthens SINGLE_002 FAIL classification. Does NOT invent PASS. Does NOT certify G05-G06. Does NOT alter production GPU completion semantics. PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0."
+}

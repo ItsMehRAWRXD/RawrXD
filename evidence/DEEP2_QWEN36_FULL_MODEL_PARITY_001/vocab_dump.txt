@@ -1,0 +1,74 @@
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 272 MB
+   layers_0: 144 tensors, 4029 MB
+   layers_1: 144 tensors, 3755 MB
+   layers_2: 144 tensors, 3822 MB
+   layers_3: 144 tensors, 3822 MB
+   layers_4: 144 tensors, 4029 MB
+   output_head: 12 tensors, 442 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+   Tensors: 733
+   Zones: 7
+   Memory (header+index): ~0 MB
+Wrote 248320 tokens to qwen3_vocab_full.txt
+Byte-like tokens (<0xXX>): 0
+Special tokens (<*>): 36
+Unicode tokens: 179582
+Tokens with space: 0
+
+First 50:
+  [0] "!"
+  [1] """
+  [2] "#"
+  [3] "$"
+  [4] "%"
+  [5] "&"
+  [6] "'"
+  [7] "("
+  [8] ")"
+  [9] "*"
+  [10] "+"
+  [11] ","
+  [12] "-"
+  [13] "."
+  [14] "/"
+  [15] "0"
+  [16] "1"
+  [17] "2"
+  [18] "3"
+  [19] "4"
+  [20] "5"
+  [21] "6"
+  [22] "7"
+  [23] "8"
+  [24] "9"
+  [25] ":"
+  [26] ";"
+  [27] "<"
+  [28] "="
+  [29] ">"
+  [30] "?"
+  [31] "@"
+  [32] "A"
+  [33] "B"
+  [34] "C"
+  [35] "D"
+  [36] "E"
+  [37] "F"
+  [38] "G"
+  [39] "H"
+  [40] "I"
+  [41] "J"
+  [42] "K"
+  [43] "L"
+  [44] "M"
+  [45] "N"
+  [46] "O"
+  [47] "P"
+  [48] "Q"
+  [49] "R"
+
+Searching for byte patterns...

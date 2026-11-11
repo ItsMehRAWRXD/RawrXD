@@ -1,0 +1,960 @@
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B45060 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=5.976785
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B45060 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B45060 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=5.976785
+[IR] Starting execution of 300 operations
+[DUMP] Wrote 2048 floats to layer0_pos1_rmsnorm_output.bin
+[DUMP] Wrote 3072 floats to layer0_pos1_k_new.bin
+[STATS] K_new: min=-4.694054 max=16.992382 mean=0.067392 var=2.892570 stddev=1.700756
+[DUMP] Wrote 3072 floats to layer0_pos1_k_cached_after_write.bin
+[STATS] K_cached_after_write: min=-4.699358 max=16.992353 mean=0.088313 var=2.889313 stddev=1.699798
+[DUMP] Wrote 3072 floats to layer0_pos1_q_before_rope.bin
+[DUMP] Wrote 3072 floats to layer0_pos1_q_before_rope.bin
+[STATS] Q_before_RoPE: min=-7.294725 max=17.030977 mean=-0.007007 var=2.812822 stddev=1.677147
+[DUMP] Wrote 128 floats to layer0_pos1_k_rope_raw_cached.bin
+[STATS] K_rope_raw_cached: min=-4.699358 max=16.992353 mean=0.222082 var=8.275674 stddev=2.876747
+[DUMP] Wrote 3072 floats to layer0_pos1_q.bin
+[DUMP] Wrote 192 floats to layer0_pos1_k.bin
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[DUMP] Wrote 2048 floats to layer0_pos1_attn_output.bin
+[STATS] Attention_Output_L0P1: min=-0.400429 max=0.388624 mean=-0.001143 var=0.001295 stddev=0.035981
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.911716
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.911716
+[IR] Starting execution of 300 operations
+[DUMP] Wrote 192 floats to layer0_pos2_k.bin
+[STATS] K_pos2: min=-4.367257 max=17.208939 mean=0.022551 var=2.898133 stddev=1.702391
+[STATS] Attention_Scores_L0P2: empty
+[SOFTMAX] Softmax_Weights_L0P2: empty
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CDB1A0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.829660
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CDB1A0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CDB1A0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.829660
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.932614
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.932614
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=4 max_val=9.028745
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=4 max_val=9.028745
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=9.183338
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=9.183338
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=11.264739
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83A96100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=11.264739
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=13.563139
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=13.563139
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83D41080 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=11.574302
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83D41080 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83D41080 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=11.574302
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=13.614787
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C76120 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=13.614787
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CFA060 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=9.759635
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CFA060 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CFA060 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=9.759635
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=12 max_val=17.444321
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=12 max_val=17.444321
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=11.647930
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=11.647930
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=14.298379
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=14.298379
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=12.818486
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=12.818486
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=10.270201
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=10.270201
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=26644 max_val=23.475588
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=26644 max_val=23.475588
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=12 max_val=15.955540
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=12 max_val=15.955540
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=14.204688
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=14.204688
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=317 max_val=22.017590
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=317 max_val=22.017590
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=647 max_val=18.131142
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=647 max_val=18.131142
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=82 max_val=8.808641
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=82 max_val=8.808641
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CF5040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=1218 max_val=10.733457
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CF5040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CF5040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=1218 max_val=10.733457
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=101 max_val=29.739523
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=101 max_val=29.739523
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=10.870207
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=10.870207
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=15.139280
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=15.139280
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=94 max_val=20.344891
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=94 max_val=20.344891
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=26 max_val=11.838598
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=26 max_val=11.838598
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=101 max_val=18.913773
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=101 max_val=18.913773
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=2 max_val=14.245272
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=2 max_val=14.245272
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.591615
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.591615
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=5.776237
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=5.776237
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=254 max_val=9.392962
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=254 max_val=9.392962
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=10.448370
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=10.448370
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=7.955059
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=7.955059
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=7.687804
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=7.687804
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=253 max_val=7.345796
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=253 max_val=7.345796
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=253 max_val=8.591696
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=253 max_val=8.591696
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.994202
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.994202
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=12.270391
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=12.270391
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=92 max_val=9.678856
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=92 max_val=9.678856
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=384 max_val=7.925667
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=384 max_val=7.925667
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=384 max_val=8.511575
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=384 max_val=8.511575
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=8.470759
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=8.470759
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.140720
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.140720
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=8.394014
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=8.394014
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=4526 max_val=12.046058
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=4526 max_val=12.046058
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=255 max_val=10.277817
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=255 max_val=10.277817
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=6399 max_val=12.457904
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=6399 max_val=12.457904
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=68 max_val=10.336920
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=68 max_val=10.336920
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=950 max_val=10.690804
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=950 max_val=10.690804
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.808614
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.808614
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=6.325251
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=6.325251
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=6.114553
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=6.114553
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=2506 max_val=9.798350
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=2506 max_val=9.798350
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=7.550593
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=7.550593
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=82 max_val=7.375899
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=82 max_val=7.375899
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=6.378711
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=6.378711
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.126047
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC839DF040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.126047
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=0 max_val=6.893262
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83AE8040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=0 max_val=6.893262
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=0 max_val=6.428281
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83B2A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=0 max_val=6.428281
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=5.819060
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=5.819060
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=90 max_val=7.377553
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC8399D020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=90 max_val=7.377553
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=209 max_val=21.537422
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83C71100 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=209 max_val=21.537422
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.536677
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FC83CB3020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.536677

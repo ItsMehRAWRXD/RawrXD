@@ -1,0 +1,22 @@
+[
+  {
+    "Path": "F:\\rawrxd\\tools\\deep2_strata_bench.cpp",
+    "Hash": "F767062153CAC48E74E10E0AC902DC28935E6BCB15836DE1D2367B98CF03E321"
+  },
+  {
+    "Path": "F:\\rawrxd\\src\\deep2\\runtime_graph_executor.cpp",
+    "Hash": "1B3C445FECD8F781F6209DD3B019108F8E9B31C12A2DD3789C3A8A1B9F36A8AF"
+  },
+  {
+    "Path": "F:\\rawrxd\\src\\deep2\\runtime_graph_executor.hpp",
+    "Hash": "09A39EC975117685306DE83CFF402BC99C01B97F326AD54171DF7DE5D2AC4E19"
+  },
+  {
+    "Path": "F:\\rawrxd\\src\\deep2\\quant_dot_dispatch.cpp",
+    "Hash": "533AD904EDC9CB167C231C6B051FFDEE0CE8B670FD6670835EE614578031C84D"
+  },
+  {
+    "Path": "F:\\rawrxd\\src\\vulkan_compute.cpp",
+    "Hash": "661ED2E82077147EE18099CAA675C4C4B18237E12DA8E0AC92CA80DF4E52D21F"
+  }
+]

@@ -1,0 +1,118 @@
+diff --git a/tools/rawrxd_modelgenie_ir_executor.cpp b/tools/rawrxd_modelgenie_ir_executor.cpp
+index aa79ff4512..ca6f3bc7d3 100644
+--- a/tools/rawrxd_modelgenie_ir_executor.cpp
++++ b/tools/rawrxd_modelgenie_ir_executor.cpp
+@@ -661,7 +661,36 @@ public:
+     }
+     
+     void Disable() {
++        std::fprintf(stderr, "[DIFF] Disable called\n");
++        fflush(stderr);
+         enabled = false;
++        std::fprintf(stderr, "[DIFF] Disable returned\n");
++        fflush(stderr);
++    }
++    
++    void SaveStep(const std::string& step_dir) {
++        if (!enabled) return;
++        
++        // Create step directory
++        std::fprintf(stderr, "[DIFF] SaveStep called for %s\n", step_dir.c_str());
++        DWORD result = CreateDirectoryA(step_dir.c_str(), NULL);
++        if (result == 0 && GetLastError() != ERROR_ALREADY_EXISTS) {
++            std::fprintf(stderr, "[DIFF] Failed to create step directory: %s (error %lu)\n", 
++                         step_dir.c_str(), GetLastError());
++            return;
++        }
++        std::fprintf(stderr, "[DIFF] Step directory created: %s\n", step_dir.c_str());
++        
++        // Save records to step directory (use records vector directly but with step_dir as output_dir)
++        std::string old_output_dir = output_dir;
++        output_dir = step_dir;
++        SaveAll();
++        output_dir = old_output_dir;
++        
++        // Clear records after saving
++        records.clear();
++        
++        std::fprintf(stderr, "[DIFF] Step saved to %s, records cleared\n", step_dir.c_str());
+     }
+     
+     void Record(const std::string& op_name, uint32_t op_id, uint32_t layer_idx, 
+@@ -706,8 +735,8 @@ public:
+         // Save as binary files
+         for (const auto& rec : records) {
+             char fname[512];
+-            sprintf_s(fname, "%s\\rec_%s_l%u_p%zu_%s.bin", 
+-                     output_dir.c_str(), rec.op_name.c_str(), rec.layer_idx, rec.position, rec.tensor_type.c_str());
++            sprintf_s(fname, "%s\\rec_%s_l%u_p%zu_%s_op%u.bin", 
++                     output_dir.c_str(), rec.op_name.c_str(), rec.layer_idx, rec.position, rec.tensor_type.c_str(), rec.op_id);
+             
+             // Save header + data
+             std::ofstream f(fname, std::ios::binary);
+@@ -717,7 +746,7 @@ public:
+             }
+             
+             // Write metadata
+-            uint32_t op_id = 0;
++            uint32_t op_id = rec.op_id;
+             uint32_t layer = 0;
+             size_t pos = 0;
+             uint32_t ndim = static_cast<uint32_t>(rec.shape.size());
+@@ -762,7 +791,11 @@ public:
+     }
+     
+     void Clear() {
++        std::fprintf(stderr, "[DIFF] Clear called\n");
++        fflush(stderr);
+         records.clear();
++        std::fprintf(stderr, "[DIFF] Clear returned\n");
++        fflush(stderr);
+     }
+ };
+ 
+@@ -1840,8 +1873,14 @@ int main(int argc, char* argv[])
+         std::fprintf(stderr, "\n=== Teacher-forced decode (%zu tokens) ===\n", forced_tokens.size());
+         
+         if (differential) {
++            std::fprintf(stderr, "[DEBUG] Before DIFF_ENABLE\n");
++            fflush(stderr);
+             DIFF_ENABLE(differential_dir);
++            std::fprintf(stderr, "[DEBUG] DIFF_ENABLE returned\n");
++            fflush(stderr);
+             DIFF_CLEAR();
++            std::fprintf(stderr, "[DEBUG] DIFF_CLEAR returned\n");
++            fflush(stderr);
+         }
+         
+         IRExecutor executor(ggufPath, forced_tokens[0]);
+@@ -1853,8 +1892,12 @@ int main(int argc, char* argv[])
+             
+             std::fprintf(stderr, "\n--- Step %zu (position %zu), input token: %u ---\n", 
+                          step, executor.Position(), input_token);
++            std::fprintf(stderr, "[DEBUG] Calling executor.Execute()\n");
++            fflush(stderr);
+             
+             bool success = executor.Execute();
++            std::fprintf(stderr, "[DEBUG] executor.Execute() returned: %d\n", success);
++            fflush(stderr);
+             
+             uint32_t predictedToken = executor.SampleToken();
+             const std::vector<float>* logits = executor.GetLogits();
+@@ -1886,8 +1929,14 @@ int main(int argc, char* argv[])
+             }
+             
+             if (differential) {
+-                DIFF_SAVE();
+-            }
++                    char step_dir[512];
++                    sprintf_s(step_dir, "%s\\step%zu", differential_dir.c_str(), step);
++                    std::fprintf(stderr, "[DEBUG] Calling SaveStep for step %zu\n", step);
++                    fflush(stderr);
++                    g_differential_recorder.SaveStep(step_dir);
++                    std::fprintf(stderr, "[DEBUG] SaveStep returned\n");
++                    fflush(stderr);
++                }
+             
+             executor.AdvancePosition();
+         }

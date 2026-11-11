@@ -1,0 +1,1 @@
+Replaced drawing-library geometry references with explicit `POINT`, `RECT`, `WINDOWPLACEMENT`, and `GUITHREADINFO` structures. Preserved foreground, visibility, session, and focus API declarations. Diagnostic-only change.

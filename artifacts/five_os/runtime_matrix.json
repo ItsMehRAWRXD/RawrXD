@@ -1,0 +1,109 @@
+{
+  "schema": "RAWRXD_FIVE_OS_RUNTIME_MATRIX",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "targets": [
+    {
+      "os": "Windows",
+      "arch": "x86-64",
+      "binary": "build_ide\\bin-msvc\\cpu_engine_e2e.exe",
+      "sha256": "09699D1DA8876AEA83239B74596F27A530E1ED8AFC2C36444D26DE171FB05B58",
+      "model": "F:\\OllamaModels\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "model_architecture": "qwen3",
+      "model_tensors": 399,
+      "model_layers": 36,
+      "vocab_size": 151936,
+      "embedding_dim": 4096,
+      "attention_heads": 16,
+      "load_result": "LOAD_OK",
+      "eval_result": "EVAL_OK",
+      "logits_count": 151936,
+      "logits_finite": 151936,
+      "generated_tokens": 10,
+      "token_ids": [1933, 3, 99880, 86438, 54334, 54334, 54334, 2293, 13935, 10429],
+      "decode_time_ms": 166353.5,
+      "tokens_per_second": 0.060113,
+      "deterministic": true,
+      "zone_lookup": "PASS - all 399 tensors resolved with non-empty zones",
+      "tensor_acquisition": "PASS - all layers 0-35 acquired",
+      "dequantization": "PASS - Q4_K via GGML to_float",
+      "status": "RUNTIME_PASS",
+      "evidence_log": "evidence\\qwen3_e2e_postfix_014.log"
+    },
+    {
+      "os": "Windows",
+      "arch": "x86-64",
+      "binary": "build_ide\\bin-msvc\\rawr-reap.exe",
+      "sha256": "NOT_RECORDED",
+      "model": "F:\\OllamaModels\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "command": "capabilities",
+      "result": "PASS",
+      "output": "{\"source\":\"...\",\"format\":\"gguf\",\"inspectable\":true,\"architecture\":\"qwen3\",\"calibratable\":false,\"transformable\":false,\"shards\":1,\"tensors\":399,\"reason\":\"architecture_runtime_not_supported:qwen3\"}",
+      "status": "RUNTIME_PASS",
+      "evidence_log": "evidence\\reap_qwen3_caps.log"
+    },
+    {
+      "os": "Linux",
+      "arch": "x86-64",
+      "binary": "none",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Linux runtime available on this host"
+    },
+    {
+      "os": "macOS",
+      "arch": "x86-64/ARM64",
+      "binary": "none",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No macOS runtime available on this host"
+    },
+    {
+      "os": "Android",
+      "arch": "arm64-v8a",
+      "binary": "none",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No Android runtime available on this host"
+    },
+    {
+      "os": "iOS",
+      "arch": "ARM64",
+      "binary": "none",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "blocker": "No iOS runtime available on this host"
+    }
+  ],
+  "test_corpus_results": {
+    "total_tests": 19,
+    "positive_tests": 17,
+    "positive_pass": 17,
+    "negative_tests": 2,
+    "negative_correctly_fail": 2,
+    "tests": [
+      { "test": "01_minimal_return_zero", "type": "positive", "result": "PASS", "expected": "exit=0", "actual": "exit=0" },
+      { "test": "02_stdout", "type": "positive", "result": "PASS", "expected": "hello_world", "actual": "hello_world" },
+      { "test": "03_multi_tu_linking", "type": "positive", "result": "PASS", "expected": "exit=42", "actual": "exit=42" },
+      { "test": "04_static_library", "type": "positive", "result": "PASS", "expected": "mul=42", "actual": "mul=42" },
+      { "test": "05_shared_library", "type": "positive", "result": "PASS", "expected": "shared=42", "actual": "shared=42" },
+      { "test": "06_undefined_symbol", "type": "negative", "result": "PASS", "expected": "link_fail", "actual": "LNK2019 unresolved external" },
+      { "test": "07_relocation", "type": "positive", "result": "PASS", "expected": "exit=100", "actual": "exit=100" },
+      { "test": "09_global_init", "type": "positive", "result": "PASS", "expected": "init_value=42", "actual": "init_value=42" },
+      { "test": "10_thread_local", "type": "positive", "result": "PASS", "expected": "tls=42", "actual": "tls=42" },
+      { "test": "11_exceptions", "type": "positive", "result": "PASS", "expected": "caught=42", "actual": "caught=42" },
+      { "test": "12_stdlib", "type": "positive", "result": "PASS", "expected": "size=5 str=hello", "actual": "size=5 str=hello" },
+      { "test": "13_file_io", "type": "positive", "result": "PASS", "expected": "file written", "actual": "file written" },
+      { "test": "14_process_args", "type": "positive", "result": "PASS", "expected": "argc=3", "actual": "argc=3" },
+      { "test": "15_unicode", "type": "positive", "result": "PASS", "expected": "unicode output", "actual": "unicode output" },
+      { "test": "16_debug_release", "type": "positive", "result": "PASS", "expected": "debug/release modes", "actual": "debug/release modes" },
+      { "test": "17_optimization", "type": "positive", "result": "PASS", "expected": "sum=4950", "actual": "sum=4950" },
+      { "test": "18_incremental_rebuild", "type": "positive", "result": "PASS", "expected": "helper=7", "actual": "helper=7" },
+      { "test": "19_deliberate_compiler_fail", "type": "negative", "result": "PASS", "expected": "compile_fail", "actual": "C2059 syntax error" }
+    ]
+  },
+  "summary": {
+    "runtime_pass": 1,
+    "runtime_blocked": 4,
+    "five_os_runtime": "1/5 PASS",
+    "test_corpus": "19/19 PASS (17 positive + 2 negative correctly failing)"
+  }
+}

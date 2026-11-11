@@ -1,0 +1,13 @@
+DEEP2_OP_TIMING=1
+model=F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+workload=code tokens=4 gamma=4 draft=repeat
+
+serial positions:
+position=103 batch_flush_ms=197.977; op=9 (LmHead) count=1 total_ms=14.391 avg_ms=14.3910; op=3 count=22 total_ms=4.671; op=2 count=154 total_ms=3.012
+position=104 batch_flush_ms=194.993; op=9 (LmHead) count=1 total_ms=14.420 avg_ms=14.4204; op=3 count=22 total_ms=4.869; op=2 count=154 total_ms=2.993
+position=105 batch_flush_ms=195.287; op=9 (LmHead) count=1 total_ms=14.606 avg_ms=14.6064; op=3 count=22 total_ms=4.767; op=2 count=154 total_ms=2.988
+
+spec position:
+position=107 batch_flush_ms=195.401; op=9 (LmHead) count=1 total_ms=28.550 avg_ms=28.5498; op=3 count=22 total_ms=4.995; op=2 count=154 total_ms=3.109
+
+serial=6.04 TPS; speculative=3.50 TPS; speedup=0.58x; stream=identical; finite_logits=1; cpu_calls=0

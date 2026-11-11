@@ -1,0 +1,37 @@
+﻿# GATE_SUMMARY — HARNESS_RECOVERY_AND_OS_FORENSICS_001
+
+ASOF_UTC=2026-11-02T13:45:37.3365991Z
+GATE=HARNESS_RECOVERY_AND_OS_FORENSICS_001
+CANDIDATE_EXE=F:\rawrxd\.worktrees\product_seal_clean_a5ae60ef_build\bin\RawrXD-Win32IDE-Native.exe
+CANDIDATE_SHA256=CB34EF4E1A3C964ADEC18F02ABBE605B85CB83F10961BCA6A9DB2D812FC0C6FB
+CANDIDATE_BYTES=1608192
+SHA_REVERIFY=MATCH (CANDIDATE_SHA_REVERIFY.txt)
+REBUILD=0
+PROMOTE=0
+CERTIFIED=0
+CANDIDATE_PRESERVED=1
+TIP_CLIMB=HOLD
+PRIOR_SEAL_MUTATION=0 (PRODUCT_BINARY_SEAL_001 / HOST_STABILITY / CHATWINDOW_RESPONSE_TRACE untouched)
+
+## Recovery sequence
+
+| Step | Result | Evidence |
+|------|--------|----------|
+| 1 Process inventory | DONE | PROCESS_INVENTORY.md/csv; HOT product_seal wrappers=0; build tools=0; RawrXD IDE=0 |
+| 2 Kill stale harness | HOLD_KILL (0 killed) | KILL_RECEIPT.md — 364892 PID 22144 already DEAD; other 364* no live cmdline match |
+| 3 Shell probe | PASS | SHELL_PROBE.md EXIT=0 ELAPSED_MS=1035 STDOUT=HELLO |
+| 4 OS forensics | COLLECTED | EVENTLOG.md DUMP_INVENTORY.md MEMORY_DISK.md GPU.md |
+| 5 SHA reverify | PASS/MATCH | full hash + 1608192 bytes |
+| 6a ChatWindow | FAIL | CHATWINDOW_RUNTIME_RECEIPT.md DISPOSITION=FAIL_CLOSED_RESPONSE_NOT_OBSERVED; harness process EXIT=0; ELAPSED≈137s; OLLAMA_UP=0 |
+| 6b GhostText | NOT_VERIFIED | GHOSTTEXT_RUNTIME_RECEIPT.md DISPOSITION=UI_CONTROLS_PRESENT_NO_GHOSTTEXT_MARKER; RUNTIME_PASS=0; harness EXIT=0; ELAPSED≈52s |
+| 6c 64-token product | NOT_VERIFIED | PRODUCT_64_TOKEN_RECEIPT.md STOP_REASON=MISSING_CANDIDATE_64_TOKEN_PRODUCT_PATH |
+
+## Classifications
+- PRIMARY_CAUSE=HARNESS_HUNG (parent Cursor Shell hung; terminal files stuck status=running; live OS had no product_seal Tee/git/e2e wrappers)
+- IDE_HUNG=NOT_SUPPORTED
+- HOST_UNSTABLE=CAUSE_UNDETERMINED (no Kernel-Power/WHEA in 4h; Application: Explorer APPCRASH, Taskmgr heap, OBS AppHang earlier; AMD ANR noise only)
+- HARNESS_STILL_HUNG=0 (independent subagent shell recovered; probe PASS)
+- SHELL_CHANNEL=RECOVERED_SUBAGENT_SHELL
+
+## Law
+NOT_RUN != PASS. No invented PASS. Same-SHA fresh receipts only under this evidence dir.

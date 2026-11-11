@@ -1,0 +1,51 @@
+{
+  "receipt": "RAWRXD_GGUF_BUDGETED_RESIDENCY_QWEN3_CPU_001",
+  "timestamp": "2026-10-25",
+  "repository": {
+    "path": "F:\\rawrxd",
+    "branch": "fix/deep2-multimodel-safety-20261025",
+    "head": "cee5039457e339aa1180cb4140bd450d41d28b43",
+    "working_tree_dirty": true
+  },
+  "executable": {
+    "path": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "sha256": "9CB5DA9A145F9D3C302B100C46DCBAD0BADF576C359BF3316B429C9665F1A53A"
+  },
+  "model": {
+    "path": "F:\\OllamaModels\\DeepSeek-R1-0528-Qwen3-8B-GGUF\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+    "sha256": "713D3A7A93F306763A6DE2B5E9F9350E3AEEE3BBFE8C3EE0066B61939FEAA332",
+    "tensors": 399,
+    "zones": 7,
+    "vocab": 151936,
+    "embedding_dim": 4096,
+    "layers": 36,
+    "heads": 16
+  },
+  "residency": {
+    "bounded_slice_probe": "PASS",
+    "large_zone_full_allocation": "NOT_USED",
+    "original_model_modified": false
+  },
+  "inference": {
+    "backend": "CPU",
+    "load": "PASS",
+    "single_forward": {
+      "status": "PASS",
+      "logits": 151936,
+      "finite_logits": 151936,
+      "best_token": 25701,
+      "max_logit": 14.7155,
+      "reported_memory_bytes": 4831838208
+    },
+    "greedy_decode": {
+      "status": "PASS",
+      "requested_tokens": 2,
+      "emitted_tokens": 2
+    }
+  },
+  "capability_boundary": {
+    "qwen3_standard_attention": "CERTIFIED_FOR_THIS_PROBE",
+    "qwen3_6_hybrid_qkv_ssm": "REJECTED_UNSUPPORTED_CPU_TOPOLOGY",
+    "full_qwen3_6_generation": "NOT_CERTIFIED"
+  }
+}

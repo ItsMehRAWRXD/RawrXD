@@ -1,0 +1,47 @@
+﻿=== commit-graph remediation 2026-10-26T19:40:40.5870574-04:00
+OVERFLOW_OID=1393940bf8206f638057bc5d90a5102b43f614a5
+  type=commit
+  rev-list-parents=1393940bf8206f638057bc5d90a5102b43f614a5
+  parent_token_count=1
+  contains_refs=refs/remotes/final/codex/controlled-replacement-pass;refs/remotes/origin/codex/controlled-replacement-pass;refs/tags/v1.0.1
+OVERFLOW_OID=45057c45c51ad6f27cf73697042e786494e47642
+  type=commit
+  rev-list-parents=45057c45c51ad6f27cf73697042e786494e47642
+  parent_token_count=1
+  contains_refs=refs/recovery/bundle/repair/37ad9e7df3e7b8129f2099186834e23b4edaf484;refs/recovery/bundle/repair/45057c45c51ad6f27cf73697042e786494e47642;refs/recovery/bundle/repair/a1d27e372af58299cb8248001ad078fcb20818c2;refs/recovery/bundle/repair/e4e71e27786940b68bba5f415d23778548aac4c5;refs/remotes/closure-origin/main
+OVERFLOW_OID=b57a9880825e81dd44c218da23f920629afeafc3
+  type=commit
+  rev-list-parents=b57a9880825e81dd44c218da23f920629afeafc3
+  parent_token_count=1
+  contains_refs=refs/recovery/bundle/repair/43661f090bc90e883289dd648cba3fe58c9c4157;refs/recovery/bundle/repair/73c735eff133314ee0e098e19613fa1bf5323296;refs/remotes/final/HEAD;refs/remotes/final/main
+ABSENT=F:\rawrxd\.git\objects\info\commit-graph
+REMOVE_TARGET=F:\rawrxd\.git\objects\info\commit-graphs IsContainer=True
+REMOVED_EXISTS_AFTER=False
+FSCK_NOCG_EXIT=129
+FSCK_NOCG_ELAPSED_MS=41
+FSCK_NOCG_MISSING_LINES=0
+FSCK_NOCG_DANGLING_LINES=0
+FSCK_NOCG_CORRUPT_HITS=0
+FSCK_NOCG_COMMIT_GRAPH_ERRS=0
+FSCK_NOCG_STDERR=error: unknown option `no-commit-graph'
+usage: git fsck [--tags] [--root] [--unreachable] [--cache] [--no-reflogs]
+                [--[no-]full] [--strict] [--verbose] [--lost-found]
+                [--[no-]dangling] [--[no-]progress] [--connectivity-only]
+                [--[no-]name-objects] [--[no-]references] [<object>...]
+
+    -v, --[no-]verbose    be verbose
+    --[no-]unreachable    show unreachable objects
+    --[no-]dangling       show dangling objects
+    --[no-]tags           report tags
+    --[no-]root           report root nodes
+    --[no-]cache          make index objects head nodes
+    --[no-]reflogs        make reflogs head nodes (default)
+    --[no-]full           also consider packs and alternate objects
+    --[no-]connectivity-only
+                          check only connectivity
+    --[no-]strict         enable more strict checking
+    --[no-]lost-found     write dangling objects in .git/lost-found
+    --[no-]progress       show progress
+    --[no-]name-objects   show verbose names for reachable objects
+    --[no-]references     check reference database consistency
+MISSING_UNIQUE_COUNT=0

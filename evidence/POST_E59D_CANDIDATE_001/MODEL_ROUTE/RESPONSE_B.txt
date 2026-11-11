@@ -1,0 +1,7 @@
+﻿Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI: ROUTE_B_GEMMA3 is a fascinating exploration.
+
+

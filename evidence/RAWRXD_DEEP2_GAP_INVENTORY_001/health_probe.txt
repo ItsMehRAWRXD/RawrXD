@@ -1,0 +1,4 @@
+2026-10-30T09:20:34.291 info security [] audit log open (audit_path=C:\Users\Garrett\AppData\Local\RawrXD\audit\rawrxd_audit.jsonl) (encrypted=true)
+2026-10-30T09:20:34.292 info security [] security runtime initialized (encryption=true) (audit=true) (max_request_bytes=8388608)
+2026-10-30T09:20:34.292 info startup [] production runtime initialized (environment=development) (service=rawrxd) (instance=local) (log_level=info) (config_fingerprint=b61a02c92fffee97)
+healthy (liveness=true readiness=true)
