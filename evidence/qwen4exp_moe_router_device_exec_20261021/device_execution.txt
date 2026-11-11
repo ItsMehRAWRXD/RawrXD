@@ -1,0 +1,14 @@
+=== Qwen4Exp MoE router: device execution ===
+artifact: src\deep2\shaders\deep2_qwen4exp_moe_router.spv
+artifact: 681 words of SPIR-V
+validation: VK_LAYER_KHRONOS_validation is on
+device : AMD Radeon AI PRO R9700
+pipeline: created
+
+hidden_width=64 experts=512 top_k=10
+max_abs_diff = 1.813027e-06
+tolerance    = 2.000000e-05
+all finite   = yes
+
+RESULT: PASS (the device reproduced the reference)
+EXIT=0 

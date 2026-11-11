@@ -1,0 +1,35 @@
+=== DEEP2_NEMOTRON_MOE_EXPERT_CPU_PARITY_001 ===
+model: F:\models\nemotron-3.5-lightning-30b.gguf
+
+BLOCK          1
+EXPERT_UP      blk.1.ffn_up_exps.weight
+EXPERT_DOWN    blk.1.ffn_down_exps.weight
+
+loading 4 tensors ...
+expert up   dims=[2688,1856,128] bytes=439025664
+expert down dims=[1856,2688,128] bytes=678494208
+
+ROUTING  experts=[64,117,126,45,100,10]
+
+PER-EXPERT CONTRIBUTION
+  expert 64  kernel: max_abs=5.311e-01 rmse=5.208e-02 cosine=0.986149168 first_divergence=0 n=2688
+            exact: max_abs=5.311e-01 rmse=5.208e-02 cosine=0.986149168 first_divergence=0 n=2688
+  expert 117 kernel: max_abs=5.852e-01 rmse=6.102e-02 cosine=0.980180675 first_divergence=0 n=2688
+            exact: max_abs=5.852e-01 rmse=6.102e-02 cosine=0.980180675 first_divergence=0 n=2688
+  expert 126 kernel: max_abs=5.732e-01 rmse=5.422e-02 cosine=0.986561464 first_divergence=0 n=2688
+            exact: max_abs=5.732e-01 rmse=5.422e-02 cosine=0.986561464 first_divergence=0 n=2688
+  expert 45  kernel: max_abs=5.901e-01 rmse=6.105e-02 cosine=0.980789487 first_divergence=0 n=2688
+            exact: max_abs=5.901e-01 rmse=6.105e-02 cosine=0.980789487 first_divergence=0 n=2688
+  expert 100 kernel: max_abs=5.100e-01 rmse=6.038e-02 cosine=0.987628548 first_divergence=0 n=2688
+            exact: max_abs=5.100e-01 rmse=6.038e-02 cosine=0.987628548 first_divergence=0 n=2688
+  expert 10  kernel: max_abs=5.510e-01 rmse=5.770e-02 cosine=0.983517681 first_divergence=0 n=2688
+            exact: max_abs=5.510e-01 rmse=5.770e-02 cosine=0.983517681 first_divergence=0 n=2688
+[FAIL] every expert's contribution matches the QUANTISED reference worst expert max_abs=0.590093 (first divergent expert index 0)
+
+WEIGHTED AGGREGATION  max_abs=1.329e+00 rmse=1.050e-01 cosine=0.994723026 first_divergence=0 n=2688
+[FAIL] the weighted aggregation matches the reference   max_abs=1.329e+00 rmse=1.050e-01 cosine=0.994723026 first_divergence=0 n=2688
+
+receipt written to F:\wt_qwen4exp\evidence\nemotron_tps_20261021\moe_expert_cpu_parity.json
+
+=== DEEP2_NEMOTRON_MOE_EXPERT_CPU_PARITY_001 = FAIL ===
+=== 2 check(s) failed ===

@@ -1,0 +1,51 @@
+#version 450
+
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer XBuffer { float x[]; };
+layout(set = 0, binding = 1, std430) readonly buffer WBuffer { float w[]; };
+layout(set = 0, binding = 2, std430) readonly buffer StateBuffer { float state[]; };
+layout(set = 0, binding = 3, std430) writeonly buffer YBuffer { float y[]; };
+layout(set = 0, binding = 4, std430) writeonly buffer StateOutBuffer { float state_out[]; };
+
+layout(push_constant) uniform Push {
+    uint tokens;
+    uint channels;
+    uint kernel;
+    uint dilation;
+} pc;
+
+float silu(float value) {
+    if (value >= 0.0) return value / (1.0 + exp(-value));
+    float e = exp(value);
+    return value * e / (1.0 + e);
+}
+
+float sample_at(int source, uint channel, uint state_length) {
+    if (source < 0)
+        return state[channel * state_length + uint(int(state_length) + source)];
+    return x[uint(source) * pc.channels + channel];
+}
+
+void main() {
+    if (pc.tokens == 0u || pc.channels == 0u || pc.kernel != 4u || pc.dilation != 3u) return;
+    const uint state_length = (pc.kernel - 1u) * pc.dilation;
+    const uint gid = gl_GlobalInvocationID.x;
+    const uint total = pc.tokens * pc.channels;
+    if (gid < total) {
+        const uint token = gid / pc.channels;
+        const uint channel = gid - token * pc.channels;
+        float accumulator = 0.0;
+        for (uint tap = 0u; tap < pc.kernel; ++tap) {
+            const int source = int(token) - int(pc.kernel - 1u - tap) * int(pc.dilation);
+            accumulator += sample_at(source, channel, state_length) * w[tap * pc.channels + channel];
+        }
+        y[gid] = silu(accumulator);
+    }
+    if (gid < pc.channels) {
+        const uint channel = gid;
+        for (uint offset = 0u; offset < state_length; ++offset) {
+            const int source = int(pc.tokens) - int(state_length) + int(offset);
+            state_out[channel * state_length + offset] = sample_at(source, channel, state_length);
+        }
+    }
+}

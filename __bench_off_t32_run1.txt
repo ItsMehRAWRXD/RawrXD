@@ -1,0 +1,155 @@
+
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║              RawrXD Sovereign Runtime v1.0-ALPHA                 ║
+║                                                                  ║
+║         Validated Autonomous AI Execution Platform               ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+
+============================================================
+  CONFIGURATION
+============================================================
+  Model:    d:\rawrxd\phi3-mini-Q2_K.gguf
+  Prompt:   "\ The quick brown fox jumps over the lazy dog.\"
+  Mode:     inference
+  Backend:  auto
+  Max Tok:  32
+
+============================================================
+  EXECUTING
+============================================================
+  Initializing Sovereign Runtime...
+  Running execution pipeline...
+
+[CPUInferenceEngine] Loading model: d:\rawrxd\phi3-mini-Q2_K.gguf
+[CPUInferenceEngine] Stage: initialize backend
+failed to create logical device!
+[RawrXD] Vulkan init failed at logical device creation; falling back to CPU mode
+[RawrXD] Stage: loader.Load
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=d:\rawrxd\phi3-mini-Q2_K.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 1440 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1440 MB at 000002A3EFE00000 (2000+ TPS ready)
+[GGUF] size=1509949440
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=197
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=197 indexed_storage=1.40 GB
+[RawrXD] Data starts at offset 738400
+[RawrXD] Stage: build_tensor_lookup_map
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=3072, layers=32, heads=32, kv_heads=32, vocab=32064, ctx=131072, experts=0, experts_used=0
+[RawrXD] Tensor names in model (197 total):
+  [  0] type=14 dims=3072 32064 output.weight
+  [  1] type=0 dims=3072 blk.3.attn_norm.weight
+  [  2] type=11 dims=3072 9216 blk.1.attn_qkv.weight
+  [  3] type=0 dims=3072 blk.18.attn_norm.weight
+  [  4] type=0 dims=48 rope_factors_short.weight
+  [  5] type=0 dims=3072 output_norm.weight
+  [  6] type=11 dims=3072 3072 blk.6.attn_output.weight
+  [  7] type=11 dims=3072 3072 blk.0.attn_output.weight
+  [  8] type=0 dims=3072 blk.4.ffn_norm.weight
+  [  9] type=0 dims=3072 blk.16.attn_norm.weight
+  [ 10] type=0 dims=48 rope_factors_long.weight
+  [ 11] type=11 dims=3072 9216 blk.16.attn_qkv.weight
+  [ 12] type=11 dims=3072 3072 blk.2.attn_output.weight
+  [ 13] type=0 dims=3072 blk.2.ffn_norm.weight
+  [ 14] type=0 dims=3072 blk.19.ffn_norm.weight
+  [ 15] type=10 dims=3072 16384 blk.1.ffn_up.weight
+  ... (181 more)
+[RawrXD] Residency pool explicitly DISABLED via env (RAWRXD_RESIDENCY_POOL_MB=0)
+[RawrXD] Config: dim=3072 layers=32 heads=32 kv_heads=32 vocab=32064 hidden=8192 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+[RawrXD] KV cache: 201326592 floats (805.3 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[RawrXD] Swarm plan: GGUF coalesced (33 slices total=1.40 GiB max=77.07 MiB avg=43.56 MiB)
+[RawrXD] Stage: tokenizer.Load
+[RawrXD] Inference engine READY
+[CPUInferenceEngine] Model loaded successfully
+[CPU] GenerateStreaming ENTER  input_tokens=48 max_tokens=32
+[CPU] backend ptr=00007FF629AF56B8  model_loaded=1  context_limit=2048  current_pos=48
+[CPU] backend vocab=32064 dim=3072 layers=32 heads=32
+[CPU] GenerateFromTokens ENTER  tokens=48
+[STREAM] calling Forward() for prefill, tokens=48
+[Forward] GQA: dim=3072 heads=32 kv_heads=32 head_dim=96 kv_dim=3072 hidden=8192
+[MEM] Generation start: avail_phys=40561 MB, avail_virt=133947034 MB
+[MEM] KV footprint: k=768 MB, v=768 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=32064 * row_bytes(Q2_K)=1008 = 30 MB
+[Forward] prefill: tokens=48 layers=32 total_layer_execs=1536 est_ms=199680
+[Forward] B009 layer-outer batched prefill: T=48 layers=32
+[STEP] Layer 1/32 (batched T=48)
+[StreamingMatMul] Tensor not found: blk.0.attn_q.weight
+[Forward] FATAL: StreamingMatMul failed for blk.0.attn_q.weight
+[STREAM] Forward() returned, logits.size()=0
+[STREAM] entering generation loop, maxTokens=32
+[STREAM] generation iteration 0
+[STREAM] logits empty, breaking
+[STREAM] generation loop complete, generated=0 tokens
+[CPU] GenerateFromTokens RETURN  elapsed=0.8 ms
+[CPU] GenerateStreaming RETURN  total=0.8 ms
+KV:
+  cache_create=0
+  cache_reset=0
+  cache_write=0
+  cache_read=0
+  cache_reuse=0
+  cache_position=0
+  cache_tokens=0
+  full_recompute=0
+
+============================================================
+  EXECUTION RESULT
+============================================================
+  Status: Execution completed successfully
+
+============================================================
+  TIMING
+============================================================
+  Total:        184 ms
+  Load:         0 ms
+  Tokenize:     0 ms
+  Inference:    0 ms
+  Sampling:     0 ms
+  Recovery:     184 ms
+  TPS:          0.00 tokens/sec
+
+============================================================
+  TELEMETRY
+============================================================
+  Tokens Generated: 0
+  Tokens Prompt:    48
+  Memory Peak:      0 MB
+  Recoveries:       1/1
+
+============================================================
+  EVIDENCE
+============================================================
+  Run ID:        
+  Certificate:   RXD-SOVEREIGN-
+  Model Hash:    ...
+  Output Hash:   14695981039346656037...
+  Kernel Validation                       ✗ FAIL
+  Numeric Validation                      ✗ FAIL
+  Recovery Validation                     ✗ FAIL
+
+============================================================
+  FINAL STATUS
+============================================================
+  ✓ EXECUTION SUCCESSFUL
+  ✓ CERTIFICATE: RXD-SOVEREIGN-

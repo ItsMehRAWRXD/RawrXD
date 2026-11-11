@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/feature/qwen4exp-hyperconnection-slice",
+  "original_commit": "80ef16152c52eccebb30aed98dff782fb9918b22",
+  "worktree": "F:/wt_qwen4exp",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}

@@ -1,0 +1,423 @@
+#version 450
+
+// Native quantised dot product: K-quants and legacy quants x Q8_K.
+//
+// Decodes the GGML block layout inside the shader, applies the fp16 block
+// scales, accumulates the integer products in the same eight-lane grouping the
+// reference uses, and writes one output row per invocation.
+//
+// Block layouts (ggml):
+//   Q4_K (144 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qs[128]
+//   Q5_K (176 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qh[32], uint8 qs[128]
+//   Q6_K (210 bytes) : uint8 ql[128], uint8 qh[64], int8 scales[16], uint16 d
+//   Q5_0 (22 bytes)  : uint16 d, uint8 qh[4], uint8 qs[16]   (32 values)
+//   Q8_0 (34 bytes)  : uint16 d, int8 qs[32]                 (32 values)
+//   Q4_0 (18 bytes)  : uint16 d, uint8 qs[16]                (32 values)
+//   Q8_K (per 256)   : float d, int8 qs[256], int16 bsums[16]
+//
+// Push constants carry the dimensions and the kind selector.
+//
+// Legacy kinds (Q5_0/Q8_0/Q4_0) quantise 32 values per block, so a 256-value
+// Q8_K activation super-block holds EIGHT legacy blocks, and the LAST
+// super-block may be partial (n_in need not divide 256: e.g. 2688 = 10*256 +
+// 128). The shader decodes only the legacy blocks whose elements exist, so a
+// partial tail never reads or writes an out-of-range index.
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Packed {
+    uint packed_u32[];      // weight bytes, interpreted as u32 words
+};
+
+// Q8_K data is interleaved into a single runtime-sized array, because a
+// std430 block may only have an unsized array as its LAST member. Per block:
+//   [0]      d      (float)
+//   [1..256] qs     (256 floats, quantised activation values)
+//   [257..272] bsums (16 floats, block sums)
+// So each block occupies 273 floats.
+layout(std430, binding = 1) readonly buffer Q8 {
+    float q8_data[];
+};
+
+const uint Q8_STRIDE = 273u;
+const uint Q8_OFF_D = 0u;
+const uint Q8_OFF_QS = 1u;
+const uint Q8_OFF_BSUMS = 257u;
+
+layout(std430, binding = 2) writeonly buffer Out {
+    float out_rows[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_out;      // rows
+    uint n_in;       // input dimension
+    uint n_blocks;   // n_in / 256 (k-quants: the 256-value super-block count)
+    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K, 8 = Q5_K
+};
+
+// Q4_K / Q6_K block sizes in bytes.
+const uint Q4K_BYTES = 144u;
+const uint Q5K_BYTES = 176u;
+const uint Q6K_BYTES = 210u;
+const uint Q2K_BYTES = 84u;   // G05: scales[16]|qs[64]|d(f16)|dmin(f16)
+const uint Q3K_BYTES = 110u;  // G05: hmask[32]|qs[64]|scales[12]|d(f16)
+// Legacy block sizes in bytes (32 values per block).
+const uint Q50_BYTES = 22u;
+const uint Q80_BYTES = 34u;
+const uint Q40_BYTES = 18u;
+const uint LEGACY_PER_SB = 8u;   // legacy blocks per 256-value super-block
+
+// Read one byte from the packed buffer, which is addressed as u32 words.
+uint pack_byte(uint idx) {
+    uint word = packed_u32[idx >> 2u];
+    uint shift = (idx & 3u) * 8u;
+    return (word >> shift) & 0xFFu;
+}
+
+// Read a little-endian uint16 from the packed buffer.
+uint pack_u16(uint idx) {
+    return pack_byte(idx) | (pack_byte(idx + 1u) << 8u);
+}
+
+// Signed byte from the packed buffer (used for the Q6_K scales array).
+int pack_i8(uint idx) {
+    uint b = pack_byte(idx);
+    return (b < 128u) ? int(b) : int(b) - 256;
+}
+
+// fp16 (IEEE binary16) bits to fp32.
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16;
+    uint exp  = (h >> 10) & 31u;
+    uint frac = h & 1023u;
+
+    if (exp == 0u) {
+        if (frac == 0u) return uintBitsToFloat(sign);
+        // Subnormal: normalise the mantissa.
+        uint m = frac;
+        int e = -14;
+        while ((m & 1024u) == 0u) { m <<= 1; --e; }
+        m &= 1023u;
+        return uintBitsToFloat(sign | (uint(e + 127) << 23) | (m << 13));
+    }
+    if (exp == 31u) {
+        return uintBitsToFloat(sign | 0x7f800000u | (frac << 13));
+    }
+    return uintBitsToFloat(sign | ((exp + 112u) << 23) | (frac << 13));
+}
+
+// ggml Q4_K scales are 6-bit values packed 4-per-byte-ish in 12 bytes.
+void q4_scale_min(uint base, uint group, out int scale, out int minv) {
+    // base is the byte offset of scales[12] within the block.
+    uint s_group     = pack_byte(base + group);
+    uint s_group_p4  = pack_byte(base + group + 4u);
+    if (group < 4u) {
+        scale = int(s_group & 63u);
+        minv  = int(s_group_p4 & 63u);
+    } else {
+        uint s_group_m4 = pack_byte(base + group - 4u);
+        scale = int((s_group_p4 & 15u) | ((s_group_m4 >> 6u) << 4u));
+        minv  = int((s_group_p4 >> 4u) | ((s_group >> 6u) << 4u));
+    }
+}
+
+// GGML q5_K scale/min unpack.  There are eight 6-bit scales and eight
+// 6-bit minima, each covering one 32-value group.
+void q5_scale_min(uint base, uint group, out uint scale, out uint minv) {
+    uint u0 = pack_byte(base + 0u) | (pack_byte(base + 1u) << 8u) |
+              (pack_byte(base + 2u) << 16u) | (pack_byte(base + 3u) << 24u);
+    uint u1 = pack_byte(base + 4u) | (pack_byte(base + 5u) << 8u) |
+              (pack_byte(base + 6u) << 16u) | (pack_byte(base + 7u) << 24u);
+    uint u2 = pack_byte(base + 8u) | (pack_byte(base + 9u) << 8u) |
+              (pack_byte(base + 10u) << 16u) | (pack_byte(base + 11u) << 24u);
+    const uint kmask1 = 0x3f3f3f3fu;
+    const uint kmask2 = 0x0f0f0f0fu;
+    const uint kmask3 = 0x03030303u;
+    uint u3 = ((u2 >> 4u) & kmask2) | (((u1 >> 6u) & kmask3) << 4u);
+    uint aux = u1 & kmask1;
+    u1 = (u2 & kmask2) | (((u0 >> 6u) & kmask3) << 4u);
+    u2 = aux;
+    u0 &= kmask1;
+    const uint scaleWord = group < 4u ? u0 : u1;
+    const uint minWord = group < 4u ? u2 : u3;
+    scale = (scaleWord >> ((group & 3u) * 8u)) & 0xFFu;
+    minv = (minWord >> ((group & 3u) * 8u)) & 0xFFu;
+}
+
+void main() {
+    int act[256];
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= n_out) return;
+
+    float sums[8];
+    for (int i = 0; i < 8; ++i) sums[i] = 0.0;
+    float sumf = 0.0;
+
+    if (kind >= 2u && kind <= 4u) {   // legacy Q5_0/Q8_0/Q4_0 only; kinds 5/6 are k-quants
+        // ---- legacy Q5_0 / Q8_0 / Q4_0 ----------------------------
+        // 32 values per block, eight blocks per 256-value activation
+        // super-block. The packed row stride is (ceil(n_in/32) * lb_bytes);
+        // the final super-block decodes only the blocks that exist.
+        uint lb_bytes = (kind == 2u) ? Q50_BYTES : ((kind == 3u) ? Q80_BYTES : Q40_BYTES);
+        const uint row_bytes = ((n_in + 31u) / 32u) * lb_bytes;
+        const uint n_sb = (n_in + 255u) / 256u;
+
+        for (uint b = 0u; b < n_sb; ++b) {
+            const uint sb_off = b * 256u;
+            const uint sb_elems = min(256u, n_in - sb_off);
+            const uint lb_count = sb_elems / 32u;   // host guarantees n_in % 32 == 0
+
+            const uint q8_base = b * Q8_STRIDE;
+            for (uint i = 0u; i < sb_elems; ++i) {
+                act[i] = int(q8_data[q8_base + Q8_OFF_QS + i]);
+            }
+            const float dq = q8_data[q8_base + Q8_OFF_D];
+
+            for (uint lb = 0u; lb < lb_count; ++lb) {
+                const uint blk = row * row_bytes + b * (LEGACY_PER_SB * lb_bytes) + lb * lb_bytes;
+                const uint a0 = lb * 32u;
+                int dotp = 0;
+                if (kind == 2u) {
+                    // Q5_0: fp16 d, qh[4] as a little-endian u32, qs[16] nibbles.
+                    // Low nibble of qs[j] -> element j, high nibble -> element
+                    // j+16. The 5th bit of element j is qh bit j; the 5th bit
+                    // of element j+16 is qh bit j+16 -- ggml's
+                    // dequantize_row_q5_0 forms xh_1 = (qh >> (j+12)) & 0x10,
+                    // and that mask selects bit j+16 of qh, not bit j+12.
+                    const uint qh = pack_byte(blk + 2u) |
+                                    (pack_byte(blk + 3u) << 8u) |
+                                    (pack_byte(blk + 4u) << 16u) |
+                                    (pack_byte(blk + 5u) << 24u);
+                    for (uint j = 0u; j < 16u; ++j) {
+                        const uint qsb = pack_byte(blk + 6u + j);
+                        const int h0 = int((qh >> (j +  0u)) & 1u);
+                        const int h1 = int((qh >> (j + 16u)) & 1u);
+                        const int w0 = (int(qsb & 15u) | (h0 << 4)) - 16;
+                        const int w1 = (int(qsb >> 4)   | (h1 << 4)) - 16;
+                        dotp += w0 * act[a0 + j];
+                        dotp += w1 * act[a0 + j + 16u];
+                    }
+                } else if (kind == 3u) {
+                    // Q8_0: fp16 d, 32 signed byte quants.
+                    for (uint i = 0u; i < 32u; ++i) {
+                        dotp += pack_i8(blk + 2u + i) * act[a0 + i];
+                    }
+                } else {
+                    // Q4_0 (kind 4): fp16 d, 16 nibble bytes. Low nibble of
+                    // qs[j] -> element j, high nibble -> element j+16, minus 8;
+                    // ggml's dequantize_row_q4_0.
+                    for (uint j = 0u; j < 16u; ++j) {
+                        const uint qsb = pack_byte(blk + 2u + j);
+                        const int w0 = int(qsb & 15u) - 8;
+                        const int w1 = int(qsb >> 4) - 8;
+                        dotp += w0 * act[a0 + j];
+                        dotp += w1 * act[a0 + j + 16u];
+                    }
+                }
+                const float dw = half_to_float(pack_u16(blk + 0u));
+                sumf += dw * dq * float(dotp);
+            }
+        }
+        out_rows[row] = sumf;
+        return;
+    }
+
+    if (kind == 8u) {
+        // ---- Q5_K ---------------------------------------------------------
+        // block_q5_K is eight 32-value groups. Each group uses a low nibble
+        // from qs, one high bit from qh, and one packed scale/min pair.
+        // Keep integer products separate from the fp16 scales to mirror the
+        // GGML q5_K x q8_K reference arithmetic.
+        const uint row_bytes = ((n_in + 255u) / 256u) * Q5K_BYTES;
+        const uint n_sb = (n_in + 255u) / 256u;
+        for (uint b = 0u; b < n_sb; ++b) {
+            const uint sb_off = b * 256u;
+            const uint sb_elems = min(256u, n_in - sb_off);
+            const uint base = row * row_bytes + b * Q5K_BYTES;
+            const uint q8_base = b * Q8_STRIDE;
+            const float q8_scale = q8_data[q8_base + Q8_OFF_D];
+            float block_sum = 0.0;
+            for (uint group = 0u; group < 8u; ++group) {
+                const uint group_start = group * 32u;
+                if (group_start >= sb_elems) break;
+                const uint group_count = min(32u, sb_elems - group_start);
+                int qsum = 0;
+                int asum = 0;
+                for (uint lane = 0u; lane < group_count; ++lane) {
+                    const uint qsb = pack_byte(base + 48u + (group / 2u) * 32u + lane);
+                    const uint low = (group & 1u) == 0u ? (qsb & 15u) : (qsb >> 4u);
+                    // qh is shared by all four 64-value pairs. Each successive
+                    // 32-value half-group consumes the next bit, while qs
+                    // advances by 32 bytes after each pair. This is the same
+                    // bit progression as ggml's block_q5_K dequantizer.
+                    const uint high =
+                        (pack_byte(base + 16u + lane) & (1u << group)) != 0u
+                            ? 16u
+                            : 0u;
+                    const int q = int(low + high);
+                    const int a = int(q8_data[q8_base + Q8_OFF_QS + group_start + lane]);
+                    qsum += q * a;
+                    asum += a;
+                }
+                uint scale, minv;
+                q5_scale_min(base + 4u, group, scale, minv);
+                // qsum/asum are signed Q8 products. Cast the unpacked 6-bit
+                // fields before multiplication; leaving uint * int implicit
+                // can wrap negative sums to ~2^32 on conformant GLSL paths.
+                block_sum += half_to_float(pack_u16(base + 0u)) *
+                             float(int(scale) * qsum);
+                block_sum -= half_to_float(pack_u16(base + 2u)) *
+                             float(int(minv) * asum);
+            }
+            sumf += q8_scale * block_sum;
+        }
+        out_rows[row] = sumf;
+        return;
+    }
+
+    uint block_bytes = (kind == 0u) ? Q4K_BYTES : (kind == 1u) ? Q6K_BYTES
+                     : (kind == 5u) ? Q2K_BYTES : (kind == 6u) ? Q3K_BYTES : Q4K_BYTES;
+    uint row_base = row * block_bytes * n_blocks;
+
+    for (uint b = 0u; b < n_blocks; ++b) {
+        uint base = row_base + b * block_bytes;
+
+                {
+            uint q8_base = b * Q8_STRIDE;
+            for (uint i = 0u; i < 256u; ++i) {
+                act[i] = int(q8_data[q8_base + Q8_OFF_QS + i]);
+            }
+        }
+
+        if (kind == 0u) {
+            // ---- Q4_K ----
+            uint d_bits   = pack_u16(base + 0u);
+            uint dmin_bits= pack_u16(base + 2u);
+            uint scales_off = base + 4u;
+
+            int lanes[8];
+            for (int i = 0; i < 8; ++i) lanes[i] = 0;
+            int min_sum = 0;
+
+            for (uint group = 0u; group < 8u; ++group) {
+                int scale, minv;
+                q4_scale_min(scales_off, group, scale, minv);
+
+                uint q_off = scales_off + 12u + (group / 2u) * 32u;
+                bool high = (group & 1u) != 0u;
+
+                for (uint i = 0u; i < 32u; ++i) {
+                    uint qb = pack_byte(q_off + i);
+                    int weight = high ? int(qb >> 4u) : int(qb & 15u);
+                    int a = act[group * 32u + i];
+                    lanes[i & 7u] += scale * weight * a;
+                }
+
+                min_sum += minv * (int(q8_data[b * Q8_STRIDE + Q8_OFF_BSUMS + 2u * group]) +
+                                   int(q8_data[b * Q8_STRIDE + Q8_OFF_BSUMS + 2u * group + 1u]));
+            }
+
+            float d    = half_to_float(d_bits) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            float dmin = half_to_float(dmin_bits) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
+            sumf -= dmin * float(min_sum);
+
+        } else if (kind == 1u) {
+            // ---- Q6_K ----
+            uint ql_off = base + 0u;
+            uint qh_off = base + 128u;
+            uint sc_off = base + 192u;
+
+            int lanes[8];
+            for (int i = 0; i < 8; ++i) lanes[i] = 0;
+
+            for (uint group = 0u; group < 8u; ++group) {
+                uint hlf = group / 4u;
+                uint part  = group % 4u;
+                uint shift4 = (part >= 2u) ? 4u : 0u;
+                uint loff = hlf * 64u + (part & 1u) * 32u;
+                uint hoff = hlf * 32u;
+                uint qhoff = 2u * part;
+
+                for (uint i = 0u; i < 32u; ++i) {
+                    int low4  = int((pack_byte(ql_off + loff + i) >> shift4) & 15u);
+                    int high2 = int((pack_byte(qh_off + hoff + i) >> qhoff) & 3u);
+                    int quant = (low4 | (high2 << 4)) - 32;
+                    int a = act[group * 32u + i];
+                    int scale = int(pack_i8(sc_off + group * 2u + i / 16u));
+                    lanes[i & 7u] += scale * quant * a;
+                }
+            }
+
+            float d = half_to_float(pack_u16(base + 208u)) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
+
+        } else if (kind == 5u) {
+            // ---- G05 Q2_K: scales[16] | qs[64] | d(f16@80) | dmin(f16@82) ----
+            // Dequantise each weight x = d*(sc&0xF)*q2 - dmin*(sc>>4), dot vs the Q8
+            // activation. Mirrors the CPU reference (ggml-exact geometry).
+            float d = half_to_float(pack_u16(base + 80u));
+            float dmin = half_to_float(pack_u16(base + 82u));
+            float qd = q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            float bacc = 0.0;
+            int is = 0;
+            for (uint n = 0u; n < 256u; n += 128u) {
+                uint qgrp = base + 16u + (n / 128u) * 32u;  // this group's 32 qs bytes
+                int shift = 0;
+                for (uint j = 0u; j < 4u; ++j) {
+                    { uint sc = pack_byte(base + uint(is++));
+                      float dl = d * float(sc & 0xFu), ml = dmin * float(sc >> 4u);
+                      for (uint l = 0u; l < 16u; ++l)
+                          bacc += (dl * float((pack_byte(qgrp + l) >> uint(shift)) & 3u) - ml) * float(act[n + j*32u + l]); }
+                    { uint sc = pack_byte(base + uint(is++));
+                      float dl = d * float(sc & 0xFu), ml = dmin * float(sc >> 4u);
+                      for (uint l = 0u; l < 16u; ++l)
+                          bacc += (dl * float((pack_byte(qgrp + l + 16u) >> uint(shift)) & 3u) - ml) * float(act[n + j*32u + 16u + l]); }
+                    shift += 2;
+                }
+            }
+            sums[0] += bacc * qd;
+
+        } else if (kind == 6u) {
+            // ---- G05 Q3_K: hmask[32] | qs[64] | scales[12]->16i8 | d(f16@108) ----
+            float d_all = half_to_float(pack_u16(base + 108u));
+            float qd = q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            uint s0 = pack_byte(base+96u)|(pack_byte(base+97u)<<8u)|(pack_byte(base+98u)<<16u)|(pack_byte(base+99u)<<24u);
+            uint s1 = pack_byte(base+100u)|(pack_byte(base+101u)<<8u)|(pack_byte(base+102u)<<16u)|(pack_byte(base+103u)<<24u);
+            uint s2 = pack_byte(base+104u)|(pack_byte(base+105u)<<8u)|(pack_byte(base+106u)<<16u)|(pack_byte(base+107u)<<24u);
+            uint kmask1 = 0x03030303u, kmask2 = 0x0f0f0f0fu;
+            uint n0 = (s0 & kmask2)          | (((s2 >> 0) & kmask1) << 4);
+            uint n1 = (s1 & kmask2)          | (((s2 >> 2) & kmask1) << 4);
+            uint n2 = ((s0 >> 4) & kmask2)   | (((s2 >> 4) & kmask1) << 4);
+            uint n3 = ((s1 >> 4) & kmask2)   | (((s2 >> 6) & kmask1) << 4);
+            float bacc = 0.0;
+            uint m = 1u; int is = 0;
+            for (uint n = 0u; n < 256u; n += 128u) {
+                uint qgrp = base + 32u + (n / 128u) * 32u;  // qs[64] at base+32
+                int shift = 0;
+                for (uint j = 0u; j < 4u; ++j) {
+                    { int sj = is++; uint sww = (sj<4)?n0:(sj<8)?n1:(sj<12)?n2:n3;
+                      int sbyte = int((sww >> ((sj&3)*8u)) & 0xFFu); if (sbyte>=128) sbyte-=256;
+                      float dl = d_all * float(sbyte - 32);
+                      for (uint l = 0u; l < 16u; ++l) {
+                          int q = int((pack_byte(qgrp + l) >> uint(shift)) & 3u);
+                          int hb = (pack_byte(base + l) & m) == 0u ? 4 : 0;
+                          bacc += (dl * float(q - hb)) * float(act[n + j*32u + l]); } }
+                    { int sj = is++; uint sww = (sj<4)?n0:(sj<8)?n1:(sj<12)?n2:n3;
+                      int sbyte = int((sww >> ((sj&3)*8u)) & 0xFFu); if (sbyte>=128) sbyte-=256;
+                      float dl = d_all * float(sbyte - 32);
+                      for (uint l = 0u; l < 16u; ++l) {
+                          int q = int((pack_byte(qgrp + l + 16u) >> uint(shift)) & 3u);
+                          int hb = (pack_byte(base + l + 16u) & m) == 0u ? 4 : 0;
+                          bacc += (dl * float(q - hb)) * float(act[n + j*32u + 16u + l]); } }
+                    shift += 2; m <<= 1;
+                }
+            }
+            sums[0] += bacc * qd;
+        }
+    }
+
+    for (int i = 0; i < 8; ++i) sumf += sums[i];
+    out_rows[row] = sumf;
+}
+

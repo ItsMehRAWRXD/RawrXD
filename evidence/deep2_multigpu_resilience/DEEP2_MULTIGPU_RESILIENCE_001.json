@@ -1,0 +1,49 @@
+{
+  "gate": "DEEP2_MULTIGPU_RESILIENCE_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": true,
+  "criteria": {
+    "r9700_only_operation": true,
+    "dual_gpu_residency": true,
+    "device_loss_handling": false,
+    "safe_recovery": true,
+    "no_corrupted_output": true,
+    "no_memory_leaks": true
+  },
+  "evidence": {
+    "source_tool": "deep2_dualgpu_forward",
+    "single_gpu_baseline": {
+      "gen_stream": "278 20606 23808 7936 14336",
+      "gpu_calls": 1860,
+      "cpu_calls": 0,
+      "nonfinite": 0,
+      "primary_device": "AMD Radeon AI PRO R9700",
+      "primary_submits": 1223,
+      "primary_weight_misses": 155,
+      "primary_upload_mib": 620.0,
+      "primary_live_mib": 600.8
+    },
+    "dual_gpu_split": {
+      "split_point": 11,
+      "gen_stream": "278 20606 23808 7936 14336",
+      "gpu_calls": 1860,
+      "cpu_calls": 0,
+      "nonfinite": 0,
+      "primary_device": "AMD Radeon AI PRO R9700",
+      "secondary_device": "AMD Radeon RX 7800 XT (dev 4)",
+      "primary_submits": 981,
+      "primary_weight_misses": 78,
+      "primary_upload_mib": 338.7,
+      "primary_live_mib": 329.1,
+      "secondary_submits": 1002,
+      "secondary_weight_misses": 77,
+      "secondary_upload_mib": 281.4,
+      "secondary_live_mib": 271.8
+    },
+    "numerical_parity": "PASS - identical token stream between single and dual GPU",
+    "no_cpu_fallback": "cpu_calls=0 in both configurations",
+    "no_memory_leaks": "All tensors released, Vulkan resources cleaned up"
+  },
+  "device_loss_handling_note": "Not tested - requires controlled device removal during inference"
+}

@@ -1,0 +1,19 @@
+{
+  "certification": "DEEP2_NEMOTRON_MOE_CPU_PARITY_001",
+  "block": 1,
+  "router_matrix": "blk.1.ffn_gate_inp.weight",
+  "router_bias": "blk.1.exp_probs_b.bias",
+  "hidden": 2688,
+  "experts": 128,
+  "experts_used": 6,
+  "expert_weights_norm": true,
+  "selected_experts": [64,117,126,45,100,10],
+  "selected_weights": [0.447298527,0.436123192,0.415225774,0.413599044,0.398548901,0.389204562],
+  "seventh_selection_score": 41.445793152,
+  "router_logits": {"max_abs": 0.000000000e+00, "rmse": 0.000000000e+00, "cosine": 1.000000000, "first_divergence": -1},
+  "probs": {"max_abs": 5.960464478e-08, "rmse": 2.266962350e-08, "cosine": 1.000000000, "first_divergence": -1},
+  "selection": {"max_abs": 0.000000000e+00, "rmse": 0.000000000e+00, "cosine": 1.000000000, "first_divergence": -1},
+  "expert_weights": {"max_abs": 2.980232239e-08, "rmse": 1.720637885e-08, "cosine": 1.000000000, "first_divergence": -1},
+  "expert_ids_exact": true,
+  "result": "PASS"
+}

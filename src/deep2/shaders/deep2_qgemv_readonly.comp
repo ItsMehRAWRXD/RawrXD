@@ -1,0 +1,64 @@
+#version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+// The packed GEMV's access pattern with no dequantisation.
+//
+// This reads exactly the same bytes, with the same word granularity and the
+// same sweep, and does no quantisation arithmetic at all. The difference
+// between this kernel's rate and the real one's rate is the cost of the
+// decode, and the difference between this kernel's rate and the card's
+// bandwidth is the cost of the access pattern.
+//
+// A rate here that is far below the card's bandwidth means the shape of the
+// read is the limit, and the decode is not.
+layout(local_size_x = 256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint type;
+    uint rows;
+    uint cols;
+    uint weightBytes;
+} pc;
+
+shared float subgroupSums[8];
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    uint lane = gl_LocalInvocationID.x;
+    if (row >= pc.rows) return;
+
+    // The same words the real kernel reads, at the same offsets, so the
+    // only difference between this kernel and the real one is the
+    // quantisation arithmetic.
+    //
+    // The Q5_K layout: the quant bytes are at 48 and the high-bit bytes at
+    // 16, and the dot4 path reads one four-byte word of each, per lane, per
+    // sweep of 1024 columns.
+    const uint blocksPerRow = (pc.cols + 255u) / 256u;
+    const uint rowBytes = blocksPerRow * 176u;
+    const uint rowBase = row * rowBytes;
+    uint acc = 0u;
+    for (uint j = lane * 4u; j < pc.cols; j += 1024u) {
+        const uint idx = j % 256u;
+        const uint grp = idx / 64u;
+        const uint l32 = (idx % 64u) % 32u;
+        const uint qsByte = rowBase + 48u + grp * 32u + l32;
+        const uint qhByte = rowBase + 16u + l32;
+        acc += w[qsByte >> 2u];
+        acc += w[qhByte >> 2u];
+    }
+
+    float wave = subgroupAdd(float(acc));
+    if (subgroupElect()) subgroupSums[gl_SubgroupID] = wave;
+    barrier();
+    if (gl_SubgroupID == 0u) {
+        float v = gl_SubgroupInvocationID < gl_NumSubgroups
+            ? subgroupSums[gl_SubgroupInvocationID] : 0.0;
+        float total = subgroupAdd(v);
+        if (subgroupElect()) y[row] = total;
+    }
+}

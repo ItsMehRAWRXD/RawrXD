@@ -1,0 +1,54 @@
+=== RAWRXD_DEEP2_REAL_MODEL_GENERATION_001 ===
+model : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+prompt: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+tokens: 2  path: GPU-first
+
+--- [P] real-weight provenance ---
+  gguf_path      : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+  sha256         : 5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+  file_bytes     : 25430738944 (25.43 GB)
+  architecture   : nemotron_h_moe
+  model_name     : Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1
+  tensor_count   : 417
+  token_vocab    : 131072 tokens, 269443 merges
+  tensor_inventory: F32x243 Q5_0x116 Q8_0x26 Q4_Kx31 ?x1
+  [PASS] SHA-256 of the real model file computed
+  [PASS] tensor inventory recorded
+  [PASS] architecture derived from the model's own metadata
+  [PASS] tokenizer read from the model
+
+--- [1] runtime graph binding ---
+  ops_total=422 ops_bound=399 ops_unbound=23 weights_resolved=417
+  UNBOUND: Unsupported node: block 1: no attention or SSM weights
+  UNBOUND: Unsupported node: block 3: no attention or SSM weights
+  UNBOUND: Unsupported node: block 6: no attention or SSM weights
+  UNBOUND: Unsupported node: block 8: no attention or SSM weights
+  UNBOUND: Unsupported node: block 10: no attention or SSM weights
+  UNBOUND: Unsupported node: block 13: no attention or SSM weights
+  UNBOUND: Unsupported node: block 15: no attention or SSM weights
+  UNBOUND: Unsupported node: block 17: no attention or SSM weights
+  UNBOUND: Unsupported node: block 20: no attention or SSM weights
+  UNBOUND: Unsupported node: block 22: no attention or SSM weights
+  UNBOUND: Unsupported node: block 24: no attention or SSM weights
+  UNBOUND: Unsupported node: block 27: no attention or SSM weights
+  UNBOUND: Unsupported node: block 29: no attention or SSM weights
+  UNBOUND: Unsupported node: block 31: no attention or SSM weights
+  UNBOUND: Unsupported node: block 34: no attention or SSM weights
+  UNBOUND: Unsupported node: block 36: no attention or SSM weights
+  UNBOUND: Unsupported node: block 38: no attention or SSM weights
+  UNBOUND: Unsupported node: block 40: no attention or SSM weights
+  UNBOUND: Unsupported node: block 43: no attention or SSM weights
+  UNBOUND: Unsupported node: block 45: no attention or SSM weights
+  UNBOUND: Unsupported node: block 47: no attention or SSM weights
+  UNBOUND: Unsupported node: block 49: no attention or SSM weights
+  UNBOUND: Unsupported node: block 51: no attention or SSM weights
+  [FAIL] graph binds to real kernels (fail-closed otherwise)
+  [FAIL] no unimplemented operators left unbound
+  BIND_FAILED: graph contains unimplemented operators: Unsupported node: block 1: no attention or SSM weights; Unsupported node: block 3: no attention or SSM weights; Unsupported node: block 6: no attention or SSM weights; Unsupported node: block 8: no attention or SSM weights; 
+
+=== 4 passed, 2 failed ===
+VERDICT=FAIL

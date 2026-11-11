@@ -1,0 +1,4 @@
+tokens: 1 2
+arch=qwen4exp blocks=48 embd=2560 vocab=248320 experts=512 used=10
+BIND_FAIL(gpu): missing output_norm.weight
+EXIT_CODE=1
