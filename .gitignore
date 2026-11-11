@@ -1,0 +1,86 @@
+# Build artifacts
+build/
+build-*/
+build_prod/
+out/
+tmp/
+*.obj
+*.o
+*.lib
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.log
+
+# Certification evidence is deliberately versioned even though *.log is
+# ignored above: it is the run transcript behind a certification record.
+!certification/*.log
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.vcxproj
+*.vcxproj.filters
+*.sln
+
+# Qt
+*_autogen/
+moc_*.cpp
+moc_*.cpp.d
+*.qm
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+# IDE
+.vscode/
+.idea/
+.clangd
+
+# OS
+.DS_Store
+Thumbs.db
+
+compile_commands.json
+CMakeSettings.json
+
+.venv/
+ggml_env/
+.exrc
+.cache
+.stablelm
+.gpt-2
+
+src/arm_neon.h
+tests/arm_neon.h
+
+zig-out/
+zig-cache/
+
+*.d
+*.dot
+
+*.sw?
+
+__pycache__/
+
+# Model files
+models/
+models-mnt
+ggml-model-f16.bin
+*.bat
+
+*.gguf
+
+# CMake build directories - machine-specific caches/artifacts must never be tracked
+# (stale absolute paths in committed CMakeCache.txt break CI configure)
+RawrXD-ModelLoader/build/
+RawrXD-ModelLoader/build-arm64/
+build/
+build-*/
