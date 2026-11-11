@@ -1,0 +1,16 @@
+{
+  "gate": "RAWR_H01_AUTONOMOUS_REPAIR_001",
+  "model": "deepseek-coder-v2_16b",
+  "test": "H01-01",
+  "initial_source_sha256": "06181755DAF28E08A59933DA4C21CC41FEE0EAB53951BF89505DFB407DBB0FAF",
+  "final_source_sha256": "FC658685B1D46FD8D101FDD0359DCE93A00D122786EEAA1B6B0430E51DF4174B",
+  "model_generated_patch": true,
+  "host_applied_patch": true,
+  "compiler_exit_code": 0,
+  "test_exit_code": 0,
+  "regression_exit_code": 0,
+  "tools_executed": 4,
+  "verified": true,
+  "verdict": "PASS",
+  "notes": "Model correctly identified and fixed both off-by-one loop conditions (changed <= to <). Agent execution time exceeded 15-minute timeout during generation; host completed verification independently."
+}

@@ -1,0 +1,17 @@
+# Native IDE route integration build receipt
+
+- Timestamp (local): 2026-10-20T14:21:30.7921527-04:00
+- Checkout: F:/rawrxd
+- Branch/commit at build: local-30b-backend / d6e08d0634f122b85da3b712b565434ddc35983d
+- Command: cmake --build build --target RawrXD-Win32IDE-Native --config Release --parallel 2
+- Exit code: 0
+- Output: F:/rawrxd/build/bin/Release/RawrXD-Win32IDE-Native.exe
+- Native IDE SHA-256: 9DC0E220ED5E1529BA220684B15E741ECBF6B3063B06138D8482504DD325A5D9
+- Generated route header: F:/rawrxd/build/generated/GeneratedChatRouteMenu.h
+- Generated route header SHA-256: 46736E1CFC54821B5A68500A7D6766C9D02E9DC90DBF3F3B5FCB03AD295A71FE
+
+The linked working-tree build completed successfully with the generated Local GGUF,
+Local Ollama, and Cloud Kilo route descriptors available to the target. This receipt
+certifies compilation/linking of the current checkout only. The mixed working-tree
+source delta is intentionally not included in this receipt commit; runtime UI smoke
+and live Ollama discovery remain open.

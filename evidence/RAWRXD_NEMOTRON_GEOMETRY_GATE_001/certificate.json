@@ -1,0 +1,127 @@
+{
+  "certificate_id": "RAWRXD_NEMOTRON_GEOMETRY_GATE_001",
+  "date": "2026-10-11",
+  "verdict": "FAIL",
+  "what_was_tested": "Whether the untracked Nemotron-H SSM implementation in src/deep2 (NemotronHGeometry.hpp and friends) applies to the Nemotron 3.5 Lightning 30B blob exposed at F:\\models\\nemotron-3.5-lightning-30b.gguf.",
+  "method": "Read the real block-0 SSM tensor dimensions from the GGUF, then applied the derivation formulae transcribed from NemotronHGeometry.hpp ResolveFromLayer, and evaluated its own acceptance gate NEMOTRON_H_REAL_SSM_001.",
+  "real_block_0_tensor_dims": {
+    "blk.0.ssm_a": [
+      1,
+      64
+    ],
+    "blk.0.ssm_conv1d.bias": [
+      6144
+    ],
+    "blk.0.ssm_conv1d.weight": [
+      4,
+      6144
+    ],
+    "blk.0.ssm_d": [
+      1,
+      64
+    ],
+    "blk.0.ssm_dt.bias": [
+      64
+    ],
+    "blk.0.ssm_in.weight": [
+      2688,
+      10304
+    ],
+    "blk.0.ssm_norm.weight": [
+      512,
+      8
+    ],
+    "blk.0.ssm_out.weight": [
+      4096,
+      2688
+    ]
+  },
+  "derived_from_the_real_blob": {
+    "ssmInRows": 10304,
+    "ssmDtRank": 64,
+    "ssmHeads": 64,
+    "ssmConvK": 4,
+    "ssmConvDim": 6144,
+    "ssmInner": 4096,
+    "ssmGroupState": 1024,
+    "ssmGroups": 8,
+    "ssmState": 128,
+    "ssmHeadDim": 64
+  },
+  "gate_result": {
+    "gate": "NEMOTRON_H_REAL_SSM_001",
+    "state": {
+      "expected": 128,
+      "real": 128,
+      "match": true
+    },
+    "ssmHeads": {
+      "expected": 96,
+      "real": 64,
+      "match": false
+    },
+    "ssmInner": {
+      "expected": 7680,
+      "real": 4096,
+      "match": false
+    },
+    "ssmGroups": {
+      "expected": 8,
+      "real": 8,
+      "match": true
+    },
+    "ssmConvDim": {
+      "expected": 9728,
+      "real": 6144,
+      "match": false
+    },
+    "ssmInRows": {
+      "expected": 17504,
+      "real": 10304,
+      "match": false
+    },
+    "ssmHeadDim": {
+      "expected": 80,
+      "real": 64,
+      "match": false
+    },
+    "matches": "2 of 7",
+    "verdict": "FAIL"
+  },
+  "corroborating_evidence": "ssm_norm.weight is [512, 8]. With 8 groups and the real inner size 4096, 4096 / 8 = 512, which is exactly the first dimension. The code instead expects inner 7680, which would imply 7680 / 8 = 960, not 512. The tensor shape corroborates the derived geometry rather than the expected one.",
+  "interpretation": {
+    "the_code_targets_a_different_variant": "NemotronHSsmArm.hpp and NemotronHMamba2Step.hpp are written for a larger Nemotron-H geometry: 96 heads, head dim 80, inner 7680, conv dim 9728, input rows 17504. Those numbers do not describe the blob on this machine.",
+    "consequence_for_this_blob": "ResolveFromLayer would return ok = 0, so SsmNemotronComplete and RunMamba2Token would refuse to run on these weights. The existing SSM arm cannot execute this model.",
+    "not_a_code_defect": "This is not a bug in that implementation. It is a variant mismatch. The two are not interchangeable."
+  },
+  "state_of_the_untracked_nemotron_work": {
+    "files": [
+      "src/deep2/NemotronHGeometry.hpp",
+      "src/deep2/NemotronHMamba2Arm.hpp",
+      "src/deep2/NemotronHMamba2Step.hpp",
+      "src/deep2/NemotronHSsmArm.hpp",
+      "src/deep2/NemotronHSsmExperimental.hpp",
+      "src/deep2/NemotronHSsmMap.hpp"
+    ],
+    "tracked_in_git": false,
+    "referenced_by": {
+      "NemotronHMamba2Step.hpp": 0,
+      "NemotronHSsmArm.hpp": 0,
+      "NemotronHSsmExperimental.hpp": 0,
+      "NemotronHGeometry.hpp": 2,
+      "NemotronHSsmMap.hpp": 4,
+      "NemotronHMamba2Arm.hpp": 2
+    },
+    "wired_into_production_decode": false,
+    "self_declared_status": "The header comment on NemotronHMamba2Step.hpp states PROD_DECODE=0, and it emits SSM_NUMERIC_FINITE plus PRODUCTION_DECODE_PATH=0. In other words it reports only that outputs are finite, not that they are correct.",
+    "verified_against_a_reference": false,
+    "note": "The reference counts above were produced by searching the working tree for each filename, so they count the headers referencing each other and nothing more. No test exercises RunMamba2Token."
+  },
+  "what_this_does_not_claim": [
+    "No Nemotron inference was run.",
+    "No Nemotron tensor values were evaluated.",
+    "No claim that the SSM arithmetic in NemotronHMamba2Step.hpp is correct or incorrect. It was not executed and is not testable on this blob because its geometry gate fails first.",
+    "No TPS measurement."
+  ],
+  "consequence_for_the_tps_blueprint": "Three separate blockers now stack on the Nemotron 30B target: the architecture is nemotron_h_moe and is not implemented, the existing SSM arm targets a different geometry and would refuse these weights, and the arm is not wired into production decode or verified against a reference. The 128.78 TPS baseline and 643.90 TPS goal remain unreachable as a performance task on this codebase."
+}
