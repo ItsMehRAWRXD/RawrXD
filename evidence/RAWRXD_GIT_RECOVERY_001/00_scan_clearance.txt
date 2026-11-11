@@ -1,0 +1,12 @@
+RAWRXD_GIT_RECOVERY_001 — redundant scan clearance
+captured=2026-10-26T19:13:28-04:00
+
+git.exe processes present:
+  PID=10832 CMD=git fsmonitor--daemon run --detach --ipc-threads=8 CREATE=2026-10-26 03:05:10
+  PID=9720  CMD=git fsmonitor--daemon run --detach --ipc-threads=8 CREATE=2026-10-26 03:47:25
+  PID=20656 CMD=git fsmonitor--daemon run --detach --ipc-threads=8 CREATE=2026-10-26 04:01:41
+
+NO git fsck / rev-list / cat-file integrity jobs found.
+fsmonitor daemons are NOT redundant integrity scans; left running.
+REDUNDANT_SCAN_CONTENTION=RESOLVED
+READY_FOR_CONTROLLED_FSCK=1

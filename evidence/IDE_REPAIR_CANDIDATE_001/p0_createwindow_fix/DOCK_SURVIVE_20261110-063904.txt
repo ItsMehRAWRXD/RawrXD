@@ -1,0 +1,40 @@
+﻿ASOF_UTC=2026-11-10T11:39:13.4954697Z
+GATE=DOCK_SURVIVE_MEASURE
+IDE_SHA256=74AA42F76F0853EC9A72AE4879F0A25C586AAADF70D47303451F560DCC3A1EE6
+TIP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_theme\RawrXD-Win32IDE-Native-Ext.exe
+USER_DATA_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_surv_20261110-063904
+PID=22228
+MAIN_HWND=8392226
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+PRESENT=1
+ACCEPTED=0
+TL_t=0 alive=True exit=- hwnd=8392226
+TL_t=1 alive=True exit=- hwnd=8392226
+TL_t=2 alive=True exit=- hwnd=8392226
+TL_t=3 alive=True exit=- hwnd=8392226
+TL_t=4 alive=True exit=- hwnd=8392226
+TL_t=5 alive=True exit=- hwnd=8392226
+TL_t=6 alive=True exit=- hwnd=8392226
+TL_t=7 alive=True exit=- hwnd=8392226
+TL_t=8 alive=True exit=- hwnd=8392226
+TL_t=9 alive=True exit=- hwnd=8392226
+TL_t=10 alive=True exit=- hwnd=8392226
+TL_t=11 alive=True exit=- hwnd=8392226
+TL_t=12 alive=True exit=- hwnd=8392226
+TL_t=13 alive=True exit=- hwnd=8392226
+TL_t=14 alive=True exit=- hwnd=8392226
+TL_t=15 alive=True exit=- hwnd=8392226
+TL_t=16 alive=True exit=- hwnd=8392226
+TL_t=17 alive=True exit=- hwnd=8392226
+TL_t=18 alive=True exit=- hwnd=8392226
+TL_t=19 alive=True exit=- hwnd=8392226
+TL_t=20 alive=True exit=- hwnd=8392226
+TL_t=21 alive=True exit=- hwnd=8392226
+TL_t=22 alive=True exit=- hwnd=8392226
+TL_t=23 alive=True exit=- hwnd=8392226
+TL_t=24 alive=True exit=- hwnd=8392226
+EXIT_CODE=-1
+VERDICT=DOCK_PROBE_FAIL

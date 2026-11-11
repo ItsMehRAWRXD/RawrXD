@@ -1,0 +1,11 @@
+﻿CL_SPAWNED=True
+CL_SIGHTINGS=7
+t=2026-11-10T12:27:57.3629615-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:27:58.2775559-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:27:59.1574539-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:27:59.9952655-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:28:00.8261888-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:28:01.6364070-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+t=2026-11-10T12:28:02.4828280-05:00 name=cl.exe pid=29220 ppid=20484 cmd="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe" @C:\Users\Garrett\AppData\Local\Temp\MSBuildTemp\tmpe07d8dd3c5184936bfed672b7cf03131.rsp
+FIXTURE_CMD_SIGHTINGS=0
+

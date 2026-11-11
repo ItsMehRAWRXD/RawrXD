@@ -1,0 +1,4 @@
+@echo off
+cd /d F:\rawrxd\~dev
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64 -no_logo
+cl /std:c++17 /O2 /arch:AVX512 /EHsc /I. /IF:\rawrxd\~dev\rawrxd\src /IF:\rawrxd\~dev\rawrxd\src\deep2 /IF:\rawrxd\3rdparty\ggml\src /IF:\rawrxd\3rdparty\ggml\include /Fe:deep2_decode_performance_gate.exe tests\deep2_decode_performance_gate.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_Speculative.cpp F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2RooflineRuntime.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp F:\rawrxd\~dev\rawrxd\src\deep2\Deep2MultiGpuLayerPlan.cpp F:\rawrxd\~dev\rawrxd\src\deep2\MedusaDecoder.cpp 2>&1 | findstr /V "warning C4"

@@ -1,0 +1,50 @@
+IDE_AGENT_VERDICT_PROPAGATION_FIX
+ASOF_UTC=2026-11-10T12:30:00Z
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+
+MEASURED_DEFECT (issue49_gui_ollama_qwen3_001 / tip 249E4EC…):
+  Agent stdout: OLLAMA_AGENT_VERDICT PASS + READ/EDIT/BUILD_TEST PASS
+  IDE UI: [fail] without a successful structured tool_result
+  Written bytes preview still showed undeclared_fn(1, 2) arity bug
+  SOURCE_FIX_CORRECTNESS=QUESTIONABLE until independent compile/run
+
+ROOT_CAUSES:
+  1. WorkerThread judged m_accumulatedOutput BEFORE joining ReadProcessOutput —
+     terminal OLLAMA_AGENT_* lines arrived after FAIL was decided (useCliAgent
+     structured tool_result gate).
+  2. Historical no-op build/run (exit 0 / echo PASS) allowed BUILD_TEST PASS
+     without compiling the written bytes (already replaced in source with
+     cl /W4 /WX + --expected-output AGENT_RESULT=5).
+  3. OLLAMA_AGENT_EDIT PASS was SHA-delta only; independent run marker missing.
+
+SOURCE_FIXES:
+  - Join output reader before success evaluation
+  - hasOllamaWorkflowPass => IDE success=true (ollama markers are the certificate)
+  - Ollama path: INDEPENDENT_RUN + AGENT_RESULT=5 log; BUILD_TEST requires it
+
+STILL_REQUIRED:
+  Rebuild Ext + deep2_agentic_loop; remasure qwen3:8b
+  Require IDE success AND agent VERDICT AND independent AGENT_RESULT=5
+  Issue49 11-step on controlling pair; VM/clean-machine NOT_VERIFIED
+
+DISPOSITION=
+  OLLAMA_AGENT_VERDICT=PASS_REPORTED (prior run; not yet re-ACCEPTED)
+  IDE_AGENT_RESULT=FAIL (propagation defect; fix landed, not runtime-accepted)
+  SOURCE_FIX_CORRECTNESS=QUESTIONABLE
+  ISSUE49_11STEP=FAIL_CLOSED
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD
+
+REMEASURE_LANDED=1
+REMEASURE_OUT=issue49_gui_ollama_qwen3_005
+REMEASURE_IDE_SHA=FEF3FFD57DAF0D9892A41FE7177A9CA07B78EAEED3C039ADE169108D4C6245CF
+REMEASURE_LOOP_SHA=7AF90B7FF35CE72E950B460A59A38E48B362F834136DC1803FECABFAFFBFF313
+PRODUCT_PATH_CONJUNCTION=PASS
+IDE_VS_AGENT=AGREE_PASS
+ISSUE49_11STEP=7/11 FAIL_CLOSED
+COMPLETION_GATE_ACCEPTED=0
+PROMOTE=0
+VM_CLEAN_MACHINE=NOT_VERIFIED

@@ -1,0 +1,21 @@
+[plain] loading F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[plain] path=cpu eos_id=2 bos_id=1
+[plain] TOKEN_IDS=1,29966,29989,1792,29989,29958,13,6113,263,3273,315,740,393,12778,1023,11920,29889,2,29966,29989,465,22137,29989,29958
+[plain] DECODED_PROMPT='<s><|user|>\nWrite a short C function that adds two integers.</s><|assistant|>'
+[plain] bound: ops=311
+[plain] prefill 24 tokens in 10292.9 ms (2.332 tok/s) gpu=0 cpu=3720
+[plain] vocab=32000 nonfinite=0 logit_range=[-12.9700, 23.8405]
+[plain] EOS_ID=2 EOS_RANK=3/32000 EOS_LOGIT=12.748152 (top logit=23.840546, gap=11.092394)
+[plain] TOP10: 13(\n)=23.8405 29871( )=13.7611 2(</s>)=12.7482 259(  )=10.5422 2266( Here)=10.2606 268(    )=9.9954 29907(C)=9.8874 1678(   )=9.4130 18585( Sure)=9.4089 29903(S)=9.2228
+PLAIN_FIRST_TOKEN argmax=13 eos_rank=3 vocab=32000 nonfinite=0 top10=13,29871,2,259,2266,268,29907,1678,18585,29903 gpu=0 cpu=3720
+[plain] logits dumped: F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\backends_001/plain_logits.cpu.f32
+[TOKEN_DIAG] t=0 selected=13 argmax=13 vocab=32000 finite=1 sel_logit=23.8405457 max=23.8405457 min=-12.970047
+[TOKEN_DIAG] t=1 selected=10605 argmax=10605 vocab=32000 finite=1 sel_logit=17.6701374 max=17.6701374 min=-12.1948547
+[TOKEN_DIAG] t=2 selected=29915 argmax=29915 vocab=32000 finite=1 sel_logit=22.0465736 max=22.0465736 min=-15.2234001
+[TOKEN_DIAG] t=3 selected=29879 argmax=29879 vocab=32000 finite=1 sel_logit=26.9315147 max=26.9315147 min=-14.3807659
+[TOKEN_DIAG] t=4 selected=263 argmax=263 vocab=32000 finite=1 sel_logit=20.5233822 max=20.5233822 min=-12.0669508
+[TOKEN_DIAG] t=10 selected=1023 argmax=1023 vocab=32000 finite=1 sel_logit=21.101223 max=21.101223 min=-17.5813732
+[plain] greedy 16 tokens in 6796.5 ms (2.354 tok/s)
+[plain] CONTINUATION='\nHere's a short C function that adds two integers:\n\n```'
+PLAIN_CONTINUATION cpu '\nHere's a short C function that adds two integers:\n\n```'
+PLAIN_VERDICT LOGITS_HEALTHY eos_rank=3 generated=16 nonfinite=0

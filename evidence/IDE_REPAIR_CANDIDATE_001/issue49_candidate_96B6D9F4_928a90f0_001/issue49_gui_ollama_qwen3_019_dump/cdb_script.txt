@@ -1,0 +1,11 @@
+.sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols;F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_96B6D9F4_928a90f0_001\bin
+.reload
+.exr -1
+.ecxr
+kL 50
+kv 50
+lm m RawrXD*
+lm m ucrtbase
+lm m deep2*
+!analyze -v
+q

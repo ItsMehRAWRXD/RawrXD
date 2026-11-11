@@ -1,0 +1,11 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"bug.cpp","observation_bytes":128,"exit_code":0,"valid":true,"timestamp":1794295871600}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"write","target":"bug.cpp","observation_bytes":227,"exit_code":1,"valid":true,"timestamp":1794295915927}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"write","target":"bug.cpp","observation_bytes":227,"exit_code":1,"valid":true,"timestamp":1794295928385}}
+{"type":"RETRY","entry":4,"payload":{"attempt":4,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794295928898}}
+{"type":"RETRY","entry":5,"payload":{"attempt":5,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794295929376}}
+{"type":"RETRY","entry":6,"payload":{"attempt":6,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794295929835}}
+{"type":"RETRY","entry":7,"payload":{"attempt":7,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794295930335}}
+{"type":"RETRY","entry":8,"payload":{"attempt":8,"reason":"invalid_tool_format","can_continue":false,"timestamp":1794295930853}}
+{"type":"VERIFICATION","entry":9,"payload":{"passed":false,"details":"Ollama agent read/edit/build/test with durable transaction","timestamp":1794295930853}}
+{"type":"LEDGER_END","entry":10,"payload":{"total_entries":10}}

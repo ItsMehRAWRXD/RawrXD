@@ -1,0 +1,57 @@
+CLEAN_MACHINE_CHECKLIST=W6_RELEASE_CERT_97_TO_100
+ASOF_UTC=2026-11-10T09:50:00Z
+CANDIDATE=IDE_REPAIR_CANDIDATE_001
+PACKAGE_ID=RawrXD-readiness-rc5b
+PROMOTE=0
+CERTIFIED=0
+BAND_WEIGHT_PLACEHOLDER=+3
+EARNED=0_UNTIL_INDEPENDENT_RECEIPTS
+
+PURPOSE=
+  Independent, reproducible package acceptance on a machine that is not the
+  developer tree that built the candidate. Completing this checklist is required
+  before any 97→100 band credit. Checklist completion alone != PROMOTE.
+
+OPERATOR_PRECONDITIONS=
+  [x] Host is not F:\rawrxd build-tree path for EXTRACT (used C:\Temp\w6_release_cert_rc5b_clean)
+  [ ] Fresh OS user profile OR documented clean VM snapshot
+  [ ] No RAWRXD_* credential/env shortcuts that leak from the builder host
+  [x] No pre-seeded evidence receipts copied into the package
+  [x] Package extracted from published artifact only (folder copy of RawrXD-readiness-rc5b)
+  [x] Verifier identity recorded — HOST=RAWRXD CLASS=HOST_NOT_INDEPENDENT (DISTINCT_VM=0)
+
+PACKAGE_IDENTITY=
+  [x] SHA_LEDGER filled with expected SHA256 for every shipped member (12 rows)
+  [x] Verify-PackageIntegrity.ps1 VERDICT=PASS_INTEGRITY_ONLY on clean extract
+  [x] Primary EXE SHA matches ledger (6E59E91A…; fresh hash, no cross-SHA inherit)
+  [x] Satellite binaries (deep2_agentic_loop / computer_use verify) same-SHA set
+
+LAUNCH_SMOKE=
+  [x] Invoke-CleanMachineSmoke.ps1 -LaunchProbe starts primary EXE without early exit
+  [ ] IDE main window HWND observed (screenshot or window-title receipt) — NOT sealed this run
+  [x] Clean exit / cancel path does not leave orphaned tool processes (ORPHAN_IDE_PROCS=0)
+
+PRODUCT_PATH_SMOKE_MIN=
+  [ ] Open project / folder on clean machine — NOT_RUN this W6 host pass
+  [ ] Chat Send reaches local model — POINTER only to Wave1 builder receipt
+  [ ] Agent tool path — POINTER: WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT.txt (same SHA 6E59E91A…)
+  [ ] Computer-use GUI dispatch — POINTER: Wave1/cu_dispatch_002; independent CU_GUI not sealed
+  [ ] Edit→build→test — POINTER: agent_read_rc5b_qwen3_same_sha; Issue49=HOLD; FourPanel NOT_SEALED
+
+ROLLBACK_AND_REPRO=
+  [x] Delete extract dir restores clean host path (extract_1 deleted)
+  [x] Second extract from same package bit-identical (PASS_ROLLBACK_REHASH_ONLY 12/12)
+  [x] Receipts under release_cert_wave6/runs/ with host+UTC+SHA
+
+FAIL_CLOSED=
+  [x] NOT_RUN rows remain NOT_RUN (never rewritten to PASS)
+  [x] Builder-host PASS is not copied as clean-machine independent PASS
+  [x] PROMOTE remains 0; CERTIFIED remains 0 until independent conjunction closes
+
+SIGN=
+  OPERATOR=W6_AGENT_HOST_PASS
+  HOST=RAWRXD
+  UTC=2026-11-10T09:50:00Z
+  PACKAGE_SHA_SET=6E59E91A/F33D14A7/F49CF31C
+  VERDICT=HOST_NOT_INDEPENDENT
+  NOTE=Reproducible checklist steps completed on clean extract; B6 earn blocked until distinct VM.

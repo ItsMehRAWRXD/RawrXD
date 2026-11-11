@@ -1,0 +1,114 @@
+[2026-11-10 16:21:45] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 16:21:45] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_162145.log
+[2026-11-10 16:21:45] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:21:45] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:21:45] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:21:46] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-10 16:21:46] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:21:48] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-10 16:21:48] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-10 16:21:50] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=3
+[2026-11-10 16:21:50] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=3
+[2026-11-10 16:21:51] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=4
+[2026-11-10 16:21:51] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=4
+[2026-11-10 16:21:53] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=5
+[2026-11-10 16:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=5
+[2026-11-10 16:21:54] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=6
+[2026-11-10 16:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=6
+[2026-11-10 16:21:56] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=7
+[2026-11-10 16:21:56] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=7
+[2026-11-10 16:21:57] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=8
+[2026-11-10 16:21:57] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=8
+[2026-11-10 16:21:59] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=9
+[2026-11-10 16:21:59] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=10
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=10
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=0
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=0
+[2026-11-10 16:22:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:22:02] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-10 16:22:02] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=2
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=3
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=3
+[2026-11-10 16:22:02] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=3
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=3
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=3
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=4
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=4
+[2026-11-10 16:22:02] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=4
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=4
+[2026-11-10 16:22:02] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=4
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=5
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=5
+[2026-11-10 16:22:03] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=5
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=5
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=5
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=6
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=6
+[2026-11-10 16:22:03] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=6
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=6
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=6
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=7
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=7
+[2026-11-10 16:22:03] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=7
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=7
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=7
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=8
+[2026-11-10 16:22:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=8
+[2026-11-10 16:22:04] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=8
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=8
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=8
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=9
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:04] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=9
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=0
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 16:22:04] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=3
+[2026-11-10 16:22:04] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=3
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=4
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=4
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=5
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=5
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=6
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=6
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=7
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=7
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=8
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=8
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=9
+[2026-11-10 16:22:05] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:06] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=9
+[2026-11-10 16:22:06] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=9
+[2026-11-10 16:22:06] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=9
+[2026-11-10 16:22:07] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=11
+[2026-11-10 16:22:07] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=11
+[2026-11-10 16:22:08] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=11
+[2026-11-10 16:22:08] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=11
+[2026-11-10 16:22:08] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama

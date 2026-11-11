@@ -1,0 +1,33 @@
+{
+    "files_extracted":  8,
+    "cold_launch_pid":  42352,
+    "missing_dependencies":  [
+                                 "vulkan-1.dll",
+                                 "ggml.dll",
+                                 "msvcp140.dll",
+                                 "vcruntime140.dll"
+                             ],
+    "ide_exe_sha256":  "BBA0724D3B50CA91A51D750B31E132A69F881B639C4A2C641D9193A305473CA8",
+    "extraction_ok":  true,
+    "package_sha256":  "86EA3484580FF53B971E493A7D7D102B7569E9685E09118659B24252544C6AB1",
+    "timestamp_utc":  "2026-11-10T21:43:28.4361382Z",
+    "package_path":  "F:\\rawrxd\\dist\\RawrXD-14.7.3-Windows-x64.zip",
+    "schema":  "RAWRXD_T24_DEPLOYMENT_VERIFICATION_001",
+    "cold_launch_exit_code":  null,
+    "ide_exe_path":  "F:\\rawrxd\\deploy_test\\RawrXD-Win32IDE-Native.exe",
+    "ide_exe_found":  true,
+    "smoke_test_ok":  true,
+    "dependency_manifest":  [
+
+                            ],
+    "extract_to":  "F:\\rawrxd\\deploy_test",
+    "package_exists":  true,
+    "pass":  false,
+    "errors":  [
+                   "Missing dependency: vulkan-1.dll",
+                   "Missing dependency: ggml.dll",
+                   "Missing dependency: msvcp140.dll",
+                   "Missing dependency: vcruntime140.dll"
+               ],
+    "cold_launch_ok":  true
+}

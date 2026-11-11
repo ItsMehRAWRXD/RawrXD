@@ -1,0 +1,103 @@
+DISPATCH_FIRST_FAILURE
+ASOF_UTC=2026-11-10T06:42:00Z
+RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+NO_REBUILD=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+LIVE_RC4_REPROBE=0
+REASON_NO_REPROBE=Sealed receipts (COMPUTER_USE_GUI_E2E_RECEIPT, AGENT_REPAIR_RECEIPT, chat_runtime_keyed, agent_repair_001 ledger/stdout) already prove the first missing transitions; source read confirms orphan registry / chat-not-agent path.
+MOTD_ACK=1
+
+================================================================================
+WORKFLOW_1=COMPUTER_USE_GUI_E2E
+VERDICT=FAIL
+MODEL=bigdaddyg-productivity-local:latest
+--------------------------------------------------------------------------------
+tool_calls=0
+text=1
+chat=1
+parser=NOT_REACHED
+registry=ORPHAN_STATIC_s_cuReg (RegisterTools onto Win32IDE::ensureComputerUseReady static Registry; m_computerUseRegistry written but never consumed by live session / ToolCallBridge / HandleCopilotSend)
+dispatch=NOT_REACHED (no computer_use.* lines in chat_runtime.log)
+approval=NOT_RUN
+exec=NOT_RUN
+continuation=PARTIAL (cancel_requested/ack after RESPONSE_END only; not mid-CU)
+
+FIRST_FAILURE_CLASS=CHAT_SESSION_NOT_TOOL_LOOP__ORPHAN_CU_REGISTRY
+FIRST_MISSING_TRANSITION=
+  chat_text_response -> agent_tool_session_attach+structured_tool_call
+  (HandleCopilotSend is explicitly text-chat only; agent/tool execution requires
+   explicit Agent/agent-loop commands. CU tools, when registered, land on
+   isolated s_cuReg never attached to the live agent/chat session.)
+
+PROOF=
+  rc4_runtime_001/COMPUTER_USE_GUI_E2E_RECEIPT.txt steps 1-4 PASS, step 5 FAIL
+  rc4_runtime_001/chat_runtime_keyed.txt: BACKEND/RESPONSE only; no tool dispatch
+  Win32IDE.cpp HandleCopilotSend: "ChatWindow is a text-chat surface..."
+  Win32IDE_ComputerUse.cpp: static s_cuReg + m_computerUseRegistry; no other readers
+  AgenticBridge::GetAvailableTools: name-list only (hardcoded), not live Registry bind
+  computer_use_001: standalone agent_tool_registry_dispatch=PASS ≠ IDE GUI E2E
+  STANDALONE_BRIDGE_CREDIT=0
+
+================================================================================
+WORKFLOW_2=AGENT_REPAIR @ OLLAMA_AGENT_READ
+VERDICT=FAIL
+MODEL=llama3.2:3b
+AGENT_EXE_SHA=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+HARNESS=Test-AgentWorkflow.ps1 (packaged deep2_agentic_loop; GUI IDE dispatch separate)
+--------------------------------------------------------------------------------
+tool_calls=8 (all TOOL=write)
+text=0 (replies parsed as TOOL lines; response_bytes=84 each step)
+chat=0 (agentic tool loop, not IDE chat)
+parser=REACHED_OK (TOOL write recognized each step)
+registry=REACHED (write dispatched into read-before-write gate)
+dispatch=REACHED (exit=-1 valid=0 observation=126)
+approval=N/A_FOR_READ (gate is protocol/read-before-write, not CU approval)
+exec=BLOCKED_AT_GATE (write refused; source_changed=false)
+continuation=STUCK (steps 1..8 identical write→refuse; never emits TOOL read)
+
+FIRST_FAILURE_CLASS=MODEL_PROTOCOL_NONCOMPLIANCE__REQUIRED_TOOL_READ_NEVER_EMITTED
+FIRST_MISSING_TRANSITION=
+  model_reply -> TOOL_read_bug.cpp
+  (Required first tool TOOL read bug.cpp; model repeatedly emitted TOOL write.
+   Parser/registry/dispatch for write are live; READ transition never occurs.)
+
+PROOF=
+  rc4_runtime_001/AGENT_REPAIR_RECEIPT.txt FIRST_FAILING_TRANSITION=OLLAMA_AGENT_READ
+  agent_repair_001/agent.stdout.log: TOOL=write exit=-1 x8; OLLAMA_AGENT_READ FAIL
+  agent_repair_001/execution_ledger.jsonl: eight write entries, zero read
+  REPRODUCES_PRIOR_A53E_FAILURE=1
+  PRODUCT_DEFECT_CONFIRMED_BLOCKING_REPAIR=0 (protocol/model noncompliance on packaged agent)
+  NOTE: agent_workflow_003 (prior A53E agent) reached OLLAMA_AGENT_READ PASS then EDIT FAIL;
+        this RC4 agent_repair_001 fails earlier at READ emission.
+
+================================================================================
+SHARED_BOUNDARY_HYPOTHESIS=
+  Both workflows fail at the structured-tool-invocation boundary, but on opposite
+  sides of session attachment:
+    (A) COMPUTER_USE_GUI_E2E: live IDE path stays on chat/text; CU RegisterTools
+        binds an orphan Registry never attached to the live agent session, so
+        tool_calls/parser/dispatch/approval/exec cannot start.
+    (B) AGENT_REPAIR: tool loop + parser + registry + dispatch ARE attached; the
+        model never emits the mandated TOOL read, so the first product gate
+        OLLAMA_AGENT_READ fails before edit/build.
+  Common theme: SOURCE_WIRED / name-list / schema presence ≠ RUNTIME session that
+  actually emits and routes tool calls. Fail-closed: SOURCE_WIRED != RUNTIME_REACHED
+  for GUI CU tools; RUNTIME tool loop reached for repair but TOKEN/protocol does
+  not produce the required read tool call.
+
+NEXT_EXACT_GATE (informational; PROMOTE=0 TIP_CLIMB=HOLD NO_REBUILD=1)=
+  Enter explicit IDE agent-loop session that shares one Registry with
+  ComputerUseBridge::RegisterTools (not s_cuReg orphan), then force
+  computer_use.find_window→…; separately re-run repair until TOOL read occurs
+  (or confirm product defect before RC5). Do not invent PASS.
+
+EVIDENCE=
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\COMPUTER_USE_GUI_E2E_RECEIPT.txt
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\AGENT_REPAIR_RECEIPT.txt
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\chat_runtime_keyed.txt
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\agent_repair_001\
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\agent_workflow_003\
+  F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\computer_use_001\
+  F:\rawrxd\src\win32app\Win32IDE_ComputerUse.cpp
+  F:\rawrxd\src\win32app\Win32IDE.cpp (HandleCopilotSend chat-only fence)

@@ -1,0 +1,102 @@
+﻿
+F:\rawrxd\build_post_e59d_candidate\bin\RawrXD-Win32IDE-Native.exe:	file format coff-x86-64
+
+Disassembly of section .text:
+
+0000000140001000 <.text>:
+140003300: f8                          	clc
+140003301: 48 00 48 8d                 	add	byte ptr [rax - 0x73], cl
+140003305: 8c 24 00                    	mov	word ptr [rax + rax], fs
+140003308: 08 00                       	or	byte ptr [rax], al
+14000330a: 00 e8                       	add	al, ch
+14000330c: 70 5c                       	jo	0x14000336a <.text+0x236a>
+14000330e: 00 00                       	add	byte ptr [rax], al
+140003310: 90                          	nop
+140003311: 4c 8b 84 24 e8 02 00 00     	mov	r8, qword ptr [rsp + 0x2e8]
+140003319: 48 8d 94 24 00 08 00 00     	lea	rdx, [rsp + 0x800]
+140003321: 48 8b 8c 24 f0 02 00 00     	mov	rcx, qword ptr [rsp + 0x2f0]
+140003329: e8 d2 c4 00 00              	call	0x14000f800 <.text+0xe800>
+14000332e: 90                          	nop
+14000332f: 48 8d 8c 24 00 08 00 00     	lea	rcx, [rsp + 0x800]
+140003337: e8 54 72 00 00              	call	0x14000a590 <.text+0x9590>
+14000333c: 90                          	nop
+14000333d: 48 8d 8c 24 c0 0a 00 00     	lea	rcx, [rsp + 0xac0]
+140003345: e8 46 72 00 00              	call	0x14000a590 <.text+0x9590>
+14000334a: 90                          	nop
+14000334b: 48 8d 8c 24 e0 0a 00 00     	lea	rcx, [rsp + 0xae0]
+140003353: e8 38 72 00 00              	call	0x14000a590 <.text+0x9590>
+140003358: 90                          	nop
+140003359: 48 8d 8c 24 c0 0b 00 00     	lea	rcx, [rsp + 0xbc0]
+140003361: e8 9a c5 00 00              	call	0x14000f900 <.text+0xe900>
+140003366: 45 33 c9                    	xor	r9d, r9d
+140003369: 45 33 c0                    	xor	r8d, r8d
+14000336c: ba 10 00 00 00              	mov	edx, 0x10
+140003371: 48 8b c8                    	mov	rcx, rax
+140003374: ff 15 2e e9 48 00           	call	qword ptr [rip + 0x48e92e] # 0x140491ca8
+14000337a: 90                          	nop
+14000337b: e8 10 c5 00 00              	call	0x14000f890 <.text+0xe890>
+140003380: 48 89 84 24 f8 02 00 00     	mov	qword ptr [rsp + 0x2f8], rax
+140003388: 48 8d 15 39 f8 48 00        	lea	rdx, [rip + 0x48f839]   # 0x140492bc8
+14000338f: 48 8d 8c 24 20 08 00 00     	lea	rcx, [rsp + 0x820]
+140003397: e8 e4 5b 00 00              	call	0x140008f80 <.text+0x7f80>
+14000339c: 90                          	nop
+14000339d: 48 8d 15 3c f8 48 00        	lea	rdx, [rip + 0x48f83c]   # 0x140492be0
+1400033a4: 48 8d 8c 24 e0 09 00 00     	lea	rcx, [rsp + 0x9e0]
+1400033ac: e8 cf 5b 00 00              	call	0x140008f80 <.text+0x7f80>
+1400033b1: 90                          	nop
+1400033b2: 4c 8d 84 24 20 08 00 00     	lea	r8, [rsp + 0x820]
+1400033ba: 48 8d 94 24 e0 09 00 00     	lea	rdx, [rsp + 0x9e0]
+1400033c2: 48 8b 8c 24 f8 02 00 00     	mov	rcx, qword ptr [rsp + 0x2f8]
+1400033ca: e8 81 c5 00 00              	call	0x14000f950 <.text+0xe950>
+1400033cf: 90                          	nop
+1400033d0: 48 8d 8c 24 e0 09 00 00     	lea	rcx, [rsp + 0x9e0]
+1400033d8: e8 b3 71 00 00              	call	0x14000a590 <.text+0x9590>
+1400033dd: 90                          	nop
+1400033de: 48 8d 8c 24 20 08 00 00     	lea	rcx, [rsp + 0x820]
+1400033e6: e8 a5 71 00 00              	call	0x14000a590 <.text+0x9590>
+1400033eb: 90                          	nop
+1400033ec: 48 8d 8c 24 c0 0b 00 00     	lea	rcx, [rsp + 0xbc0]
+1400033f4: e8 87 c7 12 00              	call	0x14012fb80 <.text+0x12eb80>
+1400033f9: 89 44 24 48                 	mov	dword ptr [rsp + 0x48], eax
+1400033fd: e8 8e c4 00 00              	call	0x14000f890 <.text+0xe890>
+140003402: 48 89 84 24 28 03 00 00     	mov	qword ptr [rsp + 0x328], rax
+14000340a: 8b 54 24 48                 	mov	edx, dword ptr [rsp + 0x48]
+14000340e: 48 8d 8c 24 20 0b 00 00     	lea	rcx, [rsp + 0xb20]
+140003416: e8 e5 e3 00 00              	call	0x140011800 <.text+0x10800>
+14000341b: 48 89 84 24 00 03 00 00     	mov	qword ptr [rsp + 0x300], rax
+140003423: 48 8b 84 24 00 03 00 00     	mov	rax, qword ptr [rsp + 0x300]
+14000342b: 48 89 84 24 08 03 00 00     	mov	qword ptr [rsp + 0x308], rax
+140003433: 4c 8b 84 24 08 03 00 00     	mov	r8, qword ptr [rsp + 0x308]
+14000343b: 48 8d 15 a6 f7 48 00        	lea	rdx, [rip + 0x48f7a6]   # 0x140492be8
+140003442: 48 8d 8c 24 00 0b 00 00     	lea	rcx, [rsp + 0xb00]
+14000344a: e8 b1 17 00 00              	call	0x140004c00 <.text+0x3c00>
+14000344f: 48 89 84 24 10 03 00 00     	mov	qword ptr [rsp + 0x310], rax
+140003457: 48 8b 84 24 10 03 00 00     	mov	rax, qword ptr [rsp + 0x310]
+14000345f: 48 89 84 24 18 03 00 00     	mov	qword ptr [rsp + 0x318], rax
+140003467: 48 8b 84 24 18 03 00 00     	mov	rax, qword ptr [rsp + 0x318]
+14000346f: 48 89 84 24 20 03 00 00     	mov	qword ptr [rsp + 0x320], rax
+140003477: 48 8d 15 8a f7 48 00        	lea	rdx, [rip + 0x48f78a]   # 0x140492c08
+14000347e: 48 8d 8c 24 40 08 00 00     	lea	rcx, [rsp + 0x840]
+140003486: e8 f5 5a 00 00              	call	0x140008f80 <.text+0x7f80>
+14000348b: 90                          	nop
+14000348c: 4c 8b 84 24 20 03 00 00     	mov	r8, qword ptr [rsp + 0x320]
+140003494: 48 8d 94 24 40 08 00 00     	lea	rdx, [rsp + 0x840]
+14000349c: 48 8b 8c 24 28 03 00 00     	mov	rcx, qword ptr [rsp + 0x328]
+1400034a4: e8 a7 c4 00 00              	call	0x14000f950 <.text+0xe950>
+1400034a9: 90                          	nop
+1400034aa: 48 8d 8c 24 40 08 00 00     	lea	rcx, [rsp + 0x840]
+1400034b2: e8 d9 70 00 00              	call	0x14000a590 <.text+0x9590>
+1400034b7: 90                          	nop
+1400034b8: 48 8d 8c 24 00 0b 00 00     	lea	rcx, [rsp + 0xb00]
+1400034c0: e8 cb 70 00 00              	call	0x14000a590 <.text+0x9590>
+1400034c5: 90                          	nop
+1400034c6: 48 8d 8c 24 20 0b 00 00     	lea	rcx, [rsp + 0xb20]
+1400034ce: e8 bd 70 00 00              	call	0x14000a590 <.text+0x9590>
+1400034d3: 90                          	nop
+1400034d4: e8 77 c8 00 00              	call	0x14000fd50 <.text+0xed50>
+1400034d9: 48 89 84 24 f8 03 00 00     	mov	qword ptr [rsp + 0x3f8], rax
+1400034e1: 48 8d 84 24 e8 05 00 00     	lea	rax, [rsp + 0x5e8]
+1400034e9: 48 89 84 24 30 03 00 00     	mov	qword ptr [rsp + 0x330], rax
+1400034f1: 48 8b 8c 24 30 03 00 00     	mov	rcx, qword ptr [rsp + 0x330]
+1400034f9: e8 12 5d 00 00              	call	0x140009210 <.text+0x8210>
+1400034fe: 48 89 84 24 38 03 00 00     	mov	qword ptr [rsp + 0x338], rax

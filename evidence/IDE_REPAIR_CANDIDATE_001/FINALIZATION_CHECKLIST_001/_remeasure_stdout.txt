@@ -1,0 +1,27 @@
+RawrXD Local Agent
+Model:    qwen3:8b
+Backend:  ollama (backup)
+Endpoint: http://127.0.0.1:11434/v1/chat/completions
+Route:    ollama tag preserved; GGUF lookup bypassed; :8080 not probed
+Mode:     ask - Answer and explain without changing anything
+Root:     F:\rawrxd
+Edits:    denied
+Execute:  denied by default
+Tools:    9 registered
+
+RawrXD Local Agent
+Model:    qwen3:8b
+Backend:  ollama (backup)
+Mode:     ask - Answer and explain without changing anything
+Root:     F:\rawrxd
+Edits:    denied
+Execute:  denied by default
+Tools:    9 registered
+
+
+=== Run summary ===
+turns=10 tool_calls=0 denied=0
+
+Summary: AGENT_RESULT=5
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.

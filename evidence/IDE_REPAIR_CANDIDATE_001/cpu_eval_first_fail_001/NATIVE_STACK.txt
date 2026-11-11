@@ -1,0 +1,77 @@
+﻿NATIVE_STACK_CAPTURE
+CAPTURE_UTC=2026-11-10T14:03:07.3125516Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+EXCEPTION_CODE=0xC0000409
+EXCEPTION_NAME=STATUS_STACK_BUFFER_OVERRUN (security check failure / fast-fail)
+EXCEPTION_FLAGS=0x00000001
+NUMBER_PARAMETERS=1
+PARAMETER[0]=0x0000000000000005
+FAST_FAIL_SUBCODE=5
+FAST_FAIL_NAME=FAST_FAIL_INVALID_ARG
+FAULT_MODULE=ucrtbase.dll
+FAULT_SYMBOL=ucrtbase!invoke_watson+0x18
+FAULT_INSTRUCTION=int 29h
+THREAD=GenerationWorker (std::thread from Deep2Bridge::GenerateStream)
+
+NOTE=Subcode 5 is CRT invalid-parameter fast-fail, NOT proof of stack buffer overrun.
+NOTE=Fault in ucrtbase does not prove dequant root cause by itself.
+
+PRE_CRASH_STDERR_MARKERS=
+  [TENSOR_LOOKUP_FAIL] name=output.weight  (YES — appears before crash during init)
+  [GGUF] GetTensorInfo not found: output.weight
+  [CPUInferenceEngine] using tied token_embd.weight as output projection
+  LIFECYCLE_PHASE=initialize_complete
+  LIFECYCLE_PHASE=request_0_begin
+  (crash; token callback / request_2 never reached)
+
+TOP_STACK_FRAMES (kL / kv after .ecxr):
+ 00 ucrtbase!invoke_watson+0x18
+ 01 ucrtbase!invalid_parameter+0xc2
+ 02 ucrtbase!invalid_parameter_noinfo+0x9
+ 03 ucrtbase!fread_nolock_s+0x1cf
+ 04 ucrtbase!fread_s+0x5d
+ 05 ucrtbase!fread+0x1b
+ 06 bridge_lifecycle_test!std::basic_filebuf<char,std::char_traits<char> >::xsgetn+0x10b
+ 07 msvcp140!std::basic_istream<char,std::char_traits<char> >::read+0x8a
+ 08 bridge_lifecycle_test!StreamingGGUFLoader::LoadTensorSlice+0x169   << FIRST APP FRAME
+ 09 bridge_lifecycle_test!RawrXD::CPUInferenceEngine::Eval+0x409       << FIRST CPUInferenceEngine FRAME
+ 10 bridge_lifecycle_test!RawrXD::CPUInferenceEngine::GenerateStreaming+0x103
+ 11 bridge_lifecycle_test!Deep2Bridge::GenerationWorker+0x222
+ 12 bridge_lifecycle_test!std::thread::_Invoke<...Deep2Bridge::GenerateStream lambda...>+0x1d
+ 13 ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x30
+ 14 kernel32!BaseThreadInitThunk+0x17
+ 15 ntdll!RtlUserThreadStart+0x2c
+
+KV_NOTABLE_ARGS=
+  fread_nolock_s child args include 0xffffffffffffffff (suspicious size/count)
+  nearby size-like value 0x4ec appears on fread_s / LoadTensorSlice path
+
+MODULE_EXCERPT (lm):
+  bridge_lifecycle_test  00007ff7e12b0000-00007ff7e191d000  private pdb OK
+    pdb=f:\rawrxd\evidence\...\stack_capture_001\bridge_lifecycle_test.pdb
+  ucrtbase               00007ffa37e30000-00007ffa37f7c000  pdb from symbol server OK
+
+IMPLICATION (observation only; no patch this turn):
+  Crash is CRT invalid-parameter during istream::read/fread inside
+  StreamingGGUFLoader::LoadTensorSlice, invoked from first
+  CPUInferenceEngine::Eval (embedding/tensor slice load path).
+  TENSOR_LOOKUP_FAIL output.weight + tied token_embd fallback occur at init
+  before request_0_begin; stack does not land in a dequant to_float frame.
+
+NEXT_REPAIR_TARGET=
+  StreamingGGUFLoader::LoadTensorSlice  (istream::read / underlying fread invalid arg)
+  caller context: RawrXD::CPUInferenceEngine::Eval  (first call / embedding row slice)
+  source candidates:
+    F:\rawrxd\src\streaming_gguf_loader.cpp :: LoadTensorSlice
+    F:\rawrxd\src\cpu_inference_engine_impl.cpp :: Eval (LoadTensorSlice token_embd.weight)
+
+DEBUGGER_USED=procdump64 (capture) + cdb 10.0.29680.1004 (analyze)
+DUMP=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\dumps\bridge_lifecycle_test.exe_261110_085703.dmp
+
+LN_CONFIRM=
+  LoadTensorSlice+0x169 within StreamingGGUFLoader::LoadTensorSlice .. LoadTensorZone
+  Eval+0x409 within RawrXD::CPUInferenceEngine::Eval .. FeedForward
+  (private PDB loaded; file:line via lsa may be absent if /Zi path not mapped)

@@ -1,0 +1,26 @@
+[0/2] Re-checking globbed directories...
+[1/24] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/24] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_001/Debug/vulkan-shaders-gen.exe
+[3/24] Completed 'vulkan-shaders-gen'
+[4/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_MenuHandlers.cpp.obj
+[5/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\main_win32.cpp.obj
+[6/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+[7/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+[8/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShell.cpp.obj
+[9/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Logger.cpp.obj
+[10/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_FileOps.cpp.obj
+[11/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj
+[12/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Sidebar.cpp.obj
+[13/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Debugger.cpp.obj
+[14/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj
+[15/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE.cpp.obj
+[16/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgenticLoopBridge.cpp.obj
+[17/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+[18/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_GhostTextIntegration.cpp.obj
+[19/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\quickjs_extension_host.cpp.obj
+[20/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj
+[21/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+[22/24] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\modules\vscode_extension_api.cpp.obj
+[23/24] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

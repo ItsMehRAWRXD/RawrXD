@@ -1,0 +1,32 @@
+[2026-11-09 06:21:12] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-09 06:21:12] [SYSTEM] Log file: logs\RawrXD_IDE_20261109_062112.log
+[2026-11-09 06:21:12] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 06:21:12] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 06:21:12] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 06:21:12] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:13] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=2
+[2026-11-09 06:21:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:14] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 06:21:15] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:48] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=2
+[2026-11-09 06:21:48] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=2
+[2026-11-09 06:21:59] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 06:22:08] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 06:22:10] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 06:22:11] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-09 06:22:12] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama

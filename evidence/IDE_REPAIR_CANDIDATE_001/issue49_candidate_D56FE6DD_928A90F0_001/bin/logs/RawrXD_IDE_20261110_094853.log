@@ -1,0 +1,10 @@
+[2026-11-10 09:48:53] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 09:48:53] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_094853.log
+[2026-11-10 09:48:53] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 09:48:53] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 09:48:53] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=-1
+[2026-11-10 09:48:54] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=0
+[2026-11-10 09:48:54] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 09:48:58] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=0
+[2026-11-10 09:48:59] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 09:49:43] [INFO] [ModelSelector] discovery update deferred while inference running

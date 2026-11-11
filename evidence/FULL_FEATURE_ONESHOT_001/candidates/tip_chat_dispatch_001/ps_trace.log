@@ -1,0 +1,22 @@
+43832 [PS_TRACE] executePowerShellInput() ENTRY thread=43832
+
+43832 [PS_TRACE] executePowerShellInput() command_len=1 cmd='?'
+
+43832 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=43832
+
+43832 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=43832
+
+43832 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=43832
+
+43832 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+43832 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+43832 [PS_TRACE] executePowerShellInput() EXIT
+
+43832 [PS_TRACE] executePowerShellInput() ENTRY thread=43832
+
+43832 [PS_TRACE] executePowerShellInput() command_len=0 cmd=''
+
+43832 [PS_TRACE] executePowerShellInput() exit: empty command
+

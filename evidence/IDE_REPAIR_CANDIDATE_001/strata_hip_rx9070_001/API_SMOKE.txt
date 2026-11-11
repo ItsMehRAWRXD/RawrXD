@@ -1,0 +1,5 @@
+STRATA_API=PASS
+HTTP=200
+MS=137
+PORT=8080
+ENGINE=F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe

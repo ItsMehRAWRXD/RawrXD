@@ -1,0 +1,21 @@
+TIP_AUTHORITY_REJECT_AC9B245A_SPRAWL_001
+ASOF_UTC=2026-11-10T18:55:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+
+LIVE_TIP_SHA256=8EE30F97C6137E250237E01F2535935641690E82B1D48427F326E09CA28DE8B9
+SUPERSEDED_REMEASURE=AC9B245A (buffer_len=0 remasure is stale; do not drive P07/P04 from it)
+LIVE_T080_NOTE=on 8EE30F97: BUFFER_OK len=55 RICHEDIT id=1001; PROBLEMS rows=1; exclusive fixture OK; FAIL=click-to-line/survive metric
+
+REJECTED_THIS_TURN=
+  - Invent PROMOTE=1 from ~102 tok/s or KV-cache recipes
+  - Wire IDM_AI_EDIT=3020 (3020=IDM_GIT_STATUS; T15 remains NOT_WIRED until real unused ID)
+  - G/E Python parse + PACKAGE_GAP CI + RAR/Slack/mTLS/PKCS12 tutorial sprawl
+  - Treating AC9B245A as live tip authority after 8EE30F97 rebuild
+
+IN_FLIGHT=
+  - T080 click-to-line remasure
+  - P03 agent-loop close
+  - P04 deep2_openai_server / test_api_server CMake locate+build

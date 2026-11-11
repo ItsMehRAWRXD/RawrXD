@@ -1,0 +1,9 @@
+SESSION_OPEN session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset pid=23740
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000002070C4A session=1 pane=copilot_sidebar session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+SESSION_OPEN session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset pid=23740
+DISPATCH_ID id=1 bytes=54 session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=54 session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=sid_00005CBC_0000000004333EA2 run_id=run_unset

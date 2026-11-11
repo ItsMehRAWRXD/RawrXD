@@ -1,0 +1,121 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\issue49_gui_ollama_qwen3_021\G021_ABORT_CDB_STACK.txt'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 46
+
+Microsoft (R) Windows Debugger Version 10.0.29680.1004 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+
+Loading Dump File [C:\Users\Garrett\AppData\Local\CrashDumps\RawrXD-Win32IDE-Native-Ext.exe.20844.dmp]
+User Mini Dump File: Only registers, stack and portions of memory are available
+
+Symbol search path is: srv*
+Executable search path is: 
+Windows 10 Version 26300 MP (8 procs) Free x64
+Product: WinNt, suite: SingleUserTS Personal
+Edition build lab: 26100.1.amd64fre.ge_release.240331-1435
+Debug session time: Tue Nov 10 10:04:58.000 2026 (UTC - 5:00)
+System Uptime: 0 days 20:14:37.172
+Process Uptime: 0 days 0:03:04.000
+.NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'
+...............................................................
+............
+This dump file has an exception of interest stored in it.
+The stored exception information can be accessed via .ecxr
+----------------------------------------------------------------------------
+The user dump currently examined is a minidump. Consequently, only a subset
+of sos.dll functionality will be available. If needed, attaching to the live
+process or debugging a full dump will allow access to sos.dll's full feature
+set.
+To create a full user dump use the command: .dump /ma <filename>
+----------------------------------------------------------------------------
+(516c.4a88): Security check failure or stack buffer overrun - code c0000409 (first/second chance not available)
+Subcode: 0x7 FAST_FAIL_FATAL_APP_EXIT 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+For analysis of this file, run !analyze -v
+ucrtbase!abort+0x4e:
+00007ffa`37ed527e cd29            int     29h
+0:000> kL 20; q
+Child-SP          RetAddr               Call Site
+000000d1`51af5f00 00007ffa`37ef218e     ucrtbase!abort+0x4e
+*** WARNING: Unable to verify checksum for RawrXD-Win32IDE-Native-Ext.exe
+000000d1`51af5f30 00007ff6`891b9f52     ucrtbase!terminate+0x1e
+000000d1`51af5f60 00007ffa`3788faa3     RawrXD_Win32IDE_Native_Ext!__scrt_unhandled_exception_filter+0x62
+000000d1`51af5f90 00007ffa`3a69f8fd     KERNELBASE!UnhandledExceptionFilter+0x1f3
+000000d1`51af6080 00007ffa`3a657733     ntdll!RtlUserThreadStart$filt$0+0x3f
+000000d1`51af60b0 00007ffa`3a69ab3f     ntdll!_C_specific_handler+0x93
+000000d1`51af6120 00007ffa`3a5f6985     ntdll!RtlpExecuteHandlerForException+0xf
+000000d1`51af6150 00007ffa`3a549f3d     ntdll!RtlDispatchException+0x5f5
+000000d1`51af68b0 00007ffa`3784569a     ntdll!RtlRaiseException+0x18d
+000000d1`51af76d0 00007ff9`d4a455a9     KERNELBASE!RaiseException+0x8a
+000000d1`51af77d0 00007ff6`88dec5c6     VCRUNTIME140!_CxxThrowException+0x99
+000000d1`51af7830 00007ff6`88debad8     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump_escaped+0x416
+000000d1`51af7940 00007ff6`88deb78c     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x6a8
+000000d1`51af79c0 00007ff6`88debaa1     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x35c
+000000d1`51af7a40 00007ff6`88deb78c     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x671
+000000d1`51af7ac0 00007ff6`88deba5b     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x35c
+000000d1`51af7b40 00007ff6`88deb85e     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x62b
+000000d1`51af7bc0 00007ff6`88deb78c     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x42e
+000000d1`51af7c40 00007ff6`88deb27f     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::detail::serializer<nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void> >::dump+0x35c
+000000d1`51af7cc0 00007ff6`88eca343     RawrXD_Win32IDE_Native_Ext!nlohmann::json_abi_v3_11_3::basic_json<std::map,std::vector,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_11_3::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char> >,void>::dump+0x24f
+000000d1`51af8010 00007ff6`88f8093b     RawrXD_Win32IDE_Native_Ext!Win32IDE::saveIdeSession+0x1283
+000000d1`51af8860 00007ffa`394252e6     RawrXD_Win32IDE_Native_Ext!Win32IDE::WindowProc+0xb9b
+000000d1`51afabe0 00007ffa`39426fa5     user32!UserCallWinProcCheckWow+0x356
+000000d1`51afad40 00007ffa`39426974     user32!SendMessageWorker+0x605
+000000d1`51afade0 00007ffa`394265ea     user32!SendMessageInternal+0x174
+000000d1`51afae30 00007ff6`88f7ff16     user32!SendMessageA+0x3a
+000000d1`51afae80 00007ffa`394252e6     RawrXD_Win32IDE_Native_Ext!Win32IDE::WindowProc+0x176
+000000d1`51afd200 00007ffa`39425dbd     user32!UserCallWinProcCheckWow+0x356
+000000d1`51afd360 00007ffa`394221ab     user32!DispatchMessageWorker+0x1dd
+000000d1`51afd3e0 00007ffa`39421079     user32!IsDialogMessageW+0x13b
+000000d1`51afd440 00007ff6`88f89b0e     user32!IsDialogMessageA+0x79
+000000d1`51afd470 00007ff6`88d59516     RawrXD_Win32IDE_Native_Ext!Win32IDE::runMessageLoop+0x77e
+quit:
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\Visualizers\winrt.natvis'

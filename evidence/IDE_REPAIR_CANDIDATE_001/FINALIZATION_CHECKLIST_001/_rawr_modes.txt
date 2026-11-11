@@ -1,0 +1,16 @@
+Agent modes:
+  code        [rsxw] Default agent: inspect, modify, build and test
+  ask         [rs] Answer and explain without changing anything
+  debug       [rsxw] Diagnose crashes, apply and verify fixes
+  plan        [rsw] Research and produce implementation plans (plan artifacts only)
+  architect   [rsw] Design components, interfaces and dependency graphs (plan artifacts only)
+  review      [rs] Review code, diffs and security (read-only)
+  research    [rs] Investigate local sources and approved docs
+  audit       [rsx] Check completeness and produce evidence
+  test        [rsxw] Discover, generate and execute tests
+  repair      [rsxw] Fix build failures and failing tests
+  refactor    [rsxw] Restructure while preserving behavior
+  benchmark   [rx] Measure real inference and system performance
+  swarm       [rsx] Coordinate specialized subagents (alias: orchestrator)
+  autonomous  [rsxw] Execute a persistent backlog across sessions
+[StreamEngine] Shutdown

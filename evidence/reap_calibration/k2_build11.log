@@ -1,0 +1,283 @@
+[1/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\asm\RuntimeEvidence512_Core.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\asm\RuntimeEvidence512_Core.asm
+[2/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\deep2\vwa\VwaRangeLineageX64.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\deep2\vwa\VwaRangeLineageX64.asm
+[3/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\asm\RuntimeEvidence512_IDEEmit.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\asm\RuntimeEvidence512_IDEEmit.asm
+[4/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\asm\RuntimeEvidence512_Emit.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\asm\RuntimeEvidence512_Emit.asm
+[5/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\asm\RuntimeEvidence512_Collect.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\asm\RuntimeEvidence512_Collect.asm
+[6/23] Building ASM_MASM object CMakeFiles\deep2_engine_lib.dir\src\asm\RuntimeEvidence512_IDECollect.asm.obj
+MASM : warning A4018:invalid command-line option : /MD
+MASM : warning A4018:invalid command-line option : /GS
+MASM : warning A4018:invalid command-line option : /guard:cf
+MASM : warning A4018:invalid command-line option : /VOLATILE:ISO
+MASM : warning A4018:invalid command-line option : /Zc:strictStrings
+MASM : warning A4018:invalid command-line option : /Z:strictStrings
+MASM : warning A4018:invalid command-line option : /ZtrictStrings
+MASM : warning A4018:invalid command-line option : /ZrictStrings
+MASM : warning A4018:invalid command-line option : /ZctStrings
+MASM : warning A4018:invalid command-line option : /ZtStrings
+MASM : warning A4018:invalid command-line option : /ZStrings
+MASM : warning A4018:invalid command-line option : /Ztrings
+MASM : warning A4018:invalid command-line option : /Zrings
+MASM : warning A4018:invalid command-line option : /Zngs
+MASM : warning A4018:invalid command-line option : /Zgs
+MASM : warning A4018:invalid command-line option : /Zc:throwingNew
+MASM : warning A4018:invalid command-line option : /Z:throwingNew
+MASM : warning A4018:invalid command-line option : /ZthrowingNew
+MASM : warning A4018:invalid command-line option : /ZhrowingNew
+MASM : warning A4018:invalid command-line option : /ZrowingNew
+MASM : warning A4018:invalid command-line option : /ZowingNew
+MASM : warning A4018:invalid command-line option : /ZwingNew
+MASM : warning A4018:invalid command-line option : /ZngNew
+MASM : warning A4018:invalid command-line option : /ZgNew
+MASM : warning A4018:invalid command-line option : /ZNew
+MASM : warning A4018:invalid command-line option : /Zew
+MASM : warning A4018:invalid command-line option : /Zw
+MASM : warning A4018:invalid command-line option : /permissive-
+MASM : warning A4018:invalid command-line option : /EHsc
+MASM : warning A4018:invalid command-line option : /std:c++20
+MASM : warning A4018:invalid command-line option : /O2
+MASM : warning A4008:invalid command-line option value, default is used : /W
+ Assembling: F:\rawrxd\src\asm\RuntimeEvidence512_IDECollect.asm
+[7/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_FusedQ4KT.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEPlaceLiveCounters.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Cost.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[11/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\engine_link_supplement.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy_Overlap.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[13/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[14/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[16/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLAWeights.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(755): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(572): warning C4505: 'Deep2::gemvDispatch': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\K2MLAWeights.cpp(603): warning C4505: 'Deep2::rmsNorm': unreferenced function with internal linkage has been removed
+[17/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_adapter_fused.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(197): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(198): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(258): warning C4100: 'cacheKey': unreferenced parameter
+F:\rawrxd\src\deep2\vulkan_compute_adapter_fused.cpp(816): warning C4100: 'cacheKey': unreferenced parameter
+[18/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\StreamerParity_Post.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[19/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_missing_members.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[20/23] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+[21/23] Linking CXX static library deep2_engine_lib.lib
+FAILED: [code=1181] deep2_engine_lib.lib 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\lib.exe" /nologo /machine:x64 /out:deep2_engine_lib.lib @CMakeFiles\deep2_engine_lib.rsp && cd ."
+LINK : fatal error LNK1181: cannot open input file 'CMakeFiles\deep2_engine_lib.dir\src\deep2\vwa\VwaRangeLineageX64.asm.obj'
+[22/23] Building CXX object CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\deep2_flight_recorder.hpp(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\BatchedPrefill.hpp(166): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\reap_replay_cli.cpp(29): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+ninja: build stopped: subcommand failed.

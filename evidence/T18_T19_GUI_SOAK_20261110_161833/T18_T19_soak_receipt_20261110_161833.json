@@ -1,0 +1,22 @@
+{
+    "ide_exe":  "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+    "hangs":  0,
+    "ide_sha256":  "BBA0724D3B50CA91A51D750B31E132A69F881B639C4A2C641D9193A305473CA8",
+    "memory_peak_mb":  9.61,
+    "memory_end_mb":  null,
+    "iterations_completed":  10,
+    "timestamp_utc":  "2026-11-10T21:20:56.0945318Z",
+    "oom_events":  0,
+    "schema":  "RAWRXD_T18_T19_GUI_ENDURANCE_SOAK_001",
+    "memory_growth_mb":  null,
+    "failed_actions":  0,
+    "pass":  true,
+    "memory_start_mb":  8.99,
+    "interval_seconds":  10,
+    "iterations_requested":  10,
+    "crashes":  0,
+    "duration_seconds":  142.83,
+    "errors":  [
+
+               ]
+}

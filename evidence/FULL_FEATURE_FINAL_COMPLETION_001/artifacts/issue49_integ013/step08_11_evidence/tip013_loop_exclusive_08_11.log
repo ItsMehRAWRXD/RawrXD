@@ -1,0 +1,224 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-34688-17664517975100 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+[stage] ingest done in 11147.4 ms: arch=qwen2 blocks=28 vocab=152064 bos=151643 eos=151645
+[stage] model ships a chat template (2507 bytes):
+{%- if tools %}
+    {{- '<|im_start|>system\n' }}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- messages[0]['content'] }}
+    {%- else %}
+        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}
+    {%- endif %}
+    {{- "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
+    {%- for tool in tools %}
+        {{- "\n" }}
+        {{- tool | tojson }}
+    {%- endfor %}
+    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
+{%- else %}
+    {%- if messages[0]['role'] == 'system' %}
+        {{- '<|im_start|>system\n' + messages[0]['content'] + '<|im_end|>\n' }}
+    {%- else %}
+        {{- '<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n' }}
+    {%- endif %}
+{%- endif %}
+{%- for message in messages %}
+    {%- if (message.role == "user") or (message.role == "system" and not loop.first) or (message.role == "assistant" and not message.tool_calls) %}
+        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}
+    {%- elif message.role == "assistant" %}
+        {{- '<|im_start|>' + message.role }}
+        {%- if message.content %}
+            {{- '\n' + message.content }}
+        {%- endif %}
+        {%- for tool_call in message.tool_calls %}
+            {%- if tool_call.function is defined %}
+                {%- set tool_call = tool_call.function %}
+            {%- endif %}
+            {{- '\n<tool_call>\n{"name": "' }}
+            {{- tool_call.name }}
+            {{- '", "arguments": ' }}
+            {{- tool_call.arguments | tojson }}
+            {{- '}\n</tool_call>' }}
+        {%- endfor %}
+        {{- '<|im_end|>\n' }}
+    {%- elif message.role == "tool" %}
+        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != "tool") %}
+            {{- '<|im_start|>user' }}
+        {%- endif %}
+        {{- '\n<tool_response>\n' }}
+        {{- message.content }}
+        {{- '\n</tool_response>' }}
+        {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}
+            {{- '<|im_end|>\n' }}
+        {%- endif %}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|im_start|>assistant\n' }}
+{%- endif %}
+
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=395 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+[stage] chat markers: template user='User: ' asst='Assistant: ' gen='<|im_start|>assistant\n' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\.rawrxd\agent_transactions\txn_17575853404500
+[step 1] PREFILL_BATCH_BEGIN pos=0 count=128/239
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] PREFILL_BATCH_END pos=0 count=128 ok=true ms=142301
+[step 1] PREFILL_BATCH_BEGIN pos=128 count=111/239
+[step 1] PREFILL_BATCH_END pos=128 count=111 ok=true ms=117311
+[step 1] prefill +239/239 tokens (ctx=239 tokens) in 259631 ms (batched)
+[step 1] tok 0/128: TO
+[step 1] SNAP protocol=legacy
+[step 1] SNAP STOP: reason=1 tokens=5 after 5 host tokens
+[step 1] generated 5 tokens / 14 chars in 4900 ms (1.021 tok/s) snap=1
+[step 1] MOTD_STATUS ACKNOWLEDGED sha256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[step 1] TOOL read_motd ->  ; observation 3327 bytes; SNAP dispatch transition 95.5425 ms
+MOTD_ACK=1
+MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+---
+description: >-
+  PassiveRoleNotRoleplay MOTD: per-turn Read gate + continue-ensure passive
+  coordinator (Cursor hooks, Deep/Win32/Headless /api/tool). Not roleplay.
+alwaysApply: true
+---
+
+# PassiveRoleNotRoleplay
+
+This file is the **Message of the Day (MOTD)** for Cursor and RawrXD agent execution.
+
+The parent agent is a **passive coordinator**. It does not perform work delegated to a worker. This is execution policy, not character roleplay.
+
+## Per-turn MOTD gate
+
+1. Each new user message: `MOTD_ACK=0`.
+2. Until ack: only `Read` / `read_file` / `read_motd` of this file (`.md` / `.mdc`) is allowed.
+3. After a successful read this turn: `MOTD_ACK=1` — tools unlock for this turn only.
+4. Same gate: Cursor agent tools/hooks/background agents, Deep IDE, Win32IDE, HeadlessIDE, `/api/tool`.
+
+## Continue-ensure triggers
+
+Exact short: `Please continue ensuring`
+
+Exact max: `Please continue ensuring that the streamer is complete and can run agentic`
+
+When either matches:
+
+1. Read this MOTD if not already read this turn.
+2. Follow `StreamerAgenticContinueEnsure.mdc` + `MultitaskMode.mdc`.
+3. Launch **exactly one** background worker with the max E2E brief.
+4. Parent does **not** execute delegated engineering work.
+5. Emit coordinator handoff; **end the parent turn**.
+
+Required: `WORKER_COUNT=1` · `PARENT_EXECUTES_DELEGATED_WORK=0` · `PROMOTE=0`
+
+## Fail-closed law
+
+`SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS`
+
+`NOT_RUN != PASS`. Do not invent PASS. Do not alter sealed certification evidence.
+
+## Coordinator output (continue-ensure only)
+
+```
+CONTINUE_ENSURE=DISPATCHED
+BACKGROUND_WORKERS=1
+PARENT_MODE=PASSIVE_COORDINATOR
+MOTD_ACK=1
+```
+
+## Forbidden
+
+Character roleplay, persona improv, treating "agentic" as fiction/RP, more than one continue-ensure worker, parent continuing delegated work after dispatch.
+
+
+## Agent Handoff as delegation -> NOT completion
+
+Yes. I’ll treat **agent handoff as delegation, not completion**.
+
+For RawrXD/Deep2 work, I’ll keep the governing rule as:
+
+```text
+HANDOFF_TO_AGENT != DONE
+
+IF work is:
+  gapped
+  incomplete
+  partially implemented
+  started but unverified
+  delegated but not landed
+  landed but not wired
+  wired but not exercised
+  exercised but not E2E
+  E2E but not dispositioned
+
+THEN:
+  RESUME_IT
+  TRACE_TO_REAL_OWNER
+  IMPLEMENT_MISSING_PIECES
+  WIRE_REAL_PRODUCT_PATH
+  BUILD
+  RUN
+  VERIFY
+  CLOSE_END_TO_END
+```
+
+That also means I won’t let documentation, a source stub, a smoke witness, an agent result, or an intermediate receipt silently substitute for the actual product path. Existing authority still remains intact—e.g. `R27=LIVE_E2E_PASS`, R28 witness-only/APPLY held, `PROMOTE=0`, and `TIP_CLIMB=HOLD`—unless later real evidence legitimately changes it.
+
+Where I have the necessary repo/files/tools in the current session, I’ll continue the work myself rather than merely describing what another agent should do. Where execution access is absent, I’ll still carry the implementation/review as far as the available artifacts permit and identify the exact remaining executable gate rather than calling the work finished.
+
+RESULT_REINJECTION step=1 tool=read_motd target= observation_bytes=3327 status=PASS
+[step 2] PREFILL_BATCH_BEGIN pos=243 count=128/1201
+[step 2] PREFILL_BATCH_END pos=243 count=128 ok=true ms=135243
+[step 2] PREFILL_BATCH_BEGIN pos=371 count=128/1201
+[step 2] PREFILL_BATCH_END pos=371 count=128 ok=true ms=136425
+[step 2] PREFILL_BATCH_BEGIN pos=499 count=128/1201
+[step 2] PREFILL_BATCH_END pos=499 count=128 ok=true ms=136567
+[step 2] PREFILL_BATCH_BEGIN pos=627 count=128/1201
+[step 2] PREFILL_BATCH_END pos=627 count=128 ok=true ms=137732
+[step 2] PREFILL_BATCH_BEGIN pos=755 count=128/1201
+
+===== STDERR =====
+
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\models\qwen2.5-coder-7b-instruct.Q4_K_M.gguf
+[ESP] =okenizer_check value=0 message=PASS
+[ESP] seq=3 req=1 agent=0 kind=prefill_start value=0 message=tokens=239 ctx=0
+[ESP] seq=4 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":128,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":142310.286,"decode_ms":0.000,"task_ms":142311.156,"gpu_dispatches":25872,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=5 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":239,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":259630.802,"decode_ms":0.000,"task_ms":259631.672,"gpu_dispatches":48357,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=6 req=1 agent=0 kind=prefill_end value=259630 message=elapsed_ms=259630.844700 tokens=239
+[ESP] seq=7 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":239,"context":239,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.921,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":259630.845,"decode_ms":0.000,"task_ms":259644.511,"gpu_dispatches":48357,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=9 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"decode","generated":1,"prefill_tokens":239,"context":239,"rolling_tps":2550.370,"decode_tps":2550.370,"prefill_tps":0.921,"task_tps":0.004,"ttft_ms":259645.204,"prefill_ms":259630.845,"decode_ms":0.392,"task_ms":259645.206,"gpu_dispatches":48357,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=13 req=1 agent=0 kind=snap_stop value=0 message=reason=1
+[ESP] seq=14 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"decode","generated":4,"prefill_tokens":239,"context":239,"rolling_tps":0.816,"decode_tps":0.816,"prefill_tps":0.921,"task_tps":0.015,"ttft_ms":259645.204,"prefill_ms":259630.845,"decode_ms":4899.229,"task_ms":264544.043,"gpu_dispatches":48949,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false}
+[SNAP OUT RAW] bytes=14 text="TOOL read_motd"
+[SNAP OUT META] eos_id=151645
+[SNAP OUT TOKENS] n=4 ids=5207,1930,1349,78584
+[ESP] seq=15 req=1 agent=0 kind=tool_start value=0 message=name=read_motd target=
+[ESP] seq=16 req=1 agent=0 kind=tool_result value=0 message=name=read_motd target= status=PASS bytes=3327
+[ESP] seq=17 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"tool","generated":4,"prefill_tokens":239,"context":239,"rolling_tps":0.000,"decode_tps":0.800,"prefill_tps":0.921,"task_tps":0.015,"ttft_ms":259645.204,"prefill_ms":259630.845,"decode_ms":4998.334,"task_ms":265157.164,"gpu_dispatches":48949,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=18 req=1 agent=0 kind=prefill_start value=0 message=tokens=958 ctx=243
+[ESP] seq=19 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":4,"prefill_tokens":239,"context":371,"rolling_tps":0.000,"decode_tps":0.800,"prefill_tps":0.605,"task_tps":0.010,"ttft_ms":259645.204,"prefill_ms":394889.194,"decode_ms":4998.334,"task_ms":400431.112,"gpu_dispatches":75018,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=20 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":4,"prefill_tokens":239,"context":499,"rolling_tps":0.000,"decode_tps":0.800,"prefill_tps":0.450,"task_tps":0.007,"ttft_ms":259645.204,"prefill_ms":531325.918,"decode_ms":4998.334,"task_ms":536867.836,"gpu_dispatches":100891,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=21 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":4,"prefill_tokens":239,"context":627,"rolling_tps":0.000,"decode_tps":0.800,"prefill_tps":0.358,"task_tps":0.006,"ttft_ms":259645.204,"prefill_ms":667904.762,"decode_ms":4998.334,"task_ms":673446.680,"gpu_dispatches":126764,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false}
+[ESP] seq=22 req=1 agent=0 kind=heartbeat value=0 message={"request":1,"agent":0,"phase":"prefill","generated":4,"prefill_tokens":239,"context":755,"rolling_tps":0.000,"decode_tps":0.800,"prefill_tps":0.297,"task_tps":0.005,"ttft_ms":259645.204,"prefill_ms":805650.071,"decode_ms":4998.334,"task_ms":811191.989,"gpu_dispatches":152637,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":true,"slow":false}
+
+
+EXIT=

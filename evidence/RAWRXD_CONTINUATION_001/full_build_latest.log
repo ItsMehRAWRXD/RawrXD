@@ -1,0 +1,15 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[0/2] Re-checking globbed directories...
+[1/9] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/9] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_reap/Release/vulkan-shaders-gen.exe
+[3/9] Completed 'vulkan-shaders-gen'
+[4/9] Linking CXX executable bin-msvc\reap-tok-inspect.exe
+[5/9] Linking CXX executable bin-msvc\reap-cert-parity.exe
+[6/9] Linking CXX executable bin-msvc\reap-tensor-enum.exe
+[7/9] Linking CXX executable bin-msvc\cpu_engine_e2e.exe
+[8/9] Linking CXX executable tests\test_deep2_inference.exe

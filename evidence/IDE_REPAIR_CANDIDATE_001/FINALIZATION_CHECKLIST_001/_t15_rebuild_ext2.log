@@ -1,0 +1,76 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Commands.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_GGML=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_HAS_AGENT_SESSION=1 -DRAWRXD_HAS_COMPUTER_USE=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_ext_host_001\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IC:\VulkanSDK\1.4.357.0\include -IF:\rawrxd\src\production -IF:\rawrxd\src\computer_use -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\Win32IDE_Commands.cpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(553): error C3861: 'pathExists': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(558): error C3861: 'pathExists': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(559): error C3861: 'pathExists': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(593): error C3861: 'pathExists': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(599): error C3861: 'parentDirectory': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(599): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(600): error C3861: 'parentDirectory': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(677): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(678): error C3861: 'workspaceRootFromSeeds': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(679): error C3861: 'configuredBuildDirectory': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(682): error C3861: 'configuredBuildTarget': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(682): error C2676: binary '+': 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' does not define this operator or a conversion to a type acceptable to the predefined operator
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(1984): note: could be 'std::reverse_iterator<_BidIt> std::operator +(reverse_iterator<_BidIt>::difference_type,const std::reverse_iterator<_BidIt> &) noexcept(<expr>)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::reverse_iterator<_BidIt> std::operator +(reverse_iterator<_BidIt>::difference_type,const std::reverse_iterator<_BidIt> &) noexcept(<expr>)': could not deduce template argument for 'const std::reverse_iterator<_BidIt> &' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(4535): note: or       'std::move_iterator<_Iter> std::operator +(move_iterator<_Iter>::difference_type,const std::move_iterator<_Iter> &) noexcept(<expr>)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::move_iterator<_Iter> std::operator +(move_iterator<_Iter>::difference_type,const std::move_iterator<_Iter> &) noexcept(<expr>)': could not deduce template argument for 'const std::move_iterator<_Iter> &' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3147): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'const std::basic_string<_Elem,_Traits,_Alloc> &' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3159): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem *const ,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem *const ,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'const _Elem *const ' from 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3172): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'const std::basic_string<_Elem,_Traits,_Alloc> &' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3183): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const _Elem *const )'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const _Elem *const )': could not deduce template argument for 'const _Elem *const ' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3196): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const _Elem)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const _Elem)': template parameter '_Elem' is ambiguous
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: could be '<error type>'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: or       'char'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,const _Elem)': could not deduce template argument for 'const _Elem' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3207): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,std::basic_string<_Elem,_Traits,_Alloc> &&)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const std::basic_string<_Elem,_Traits,_Alloc> &,std::basic_string<_Elem,_Traits,_Alloc> &&)': could not deduce template argument for 'std::basic_string<_Elem,_Traits,_Alloc> &&' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3213): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'const std::basic_string<_Elem,_Traits,_Alloc> &' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3219): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,std::basic_string<_Elem,_Traits,_Alloc> &&)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,std::basic_string<_Elem,_Traits,_Alloc> &&)': could not deduce template argument for 'std::basic_string<_Elem,_Traits,_Alloc> &&' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3232): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem *const ,std::basic_string<_Elem,_Traits,_Alloc> &&)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem *const ,std::basic_string<_Elem,_Traits,_Alloc> &&)': could not deduce template argument for 'const _Elem *const ' from 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3238): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem,std::basic_string<_Elem,_Traits,_Alloc> &&)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(const _Elem,std::basic_string<_Elem,_Traits,_Alloc> &&)': could not deduce template argument for 'std::basic_string<_Elem,_Traits,_Alloc> &&' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3244): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const _Elem *const )'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const _Elem *const )': could not deduce template argument for 'const _Elem *const ' from '<error type>'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3250): note: or       'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const _Elem)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const _Elem)': template parameter '_Elem' is ambiguous
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: could be '<error type>'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: or       'char'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(681): note: 'std::basic_string<_Elem,_Traits,_Alloc> std::operator +(std::basic_string<_Elem,_Traits,_Alloc> &&,const _Elem)': could not deduce template argument for 'const _Elem' from '<error type>'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(713): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(712): error C3861: 'powerShellLiteral': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(714): error C3861: 'powerShellLiteral': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(715): error C3861: 'configuredBuildTarget': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(716): error C3861: 'configuredBuildCommand': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(737): error C3861: 'encodePowerShellCommand': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(765): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(778): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(779): error C3861: 'workspaceRootFromSeeds': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(780): error C3861: 'configuredBuildDirectory': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(792): error C3861: 'currentDirectoryPath': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(792): error C3861: 'powerShellLiteral': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(793): error C3861: 'powerShellLiteral': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(802): error C3861: 'encodePowerShellCommand': identifier not found
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(813): error C3861: 'currentDirectoryPath': identifier not found
+ninja: build stopped: subcommand failed.
+NINJA_EXIT=2
+SHA256 hash of bin\RawrXD-Win32IDE-Native-Ext.exe:
+a8534c731fffb576978490883c67ae8de0eca52409e3c648761bf96a5038f3a9
+CertUtil: -hashfile command completed successfully.

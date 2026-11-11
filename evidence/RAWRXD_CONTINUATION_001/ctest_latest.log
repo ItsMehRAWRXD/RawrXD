@@ -1,0 +1,62 @@
+Test project F:/rawrxd/build_reap
+      Start  1: deep2_gpu_code31_pnp_probe
+ 1/27 Test  #1: deep2_gpu_code31_pnp_probe .........   Passed    0.05 sec
+      Start  2: deep2_gdn_reference_contract
+ 2/27 Test  #2: deep2_gdn_reference_contract .......   Passed    0.02 sec
+      Start  3: deep2_qwen4exp_operator_contract
+ 3/27 Test  #3: deep2_qwen4exp_operator_contract ...   Passed    0.02 sec
+      Start  4: deep2_h11_prefill_parity
+ 4/27 Test  #4: deep2_h11_prefill_parity ...........***Skipped   0.03 sec
+      Start  5: workspace_path_policy_smoke
+ 5/27 Test  #5: workspace_path_policy_smoke ........   Passed    0.03 sec
+      Start  6: native_tool_protocol_smoke
+ 6/27 Test  #6: native_tool_protocol_smoke .........   Passed    0.02 sec
+      Start  7: cursor_parity_registry_smoke
+ 7/27 Test  #7: cursor_parity_registry_smoke .......   Passed    0.06 sec
+      Start  8: q8k_edge_tests
+ 8/27 Test  #8: q8k_edge_tests .....................   Passed    0.01 sec
+      Start  9: q8k_byte_parity
+ 9/27 Test  #9: q8k_byte_parity ....................   Passed    0.01 sec
+      Start 10: quant_parity_cert
+10/27 Test #10: quant_parity_cert ..................   Passed    0.01 sec
+      Start 11: kquant_dot_parity
+11/27 Test #11: kquant_dot_parity ..................   Passed    0.02 sec
+      Start 12: gate2_manifest_consistency
+12/27 Test #12: gate2_manifest_consistency .........   Passed    1.83 sec
+      Start 13: rawr_reap_cli_contract
+13/27 Test #13: rawr_reap_cli_contract .............   Passed    0.02 sec
+      Start 14: rawr_reap_expert_layout
+14/27 Test #14: rawr_reap_expert_layout ............   Passed    0.03 sec
+      Start 15: rawr_reap_runtime_plan
+15/27 Test #15: rawr_reap_runtime_plan .............   Passed    0.02 sec
+      Start 16: rawr_tensor_residency_budget
+16/27 Test #16: rawr_tensor_residency_budget .......   Passed    0.02 sec
+      Start 17: hexmag_reap_live_fail_closed
+17/27 Test #17: hexmag_reap_live_fail_closed .......   Passed    0.03 sec
+      Start 18: reap_moe_transform
+18/27 Test #18: reap_moe_transform .................   Passed    0.06 sec
+      Start 19: deep2_mla_lifecycle_test
+19/27 Test #19: deep2_mla_lifecycle_test ...........   Passed    0.01 sec
+      Start 20: reap-floor-audit-smoke
+20/27 Test #20: reap-floor-audit-smoke .............   Passed    0.01 sec
+      Start 21: deep2_snap_test
+21/27 Test #21: deep2_snap_test ....................   Passed    0.01 sec
+      Start 22: snap_process_guard_test
+22/27 Test #22: snap_process_guard_test ............   Passed    1.07 sec
+      Start 23: flight_recorder_smoke_test
+23/27 Test #23: flight_recorder_smoke_test .........   Passed    0.20 sec
+      Start 24: rawr_run_self_test
+24/27 Test #24: rawr_run_self_test .................   Passed    0.02 sec
+      Start 25: rawr_fuzz_parsers
+25/27 Test #25: rawr_fuzz_parsers ..................   Passed    0.18 sec
+      Start 26: rawrxd_production_hardening
+26/27 Test #26: rawrxd_production_hardening ........   Passed    0.08 sec
+      Start 27: agent_esp_test
+27/27 Test #27: agent_esp_test .....................   Passed    0.02 sec
+
+100% tests passed out of 27
+
+Total Test time (real) =   4.16 sec
+
+The following tests did not run:
+	  4 - deep2_h11_prefill_parity (Skipped)

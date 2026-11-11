@@ -1,0 +1,3 @@
+CHAT_SEND_ATTEMPT bytes=10
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+CHAT_SEND_ATTEMPT bytes=12

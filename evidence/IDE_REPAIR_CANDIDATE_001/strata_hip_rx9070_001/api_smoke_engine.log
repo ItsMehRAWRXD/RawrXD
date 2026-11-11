@@ -1,0 +1,26 @@
+[strata] 2026-11-10 08:43:33 engine started: F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe --serve --native F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --max-context 2048 --prefill auto --mtp 2
+strata-q36: F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf: 753 tensors (layout checked), 4.40 GiB on the GPU in 2.8 s (the routed experts are placed after the engine's buffers)
+strata: Windows budgets 31707 of this card's 32624 MiB for this process; free VRAM is counted within that (STRATA_WDDM_BUDGET=0: off)
+strata-q36: prompt experts on MMQ (int8)
+strata-q36: context 2048 cells, prompt chunk 4096, MTP block loaded, 23.57 GiB of VRAM free
+strata-q36: every routed expert in VRAM (18.75 GiB) in 40.2 s
+strata-q36: warmed up in 1.8 s (one prompt chunk, a decode step, a speculative step)
+strata serve: session 0: prompt 16 tokens = 0 reused + 16 read in 57 ms (282.7 tok/s), 8 generated in 58 ms (137.0 tok/s), drafts accepted 0 of 0 (length)
+[strata] 2026-11-10 08:45:42 engine started: F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe --serve --native F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --max-context 2048 --prefill auto --mtp 2
+strata-q36: F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf: 753 tensors (layout checked), 4.40 GiB on the GPU in 3.4 s (the routed experts are placed after the engine's buffers)
+strata: Windows budgets 31707 of this card's 32624 MiB for this process; free VRAM is counted within that (STRATA_WDDM_BUDGET=0: off)
+strata-q36: prompt experts on MMQ (int8)
+strata-q36: context 2048 cells, prompt chunk 4096, MTP block loaded, 23.57 GiB of VRAM free
+strata-q36: every routed expert in VRAM (18.75 GiB) in 25.4 s
+strata-q36: warmed up in 2.3 s (one prompt chunk, a decode step, a speculative step)
+strata serve: session 0: prompt 17 tokens = 0 reused + 17 read in 135 ms (126.1 tok/s), 64 generated in 704 ms (90.9 tok/s), drafts accepted 0 of 0 (length)
+[strata] 2026-11-10 10:16:29 engine started: F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe --serve --native F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --max-context 2048 --prefill auto --mtp 2
+strata-q36: F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf: 753 tensors (layout checked), 4.40 GiB on the GPU in 5.8 s (the routed experts are placed after the engine's buffers)
+strata: Windows budgets 31707 of this card's 32624 MiB for this process; free VRAM is counted within that (STRATA_WDDM_BUDGET=0: off)
+strata-q36: prompt experts on MMQ (int8)
+strata-q36: context 2048 cells, prompt chunk 4096, MTP block loaded, 23.57 GiB of VRAM free
+strata-q36: every routed expert in VRAM (18.75 GiB) in 51.8 s
+strata-q36: warmed up in 2.5 s (one prompt chunk, a decode step, a speculative step)
+strata serve: session 0: prompt 22 tokens = 0 reused + 22 read in 154 ms (143.3 tok/s), 213 generated in 3125 ms (68.2 tok/s), drafts accepted 0 of 0 (stop)
+strata serve: session 0: prompt 340 tokens = 0 reused + 340 read in 366 ms (928.2 tok/s), 118 generated in 1757 ms (67.2 tok/s), drafts accepted 0 of 0 (stop)
+strata serve: session 0: prompt 96 tokens = 0 reused + 96 read in 204 ms (471.1 tok/s), 115 generated in 2652 ms (43.4 tok/s), drafts accepted 0 of 0 (stop)

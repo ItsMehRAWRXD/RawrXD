@@ -1,0 +1,1 @@
+"F:\rawrxd\build_ide\bin-msvc\rawr.exe" run nemotron-3-nano:4b "Use the editFiles tool to replace the exact text EDIT_ME T15_7bb4df317c with T15_EDITED_T15_7bb4df317c in the file F:\rawrxd\verify_temp\rawr_t15_test.txt" --approve-mutations=true

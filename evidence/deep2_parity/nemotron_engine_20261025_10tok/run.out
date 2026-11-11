@@ -1,0 +1,3152 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[MOE_KEYS_DIAG] Scanning 26 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 26 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=131072\n[REAP_TOKENIZER] merges=269443\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=131072\n[REAP_TOKENIZER] merges=269443\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[Deep2Engine] Mamba-2 SSM: 21 hybrid/SSM layers detected, using production selective-scan path
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=262144 fit=31268 (kv_bytes_per_token=147420)
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+[deep2-engine] rawrxd_deep2_engine starting
+[deep2-engine] loading model: F:\models\gguf\library__nemotron-3-nano__4b.gguf
+[Deep2Engine] Loading model from: F:\models\gguf\library__nemotron-3-nano__4b.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\models\gguf\library__nemotron-3-nano__4b.gguf mode=GPU_MULTI devices=2 kv_per_token=147420 max_ctx_est=31268
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\models\gguf)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 layers=42 heads=40 kvHeads=40 inter=0 vocab=131072
+[Deep2Engine] Nemotron-H MoE/Bolt architecture detected: nemotron_h
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=1x9728 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=9728x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=1x96 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=17504x3136 type=6)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x960 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=3136x7680 type=12)
+[Deep2Engine] Layer topology: 4 attention, 21 SSM, 17 unknown of 42 total
+[Deep2Engine] KV cache sized for 4 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[ResidencyManager] this=000002578AC2ADF0  Registered 'blk.0.attn_norm.weight': shard=0 offset=0 bytes=12544  |  registry_size=1  registeredBytes=12544  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000002578AC2ADF0  Registered 'blk.16.ssm_a': shard=0 offset=0 bytes=384  |  registry_size=100  registeredBytes=831716608  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000002578AC2ADF0  Registered 'blk.32.attn_k.weight': shard=0 offset=0 bytes=2207744  |  registry_size=200  registeredBytes=1622745984  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000002578AC2ADF0  registered=263 tensors  bytes=2829187200  max=536870912
+[Deep2Engine] Mamba-2 state buffers: proj=17504 state=30965760x1634304 conv=4x9728
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6219504C0 dequant=00007FF621953680 GetGEMV(12)=00007FF6219504C0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=4 page=8 virtualMax=31268 heads=40 dim=78
+[KVCache] HOT_BYTES=798720 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 4 layers x 31268 positions x 40 heads x 78 dim = 2977.18 MB
+[Deep2Engine] Model loaded successfully (263 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[deep2-engine] model loaded
+[deep2-engine] prompt: hello
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=42 tokens=10
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=420
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=42 TOKENS=10
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2322600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 4 (patch_043efa60325c838b)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=4
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[DBG-FWD] enter layer=0 seqLen=1 liveSeq=0
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=1 liveSeq=0
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=1 liveSeq=0
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=1 liveSeq=0
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=1 liveSeq=0
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=1 liveSeq=0
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=1 liveSeq=0
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=1 liveSeq=0
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=1 liveSeq=0
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=1 liveSeq=0
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=1 liveSeq=0
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=1 liveSeq=0
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=1 liveSeq=0
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.938080e+02
+[L12_DIAG] layer=12 K_proj norm=3.774825e+02
+[L12_DIAG] layer=12 V_proj norm=6.205827e+01
+[L12_ROPE_DIAG] pos=0 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.378676e+01 -6.588252e+00 -1.095215e+01 -4.648815e+00 -7.009622e+00 -6.554188e+00 7.481532e+00 -7.832442e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.378676e+01 k[1]=-6.588252e+00 k[2]=-1.095215e+01 k[3]=-4.648815e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.378676e+01 k1=-6.588252e+00 cosA=1.000000e+00 sinA=0.000000e+00 before=2.334799e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.378676e+01 kh[i+1]=-6.588252e+00 after=2.334799e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.095215e+01 k1=-4.648815e+00 cosA=1.000000e+00 sinA=0.000000e+00 before=1.415612e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.095215e+01 kh[i+1]=-4.648815e+00 after=1.415612e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-3.471728e+00 k[1]=1.015504e+01 k[2]=8.926205e+00 k[3]=-2.489524e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=2.938080e+02 K_postRoPE norm=3.774825e+02
+[L12_DIAG] layer=12 wo_proj norm=1.864146e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.864146e+02
+[L12_DIAG] layer=12 after residual norm=8.194661e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=8.194661e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=1 liveSeq=0
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=1 liveSeq=0
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=1 liveSeq=0
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=1 liveSeq=0
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=1 liveSeq=0
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=1 liveSeq=0
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=1 liveSeq=0
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=1 liveSeq=0
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=1 liveSeq=0
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=1 liveSeq=0
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=1 liveSeq=0
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=1 liveSeq=0
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=1 liveSeq=0
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=1 liveSeq=0
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=1 liveSeq=0
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=1 liveSeq=0
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=1 liveSeq=0
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=1 liveSeq=0
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=1 liveSeq=0
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=1 liveSeq=0
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=1 liveSeq=0
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=1 liveSeq=0
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=1 liveSeq=0
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=1 liveSeq=0
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=1 liveSeq=0
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=1 liveSeq=0
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=1 liveSeq=0
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=1 liveSeq=0
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=1 liveSeq=0
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[Deep2Engine] embedToken: type=6 vocabSize=131072 hiddenDim=3136 data=00000258C88D2240 sizeBytes=282591232 rows=131072 cols=3136
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=2153.596
+[AGENT] DECODE_BEGIN max_out=10
+[B3_WARN] hidden state norm explosion pos=1 norm=1.406048859e+02
+[DBG] stateNorm=1.406049e+02 finite=1 pos=1
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1656 logit=    7.324708 text=' In'
+  [ 1] id= 9246 logit=    6.962212 text=' Let'
+  [ 2] id= 1349 logit=    6.878009 text=' A'
+  [ 3] id= 1436 logit=    6.813816 text=' E'
+  [ 4] id= 3249 logit=    6.402798 text=' On'
+  [ 5] id= 5511 logit=    6.315666 text=' Sim'
+  [ 6] id=23627 logit=    6.224929 text=' Given'
+  [ 7] id= 2898 logit=    6.151131 text=' For'
+  [ 8] id= 1531 logit=    6.072748 text=' The'
+  [ 9] id= 3367 logit=    5.948576 text=' If'
+[Deep2Engine] Sampler selected token: 45400
+[DBG] sampled token=45400 eosId=11
+[AGENT] TOKEN id=45400 piece= derrota
+[DBG-FWD] enter layer=0 seqLen=2 liveSeq=1
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=2 liveSeq=1
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=2 liveSeq=1
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=2 liveSeq=1
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=2 liveSeq=1
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=2 liveSeq=1
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=2 liveSeq=1
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=2 liveSeq=1
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=2 liveSeq=1
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=2 liveSeq=1
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=2 liveSeq=1
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=2 liveSeq=1
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=2 liveSeq=1
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.252934e+02
+[L12_DIAG] layer=12 K_proj norm=4.195865e+02
+[L12_DIAG] layer=12 V_proj norm=6.836836e+01
+[L12_ROPE_DIAG] pos=1 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.572661e+01 -6.692248e+00 -1.162390e+01 -5.339593e+00 -6.945352e+00 -7.078698e+00 8.186201e+00 -8.654251e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.572661e+01 k[1]=-6.692248e+00 k[2]=-1.162390e+01 k[3]=-5.339593e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.572661e+01 k1=-6.692248e+00 cosA=5.403023e-01 sinA=8.414710e-01 before=2.921123e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-2.865788e+00 kh[i+1]=-1.684932e+01 after=2.921123e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.162390e+01 k1=-5.339593e+00 cosA=6.479058e-01 sinA=7.617204e-01 before=1.636262e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-3.463913e+00 kh[i+1]=-1.231371e+01 after=1.636262e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-4.839732e+00 k[1]=1.070718e+01 k[2]=1.040579e+01 k[3]=-2.579083e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=3.252934e+02 K_postRoPE norm=4.195864e+02
+[L12_DIAG] layer=12 wo_proj norm=8.081445e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=8.081445e+01
+[L12_DIAG] layer=12 after residual norm=3.740461e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=3.740461e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=2 liveSeq=1
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=2 liveSeq=1
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=2 liveSeq=1
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=2 liveSeq=1
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=2 liveSeq=1
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=2 liveSeq=1
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=2 liveSeq=1
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=2 liveSeq=1
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=2 liveSeq=1
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=2 liveSeq=1
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=2 liveSeq=1
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=2 liveSeq=1
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=2 liveSeq=1
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=2 liveSeq=1
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=2 liveSeq=1
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=2 liveSeq=1
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=2 liveSeq=1
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=2 liveSeq=1
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=2 liveSeq=1
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=2 liveSeq=1
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=2 liveSeq=1
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=2 liveSeq=1
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=2 liveSeq=1
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=2 liveSeq=1
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=2 liveSeq=1
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=2 liveSeq=1
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=2 liveSeq=1
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=2 liveSeq=1
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=2 liveSeq=1
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[B3_WARN] hidden state norm explosion pos=2 norm=1.191156232e+02
+[DBG] stateNorm=1.191156e+02 finite=1 pos=2
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id=114082 logit=    6.790291 text=' embarc'
+  [ 1] id=126698 logit=    6.464701 text=' brod'
+  [ 2] id=75916 logit=    6.151772 text=' abbandon'
+  [ 3] id=112737 logit=    5.926141 text='donald'
+  [ 4] id=123471 logit=    5.918777 text='ilise'
+  [ 5] id=114051 logit=    5.860185 text=' Cinq'
+  [ 6] id=67173 logit=    5.851824 text=' abband'
+  [ 7] id=83118 logit=    5.823351 text='weite'
+  [ 8] id=109533 logit=    5.767885 text=' poign'
+  [ 9] id=106151 logit=    5.751049 text=' Miroslav'
+[Deep2Engine] Sampler selected token: 87942
+[DBG] sampled token=87942 eosId=11
+[DBG-FWD] enter layer=0 seqLen=3 liveSeq=2
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=3 liveSeq=2
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=3 liveSeq=2
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=3 liveSeq=2
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=3 liveSeq=2
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=3 liveSeq=2
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=3 liveSeq=2
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=3 liveSeq=2
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=3 liveSeq=2
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=3 liveSeq=2
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=3 liveSeq=2
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=3 liveSeq=2
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=3 liveSeq=2
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.929611e+02
+[L12_DIAG] layer=12 K_proj norm=3.725414e+02
+[L12_DIAG] layer=12 V_proj norm=6.077880e+01
+[L12_ROPE_DIAG] pos=2 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.217503e+01 -6.251438e+00 -1.057927e+01 -5.265404e+00 -5.862173e+00 -6.535069e+00 8.438204e+00 -7.877262e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.217503e+01 k[1]=-6.251438e+00 k[2]=-1.057927e+01 k[3]=-5.265404e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.217503e+01 k1=-6.251438e+00 cosA=-4.161468e-01 sinA=9.092974e-01 before=1.873119e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.075102e+01 kh[i+1]=-8.469211e+00 after=1.873119e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.057927e+01 k1=-5.265404e+00 cosA=-1.604360e-01 sinA=9.870462e-01 before=1.396455e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=6.894494e+00 kh[i+1]=-9.597471e+00 after=1.396455e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-4.224540e+00 k[1]=9.686374e+00 k[2]=8.947949e+00 k[3]=-3.153168e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=2.929611e+02 K_postRoPE norm=3.725414e+02
+[L12_DIAG] layer=12 wo_proj norm=6.593488e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=6.593488e+01
+[L12_DIAG] layer=12 after residual norm=1.391208e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=1.391208e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=3 liveSeq=2
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=3 liveSeq=2
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=3 liveSeq=2
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=3 liveSeq=2
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=3 liveSeq=2
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=3 liveSeq=2
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=3 liveSeq=2
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=3 liveSeq=2
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=3 liveSeq=2
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=3 liveSeq=2
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=3 liveSeq=2
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=3 liveSeq=2
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=3 liveSeq=2
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=3 liveSeq=2
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=3 liveSeq=2
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=3 liveSeq=2
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=3 liveSeq=2
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=3 liveSeq=2
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=3 liveSeq=2
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=3 liveSeq=2
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=3 liveSeq=2
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=3 liveSeq=2
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=3 liveSeq=2
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=3 liveSeq=2
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=3 liveSeq=2
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=3 liveSeq=2
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=3 liveSeq=2
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=3 liveSeq=2
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=3 liveSeq=2
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[B3_WARN] hidden state norm explosion pos=3 norm=1.324957590e+02
+[DBG] stateNorm=1.324958e+02 finite=1 pos=3
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5511 logit=    6.099830 text=' Sim'
+  [ 1] id= 1656 logit=    5.983839 text=' In'
+  [ 2] id= 1436 logit=    5.729987 text=' E'
+  [ 3] id=112737 logit=    5.551688 text='donald'
+  [ 4] id= 9246 logit=    5.415421 text=' Let'
+  [ 5] id= 3249 logit=    5.349585 text=' On'
+  [ 6] id=28809 logit=    5.194792 text=' �'
+  [ 7] id= 1349 logit=    5.145576 text=' A'
+  [ 8] id= 3931 logit=    5.129854 text=' At'
+  [ 9] id= 2898 logit=    5.087574 text=' For'
+[Deep2Engine] Sampler selected token: 108398
+[DBG] sampled token=108398 eosId=11
+[DBG-FWD] enter layer=0 seqLen=4 liveSeq=3
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=4 liveSeq=3
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=4 liveSeq=3
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=4 liveSeq=3
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=4 liveSeq=3
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=4 liveSeq=3
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=4 liveSeq=3
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=4 liveSeq=3
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=4 liveSeq=3
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=4 liveSeq=3
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=4 liveSeq=3
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=4 liveSeq=3
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=4 liveSeq=3
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.145610e+02
+[L12_DIAG] layer=12 K_proj norm=3.991056e+02
+[L12_DIAG] layer=12 V_proj norm=6.503250e+01
+[L12_ROPE_DIAG] pos=3 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.466751e+01 -6.077025e+00 -1.156207e+01 -5.364256e+00 -6.668154e+00 -5.504324e+00 7.063046e+00 -8.420000e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.466751e+01 k[1]=-6.077025e+00 k[2]=-1.156207e+01 k[3]=-5.364256e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.466751e+01 k1=-6.077025e+00 cosA=-9.899925e-01 sinA=1.411200e-01 before=2.520661e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.537832e+01 kh[i+1]=3.946330e+00 after=2.520661e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.156207e+01 k1=-5.364256e+00 cosA=-8.558007e-01 sinA=5.173057e-01 before=1.624568e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.266979e+01 kh[i+1]=-1.390392e+00 after=1.624568e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-5.246787e+00 k[1]=1.048063e+01 k[2]=9.001529e+00 k[3]=-3.006204e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=3.145610e+02 K_postRoPE norm=3.991056e+02
+[L12_DIAG] layer=12 wo_proj norm=1.457136e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.457136e+02
+[L12_DIAG] layer=12 after residual norm=6.807676e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=6.807676e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=4 liveSeq=3
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=4 liveSeq=3
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=4 liveSeq=3
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=4 liveSeq=3
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=4 liveSeq=3
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=4 liveSeq=3
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=4 liveSeq=3
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=4 liveSeq=3
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=4 liveSeq=3
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=4 liveSeq=3
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=4 liveSeq=3
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=4 liveSeq=3
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=4 liveSeq=3
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=4 liveSeq=3
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=4 liveSeq=3
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=4 liveSeq=3
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=4 liveSeq=3
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=4 liveSeq=3
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=4 liveSeq=3
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=4 liveSeq=3
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=4 liveSeq=3
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=4 liveSeq=3
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=4 liveSeq=3
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=4 liveSeq=3
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=4 liveSeq=3
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=4 liveSeq=3
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=4 liveSeq=3
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=4 liveSeq=3
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=4 liveSeq=3
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[B3_WARN] hidden state norm explosion pos=4 norm=1.431510797e+02
+[DBG] stateNorm=1.431511e+02 finite=1 pos=4
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1436 logit=    8.935383 text=' E'
+  [ 1] id= 1656 logit=    7.629833 text=' In'
+  [ 2] id= 3249 logit=    7.611885 text=' On'
+  [ 3] id= 1349 logit=    7.385912 text=' A'
+  [ 4] id= 5511 logit=    7.154925 text=' Sim'
+  [ 5] id= 9246 logit=    6.838156 text=' Let'
+  [ 6] id=28809 logit=    6.756867 text=' �'
+  [ 7] id= 3931 logit=    6.084666 text=' At'
+  [ 8] id= 2898 logit=    6.072001 text=' For'
+  [ 9] id= 1531 logit=    6.002722 text=' The'
+[Deep2Engine] Sampler selected token: 92420
+[DBG] sampled token=92420 eosId=11
+[DBG-FWD] enter layer=0 seqLen=5 liveSeq=4
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=5 liveSeq=4
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=5 liveSeq=4
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=5 liveSeq=4
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=5 liveSeq=4
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=5 liveSeq=4
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=5 liveSeq=4
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=5 liveSeq=4
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=5 liveSeq=4
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=5 liveSeq=4
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=5 liveSeq=4
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=5 liveSeq=4
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=5 liveSeq=4
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.239561e+02
+[L12_DIAG] layer=12 K_proj norm=4.125653e+02
+[L12_DIAG] layer=12 V_proj norm=6.751079e+01
+[L12_ROPE_DIAG] pos=4 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.563204e+01 -5.444473e+00 -1.105276e+01 -5.690441e+00 -7.349263e+00 -5.818043e+00 8.056126e+00 -8.145579e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.563204e+01 k[1]=-5.444473e+00 k[2]=-1.105276e+01 k[3]=-5.690441e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.563204e+01 k1=-5.444473e+00 cosA=-6.536436e-01 sinA=-7.568025e-01 before=2.740030e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=6.097392e+00 kh[i+1]=1.538911e+01 after=2.740030e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.105276e+01 k1=-5.690441e+00 cosA=-9.485205e-01 sinA=-3.167155e-01 before=1.545445e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=8.681515e+00 kh[i+1]=8.898079e+00 after=1.545445e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-4.179484e+00 k[1]=1.067958e+01 k[2]=9.256835e+00 k[3]=-2.008374e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=3.239561e+02 K_postRoPE norm=4.125653e+02
+[L12_DIAG] layer=12 wo_proj norm=9.962938e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=9.962938e+01
+[L12_DIAG] layer=12 after residual norm=4.902684e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.902684e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=5 liveSeq=4
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=5 liveSeq=4
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=5 liveSeq=4
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=5 liveSeq=4
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=5 liveSeq=4
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=5 liveSeq=4
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=5 liveSeq=4
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=5 liveSeq=4
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=5 liveSeq=4
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=5 liveSeq=4
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=5 liveSeq=4
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=5 liveSeq=4
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=5 liveSeq=4
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=5 liveSeq=4
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=5 liveSeq=4
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=5 liveSeq=4
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=5 liveSeq=4
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=5 liveSeq=4
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=5 liveSeq=4
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=5 liveSeq=4
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=5 liveSeq=4
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=5 liveSeq=4
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=5 liveSeq=4
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=5 liveSeq=4
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=5 liveSeq=4
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=5 liveSeq=4
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=5 liveSeq=4
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=5 liveSeq=4
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=5 liveSeq=4
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[DBG] stateNorm=1.424129e+02 finite=1 pos=5
+[B3_WARN] hidden state norm explosion pos=5 norm=1.424128515e+02
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1436 logit=    9.109478 text=' E'
+  [ 1] id= 1349 logit=    8.300215 text=' A'
+  [ 2] id= 1656 logit=    7.757038 text=' In'
+  [ 3] id= 5511 logit=    7.589044 text=' Sim'
+  [ 4] id= 9246 logit=    7.542063 text=' Let'
+  [ 5] id= 1032 logit=    6.727378 text=' '
+  [ 6] id= 1531 logit=    6.605544 text=' The'
+  [ 7] id= 3249 logit=    6.432168 text=' On'
+  [ 8] id=28809 logit=    6.362169 text=' �'
+  [ 9] id= 3316 logit=    6.180542 text=' Is'
+[Deep2Engine] Sampler selected token: 1436
+[DBG] sampled token=1436 eosId=11
+[DBG-FWD] enter layer=0 seqLen=6 liveSeq=5
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=6 liveSeq=5
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=6 liveSeq=5
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=6 liveSeq=5
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=6 liveSeq=5
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=6 liveSeq=5
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=6 liveSeq=5
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=6 liveSeq=5
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=6 liveSeq=5
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=6 liveSeq=5
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=6 liveSeq=5
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=6 liveSeq=5
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=6 liveSeq=5
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=8.957245e+01
+[L12_DIAG] layer=12 K_proj norm=8.013529e+01
+[L12_DIAG] layer=12 V_proj norm=1.965207e+01
+[L12_ROPE_DIAG] pos=5 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.640550e+00 1.954446e+00 -1.095987e+00 1.901406e-01 -5.673665e-02 -7.988212e-01 2.816568e-01 -3.748047e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.640550e+00 k[1]=1.954446e+00 k[2]=-1.095987e+00 k[3]=1.901406e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-1.640550e+00 k1=1.954446e+00 cosA=2.836622e-01 sinA=-9.589243e-01 before=6.511263e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.408803e+00 kh[i+1]=2.127566e+00 after=6.511263e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-1.095987e+00 k1=1.901406e-01 cosA=-3.733035e-01 sinA=-9.277093e-01 before=1.237341e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=5.855310e-01 kh[i+1]=9.457772e-01 after=1.237341e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-3.657380e-01 k[1]=5.315927e+00 k[2]=7.569528e-01 k[3]=1.971860e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=8.957245e+01 K_postRoPE norm=8.013529e+01
+[L12_DIAG] layer=12 wo_proj norm=8.650842e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=8.650842e+01
+[L12_DIAG] layer=12 after residual norm=2.002793e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.002793e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=6 liveSeq=5
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=6 liveSeq=5
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=6 liveSeq=5
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=6 liveSeq=5
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=6 liveSeq=5
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=6 liveSeq=5
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=6 liveSeq=5
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=6 liveSeq=5
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=6 liveSeq=5
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=6 liveSeq=5
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=6 liveSeq=5
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=6 liveSeq=5
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=6 liveSeq=5
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=6 liveSeq=5
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=6 liveSeq=5
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=6 liveSeq=5
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=6 liveSeq=5
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=6 liveSeq=5
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=6 liveSeq=5
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=6 liveSeq=5
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=6 liveSeq=5
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=6 liveSeq=5
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=6 liveSeq=5
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=6 liveSeq=5
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=6 liveSeq=5
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=6 liveSeq=5
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=6 liveSeq=5
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=6 liveSeq=5
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=6 liveSeq=5
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[DBG] stateNorm=1.274849e+02 finite=1 pos=6
+[B3_WARN] hidden state norm explosion pos=6 norm=1.274849264e+02
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id=123856 logit=    4.808520 text=' biograf'
+  [ 1] id=49817 logit=    4.737116 text=' Eind'
+  [ 2] id=62050 logit=    4.638375 text=' brass'
+  [ 3] id=21036 logit=    4.631066 text='ót'
+  [ 4] id=68512 logit=    4.578977 text=' PUR'
+  [ 5] id=103493 logit=    4.574754 text=' Bruch'
+  [ 6] id=53724 logit=    4.540745 text=' curtain'
+  [ 7] id=104991 logit=    4.465285 text=' ingleses'
+  [ 8] id=44045 logit=    4.456497 text=' Bren'
+  [ 9] id=33706 logit=    4.417205 text=' weiteren'
+[Deep2Engine] Sampler selected token: 119545
+[DBG] sampled token=119545 eosId=11
+[DBG-FWD] enter layer=0 seqLen=7 liveSeq=6
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=7 liveSeq=6
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=7 liveSeq=6
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=7 liveSeq=6
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=7 liveSeq=6
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=7 liveSeq=6
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=7 liveSeq=6
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=7 liveSeq=6
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=7 liveSeq=6
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=7 liveSeq=6
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=7 liveSeq=6
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=7 liveSeq=6
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=7 liveSeq=6
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=3.135289e+02
+[L12_DIAG] layer=12 K_proj norm=4.004881e+02
+[L12_DIAG] layer=12 V_proj norm=6.537871e+01
+[L12_ROPE_DIAG] pos=6 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.413016e+01 -5.705317e+00 -1.006179e+01 -5.089872e+00 -6.869083e+00 -5.838080e+00 6.815292e+00 -7.960475e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.413016e+01 k[1]=-5.705317e+00 k[2]=-1.006179e+01 k[3]=-5.089872e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.413016e+01 k1=-5.705317e+00 cosA=9.601703e-01 sinA=-2.794155e-01 before=2.322119e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.516151e+01 kh[i+1]=-1.529892e+00 after=2.322119e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.006179e+01 k1=-5.089872e+00 cosA=4.647896e-01 sinA=-8.854212e-01 before=1.271464e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-9.183295e+00 kh[i+1]=6.543200e+00 after=1.271464e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-4.205575e+00 k[1]=1.103218e+01 k[2]=9.334343e+00 k[3]=-2.434270e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=3.135289e+02 K_postRoPE norm=4.004881e+02
+[L12_DIAG] layer=12 wo_proj norm=7.532840e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=7.532840e+01
+[L12_DIAG] layer=12 after residual norm=2.710249e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.710249e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=7 liveSeq=6
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=7 liveSeq=6
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=7 liveSeq=6
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=7 liveSeq=6
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=7 liveSeq=6
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=7 liveSeq=6
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=7 liveSeq=6
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=7 liveSeq=6
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=7 liveSeq=6
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=7 liveSeq=6
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=7 liveSeq=6
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=7 liveSeq=6
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=7 liveSeq=6
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=7 liveSeq=6
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=7 liveSeq=6
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=7 liveSeq=6
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=7 liveSeq=6
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=7 liveSeq=6
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=7 liveSeq=6
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=7 liveSeq=6
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=7 liveSeq=6
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=7 liveSeq=6
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=7 liveSeq=6
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=7 liveSeq=6
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=7 liveSeq=6
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=7 liveSeq=6
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=7 liveSeq=6
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=7 liveSeq=6
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=7 liveSeq=6
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[DBG] stateNorm=1.311720e+02 finite=1 pos=7
+[B3_WARN] hidden state norm explosion pos=7 norm=1.311720296e+02
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id=107010 logit=    5.836514 text=' verletzt'
+  [ 1] id=66301 logit=    5.566185 text=' cominci'
+  [ 2] id=83118 logit=    5.503798 text='weite'
+  [ 3] id=109688 logit=    5.374042 text='vista'
+  [ 4] id=33737 logit=    5.316682 text='ары'
+  [ 5] id=67173 logit=    5.251395 text=' abband'
+  [ 6] id=118276 logit=    5.082327 text=' destinado'
+  [ 7] id=91225 logit=    5.072105 text=' ascol'
+  [ 8] id=114082 logit=    5.053743 text=' embarc'
+  [ 9] id=68512 logit=    4.997395 text=' PUR'
+[Deep2Engine] Sampler selected token: 50421
+[DBG] sampled token=50421 eosId=11
+[DBG-FWD] enter layer=0 seqLen=8 liveSeq=7
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=8 liveSeq=7
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=8 liveSeq=7
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=8 liveSeq=7
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=8 liveSeq=7
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=8 liveSeq=7
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=8 liveSeq=7
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=8 liveSeq=7
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=8 liveSeq=7
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=8 liveSeq=7
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=8 liveSeq=7
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=8 liveSeq=7
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=8 liveSeq=7
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=2.982075e+02
+[L12_DIAG] layer=12 K_proj norm=3.770004e+02
+[L12_DIAG] layer=12 V_proj norm=6.164379e+01
+[L12_ROPE_DIAG] pos=7 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -1.349527e+01 -5.872763e+00 -1.063019e+01 -4.469831e+00 -6.858096e+00 -6.401136e+00 5.824962e+00 -7.956907e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.349527e+01 k[1]=-5.872763e+00 k[2]=-1.063019e+01 k[3]=-4.469831e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.349527e+01 k1=-5.872763e+00 cosA=7.539023e-01 sinA=6.569866e-01 before=2.166118e+02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-6.315791e+00 kh[i+1]=-1.329370e+01 after=2.166118e+02
+[L12_ROPE_DIAG] K pair i=2: k0=-1.063019e+01 k1=-4.469831e+00 cosA=9.755833e-01 sinA=-2.196297e-01 before=1.329802e+02
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.135234e+01 kh[i+1]=-2.025987e+00 after=1.329802e+02
+[L12_ROPE_DIAG] K head=1: k[0]=-3.944876e+00 k[1]=1.075280e+01 k[2]=9.820847e+00 k[3]=-2.649467e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=2.982076e+02 K_postRoPE norm=3.770004e+02
+[L12_DIAG] layer=12 wo_proj norm=8.383139e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=8.383139e+01
+[L12_DIAG] layer=12 after residual norm=2.629744e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.629744e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=8 liveSeq=7
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=8 liveSeq=7
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=8 liveSeq=7
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=8 liveSeq=7
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=8 liveSeq=7
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=8 liveSeq=7
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=8 liveSeq=7
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=8 liveSeq=7
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=8 liveSeq=7
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=8 liveSeq=7
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=8 liveSeq=7
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=8 liveSeq=7
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=8 liveSeq=7
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=8 liveSeq=7
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=8 liveSeq=7
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=8 liveSeq=7
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=8 liveSeq=7
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=8 liveSeq=7
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=8 liveSeq=7
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=8 liveSeq=7
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=8 liveSeq=7
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=8 liveSeq=7
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=8 liveSeq=7
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=8 liveSeq=7
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=8 liveSeq=7
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=8 liveSeq=7
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=8 liveSeq=7
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=8 liveSeq=7
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=8 liveSeq=7
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[DBG] stateNorm=1.449648e+02 finite=1 pos=8
+[B3_WARN] hidden state norm explosion pos=8 norm=1.449647987e+02
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1436 logit=    9.301908 text=' E'
+  [ 1] id= 1656 logit=    8.535874 text=' In'
+  [ 2] id= 1349 logit=    8.180955 text=' A'
+  [ 3] id= 9246 logit=    7.408805 text=' Let'
+  [ 4] id= 5511 logit=    7.173824 text=' Sim'
+  [ 5] id= 2898 logit=    7.006548 text=' For'
+  [ 6] id= 3249 logit=    6.840423 text=' On'
+  [ 7] id= 1531 logit=    6.749926 text=' The'
+  [ 8] id=28809 logit=    6.589220 text=' �'
+  [ 9] id= 3931 logit=    6.202624 text=' At'
+[Deep2Engine] Sampler selected token: 1436
+[DBG] sampled token=1436 eosId=11
+[DBG-FWD] enter layer=0 seqLen=9 liveSeq=8
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=9 liveSeq=8
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=9 liveSeq=8
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=9 liveSeq=8
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=9 liveSeq=8
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=9 liveSeq=8
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=9 liveSeq=8
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=9 liveSeq=8
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=9 liveSeq=8
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=9 liveSeq=8
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=9 liveSeq=8
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=9 liveSeq=8
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=9 liveSeq=8
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=1.808239e+02
+[L12_DIAG] layer=12 K_proj norm=2.166633e+02
+[L12_DIAG] layer=12 V_proj norm=3.819237e+01
+[L12_ROPE_DIAG] pos=8 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -8.204561e+00 -2.685959e+00 -6.163718e+00 -3.735805e+00 -4.766810e+00 -3.376692e+00 2.716425e+00 -4.030086e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-8.204561e+00 k[1]=-2.685959e+00 k[2]=-6.163718e+00 k[3]=-3.735805e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-8.204561e+00 k1=-2.685959e+00 cosA=-1.455000e-01 sinA=9.893582e-01 before=7.452920e+01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=3.851140e+00 kh[i+1]=-7.726443e+00 after=7.452921e+01
+[L12_ROPE_DIAG] K pair i=2: k0=-6.163718e+00 k1=-3.735805e+00 cosA=7.993825e-01 sinA=6.008224e-01 before=5.194765e+01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-2.682613e+00 kh[i+1]=-6.689636e+00 after=5.194765e+01
+[L12_ROPE_DIAG] K head=1: k[0]=-1.350455e+00 k[1]=7.648017e+00 k[2]=4.724764e+00 k[3]=-6.489822e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=1.808239e+02 K_postRoPE norm=2.166633e+02
+[L12_DIAG] layer=12 wo_proj norm=1.064371e+02
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.064371e+02
+[L12_DIAG] layer=12 after residual norm=2.901189e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.901189e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=9 liveSeq=8
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=9 liveSeq=8
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=9 liveSeq=8
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=9 liveSeq=8
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=9 liveSeq=8
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=9 liveSeq=8
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=9 liveSeq=8
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=9 liveSeq=8
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=9 liveSeq=8
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=9 liveSeq=8
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=9 liveSeq=8
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=9 liveSeq=8
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=9 liveSeq=8
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=9 liveSeq=8
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=9 liveSeq=8
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=9 liveSeq=8
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=9 liveSeq=8
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=9 liveSeq=8
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=9 liveSeq=8
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=9 liveSeq=8
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=9 liveSeq=8
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=9 liveSeq=8
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=9 liveSeq=8
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=9 liveSeq=8
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=9 liveSeq=8
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=9 liveSeq=8
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=9 liveSeq=8
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=9 liveSeq=8
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=9 liveSeq=8
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[B3_WARN] hidden state norm explosion pos=9 norm=1.117384490e+02
+[KVCache] page grow 8 -> 16 hot (virtualMax=31268 pos=8)
+[DBG] stateNorm=1.117384e+02 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29682 logit=    6.293338 text=' Éd'
+  [ 1] id=65531 logit=    6.027875 text='chent'
+  [ 2] id=113714 logit=    5.957730 text=' Garib'
+  [ 3] id=91950 logit=    5.907252 text=' Éc'
+  [ 4] id=32109 logit=    5.896996 text='ござ'
+  [ 5] id=115111 logit=    5.859124 text='/button'
+  [ 6] id=107959 logit=    5.846313 text='maso'
+  [ 7] id=129455 logit=    5.805300 text=' grito'
+  [ 8] id=113901 logit=    5.787335 text=' Fleisch'
+  [ 9] id=43095 logit=    5.777613 text='-É'
+[Deep2Engine] Sampler selected token: 75857
+[DBG] sampled token=75857 eosId=11
+[DBG-FWD] enter layer=0 seqLen=10 liveSeq=9
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-SSM] layer=0 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=0 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=10 liveSeq=9
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=10 liveSeq=9
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-SSM] layer=2 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=2 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=10 liveSeq=9
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=10 liveSeq=9
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-SSM] layer=4 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=4 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=10 liveSeq=9
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=10 liveSeq=9
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-SSM] layer=6 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=6 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=10 liveSeq=9
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-SSM] layer=7 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=7 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=10 liveSeq=9
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=10 liveSeq=9
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-SSM] layer=9 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=9 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=10 liveSeq=9
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=10 liveSeq=9
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-SSM] layer=11 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=11 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=10 liveSeq=9
+[DBG-FWD] layer=12 rmsnorm ok
+[ATTN_TOPOLOGY] layer=12 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[L12_DIAG] layer=12 Q_proj norm=1.298515e+02
+[L12_DIAG] layer=12 K_proj norm=1.393363e+02
+[L12_DIAG] layer=12 V_proj norm=2.663439e+01
+[L12_ROPE_DIAG] pos=9 headDim=128 numHeads=40 numKVHeads=8 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (1024 elements)
+[L12_ROPE_DIAG] K first 8: -3.969988e+00 -2.571697e+00 -2.950521e+00 1.015359e+00 -1.865788e+00 -9.628811e-01 -1.335038e-01 -3.841542e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-3.969988e+00 k[1]=-2.571697e+00 k[2]=-2.950521e+00 k[3]=1.015359e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-3.969988e+00 k1=-2.571697e+00 cosA=-9.111302e-01 sinA=4.121185e-01 before=2.237443e+01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=4.677020e+00 kh[i+1]=7.070459e-01 after=2.237443e+01
+[L12_ROPE_DIAG] K pair i=2: k0=-2.950521e+00 k1=1.015359e+00 cosA=6.026586e-02 sinA=9.981824e-01 before=9.736531e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.191329e+00 kh[i+1]=-2.883967e+00 after=9.736530e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.241367e+00 k[1]=4.738288e+00 k[2]=2.280772e+00 k[3]=-3.460020e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (1024 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=1.298515e+02 K_postRoPE norm=1.393363e+02
+[L12_DIAG] layer=12 wo_proj norm=7.303808e+01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=7.303808e+01
+[L12_DIAG] layer=12 after residual norm=1.311945e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=1.311945e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=10 liveSeq=9
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=10 liveSeq=9
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-SSM] layer=14 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=14 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=10 liveSeq=9
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=10 liveSeq=9
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-SSM] layer=16 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=16 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=10 liveSeq=9
+[DBG-FWD] layer=17 rmsnorm ok
+[ATTN_TOPOLOGY] layer=17 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=10 liveSeq=9
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=10 liveSeq=9
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-SSM] layer=19 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=19 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=10 liveSeq=9
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=10 liveSeq=9
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-SSM] layer=21 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=21 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=10 liveSeq=9
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=10 liveSeq=9
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-SSM] layer=23 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=23 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=10 liveSeq=9
+[DBG-FWD] layer=24 rmsnorm ok
+[ATTN_TOPOLOGY] layer=24 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=10 liveSeq=9
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=10 liveSeq=9
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-SSM] layer=26 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=26 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=10 liveSeq=9
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[DBG-FWD] enter layer=28 seqLen=10 liveSeq=9
+[DBG-FWD] layer=28 rmsnorm ok
+[DBG-FWD] layer=28 attention ok
+[DBG-SSM] layer=28 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=28 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=28 ffn ok
+[DBG-FWD] layer=28 exit
+[DBG-FWD] enter layer=29 seqLen=10 liveSeq=9
+[DBG-FWD] layer=29 rmsnorm ok
+[DBG-FWD] layer=29 attention ok
+[DBG-FWD] layer=29 ffn ok
+[DBG-FWD] layer=29 exit
+[DBG-FWD] enter layer=30 seqLen=10 liveSeq=9
+[DBG-FWD] layer=30 rmsnorm ok
+[DBG-FWD] layer=30 attention ok
+[DBG-SSM] layer=30 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=30 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=30 ffn ok
+[DBG-FWD] layer=30 exit
+[DBG-FWD] enter layer=31 seqLen=10 liveSeq=9
+[DBG-FWD] layer=31 rmsnorm ok
+[DBG-FWD] layer=31 attention ok
+[DBG-SSM] layer=31 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=31 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=31 ffn ok
+[DBG-FWD] layer=31 exit
+[DBG-FWD] enter layer=32 seqLen=10 liveSeq=9
+[DBG-FWD] layer=32 rmsnorm ok
+[ATTN_TOPOLOGY] layer=32 metadata heads=40 kvHeads=40 headDim=78; weights heads=40 kvHeads=8 headDim=128; using weight geometry
+[DBG-FWD] layer=32 attention ok
+[DBG-FWD] layer=32 ffn ok
+[DBG-FWD] layer=32 exit
+[DBG-FWD] enter layer=33 seqLen=10 liveSeq=9
+[DBG-FWD] layer=33 rmsnorm ok
+[DBG-FWD] layer=33 attention ok
+[DBG-FWD] layer=33 ffn ok
+[DBG-FWD] layer=33 exit
+[DBG-FWD] enter layer=34 seqLen=10 liveSeq=9
+[DBG-FWD] layer=34 rmsnorm ok
+[DBG-FWD] layer=34 attention ok
+[DBG-SSM] layer=34 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=34 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=34 ffn ok
+[DBG-FWD] layer=34 exit
+[DBG-FWD] enter layer=35 seqLen=10 liveSeq=9
+[DBG-FWD] layer=35 rmsnorm ok
+[DBG-FWD] layer=35 attention ok
+[DBG-SSM] layer=35 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=35 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=35 ffn ok
+[DBG-FWD] layer=35 exit
+[DBG-FWD] enter layer=36 seqLen=10 liveSeq=9
+[DBG-FWD] layer=36 rmsnorm ok
+[DBG-FWD] layer=36 attention ok
+[DBG-SSM] layer=36 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=36 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=36 ffn ok
+[DBG-FWD] layer=36 exit
+[DBG-FWD] enter layer=37 seqLen=10 liveSeq=9
+[DBG-FWD] layer=37 rmsnorm ok
+[DBG-FWD] layer=37 attention ok
+[DBG-FWD] layer=37 ffn ok
+[DBG-FWD] layer=37 exit
+[DBG-FWD] enter layer=38 seqLen=10 liveSeq=9
+[DBG-FWD] layer=38 rmsnorm ok
+[DBG-FWD] layer=38 attention ok
+[DBG-SSM] layer=38 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=38 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=38 ffn ok
+[DBG-FWD] layer=38 exit
+[DBG-FWD] enter layer=39 seqLen=10 liveSeq=9
+[DBG-FWD] layer=39 rmsnorm ok
+[DBG-FWD] layer=39 attention ok
+[DBG-FWD] layer=39 ffn ok
+[DBG-FWD] layer=39 exit
+[DBG-FWD] enter layer=40 seqLen=10 liveSeq=9
+[DBG-FWD] layer=40 rmsnorm ok
+[DBG-FWD] layer=40 attention ok
+[DBG-SSM] layer=40 yInner[d_inner=7680] bad=0/7680 firstBad=0
+[DBG-SSM] layer=40 ssmOut output[hiddenDim=3136] bad=0/3136 firstBad=0
+[DBG-FWD] layer=40 ffn ok
+[DBG-FWD] layer=40 exit
+[DBG-FWD] enter layer=41 seqLen=10 liveSeq=9
+[DBG-FWD] layer=41 rmsnorm ok
+[DBG-FWD] layer=41 attention ok
+[DBG-FWD] layer=41 ffn ok
+[DBG-FWD] layer=41 exit
+[DBG] stateNorm=1.287952e+02 finite=1 pos=10
+[B3_WARN] hidden state norm explosion pos=10 norm=1.287952200e+02
+[DBG] nonFiniteLogits=0 vocabSize=131072
+[Deep2Engine] Top-10 logits:
+  [ 0] id=39019 logit=    6.265549 text='eton'
+  [ 1] id=102547 logit=    5.864361 text='jac'
+  [ 2] id= 6242 logit=    5.717257 text='ija'
+  [ 3] id=76459 logit=    5.637542 text='azin'
+  [ 4] id=103935 logit=    5.550900 text='wc'
+  [ 5] id=57607 logit=    5.413592 text=' Willem'
+  [ 6] id=64037 logit=    5.390841 text='quête'
+  [ 7] id=128985 logit=    5.375864 text='-minist'
+  [ 8] id=18812 logit=    5.358742 text='._,'
+  [ 9] id=75169 logit=    5.350595 text='oise'
+[Deep2Engine] Sampler selected token: 30463
+[DBG] sampled token=30463 eosId=11
+[Deep2Engine] Generation complete: 10 tokens in 7097.64 ms (E2E 1.41 TPS)
+[Deep2Engine] PREFILL: 1 tok in 2153.60 ms (0.46 tok/s) | DECODE: 10 tok in 4944.02 ms (2.02 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 420
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 6437.857
+totalEmbedMs       = 2.640
+totalLogitsMs      = 523.234
+totalAttnMs        = 435.428
+totalFfnMs         = 5940.515
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 15.328
+============================================================
+[live-path] vacuumArmed=0 trampoline=1/431 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=0 plasmaAbsence=0 enhancements=1
+[AGENT] GENERATION_RECEIPT prompt=1 generated=10 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[AGENT] POST_GENERATE generated=10 tokens
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=42
+[LIFE] unloadModel FreeTensorData ggufResult (263 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+ derrota കൂട regent Déf E Dominion نع E Desarrollování
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

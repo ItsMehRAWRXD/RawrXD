@@ -1,0 +1,57 @@
+﻿ M 3rdparty/quickjs_ng/docs/docs/developer-guide/_category_.json
+ M 3rdparty/quickjs_ng/docs/package-lock.json
+ M 3rdparty/quickjs_ng/docs/package.json
+ M CMakeLists.txt
+ M src/win32app/Win32IDE.cpp
+ M src/win32app/Win32IDE.h
+ M src/win32app/Win32IDE_AgenticBridge.cpp
+ M src/win32app/Win32IDE_AgenticBridge.h
+ M src/win32app/Win32IDE_lifecycle.cpp
+?? 3rdparty/quickjs_ng/CMakeLists.txt
+?? 3rdparty/quickjs_ng/LICENSE
+?? 3rdparty/quickjs_ng/api-test.c
+?? 3rdparty/quickjs_ng/builtin-array-fromasync.h
+?? 3rdparty/quickjs_ng/builtin-iterator-zip-keyed.h
+?? 3rdparty/quickjs_ng/builtin-iterator-zip.h
+?? 3rdparty/quickjs_ng/ctest.c
+?? 3rdparty/quickjs_ng/cutils.h
+?? 3rdparty/quickjs_ng/dtoa.c
+?? 3rdparty/quickjs_ng/dtoa.h
+?? 3rdparty/quickjs_ng/fuzz.c
+?? 3rdparty/quickjs_ng/libregexp-opcode.h
+?? 3rdparty/quickjs_ng/libregexp.c
+?? 3rdparty/quickjs_ng/libregexp.h
+?? 3rdparty/quickjs_ng/libunicode-table.h
+?? 3rdparty/quickjs_ng/libunicode.c
+?? 3rdparty/quickjs_ng/libunicode.h
+?? 3rdparty/quickjs_ng/list.h
+?? 3rdparty/quickjs_ng/qjs-wasi-reactor.c
+?? 3rdparty/quickjs_ng/qjs.c
+?? 3rdparty/quickjs_ng/qjsc.c
+?? 3rdparty/quickjs_ng/quickjs-atom.h
+?? 3rdparty/quickjs_ng/quickjs-c-atomics.h
+?? 3rdparty/quickjs_ng/quickjs-libc.c
+?? 3rdparty/quickjs_ng/quickjs-libc.h
+?? 3rdparty/quickjs_ng/quickjs-opcode.h
+?? 3rdparty/quickjs_ng/quickjs.c
+?? 3rdparty/quickjs_ng/quickjs.h
+?? 3rdparty/quickjs_ng/run-test262.c
+?? 3rdparty/quickjs_ng/unicode_gen.c
+?? 3rdparty/quickjs_ng/unicode_gen_def.h
+?? build_release_freeze_001/
+?? include/Win32IDE_ExtHostWire.h
+?? include/plugin_signature.h
+?? include/quickjs_extension_host.h
+?? src/core/extension_polyfill_engine.cpp
+?? src/core/js_extension_host.cpp
+?? src/core/js_extension_host.hpp
+?? src/core/model_memory_hotpatch.hpp
+?? src/core/patch_result.hpp
+?? src/core/plugin_signature.cpp
+?? src/modules/quickjs_extension_host.cpp
+?? src/modules/quickjs_extension_host.h
+?? src/modules/quickjs_vscode_bindings.cpp
+?? src/modules/vscode_extension_api.cpp
+?? src/modules/vscode_extension_api.h
+?? src/win32app/Win32IDE_ExtHostWire.cpp
+?? src/win32app/Win32IDE_ExtHostWire.h

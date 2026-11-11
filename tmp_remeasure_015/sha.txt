@@ -1,0 +1,3 @@
+SHA256 hash of bin-msvc\rawr.exe:
+bc16ee8e8784463f8d24f3ddce3af85a39a3dfc53c46518f304519296dff7407
+CertUtil: -hashfile command completed successfully.

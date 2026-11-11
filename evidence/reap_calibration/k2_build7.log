@@ -1,0 +1,43 @@
+[1/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Evict.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\HostExchangeDiscover.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Attr.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Table.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice_Emit.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2MLA_QPathDevice_Emit.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice_Emit.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2MLA_QPathDevice_Emit.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2MLA_QPathDevice_Emit.cpp(5): fatal error C1083: Cannot open include file: '../runtime/QbExchangeLedger.hpp': No such file or directory
+[6/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Note.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[7/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Pins.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[8/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Quota.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[9/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickBundle_Touch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[10/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickExpertBundle.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[11/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[12/17] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MoEWeights.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2MoEWeights.cpp(102): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+ninja: build stopped: subcommand failed.

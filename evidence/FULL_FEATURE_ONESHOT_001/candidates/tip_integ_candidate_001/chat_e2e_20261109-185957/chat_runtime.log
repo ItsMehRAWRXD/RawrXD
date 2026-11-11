@@ -1,0 +1,21 @@
+SESSION_OPEN session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957 pid=31432
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x0000000000860C0C session=1 pane=copilot_sidebar session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+SESSION_OPEN session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957 pid=31432
+DISPATCH_ID id=1 bytes=74 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=74 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=nemotron-3-nano:4b session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+request_started request_id=1 model=nemotron-3-nano:4b session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+callback request_id=1 complete=0 response_bytes=5 stop=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+ui_update request_id=1 rendered=1 complete=0 response_bytes=5 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+callback request_id=1 complete=0 response_bytes=7 stop=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+ui_update request_id=1 rendered=1 complete=0 response_bytes=7 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+callback request_id=1 complete=0 response_bytes=5 stop=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+ui_update request_id=1 rendered=1 complete=0 response_bytes=5 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+callback request_id=1 complete=1 response_bytes=0 stop=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+ui_update request_id=1 rendered=1 complete=1 response_bytes=0 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=1 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957
+RESPONSE_END request_id=1 session=1 bytes=17 session_id=integ_chat_e2e_20261109-185957 run_id=integ_chat_e2e_run_20261109-185957

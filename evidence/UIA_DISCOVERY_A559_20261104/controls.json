@@ -1,0 +1,401 @@
+﻿[
+    {
+        "Name":  "",
+        "AutomationId":  "",
+        "Class":  "ToolbarWindow32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Untitled  -  Workspace",
+        "AutomationId":  "1018",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Gear",
+        "AutomationId":  "1024",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1030",
+        "Class":  "SysTabControl32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1100",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "[]",
+        "AutomationId":  "1101",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "()",
+        "AutomationId":  "1102",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "\u003c\u003e",
+        "AutomationId":  "1103",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "\u003e",
+        "AutomationId":  "1104",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "++",
+        "AutomationId":  "1105",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "*",
+        "AutomationId":  "1106",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "@",
+        "AutomationId":  "1107",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Sidebar",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "6010",
+        "Class":  "SysTreeView32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Model routes ready: 44 local model(s), Kilo free cloud route available",
+        "AutomationId":  "1004",
+        "Class":  "msctls_statusbar32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1005",
+        "Class":  "SysTabControl32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "All Messages",
+        "AutomationId":  "1017",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1016",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1200",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1208",
+        "Class":  "SysTabControl32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1",
+        "Class":  "msctls_updown32",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "New Chat",
+        "AutomationId":  "1209",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "X",
+        "AutomationId":  "1214",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Restore",
+        "AutomationId":  "1215",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  false
+    },
+    {
+        "Name":  "Rollback",
+        "AutomationId":  "1216",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "AI Sessions",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Model:",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Local models / Ollama / bigdaddyg-productivity-local:latest",
+        "AutomationId":  "1206",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "GhostText model:",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "GhostText: Auto Local",
+        "AutomationId":  "1211",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Allow cloud GhostText for this session",
+        "AutomationId":  "1212",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Max tokens:",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "4096",
+        "AutomationId":  "1219",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Context:",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "64K",
+        "AutomationId":  "1220",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Reasoning:",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Instant (no reasoning)",
+        "AutomationId":  "1217",
+        "Class":  "ComboBox",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Allow web browsing (WinHTTP)",
+        "AutomationId":  "1218",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "\u003e User: T05_BATCH_A_20261104. Write a very long technical essay about Windows debugging with many sections and examples. Continue for as long as possible.\r\n\r\n\u003e User: T05_BATCH_B_20261104. Reply exactly with this marker and nothing else: T05_BATCH_B_20261104\r\n\r\nAI:   T05_BATCH_B_20261104\r\n\r\n",
+        "AutomationId":  "1203",
+        "Class":  "Edit",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1202",
+        "Class":  "Edit",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Send",
+        "AutomationId":  "1204",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Clear",
+        "AutomationId":  "1205",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Stop",
+        "AutomationId":  "1210",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  false
+    },
+    {
+        "Name":  "PowerShell Console",
+        "AutomationId":  "5000",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Clear",
+        "AutomationId":  "5011",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Stop",
+        "AutomationId":  "5012",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "History",
+        "AutomationId":  "5013",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Restart",
+        "AutomationId":  "5014",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Load RawrXD",
+        "AutomationId":  "5015",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "[PowerShell session started]\r\n\r\n  RawrXD Integrated PowerShell Console\r\n\r\n\r\nPowerShell Version: 5.1.26100.9818\r\n\r\nEdition: Desktop\r\n\r\n\r\nType commands below or click \u0027Load RawrXD\u0027 to access RawrXD.ps1 functions\r\n\r\nCommands:\r\n  - Enter: Execute command\r\n  - Up/Down: Navigate history\r\n  - Ctrl+L: Clear console\r\n  - Ctrl+`: Toggle panel\r\n\r\nPS\u003e ",
+        "AutomationId":  "5001",
+        "Class":  "RichEdit20A",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "5002",
+        "Class":  "Edit",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Execute",
+        "AutomationId":  "5010",
+        "Class":  "Button",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "PowerShell: Active | 5.1.26100.9818\r\n",
+        "AutomationId":  "5004",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "",
+        "AutomationId":  "1001",
+        "Class":  "RichEdit20W",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    },
+    {
+        "Name":  "Untitled  \u003e  (workspace)",
+        "AutomationId":  "",
+        "Class":  "Static",
+        "Type":  "ControlType.Pane",
+        "Enabled":  true
+    }
+]

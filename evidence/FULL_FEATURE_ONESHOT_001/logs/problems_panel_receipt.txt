@@ -1,0 +1,19 @@
+PARSE_COUNT=4
+SPACES_IN_PATH=PASS
+FILE_LINE_COL=PASS
+ERR file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\path with spaces\broken.cpp line=3 col=5 sev=0 msg=C2065: 'x': undeclared identifier
+ERR file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 col=1 sev=1 msg=C4100: 'y': unreferenced parameter
+ERR file=main.obj line=1 col=1 sev=0 msg=LNK2019: unresolved external symbol foo referenced in function main
+ERR file=CMakeLists.txt line=42 col=1 sev=0 msg=missing dependency
+LINKER_PARSE=PASS
+CMAKE_PARSE=PASS
+SEVERITY_WARN=PASS
+STALE_CLEAR=PASS
+REFRESH_AFTER_CORRECT=PASS
+WORKER_THREAD_SAFE_MODEL=PASS
+CLICK_TO_LINE=SOURCE_WIRED
+GUI_PROBLEMS_PANEL_E2E=NOT_RUN
+T080_PRESERVED=1
+MSVC_PARSE_FIXTURE=PASS
+PROBLEMS_PANEL=PARTIAL_PASS
+PROMOTE=0

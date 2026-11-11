@@ -1,0 +1,39 @@
+﻿{
+    "schema":  "RAWRXD_T15_AUTONOMOUS_EDITING_001",
+    "asof_utc":  "2026-11-10T20:49:47.5191089Z",
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "RELEASE":  "HELD",
+    "CONTROLLING":  "D015",
+    "T15":  "PASS",
+    "IdmAiAutonomousEdit":  2060,
+    "IDM_AI_EDIT":  2060,
+    "IDM_EDIT_UNDO":  2007,
+    "IDM_TOOLS_BUILD_PROJECT":  3014,
+    "IdePath":  "F:\\rawrxd\\build_tip_ext_host_001\\bin\\RawrXD-Win32IDE-Native-Ext.exe",
+    "IdeSha256":  "A4903E6FF683099D88A0F081AF24B4F713FFAB6B311D57BCD3DD79C9B22C0C31",
+    "Fixture":  "F:\\rawrxd\\T080_test_bad.cpp",
+    "HashBefore":  "7D52431506ED83196F8B816E295B4E8863BA067DB92F3EA99D346FD204463509",
+    "HashAfterEdit":  "24697E5E59F039FB1AF992A1E7F22CCF32CC87219DDE9ED8BDE9FED197B061C6",
+    "HashAfterUndo":  "7D52431506ED83196F8B816E295B4E8863BA067DB92F3EA99D346FD204463509",
+    "ProblemsBefore":  1,
+    "ProblemsAfterBuild":  0,
+    "EditPosted":  true,
+    "BuildPosted":  true,
+    "UndoPosted":  true,
+    "SavePosted":  true,
+    "TitleMatch":  true,
+    "Survived":  true,
+    "FindChildByIdAndClass":  "SysListView32 id=1312",
+    "RAWRXD_T15_DETERMINISTIC":  "1",
+    "RAWRXD_PROBLEMS_FIXTURE":  "F:\\rawrxd\\T080_test_bad.cpp",
+    "errors":  [
+
+               ],
+    "LAW":  [
+                "NOT_RUN!=PASS",
+                "DO_NOT_INVENT_T15_PASS",
+                "PROMOTE=0",
+                "NO_T15_EXE_TARGET"
+            ]
+}

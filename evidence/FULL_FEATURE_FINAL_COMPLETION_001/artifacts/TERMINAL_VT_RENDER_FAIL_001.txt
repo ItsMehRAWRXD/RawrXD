@@ -1,0 +1,76 @@
+TERMINAL_VT_RENDER_FAIL_001
+ASOF_LOCAL=2026-11-09T07:54:45-05:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+A4F_UNTOUCHED=1
+CONTROLLING_TIP=CC79
+OWNER=TERMINAL_VT_* only (not MASTER_*)
+
+## RUNNING_SHA (measured at audit start; process later exited)
+
+RUNNING_PID=5356
+RUNNING_PATH=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\package\tip_hwnd_repair_001\RawrXD-Win32IDE-Native-Ext.exe
+RUNNING_SHA256=B2AD7E9B77F23512EB145422BDECC4C7416002F07EAC44ED463AE71DCA0595CC
+RUNNING_SIZE=2804736
+RUNNING_NOTE=NOT CC79; NOT tip_003/004; tip_hwnd_repair_001 / tip_final_007 lineage
+RUNNING_AT_RECEIPT_CLOSE=ABSENT (no RawrXD-Win32IDE-Native-Ext process)
+
+## SHA COMPARE
+
+CC79 tip_final_integ_002 = CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4  SIZE=6152704  MATCH_LIVE=1  UNTOUCHED=1
+tip_003 live            = DD60FFB8CFB5133ADC0C6E59124C4E4A199E26F310FD00C6A55EC9F7D8A9497C  (historical tip_003 0EA05DF7… ABSENT on disk)
+tip_004 PRE_PATCH        = 35EFA9BAE44AD23F6007AC158E1BF0D6C297A5412C8DEF513434058C6D044351
+tip_004 POST_PATCH       = 27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC
+build_tip_debug_rel bin  = 27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC  MATCH tip_004
+RUNNING_EQ_CC79=0
+RUNNING_EQ_TIP003=0
+RUNNING_EQ_TIP004_PRE=0
+RUNNING_EQ_TIP004_POST=0
+
+## SOURCE_REV notes
+
+SOURCE_TREE=F:\rawrxd\src\win32app (same tree used by tip_final_integ_00x / build_tip_debug_rel)
+PATCHED=
+  Win32TerminalManager.h/.cpp  +startNonInteractive() -> startPipe(-Command -), boundedWait=0
+  Win32IDE_PowerShellPanel.cpp startPowerShellSession -> startNonInteractive
+  Win32IDE_PowerShellPanel.cpp appendPowerShellOutput -> stripVtForRichEdit before EM_REPLACESEL
+EXISTING_STRIP=Win32IDE.cpp stripAnsiForDiag() used ONLY for Problems/diag ingest — NOT RichEdit panel append
+TERM_SMOKE_PATH=main_win32.cpp still uses start()/ConPTY — intentionally unchanged
+
+## ROOT_CAUSE
+
+1) Panel calls Win32TerminalManager::start() which prefers ConPTY + powershell -NoExit -NoLogo …
+2) ConPTY emits CSI/OSC (ESC[?25l/h, ESC[2J, ESC[H, ESC]0;…)
+3) Win32IDE_PowerShellPanel::appendPowerShellOutput does raw RichEdit EM_REPLACESEL — no VT interpret/strip
+4) UI also injects getPowerShellPrompt()="PS> " while interactive host emits its own prompt => duplicate PS>
+5) User-facing FAIL observed on tip_hwnd_repair_001 (B2AD7E9B…), which is a different revision than CC79; defect is present in shared source path used by candidate tips
+
+## FIX_STATUS
+
+FIX_APPLIED_SOURCE=1  (A+B minimal)
+FIX_REBUILT_TIP004=1  SHA=27E2263E… via artifacts\build_tip_004_vt_render.bat (no ninja -t clean; CC79 not overwritten)
+FIX_DEPLOYED_TO_RUNNING=0  (running image was hwnd_repair; not relaunched as tip_004)
+GUI_VT_RENDER_RETEST=NOT_RUN
+CMD_EXEC_RETEST=NOT_RUN
+
+## MEASURED STATUS (fail-closed)
+
+CONSOLE_RENDER=FAIL
+  (user finding + source proof; no post-patch GUI remeasure of RichEdit contents)
+CMD_EXEC=UNVERIFIED
+CC79_TERM_SMOKE=PASS_SEALED_DISTINCT
+  (TERMINAL_GATE.md tip_final_integ_002 --term-smoke; ≠ GUI VT render)
+PROMOTE=0
+COMPLETION_INCREASE=0
+
+## OPTIONS CONSIDERED
+
+A) Force noninteractive pipe pump for panel — APPLIED (startNonInteractive)
+B) Strip/filter CSI/OSC before RichEdit append — APPLIED (stripVtForRichEdit)
+C) Full VT→RichEdit interpreter — NOT_DONE (larger)
+
+## REBUILD LOG
+
+F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\build_integ_004_vt_render2.log
+LINKED=bin\RawrXD-Win32IDE-Native-Ext.exe
+DST=candidates\tip_final_integ_004\

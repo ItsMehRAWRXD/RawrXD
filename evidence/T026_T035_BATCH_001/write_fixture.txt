@@ -1,0 +1,2 @@
+CRLF_ONE
+Unicode: café 東京 💡

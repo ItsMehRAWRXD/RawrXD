@@ -1,0 +1,35 @@
+[1/8] Assembling VwaRangeLineageX64.asm with ml64
+ Assembling: F:/rawrxd/src/deep2/vwa/VwaRangeLineageX64.asm
+[2/8] Assembling RuntimeEvidence512_Core.asm with ml64
+ Assembling: F:/rawrxd/src/asm/RuntimeEvidence512_Core.asm
+[3/8] Assembling RuntimeEvidence512_Emit.asm with ml64
+ Assembling: F:/rawrxd/src/asm/RuntimeEvidence512_Emit.asm
+[4/8] Assembling RuntimeEvidence512_Collect.asm with ml64
+ Assembling: F:/rawrxd/src/asm/RuntimeEvidence512_Collect.asm
+[5/8] Assembling RuntimeEvidence512_IDEEmit.asm with ml64
+ Assembling: F:/rawrxd/src/asm/RuntimeEvidence512_IDEEmit.asm
+[6/8] Assembling RuntimeEvidence512_IDECollect.asm with ml64
+ Assembling: F:/rawrxd/src/asm/RuntimeEvidence512_IDECollect.asm
+[7/8] Linking CXX static library deep2_engine_lib.lib
+VwaRangeLineageX64.obj : warning LNK4006: VwaRangeSetHash64 already defined in engine_link_supplement.cpp.obj; second definition ignored
+VwaRangeLineageX64.obj : warning LNK4006: VwaRangeSetSumBytes64 already defined in engine_link_supplement.cpp.obj; second definition ignored
+VwaRangeLineageX64.obj : warning LNK4006: VwaRangeSetEqual64 already defined in engine_link_supplement.cpp.obj; second definition ignored
+[8/8] Linking CXX executable bin-msvc\rawr-reap-replay.exe
+FAILED: [code=4294967295] bin-msvc/rawr-reap-replay.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawr-reap-replay.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj  /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  deep2_engine_lib.lib  rawrxd_gpu_compute.lib  3rdparty\ggml\src\ggml.lib  3rdparty\ggml\src\ggml-cpu.lib  3rdparty\ggml\src\ggml-base.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont deep2_engine_lib.lib rawrxd_gpu_compute.lib 3rdparty\ggml\src\ggml.lib 3rdparty\ggml\src\ggml-cpu.lib 3rdparty\ggml\src\ggml-base.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+deep2_engine_lib.lib(VwaRangeLineageX64.obj) : error LNK2005: VwaRangeSetHash64 already defined in deep2_engine_lib.lib(engine_link_supplement.cpp.obj)
+deep2_engine_lib.lib(VwaRangeLineageX64.obj) : error LNK2005: VwaRangeSetSumBytes64 already defined in deep2_engine_lib.lib(engine_link_supplement.cpp.obj)
+deep2_engine_lib.lib(VwaRangeLineageX64.obj) : error LNK2005: VwaRangeSetEqual64 already defined in deep2_engine_lib.lib(engine_link_supplement.cpp.obj)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "struct Deep2::future::FutureConsumer * __cdecl Deep2::future::ConsumerAt(unsigned __int64)" (?ConsumerAt@future@Deep2@@YAPEAUFutureConsumer@12@_K@Z)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "int __cdecl Deep2::hostfc::detail::ConsumerBound(void)" (?ConsumerBound@detail@hostfc@Deep2@@YAHXZ)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::hostfc::detail::AwaitChairIfLate(unsigned int,unsigned int)" (?AwaitChairIfLate@detail@hostfc@Deep2@@YA_KII@Z)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "struct Deep2::hostfc::detail::St & __cdecl Deep2::hostfc::detail::S(void)" (?S@detail@hostfc@Deep2@@YAAEAUSt@123@XZ)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "int __cdecl Deep2::hostfc::detail::RunKnO3OnChair(unsigned int,unsigned __int64)" (?RunKnO3OnChair@detail@hostfc@Deep2@@YAHI_K@Z)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::detail::KickChair(unsigned int,unsigned int,unsigned int)" (?KickChair@detail@hostfc@Deep2@@YAXIII@Z)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::detail::StartWorker(void)" (?StartWorker@detail@hostfc@Deep2@@YAXXZ)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::BindK3cConsumer(__int64 (__cdecl*)(struct KN_CHAIR *,struct KN_VENTI *,unsigned __int64 *))" (?BindK3cConsumer@hostfc@Deep2@@YAXP6A_JPEAUKN_CHAIR@@PEAUKN_VENTI@@PEA_K@Z@Z)
+deep2_engine_lib.lib(HostFutureConsumerPrefetch.cpp.obj) : error LNK2001: unresolved external symbol K3C_ConsumeResolved
+deep2_engine_lib.lib(DualStickImbalance_Observe.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ds_imb::CostCoverageRefresh(void)" (?CostCoverageRefresh@ds_imb@Deep2@@YAXXZ)
+bin-msvc\rawr-reap-replay.exe : fatal error LNK1120: 10 unresolved externals
+ninja: build stopped: subcommand failed.

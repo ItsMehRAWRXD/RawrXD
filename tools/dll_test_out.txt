@@ -1,0 +1,74 @@
+=== RAWRXD_DEEP2_DLL_EQUIVALENCE_001 ===
+Testing DLL vs Standalone executor equivalence
+
+Loading DLL: F:\rawrxd\build_cert\bin\Release\RawrXDCore.dll
+DLL loaded, getting exports...
+GetVersion: 00007FF9206839E0
+Initialize: 00007FF920683A20
+GetVersion: 00007FF9206839E0
+Initialize: 00007FF920683A20
+Shutdown: 00007FF920685560
+LoadModel: 00007FF920683BB0
+UnloadModel: 00007FF9206857D0
+CreateContext: 00007FF920682C00
+DestroyContext: 00007FF920682DB0
+RunInference: 00007FF9206848A0
+GetDefaultInferenceParams: 00007FF920683150
+Tokenize: 00007FF920685590
+GetLastError: 00007FF920683310
+GetErrorString: 00007FF920683190
+Core DLL loaded: 14.7.3
+Initializing Core DLL...
+Initialize returned: 1
+Core DLL initialized
+Loading model: F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+Model loaded via RawrXDCore
+Creating context...
+Context created
+Loading model via mg_model_load...
+Creating mg_context...
+Model loaded via ModelGenieRuntime, vocab size: 102400
+Creating output directory...
+Processing position 0...
+Saved dll_logits_pos0.bin
+Pos  0: argmax native=185 dll=185 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 1...
+Saved dll_logits_pos1.bin
+Pos  1: argmax native=185 dll=185 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 2...
+Saved dll_logits_pos2.bin
+Pos  2: argmax native=13 dll=13 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 3...
+Saved dll_logits_pos3.bin
+Pos  3: argmax native=13 dll=13 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 4...
+Saved dll_logits_pos4.bin
+Pos  4: argmax native=4 dll=4 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 5...
+Saved dll_logits_pos5.bin
+Pos  5: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 6...
+Saved dll_logits_pos6.bin
+Pos  6: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 7...
+Saved dll_logits_pos7.bin
+Pos  7: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 8...
+Saved dll_logits_pos8.bin
+Pos  8: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 9...
+Saved dll_logits_pos9.bin
+Pos  9: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 10...
+Saved dll_logits_pos10.bin
+Pos 10: argmax native=24 dll=24 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 11...
+Saved dll_logits_pos11.bin
+Pos 11: argmax native=12 dll=12 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 12...
+Saved dll_logits_pos12.bin
+Pos 12: argmax native=16 dll=16 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 13...
+Saved dll_logits_pos13.bin
+Pos 13: argmax native=15 dll=15 match=YES cos=1.00000000 rmse=0.000000 max=0.000000
+Processing position 14...

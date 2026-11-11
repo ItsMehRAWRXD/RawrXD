@@ -1,0 +1,43 @@
+P01_P12_MATRIX
+ASOF_UTC=2026-11-10T15:15:00Z
+OWNER=I_T_P_H_B07B08
+TIP_ISSUE49_IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+PACKAGE_RC5B=F:\rawrxd\release\RawrXD-readiness-rc5b
+PROMOTE=0
+CERTIFIED=0
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+LAW=HOST_GIT_STATUS != IDE_GIT_PANEL_PASS
+LAW=PACKAGE_INTEGRITY_PASS != CLEAN_MACHINE_PRODUCT_PASS
+LAW=NOT_RUN != PASS
+
+CHEAP_GATES=
+  GIT_STATUS_F_rawrxd=## upload/repair-candidate-20261110 (dirty tree observed)
+  GIT_HEAD_F_rawrxd=509573dd7e
+  GIT_STATUS_g_dev=FAIL dubious ownership (safe.directory)
+  PATH=_cheap_gates_20261110-101327.txt
+  CLASS=HOST_ONLY
+
+# ID | REQUIREMENT | STATUS | EVIDENCE_PATHS | NOTE
+P01 | Open/create projects workspace lifecycle | NOT_VERIFIED | release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt Open project NOT_RUN | Tip IDE project open E2E NOT_RUN
+P02 | Git status and diffs accurate working-tree | NOT_VERIFIED | _cheap_gates_20261110-101327.txt; F:\rawrxd git status -sb | Host git works; IDE Source Control panel NOT_VERIFIED on tip
+P03 | Git stage/commit correct selection | NOT_VERIFIED | — | Issue49 commit path open / not sealed on tip
+P04 | Git rollback safe recovery | NOT_VERIFIED | issue49 G WRITE_ROLLBACK without commit (HISTORICAL note in MASTER/SWARM) | Tip rollback integrity NOT_VERIFIED as P04 PASS
+P05 | Branch operations / worktree | NOT_VERIFIED | — | No tip receipt
+P06 | Repository integrity no sealed-baseline churn | NOT_VERIFIED | F:\rawrxd git status shows modified evidence files | Host dirty tree observed; IDE must not mutate sealed baselines — not closed
+P07 | Settings persistence theme/models/panels | HISTORICAL | DAILY_DRIVER_9FDE_ITEMS_5_10.txt items 5-6 theme/dock PASS on 9FDE | Tip settings restore E2E NOT_VERIFIED
+P08 | Clean installation no hidden machine deps | NOT_VERIFIED | release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt VERDICT=HOST_NOT_INDEPENDENT | Integrity steps partial; independent clean install NOT closed
+P09 | Portable packaging binaries/libs/assets | HISTORICAL | release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt Verify-PackageIntegrity PASS_INTEGRITY_ONLY; SHA_LEDGER | Integrity-only historical; full portable product conjunction NOT_VERIFIED
+P10 | Fresh clone build reproducible toolchain | NOT_VERIFIED | CERTIFICATION_LADDER_MAP.md A06 related | Clean-clone build seal NOT_RUN this lane
+P11 | Clean-machine execution no prepared state | NOT_VERIFIED | release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt DISTINCT_VM=0 HOST_NOT_INDEPENDENT | Product-path smokes unchecked
+P12 | CI reproducibility automated artifacts | NOT_VERIFIED | CERTIFICATION_LADDER_MAP.md A01 / Issue #47 | No successful Actions conjunction receipt claimed
+
+SCOREBOARD_P=
+  TOTAL=12
+  PASS=0
+  FAIL=0
+  NOT_VERIFIED=10
+  SEALED_STANDALONE=0
+  HISTORICAL=2
+  CERTIFIED=0
+  PROMOTE=0

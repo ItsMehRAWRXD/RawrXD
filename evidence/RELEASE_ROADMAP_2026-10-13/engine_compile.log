@@ -1,0 +1,3 @@
+Deep2Engine.cpp
+F:\rawrxd\src\deep2\NVMeStream.h(34): warning C4005: 'NOMINMAX': macro redefinition
+F:\rawrxd\src\deep2\NVMeStream.h(34): note: 'NOMINMAX' previously declared on the command line

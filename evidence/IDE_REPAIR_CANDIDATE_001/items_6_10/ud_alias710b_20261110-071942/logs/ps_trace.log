@@ -1,0 +1,30 @@
+44532 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() ENTRY thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() input_hwnd=0000000001230EDE panel=0000000000BC125E
+
+44532 [PS_TRACE] executePowerShellInput() command_len=0 cmd='' wlen=0
+
+44532 [PS_TRACE] executePowerShellInput() exit: empty command
+
+44532 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() ENTRY thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() input_hwnd=0000000001230EDE panel=0000000000BC125E
+
+44532 [PS_TRACE] executePowerShellInput() command_len=0 cmd='' wlen=0
+
+44532 [PS_TRACE] executePowerShellInput() exit: empty command
+
+44532 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() ENTRY thread=44532
+
+44532 [PS_TRACE] executePowerShellInput() input_hwnd=0000000001230EDE panel=0000000000BC125E
+
+44532 [PS_TRACE] executePowerShellInput() command_len=0 cmd='' wlen=0
+
+44532 [PS_TRACE] executePowerShellInput() exit: empty command
+

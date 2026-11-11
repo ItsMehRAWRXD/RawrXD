@@ -1,0 +1,9 @@
+ERROR: unsupported backend 'notareal' (expected deep2 or ollama)
+rawr.exe : [StreamEngine] Shutdown
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-682bcf46-8ca3-4185-9e3d-8a6d23ce94fa.ps1:112 char:8
++ $unk = & $exe run qwen3:8b --backend notareal --goal "x" 2>&1 | Out-S ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([StreamEngine] Shutdown:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

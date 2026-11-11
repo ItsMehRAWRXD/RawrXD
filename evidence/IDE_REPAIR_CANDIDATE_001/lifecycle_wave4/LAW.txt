@@ -1,0 +1,13 @@
+WAVE4_LIFECYCLE_LAW
+BAND=91->94
+PACKET=evidence/IDE_REPAIR_CANDIDATE_001/lifecycle_wave4/
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_RC4_MUTATION=1
+NOT_RUN_NE_PASS=1
+NO_CROSS_SHA_PASS=1
+MATURITY_EARN_RULE=all_13_gates_PASS_on_ONE_controlling_Ext_SHA
+AVOID_BINARY_CONTENTION=coordinate_via_receipts; do_not_edit_ComputerUse_or_AgentCommands
+EDIT_OK=ExtHostWire FileOps lifecycle main_win32 NativeProfile session persistence
+SOURCE_WIRED_NE_RUNTIME_REACHED=1

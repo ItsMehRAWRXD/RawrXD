@@ -1,0 +1,57 @@
+﻿ASOF_UTC=2026-11-10T11:57:22.6783255Z
+GATE=DOCK_SURVIVE_MEASURE
+IDE_SHA256=1AE1DFD000EEED778FB2E23E5983B9A430D5A97F511D4EFCCF2D753A53B65D59
+TIP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\lifecycle_wave4\package_dockfix\RawrXD-Win32IDE-Native-Ext.exe
+USER_DATA_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\p0_createwindow_fix\ud_surv_20261110-065715
+PID=3884
+MAIN_HWND=2364826
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NO_CROSS_SHA=1
+PRESENT=1
+ACCEPTED=0
+TL_t=0 alive=True exit=- hwnd=2364826
+TL_t=1 alive=True exit=- hwnd=2364826
+TL_t=2 alive=True exit=- hwnd=2364826
+TL_t=3 alive=True exit=- hwnd=2364826
+TL_t=4 alive=True exit=- hwnd=2364826
+TL_t=5 alive=True exit=- hwnd=2364826
+TL_t=6 alive=True exit=- hwnd=2364826
+TL_t=7 alive=True exit=- hwnd=2364826
+TL_t=8 alive=True exit=- hwnd=2364826
+TL_t=9 alive=True exit=- hwnd=2364826
+TL_t=10 alive=True exit=- hwnd=2364826
+TL_t=11 alive=True exit=- hwnd=2364826
+TL_t=12 alive=True exit=- hwnd=2364826
+TL_t=13 alive=True exit=- hwnd=2364826
+TL_t=14 alive=True exit=- hwnd=2364826
+TL_t=15 alive=True exit=- hwnd=2364826
+TL_t=16 alive=True exit=- hwnd=2364826
+TL_t=17 alive=True exit=- hwnd=2364826
+TL_t=18 alive=True exit=- hwnd=2364826
+TL_t=19 alive=True exit=- hwnd=2364826
+TL_t=20 alive=True exit=- hwnd=2364826
+TL_t=21 alive=True exit=- hwnd=2364826
+TL_t=22 alive=True exit=- hwnd=2364826
+TL_t=23 alive=True exit=- hwnd=2364826
+TL_t=24 alive=True exit=- hwnd=2364826
+COLOR_WINDOW_SYS=0xFFFFFF
+DOCK_PRESENT=True
+DOCK_VISIBLE=True
+DOCK_SIZE=1480x250
+DOCK_PIXEL=pix=0xF0F0F0 rgb=240,240,240 luma=240.0 isSysGray=False
+DOCK_THEME_NOT_SYS_GRAY=False
+DOCK_HEIGHT=250
+DOCK_HEIGHT_GE_160=True
+TABS_CLICKABLE=True
+TABS_NOTE=sels=0,2,1,0
+PROBLEMS_1312_PRESENT=True
+PROBLEMS_1312_VISIBLE=False
+POWERSHELL_5600_PRESENT=True
+POWERSHELL_5600_VISIBLE=False
+PROCESS_ALIVE_AFTER_LAYOUT=True
+THEME_VERDICT=THEME_FAIL
+LAYOUT_VERDICT=LAYOUT_PASS
+TABS_VERDICT=TABS_PASS
+VERDICT=DOCK_PROBE_PARTIAL_OR_FAIL

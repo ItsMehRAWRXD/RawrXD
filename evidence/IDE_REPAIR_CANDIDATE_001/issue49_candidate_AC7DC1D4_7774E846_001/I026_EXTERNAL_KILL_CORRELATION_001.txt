@@ -1,0 +1,185 @@
+I026_EXTERNAL_KILL_CORRELATION_001
+ASOF_UTC=2026-11-10T17:20:00Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+RECEIPT=issue49_gui_ollama_qwen3_026
+TIP_EXE=bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_SHA256=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+PRIOR=I026_FINISHSESSION_FORCE_KILL_001
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+T05_LANE_SEPARATE=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_BLIND_027=1
+D015_SUPERSEDED=0
+FIX_APPLIED=HARNESS_74AA_PID_SCOPED_ONLY
+SEAL_J=N
+TRACE_ONLY_REMEASURE=NOT_RUN
+
+========================================================================
+VERDICT (fail-closed)
+========================================================================
+EXTERNAL_KILL_I026=HIGHLY_LIKELY
+CONFIRMED=0
+UNPROVEN=0
+# CONFIRMED withheld: no ETW/Security-4689/ProcessExplorer parent chain for PID=3356.
+# HIGHLY_LIKELY: T05 exitbp_01 CLASS_A Stop-AllNative window overlaps death to <1s,
+# signature ExitCode=-1 matches Stop-Process -Force / TerminateProcess(0xFFFFFFFF),
+# Tip Ext process name matches RawrXD-Win32IDE-Native* wildcard.
+
+TIMELINE_OVERLAP=Y
+HARNESS_CHANGE=Y
+CLASSIFICATION_STILL=STILL_UNKNOWN_PRODUCT_VS_EXTERNAL
+# Product quit / finishSession / GetMessage remain ruled out (prior seals).
+# External CLASS_A kill is now the top lead with timeline correlation.
+
+========================================================================
+1) I026 death window (local -05:00)
+========================================================================
+SPAWN     2026-11-10T10:52:28.836  PID=3356 Tip=RawrXD-Win32IDE-Native-Ext.exe
+CTRL_ENTER 10:52:35.542  AGENT_WAIT_SEC=600
+LAST_POLL  10:52:59.847  loopChild=1 (alive)
+IDE_EXIT   10:53:02.984  ExitCode=-1   << mid-wait; NOT 74aa post-deadline cleanup
+NAME_MATCH RawrXD-Win32IDE-Native-Ext -like 'RawrXD-Win32IDE-Native*' = True
+
+74aa mid-wait FORCE_KILL for own PID: NONE (prior seal HARNESS_FORCE_KILL_I026=0).
+
+========================================================================
+2) Concurrent activity overlapping death window
+========================================================================
+NON_I026 evidence mtimes 10:50-10:55 dominated by T05 FAULTING_STACK lane:
+
+  10:52:24.520  T05 STOCK_LOOP_STATUS.txt  (stock_06 end; BEFORE I026 spawn)
+  10:52:28.836  I026 spawn PID=3356
+  10:52:59.847  I026 last alive poll
+  10:53:02.984  I026 IDE_EXIT=-1
+  10:53:03.834  T05 runs\exitbp_01\cdb_cmds.txt   (+0.85s after death)
+  10:53:05.019  T05 exitbp_01\status.txt  ATTEMPT=1 PID=39108 CDB=41376
+  10:53:13.661  T05 exitbp_01\T05.receipt.json Gate=T05_EXITBP
+
+Agent-transcript files: none with LastWriteTime in 10:52:20-10:53:15.
+
+Gap stock_06 end → exitbp_01 start ≈ 39s; I026 lived inside that gap and died
+at the exact moment exitbp_01 attempt-1 preflight would run.
+
+========================================================================
+3) CLASS_A kill-site inventory (can hit Tip Ext)
+========================================================================
+DEFINITION_CLASS_A=
+  Get-Process -Name 'RawrXD-Win32IDE-Native*' | Stop-Process -Force
+  OR taskkill /F /IM RawrXD-Win32IDE-Native*
+  (matches both RawrXD-Win32IDE-Native.exe AND RawrXD-Win32IDE-Native-Ext.exe)
+
+A) ACTIVE DURING I026 WINDOW (prime suspect)
+  T05_REQUEST_B_FAULTING_STACK_001 sibling harnesses ALL begin attempts with
+  Stop-AllNative / Stop-All:
+    - repro_attach_t05.ps1:61-63,69,224
+        Get-Process -Name 'RawrXD-Win32IDE-Native*','cdb*' | Stop-Process -Force
+        Start-Sleep -Seconds 1
+    - capture_exitcode_procdump_t05.ps1:82-86,117  (same wildcard + Sleep 1)
+    - T05_REQUEST_B_EXIT_CALLSITE_001\capture_exit_callsite_t05.ps1:72-74,114
+    - T05_REQUEST_B_EXIT_CALLSITE_001\capture_cdb_exitprocess_t05.ps1:75-77,90
+  exitbp_01 artifacts use identical cdb/RtlExitUserProcess BP recipe and timing
+  pattern Stop-All → Sleep 1 → write cdb_cmds (cdb_cmds @ 10:53:03.834).
+  EXITBP driver ps1 not retained on disk (ephemeral agent loop); behavior inferred
+  from sibling scripts + artifact cadence + EXITBP_LOOP_STATUS.txt.
+
+B) ISSUE49 74aa HARNESS (was CLASS_A; NOT mid-wait killer for I026 own wait)
+  Invoke-Issue49Live74aa.ps1 (pre-fix):
+    L32  startup Name=* Stop-Process
+    L240 launch-retry Name=* Stop-Process
+    L697 final cleanup Name=* Stop-Process
+  Own 74aa mid-wait did not call these for PID=3356 (death during AgentWait).
+  Still a cross-harness hazard for concurrent Tip Ext.
+
+C) HISTORICAL Item10 CLASS_A sibling (WORKER_RECEIPT_ITEMS_7_10)
+  Documented false EXIT=-1 from concurrent Name=* kill; mitigated hist via alias exe.
+
+D) FLEET (representative; not all fired in I026 window)
+  CC79_RUNTIME_001\scripts\: _probe_alive, problems_click_to_line_tip002,
+    issue49_product_final_tip002, four_panel_measure_tip, debug_session_real_tip002,
+    chat_hwnd1203_capture, chat_exactly_once_correlate
+  FULL_FEATURE_ONESHOT_001\harness\: ext_smoke_oneshot, ea5d_*, four_panel_*,
+    ide_panels_gui_verify, chat_* , problems_gui_measure_007, ...
+  FULL_FEATURE_ONESHOT_001\scripts\: taskkill /F /IM RawrXD-Win32IDE-Native*
+    (_measure_1f60_gates.bat, _run_1f60_closeout.bat) plus many exact -Ext.exe kills
+  FULL_FEATURE_FINAL_COMPLETION_001\harness\: issue49_remeasure_tip00*, ORIG, ...
+  IDE_REPAIR I026 stack/exit capture V3-V7: Name=* Stop-Process
+  RELEASE_FREEZE / others: multiple Name=* sites
+  Exact /IM RawrXD-Win32IDE-Native-Ext.exe taskkill sites: dozens (rebuild/remeasure
+    bats) — also lethal to Tip Ext but name-exact, not wildcard.
+
+PID-SAFE REFERENCE (already existed):
+  Invoke-Issue49LiveF6E6-PidScoped.ps1 — OwnedPids only; comment documents
+  cross-worker kill as cause of IDE_EXIT_BEFORE_EDIT.
+
+========================================================================
+4) Correlation chain (why HIGHLY_LIKELY)
+========================================================================
+1. ExitCode=-1 is the documented signature of Stop-Process -Force /
+   .NET Process.Kill / TerminateProcess(..., 0xFFFFFFFF) (prior FORCE_KILL seal).
+2. Tip Ext process name matches CLASS_A wildcard (verified).
+3. T05 exitbp_01 started within ~1s of I026 death; sibling T05 scripts ALWAYS
+   Stop-AllNative first with Sleep 1 before writing cdb_cmds / spawning.
+4. No WM_CLOSE / messageLoop / finishSession.exception breadcrumbs for product quit.
+5. 74aa wait-loop itself did not mid-wait Stop-Process PID=3356.
+6. No Security 4689 audit events available this host to CONFIRMED-grade the kill.
+
+NOT CONFIRMED because:
+  - exitbp driver .ps1 not retained
+  - no Process Explorer / ETW / handle snapshot of killer PID for 3356
+  - theoretically another Name=* agent could share the same second
+
+========================================================================
+5) Harness harden (applied)
+========================================================================
+HARNESS_CHANGE=Y
+FILE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+CHANGE=
+  Replaced all three Name='RawrXD-Win32IDE-Native*' Stop-Process sites with
+  Stop-OwnedPids (exact owned PID + ParentProcessId children), matching
+  Invoke-Issue49LiveF6E6-PidScoped.ps1. Launch adds TipExe PID to OwnedPids.
+  Log tag PID_SCOPED_KILL=1.
+
+REQUIRED_HARNESS_GUARD (fleet; NOT all applied this turn)=
+  FORBID during any Issue49 remasure / Tip Ext long-wait:
+    Get-Process -Name 'RawrXD-Win32IDE-Native*' | Stop-Process -Force
+    taskkill /F /IM RawrXD-Win32IDE-Native*
+  REQUIRE:
+    Kill by exact owned PID only (and optional full TipExe path filter).
+  T05 FAULTING_STACK / EXIT_CALLSITE Stop-AllNative MUST be PID-scoped or
+  isolated (unique TipExe name / mutex) before concurrent Issue49 remasure.
+  Do NOT run T05 exitbp/stock loops beside Issue49 74aa AgentWait.
+
+========================================================================
+6) Optional TRACE_ONLY remasure
+========================================================================
+TRACE_ONLY_REMEASURE=NOT_RUN
+REASON=Correlation already HIGHLY_LIKELY; NO_BLIND_027=1; avoid another
+  cross-lane collision while T05 tooling remains CLASS_A. Future TRACE_ONLY
+  should: unique mutex name, log Tip PID + ParentProcessId at spawn, sample
+  WMI Win32_Process every 1s during wait, label TRACE_ONLY, no supersede.
+
+========================================================================
+DISPOSITION
+========================================================================
+EXTERNAL_KILL=HIGHLY_LIKELY
+TIMELINE_OVERLAP=Y
+HARNESS_CHANGE=Y
+KILL_SITE_INVENTORY=COMPLETE_FOR_WILDCARD_CLASS_A
+NEXT_ACTION=
+  1) Keep Issue49 remasure exclusive (no concurrent T05 Name=* loops).
+  2) PID-scope or rename-isolate T05 Stop-AllNative before shared-host runs.
+  3) Optional TRACE_ONLY remasure under exclusive host + PID/parent log.
+  4) Do NOT blind 027; do NOT invent PROMOTE.
+CONTROLLING=D015
+D015_SUPERSEDED=0
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+T05_LANE_SEPARATE=1
+NO_BLIND_027=1
+FIX_APPLIED=HARNESS_74AA_PID_SCOPED_ONLY
+SEAL_J=N

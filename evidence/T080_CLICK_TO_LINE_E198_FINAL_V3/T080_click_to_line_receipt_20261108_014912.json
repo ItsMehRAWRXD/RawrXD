@@ -1,0 +1,33 @@
+{
+  "file_opened_success": false,
+  "diagnostic_triggered": true,
+  "expected_column": 0,
+  "schema": "RAWRXD_T080_CLICK_TO_LINE_001",
+  "line_positioned_correct": false,
+  "column_positioned_correct": false,
+  "ide_sha256": "E198F94CF4FFAEC320840C36CE4E4A33A5234E929761A2BA71F7C1C64DD25290",
+  "problems_list_hwnd": "0x60B0BA8",
+  "first_row_text": null,
+  "editor_hwnd": "0x50B0B82",
+  "test_file_sha256": "C9234157B599517F950333E31EC76A8ACC597015F0CC0D3C5E5FB7C56C9F46E6",
+  "test_file": "F:\\rawrxd\\T080_test_bad.cpp",
+  "ide_sha256_matches_e198": true,
+  "ide_sha256_matches_b544": false,
+  "problems_row_created": false,
+  "clicked_row_file": null,
+  "row_count_after_click": 0,
+  "clicked_row_line": null,
+  "file_opened_correct": false,
+  "editor_text_length": 0,
+  "row_count_before_click": 0,
+  "ide_exe": "F:\\rawrxd\\build_t080\\bin\\RawrXD-Win32IDE-Native.exe",
+  "panel_tabs_found": true,
+  "expected_line": 3,
+  "pass": false,
+  "errors": [
+    "File dialog edit control (ID 1001) not found after 10 attempts"
+  ],
+  "timestamp_utc": "2026-11-08T01:49:39.5624080-05:00",
+  "problems_panel_selected": true,
+  "single_click_navigated": false
+}

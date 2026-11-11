@@ -1,0 +1,71 @@
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[Deep2Engine] HEADDIM_SYNC config.headDim=256 modelWeights.headDim=256
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[Deep2Engine] GEMMA_NUMERIC logitSoftCap=30.0 attnSoftCap=0.0 embedScale=sqrt(hidden) rmsNorm=plain(baked+1) geGlu=1 sandwich=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[GREEDY] enabled=1 temperature=0.0000 topK=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[AGENT] PREFILL_DONE prompt_tokens=69 prefill_ms=115316.246
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=531 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236772 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1699 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=2537 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236774 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236774 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=531 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1018 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236761 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236787 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=237207 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236761 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236779 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=236787 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=509 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=617 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_013\stdout.txt:[ask] AGENT_RESULT_5=0 chars=65
+F:\rawrxd\tmp_remeasure_013\stderr.txt:ASK_PATH=generateChat max_tokens=32
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=69 norm=1.494864587e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=70 norm=1.618615014e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=71 norm=1.359530361e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=72 norm=1.302089447e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=73 norm=1.362886498e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=74 norm=1.472712746e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=75 norm=1.463203476e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=76 norm=1.420569963e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=77 norm=1.369882003e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=78 norm=1.433593370e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=79 norm=1.436129995e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=80 norm=1.424906668e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=81 norm=1.554106084e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=82 norm=1.512677633e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=83 norm=1.528721455e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=84 norm=1.487504597e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=85 norm=1.469478867e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=86 norm=1.523949569e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=87 norm=1.603322679e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=88 norm=1.598274221e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=89 norm=1.419562669e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=90 norm=1.377894622e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=91 norm=1.496101840e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=92 norm=1.381128493e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=93 norm=1.395729768e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=94 norm=1.403410178e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=95 norm=1.396672927e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=96 norm=1.489897986e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=97 norm=1.415306855e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=98 norm=1.450594672e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=99 norm=1.478037256e+02
+F:\rawrxd\tmp_remeasure_013\stderr.txt:[B3_WARN] hidden state norm explosion pos=100 norm=1.292662152e+02

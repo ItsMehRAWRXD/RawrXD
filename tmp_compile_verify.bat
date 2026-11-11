@@ -1,0 +1,3 @@
+@echo off
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+cl /nologo /O2 /EHsc /std:c++20 /Fe"F:\rawrxd\tools\build_token0\bin\Release\rawrxd_modelgenie_executionir_verify.exe" -I"F:\rawrxd\tools\build_token0\src" -I"F:\rawrxd\tools\build_token0\src\deep2" -I"F:\rawrxd\tools\build_token0\src\deep2\modelgenie" -I"F:\rawrxd\tools" -I"F:\rawrxd\generated\DeepSeek-V2-Lite-Chat" -I"F:\rawrxd\src\deep2\modelgenie" "F:\rawrxd\tools\rawrxd_modelgenie_executionir_verify.cpp" /link /nologo /machine:x64 kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib version.lib ws2_32.lib psapi.lib

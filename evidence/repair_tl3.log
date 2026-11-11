@@ -1,0 +1,40 @@
+[stage]   [     0.0 ms] load model | F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[stage]   [  2161.4 ms] ingest | arch=llama blocks=22
+[stage]   [  2190.7 ms] tokenizer build | vocab=32000 convention=U+2581_sp
+[stage]   [  2190.7 ms] G1 tokenizer: round-trip begin
+[stage] G1 probe ids=12 -> bytes=25 PASS
+[stage] G1 probe ids=25 -> bytes=43 PASS
+[stage] G1 probe ids=13 -> bytes=39 PASS
+[stage] G1 probe ids=27 -> bytes=58 PASS
+[stage]   [  2196.6 ms] G1 tokenizer: round-trip done | PASS
+GATE_RESULT G1=PASS
+[stage]   [  2196.9 ms] probe executor bound | ops=311
+[stage]   [  2196.9 ms] G2 inference: batched prefill of probe prompt
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[stage]   [  6771.2 ms] G2 inference: prefill complete | tokens=11 ctx=12
+[stage]   [  6771.2 ms] G2 inference: one-token logits | n=32000 nonfinite=0 PASS
+[stage]   [  6771.3 ms] G3 generation: begin
+[stage]   [  8732.0 ms] G3 generation: done | tokens=10 bytes=19
+G3_TOKEN_IDS=13 13 524 1667 580 29871 13 29912 13 1678 
+G3_DECODED_ESCAPED=0a0a 696e 7420 6d61 696e 2829 200a 7b0a 2020 20
+[stage] G3 sample: int main() 
+{
+GATE_RESULT G1=PASS G2=PASS G3=PASS
+[stage]   [  8733.1 ms] G4 baseline: build defective source
+[stage]   [ 12641.4 ms] G4 baseline: built and ran | build_exit=0 run_exit=1 marker_present=0
+GATE_RESULT G1=PASS G2=PASS G3=PASS G4=PASS
+[stage]   [ 12641.6 ms] G5 setup: fresh executor for repair stage
+[stage]   [ 12641.8 ms] G5 setup: repair executor bound | ops=311
+[stage]   [ 12641.8 ms] G5 attempt 1: prompt build + prefill

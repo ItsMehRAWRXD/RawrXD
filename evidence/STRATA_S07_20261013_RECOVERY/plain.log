@@ -1,0 +1,36 @@
+STRATA_BENCH tag=s07_plain_int8 model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=gpu-native prefill=32 generate=24
+ingesting F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ...
+arch=llama blocks=22 embd=2048 heads=32 kv=4 experts=0 used=0 shared=0
+bound ops=311 (2276.4 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+S10_TTFT_MS 11626.1
+S10_PREFILL_TOKENS 32
+S10_PREFILL_MS 9349.6
+S10_PREFILL_TPS 3.42
+S10_DECODE_TOKENS 24
+S10_DECODE_MS 6098.3
+S10_DECODE_TPS_MEAN 3.94
+S10_DECODE_TPS_MEDIAN 4.29
+S10_DECODE_P50_MS 233.26
+S10_DECODE_P95_MS 332.23
+S10_AGGREGATE_TPS 3.63
+TOKSTREAM: 29871 29896 29871 29906 29871 29941 29871 29946 29871 29945 29871 29953 29871 29955 29871 29947 29871 29929 29871 29896 29900 29871 29896 29896
+S02_VRAM_CACHE hits=8525 misses=155 evictions=0 prefetches=0 prefetch_hits=0 hit_rate=0.9821 device_bytes_live=629982752 device_bytes_peak=629982752
+S04_BACKEND upload_bytes=724509312 download_bytes=95477760 submits=8835 waits=8835 kernel_ms=12763.3 submit_ms=163.9 wait_ms=12763.3
+S06_INT8_KV rows_k=1232 rows_v=1232 q8_bytes=1419264 fp32_equivalent=5046272 savings=71.88% max_abs_err=0.073299 mean_abs_err=0.007426
+DISPATCH gpu_calls=8680 cpu_calls=0 fallback=<none> nonfinite_logits=0
+RECEIPT F:\rawrxd\evidence\STRATA_S07_20261013_RECOVERY/strata_bench_s07_plain_int8.json
+Released all tensors
+Vulkan resources cleaned up successfully

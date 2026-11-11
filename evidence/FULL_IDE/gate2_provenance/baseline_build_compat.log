@@ -1,0 +1,8 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  audit_probe.cpp
+F:\rawrxd\src\deep2\modelgenie\ModelGenieCompat.hpp(21,19): error C2874: using-declaration causes a multiple declaration of 'Deep2::GGMLType' [F:\rawrxd\evidence\FULL_IDE\gate2_provenance\build\gate2_admission_probe.vcxproj]
+  (compiling source file '../audit_probe.cpp')
+      F:\rawrxd\src\deep2\QuantTypeTable.hpp(21,12):
+      see declaration of 'Deep2::GGMLType'
+  

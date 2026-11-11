@@ -1,0 +1,6 @@
+Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+[stopped] generation cancelled
+

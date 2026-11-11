@@ -1,0 +1,63 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml.c
+  ggml.cpp
+  ggml-alloc.c
+  ggml-quants.c
+  Generating Code...
+  ggml-backend.cpp
+  ggml-opt.cpp
+  ggml-threading.cpp
+  gguf.cpp
+  Generating Code...
+  ggml-base.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml-base.lib
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml-cpu.c
+  ggml-cpu.cpp
+  repack.cpp
+  hbm.cpp
+  traits.cpp
+  amx.cpp
+  mmq.cpp
+  binary-ops.cpp
+  unary-ops.cpp
+  vec.cpp
+  ops.cpp
+  Generating Code...
+  quants.c
+  quants.c
+  repack.cpp
+  ggml-cpu.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  Building Custom Rule F:/rawrxd/3rdparty/ggml/src/CMakeLists.txt
+  ggml-backend-reg.cpp
+  ggml.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\3rdparty\ggml\src\Release\ggml.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  main_win32.cpp
+  Win32IDE.cpp
+  Win32IDE_Sidebar.cpp
+  Win32IDE_VSCodeUI.cpp
+  Win32IDE_PowerShellPanel.cpp
+  Win32IDE_PowerShell.cpp
+  Win32IDE_Logger.cpp
+  Win32TerminalManager.cpp
+  Win32IDE_FileOps.cpp
+  Win32IDE_Commands.cpp
+  Win32IDE_Debugger.cpp
+  Win32IDE_AgenticBridge.cpp
+  Win32IDE_AgentCommands.cpp
+  Win32IDE_Autonomy.cpp
+  Win32IDE_lifecycle.cpp
+  TransparentRenderer.cpp
+  gguf_loader.cpp
+  GGUFLoader.cpp
+  gguf_vocab_resolver.cpp
+  streaming_gguf_loader.cpp
+  Generating Code...
+  Compiling...
+  cpu_inference_engine_impl.cpp
+  ErrorReporter.cpp
+  Diagnostics.cpp
+  Generating Code...
+  RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\evidence\FULL_IDE\production_build\build\bin\Release\RawrXD-Win32IDE-Native.exe

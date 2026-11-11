@@ -1,0 +1,191 @@
+I026_EXIT_CALLSITE_001
+ASOF_UTC=2026-11-10T16:45:30Z
+CANDIDATE=I
+CANDIDATE_DIR=issue49_candidate_AC7DC1D4_7774E846_001
+TIP_EXE=bin\RawrXD-Win32IDE-Native-Ext.exe
+REPAIR_SHA=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+LOOP_SHA=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+PROMPT_LEN=746
+PROMPT_REGIME=ASCII_staged_dual_fault_STEP_A_B
+OllamaAgentModel=qwen3:8b
+PRIOR=I026_EARLY_DEATH_STACK_001 (GOT_STACK=0 dump-chase exhausted)
+CONTROLLING=D015
+H_022_SUPERSEDES_D015=0
+T05_LANE_SEPARATE=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_BLIND_027_ACCEPTANCE=1
+NO_REBUILD_THIS_TURN=1
+NO_PASS_INHERIT_FROM_H=1
+
+========================================================================
+RESULT (FAIL-CLOSED)
+========================================================================
+CALLSITE=MISSING
+GOT_STACK=0
+MISSING_STACK=1
+HEISENBERG=1
+DYNAMIC_CLASS=HEISENBERG_BP_SUPPRESSED_DEATH
+EXCEPTION_CODE=NONE
+PROCESS_EXIT_CODE_CLASS_UNDEBUGGED=-1 (0xFFFFFFFF)
+CDB_RCX_AT_EXIT=
+STACK=
+
+========================================================================
+1) STATIC SEARCH (F:\rawrxd\src) — ExitProcess / exit(-1) / abort
+========================================================================
+SCOPE: agent session / Win32IDE startup / ollama-agentic spawn (~27s
+post-CREATEPROCESS death window on undebugged I026).
+
+WIN32APP ExitProcess CALLSITES (exact):
+  main_win32.cpp
+    ::ExitProcess(pass ? 0u : 2u)           // --term-quit smoke
+    ::ExitProcess(termRc == 0 ? 0 : UINT)   // --term-quit fallback
+    ::ExitProcess(rc == 0 ? 0 : UINT(rc))   // --ext-quit only
+  Win32IDE_Core.cpp
+    ::ExitProcess(0)                        // PathB CMD_DIAG body-done only
+NO win32app ExitProcess(-1) / ExitProcess(0xFFFFFFFF) found.
+NO PostQuitMessage(-1) found (all PostQuitMessage(0)).
+
+AGENT / LOOP BRIDGE (TerminateProcess on CHILD only — not IDE self-exit):
+  Win32IDE_AgenticLoopBridge.cpp
+    TerminateProcess(pi/child, 1 | 0xE001) / TerminateProcessTree
+  Win32IDE_AgentBridge.cpp
+    TerminateProcess(m_hProcess, 1)
+  No ExitProcess/exit(-1)/abort on the IDE host path around
+  AGENT_SESSION_SPAWNED / DEEP2_AGENTIC_LOOP_CREATEPROCESS.
+
+CRT / main return path (PLAUSIBLE -1 MECHANISM — not proven live):
+  TipExe strings probe: lifecycle runMessageLoop linked
+    PRESENT: "runMessageLoop entered", "GetMessage.error",
+             "finishSession.done", "CHAT_CTRL_LATCH_V1"
+    ABSENT:  Core "Message loop starting", "MESSAGE_LOOP_WM_QUIT"
+  Win32IDE_lifecycle.cpp::runMessageLoop
+    returns static_cast<int>(msg.wParam)
+    comment documents prior EXIT=-1 after finishSession.done / WM_CLOSE
+      when GetMessage==-1 left MSG undefined (now zero-init + wParam=0
+      on GetMessage error). Still: any WM_QUIT with wParam=-1 OR
+      main returning -1 => CRT ExitProcess(-1) without an explicit
+      ExitProcess(-1) in source.
+  main_win32.cpp: int rc = ide.runMessageLoop(); return rc;
+    (non-extQuit path) => ucrtbase!common_exit / KERNEL32
+    ExitProcessImplementation with that code.
+
+abort() sites in deep2/ggml/crash_handler are NOT on the Ext IDE
+chat→AgentSession→CREATEPROCESS hot path for this death class
+(EXCEPTION_CODE=NONE; no WER dump).
+
+STATIC_CALLSITE_FOR_MINUS1=MISSING_EXPLICIT
+STATIC_PLAUSIBLE_PATH=CRT_exit_of_main_return_OR_external_TerminateProcess
+STATIC_SELF_EXITPROCESS_MINUS1=0
+
+========================================================================
+2) DYNAMIC — ExitProcess BP under 746 STEP A/B (AC7DC1D4 Ext only)
+========================================================================
+SCRIPT=I026_EXIT_CALLSITE_CAPTURE_V8.ps1
+OUTDIR=issue49_gui_ollama_qwen3_027_EXIT_CALLSITE
+DEBUGGER=C:\Users\Garrett\AppData\Local\Microsoft\WindowsApps\cdbX64.exe
+T05_TOUCHED=0
+  (left alone: RawrXD-Win32IDE-Native.exe from F:\rawrxd\build_ide\bin)
+
+BP TARGETS ATTEMPTED:
+  kernel32!ExitProcess          -> UNRESOLVED (Win11)
+  kernelbase!ExitProcess        -> UNRESOLVED (command/symbol)
+  x kernel*!*ExitProcess*       -> KERNEL32!ExitProcessImplementation
+  ntdll!RtlExitUserProcess      -> ARMED
+  ucrtbase!common_exit          -> ARMED
+  ucrtbase!quick_exit           -> ARMED
+  ucrtbase!exit                 -> AMBIGUOUS (skipped after V8a)
+
+RUN A (late attach after CREATEPROCESS):
+  Undebugged death raced attach: IDE_EXIT=-1 ~2s post-send
+  CREATEPROCESS logged; DIED_BEFORE_ATTACH; no cdb stack
+  SUMMARY=.../exit_callsite_v8_summary_20261110-114147.txt
+  CLASS=SILENT_EXIT_MINUS1_NO_BP_HIT
+
+RUN B (early attach at MAIN, then 746 send) — CONTROLLING DYNAMIC:
+  SPAWN_PID observed; CDB attach before CTRL_ENTER
+  BPs armed (bl): RtlExitUserProcess + common_exit + quick_exit
+  CREATEPROCESS_SEEN under debugger
+  Wait window ~93s post-send: process ALIVE; NO HIT_EXIT_CALLSITE
+  Stall observation: ntdll!NtWaitForSingleObject (stdin idle)
+  CLASS=HEISENBERG_BP_SUPPRESSED_DEATH
+  SUMMARY=.../exit_callsite_v8_summary_20261110-114318.txt
+  GOT_STACK=0
+
+HEISENBERG_LAW (this death class, Candidate I):
+  Live cdb attach (early or late) prevents faithful undebugged -1 death.
+  Same family as I026 A7 (RtlExitUserProcess armed; no HIT; survived).
+  Dump-chase + ExitProcess-BP chase both exhausted without stack.
+  Do NOT treat debugger-alive as ALIVE_PASS / repair.
+
+========================================================================
+3) H vs I CONTRAST (binary delta hypothesis ONLY — not PASS inherit)
+========================================================================
+H: issue49_candidate_D56FE6DD_7774E846_001
+   TipExe SHA=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+   Size=6679552  MTime=2026-11-10 09:47:38
+   PE_TimeDateStamp=0x6AF32E8A
+   RESULT_CLASS=ALIVE (H_022 11/11 scoped; non-superseding; same LOOP)
+
+I: issue49_candidate_AC7DC1D4_7774E846_001
+   TipExe SHA=AC7DC1D44F699FBCA19D4948CCE7EA1C17A4C941627CB229583DE4C570C2DF9A
+   Size=6679552  MTime=2026-11-10 10:51:56
+   PE_TimeDateStamp=0x6AF33D9C
+   RESULT_CLASS=EARLY_SILENT_EXIT_-1 (~27s undebugged I026; variable)
+
+LOOP (both): SHA=7774E846... Size=33837056 MTime=2026-11-10 10:22:50
+  => SAME deep2_agentic_loop.exe; death differs by IDE TipExe only.
+
+BYTE_DELTA_I_vs_H:
+  LEN_EQUAL=1
+  DIFF_BYTES≈251661 (not timestamp-only; first diff @0x118 PE stamp region
+  plus widespread content drift — distinct rebuilds, same size)
+  Key ASCII markers present at SAME file offsets in both:
+    ExitProcess / AgentSession bound / DEEP2_AGENTIC_LOOP_CREATEPROCESS /
+    ext-quit ExitProcess / term-quit ExitProcess / LoadTensorSlice
+
+HYPOTHESIS (evidenced, not causal proof):
+  Early -1 is TipExe-SHA-correlated (AC7DC1D4 dies; D56FE6DD lived) under
+  identical LOOP_SHA + 746 regime. Root cause NOT invented as shared with H.
+  String-offset equality does NOT imply instruction-identical text/rdata.
+  Do NOT inherit H_022 PASS onto I. Do NOT merge T05 SILENT_EXIT lane.
+
+========================================================================
+4) TRACE-ONLY PATCH PROPOSAL (no rebuild this turn)
+========================================================================
+Prefer TRACE over seal rebuild until undebugged -1 stack is obtainable.
+If a later NEW seal is authorized, add one-line breadcrumbs only:
+
+  A) Win32IDE_lifecycle.cpp::runMessageLoop — before return:
+     chat_runtime / OutputDebugString:
+     "EXIT_TRACE runMessageLoop msg=0x.. wParam=0x.. gm_path=QUIT|ERR"
+  B) main_win32.cpp — after runMessageLoop, before return/ExitProcess:
+     "EXIT_TRACE main rc=.."
+  C) Optional: one fprintf/OutputDebugString immediately before any
+     existing ::ExitProcess(...) in main_win32 / Core PathB
+     (codes are 0/2 today — still useful as negative evidence)
+
+Do NOT add behavioral fixes in the TRACE seal. PROMOTE=0 remains.
+
+NEXT executable gate (after TRACE seal or non-Heisenberg capture):
+  Capture rcx + kL at KERNEL32!ExitProcessImplementation /
+  ntdll!RtlExitUserProcess on the UNDEbugGED -1 path (or TRACE log of
+  runMessageLoop wParam). Until then CALLSITE=MISSING.
+
+========================================================================
+5) AUTHORITY
+========================================================================
+CONTROLLING=D015
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NO_SUPERSEDE=1
+NO_BLIND_027_ACCEPTANCE=1
+H_022_SUPERSEDES_D015=0
+LoadTensorSlice_REOPENED=0
+T05_LANE_SEPARATE=1
+T05_COMPARISON_PENDING_ONLY=1
+SOURCE_EDITED_PASS_CLAIM=0
+ALIVE_PASS_CLAIM=0

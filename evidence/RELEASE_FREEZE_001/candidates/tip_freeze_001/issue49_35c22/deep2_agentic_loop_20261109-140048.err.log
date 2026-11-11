@@ -1,0 +1,7 @@
+[flight] Executor recorder started: F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\deep2_flight.jsonl
+[ESP] seq=1 req=1 agent=0 model_load        F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf value=0
+[ESP] seq=2 req=1 agent=0 tokenizer_check   PASS value=0
+[ESP] seq=3 req=1 agent=0 prefill_start     tokens=0 ctx=0 value=0
+[ESP] seq=4 req=1 agent=0 prefill_start     tokens=167 ctx=0 value=0
+[ESP] seq=5 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":1,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":1229.668,"decode_ms":0.000,"task_ms":1229.670,"gpu_dispatches":0,"cpu_fallbacks":197,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=6 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":9,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":7541.931,"decode_ms":0.000,"task_ms":7541.933,"gpu_dispatches":0,"cpu_fallbacks":1773,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0

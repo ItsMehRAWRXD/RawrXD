@@ -1,0 +1,3 @@
+FROM F:\rawrxd\gemma3-1b-Q2_K.gguf 
+PARAMETER num_predict 32 
+PARAMETER top_k  

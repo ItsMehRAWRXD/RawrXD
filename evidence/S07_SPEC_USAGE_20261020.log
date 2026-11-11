@@ -1,0 +1,3 @@
+usage: deep2_spec_bench.exe --model <gguf> [--workload code|prose|both]
+   [--tokens N] [--gamma N] [--ngram N] [--draft prompt|repeat]
+   [--prompt "..."] [--force-cpu] [--no-bos] [--evidence dir]

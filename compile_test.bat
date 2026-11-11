@@ -1,0 +1,2 @@
+@echo off
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /std:c++20 /EHsc /W4 /I "F:\rawrxd\~dev\rawrxd\src" /I "F:\rawrxd\~dev\rawrxd\src\deep2" /I "F:\rawrxd\deep2_tiered_moe_drop\deep2_tiered_moe_drop\include" /c "F:\rawrxd\~dev\rawrxd\src\deep2\deep2_tiered_residency_integration_test.cpp"

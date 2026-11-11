@@ -1,0 +1,10 @@
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+rawr.exe : DENIED: Tool 'editFiles' denied in mode 'autonomous' (granted: full, ceiling: full)
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-eb696ff6-d3f2-4a19-b759-da7c96837ad4.ps1:113 char:8
++   $out=& $cli @a 2>&1 | Out-String
++        ~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (DENIED: Tool 'e... ceiling: full):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown
+

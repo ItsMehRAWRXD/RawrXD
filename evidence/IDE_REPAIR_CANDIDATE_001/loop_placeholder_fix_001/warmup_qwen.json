@@ -1,0 +1,1 @@
+{"model":"qwen2.5-coder:1.5b-base","prompt":"ping","stream":false,"options":{"num_predict":8}}

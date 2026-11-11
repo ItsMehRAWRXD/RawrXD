@@ -1,0 +1,82 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  runtime_graph_executor.cpp
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(265,63): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,65): warning C4100: 'position': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,45): warning C4100: 'token_index': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(299,25): warning C4100: 'output_size': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,69): warning C4100: 'input_name': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(298,37): warning C4100: 'weight_name': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,66): warning C4100: 'op_name': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,40): warning C4100: 'block': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(297,28): warning C4100: 'op': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\deep2_execution_trace.hpp(364,40): warning C4100: 'bytes': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  (compiling source file '../src/deep2/runtime_graph_executor.cpp')
+  
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2319,25): warning C4457: declaration of 'k' hides function parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+      F:\rawrxd\src\deep2\runtime_graph_executor.cpp(1700,54):
+      see declaration of 'k'
+  
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(4259,17): warning C4458: declaration of 'dot_batch_last_out_slot_' hides class member [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+      F:\rawrxd\src\deep2\runtime_graph_executor.hpp(524,17):
+      see declaration of 'RawrXD::Deep2::RuntimeGraph::Executor::dot_batch_last_out_slot_'
+  
+F:\rawrxd\src\deep2\runtime_graph_executor.cpp(2522,13): warning C4505: 'RawrXD::Deep2::RuntimeGraph::DequantRange': unreferenced function with internal linkage has been removed [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  vulkan_compute.cpp
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2376,32): warning C4456: declaration of 'lane' hides previous local declaration [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+      F:\rawrxd\src\deep2\vulkan_compute.cpp(2357,22):
+      see declaration of 'lane'
+  
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6680,43): warning C4100: 'epoch': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  vulkan_compute.cpp
+F:\rawrxd\src\vulkan_compute.cpp(143,24): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(206,24): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(781,57): warning C4100: 'usage': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3460,94): warning C4100: 'layout': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3460,56): warning C4100: 'binding_count': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3467,90): warning C4100: 'descriptor_set': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3467,65): warning C4100: 'layout': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3475,65): warning C4100: 'buffer_size': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3475,50): warning C4100: 'buffer': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3474,82): warning C4100: 'binding': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\src\vulkan_compute.cpp(3474,57): warning C4100: 'descriptor_set': unreferenced parameter [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  Generating code
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973): warning C4701: potentially uninitialized local variable 'l_mmq_wg_denoms_k' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973): warning C4701: potentially uninitialized local variable 'm_mmq_wg_denoms_k' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2973): warning C4701: potentially uninitialized local variable 's_mmq_wg_denoms_k' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997): warning C4701: potentially uninitialized local variable 'l_mmqid_wg_denoms' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997): warning C4701: potentially uninitialized local variable 'm_mmqid_wg_denoms' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(2997): warning C4701: potentially uninitialized local variable 's_mmqid_wg_denoms' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp(5531): warning C4701: potentially uninitialized local variable 'index' used [F:\rawrxd\build\deep2_bench_tps.vcxproj]
+  Finished generating code
+  deep2_bench_tps.vcxproj -> F:\rawrxd\build\bin\Release\deep2_bench_tps.exe

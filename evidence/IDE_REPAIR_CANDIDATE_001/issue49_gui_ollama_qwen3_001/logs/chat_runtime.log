@@ -1,0 +1,16 @@
+SESSION_OPEN session_id=sid_0000AB48_0000000003C6EF76 run_id=run_unset pid=43848
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=sid_0000AB48_0000000003C6EF76 run_id=run_unset
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x00000000001E04A2 session=1 pane=copilot_sidebar session_id=sid_0000AB48_0000000003C6EFA5 run_id=run_unset
+INPUT_EVENT path=AGENT_MODE_AGENTIC_LOOP AGENT_MODE=ACTIVE source=ctrl_enter session_id=sid_0000AB48_0000000003C6EFA5 run_id=run_unset
+AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0
+TOOL_SCHEMA_READY computer_use.find_window=1 computer_use.screenshot=1
+AGENT_MODE=ACTIVE path=AgenticLoopBridge session_registry=1 AGENT_DISPATCH_CLAIM=1
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=qwen3:8b workspace=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures AGENT_MODE=ACTIVE session_registry=1 tool=computer_use.screenshot tool=computer_use.find_window tool=computer_use.inspect tool=computer_use.click tool=computer_use.type tool=computer_use.key tool=computer_use.scroll tool=computer_use.launch
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=54
+DEEP2_AGENTIC_LOOP_CREATEPROCESS pid=23468 exe=F:\rawrxd\build_tip_ext_host_001\bin\deep2_agentic_loop.exe workdir=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures
+SESSION_OPEN session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset pid=43848
+ui_update request_id=0 rendered=1 complete=0 response_bytes=84 session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset
+ui_update request_id=0 rendered=1 complete=1 response_bytes=1994 session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=0 session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset
+RESPONSE_END request_id=0 session=1 bytes=2078 session_id=sid_0000AB48_0000000003C6EFC4 run_id=run_unset

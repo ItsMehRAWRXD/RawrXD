@@ -1,0 +1,26 @@
+Opened log file 'F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\cdb_20261110-111147.log'
+0:014> .sympath srv*
+Symbol search path is: srv*
+Expanded Symbol search path is: cache*;SRV*https://msdl.microsoft.com/download/symbols
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+0:014> .reload /f ntdll.dll
+0:014> bp ntdll!RtlExitUserProcess ".echo ===HIT_EXITPROCESS===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd"
+0:014> bp kernelbase!ExitProcess ".echo ===HIT_EXITPROCESS_KB===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd"
+Couldn't resolve error at 'kernelbase!ExitProcess ".echo ===HIT_EXITPROCESS_KB===; r rcx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd"'
+0:014> bp ntdll!NtTerminateProcess ".echo ===HIT_NTTERMINATE===; r rcx; r rdx; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd"
+0:014> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd" av
+0:014> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd" eh
+0:014> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd" c0000409
+0:014> sxe -c ".echo ===HIT_EXCEPTION===; .exr -1; kL 80; lm m RawrXD*; .dump /ma /u F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\issue49_gui_ollama_qwen3_027_STACK\dumps\i026_early_death_20261110-111147.dmp; .logclose; qd" c0000005
+0:014> sxi ibp
+0:014> g
+[2026-11-10 11:11:57] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+ModLoad: 00007ffa`35e50000 00007ffa`35f9c000   C:\WINDOWS\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffa`36740000 00007ffa`3674d000   C:\WINDOWS\SYSTEM32\DSPARSE.dll
+ModLoad: 00007ffa`26f20000 00007ffa`26f2b000   C:\Windows\System32\rasadhlp.dll
+ModLoad: 00007ffa`293a0000 00007ffa`29426000   C:\WINDOWS\System32\fwpuclnt.dll
+ntdll!KiUserCallbackDispatch:
+00007ffa`3a69a400 488b4c2420      mov     rcx,qword ptr [rsp+20h] ss:00000064`e8bed790=00000064e8bed7c8

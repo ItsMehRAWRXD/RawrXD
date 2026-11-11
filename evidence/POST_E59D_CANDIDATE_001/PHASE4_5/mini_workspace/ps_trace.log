@@ -1,0 +1,240 @@
+18664 [PS_TRACE] start() encoded command length=1208
+
+18664 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+18664 [PS_TRACE] CreateProcessA SUCCESS pid=27284
+
+18664 [PS_TRACE] Process started, starting output threads
+
+19084 [PS_TRACE] readOutputThread() STARTED thread=19084
+
+19588 [PS_TRACE] monitorProcessThread() STARTED thread=19588
+
+28944 [PS_TRACE] start() encoded command length=1208
+
+28944 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+28944 [PS_TRACE] CreateProcessA SUCCESS pid=8608
+
+28944 [PS_TRACE] Process started, starting output threads
+
+14960 [PS_TRACE] monitorProcessThread() STARTED thread=14960
+
+28236 [PS_TRACE] readOutputThread() STARTED thread=28236
+
+3896 [PS_TRACE] start() encoded command length=1208
+
+3896 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+3896 [PS_TRACE] CreateProcessA SUCCESS pid=8840
+
+3896 [PS_TRACE] Process started, starting output threads
+
+20416 [PS_TRACE] readOutputThread() STARTED thread=20416
+
+8792 [PS_TRACE] monitorProcessThread() STARTED thread=8792
+
+3896 [PS_TRACE] start() encoded command length=1208
+
+3896 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+3896 [PS_TRACE] CreateProcessA SUCCESS pid=316
+
+3896 [PS_TRACE] Process started, starting output threads
+
+5456 [PS_TRACE] readOutputThread() STARTED thread=5456
+
+29076 [PS_TRACE] monitorProcessThread() STARTED thread=29076
+
+3896 [PS_TRACE] writeInput() WriteFile ok=1 written=832 GetLastError=2 framed_len=832
+
+5456 [PS_TRACE] readOutputThread() read 22 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=22
+
+5456 [PS_TRACE] readOutputThread() read 72 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=72
+
+5456 [PS_TRACE] readOutputThread() read 175 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=175
+
+5456 [PS_TRACE] readOutputThread() read 52 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=52
+
+5456 [PS_TRACE] readOutputThread() read 256 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=256
+
+5456 [PS_TRACE] readOutputThread() read 133 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=133
+
+5456 [PS_TRACE] readOutputThread() read 30 bytes thread=5456
+
+5456 [PS_TRACE] readOutputThread() calling onOutput() bytes=30
+
+14584 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+5456 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+14584 [PS_TRACE] readErrorThread() EXITING
+
+5456 [PS_TRACE] readOutputThread() EXITING
+
+29076 [PS_TRACE] monitorProcessThread() process exited code=0
+
+29076 [PS_TRACE] monitorProcessThread() EXITING
+
+3896 [PS_TRACE] start() encoded command length=1208
+
+3896 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+3896 [PS_TRACE] CreateProcessA SUCCESS pid=29052
+
+3896 [PS_TRACE] Process started, starting output threads
+
+17120 [PS_TRACE] readOutputThread() STARTED thread=17120
+
+24744 [PS_TRACE] monitorProcessThread() STARTED thread=24744
+
+3896 [PS_TRACE] writeInput() WriteFile ok=1 written=384 GetLastError=2 framed_len=384
+
+17120 [PS_TRACE] readOutputThread() read 21 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=21
+
+17120 [PS_TRACE] readOutputThread() read 87 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=87
+
+17120 [PS_TRACE] readOutputThread() read 32 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=32
+
+17120 [PS_TRACE] readOutputThread() read 70 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=70
+
+17120 [PS_TRACE] readOutputThread() read 2 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=2
+
+17120 [PS_TRACE] readOutputThread() read 67 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=67
+
+17120 [PS_TRACE] readOutputThread() read 29 bytes thread=17120
+
+17120 [PS_TRACE] readOutputThread() calling onOutput() bytes=29
+
+10548 [PS_TRACE] start() encoded command length=1208
+
+10548 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+10548 [PS_TRACE] CreateProcessA SUCCESS pid=14456
+
+10548 [PS_TRACE] Process started, starting output threads
+
+24344 [PS_TRACE] readOutputThread() STARTED thread=24344
+
+6692 [PS_TRACE] monitorProcessThread() STARTED thread=6692
+
+10548 [PS_TRACE] start() encoded command length=1208
+
+10548 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+10548 [PS_TRACE] CreateProcessA SUCCESS pid=25316
+
+10548 [PS_TRACE] Process started, starting output threads
+
+7612 [PS_TRACE] readOutputThread() STARTED thread=7612
+
+3964 [PS_TRACE] monitorProcessThread() STARTED thread=3964
+
+10548 [PS_TRACE] writeInput() WriteFile ok=1 written=832 GetLastError=2 framed_len=832
+
+7612 [PS_TRACE] readOutputThread() read 22 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=22
+
+7612 [PS_TRACE] readOutputThread() read 72 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=72
+
+7612 [PS_TRACE] readOutputThread() read 175 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=175
+
+7612 [PS_TRACE] readOutputThread() read 52 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=52
+
+7612 [PS_TRACE] readOutputThread() read 256 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=256
+
+7612 [PS_TRACE] readOutputThread() read 133 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=133
+
+7612 [PS_TRACE] readOutputThread() read 30 bytes thread=7612
+
+7612 [PS_TRACE] readOutputThread() calling onOutput() bytes=30
+
+3344 [PS_TRACE] readErrorThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+7612 [PS_TRACE] readOutputThread() ReadFile ok=0 bytesRead=0 GetLastError=109 EOF/broken pipe
+
+3344 [PS_TRACE] readErrorThread() EXITING
+
+7612 [PS_TRACE] readOutputThread() EXITING
+
+3964 [PS_TRACE] monitorProcessThread() process exited code=0
+
+3964 [PS_TRACE] monitorProcessThread() EXITING
+
+10548 [PS_TRACE] start() encoded command length=1208
+
+10548 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+10548 [PS_TRACE] CreateProcessA SUCCESS pid=512
+
+10548 [PS_TRACE] Process started, starting output threads
+
+18440 [PS_TRACE] monitorProcessThread() STARTED thread=18440
+
+29668 [PS_TRACE] readOutputThread() STARTED thread=29668
+
+10548 [PS_TRACE] writeInput() WriteFile ok=1 written=384 GetLastError=2 framed_len=384
+
+29668 [PS_TRACE] readOutputThread() read 21 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=21
+
+29668 [PS_TRACE] readOutputThread() read 87 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=87
+
+29668 [PS_TRACE] readOutputThread() read 32 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=32
+
+29668 [PS_TRACE] readOutputThread() read 70 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=70
+
+29668 [PS_TRACE] readOutputThread() read 2 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=2
+
+29668 [PS_TRACE] readOutputThread() read 67 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=67
+
+29668 [PS_TRACE] readOutputThread() read 29 bytes thread=29668
+
+29668 [PS_TRACE] readOutputThread() calling onOutput() bytes=29
+

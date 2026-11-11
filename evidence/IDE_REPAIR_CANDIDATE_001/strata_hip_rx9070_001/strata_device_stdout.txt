@@ -1,0 +1,15 @@
+device 0: AMD Radeon AI PRO R9700
+  HIP arch            gfx1201 wave32 (compiled for gfx1200,gfx1201)
+  multiprocessors     32
+  VRAM total / free   31.859 GiB (34208743424 B) / 30.817 GiB (33089417216 B)
+  driver / runtime    71726391 / 71726391
+  HIP runtime         F:\rawrxd\external\strata\engines\rx9070_0.1.59\extracted\amdhip64_7.dll
+
+memory plan  --max-context 20480
+  KV + indexer keys   0.267387 GB
+  recurrent state     0.000000 GB  (GDN recurrence + conv history, NOT evictable)
+  expert cache        5.675613 GB  (4105 slots of 1,382,400 B)
+  VRAM pool           5.943000 GB
+  expert arena (DRAM) 0.000000 GB
+  card free           30.817 GiB (33089417216 B)
+  plan + KV vs free   FITS

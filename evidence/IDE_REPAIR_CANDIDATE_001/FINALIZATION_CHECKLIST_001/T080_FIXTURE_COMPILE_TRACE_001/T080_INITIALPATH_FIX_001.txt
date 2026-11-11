@@ -1,0 +1,38 @@
+T080_INITIALPATH_FIX_001
+ASOF_UTC=2026-11-10T17:52:00Z
+PROMOTE=0
+CERTIFIED=0
+T080=FAIL
+ISSUE49_D015=UNTOUCHED
+
+ROOT_CAUSE=
+  WinMain called openDocumentPath(initialPath) BEFORE message-loop
+  finishSession -> loadEditorSession. Sticky session restore then
+  overwrote title to broken_multi.cpp and left editor buffer empty
+  (INITIALPATH_BUFFER_LEN_0_TITLE_MISS). Ext tip links lifecycle.cpp
+  (not Core.cpp restoreSession path).
+
+REPAIR_LANDED_SOURCE=1
+  main_win32.cpp: queueInitialDocumentPath instead of early open
+  Win32IDE.h/cpp: queueInitialDocumentPath + flushPendingInitialDocument
+  Win32IDE_lifecycle.cpp: flush after loadEditorSession/switchDocumentTab
+  (argv/fixture wins over sticky session)
+
+REBUILD_NOTE=
+  Prior rebuild produced TIP_SHA256=
+  AC9B245A1E5AC5D5FCD27E4DA4E3CF340F59AD0C732CBFD348D1D4A38DC92123
+  (supersedes claimed 89A5F76F… and A43B5F6A…). Source was briefly
+  half-reverted (main_win32 queue without methods); full repair
+  re-landed. Re-hash after next successful ninja required if binary
+  moves again.
+
+PRIOR_GUI_ON_AC9B245A=
+  TITLE_BAR=RawrXD IDE  -  T080_test_bad.cpp  -  rawrxd
+  TITLE_MATCH_T080=True
+  EDITOR_BUFFER_LEN_WM_GETTEXTLENGTH=525 (plain Edit max; RichEdit
+  file-buffer not separately sealed — do not invent editor-len PASS)
+  CL/PROBLEMS remasure=NOT_COMPLETED_THIS_TURN
+
+LAW=NOT_RUN!=PASS
+LAW=DO_NOT_INVENT_T080_PASS
+PROMOTE=0

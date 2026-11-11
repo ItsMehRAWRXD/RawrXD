@@ -1,0 +1,48 @@
+30596 [PS_TRACE] WM_SETTEXT cache len=1
+
+30596 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=30596
+
+30596 [PS_TRACE] executePowerShellInput() ENTRY thread=30596
+
+30596 [PS_TRACE] executePowerShellInput() input_hwnd=00000000006F1466 panel=00000000002D13D0
+
+30596 [PS_TRACE] executePowerShellInput() command_len=1 cmd='W' wlen=1
+
+30596 [PS_TRACE] WM_SETTEXT cache len=0
+
+30596 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+30596 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+30596 [PS_TRACE] executePowerShellInput() EXIT
+
+30596 [PS_TRACE] WM_SETTEXT cache len=1
+
+30596 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=30596
+
+30596 [PS_TRACE] executePowerShellInput() ENTRY thread=30596
+
+30596 [PS_TRACE] executePowerShellInput() input_hwnd=00000000006F1466 panel=00000000002D13D0
+
+30596 [PS_TRACE] executePowerShellInput() command_len=1 cmd='S' wlen=1
+
+30596 [PS_TRACE] WM_SETTEXT cache len=0
+
+30596 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=30596
+
+30596 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+30596 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+30596 [PS_TRACE] executePowerShellInput() EXIT
+

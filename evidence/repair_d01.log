@@ -1,0 +1,48 @@
+[stage]   [     0.0 ms] load model | F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+[stage]   [  4477.3 ms] ingest | arch=qwen2 blocks=28
+[stage]   [  4601.5 ms] tokenizer build | vocab=151936 convention=U+0120_gpt2
+[stage]   [  4601.6 ms] G1 tokenizer: round-trip begin
+[stage]   [  4636.3 ms] G1 tokenizer: round-trip done | PASS
+GATE_RESULT G1=PASS
+[stage]   [  4636.4 ms] executor bind begin | gpu-first
+[stage]   [  4636.6 ms] executor bound | ops=395
+[stage]   [  4636.6 ms] G2 inference: batched prefill of probe prompt
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[stage]   [ 10125.1 ms] G2 inference: prefill complete | tokens=11 ctx=12
+[stage]   [ 10125.5 ms] G2 inference: one-token logits | n=151936 nonfinite=0 PASS
+[stage]   [ 10125.5 ms] G3 generation: begin
+[stage]   [ 13376.9 ms] G3 generation: done | tokens=10 bytes=10
+GATE_RESULT G1=PASS G2=PASS G3=PASS
+[stage]   [ 13377.3 ms] G4 baseline: build defective source
+[stage]   [ 17391.5 ms] G4 baseline: built and ran | build_exit=0 run_exit=1 marker_present=0
+GATE_RESULT G1=PASS G2=PASS G3=PASS G4=PASS
+[stage]   [ 17391.8 ms] G5 setup: fresh executor for repair stage
+[stage]   [ 17392.0 ms] G5 setup: repair executor bound | ops=395
+[stage]   [ 17392.0 ms] G5 attempt 1: prompt build + prefill
+[stage]   [159619.8 ms] G5 attempt 1: prompt prefilled | tokens=575 ctx=576
+[stage]   [273309.4 ms] G5 attempt 1: generated | bytes=1000
+[stage]   [275106.4 ms] G6 attempt 1: patched build FAILED | exit=2
+[stage]   [275108.2 ms] G5 attempt 2: prompt build + prefill
+[stage]   [445782.9 ms] G5 attempt 2: prompt prefilled | tokens=615 ctx=1493
+[stage]   [705521.6 ms] G5 attempt 2: generated | bytes=1027
+[stage]   [705521.8 ms] G5 attempt 2: model output unusable | no main() or #include
+[stage]   [705521.8 ms] G5 repair budget exhausted | 688s
+ORIGINAL_HASH=0f74a687544a0e4a
+FINAL_HASH=0f74a687544a0e4a
+SOURCE_CHANGED=false
+GATE_RESULT G1=PASS G2=PASS G3=PASS G4=PASS G5=FAIL G6=FAIL G7=SKIP
+FINAL_VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully

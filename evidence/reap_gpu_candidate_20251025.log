@@ -1,0 +1,246 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[MLA_GEOMETRY] Derived MLA head dims: qkNopeHeadDim=128 (q_b_out_per_head=192 ropeDim=64)
+[MLA_GEOMETRY] Derived MLA ranks from tensor geometry: qLoraRank=1536 kvLoraRank=512 keyLengthMla=576 ropeDim=64
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=262144 fit=244682 (kv_bytes_per_token=7686)
+[MLA_ALLOC] hidden=7168 heads=64 headDim=192 qProjSize=12288 q_b=12288 kv_a=576 k_b=8192 v_b=8192
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=1 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=18432 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[Deep2Engine] MLA production stream available; certification deferred to live MlaAttentionComplete
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=163840 bos=163584 eos=163586 (Spm::encode)
+[Deep2Engine] Layer topology: 0 attention, 0 SSM, 61 unknown of 61 total
+[Deep2Engine] KV cache sized for 0 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[Deep2Engine] ResidencyManager: this=000001CF74869000  registered=0 tensors  bytes=0  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7F7F8F560 dequant=00007FF7F7F92520 GetGEMV(12)=00007FF7F7F8F560 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=244682 heads=1 dim=192
+[KVCache] HOT_BYTES=749568 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 61 layers x 244682 positions x 1 heads x 192 dim = 21863.67 MB
+[Deep2Engine] Model loaded successfully (1096 tensors)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32476 MB) GPU1=AMD Radeon RX 7800 XT (16176 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BC6C
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BEC
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+[K2_DBG] entry depth=61 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=61
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/1
+STREAM_HEARTBEAT STEP=0/1 TEARDOWN_WITNESS=0
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=0 nEx=8 pin_clock=24 pin_bytes=228458496 buf=000001CF582F5DB0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=e22604b5582077c3 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,62,69,86,132,146,217,296]
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=0 nEx=8 pin_clock=48 pin_bytes=228458496 buf=000001CF582F5AB0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=2bb4e51f2046fa11 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[26,65,118,153,162,180,194,219]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=0 nEx=8 pin_clock=72 pin_bytes=228458496 buf=000001CF6C47B1B0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=bbaca939c874826d post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[32,33,34,58,164,257,365,366]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=0 nEx=8 pin_clock=96 pin_bytes=228458496 buf=000001CF6C47C830 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=10abe34b16535aa6 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[59,98,121,233,244,275,304,315]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=0 nEx=8 pin_clock=120 pin_bytes=228458496 buf=000001CF530ACD90 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=91d59e4a6021df15 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[25,33,95,119,153,197,227,231]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=0 nEx=8 pin_clock=144 pin_bytes=228458496 buf=000001CF6C4A3F40 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=6096383df6bc8e5e post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,35,52,85,121,124,212,369]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=0 nEx=8 pin_clock=168 pin_bytes=198180864 buf=000001CF6C4A37C0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=4ace725982180ec1 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[18,87,88,98,238,291,308,374]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=0 nEx=8 pin_clock=192 pin_bytes=198180864 buf=000001CF6C4A2DC0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=9c273b313b00efaa post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[16,78,79,85,106,156,254,380]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=0 nEx=8 pin_clock=216 pin_bytes=228458496 buf=000001CF6C5514D0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=1a8d0c2c5ed942ac post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,48,103,151,224,254,262,316]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=0 nEx=8 pin_clock=240 pin_bytes=198180864 buf=000001CF6C54ECD0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=e66ae24d75512ca6 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[21,38,53,75,118,128,200,304]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=0 nEx=8 pin_clock=264 pin_bytes=198180864 buf=000001CF6C54F150 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=9003c00567cd46fc post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[46,64,86,99,259,298,322,359]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=0 nEx=8 pin_clock=288 pin_bytes=228458496 buf=000001CF6C4A3F40 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=0b10ffd745dce21f post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[1,14,131,134,176,194,273,315]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=13 stick=0 nEx=8 pin_clock=312 pin_bytes=198180864 buf=000001CF6C5DB640 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=2096ba8c52287362 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[51,65,180,242,355,360,364,365]
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=14 stick=0 nEx=8 pin_clock=336 pin_bytes=198180864 buf=000001CF6C5DB0C0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=24ac2a481dd1e749 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[8,93,137,155,178,279,297,328]
+[GPU] endSubmitWait stage=queue_submit vk=-4
+[GPU] downloadFromBuffer failed stage=transfer_wait bytes=28672
+ENDDEVICE_STEP3 tag=END_FAIL STEP=0/1 layer=15 stick=0 nEx=8 pin_clock=360 pin_bytes=228458496 buf=000001CF6C5DD840 bytes=28672 fused=1 d2h=0 vk=0 phase=unknown in_hash=7f3ca490ca1e0b19 post_hash=0000000000000000 CLASS=ENDDEVICE_ABORT_BEFORE_RESULT ex=[51,109,209,212,233,260,264,283]
+HIDDEN_PROBE_DISPOSITION STEP=0/1 EMITTED=0 REASON=NOT_REACHED
+STEP_EXIT STEP=0/1
+STREAM_ABORT=1 STEP=0/1 OWNER=MLA_FORWARD ERR=K2MoEStickEndDevice failed TEARDOWN_WITNESS=0
+MLA_GPU_GEMV_OPS=48 MLA_GPU_GEMV_FAIL=16
+[live-path] vacuumArmed=0 trampoline=1/17 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=1 plasmaAbsence=0 enhancements=1
+[Deep2Engine] K2 generateStream: K2MoEStickEndDevice failed
+REPLAY_CONTINUOUS generated=0 prompt_tokens=81 completed=0
+REPLAY_WINDOWS=1 GENERATED=0 METRICS=120 COMPLETE=0
+REPLAY_INCOMPLETE windows=1 generated=0 metrics=120
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=61
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

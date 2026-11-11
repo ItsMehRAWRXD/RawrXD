@@ -1,0 +1,69 @@
+[1/6] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\EndDeviceStep3Diag.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/6] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_QPathDevice_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/6] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickStreamWindow_Vc.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/6] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\lavapath\DualStickImbalance_Steal.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/6] Linking CXX static library deep2_engine_lib.lib
+K2MLA_QPathDevice_Emit.cpp.obj : warning LNK4006: "void __cdecl Deep2::MLA_QPathDevice_Emit(struct _iobuf *)" (?MLA_QPathDevice_Emit@Deep2@@YAXPEAU_iobuf@@@Z) already defined in engine_link_supplement.cpp.obj; second definition ignored
+[6/6] Linking CXX executable bin-msvc\rawr-reap-replay.exe
+FAILED: [code=4294967295] bin-msvc/rawr-reap-replay.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawr-reap-replay.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj  /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont  deep2_engine_lib.lib  rawrxd_gpu_compute.lib  3rdparty\ggml\src\ggml.lib  3rdparty\ggml\src\ggml-cpu.lib  3rdparty\ggml\src\ggml-base.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawr-reap-replay.dir\src\reap_replay_cli.cpp.obj /out:bin-msvc\rawr-reap-replay.exe /implib:rawr-reap-replay.lib /pdb:bin-msvc\rawr-reap-replay.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF /subsystem:console /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont deep2_engine_lib.lib rawrxd_gpu_compute.lib 3rdparty\ggml\src\ggml.lib 3rdparty\ggml\src\ggml-cpu.lib 3rdparty\ggml\src\ggml-base.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+deep2_engine_lib.lib(K2MLA_QPathDevice_Emit.cpp.obj) : error LNK2005: "void __cdecl Deep2::MLA_QPathDevice_Emit(struct _iobuf *)" (?MLA_QPathDevice_Emit@Deep2@@YAXPEAU_iobuf@@@Z) already defined in deep2_engine_lib.lib(engine_link_supplement.cpp.obj)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceInit512
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitWallNs
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitValid
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitLogitsEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTokenizeComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitLogitsComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitFirstTokenBoundary
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::~LayerEdge(void)" (??1LayerEdge@hostfc@Deep2@@QEAA@XZ)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::LayerEdge(unsigned int,unsigned int)" (??0LayerEdge@hostfc@Deep2@@QEAA@II@Z)
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitSampleComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitParity
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitHiddenLast
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitPrefillEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDeviceSelected
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamError
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitPrefillComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownFault
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitBounds
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitForwardComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDecodeTpsQ32_32
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitKVHotsetReady
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamAbort
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitWeightRangeReady
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitStreamComplete
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitTeardownEntry
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitDeviceExecution
+deep2_engine_lib.lib(K2NativeStreamGate.cpp.obj) : error LNK2001: unresolved external symbol EvidenceEmitHiddenProbe
+deep2_engine_lib.lib(K2LogitsSplit.cpp.obj) : error LNK2001: unresolved external symbol K2RowsToBlockRangeX64_Fixed
+deep2_engine_lib.lib(K2MLAWeights.cpp.obj) : error LNK2001: unresolved external symbol "public: void __cdecl CPUInference::VulkanCompute::GemvFuseResidualNext(float const *)" (?GemvFuseResidualNext@VulkanCompute@CPUInference@@QEAAXPEBM@Z)
+deep2_engine_lib.lib(K2MLAWeights.cpp.obj) : error LNK2001: unresolved external symbol "public: void __cdecl CPUInference::VulkanCompute::GemvReuseInputNext(void)" (?GemvReuseInputNext@VulkanCompute@CPUInference@@QEAAXXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceObserve(unsigned __int64,unsigned __int64,unsigned int,unsigned int,unsigned __int64,unsigned __int64)" (?DualStickImbalanceObserve@Deep2@@YAX_K0II00@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickImbalanceObserveExpert(int,int,unsigned int,int,unsigned __int64,unsigned __int64)" (?DualStickImbalanceObserveExpert@Deep2@@YAXHHIH_K0@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_Place.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::ds_imb::TransferExecNs(unsigned int,unsigned __int64)" (?TransferExecNs@ds_imb@Deep2@@YA_KI_K@Z)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned int Deep2::ds_imb::g_inDim" (?g_inDim@ds_imb@Deep2@@3IA)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 * Deep2::ds_imb::g_predLayer" (?g_predLayer@ds_imb@Deep2@@3PA_KA)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::ds_imb::EwmaGet(unsigned __int64,unsigned __int64)" (?EwmaGet@ds_imb@Deep2@@YA_K_K0@Z)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 * Deep2::ds_imb::g_avail" (?g_avail@ds_imb@Deep2@@3PA_KA)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ds_imb::XferBeginLayer(void)" (?XferBeginLayer@ds_imb@Deep2@@YAXXZ)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned int Deep2::ds_imb::g_quant" (?g_quant@ds_imb@Deep2@@3IA)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned int * Deep2::ds_imb::g_nAssign" (?g_nAssign@ds_imb@Deep2@@3PAIA)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "void __cdecl Deep2::ds_imb::XferNoteMiss(unsigned int)" (?XferNoteMiss@ds_imb@Deep2@@YAXI@Z)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned __int64 __cdecl Deep2::ds_imb::TransferNs(unsigned int,unsigned __int64)" (?TransferNs@ds_imb@Deep2@@YA_KI_K@Z)
+deep2_engine_lib.lib(DualStickImbalance.cpp.obj) : error LNK2001: unresolved external symbol "unsigned int Deep2::ds_imb::g_outDim" (?g_outDim@ds_imb@Deep2@@3IA)
+deep2_engine_lib.lib(DualStickBundle_Pins.cpp.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::HasPinnedGemvWeight(unsigned __int64,unsigned __int64,unsigned int,unsigned int)const " (?HasPinnedGemvWeight@VulkanCompute@CPUInference@@QEBA_N_K0II@Z)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl CPUInference::VulkanCompute::WeightPinClock(void)const " (?WeightPinClock@VulkanCompute@CPUInference@@QEBA_KXZ)
+deep2_engine_lib.lib(K2NativeMoEFfn_ExpertGpuDevice.cpp.obj) : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl CPUInference::VulkanCompute::WeightPinResidentBytes(void)const " (?WeightPinResidentBytes@VulkanCompute@CPUInference@@QEBA_KXZ)
+deep2_engine_lib.lib(DualStickBundle_Touch.cpp.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl CPUInference::VulkanCompute::TouchPinnedGemvWeight(unsigned __int64,unsigned __int64,unsigned int,unsigned int)" (?TouchPinnedGemvWeight@VulkanCompute@CPUInference@@QEAA_N_K0II@Z)
+bin-msvc\rawr-reap-replay.exe : fatal error LNK1120: 48 unresolved externals
+ninja: build stopped: subcommand failed.

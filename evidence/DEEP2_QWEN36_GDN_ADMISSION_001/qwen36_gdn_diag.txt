@@ -1,0 +1,21 @@
+BENCH model=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf decode=2 runs=1 backend=cpu-pinned prefill=serial ExecuteToken wide_dot_batch=0
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf ...
+arch=qwen35moe blocks=40 embd=2048 heads=16 kv=2 rope_dim=64 experts=256 used=8
+bound ops=603 (bind 48069.4 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+PREFILL_FAIL pos=0 err=GDN: GDN dimensions must be non-zero
+GDN_ADMISSION_DIAG block=0 qkv_tensor=blk.0.attn_qkv.weight gate_tensor=blk.0.attn_gate.weight A=blk.0.ssm_a alpha=blk.0.ssm_alpha.weight beta=blk.0.ssm_beta.weight conv=blk.0.ssm_conv1d.weight dt=blk.0.ssm_dt.bias norm=blk.0.ssm_norm.weight out=blk.0.ssm_out.weight qkv_width=8192 gate_width=4096 key_heads=16 value_heads=32 head_dim=128 channels=0 state_size=0 groups=0 tokens=1 stride=0 spec_inner=4096 spec_state=128 spec_groups=16
+Released all tensors
+Vulkan resources cleaned up successfully

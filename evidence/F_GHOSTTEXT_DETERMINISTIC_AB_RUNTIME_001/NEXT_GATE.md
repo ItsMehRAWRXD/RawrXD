@@ -1,0 +1,1 @@
+Re-run only after confirming zero candidate windows before launch. Use one candidate instance, open a disposable editor through a reliable UI path, execute A → invalidate → B, and capture the actual callback and render order. Keep Qwen routing as a separate test.

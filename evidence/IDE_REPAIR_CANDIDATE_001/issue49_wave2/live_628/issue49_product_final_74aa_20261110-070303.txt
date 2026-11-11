@@ -1,0 +1,205 @@
+2026-11-10T07:03:03.8442861-05:00 STEP 00_CLEAN_CLONE=NOT_RUN_LANE_HARNESS_NOT_CLEAN_MACHINE
+2026-11-10T07:03:04.4633440-05:00 STEP 01_LAUNCH=PENDING
+2026-11-10T07:03:04.4709583-05:00 STEP 02_LOCAL_MODEL_LOAD=MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+2026-11-10T07:03:04.4728014-05:00 STEP 03_GPU_RUNTIME_R9700=NOT_RUN
+2026-11-10T07:03:04.4793980-05:00 STEP 04_OPEN_PROJECT=PENDING
+2026-11-10T07:03:04.4839427-05:00 STEP 05_AGENT_PROMPT=PENDING
+2026-11-10T07:03:04.4931337-05:00 STEP 06_AGENT_READS_PROJECT=PENDING
+2026-11-10T07:03:04.4945583-05:00 STEP 07_AGENT_REASONING_GPU=PENDING
+2026-11-10T07:03:04.4997946-05:00 STEP 08_TOOL_AUTHORITY=PENDING
+2026-11-10T07:03:04.5111587-05:00 STEP 09_RESULT_REINJECTION=PENDING
+2026-11-10T07:03:04.5197356-05:00 STEP 10_REAL_SOURCE_EDIT=PENDING
+2026-11-10T07:03:04.5265441-05:00 STEP 11_BUILD_FAILURE_RECOVERY=PENDING
+2026-11-10T07:03:04.5310587-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=PENDING
+2026-11-10T07:03:04.5330656-05:00 STEP 13_SECOND_EDIT=PENDING
+2026-11-10T07:03:04.5452587-05:00 STEP 14_FINAL_BUILD=PENDING
+2026-11-10T07:03:04.5476860-05:00 STEP 15_FINAL_TESTS=PENDING
+2026-11-10T07:03:04.5597640-05:00 STEP 16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER
+2026-11-10T07:03:04.5667883-05:00 STEP 17_AGENT_EVIDENCE_REPORT=PENDING
+2026-11-10T07:03:04.5718739-05:00 STEP 18_IDE_GIT_COMMIT=NOT_RUN
+2026-11-10T07:03:04.5808391-05:00 STEP H57_AGENTSESSION=PRESENT_IN_EXE
+2026-11-10T07:03:04.5897520-05:00 TIP_SHA256=628BC8F598304CADC62BD7C1DD1526B0E06F344223B5A14F85826A787C934D9C
+2026-11-10T07:03:04.5917555-05:00 LOOP_BESIDE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_issue49_stable_628BC8F5\deep2_agentic_loop.exe EXISTS=1
+2026-11-10T07:03:04.5965497-05:00 MODEL=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf EXISTS=1
+2026-11-10T07:03:04.6316323-05:00 PROJECT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp HASH_BEFORE=7FC4B6171427417E270636FC79A3B46C3706F55B750C43ACCCFD1500B5A6D3F9
+2026-11-10T07:03:04.6326359-05:00 AgentSession_IN_EXE=1 AgenticLoop_IN_EXE=1
+2026-11-10T07:03:07.0156716-05:00 PID=21868 CWD=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_issue49_stable_628BC8F5 USER_DATA_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\live_628\userdata LAUNCH_ATTEMPT=1
+2026-11-10T07:03:08.0566998-05:00 MAIN_VIA_ENUM t=1
+2026-11-10T07:03:08.0612142-05:00 MAIN=0x6D13CE
+2026-11-10T07:03:08.0744306-05:00 STEP 01_LAUNCH=PASS_MAIN_HWND
+2026-11-10T07:03:11.0947668-05:00 STEP 04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE
+2026-11-10T07:03:11.0963159-05:00 VIEW_CMDS=SKIPPED
+2026-11-10T07:03:13.1052639-05:00 STEP 11_BUILD_FAILURE_SUBSTRATE_ONLY=SKIPPED_CRASH_AVOID
+2026-11-10T07:03:13.1108142-05:00 STEP 11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+2026-11-10T07:03:13.1178988-05:00 PROJECT_HASH_REBASELINE=7FC4B6171427417E270636FC79A3B46C3706F55B750C43ACCCFD1500B5A6D3F9 NORM_LEN=241
+2026-11-10T07:03:13.1312434-05:00 CHAT_INPUT setOk=True method=EM_REPLACESEL len=54 setEqGet=1 hwnd=0x521344 alive=True
+2026-11-10T07:03:14.2112648-05:00 CHAT_CTRL_ENTER newAttempts=4 afterLen=0 stageOk=True sendOk=True rt=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\live_628\logs_live\chat_runtime.log
+2026-11-10T07:03:14.2127885-05:00 STEP 05_AGENT_PROMPT=PASS_PROMPT_CTRL_ENTER_SEND
+2026-11-10T07:03:14.2184372-05:00 AGENTIC_LOOP_RUN_4106=SKIPPED_ALREADY_DISPATCHED
+2026-11-10T07:03:14.2267920-05:00 AGENT_WAIT_SEC=300 DEADLINE=2026-11-10T07:08:14.2237327-05:00
+2026-11-10T07:03:14.2434680-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:17.2606627-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:20.2847074-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:23.3022751-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:26.3273775-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:29.3480129-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:32.4192398-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:35.4425802-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:38.4607551-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:41.4791010-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:44.5016026-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:47.5260734-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:50.5475015-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:53.5731339-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:56.5910845-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:03:59.6047765-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:02.6211384-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:05.6445312-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:08.9005311-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:11.9146869-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:14.9399311-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:17.9666295-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:20.9928244-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:24.0055257-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:27.0264283-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:30.0510434-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:33.0718929-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:36.0927498-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:39.1580153-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:43.7949729-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:49.0174347-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:52.0252241-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:55.0406885-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:04:58.0628872-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:05:01.0754816-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=0 edit=0
+2026-11-10T07:05:04.0961797-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:07.1191230-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:10.1407535-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:13.1572658-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:16.1825634-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:19.2152517-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:22.2463554-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:25.2678195-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:28.2840007-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:31.3082540-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:34.3208593-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:37.3410850-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:40.3532215-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:43.3650312-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:46.3771605-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:49.4035355-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:52.4243750-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:55.4383229-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:05:58.4612681-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:01.4851705-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:04.4998128-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:07.5104163-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:10.5316461-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:13.5572382-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:16.5940375-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:19.6044333-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:22.6228155-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:25.6352745-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:28.6509904-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:31.6832940-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:34.7417340-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:37.7660833-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:40.7990681-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:43.8233602-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:46.8528284-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:49.8802562-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:06:58.3357083-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:01.3540745-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:04.3733060-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:07.4096352-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:10.4259887-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:13.4486475-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:16.4621003-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:19.4775722-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:22.5000275-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:25.5244907-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:28.5417706-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:31.5671340-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:34.6011825-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:37.6144979-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:40.6385696-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:43.6557814-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:46.6680942-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:49.6896198-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:52.7041793-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:55.7283080-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:07:58.7433853-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:01.7798192-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:04.7909771-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:07.8152802-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:10.8348964-05:00 POLL loopChild=0 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:13.8510110-05:00 POLL loopChild=1 spawned=1 session=1 dispatch=1 read=1 tool=1 edit=0
+2026-11-10T07:08:16.8679529-05:00 STEP 10_REAL_SOURCE_EDIT=NOT_RUN_NO_AGENT_EDIT
+2026-11-10T07:08:16.8786013-05:00 STEP 06_AGENT_READS_PROJECT=PASS_READ_EVIDENCE
+2026-11-10T07:08:16.8870260-05:00 STEP 07_AGENT_REASONING_GPU=PASS_REASONING_SIGNAL
+2026-11-10T07:08:16.9107483-05:00 STEP 08_TOOL_AUTHORITY=PASS_TOOL_CALL_EVIDENCE
+2026-11-10T07:08:16.9194424-05:00 STEP 09_RESULT_REINJECTION=NOT_RUN
+2026-11-10T07:08:16.9225053-05:00 STEP 11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+2026-11-10T07:08:16.9283197-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=NOT_RUN
+2026-11-10T07:08:16.9358503-05:00 STEP 13_SECOND_EDIT=NOT_RUN
+2026-11-10T07:08:16.9531779-05:00 STEP 14_FINAL_BUILD=NOT_RUN
+2026-11-10T07:08:16.9569406-05:00 STEP 15_FINAL_TESTS=NOT_RUN
+2026-11-10T07:08:16.9652015-05:00 STEP 17_AGENT_EVIDENCE_REPORT=NOT_RUN
+ISSUE49_PRODUCT_FINAL=MEASURED
+ASOF_UTC=2026-11-10T12:08:17Z
+TIP_SHA256=628BC8F598304CADC62BD7C1DD1526B0E06F344223B5A14F85826A787C934D9C
+TIP_EXE=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_issue49_stable_628BC8F5\Issue49Measure-Ext.exe
+ISSUE49_VERDICT=FAIL_CLOSED_PARTIAL_STEPS
+MAJOR_INTEGRATED_ACCEPTANCE=NOT_DEMONSTRATED
+ENGINEERING_MATURITY=82%_UNCHANGED
+AgentSession_IN_EXE=1
+AgenticLoop_IN_EXE=1
+DEEP2_AGENTIC_LOOP_BESIDE=1
+DEEP2_AGENTIC_LOOP_SPAWNED=1
+MODEL_PATH=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+MODEL_EXISTS=1
+PROJECT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp
+PROJECT_SHA_BEFORE=7FC4B6171427417E270636FC79A3B46C3706F55B750C43ACCCFD1500B5A6D3F9
+PROJECT_SHA_AFTER=E63934C5F646605A60BF9836A6AAD9149D324371994A777EDE8F9928134DDF84
+SOURCE_EDITED=0
+TOOL_CALL_EVIDENCE=1
+READ_EVIDENCE=1
+REQUEST_DISPATCH_CORRELATED=1
+CHAT_INPUT_METHOD=EM_REPLACESEL
+IDE_EXIT_BEFORE_EDIT=0
+IDE_EXIT_CODE=
+ALIVE=0
+OUTPUT_SAMPLE=t|>assistant\n' }}  | {%- endif %}  |   | [stage] tokenizer round-trip: PASS (30 ids -> 73 chars)  | [stage] executor bound: ops=395 path=gpu-first  | [snap] Job Object created and self-assigned; children will inherit  | [snap] Preflight clean: no contention detected  | [flight] Executor recorder started: F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\deep2_flight.jsonl  | [flight] Executor flight recorder active: F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures  | [stage] chat markers: template user='User: ' asst='Assistant: ' gen='<|im_start|>assistant\n' bos_in_template=0  | [env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)  | [recovery] RESTORED target=bug.cpp transaction=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\.rawrxd\agent_transactions\txn_61698939100300  | [step 1] PREFILL_BATCH_BEGIN pos=0 count=128/324  | [ESP] seq=1 req=1 agent=0 kind=model_load value=0 message=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf  | [ESP] seq=2 req=1 agent=0 kind=tokenizer_check value=0 message=PASS  | [ESP] seq=3 req | ...(truncated)  | 
+PASS_COUNT=6 BLOCKED_COUNT=0 FAIL_COUNT=0 NOT_RUN_COUNT=13
+REQUIRED_PASS_HITS=5/11
+S_00_CLEAN_CLONE=NOT_RUN_LANE_HARNESS_NOT_CLEAN_MACHINE
+S_01_LAUNCH=PASS_MAIN_HWND
+S_02_LOCAL_MODEL_LOAD=MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+S_03_GPU_RUNTIME_R9700=NOT_RUN
+S_04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE
+S_05_AGENT_PROMPT=PASS_PROMPT_CTRL_ENTER_SEND
+S_06_AGENT_READS_PROJECT=PASS_READ_EVIDENCE
+S_07_AGENT_REASONING_GPU=PASS_REASONING_SIGNAL
+S_08_TOOL_AUTHORITY=PASS_TOOL_CALL_EVIDENCE
+S_09_RESULT_REINJECTION=NOT_RUN
+S_10_REAL_SOURCE_EDIT=NOT_RUN_NO_AGENT_EDIT
+S_11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+S_12_MODEL_DIAGNOSES_FAILURE=NOT_RUN
+S_13_SECOND_EDIT=NOT_RUN
+S_14_FINAL_BUILD=NOT_RUN
+S_15_FINAL_TESTS=NOT_RUN
+S_16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER
+S_17_AGENT_EVIDENCE_REPORT=NOT_RUN
+S_18_IDE_GIT_COMMIT=NOT_RUN
+S_H57_AGENTSESSION=PRESENT_IN_EXE
+S_11_BUILD_FAILURE_SUBSTRATE_ONLY=SKIPPED_CRASH_AVOID
+BLOCKERS=NO_AGENT_SOURCE_EDIT;NO_AGENT_OWNED_BUILD_RECOVERY;GPU_R9700_NOT_RUN;NO_INDEPENDENT_REVIEWER;ISSUE49_AUTONOMOUS_LOOP_INCOMPLETE
+NO_CROSS_SHA_PASS_INHERITANCE=1
+NO_MOCK_AGENT_LOOP=1
+STUB_FALLBACKS=NOT_CLAIMED
+RUNLOG=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\live_628\issue49_product_final_74aa_20261110-070303.txt
+CHAT_RUNTIME=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\live_628\logs_live\chat_runtime.log
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+ACCEPTED=0

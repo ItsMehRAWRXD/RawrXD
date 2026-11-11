@@ -1,0 +1,1962 @@
+[Deep2Backend] Resolved alias 'F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf' -> F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf (1 shard)
+[Deep2Backend] Loading model: F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=131072 fit=126911 (kv_bytes_per_token=32256)
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=NOTFOUND
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=0
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Backend] Model loaded: hidden=3072 vocab=128256 layers=28
+[Deep2Engine] Loading model from: F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf mode=GPU_MULTI devices=2 kv_per_token=32256 max_ctx_est=126911
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\ollamamodels\_r1_iso\03_llama32_3b)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Context length from metadata: 131072 tokens
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[WO_DIAG] GGUF wo.data=000001DBA71770E0 rows=3072 cols=3072 type=11(other) — skipping float interpretation
+[Deep2Engine] Layer topology: 28 attention, 0 SSM, 0 unknown of 28 total
+[Deep2Engine] KV cache sized for 28 attention layers (SSM layers excluded)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001DB4001E690  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=3096576  |  registry_size=1  registeredBytes=3096576  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001DB4001E690  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=3096576  |  registry_size=100  registeredBytes=408870912  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001DB4001E690  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=1032192  |  registry_size=200  registeredBytes=815677440  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001DB4001E690  registered=254 tensors  bytes=1356097536  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF712D1C640 dequant=00007FF712D19590 GetGEMV(12)=00007FF712D1C640 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=126911 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 28 layers x 126911 positions x 8 heads x 128 dim = 27761.78 MB
+[Deep2Engine] Model loaded successfully (255 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BC6C
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BEC
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+
+RawrXD Local Agent
+Model:   F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+Backend: deep2
+Mode:    ask
+Root:    F:\rawrxd
+
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=893
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=28 tokens=256
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=7168
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=28 TOKENS=256
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1548400000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 1 (patch_7f746a9d475139cb)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=45147 all_finite hiddenDim=3072
+[EMBED_DIAG] token=45147 rowBytes=2520 first8= -0.015 0.006 0.003 -0.009 0.007 -0.024 -0.009 0.032
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=31868 all_finite hiddenDim=3072
+[EMBED_DIAG] token=31868 rowBytes=2520 first8= 0.022 -0.022 -0.002 0.012 0.012 0.007 0.007 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=65562 all_finite hiddenDim=3072
+[EMBED_DIAG] token=65562 rowBytes=2520 first8= 0.000 0.023 0.007 -0.007 0.042 -0.051 -0.003 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=60 all_finite hiddenDim=3072
+[EMBED_DIAG] token=60 rowBytes=2520 first8= -0.005 -0.010 0.011 0.015 0.008 0.005 0.016 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1134 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1134 rowBytes=2520 first8= -0.013 -0.010 0.017 0.025 -0.019 0.002 -0.010 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=39031 all_finite hiddenDim=3072
+[EMBED_DIAG] token=39031 rowBytes=2520 first8= -0.008 -0.023 -0.035 0.024 0.003 -0.002 -0.014 -0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=40171 all_finite hiddenDim=3072
+[EMBED_DIAG] token=40171 rowBytes=2520 first8= -0.013 0.015 -0.000 -0.016 0.025 0.003 0.015 -0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2675 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2675 rowBytes=2520 first8= 0.011 0.002 0.026 -0.011 0.018 -0.002 -0.015 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=527 all_finite hiddenDim=3072
+[EMBED_DIAG] token=527 rowBytes=2520 first8= -0.008 0.012 0.023 0.013 -0.015 0.007 -0.003 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=264 rowBytes=2520 first8= -0.002 0.012 -0.019 0.019 -0.031 -0.027 0.000 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11190 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11190 rowBytes=2520 first8= -0.015 -0.004 0.009 0.024 0.007 -0.014 0.015 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18328 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18328 rowBytes=2520 first8= -0.000 -0.024 0.037 0.004 -0.013 -0.007 -0.037 -0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11359 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11359 rowBytes=2520 first8= -0.002 -0.000 0.018 0.020 0.007 0.020 -0.011 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1217 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1217 rowBytes=2520 first8= -0.013 -0.030 0.029 -0.014 -0.006 0.037 -0.017 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=596 all_finite hiddenDim=3072
+[EMBED_DIAG] token=596 rowBytes=2520 first8= -0.010 -0.035 -0.014 -0.012 -0.016 0.015 -0.017 0.040
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11470 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11470 rowBytes=2520 first8= -0.028 -0.009 0.036 -0.017 -0.050 0.002 0.003 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6089 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6089 rowBytes=2520 first8= 0.027 -0.007 0.032 -0.012 0.010 0.004 -0.028 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=323 all_finite hiddenDim=3072
+[EMBED_DIAG] token=323 rowBytes=2520 first8= 0.013 0.006 -0.002 0.009 -0.030 -0.012 -0.019 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3613 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3613 rowBytes=2520 first8= 0.025 0.004 0.008 0.035 0.066 0.012 -0.010 -0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=285 all_finite hiddenDim=3072
+[EMBED_DIAG] token=285 rowBytes=2520 first8= -0.003 -0.016 -0.006 -0.011 -0.012 0.027 -0.010 -0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=989 all_finite hiddenDim=3072
+[EMBED_DIAG] token=989 rowBytes=2520 first8= -0.025 -0.031 0.019 0.016 0.030 -0.035 -0.002 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=627 all_finite hiddenDim=3072
+[EMBED_DIAG] token=627 rowBytes=2520 first8= 0.016 -0.002 0.017 0.002 -0.016 -0.006 -0.017 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47081 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47081 rowBytes=2520 first8= -0.005 0.031 0.012 -0.002 0.021 -0.001 -0.017 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11572 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11572 rowBytes=2520 first8= -0.014 0.024 0.018 -0.011 -0.008 0.008 0.004 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4947 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4947 rowBytes=2520 first8= 0.007 -0.008 0.037 -0.031 -0.031 -0.028 -0.008 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1373 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1373 rowBytes=2520 first8= 0.028 -0.014 0.014 0.004 -0.008 0.007 -0.010 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=369 all_finite hiddenDim=3072
+[EMBED_DIAG] token=369 rowBytes=2520 first8= 0.000 -0.004 0.024 0.016 -0.016 -0.023 0.000 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1217 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1217 rowBytes=2520 first8= -0.013 -0.030 0.029 -0.014 -0.006 0.037 -0.017 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2543 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2543 rowBytes=2520 first8= 0.019 0.012 0.029 0.005 -0.012 -0.008 0.007 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=22466 all_finite hiddenDim=3072
+[EMBED_DIAG] token=22466 rowBytes=2520 first8= -0.009 -0.001 -0.016 0.018 0.015 0.007 -0.004 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12 rowBytes=2520 first8= -0.007 -0.001 0.001 0.022 0.020 0.030 0.006 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4146 rowBytes=2520 first8= 0.005 -0.011 -0.000 0.050 0.011 0.023 -0.023 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18 rowBytes=2520 first8= 0.022 0.005 0.005 0.010 -0.007 0.016 -0.001 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=67 all_finite hiddenDim=3072
+[EMBED_DIAG] token=67 rowBytes=2520 first8= -0.027 -0.007 0.005 0.022 -0.020 0.024 -0.017 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2318 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2318 rowBytes=2520 first8= -0.002 -0.000 0.002 0.008 -0.001 -0.016 -0.007 0.037
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=65 all_finite hiddenDim=3072
+[EMBED_DIAG] token=65 rowBytes=2520 first8= -0.034 -0.014 0.011 -0.003 0.007 -0.024 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1272 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1272 rowBytes=2520 first8= 0.001 -0.030 0.007 -0.007 0.004 0.027 -0.020 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12806 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12806 rowBytes=2520 first8= 0.058 -0.004 -0.002 0.007 0.018 0.004 0.024 -0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=10697 all_finite hiddenDim=3072
+[EMBED_DIAG] token=10697 rowBytes=2520 first8= 0.018 -0.042 0.016 -0.005 0.039 0.012 -0.005 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6086 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6086 rowBytes=2520 first8= 0.002 -0.006 -0.006 -0.003 0.003 -0.003 -0.013 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12652 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12652 rowBytes=2520 first8= -0.020 -0.010 -0.009 -0.024 0.023 0.033 0.020 0.029
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=68 all_finite hiddenDim=3072
+[EMBED_DIAG] token=68 rowBytes=2520 first8= -0.028 -0.000 0.002 -0.011 -0.012 -0.007 0.017 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2075 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2075 rowBytes=2520 first8= 0.007 -0.027 0.003 0.006 0.014 0.029 0.017 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=5313 all_finite hiddenDim=3072
+[EMBED_DIAG] token=5313 rowBytes=2520 first8= -0.011 -0.013 0.002 0.005 0.016 -0.001 0.033 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=10005 all_finite hiddenDim=3072
+[EMBED_DIAG] token=10005 rowBytes=2520 first8= 0.017 -0.019 -0.009 -0.007 0.012 0.019 -0.002 0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=68 all_finite hiddenDim=3072
+[EMBED_DIAG] token=68 rowBytes=2520 first8= -0.028 -0.000 0.002 -0.011 -0.012 -0.007 0.017 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4767 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4767 rowBytes=2520 first8= 0.019 -0.015 0.006 0.006 0.023 -0.005 0.006 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3716 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3716 rowBytes=2520 first8= 0.007 -0.014 -0.002 0.021 0.009 0.019 -0.023 -0.032
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=23 all_finite hiddenDim=3072
+[EMBED_DIAG] token=23 rowBytes=2520 first8= -0.015 0.023 0.012 0.015 -0.003 0.012 -0.009 0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=58923 all_finite hiddenDim=3072
+[EMBED_DIAG] token=58923 rowBytes=2520 first8= 0.027 -0.012 -0.013 -0.016 -0.013 -0.014 0.021 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=66 all_finite hiddenDim=3072
+[EMBED_DIAG] token=66 rowBytes=2520 first8= 0.003 0.014 0.014 0.006 0.009 -0.003 -0.047 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19 rowBytes=2520 first8= 0.018 0.000 0.023 0.025 -0.003 0.020 0.018 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=67 all_finite hiddenDim=3072
+[EMBED_DIAG] token=67 rowBytes=2520 first8= -0.027 -0.007 0.005 0.022 -0.020 0.024 -0.017 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=5500 all_finite hiddenDim=3072
+[EMBED_DIAG] token=5500 rowBytes=2520 first8= -0.009 -0.010 0.010 -0.007 0.015 0.006 -0.016 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=69 all_finite hiddenDim=3072
+[EMBED_DIAG] token=69 rowBytes=2520 first8= -0.006 -0.009 0.005 0.023 -0.022 0.012 -0.014 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=24 all_finite hiddenDim=3072
+[EMBED_DIAG] token=24 rowBytes=2520 first8= -0.013 -0.005 0.013 0.017 0.021 -0.000 0.009 0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=291 all_finite hiddenDim=3072
+[EMBED_DIAG] token=291 rowBytes=2520 first8= 0.019 -0.001 0.033 -0.005 0.005 0.012 0.007 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8480 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8480 rowBytes=2520 first8= 0.040 -0.038 0.006 0.021 0.003 0.035 -0.000 -0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=914 all_finite hiddenDim=3072
+[EMBED_DIAG] token=914 rowBytes=2520 first8= 0.021 -0.033 0.007 0.018 0.002 0.007 0.024 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1682 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1682 rowBytes=2520 first8= 0.020 -0.000 0.035 0.016 -0.007 0.009 0.013 0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=605 all_finite hiddenDim=3072
+[EMBED_DIAG] token=605 rowBytes=2520 first8= 0.017 -0.004 0.027 0.012 0.033 0.017 -0.006 0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=64 all_finite hiddenDim=3072
+[EMBED_DIAG] token=64 rowBytes=2520 first8= -0.027 0.022 -0.015 0.018 -0.001 -0.004 0.013 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1987 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1987 rowBytes=2520 first8= 0.014 -0.020 0.011 -0.007 -0.015 0.020 -0.021 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=68 all_finite hiddenDim=3072
+[EMBED_DIAG] token=68 rowBytes=2520 first8= -0.028 -0.000 0.002 -0.011 -0.012 -0.007 0.017 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=291 all_finite hiddenDim=3072
+[EMBED_DIAG] token=291 rowBytes=2520 first8= 0.019 -0.001 0.033 -0.005 0.005 0.012 0.007 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3264 rowBytes=2520 first8= -0.007 0.010 -0.003 0.007 0.003 0.018 0.007 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=451 all_finite hiddenDim=3072
+[EMBED_DIAG] token=451 rowBytes=2520 first8= -0.005 -0.012 -0.014 0.029 0.015 0.003 0.029 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=198 all_finite hiddenDim=3072
+[EMBED_DIAG] token=198 rowBytes=2520 first8= 0.001 0.002 0.023 -0.005 0.012 0.003 -0.014 -0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=95907 all_finite hiddenDim=3072
+[EMBED_DIAG] token=95907 rowBytes=2520 first8= -0.012 -0.008 -0.003 -0.010 0.006 0.003 -0.016 -0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4789 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4789 rowBytes=2520 first8= -0.003 -0.025 0.009 0.011 0.005 0.003 -0.021 -0.032
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=871 all_finite hiddenDim=3072
+[EMBED_DIAG] token=871 rowBytes=2520 first8= 0.009 0.028 0.021 0.031 0.022 0.020 0.017 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=70227 all_finite hiddenDim=3072
+[EMBED_DIAG] token=70227 rowBytes=2520 first8= -0.011 0.014 0.003 0.001 0.026 0.003 -0.002 -0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=256 all_finite hiddenDim=3072
+[EMBED_DIAG] token=256 rowBytes=2520 first8= 0.016 -0.004 0.010 -0.004 -0.013 -0.014 -0.005 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12465 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12465 rowBytes=2520 first8= -0.009 -0.002 0.013 -0.044 -0.000 0.037 0.057 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=535 all_finite hiddenDim=3072
+[EMBED_DIAG] token=535 rowBytes=2520 first8= 0.018 0.036 0.031 0.027 0.039 -0.003 -0.019 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9207 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9207 rowBytes=2520 first8= -0.003 -0.045 0.007 -0.004 -0.021 -0.018 0.008 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2688 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2688 rowBytes=2520 first8= 0.025 -0.016 -0.004 -0.001 0.010 -0.009 -0.008 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9207 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9207 rowBytes=2520 first8= -0.003 -0.045 0.007 -0.004 -0.021 -0.018 0.008 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1387 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1387 rowBytes=2520 first8= -0.061 -0.008 0.008 0.023 -0.020 0.029 0.023 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=46947 all_finite hiddenDim=3072
+[EMBED_DIAG] token=46947 rowBytes=2520 first8= 0.003 -0.015 0.011 0.039 0.024 0.003 0.001 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=824 all_finite hiddenDim=3072
+[EMBED_DIAG] token=824 rowBytes=2520 first8= 0.015 -0.020 -0.006 0.003 -0.023 -0.004 0.015 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=65051 all_finite hiddenDim=3072
+[EMBED_DIAG] token=65051 rowBytes=2520 first8= -0.012 -0.012 0.030 -0.019 0.016 0.012 0.009 -0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4557 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4557 rowBytes=2520 first8= -0.015 0.008 -0.018 0.014 0.004 0.014 -0.008 0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18618 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18618 rowBytes=2520 first8= 0.014 0.013 0.033 -0.014 0.013 -0.005 -0.008 -0.049
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=489 all_finite hiddenDim=3072
+[EMBED_DIAG] token=489 rowBytes=2520 first8= -0.005 -0.024 0.034 0.051 -0.008 0.005 0.028 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3136 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3136 rowBytes=2520 first8= 0.023 0.027 0.044 0.024 0.026 -0.020 0.017 -0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12 rowBytes=2520 first8= -0.007 -0.001 0.001 0.022 0.020 0.030 0.006 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28389 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28389 rowBytes=2520 first8= 0.008 0.007 0.038 -0.014 0.001 0.016 -0.010 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28979 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28979 rowBytes=2520 first8= -0.024 -0.006 0.013 -0.030 -0.034 0.040 0.034 0.033
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=256 all_finite hiddenDim=3072
+[EMBED_DIAG] token=256 rowBytes=2520 first8= 0.016 -0.004 0.010 -0.004 -0.013 -0.014 -0.005 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1030 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1030 rowBytes=2520 first8= 0.033 -0.034 -0.007 -0.010 0.044 0.007 0.007 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17900 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17900 rowBytes=2520 first8= 0.030 -0.009 -0.005 0.009 0.028 0.008 0.004 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=320 all_finite hiddenDim=3072
+[EMBED_DIAG] token=320 rowBytes=2520 first8= -0.024 -0.001 0.004 0.010 -0.013 0.002 -0.015 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=14885 all_finite hiddenDim=3072
+[EMBED_DIAG] token=14885 rowBytes=2520 first8= 0.008 -0.003 -0.003 0.010 0.013 0.023 0.083 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=30777 all_finite hiddenDim=3072
+[EMBED_DIAG] token=30777 rowBytes=2520 first8= -0.004 -0.024 0.017 -0.031 0.041 0.008 -0.014 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18682 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18682 rowBytes=2520 first8= 0.026 0.022 -0.016 -0.001 0.014 -0.042 0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=14 all_finite hiddenDim=3072
+[EMBED_DIAG] token=14 rowBytes=2520 first8= -0.013 0.002 0.018 0.023 0.024 0.001 0.008 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17400 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17400 rowBytes=2520 first8= 0.031 0.012 0.017 -0.032 0.012 0.030 0.001 -0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=843 all_finite hiddenDim=3072
+[EMBED_DIAG] token=843 rowBytes=2520 first8= 0.001 -0.028 0.028 0.025 0.018 0.028 -0.008 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=14 all_finite hiddenDim=3072
+[EMBED_DIAG] token=14 rowBytes=2520 first8= -0.013 0.002 0.018 0.023 0.024 0.001 0.008 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12626 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12626 rowBytes=2520 first8= -0.015 -0.015 0.020 -0.039 0.029 -0.013 0.005 0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1752 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1752 rowBytes=2520 first8= -0.014 -0.009 0.039 0.003 -0.007 -0.007 -0.002 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=611 all_finite hiddenDim=3072
+[EMBED_DIAG] token=611 rowBytes=2520 first8= -0.033 0.007 0.030 0.007 0.027 -0.008 0.000 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2113 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2113 rowBytes=2520 first8= 0.017 -0.031 0.001 0.003 0.036 -0.030 0.019 -0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=76127 all_finite hiddenDim=3072
+[EMBED_DIAG] token=76127 rowBytes=2520 first8= -0.019 -0.020 0.016 0.015 -0.012 -0.013 0.014 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=570 all_finite hiddenDim=3072
+[EMBED_DIAG] token=570 rowBytes=2520 first8= -0.021 -0.035 0.003 -0.021 -0.018 -0.004 -0.008 0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2876 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2876 rowBytes=2520 first8= 0.012 -0.006 -0.011 0.007 -0.001 -0.008 -0.017 0.024
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3560 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3560 rowBytes=2520 first8= 0.016 -0.034 0.000 -0.006 -0.065 -0.024 -0.006 0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1387 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1387 rowBytes=2520 first8= -0.061 -0.008 0.008 0.023 -0.020 0.029 0.023 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=33222 all_finite hiddenDim=3072
+[EMBED_DIAG] token=33222 rowBytes=2520 first8= -0.006 0.001 -0.021 0.008 0.007 -0.011 0.016 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29597 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29597 rowBytes=2520 first8= 0.003 0.042 0.018 0.001 0.025 -0.010 -0.010 0.033
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=837 all_finite hiddenDim=3072
+[EMBED_DIAG] token=837 rowBytes=2520 first8= 0.015 0.044 -0.012 0.008 0.025 0.002 0.053 -0.037
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4521 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4521 rowBytes=2520 first8= -0.020 0.001 0.022 0.012 -0.020 -0.033 -0.025 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2 rowBytes=2520 first8= 0.020 0.020 0.029 -0.006 0.009 -0.005 0.003 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=72689 all_finite hiddenDim=3072
+[EMBED_DIAG] token=72689 rowBytes=2520 first8= -0.018 -0.002 0.011 -0.034 -0.029 0.041 0.048 0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9207 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9207 rowBytes=2520 first8= -0.003 -0.045 0.007 -0.004 -0.021 -0.018 0.008 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2688 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2688 rowBytes=2520 first8= 0.025 -0.016 -0.004 -0.001 0.010 -0.009 -0.008 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9207 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9207 rowBytes=2520 first8= -0.003 -0.045 0.007 -0.004 -0.021 -0.018 0.008 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1387 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1387 rowBytes=2520 first8= -0.061 -0.008 0.008 0.023 -0.020 0.029 0.023 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2028 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2028 rowBytes=2520 first8= 0.004 -0.018 0.003 -0.025 0.007 -0.009 -0.026 0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1052 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1052 rowBytes=2520 first8= -0.020 -0.033 0.010 0.034 -0.013 0.025 -0.014 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=374 all_finite hiddenDim=3072
+[EMBED_DIAG] token=374 rowBytes=2520 first8= 0.008 -0.007 0.009 -0.010 -0.005 0.010 -0.010 0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3146 rowBytes=2520 first8= -0.010 -0.014 0.006 0.023 -0.030 0.015 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2097 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2097 rowBytes=2520 first8= 0.029 -0.030 0.022 0.010 -0.017 0.002 0.007 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=315 all_finite hiddenDim=3072
+[EMBED_DIAG] token=315 rowBytes=2520 first8= 0.004 -0.012 0.001 -0.008 -0.017 0.015 -0.011 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6187 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6187 rowBytes=2520 first8= 0.019 -0.022 0.005 0.005 0.006 -0.011 0.051 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=320 all_finite hiddenDim=3072
+[EMBED_DIAG] token=320 rowBytes=2520 first8= -0.024 -0.001 0.004 0.010 -0.013 0.002 -0.015 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44 rowBytes=2520 first8= -0.003 -0.025 -0.001 0.009 -0.008 0.027 0.002 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1831 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1831 rowBytes=2520 first8= 0.003 -0.003 -0.016 -0.006 -0.002 -0.020 0.019 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=33395 all_finite hiddenDim=3072
+[EMBED_DIAG] token=33395 rowBytes=2520 first8= -0.019 0.001 -0.003 0.008 0.005 -0.015 -0.014 -0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=369 all_finite hiddenDim=3072
+[EMBED_DIAG] token=369 rowBytes=2520 first8= 0.000 -0.004 0.024 0.016 -0.016 -0.023 0.000 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29167 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29167 rowBytes=2520 first8= 0.011 -0.006 -0.000 0.014 0.011 0.009 0.089 -0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=323 all_finite hiddenDim=3072
+[EMBED_DIAG] token=323 rowBytes=2520 first8= 0.013 0.006 -0.002 0.009 -0.030 -0.012 -0.019 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=23886 all_finite hiddenDim=3072
+[EMBED_DIAG] token=23886 rowBytes=2520 first8= 0.000 0.001 0.015 -0.001 0.013 0.014 -0.001 -0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=81 all_finite hiddenDim=3072
+[EMBED_DIAG] token=81 rowBytes=2520 first8= -0.062 0.008 0.041 0.041 0.017 -0.008 0.004 -0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=68777 all_finite hiddenDim=3072
+[EMBED_DIAG] token=68777 rowBytes=2520 first8= 0.011 -0.047 -0.004 -0.005 0.027 0.007 0.041 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8479 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8479 rowBytes=2520 first8= -0.041 -0.016 0.017 -0.027 -0.015 -0.011 -0.009 0.035
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11572 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11572 rowBytes=2520 first8= -0.014 0.024 0.018 -0.011 -0.008 0.008 0.004 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18304 rowBytes=2520 first8= -0.032 -0.014 0.005 -0.013 0.007 -0.011 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=791 all_finite hiddenDim=3072
+[EMBED_DIAG] token=791 rowBytes=2520 first8= 0.005 -0.034 -0.009 -0.005 -0.006 0.001 0.010 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2748 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2748 rowBytes=2520 first8= 0.011 -0.000 0.021 -0.024 0.005 0.026 -0.008 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8479 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8479 rowBytes=2520 first8= -0.041 -0.016 0.017 -0.027 -0.015 -0.011 -0.009 0.035
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=374 all_finite hiddenDim=3072
+[EMBED_DIAG] token=374 rowBytes=2520 first8= 0.008 -0.007 0.009 -0.010 -0.005 0.010 -0.010 0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=264 rowBytes=2520 first8= -0.002 0.012 -0.019 0.019 -0.031 -0.027 0.000 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3146 rowBytes=2520 first8= -0.010 -0.014 0.006 0.023 -0.030 0.015 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6519 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6519 rowBytes=2520 first8= -0.015 -0.011 0.043 -0.033 -0.014 0.033 0.043 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=535 all_finite hiddenDim=3072
+[EMBED_DIAG] token=535 rowBytes=2520 first8= 0.018 0.036 0.031 0.027 0.039 -0.003 -0.019 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=31384 all_finite hiddenDim=3072
+[EMBED_DIAG] token=31384 rowBytes=2520 first8= 0.007 -0.010 0.005 0.006 0.029 0.006 0.005 -0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=334 all_finite hiddenDim=3072
+[EMBED_DIAG] token=334 rowBytes=2520 first8= -0.004 -0.020 0.011 0.011 -0.026 0.011 -0.015 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1102 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1102 rowBytes=2520 first8= -0.018 0.004 -0.018 -0.001 0.011 -0.032 0.019 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1587 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1587 rowBytes=2520 first8= 0.001 0.009 -0.010 -0.009 -0.001 -0.006 0.009 0.024
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=539 rowBytes=2520 first8= 0.020 -0.001 -0.000 0.013 -0.021 0.012 -0.011 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2804 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2804 rowBytes=2520 first8= 0.004 0.025 0.029 -0.010 0.004 -0.046 0.000 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=990 all_finite hiddenDim=3072
+[EMBED_DIAG] token=990 rowBytes=2520 first8= 0.019 0.019 0.040 -0.002 -0.014 0.010 -0.005 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=91757 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91757 rowBytes=2520 first8= -0.007 0.012 -0.011 0.021 0.024 -0.012 0.021 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=311 all_finite hiddenDim=3072
+[EMBED_DIAG] token=311 rowBytes=2520 first8= -0.004 0.014 0.002 0.018 -0.024 0.006 -0.006 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=264 rowBytes=2520 first8= -0.002 0.012 -0.019 0.019 -0.031 -0.027 0.000 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12128 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12128 rowBytes=2520 first8= 0.034 -0.038 0.017 -0.012 0.004 0.017 -0.016 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1115 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1115 rowBytes=2520 first8= -0.020 -0.015 -0.011 -0.009 0.009 -0.017 -0.019 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=374 all_finite hiddenDim=3072
+[EMBED_DIAG] token=374 rowBytes=2520 first8= 0.008 -0.007 0.009 -0.010 -0.005 0.010 -0.010 0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11572 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11572 rowBytes=2520 first8= -0.014 0.024 0.018 -0.011 -0.008 0.008 0.004 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4947 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4947 rowBytes=2520 first8= 0.007 -0.008 0.037 -0.031 -0.031 -0.028 -0.008 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=539 rowBytes=2520 first8= 0.020 -0.001 -0.000 0.013 -0.021 0.012 -0.011 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3752 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3752 rowBytes=2520 first8= -0.011 -0.005 0.010 0.025 0.031 0.021 -0.002 -0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3560 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3560 rowBytes=2520 first8= 0.016 -0.034 0.000 -0.006 -0.065 -0.024 -0.006 0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1387 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1387 rowBytes=2520 first8= -0.061 -0.008 0.008 0.023 -0.020 0.029 0.023 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18304 rowBytes=2520 first8= -0.032 -0.014 0.005 -0.013 0.007 -0.011 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=567 all_finite hiddenDim=3072
+[EMBED_DIAG] token=567 rowBytes=2520 first8= 0.010 -0.019 -0.014 -0.023 0.035 0.007 0.016 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3700 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3700 rowBytes=2520 first8= -0.005 -0.031 -0.022 -0.000 -0.016 0.019 0.038 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=65051 all_finite hiddenDim=3072
+[EMBED_DIAG] token=65051 rowBytes=2520 first8= -0.012 -0.012 0.030 -0.019 0.016 0.012 0.009 -0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=46947 all_finite hiddenDim=3072
+[EMBED_DIAG] token=46947 rowBytes=2520 first8= 0.003 -0.015 0.011 0.039 0.024 0.003 0.001 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18618 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18618 rowBytes=2520 first8= 0.014 0.013 0.033 -0.014 0.013 -0.005 -0.008 -0.049
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9062 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9062 rowBytes=2520 first8= -0.037 0.029 -0.024 -0.001 0.025 0.023 0.017 -0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=502 all_finite hiddenDim=3072
+[EMBED_DIAG] token=502 rowBytes=2520 first8= 0.001 0.007 0.007 -0.017 -0.029 -0.025 -0.013 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1217 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1217 rowBytes=2520 first8= -0.013 -0.030 0.029 -0.014 -0.006 0.037 -0.017 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1984 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1984 rowBytes=2520 first8= -0.005 -0.042 0.035 -0.002 -0.009 0.014 -0.000 0.029
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44 rowBytes=2520 first8= -0.003 -0.025 -0.001 0.009 -0.008 0.027 0.002 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1831 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1831 rowBytes=2520 first8= 0.003 -0.003 -0.016 -0.006 -0.002 -0.020 0.019 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=51790 all_finite hiddenDim=3072
+[EMBED_DIAG] token=51790 rowBytes=2520 first8= 0.019 -0.005 -0.005 -0.014 0.010 -0.025 0.004 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15 rowBytes=2520 first8= 0.013 -0.000 0.010 0.021 0.017 0.017 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17 rowBytes=2520 first8= -0.002 0.013 0.012 0.008 -0.010 0.010 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=30070 all_finite hiddenDim=3072
+[EMBED_DIAG] token=30070 rowBytes=2520 first8= 0.006 0.016 0.010 -0.016 0.013 0.023 0.011 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=10956 all_finite hiddenDim=3072
+[EMBED_DIAG] token=10956 rowBytes=2520 first8= -0.023 -0.013 0.025 -0.017 0.028 -0.047 -0.009 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1193 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1193 rowBytes=2520 first8= 0.022 -0.014 -0.001 0.007 0.004 0.016 -0.019 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4518 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4518 rowBytes=2520 first8= -0.003 0.008 0.010 0.006 0.003 0.005 0.006 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=611 all_finite hiddenDim=3072
+[EMBED_DIAG] token=611 rowBytes=2520 first8= -0.033 0.007 0.030 0.007 0.027 -0.008 0.000 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=888 all_finite hiddenDim=3072
+[EMBED_DIAG] token=888 rowBytes=2520 first8= 0.012 -0.009 0.038 0.000 0.008 0.025 -0.003 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2517 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2517 rowBytes=2520 first8= -0.016 -0.024 -0.005 0.033 0.007 0.013 0.005 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=611 all_finite hiddenDim=3072
+[EMBED_DIAG] token=611 rowBytes=2520 first8= -0.033 0.007 0.030 0.007 0.027 -0.008 0.000 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=888 all_finite hiddenDim=3072
+[EMBED_DIAG] token=888 rowBytes=2520 first8= 0.012 -0.009 0.038 0.000 0.008 0.025 -0.003 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=79684 all_finite hiddenDim=3072
+[EMBED_DIAG] token=79684 rowBytes=2520 first8= -0.016 -0.002 -0.004 0.006 0.029 0.004 0.006 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=67 all_finite hiddenDim=3072
+[EMBED_DIAG] token=67 rowBytes=2520 first8= -0.027 -0.007 0.005 0.022 -0.020 0.024 -0.017 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=315 all_finite hiddenDim=3072
+[EMBED_DIAG] token=315 rowBytes=2520 first8= 0.004 -0.012 0.001 -0.008 -0.017 0.015 -0.011 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1052 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1052 rowBytes=2520 first8= -0.020 -0.033 0.010 0.034 -0.013 0.025 -0.014 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29754 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29754 rowBytes=2520 first8= -0.003 0.021 -0.002 -0.007 0.001 0.025 -0.008 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=22030 all_finite hiddenDim=3072
+[EMBED_DIAG] token=22030 rowBytes=2520 first8= -0.021 0.020 0.014 -0.007 0.039 -0.014 0.031 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=611 all_finite hiddenDim=3072
+[EMBED_DIAG] token=611 rowBytes=2520 first8= -0.033 0.007 0.030 0.007 0.027 -0.008 0.000 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=749 all_finite hiddenDim=3072
+[EMBED_DIAG] token=749 rowBytes=2520 first8= 0.007 -0.014 0.024 -0.002 -0.040 0.001 -0.017 0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7783 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7783 rowBytes=2520 first8= -0.000 -0.001 0.008 0.019 -0.025 0.004 -0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=33981 all_finite hiddenDim=3072
+[EMBED_DIAG] token=33981 rowBytes=2520 first8= 0.005 -0.001 -0.011 -0.007 0.042 0.021 0.007 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=374 all_finite hiddenDim=3072
+[EMBED_DIAG] token=374 rowBytes=2520 first8= 0.008 -0.007 0.009 -0.010 -0.005 0.010 -0.010 0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=5535 all_finite hiddenDim=3072
+[EMBED_DIAG] token=5535 rowBytes=2520 first8= -0.040 -0.013 -0.005 -0.008 0.010 0.018 0.008 -0.049
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18 rowBytes=2520 first8= 0.022 0.005 0.005 0.010 -0.007 0.016 -0.001 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4740 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4740 rowBytes=2520 first8= -0.002 -0.000 -0.018 -0.028 -0.007 0.006 -0.005 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=264 rowBytes=2520 first8= -0.002 0.012 -0.019 0.019 -0.031 -0.027 0.000 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6992 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6992 rowBytes=2520 first8= 0.013 0.012 0.010 0.013 -0.030 -0.015 0.003 -0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1373 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1373 rowBytes=2520 first8= 0.028 -0.014 0.014 0.004 -0.008 0.007 -0.010 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2543 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2543 rowBytes=2520 first8= 0.019 0.012 0.029 0.005 -0.012 -0.008 0.007 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44 rowBytes=2520 first8= -0.003 -0.025 -0.001 0.009 -0.008 0.027 0.002 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1831 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1831 rowBytes=2520 first8= 0.003 -0.003 -0.016 -0.006 -0.002 -0.020 0.019 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=51790 all_finite hiddenDim=3072
+[EMBED_DIAG] token=51790 rowBytes=2520 first8= 0.019 -0.005 -0.005 -0.014 0.010 -0.025 0.004 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2001 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2001 rowBytes=2520 first8= -0.056 -0.020 0.014 -0.005 -0.009 -0.009 -0.004 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7526 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7526 rowBytes=2520 first8= -0.059 -0.025 0.051 0.015 0.015 0.013 0.057 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15405 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15405 rowBytes=2520 first8= -0.022 0.007 0.005 -0.009 -0.002 -0.010 -0.000 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=369 all_finite hiddenDim=3072
+[EMBED_DIAG] token=369 rowBytes=2520 first8= 0.000 -0.004 0.024 0.016 -0.016 -0.023 0.000 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2543 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2543 rowBytes=2520 first8= 0.019 0.012 0.029 0.005 -0.012 -0.008 0.007 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1193 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1193 rowBytes=2520 first8= 0.022 -0.014 -0.001 0.007 0.004 0.016 -0.019 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19 rowBytes=2520 first8= 0.018 0.000 0.023 0.025 -0.003 0.020 0.018 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=26823 all_finite hiddenDim=3072
+[EMBED_DIAG] token=26823 rowBytes=2520 first8= -0.019 -0.023 -0.005 0.007 0.019 -0.017 0.002 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18618 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18618 rowBytes=2520 first8= 0.014 0.013 0.033 -0.014 0.013 -0.005 -0.008 -0.049
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29167 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29167 rowBytes=2520 first8= 0.011 -0.006 -0.000 0.014 0.011 0.009 0.089 -0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8479 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8479 rowBytes=2520 first8= -0.041 -0.016 0.017 -0.027 -0.015 -0.011 -0.009 0.035
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7526 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7526 rowBytes=2520 first8= -0.059 -0.025 0.051 0.015 0.015 0.013 0.057 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=93619 all_finite hiddenDim=3072
+[EMBED_DIAG] token=93619 rowBytes=2520 first8= 0.028 -0.046 -0.004 -0.044 -0.029 -0.009 0.006 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=83545 all_finite hiddenDim=3072
+[EMBED_DIAG] token=83545 rowBytes=2520 first8= 0.005 -0.009 0.015 -0.015 0.021 0.017 -0.015 -0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13307 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13307 rowBytes=2520 first8= -0.059 -0.011 0.006 -0.017 -0.006 -0.013 -0.004 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18682 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18682 rowBytes=2520 first8= 0.026 0.022 -0.016 -0.001 0.014 -0.042 0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29075 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29075 rowBytes=2520 first8= -0.001 -0.000 0.006 -0.010 0.016 0.009 -0.001 0.029
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12468 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12468 rowBytes=2520 first8= 0.027 0.009 -0.003 -0.024 -0.018 0.036 -0.008 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=843 all_finite hiddenDim=3072
+[EMBED_DIAG] token=843 rowBytes=2520 first8= 0.001 -0.028 0.028 0.025 0.018 0.028 -0.008 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12420 rowBytes=2520 first8= 0.003 -0.000 0.002 0.002 0.052 -0.014 -0.002 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11452 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11452 rowBytes=2520 first8= -0.032 -0.011 0.014 -0.049 0.039 -0.012 -0.014 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1752 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1752 rowBytes=2520 first8= -0.014 -0.009 0.039 0.003 -0.007 -0.007 -0.002 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12420 rowBytes=2520 first8= 0.003 -0.000 0.002 0.002 0.052 -0.014 -0.002 0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=10729 all_finite hiddenDim=3072
+[EMBED_DIAG] token=10729 rowBytes=2520 first8= 0.040 -0.002 -0.002 -0.006 0.008 0.004 -0.000 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=76127 all_finite hiddenDim=3072
+[EMBED_DIAG] token=76127 rowBytes=2520 first8= -0.019 -0.020 0.016 0.015 -0.012 -0.013 0.014 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18304 rowBytes=2520 first8= -0.032 -0.014 0.005 -0.013 0.007 -0.011 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=567 all_finite hiddenDim=3072
+[EMBED_DIAG] token=567 rowBytes=2520 first8= 0.010 -0.019 -0.014 -0.023 0.035 0.007 0.016 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15353 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15353 rowBytes=2520 first8= -0.004 0.046 0.024 0.034 0.033 0.003 -0.001 -0.039
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12 rowBytes=2520 first8= -0.007 -0.001 0.001 0.022 0.020 0.030 0.006 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28389 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28389 rowBytes=2520 first8= 0.008 0.007 0.038 -0.014 0.001 0.016 -0.010 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=31854 all_finite hiddenDim=3072
+[EMBED_DIAG] token=31854 rowBytes=2520 first8= -0.016 -0.025 0.008 -0.032 -0.006 0.021 -0.001 0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=59054 all_finite hiddenDim=3072
+[EMBED_DIAG] token=59054 rowBytes=2520 first8= 0.036 -0.031 0.037 0.005 -0.014 -0.005 0.039 0.024
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2875 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2875 rowBytes=2520 first8= -0.021 -0.008 -0.014 -0.016 0.013 -0.002 -0.022 0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=5618 all_finite hiddenDim=3072
+[EMBED_DIAG] token=5618 rowBytes=2520 first8= -0.039 0.003 0.021 -0.052 0.002 -0.013 0.038 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3136 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3136 rowBytes=2520 first8= 0.023 0.027 0.044 0.024 0.026 -0.020 0.017 -0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=23391 all_finite hiddenDim=3072
+[EMBED_DIAG] token=23391 rowBytes=2520 first8= -0.006 0.001 0.005 -0.005 -0.004 0.002 0.020 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=59054 all_finite hiddenDim=3072
+[EMBED_DIAG] token=59054 rowBytes=2520 first8= 0.036 -0.031 0.037 0.005 -0.014 -0.005 0.039 0.024
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1973 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1973 rowBytes=2520 first8= -0.022 0.010 0.004 0.034 -0.002 0.026 0.009 -0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=5618 all_finite hiddenDim=3072
+[EMBED_DIAG] token=5618 rowBytes=2520 first8= -0.039 0.003 0.021 -0.052 0.002 -0.013 0.038 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3136 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3136 rowBytes=2520 first8= 0.023 0.027 0.044 0.024 0.026 -0.020 0.017 -0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=23391 all_finite hiddenDim=3072
+[EMBED_DIAG] token=23391 rowBytes=2520 first8= -0.006 0.001 0.005 -0.005 -0.004 0.002 0.020 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=430 all_finite hiddenDim=3072
+[EMBED_DIAG] token=430 rowBytes=2520 first8= 0.007 0.009 0.002 -0.014 -0.015 -0.024 -0.018 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4365 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4365 rowBytes=2520 first8= 0.010 0.040 0.019 -0.014 -0.015 -0.020 0.025 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=261 all_finite hiddenDim=3072
+[EMBED_DIAG] token=261 rowBytes=2520 first8= 0.005 -0.032 0.031 -0.013 -0.014 0.011 -0.040 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=374 all_finite hiddenDim=3072
+[EMBED_DIAG] token=374 rowBytes=2520 first8= 0.008 -0.007 0.009 -0.010 -0.005 0.010 -0.010 0.031
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4686 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4686 rowBytes=2520 first8= 0.022 -0.004 -0.004 -0.000 -0.030 0.013 -0.002 -0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=323 all_finite hiddenDim=3072
+[EMBED_DIAG] token=323 rowBytes=2520 first8= 0.013 0.006 -0.002 0.009 -0.030 -0.012 -0.019 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=649 all_finite hiddenDim=3072
+[EMBED_DIAG] token=649 rowBytes=2520 first8= -0.012 -0.021 0.025 -0.014 0.006 -0.001 -0.014 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1629 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1629 rowBytes=2520 first8= 0.031 -0.028 0.006 0.006 -0.013 -0.012 0.019 0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=945 all_finite hiddenDim=3072
+[EMBED_DIAG] token=945 rowBytes=2520 first8= 0.028 -0.001 0.031 -0.015 0.000 -0.025 0.008 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4351 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4351 rowBytes=2520 first8= 0.006 -0.062 0.015 -0.056 0.046 0.029 0.000 0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4599 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4599 rowBytes=2520 first8= 0.029 0.004 -0.000 -0.013 0.009 0.005 -0.028 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3060 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3060 rowBytes=2520 first8= -0.019 -0.020 -0.014 -0.046 -0.012 0.007 -0.014 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9248 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9248 rowBytes=2520 first8= 0.006 0.018 0.007 -0.022 0.034 -0.001 -0.034 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=33080 all_finite hiddenDim=3072
+[EMBED_DIAG] token=33080 rowBytes=2520 first8= -0.018 -0.007 0.008 0.008 0.003 -0.020 0.003 -0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4557 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4557 rowBytes=2520 first8= -0.015 0.008 -0.018 0.014 0.004 0.014 -0.008 0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=46947 all_finite hiddenDim=3072
+[EMBED_DIAG] token=46947 rowBytes=2520 first8= 0.003 -0.015 0.011 0.039 0.024 0.003 0.001 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=422 all_finite hiddenDim=3072
+[EMBED_DIAG] token=422 rowBytes=2520 first8= 0.036 0.006 0.028 0.013 -0.017 -0.008 0.019 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=539 rowBytes=2520 first8= 0.020 -0.001 -0.000 0.013 -0.021 0.012 -0.011 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2736 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2736 rowBytes=2520 first8= 0.002 0.043 0.000 -0.022 -0.032 -0.008 -0.004 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1373 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1373 rowBytes=2520 first8= 0.028 -0.014 0.014 0.004 -0.008 0.007 -0.010 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=420 all_finite hiddenDim=3072
+[EMBED_DIAG] token=420 rowBytes=2520 first8= 0.010 0.000 0.006 0.002 -0.012 -0.002 -0.010 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2543 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2543 rowBytes=2520 first8= 0.019 0.012 0.029 0.005 -0.012 -0.008 0.007 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17 rowBytes=2520 first8= -0.002 0.013 0.012 0.008 -0.010 0.010 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11359 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11359 rowBytes=2520 first8= -0.002 -0.000 0.018 0.020 0.007 0.020 -0.011 -0.000
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=81163 all_finite hiddenDim=3072
+[EMBED_DIAG] token=81163 rowBytes=2520 first8= 0.029 0.017 0.005 -0.007 -0.013 -0.013 0.024 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9219 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9219 rowBytes=2520 first8= 0.012 -0.006 0.032 -0.011 0.034 -0.048 0.020 -0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4351 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4351 rowBytes=2520 first8= 0.006 -0.062 0.015 -0.056 0.046 0.029 0.000 0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=24433 all_finite hiddenDim=3072
+[EMBED_DIAG] token=24433 rowBytes=2520 first8= -0.004 0.045 0.021 0.008 0.015 -0.024 -0.002 -0.058
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=65539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=65539 rowBytes=2520 first8= 0.019 0.012 0.007 -0.020 -0.017 0.001 0.000 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=749 all_finite hiddenDim=3072
+[EMBED_DIAG] token=749 rowBytes=2520 first8= 0.007 -0.014 0.024 -0.002 -0.040 0.001 -0.017 0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7783 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7783 rowBytes=2520 first8= -0.000 -0.001 0.008 0.019 -0.025 0.004 -0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=489 all_finite hiddenDim=3072
+[EMBED_DIAG] token=489 rowBytes=2520 first8= -0.005 -0.024 0.034 0.051 -0.008 0.005 0.028 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=41504 all_finite hiddenDim=3072
+[EMBED_DIAG] token=41504 rowBytes=2520 first8= -0.036 0.013 -0.004 0.007 -0.011 0.009 0.028 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=275 all_finite hiddenDim=3072
+[EMBED_DIAG] token=275 rowBytes=2520 first8= -0.010 -0.008 0.015 0.010 -0.028 -0.003 -0.003 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1091 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1091 rowBytes=2520 first8= -0.010 -0.033 0.020 -0.010 -0.006 -0.028 -0.036 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3720 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3720 rowBytes=2520 first8= 0.007 -0.023 -0.005 0.002 0.000 -0.006 -0.040 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=749 all_finite hiddenDim=3072
+[EMBED_DIAG] token=749 rowBytes=2520 first8= 0.007 -0.014 0.024 -0.002 -0.040 0.001 -0.017 0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7783 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7783 rowBytes=2520 first8= -0.000 -0.001 0.008 0.019 -0.025 0.004 -0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18 rowBytes=2520 first8= 0.022 0.005 0.005 0.010 -0.007 0.016 -0.001 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=24083 all_finite hiddenDim=3072
+[EMBED_DIAG] token=24083 rowBytes=2520 first8= -0.005 -0.017 0.020 0.047 -0.023 0.017 0.014 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3146 rowBytes=2520 first8= -0.010 -0.014 0.006 0.023 -0.030 0.015 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=327 all_finite hiddenDim=3072
+[EMBED_DIAG] token=327 rowBytes=2520 first8= -0.005 -0.008 0.007 -0.003 -0.003 0.031 0.001 -0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=33839 all_finite hiddenDim=3072
+[EMBED_DIAG] token=33839 rowBytes=2520 first8= -0.000 -0.011 -0.009 -0.017 -0.001 0.026 0.031 -0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=832 all_finite hiddenDim=3072
+[EMBED_DIAG] token=832 rowBytes=2520 first8= -0.028 0.019 -0.021 0.016 -0.043 0.040 0.020 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=334 all_finite hiddenDim=3072
+[EMBED_DIAG] token=334 rowBytes=2520 first8= -0.004 -0.020 0.011 0.011 -0.026 0.011 -0.015 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4092 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4092 rowBytes=2520 first8= 0.006 -0.008 -0.006 -0.026 -0.039 0.030 -0.010 0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12128 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12128 rowBytes=2520 first8= 0.034 -0.038 0.017 -0.012 0.004 0.017 -0.016 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=449 all_finite hiddenDim=3072
+[EMBED_DIAG] token=449 rowBytes=2520 first8= -0.004 0.021 0.015 -0.017 -0.024 0.012 -0.017 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1973 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1973 rowBytes=2520 first8= -0.022 0.010 0.004 0.034 -0.002 0.026 0.009 -0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=469 all_finite hiddenDim=3072
+[EMBED_DIAG] token=469 rowBytes=2520 first8= -0.007 0.000 -0.018 -0.005 0.029 0.019 0.007 -0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17 rowBytes=2520 first8= -0.002 0.013 0.012 0.008 -0.010 0.010 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=36 all_finite hiddenDim=3072
+[EMBED_DIAG] token=36 rowBytes=2520 first8= -0.002 -0.012 -0.005 0.014 0.032 0.030 0.012 -0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=10015 all_finite hiddenDim=3072
+[EMBED_DIAG] token=10015 rowBytes=2520 first8= -0.008 0.000 0.002 -0.028 0.003 0.003 -0.029 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19 rowBytes=2520 first8= 0.018 0.000 0.023 0.025 -0.003 0.020 0.018 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17457 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17457 rowBytes=2520 first8= -0.004 -0.002 0.019 -0.016 0.029 0.020 -0.003 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1587 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1587 rowBytes=2520 first8= 0.001 0.009 -0.010 -0.009 -0.001 -0.006 0.009 0.024
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3146 rowBytes=2520 first8= -0.010 -0.014 0.006 0.023 -0.030 0.015 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1962 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1962 rowBytes=2520 first8= 0.026 -0.018 0.006 -0.006 0.003 0.012 -0.022 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=334 all_finite hiddenDim=3072
+[EMBED_DIAG] token=334 rowBytes=2520 first8= -0.004 -0.020 0.011 0.011 -0.026 0.011 -0.015 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9203 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9203 rowBytes=2520 first8= 0.016 0.017 0.029 -0.008 0.006 0.002 0.016 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=91757 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91757 rowBytes=2520 first8= -0.007 0.012 -0.011 0.021 0.024 -0.012 0.021 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15009 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15009 rowBytes=2520 first8= -0.016 -0.013 0.006 -0.005 -0.010 -0.013 -0.006 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=990 all_finite hiddenDim=3072
+[EMBED_DIAG] token=990 rowBytes=2520 first8= 0.019 0.019 0.040 -0.002 -0.014 0.010 -0.005 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3304 rowBytes=2520 first8= -0.007 0.002 0.012 -0.004 0.021 -0.005 -0.008 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=20 all_finite hiddenDim=3072
+[EMBED_DIAG] token=20 rowBytes=2520 first8= 0.022 0.008 0.019 0.015 -0.003 0.015 0.008 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=62637 all_finite hiddenDim=3072
+[EMBED_DIAG] token=62637 rowBytes=2520 first8= 0.013 0.010 0.013 -0.020 0.028 -0.015 0.046 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=31384 all_finite hiddenDim=3072
+[EMBED_DIAG] token=31384 rowBytes=2520 first8= 0.007 -0.010 0.005 0.006 0.029 0.006 0.005 -0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1450 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1450 rowBytes=2520 first8= 0.004 0.015 0.013 -0.009 -0.026 0.000 -0.015 -0.042
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1885 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1885 rowBytes=2520 first8= -0.051 -0.002 0.062 -0.014 0.027 -0.023 0.021 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=26 all_finite hiddenDim=3072
+[EMBED_DIAG] token=26 rowBytes=2520 first8= -0.014 0.016 0.009 0.003 -0.027 -0.012 -0.002 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3146 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3146 rowBytes=2520 first8= -0.010 -0.014 0.006 0.023 -0.030 0.015 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=408 all_finite hiddenDim=3072
+[EMBED_DIAG] token=408 rowBytes=2520 first8= -0.041 0.000 -0.003 0.010 -0.010 0.016 -0.010 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2748 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2748 rowBytes=2520 first8= 0.011 -0.000 0.021 -0.024 0.005 0.026 -0.008 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2543 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2543 rowBytes=2520 first8= 0.019 0.012 0.029 0.005 -0.012 -0.008 0.007 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=334 all_finite hiddenDim=3072
+[EMBED_DIAG] token=334 rowBytes=2520 first8= -0.004 -0.020 0.011 0.011 -0.026 0.011 -0.015 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18304 rowBytes=2520 first8= -0.032 -0.014 0.005 -0.013 0.007 -0.011 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8327 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8327 rowBytes=2520 first8= 0.004 -0.024 0.005 0.023 -0.002 0.016 0.022 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25 rowBytes=2520 first8= 0.002 0.002 0.034 0.014 -0.029 -0.016 0.014 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18977 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18977 rowBytes=2520 first8= 0.011 -0.005 0.003 0.003 0.028 0.014 0.012 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=643 all_finite hiddenDim=3072
+[EMBED_DIAG] token=643 rowBytes=2520 first8= 0.020 -0.016 0.027 -0.001 -0.010 0.003 -0.024 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15014 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15014 rowBytes=2520 first8= -0.005 0.002 0.004 -0.012 0.026 -0.002 -0.002 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9787 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9787 rowBytes=2520 first8= -0.005 -0.019 0.022 0.030 0.019 0.009 -0.004 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47 rowBytes=2520 first8= -0.008 0.003 0.002 0.028 0.008 0.025 -0.004 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29255 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29255 rowBytes=2520 first8= -0.019 0.009 0.008 -0.020 0.022 0.012 -0.013 0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=39335 all_finite hiddenDim=3072
+[EMBED_DIAG] token=39335 rowBytes=2520 first8= -0.000 0.004 0.018 -0.006 0.033 -0.007 0.007 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=54885 all_finite hiddenDim=3072
+[EMBED_DIAG] token=54885 rowBytes=2520 first8= -0.013 0.004 0.021 0.017 0.041 -0.026 0.017 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2952 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2952 rowBytes=2520 first8= -0.004 -0.014 -0.011 0.012 -0.009 -0.006 0.013 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=36313 all_finite hiddenDim=3072
+[EMBED_DIAG] token=36313 rowBytes=2520 first8= 0.030 0.018 0.015 0.016 -0.010 -0.012 -0.025 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9182 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9182 rowBytes=2520 first8= -0.006 0.035 0.034 0.006 0.021 -0.016 0.026 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35144 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35144 rowBytes=2520 first8= -0.001 0.001 -0.009 0.005 0.007 0.006 -0.007 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15 rowBytes=2520 first8= 0.013 -0.000 0.010 0.021 0.017 0.017 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9787 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9787 rowBytes=2520 first8= -0.005 -0.019 0.022 0.030 0.019 0.009 -0.004 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1595 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1595 rowBytes=2520 first8= -0.006 0.024 0.005 0.000 -0.005 0.019 -0.016 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47 rowBytes=2520 first8= -0.008 0.003 0.002 0.028 0.008 0.025 -0.004 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3442 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3442 rowBytes=2520 first8= -0.007 0.004 0.007 0.003 0.031 0.013 0.001 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19707 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19707 rowBytes=2520 first8= -0.010 0.016 0.021 -0.011 0.010 0.015 0.051 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=15 all_finite hiddenDim=3072
+[EMBED_DIAG] token=15 rowBytes=2520 first8= 0.013 -0.000 0.010 0.021 0.017 0.017 0.001 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=567 all_finite hiddenDim=3072
+[EMBED_DIAG] token=567 rowBytes=2520 first8= 0.010 -0.019 -0.014 -0.023 0.035 0.007 0.016 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=40745 all_finite hiddenDim=3072
+[EMBED_DIAG] token=40745 rowBytes=2520 first8= -0.002 -0.039 0.024 0.019 0.013 0.004 0.019 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1824 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1824 rowBytes=2520 first8= -0.018 -0.027 0.003 -0.024 -0.008 0.029 -0.012 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9443 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9443 rowBytes=2520 first8= 0.021 0.007 0.014 -0.032 0.014 -0.028 -0.002 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2383 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2383 rowBytes=2520 first8= 0.013 0.026 -0.006 0.001 -0.011 -0.020 -0.024 -0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44098 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44098 rowBytes=2520 first8= 0.028 -0.010 -0.011 -0.004 0.004 -0.007 0.022 0.025
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2832 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2832 rowBytes=2520 first8= 0.021 0.008 -0.001 0.004 -0.002 -0.024 0.016 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=40 all_finite hiddenDim=3072
+[EMBED_DIAG] token=40 rowBytes=2520 first8= 0.016 -0.013 -0.000 0.009 0.010 0.046 -0.004 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6641 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6641 rowBytes=2520 first8= 0.007 0.022 0.023 -0.029 0.033 -0.008 0.012 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=976 all_finite hiddenDim=3072
+[EMBED_DIAG] token=976 rowBytes=2520 first8= 0.021 0.014 -0.004 0.043 -0.001 0.011 0.029 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=31860 all_finite hiddenDim=3072
+[EMBED_DIAG] token=31860 rowBytes=2520 first8= -0.007 -0.017 0.010 -0.000 -0.012 -0.012 0.031 0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18621 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18621 rowBytes=2520 first8= -0.006 -0.005 0.032 0.002 0.009 -0.005 0.024 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2241 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2241 rowBytes=2520 first8= 0.019 0.012 0.003 0.001 0.017 0.005 0.033 0.018
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=53745 all_finite hiddenDim=3072
+[EMBED_DIAG] token=53745 rowBytes=2520 first8= -0.000 0.050 -0.014 -0.008 0.044 -0.005 0.011 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=976 all_finite hiddenDim=3072
+[EMBED_DIAG] token=976 rowBytes=2520 first8= 0.021 0.014 -0.004 0.043 -0.001 0.011 0.029 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44674 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44674 rowBytes=2520 first8= 0.014 -0.027 0.017 -0.015 -0.041 -0.019 0.005 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=61150 all_finite hiddenDim=3072
+[EMBED_DIAG] token=61150 rowBytes=2520 first8= -0.002 0.005 -0.003 0.009 -0.012 -0.000 0.003 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=53 all_finite hiddenDim=3072
+[EMBED_DIAG] token=53 rowBytes=2520 first8= -0.030 0.022 0.012 0.010 -0.010 0.016 0.003 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47649 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47649 rowBytes=2520 first8= -0.019 -0.018 0.012 -0.032 0.024 0.018 -0.006 0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=976 all_finite hiddenDim=3072
+[EMBED_DIAG] token=976 rowBytes=2520 first8= 0.021 0.014 -0.004 0.043 -0.001 0.011 0.029 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=82046 all_finite hiddenDim=3072
+[EMBED_DIAG] token=82046 rowBytes=2520 first8= 0.015 0.020 0.026 -0.042 0.031 -0.038 0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35451 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35451 rowBytes=2520 first8= -0.005 -0.001 0.020 -0.038 0.018 0.021 0.020 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=63 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63 rowBytes=2520 first8= 0.007 0.020 0.026 0.005 0.004 0.018 -0.004 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=14394 all_finite hiddenDim=3072
+[EMBED_DIAG] token=14394 rowBytes=2520 first8= 0.017 -0.005 0.002 -0.006 -0.015 -0.009 0.009 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=25035 all_finite hiddenDim=3072
+[EMBED_DIAG] token=25035 rowBytes=2520 first8= -0.027 0.005 0.017 0.009 0.016 -0.010 0.023 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=976 all_finite hiddenDim=3072
+[EMBED_DIAG] token=976 rowBytes=2520 first8= 0.021 0.014 -0.004 0.043 -0.001 0.011 0.029 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=51935 all_finite hiddenDim=3072
+[EMBED_DIAG] token=51935 rowBytes=2520 first8= 0.012 -0.012 0.024 -0.048 -0.007 0.037 0.025 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29687 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29687 rowBytes=2520 first8= -0.002 -0.007 -0.006 -0.019 -0.007 0.028 -0.009 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3234 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3234 rowBytes=2520 first8= -0.005 -0.024 -0.017 0.008 0.023 0.030 0.008 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=539 rowBytes=2520 first8= 0.020 -0.001 -0.000 0.013 -0.021 0.012 -0.011 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17459 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17459 rowBytes=2520 first8= -0.009 -0.020 0.024 -0.043 -0.025 -0.012 0.025 -0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=51935 all_finite hiddenDim=3072
+[EMBED_DIAG] token=51935 rowBytes=2520 first8= 0.012 -0.012 0.024 -0.048 -0.007 0.037 0.025 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3234 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3234 rowBytes=2520 first8= -0.005 -0.024 -0.017 0.008 0.023 0.030 0.008 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=539 all_finite hiddenDim=3072
+[EMBED_DIAG] token=539 rowBytes=2520 first8= 0.020 -0.001 -0.000 0.013 -0.021 0.012 -0.011 0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11857 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11857 rowBytes=2520 first8= -0.005 0.016 0.018 -0.001 0.029 0.004 0.016 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19584 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19584 rowBytes=2520 first8= 0.010 -0.010 0.002 0.003 0.011 -0.027 -0.051 -0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28706 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28706 rowBytes=2520 first8= -0.007 0.005 0.027 -0.030 0.011 -0.029 -0.001 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6029 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6029 rowBytes=2520 first8= -0.017 0.022 -0.000 -0.029 -0.008 -0.022 -0.005 0.030
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=18304 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18304 rowBytes=2520 first8= -0.032 -0.014 0.005 -0.013 0.007 -0.011 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=567 all_finite hiddenDim=3072
+[EMBED_DIAG] token=567 rowBytes=2520 first8= 0.010 -0.019 -0.014 -0.023 0.035 0.007 0.016 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=43424 all_finite hiddenDim=3072
+[EMBED_DIAG] token=43424 rowBytes=2520 first8= 0.003 -0.006 0.005 0.006 0.015 -0.008 0.006 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2612 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2612 rowBytes=2520 first8= 0.019 -0.016 -0.003 -0.012 0.041 0.031 0.023 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=320 all_finite hiddenDim=3072
+[EMBED_DIAG] token=320 rowBytes=2520 first8= -0.024 -0.001 0.004 0.010 -0.013 0.002 -0.015 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=9726 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9726 rowBytes=2520 first8= 0.009 0.030 0.039 0.009 0.023 -0.020 0.005 -0.029
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12 rowBytes=2520 first8= -0.007 -0.001 0.001 0.022 0.020 0.030 0.006 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28389 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28389 rowBytes=2520 first8= 0.008 0.007 0.038 -0.014 0.001 0.016 -0.010 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1193 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1193 rowBytes=2520 first8= 0.022 -0.014 -0.001 0.007 0.004 0.016 -0.019 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=7377 all_finite hiddenDim=3072
+[EMBED_DIAG] token=7377 rowBytes=2520 first8= -0.014 -0.005 0.005 -0.021 0.015 0.012 -0.011 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=74694 all_finite hiddenDim=3072
+[EMBED_DIAG] token=74694 rowBytes=2520 first8= 0.011 0.013 0.015 -0.008 0.009 0.030 -0.009 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=24194 all_finite hiddenDim=3072
+[EMBED_DIAG] token=24194 rowBytes=2520 first8= 0.001 -0.006 0.015 -0.011 -0.011 -0.004 -0.008 -0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=49871 all_finite hiddenDim=3072
+[EMBED_DIAG] token=49871 rowBytes=2520 first8= -0.005 0.009 0.040 -0.012 0.030 0.018 0.004 0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=83917 all_finite hiddenDim=3072
+[EMBED_DIAG] token=83917 rowBytes=2520 first8= 0.004 0.008 0.004 0.012 -0.010 0.013 0.006 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=21894 all_finite hiddenDim=3072
+[EMBED_DIAG] token=21894 rowBytes=2520 first8= -0.000 -0.019 -0.001 0.008 0.004 0.006 0.018 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=32265 all_finite hiddenDim=3072
+[EMBED_DIAG] token=32265 rowBytes=2520 first8= -0.006 0.008 0.012 -0.017 -0.006 -0.012 0.022 0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1507 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1507 rowBytes=2520 first8= 0.023 -0.027 0.041 0.020 0.001 0.008 -0.003 0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=82522 all_finite hiddenDim=3072
+[EMBED_DIAG] token=82522 rowBytes=2520 first8= 0.011 -0.023 -0.008 -0.032 0.003 0.035 0.015 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35144 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35144 rowBytes=2520 first8= -0.001 0.001 -0.009 0.005 0.007 0.006 -0.007 0.002
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=000001DB93C3C8E0 sizeBytes=323205120
+[KVCache] page grow 8 -> 16 hot (virtualMax=126911 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=126911 pos=16)
+[KVCache] page grow 24 -> 32 hot (virtualMax=126911 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=126911 pos=32)
+[KVCache] page grow 40 -> 48 hot (virtualMax=126911 pos=40)
+[KVCache] page grow 48 -> 56 hot (virtualMax=126911 pos=48)
+[KVCache] page grow 56 -> 64 hot (virtualMax=126911 pos=56)
+[KVCache] page grow 64 -> 72 hot (virtualMax=126911 pos=64)
+[KVCache] page grow 72 -> 80 hot (virtualMax=126911 pos=72)
+[KVCache] page grow 80 -> 88 hot (virtualMax=126911 pos=80)
+[KVCache] page grow 88 -> 96 hot (virtualMax=126911 pos=88)
+[KVCache] page grow 96 -> 104 hot (virtualMax=126911 pos=96)
+[KVCache] page grow 104 -> 112 hot (virtualMax=126911 pos=104)
+[KVCache] page grow 112 -> 120 hot (virtualMax=126911 pos=112)
+[KVCache] page grow 120 -> 128 hot (virtualMax=126911 pos=120)
+[KVCache] page grow 128 -> 136 hot (virtualMax=126911 pos=128)
+[KVCache] page grow 136 -> 144 hot (virtualMax=126911 pos=136)
+[KVCache] page grow 144 -> 152 hot (virtualMax=126911 pos=144)
+[KVCache] page grow 152 -> 160 hot (virtualMax=126911 pos=152)
+[KVCache] page grow 160 -> 168 hot (virtualMax=126911 pos=160)
+[KVCache] page grow 168 -> 176 hot (virtualMax=126911 pos=168)
+[KVCache] page grow 176 -> 184 hot (virtualMax=126911 pos=176)
+[KVCache] page grow 184 -> 192 hot (virtualMax=126911 pos=184)
+[KVCache] page grow 192 -> 200 hot (virtualMax=126911 pos=192)
+[KVCache] page grow 200 -> 208 hot (virtualMax=126911 pos=200)
+[KVCache] page grow 208 -> 216 hot (virtualMax=126911 pos=208)
+[KVCache] page grow 216 -> 224 hot (virtualMax=126911 pos=216)
+[KVCache] page grow 224 -> 232 hot (virtualMax=126911 pos=224)
+[KVCache] page grow 232 -> 240 hot (virtualMax=126911 pos=232)
+[KVCache] page grow 240 -> 248 hot (virtualMax=126911 pos=240)
+[KVCache] page grow 248 -> 256 hot (virtualMax=126911 pos=248)
+[KVCache] page grow 256 -> 264 hot (virtualMax=126911 pos=256)
+[KVCache] page grow 264 -> 272 hot (virtualMax=126911 pos=264)
+[KVCache] page grow 272 -> 280 hot (virtualMax=126911 pos=272)
+[KVCache] page grow 280 -> 288 hot (virtualMax=126911 pos=280)
+[KVCache] page grow 288 -> 296 hot (virtualMax=126911 pos=288)
+[KVCache] page grow 296 -> 304 hot (virtualMax=126911 pos=296)
+[KVCache] page grow 304 -> 312 hot (virtualMax=126911 pos=304)
+[KVCache] page grow 312 -> 320 hot (virtualMax=126911 pos=312)
+[KVCache] page grow 320 -> 328 hot (virtualMax=126911 pos=320)
+[KVCache] page grow 328 -> 336 hot (virtualMax=126911 pos=328)
+[KVCache] page grow 336 -> 344 hot (virtualMax=126911 pos=336)
+[KVCache] page grow 344 -> 352 hot (virtualMax=126911 pos=344)
+[KVCache] page grow 352 -> 360 hot (virtualMax=126911 pos=352)
+[KVCache] page grow 360 -> 368 hot (virtualMax=126911 pos=360)
+[KVCache] page grow 368 -> 376 hot (virtualMax=126911 pos=368)
+[KVCache] page grow 376 -> 384 hot (virtualMax=126911 pos=376)
+[KVCache] page grow 384 -> 392 hot (virtualMax=126911 pos=384)
+[KVCache] page grow 392 -> 400 hot (virtualMax=126911 pos=392)
+[KVCache] page grow 400 -> 408 hot (virtualMax=126911 pos=400)
+[KVCache] page grow 408 -> 416 hot (virtualMax=126911 pos=408)
+[KVCache] page grow 416 -> 424 hot (virtualMax=126911 pos=416)
+[KVCache] page grow 424 -> 432 hot (virtualMax=126911 pos=424)
+[KVCache] page grow 432 -> 440 hot (virtualMax=126911 pos=432)
+[KVCache] page grow 440 -> 448 hot (virtualMax=126911 pos=440)
+[KVCache] page grow 448 -> 456 hot (virtualMax=126911 pos=448)
+[KVCache] page grow 456 -> 464 hot (virtualMax=126911 pos=456)
+[KVCache] page grow 464 -> 472 hot (virtualMax=126911 pos=464)
+[KVCache] page grow 472 -> 480 hot (virtualMax=126911 pos=472)
+[KVCache] page grow 480 -> 488 hot (virtualMax=126911 pos=480)
+[KVCache] page grow 488 -> 496 hot (virtualMax=126911 pos=488)
+[KVCache] page grow 496 -> 504 hot (virtualMax=126911 pos=496)
+[KVCache] page grow 504 -> 512 hot (virtualMax=126911 pos=504)
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4419 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4419 rowBytes=2520 first8= -0.019 -0.017 0.050 -0.011 0.011 -0.008 -0.027 -0.003
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47 rowBytes=2520 first8= -0.008 0.003 0.002 0.028 0.008 0.025 -0.004 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29255 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29255 rowBytes=2520 first8= -0.019 0.009 0.008 -0.020 0.022 0.012 -0.013 0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8580 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8580 rowBytes=2520 first8= 0.008 -0.025 -0.008 0.008 0.014 -0.009 -0.037 0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=50892 all_finite hiddenDim=3072
+[EMBED_DIAG] token=50892 rowBytes=2520 first8= -0.018 -0.027 0.004 -0.038 -0.013 0.047 0.036 0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6674 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6674 rowBytes=2520 first8= 0.007 0.017 0.018 -0.003 0.034 0.025 0.009 0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=61608 all_finite hiddenDim=3072
+[EMBED_DIAG] token=61608 rowBytes=2520 first8= 0.001 0.000 -0.007 -0.033 -0.004 -0.005 0.019 -0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=691 all_finite hiddenDim=3072
+[EMBED_DIAG] token=691 rowBytes=2520 first8= -0.012 0.008 0.010 -0.012 0.041 0.023 0.022 0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12121 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12121 rowBytes=2520 first8= 0.021 0.019 -0.005 0.019 0.038 0.020 0.004 -0.006
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=44 all_finite hiddenDim=3072
+[EMBED_DIAG] token=44 rowBytes=2520 first8= -0.003 -0.025 -0.001 0.009 -0.008 0.027 0.002 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1831 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1831 rowBytes=2520 first8= 0.003 -0.003 -0.016 -0.006 -0.002 -0.020 0.019 0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=35 all_finite hiddenDim=3072
+[EMBED_DIAG] token=35 rowBytes=2520 first8= -0.002 -0.012 0.016 0.018 0.014 0.017 -0.006 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=51790 all_finite hiddenDim=3072
+[EMBED_DIAG] token=51790 rowBytes=2520 first8= 0.019 -0.005 -0.005 -0.014 0.010 -0.025 0.004 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28 rowBytes=2520 first8= 0.009 -0.011 0.019 0.016 0.040 -0.005 0.031 -0.020
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=16 all_finite hiddenDim=3072
+[EMBED_DIAG] token=16 rowBytes=2520 first8= 0.013 0.001 0.021 0.015 -0.004 0.004 0.003 0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=319 all_finite hiddenDim=3072
+[EMBED_DIAG] token=319 rowBytes=2520 first8= -0.006 -0.001 0.002 -0.007 0.017 0.002 -0.005 -0.026
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=74694 all_finite hiddenDim=3072
+[EMBED_DIAG] token=74694 rowBytes=2520 first8= 0.011 0.013 0.015 -0.008 0.009 0.030 -0.009 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=567 all_finite hiddenDim=3072
+[EMBED_DIAG] token=567 rowBytes=2520 first8= 0.010 -0.019 -0.014 -0.023 0.035 0.007 0.016 -0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=67540 all_finite hiddenDim=3072
+[EMBED_DIAG] token=67540 rowBytes=2520 first8= -0.041 0.011 0.011 0.013 -0.025 -0.009 0.004 -0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=881 all_finite hiddenDim=3072
+[EMBED_DIAG] token=881 rowBytes=2520 first8= -0.018 -0.002 0.021 -0.020 0.038 -0.004 0.005 -0.002
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12686 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12686 rowBytes=2520 first8= -0.033 -0.003 -0.010 0.022 0.039 0.004 -0.010 -0.022
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3560 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3560 rowBytes=2520 first8= 0.016 -0.034 0.000 -0.006 -0.065 -0.024 -0.006 0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1387 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1387 rowBytes=2520 first8= -0.061 -0.008 0.008 0.023 -0.020 0.029 0.023 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=29055 all_finite hiddenDim=3072
+[EMBED_DIAG] token=29055 rowBytes=2520 first8= -0.020 -0.008 0.014 0.018 -0.006 -0.036 -0.032 -0.028
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=87770 all_finite hiddenDim=3072
+[EMBED_DIAG] token=87770 rowBytes=2520 first8= 0.005 0.004 0.017 -0.005 -0.041 -0.033 -0.022 -0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=27723 all_finite hiddenDim=3072
+[EMBED_DIAG] token=27723 rowBytes=2520 first8= 0.001 0.003 -0.009 0.024 -0.010 0.031 0.009 -0.023
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=330 all_finite hiddenDim=3072
+[EMBED_DIAG] token=330 rowBytes=2520 first8= 0.011 -0.005 -0.006 0.014 -0.005 -0.016 -0.036 -0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=351 all_finite hiddenDim=3072
+[EMBED_DIAG] token=351 rowBytes=2520 first8= 0.044 -0.021 0.042 0.027 0.014 -0.041 0.031 -0.013
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=4351 all_finite hiddenDim=3072
+[EMBED_DIAG] token=4351 rowBytes=2520 first8= 0.006 -0.062 0.015 -0.056 0.046 0.029 0.000 0.027
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1 rowBytes=2520 first8= 0.013 -0.000 0.022 -0.004 -0.007 0.003 -0.010 0.009
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=439 all_finite hiddenDim=3072
+[EMBED_DIAG] token=439 rowBytes=2520 first8= 0.010 0.001 0.001 -0.001 -0.025 -0.025 -0.005 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=17422 all_finite hiddenDim=3072
+[EMBED_DIAG] token=17422 rowBytes=2520 first8= -0.019 -0.023 -0.006 -0.006 0.052 0.005 -0.013 -0.010
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=19945 all_finite hiddenDim=3072
+[EMBED_DIAG] token=19945 rowBytes=2520 first8= -0.010 0.035 0.018 -0.014 0.021 -0.028 0.013 0.011
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=47 all_finite hiddenDim=3072
+[EMBED_DIAG] token=47 rowBytes=2520 first8= -0.008 0.003 0.002 0.028 0.008 0.025 -0.004 0.021
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=810 all_finite hiddenDim=3072
+[EMBED_DIAG] token=810 rowBytes=2520 first8= -0.005 0.007 -0.019 -0.008 -0.014 -0.008 0.003 0.019
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1109 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1109 rowBytes=2520 first8= -0.008 0.026 -0.036 -0.027 -0.005 -0.017 -0.003 0.017
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=832 all_finite hiddenDim=3072
+[EMBED_DIAG] token=832 rowBytes=2520 first8= -0.028 0.019 -0.021 0.016 -0.043 0.040 0.020 0.016
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=3136 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3136 rowBytes=2520 first8= 0.023 0.027 0.044 0.024 0.026 -0.020 0.017 -0.036
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12 rowBytes=2520 first8= -0.007 -0.001 0.001 0.022 0.020 0.030 0.006 0.005
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=28389 all_finite hiddenDim=3072
+[EMBED_DIAG] token=28389 rowBytes=2520 first8= 0.008 0.007 0.038 -0.014 0.001 0.016 -0.010 0.012
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=12128 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12128 rowBytes=2520 first8= 0.034 -0.038 0.017 -0.012 0.004 0.017 -0.016 0.038
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=11 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11 rowBytes=2520 first8= 0.001 -0.005 0.007 0.000 -0.034 -0.004 0.001 -0.004
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=2748 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2748 rowBytes=2520 first8= 0.011 -0.000 0.021 -0.024 0.005 0.026 -0.008 -0.015
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=14691 all_finite hiddenDim=3072
+[EMBED_DIAG] token=14691 rowBytes=2520 first8= 0.013 0.008 0.017 0.011 0.028 0.019 0.032 -0.033
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=91757 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91757 rowBytes=2520 first8= -0.007 0.012 -0.011 0.021 0.024 -0.012 0.021 -0.001
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=990 all_finite hiddenDim=3072
+[EMBED_DIAG] token=990 rowBytes=2520 first8= 0.019 0.019 0.040 -0.002 -0.014 0.010 -0.005 0.014
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=1306 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1306 rowBytes=2520 first8= 0.008 0.005 0.007 -0.015 -0.022 -0.007 -0.017 0.008
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=6988 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6988 rowBytes=2520 first8= 0.010 -0.038 -0.009 -0.007 -0.035 -0.007 0.033 -0.051
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[EMBED_DIAG] dequant=00007FF712D1A2B0 type=14
+[EMBED_DIAG] token=8731 all_finite hiddenDim=3072
+[EMBED_DIAG] token=8731 rowBytes=2520 first8= -0.019 0.010 0.019 -0.006 0.060 -0.023 -0.012 0.012
+[KVCache] page grow 512 -> 520 hot (virtualMax=126911 po

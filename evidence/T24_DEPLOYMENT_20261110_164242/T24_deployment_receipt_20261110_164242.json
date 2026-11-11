@@ -1,0 +1,25 @@
+{
+    "files_extracted":  8,
+    "cold_launch_pid":  null,
+    "missing_dependencies":  [
+
+                             ],
+    "ide_exe_sha256":  null,
+    "extraction_ok":  true,
+    "package_sha256":  "86EA3484580FF53B971E493A7D7D102B7569E9685E09118659B24252544C6AB1",
+    "timestamp_utc":  "2026-11-10T21:42:42.7334855Z",
+    "package_path":  "F:\\rawrxd\\dist\\RawrXD-14.7.3-Windows-x64.zip",
+    "schema":  "RAWRXD_T24_DEPLOYMENT_VERIFICATION_001",
+    "cold_launch_exit_code":  null,
+    "ide_exe_path":  null,
+    "ide_exe_found":  false,
+    "smoke_test_ok":  false,
+    "dependency_manifest":  null,
+    "extract_to":  "F:\\rawrxd\\deploy_test",
+    "package_exists":  true,
+    "pass":  false,
+    "errors":  [
+                   "IDE executable \u0027RawrXD.exe\u0027 not found in extracted package"
+               ],
+    "cold_launch_ok":  false
+}

@@ -1,0 +1,127 @@
+cmake_minimum_required(VERSION 3.20)
+project(KartGibWorldForge LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_library(worldforge src/worldforge.cpp src/systems.cpp)
+target_include_directories(worldforge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(kartgib-worldforge src/main.cpp)
+target_link_libraries(kartgib-worldforge PRIVATE worldforge)
+add_executable(worldforge-tests tests/tests.cpp)
+target_link_libraries(worldforge-tests PRIVATE worldforge)
+enable_testing()
+add_test(NAME worldforge-tests COMMAND worldforge-tests)
+
+add_executable(worldforge-systems-tests tests/systems_tests.cpp)
+target_link_libraries(worldforge-systems-tests PRIVATE worldforge)
+add_test(NAME worldforge-systems-tests COMMAND worldforge-systems-tests)
+
+# Drop 03: CPU golden reference for HDR pipeline (no Vulkan SDK required).
+add_library(worldforge-render-reference src/render/hdr.cpp)
+target_include_directories(worldforge-render-reference PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-render-tests tests/render_tests.cpp)
+target_link_libraries(worldforge-render-tests PRIVATE worldforge-render-reference)
+add_test(NAME worldforge-render-tests COMMAND worldforge-render-tests)
+# Optional offline GLSL -> SPIR-V compilation, using an already-installed Vulkan SDK.
+find_program(KARTGIB_GLSLC glslc HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(KARTGIB_GLSLC)
+  set(KARTGIB_SHADER_OUTPUTS)
+  foreach(SHADER hdr_fullscreen.vert hdr_composite.frag hdr_prefilter.frag hdr_downsample.frag hdr_upsample.frag)
+    set(SPV "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER}.spv")
+    add_custom_command(OUTPUT "${SPV}" COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders" COMMAND "${KARTGIB_GLSLC}" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}" -o "${SPV}" DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}" VERBATIM)
+    list(APPEND KARTGIB_SHADER_OUTPUTS "${SPV}")
+  endforeach()
+  add_custom_target(worldforge-shaders DEPENDS ${KARTGIB_SHADER_OUTPUTS})
+endif()
+
+# Drop 04: portable shadow and advanced-lighting golden reference.
+add_library(worldforge-lighting-reference src/render/lighting.cpp)
+target_include_directories(worldforge-lighting-reference PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-lighting-tests tests/lighting_tests.cpp)
+target_link_libraries(worldforge-lighting-tests PRIVATE worldforge-lighting-reference)
+add_test(NAME worldforge-lighting-tests COMMAND worldforge-lighting-tests)
+if(KARTGIB_GLSLC)
+  foreach(SHADER shadow_depth.vert shadow_depth.frag)
+    set(SPV "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER}.spv")
+    add_custom_command(OUTPUT "${SPV}" COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders" COMMAND "${KARTGIB_GLSLC}" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}" -o "${SPV}" DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}" VERBATIM)
+    list(APPEND KARTGIB_SHADOW_SHADER_OUTPUTS "${SPV}")
+  endforeach()
+  add_custom_target(worldforge-shadow-shaders DEPENDS ${KARTGIB_SHADOW_SHADER_OUTPUTS})
+endif()
+
+# Drop 05: deterministic procedural PBR material baker (portable CPU reference).
+add_library(worldforge-materials src/materials/materials.cpp)
+target_include_directories(worldforge-materials PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-materials-tests tests/materials_tests.cpp)
+target_link_libraries(worldforge-materials-tests PRIVATE worldforge-materials)
+add_test(NAME worldforge-materials-tests COMMAND worldforge-materials-tests)
+add_executable(worldforge-material-bake src/materials/material_cli.cpp)
+target_link_libraries(worldforge-material-bake PRIVATE worldforge-materials)
+
+# Drop 06: deterministic atmospheric and water CPU golden reference.
+add_library(worldforge-atmosphere src/atmosphere/atmosphere.cpp)
+target_include_directories(worldforge-atmosphere PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-atmosphere-tests tests/atmosphere_tests.cpp)
+target_link_libraries(worldforge-atmosphere-tests PRIVATE worldforge-atmosphere)
+add_test(NAME worldforge-atmosphere-tests COMMAND worldforge-atmosphere-tests)
+add_executable(worldforge-sky-bake src/atmosphere/atmosphere_cli.cpp)
+target_link_libraries(worldforge-sky-bake PRIVATE worldforge-atmosphere)
+if(KARTGIB_GLSLC)
+  add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shaders/atmosphere_sky.frag.spv"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders"
+    COMMAND "${KARTGIB_GLSLC}" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/atmosphere_sky.frag" -o "${CMAKE_CURRENT_BINARY_DIR}/shaders/atmosphere_sky.frag.spv"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/atmosphere_sky.frag" VERBATIM)
+  add_custom_target(worldforge-atmosphere-shaders DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/shaders/atmosphere_sky.frag.spv")
+endif()
+
+# Drop 07: procedural architecture, foliage and asset placement.
+add_library(worldforge-assets src/assets/assets.cpp)
+target_include_directories(worldforge-assets PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-assets-cli src/assets/assets_cli.cpp)
+target_link_libraries(worldforge-assets-cli PRIVATE worldforge-assets worldforge)
+add_executable(worldforge-assets-tests tests/assets_tests.cpp)
+target_link_libraries(worldforge-assets-tests PRIVATE worldforge-assets)
+add_test(NAME worldforge-assets-tests COMMAND worldforge-assets-tests)
+
+# Drop 08: deterministic terrain streaming, cave masks, bridges and LOD.
+add_library(worldforge-streaming src/streaming/streaming.cpp)
+target_include_directories(worldforge-streaming PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-streaming-cli src/streaming/streaming_cli.cpp)
+target_link_libraries(worldforge-streaming-cli PRIVATE worldforge-streaming)
+add_executable(worldforge-streaming-tests tests/streaming_tests.cpp)
+target_link_libraries(worldforge-streaming-tests PRIVATE worldforge-streaming)
+add_test(NAME worldforge-streaming-tests COMMAND worldforge-streaming-tests)
+
+# Drop 09: deterministic fixed-step arcade vehicle simulation.
+add_library(worldforge-vehicle src/physics/vehicle.cpp)
+target_include_directories(worldforge-vehicle PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-vehicle-tests tests/vehicle_tests.cpp)
+target_link_libraries(worldforge-vehicle-tests PRIVATE worldforge-vehicle)
+add_test(NAME worldforge-vehicle-tests COMMAND worldforge-vehicle-tests)
+add_executable(worldforge-vehicle-cli src/physics/vehicle_cli.cpp)
+target_link_libraries(worldforge-vehicle-cli PRIVATE worldforge-vehicle)
+
+# Drop 10: deterministic combat, swept projectile collision, radial damage and CPU particles.
+add_library(worldforge-combat src/combat/combat.cpp)
+target_include_directories(worldforge-combat PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-combat-tests tests/combat_tests.cpp)
+target_link_libraries(worldforge-combat-tests PRIVATE worldforge-combat)
+add_test(NAME worldforge-combat-tests COMMAND worldforge-combat-tests)
+add_executable(worldforge-combat-cli src/combat/combat_cli.cpp)
+target_link_libraries(worldforge-combat-cli PRIVATE worldforge-combat)
+
+# Drop 11: dependency-free scene graph and editor document core.
+add_library(worldforge-editor src/editor/scene.cpp)
+target_include_directories(worldforge-editor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(worldforge-editor-tests tests/editor_tests.cpp)
+target_link_libraries(worldforge-editor-tests PRIVATE worldforge-editor)
+add_test(NAME worldforge-editor-tests COMMAND worldforge-editor-tests)
+add_executable(worldforge-scene-cli src/editor/scene_cli.cpp)
+target_link_libraries(worldforge-scene-cli PRIVATE worldforge-editor)
+
+# Drop 12: native asset browser, transform math, viewport picking and inspector tools.
+add_library(worldforge-editor-tools src/editor/tools.cpp)
+target_include_directories(worldforge-editor-tools PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(worldforge-editor-tools PUBLIC worldforge-editor)
+add_executable(worldforge-editor-tools-tests tests/editor_tools_tests.cpp)
+target_link_libraries(worldforge-editor-tools-tests PRIVATE worldforge-editor-tools)
+add_test(NAME worldforge-editor-tools-tests COMMAND worldforge-editor-tools-tests)

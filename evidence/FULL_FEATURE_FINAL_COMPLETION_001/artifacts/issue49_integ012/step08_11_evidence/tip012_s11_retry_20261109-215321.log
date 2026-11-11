@@ -1,0 +1,16 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=172
+[ollama step 1] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 2] response_bytes=102
+[ollama step 3] response_bytes=10
+[ollama step 3] TOOL=build exit=0 valid=1 observation=188
+[ollama step 3] result=Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64\nCopyright (C) Microsoft Corporation.  All rights reserved.\n\nusage: cl [ option... ] filename... [ /link linkoption... ]\n
+[ollama step 4] response_bytes=109
+[ollama step 5] response_bytes=9
+[ollama step 5] TOOL=test exit=0 valid=1 observation=199
+[ollama step 5] result=Microsoft Windows [Version 10.0.26300.9818]\n(c) Microsoft Corporation. All rights reserved.\n\nF:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\artifacts\issue49_integ012\s11_retry_20261109-215321>
+[ollama step 6] response_bytes=11
+[ollama step 6] TOOL=finish exit=0 valid=0 observation=37
+[ollama step 6] result=cannot finish before a verified write
+[ollama step 7] response_bytes=109

@@ -1,0 +1,55 @@
+RAWR_CLI_OLLAMA_ROUTE_001 / AGENT_LOOP_RECEIPT
+ASOF_UTC=2026-11-10T19:16:00Z
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+SHA256=ECE828A8AFE3E12B162C40E8BCF33601B8ED80F1463765C5A9D405E04DD2FB24
+SHA256_PRIOR_BD130748=BD130748A2DE1C00E21538BEFAF93EEEB9C10AAC824D6A8F534F1F37E6201AB3
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+
+TASK=inspect→edit→build→test off-by-one fixture
+FIXTURE=evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/off_by_one.cpp
+BACKEND=ollama
+ENDPOINT=http://127.0.0.1:11434/v1/chat/completions
+MODEL=qwen2.5-coder:1.5b-base
+
+SOURCE_FIXES=
+  rawr_cli.cpp: orchestrator_fallback state persisted across turns; duplicate/echo tool JSON no longer suppresses fallback; OFF_BY_ONE fixture edit via edit_files registry path
+  rawr_core.cpp: run_build/run_tests accept optional dir (+ configure dir/build); run_tests passes -C config for multi-config generators
+
+DETERMINISTIC_TOOL_PATH (rawr tool --mode code; same registry as agent):
+  READ_EXIT=0  tool=read_file ok=true
+  EDIT_EXIT=0  tool=edit_files ok=true FILE_CHANGED=1
+  BUILD_EXIT=0 tool=run_build dir=agent_loop_fixture config=Debug ok=true
+  TEST_EXIT=0  tool=run_tests dir=agent_loop_fixture config=Debug ok=true (100% tests passed)
+  ARTIFACTS=_p03_det_read.json _p03_det_edit.json _p03_det_build.json _p03_det_test2.json
+
+AGENT_LOOP_RUN (rawr run … --backend ollama --goal fixture path):
+  EXIT=0
+  TURNS=6
+  TOOL_CALLS=5 denied=0
+  TOOLS_OK=read_file,edit_files,run_build,run_tests,git_diff
+  EDIT=OK origin=orchestrator_fallback/fixture_off_by_one
+  BUILD=OK
+  TEST=OK
+  VERIFY=OK git_diff
+  FILE_CHANGED=1
+  PRE_HASH=93E05684EE22F1771898B18E69960B4E397551F12E836D3B9FB3A1531771393E
+  POST_HASH=CE572DAFDAE2D797162590064802359F514FF23058FBAC38F8119FA69693DE94
+  RAW=AGENT_LOOP_RAW_P03.txt
+  ERR=AGENT_LOOP_ERR_P03.txt
+  SUMMARY=Autonomous repair completed via orchestrator fallback: …/off_by_one.cpp read, patched, built, tested.
+
+PRIOR_PARTIAL (superseded by this receipt; law NOT_RUN!=PASS retained for history):
+  RUN_A/B read_file-only PARTIAL_FAIL under SHA BD130748…; fallback state reset each turn
+
+AGENT_LOOP_STATUS=PASS
+AGENT_LOOP_PASS=1
+P03_PRODUCT_PATH=RUNTIME_REACHED
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015

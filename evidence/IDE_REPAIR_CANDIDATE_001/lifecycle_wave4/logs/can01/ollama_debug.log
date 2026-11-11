@@ -1,0 +1,16 @@
+[OLLAMA_DEBUG] generateOllamaModel: pid=42704 request_generation=1 prompt_fnv1a=951D1EEAD093DEEA model='qwen2.5-coder:1.5b-base' prompt_len=82 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=42704 REQUEST_GENERATION=1 MODEL=qwen2.5-coder:1.5b-base MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=204
+[OLLAMA_DEBUG] generateOllamaModel: pid=38644 request_generation=1 prompt_fnv1a=951D1EEAD093DEEA model='qwen2.5-coder:1.5b-base' prompt_len=82 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=38644 REQUEST_GENERATION=1 MODEL=qwen2.5-coder:1.5b-base MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=204
+[OLLAMA_DEBUG] generateOllamaModel: pid=25588 request_generation=1 prompt_fnv1a=951D1EEAD093DEEA model='qwen2.5-coder:1.5b-base' prompt_len=82 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=25588 REQUEST_GENERATION=1 MODEL=qwen2.5-coder:1.5b-base MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=204
+[OLLAMA_DEBUG] generateOllamaModel: pid=4316 request_generation=1 prompt_fnv1a=951D1EEAD093DEEA model='qwen2.5-coder:1.5b-base' prompt_len=82 maxTokens=4096 contextTokens=65536 mode=Instant
+[OLLAMA_DEBUG] Connecting to localhost:11434
+[OLLAMA_RUNTIME] PID=4316 REQUEST_GENERATION=1 MODEL=qwen2.5-coder:1.5b-base MODEL_LOAD=PASS REQUESTED_CONTEXT=65536 EFFECTIVE_CONTEXT=65536 MAX_OUTPUT_TOKENS=4096
+[OLLAMA_DEBUG] body_bytes=204

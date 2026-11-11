@@ -1,0 +1,102 @@
+DEEP2_OPENAI_SERVER_GEN_002
+ASOF_UTC=2026-11-10T20:08:34Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+TIP_CLIMB=HOLD
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+LAW=HEALTH_MODELS_PASS!=GENERATION_PASS
+LAW=EMPTY_CONTENT!=TOKEN_SURVIVED
+P04_STATUS=PASS
+GENERATION_PASS=1
+P04_PASS=1
+TOKEN_SURVIVED=1
+
+GOAL=Fix empty assistant content on tip deep2_openai_server /v1/chat/completions. Fail-closed. Non-empty content required for PASS.
+
+ROOT_CAUSE=
+  MECHANICAL: generateStream skips EOS callback → accumulated content="" while
+    usage.completion_tokens=result.generatedTokens (often 1).
+  PRODUCT: tip GPU forward (dual Auto OR single) greedily argmaxes EOS id=2
+    (GREEDY top10 led by 2:11.32). HOST_DECODE/CPU_ONLY matches R25 ProductOpen
+    PASS (first token id=13 / 29903 path) and yields non-empty content.
+  NOT_NETWORK: HTTP 200 always; JSON field mapping of c.content is correct.
+  CHAT_TEMPLATE_NAME=phi3 is a mis-detect of Zephyr-style TinyLlama tags, but
+    formatPHI3 shape matches TinyLlama jinja; template rename alone ≠ fix.
+
+FIX_FILES=
+  src/deep2/deep2_openai_server_main.cpp
+    ApplyOpenAiHostDecodeFloor() before loadModel (unless RAWRXD_ALLOW_GPU=1)
+  src/deep2/deep2_openai_server.cpp
+    EMPTY_CONTENT / EMPTY_PIECE stderr receipts; content_bytes on send
+  src/deep2/Deep2Engine.cpp
+    Move Deep2DebugEnabled() before applyRoPE (MSVC C3861 build unblock only)
+
+EXE=
+  PATH=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+  SHA256=8B4D35102B2D0851F0E7C820972C87A90AEABE7A0BBAEDB02E0C120722BAFC06
+  PRIOR_SHA256=FA42C75BA6762BF0C0248D23718D4535E028B3010B5F9CFD3BA52FE02CBAA97B
+  MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  CMD=deep2_openai_server.exe --model tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --port 11436
+  PID=33296
+  STOP_POLICY=PID_SCOPED_ONLY (path build_deep2_openai_001)
+  FLOOR=BAKED_HOST_DECODE (PRODUCT_HOST_DECODE_FLOOR=1 DUALSTICK_ARM=0 GPU_POLICY=CPU)
+  MODEL_FIT=CPU_ONLY devices=0
+
+SMOKE=
+  GET_/health=HTTP_200
+  GET_/v1/models=HTTP_200 (prior)
+
+GENERATION=
+  POST=http://127.0.0.1:11436/v1/chat/completions
+  BODY=_p04_gen002_request.json
+  TIMEOUT_BOUND_S=300
+  HTTP_STATUS=200
+  ELAPSED_MS=8507
+  RESP=_p04_gen002_response.json
+  SAMPLE_CONTENT="\nSayhi!"
+  SAMPLE_CONTENT_BYTES=7
+  USAGE_prompt_tokens=20
+  USAGE_completion_tokens=6
+  USAGE_total_tokens=26
+  FINISH_REASON=stop
+  STDERR_RECEIPT=[AGENT] GENERATION_RECEIPT prompt=20 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+  STDERR_HTTP=[POST /v1/chat/completions] 200  8427.87 ms
+  STDERR_FLOOR=[server] PRODUCT_HOST_DECODE_FLOOR=1 DUALSTICK_ARM=0 GPU_POLICY=CPU WHY=EOS_COLLAPSE_ON_GPU_FORWARD
+  STDERR_SEND=[D2_HTTP_SEND] bodySize=292 httpSize=524 content_bytes=7
+  FIRST_TOKEN_ID=13
+  HANG=0
+  USABLE_TEXT_TOKENS=6
+  TOKEN_SURVIVED=1
+  GENERATION_PASS=1
+
+DIAG_PROBES_PRE_FIX=
+  GPU_SINGLE+GREEDY: TOKEN id=2 piece=</s> content="" completion_tokens=1
+  GPU_DUAL (GEN_001): TOKEN id=2 piece=</s> content="" completion_tokens=1
+  HOST_DECODE env probe: content="\nSayhi!" completion_tokens=6 → informed bake
+
+ARTIFACTS=
+  _p04_gen002_serve_pid.txt
+  _p04_gen002_serve_stderr.txt
+  _p04_gen002_serve_stdout.txt
+  _p04_gen002_request.json
+  _p04_gen002_response.json
+  _p04_build_deep2_openai_gen002.log
+
+OPEN_REMAINS=
+  GPU_FORWARD_EOS_COLLAPSE=1 (held; RAWRXD_ALLOW_GPU=1 opts out of floor)
+  CHATTEMPLATE_NAME_PHI3_FOR_TINYLLAMA=COSMETIC (format shape OK)
+  FULL_PRODUCT_OPEN_SESSION_TOKEN_CONJUNCTION=NOT_CLAIMED_HERE
+  :8080=NOT_REOPENED
+
+NOT_CLAIMED=
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD
+  GPU_FORWARD_PASS=0
+  MULTI_FAMILY=0
+
+DISPOSITION=P04_PASS_GEN_HTTP200_NONEMPTY_CONTENT_HOST_DECODE_FLOOR
+PROMOTE=0

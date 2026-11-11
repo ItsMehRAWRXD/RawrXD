@@ -1,0 +1,11 @@
+{
+  "tested_utc": "2026-11-10T13:41:22.4148982Z",
+  "status": "FAIL",
+  "process_exit": -1073740791,
+  "timed_out": false,
+  "model": "F:\\rawrxd\\models\\qwen2.5-coder_1.5b-base.gguf",
+  "product_ide_sha256": "A16D0E7CDE017812C07DC9C108EABDD2CC45D1A2CF992F554457AEDFB777627B",
+  "bridge_object_sha256": "3CF18EB3580D8C216A5E3ED252312057FA1C26260E772D5867E38412D38BF673",
+  "test_exe_sha256": "C6E2CD98AAF1AFD13EBED8A004402132907438230559540F6828A30F036BCB14",
+  "scope": "Three sequential real-engine generation requests using the product object files."
+}

@@ -1,0 +1,41 @@
+
+================= H11 PARITY k=1 =================
+
+===== H11 PARITY COMPARISON =====
+serial: blocks=22 rows=1 wk=256 wv=256 logits=32000
+batch : blocks=22 rows=1 wk=256 wv=256 logits=32000
+shape_parity=PASS
+K_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+V_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+LOGITS_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+kv_committed=YES
+BIT_EXACT_ALL=YES
+PARITY_VERDICT=PASS
+
+================= H11 PARITY k=2 =================
+
+===== H11 PARITY COMPARISON =====
+serial: blocks=22 rows=2 wk=256 wv=256 logits=32000
+batch : blocks=22 rows=2 wk=256 wv=256 logits=32000
+shape_parity=PASS
+K_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+V_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+LOGITS_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+kv_committed=YES
+BIT_EXACT_ALL=YES
+PARITY_VERDICT=PASS
+
+================= H11 PARITY k=16 =================
+
+===== H11 PARITY COMPARISON =====
+serial: blocks=22 rows=16 wk=256 wv=256 logits=32000
+batch : blocks=22 rows=16 wk=256 wv=256 logits=32000
+shape_parity=PASS
+K_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+V_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+LOGITS_PARITY=PASS  (max_abs=0 rmse=0 cos=1.000000000 first_diff=18446744073709551615)
+kv_committed=YES
+BIT_EXACT_ALL=YES
+PARITY_VERDICT=PASS
+
+================= H11 PARITY k=128 =================

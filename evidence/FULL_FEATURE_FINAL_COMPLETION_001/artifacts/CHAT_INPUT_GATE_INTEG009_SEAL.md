@@ -1,0 +1,48 @@
+# CHAT_INPUT gate seal — tip_final_integ_009 / A673
+
+ASOF_UTC=2026-11-09T18:07:00Z
+MOTD_ACK=1
+
+```
+CHAT_INPUT_GATE=PASS
+HARNESS=FULL_FEATURE_ONESHOT_001/artifacts/chat_ctrl_enter_verify_e973.ps1
+PASS_COUNT=7/7
+TIP_SHA256=A673584BFC70F1D571EBA4CDA108E79D194BE64A068B833D3931204E4CA59730
+TIP_LOCKED=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_009_A673_CHAT7\RawrXD-Win32IDE-Native-Ext.exe
+BINARY_CHAT_LATCH=CHAT_CTRL_LATCH_V1
+BINARY_G7_DOCK_STRINGS=G7_ensurePanelVisible_ShowWindow_1300
+RECEIPT=artifacts/CHAT_CTRL_ENTER_RECEIPT_INTEG009.txt
+RUNLOG=artifacts/chat_ctrl_enter_e973_run_20261109-130047.txt
+PARENT_TIP007_SHA=ACBE6150D86ECF22A623DA180C78861AC3A91CAA14E761B4C65BB1E7A2C7BE07
+PARENT_CHAT=5/7_FAIL
+A4F_UNTOUCHED=1
+E6CF_RESTORE=HELD
+PROMOTE=0
+```
+
+## Measured sub-gates
+
+| Gate | Result |
+|------|--------|
+| ENTER_NEWLINE | PASS |
+| SHIFT_ENTER_NEWLINE | PASS |
+| CTRL_ENTER_ONE_SEND | PASS |
+| SEND_BUTTON_ONE_SEND | PASS |
+| EMPTY_CTRL_ENTER_NO_SEND | PASS |
+| HELD_CTRL_ENTER_NO_DUP | PASS |
+| MULTILINE_UNICODE | PASS |
+
+## Product delta
+
+- `Win32IDE_lifecycle.cpp`: timed `CHAT_CTRL_LATCH_V1` after Ctrl KEYDOWN (PostMessage/keybd_event race).
+- Full Ext rebuild under VsDevCmd (`build_tip_debug_rel`) required for coherent link (partial link A392 crashed CreateWindow).
+
+## Non-claims (fail-closed)
+
+```
+ISSUE49_S05_CHAT_INPUT_SET = FAIL (separate SetWindowText criterion; ALIVE=0 on I49 harness)
+FOUR_PANEL_ON_A673 = FAIL_CLOSED (EXIT=-1 during build; NOT tip_007 inherit)
+SESSION_LOOP = NOT_DEMONSTRATED
+ONE_SHA_11_11 = NOT_MET
+ENGINEERING_MATURITY = 82%_UNCHANGED
+```

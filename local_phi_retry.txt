@@ -1,0 +1,66 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-14692-150210223673100 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf
+[stage] ingest done in 38932.2 ms: arch=phi3 blocks=32 vocab=32064 bos=1 eos=32000
+[stage] model ships a chat template (407 bytes):
+{% for message in messages %}{% if message['role'] == 'system' %}{{'<|system|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'user' %}{{'<|user|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'assistant' %}{{'<|assistant|>
+' + message['content'] + '<|end|>
+'}}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>
+' }}{% else %}{{ eos_token }}{% endif %}
+[stage] tokenizer round-trip: PASS (73 ids -> 73 chars)
+[stage] executor bound: ops=195 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\agent_e2e_fixture
+[stage] chat markers: template user='<|user|>
+[flight] Executor recorder started: F:\rawrxd\agent_e2e_fixture\deep2_flight.jsonl
+' asst='<|assistant|>
+' gen='<|assistant|>
+' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[recovery] RESTORED target=calc.cpp transaction=F:\rawrxd\agent_e2e_fixture\.rawrxd\agent_transactions\txn_149956683000700
+[ESP] seq=1 req=1 agent=0 model_load        F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf value=0
+[ESP] seq=2 req=1 agent=0 tokenizer_check   PASS value=0
+[ESP] seq=3 req=1 agent=0 prefill_start     tokens=0 ctx=0 value=0
+[ESP] seq=4 req=1 agent=0 prefill_start     tokens=670 ctx=0 value=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +670 tokens (ctx=670 tokens) in 239291 ms (batched)
+[ESP] seq=5 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":670,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":239291.706,"decode_ms":0.000,"task_ms":239291.711,"gpu_dispatches":44224,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=6 req=1 agent=0 prefill_end       elapsed_ms=239291.749500 value=239291
+[ESP] seq=7 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":670,"context":670,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":2.800,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":239291.750,"decode_ms":0.000,"task_ms":239291.823,"gpu_dispatches":44224,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=9 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":1,"prefill_tokens":670,"context":670,"rolling_tps":5851.375,"decode_tps":5851.375,"prefill_tps":2.800,"task_tps":0.004,"ttft_ms":239292.010,"prefill_ms":239291.750,"decode_ms":0.171,"task_ms":239292.012,"gpu_dispatches":44224,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 0/128: dent
+[ESP] seq=15 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":670,"context":670,"rolling_tps":2.008,"decode_tps":2.008,"prefill_tps":2.800,"task_tps":0.025,"ttft_ms":239292.010,"prefill_ms":239291.750,"decode_ms":2988.160,"task_ms":242280.001,"gpu_dispatches":44550,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=21 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":11,"prefill_tokens":670,"context":670,"rolling_tps":1.800,"decode_tps":1.862,"prefill_tps":2.800,"task_tps":0.045,"ttft_ms":239292.010,"prefill_ms":239291.750,"decode_ms":5906.584,"task_ms":245198.426,"gpu_dispatches":44875,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 10/128: dent extr extr extr extr extr extr extr extr extr extr
+[ESP] seq=27 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":16,"prefill_tokens":670,"context":670,"rolling_tps":1.800,"decode_tps":1.824,"prefill_tps":2.800,"task_tps":0.064,"ttft_ms":239292.010,"prefill_ms":239291.750,"decode_ms":8773.031,"task_ms":248064.872,"gpu_dispatches":45200,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] SNAP STOP: reason=5 tokens=19 after 19 host tokens
+[ESP] seq=30 req=1 agent=0 snap_stop         header invalid/too long value=0
+[step 1] generated 19 tokens / 119 chars in 10400 ms (1.827 tok/s) snap=5
+[ESP] seq=31 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":18,"prefill_tokens":670,"context":670,"rolling_tps":1.600,"decode_tps":1.731,"prefill_tps":2.800,"task_tps":0.072,"ttft_ms":239292.010,"prefill_ms":239291.750,"decode_ms":10400.373,"task_ms":249692.215,"gpu_dispatches":45330,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=119 text="dent extr extr extr extr extr extr extr extr extr extr extr Venezuela Venezuela Venezuela Venezuela Venezuela Venezuela"
+[SNAP OUT META] eos_id=32000
+[SNAP OUT TOKENS] n=18 ids=25873,17541,17541,17541,17541,17541,17541,17541,17541,17541,17541,17541,20931,20931,20931,20931,20931,20931
+[step 1] INVALID OUTPUT (snap reason=5 header invalid/too long); no complete command
+[SNAP REJECT RAW] bytes=119 text="dent extr extr extr extr extr extr extr extr extr extr extr Venezuela Venezuela Venezuela Venezuela Venezuela Venezuela"
+[SNAP REJECT META] eos_id=32000
+[SNAP REJECT TOKENS] n=18 ids=25873,17541,17541,17541,17541,17541,17541,17541,17541,17541,17541,17541,20931,20931,20931,20931,20931,20931
+[ESP] seq=32 req=1 agent=0 error             model_output_invalid value=0
+[ESP] seq=33 req=1 agent=0 prefill_start     tokens=236 ctx=688 value=0

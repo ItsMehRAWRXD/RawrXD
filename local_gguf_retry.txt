@@ -1,0 +1,178 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-25900-149110870997400 turn=1
+[stage] loading model F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[stage] ingest done in 24013.2 ms: arch=llama blocks=28 vocab=128256 bos=128000 eos=128009
+[stage] model ships a chat template (3827 bytes):
+{{- bos_token }}
+{%- if custom_tools is defined %}
+    {%- set tools = custom_tools %}
+{%- endif %}
+{%- if not tools_in_user_message is defined %}
+    {%- set tools_in_user_message = true %}
+{%- endif %}
+{%- if not date_string is defined %}
+    {%- if strftime_now is defined %}
+        {%- set date_string = strftime_now("%d %b %Y") %}
+    {%- else %}
+        {%- set date_string = "26 Jul 2024" %}
+    {%- endif %}
+{%- endif %}
+{%- if not tools is defined %}
+    {%- set tools = none %}
+{%- endif %}
+
+{#- This block extracts the system message, so we can slot it into the right place. #}
+{%- if messages[0]['role'] == 'system' %}
+    {%- set system_message = messages[0]['content']|trim %}
+    {%- set messages = messages[1:] %}
+{%- else %}
+    {%- set system_message = "" %}
+{%- endif %}
+
+{#- System message #}
+{{- "<|start_header_id|>system<|end_header_id|>\n\n" }}
+{%- if tools is not none %}
+    {{- "Environment: ipython\n" }}
+{%- endif %}
+{{- "Cutting Knowledge Date: December 2023\n" }}
+{{- "Today Date: " + date_string + "\n\n" }}
+{%- if tools is not none and not tools_in_user_message %}
+    {{- "You have access to the following functions. To call a function, please respond with JSON for a function call." }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+{%- endif %}
+{{- system_message }}
+{{- "<|eot_id|>" }}
+
+{#- Custom tools are passed in a user message with some extra guidance #}
+{%- if tools_in_user_message and not tools is none %}
+    {#- Extract the first user message so we can plug it in here #}
+    {%- if messages | length != 0 %}
+        {%- set first_user_message = messages[0]['content']|trim %}
+        {%- set messages = messages[1:] %}
+    {%- else %}
+        {{- raise_exception("Cannot put tools in the first user message when there's no first user message!") }}
+{%- endif %}
+    {{- '<|start_header_id|>user<|end_header_id|>\n\n' -}}
+    {{- "Given the following functions, please respond with a JSON for a function call " }}
+    {{- "with its proper arguments that best answers the given prompt.\n\n" }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+    {{- first_user_message + "<|eot_id|>"}}
+{%- endif %}
+
+{%- for message in messages %}
+    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}
+        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' }}
+    {%- elif 'tool_calls' in message %}
+        {%- if not message.tool_calls|length == 1 %}
+            {{- raise_exception("This model only supports single tool-calls at once!") }}
+        {%- endif %}
+        {%- set tool_call = message.tool_calls[0].function %}
+        {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' -}}
+        {{- '{"name": "' + tool_call.name + '", ' }}
+        {{- '"parameters": ' }}
+        {{- tool_call.arguments | tojson }}
+        {{- "}" }}
+        {{- "<|eot_id|>" }}
+    {%- elif message.role == "tool" or message.role == "ipython" %}
+        {{- "<|start_header_id|>ipython<|end_header_id|>\n\n" }}
+        {%- if message.content is mapping or message.content is iterable %}
+            {{- message.content | tojson }}
+        {%- else %}
+            {{- message.content }}
+        {%- endif %}
+        {{- "<|eot_id|>" }}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' }}
+{%- endif %}
+
+[stage] tokenizer round-trip: PASS (30 ids -> 73 chars)
+[stage] executor bound: ops=395 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd\agent_e2e_fixture
+[flight] Executor recorder started: F:\rawrxd\agent_e2e_fixture\deep2_flight.jsonl
+[stage] chat markers: template user='<|start_header_id|>user<|end_header_id|>
+
+' asst='<|start_header_id|>assistant<|end_header_id|>
+
+' gen='<|start_header_id|>assistant<|end_header_id|>
+
+' bos_in_template=1
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[ESP] seq=1 req=1 agent=0 model_load        F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf value=0
+[ESP] seq=2 req=1 agent=0 tokenizer_check   PASS value=0
+[ESP] seq=3 req=1 agent=0 prefill_start     tokens=0 ctx=0 value=0
+[ESP] seq=4 req=1 agent=0 prefill_start     tokens=220 ctx=0 value=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +220 tokens (ctx=220 tokens) in 120721 ms (batched)
+[ESP] seq=5 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":0,"context":220,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":120723.000,"decode_ms":0.000,"task_ms":120723.007,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=6 req=1 agent=0 prefill_end       elapsed_ms=120723.040300 value=120723
+[ESP] seq=7 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":0,"prefill_tokens":220,"context":220,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":1.822,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":120723.040,"decode_ms":0.000,"task_ms":120723.111,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=9 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":1,"prefill_tokens":220,"context":220,"rolling_tps":1439.885,"decode_tps":1439.885,"prefill_tps":1.822,"task_tps":0.008,"ttft_ms":120723.816,"prefill_ms":120723.040,"decode_ms":0.695,"task_ms":120723.819,"gpu_dispatches":44492,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] tok 0/96: TO
+[ESP] seq=15 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":1.575,"decode_tps":1.575,"prefill_tps":1.822,"task_tps":0.048,"ttft_ms":120723.816,"prefill_ms":120723.040,"decode_ms":3808.863,"task_ms":124531.988,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[step 1] SNAP STOP: reason=5 tokens=7 after 7 host tokens
+[ESP] seq=16 req=1 agent=0 snap_stop         invalid length value=0
+[step 1] generated 7 tokens / 19 chars in 4544 ms (1.540 tok/s) snap=5
+[ESP] seq=17 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":1.320,"decode_tps":1.320,"prefill_tps":1.822,"task_tps":0.048,"ttft_ms":120723.816,"prefill_ms":120723.040,"decode_ms":4544.103,"task_ms":125267.228,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":0,"failures":0,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=19 text="TOOL read  calc.cpp"
+[SNAP OUT META] eos_id=128009
+[step 1] MOTD_TOOL_VERDICT DENIED (MOTD_REQUIRED: call read_motd before any other tool this turn)
+[SNAP OUT TOKENS] n=6 ids=5319,1971,1373,220,10241,7356
+[ESP] seq=18 req=1 agent=0 tool_start        read calc.cpp value=0
+[ESP] seq=19 req=1 agent=0 tool_result       read calc.cpp bytes=76 value=-1
+[step 1] TOOL read -> calc.cpp ; observation 76 bytes; SNAP dispatch transition 1.7514 ms
+MOTD_REQUIRED: MOTD_REQUIRED: call read_motd before any other tool this turn
+[ESP] seq=20 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"tool","generated":6,"prefill_tokens":220,"context":220,"rolling_tps":0.000,"decode_tps":1.320,"prefill_tps":1.822,"task_tps":0.048,"ttft_ms":120723.816,"prefill_ms":120723.040,"decode_ms":4545.114,"task_ms":125268.486,"gpu_dispatches":45478,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=21 req=1 agent=0 prefill_start     tokens=68 ctx=226 value=0
+[step 2] prefill +68 tokens (ctx=294 tokens) in 39098 ms (batched)
+[ESP] seq=22 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":6,"prefill_tokens":220,"context":294,"rolling_tps":0.000,"decode_tps":1.320,"prefill_tps":1.377,"task_tps":0.037,"ttft_ms":120723.816,"prefill_ms":159820.677,"decode_ms":4545.114,"task_ms":164370.027,"gpu_dispatches":59507,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=23 req=1 agent=0 prefill_end       elapsed_ms=159820.719500 value=159820
+[ESP] seq=24 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"prefill","generated":6,"prefill_tokens":288,"context":294,"rolling_tps":0.000,"decode_tps":1.320,"prefill_tps":1.802,"task_tps":0.037,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":4545.114,"task_ms":164370.152,"gpu_dispatches":59507,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=26 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":7,"prefill_tokens":288,"context":294,"rolling_tps":1473.188,"decode_tps":1.540,"prefill_tps":1.802,"task_tps":0.043,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":4545.793,"task_ms":164370.850,"gpu_dispatches":59507,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 2] tok 0/96: TO
+[ESP] seq=32 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":12,"prefill_tokens":288,"context":294,"rolling_tps":1.353,"decode_tps":1.337,"prefill_tps":1.802,"task_tps":0.071,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":8978.634,"task_ms":168803.690,"gpu_dispatches":60493,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=38 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":17,"prefill_tokens":288,"context":294,"rolling_tps":1.400,"decode_tps":1.316,"prefill_tps":1.802,"task_tps":0.098,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":12920.588,"task_ms":172745.645,"gpu_dispatches":61478,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 2] tok 10/96: TOOL read  calc.cpp<|eot_id
+[ESP] seq=44 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":22,"prefill_tokens":288,"context":294,"rolling_tps":1.400,"decode_tps":1.307,"prefill_tps":1.802,"task_tps":0.125,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":16827.290,"task_ms":176652.346,"gpu_dispatches":62463,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=50 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":27,"prefill_tokens":288,"context":294,"rolling_tps":1.400,"decode_tps":1.301,"prefill_tps":1.802,"task_tps":0.150,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":20751.048,"task_ms":180576.105,"gpu_dispatches":63448,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 2] tok 20/96: TOOL read  calc.cpp<|eot_id|><|start_header_id|>assistant
+[ESP] seq=56 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":32,"prefill_tokens":288,"context":294,"rolling_tps":1.400,"decode_tps":1.302,"prefill_tps":1.802,"task_tps":0.174,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":24571.053,"task_ms":184396.109,"gpu_dispatches":64433,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[step 2] SNAP STOP: reason=5 tokens=28 after 28 host tokens
+[ESP] seq=58 req=1 agent=0 snap_stop         invalid length value=0
+[step 2] generated 28 tokens / 73 chars in 21542 ms (1.300 tok/s) snap=5
+[ESP] seq=59 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"decode","generated":33,"prefill_tokens":288,"context":294,"rolling_tps":1.200,"decode_tps":1.265,"prefill_tps":1.802,"task_tps":0.178,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":26087.088,"task_ms":185912.145,"gpu_dispatches":64630,"cpu_fallbacks":0,"tool_calls":1,"failures":1,"stalled":false,"active":true,"slow":false} value=0
+[SNAP OUT RAW] bytes=73 text="TOOL read  calc.cpp<|eot_id|><|start_header_id|>assistant<|end_header_id|"
+[SNAP OUT META] eos_id=128009
+[SNAP OUT TOKENS] n=27 ids=5319,1971,1373,220,10241,7356,27,91,68,354,851,91,29,27,91,2527,8932,851,91,29,78191,27,91,408,8932,851,91
+[step 2] MOTD_TOOL_VERDICT DENIED (MOTD_REQUIRED: call read_motd before any other tool this turn)
+[ESP] seq=60 req=1 agent=0 tool_start        read calc.cpp<|eot_id|><|start_header_id|>assistant<|end_header_id| value=0
+[step 2] TOOL read -> calc.cpp<|eot_id|><|start_header_id|>assistant<|end_header_id| ; observation 76 bytes; SNAP dispatch transition 1.2792 ms
+MOTD_REQUIRED: MOTD_REQUIRED: call read_motd before any other tool this turn
+[ESP] seq=61 req=1 agent=0 tool_result       read calc.cpp<|eot_id|><|start_header_id|>assistant<|end_header_id| bytes=76 value=-1
+[ESP] seq=62 req=1 agent=0 heartbeat         {"request":1,"agent":0,"phase":"tool","generated":33,"prefill_tokens":288,"context":294,"rolling_tps":0.000,"decode_tps":1.265,"prefill_tps":1.802,"task_tps":0.178,"ttft_ms":120723.816,"prefill_ms":159820.720,"decode_ms":26087.908,"task_ms":185913.245,"gpu_dispatches":64630,"cpu_fallbacks":0,"tool_calls":2,"failures":2,"stalled":false,"active":true,"slow":false} value=0
+[ESP] seq=63 req=1 agent=0 prefill_start     tokens=67 ctx=321 value=0

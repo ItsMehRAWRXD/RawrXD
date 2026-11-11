@@ -1,0 +1,513 @@
+=== AUDIT BATCHES 291-300 ===
+
+=== BATCH 291 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h
+D:\rawrxd-ci-bootstrap\src\win32app\v280_link_bridge.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\v280_link_fallbacks.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\VSCodeMarketplaceAPI.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\VSCodeMarketplaceAPI.hpp
+D:\rawrxd-ci-bootstrap\src\win32app\VSIXInstaller.hpp
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\win32_feature_adapter.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp
+=== BATCH 291 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:67: bool Initialize(HWND hWnd) override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:68: void Render() override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:69: void Resize(UINT width, UINT height) override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:70: void SetTransparency(float alpha) override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:71: void DrawText(const std::wstring& text, float x, float y, float size, uint32_t color) override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:72: void DrawRect(float x, float y, float w, float h, uint32_t color) override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:73: void BeginFrame() override;
+D:\rawrxd-ci-bootstrap\src\win32app\TransparentRenderer.h:74: void EndFrame() override;
+D:\rawrxd-ci-bootstrap\src\win32app\VSCodeMarketplaceAPI.cpp:242: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\VSCodeMarketplaceAPI.cpp:260: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\VSIXInstaller.hpp:148: if (system(cmd.c_str()) != 0) {
+D:\rawrxd-ci-bootstrap\src\win32app\VSIXInstaller.hpp:152: if (system(cmd.c_str()) != 0) {
+D:\rawrxd-ci-bootstrap\src\win32app\VSIXInstaller.hpp:184: std::ofstream metastub(installDir + "\\native_manifest.json");
+D:\rawrxd-ci-bootstrap\src\win32app\VSIXInstaller.hpp:185: metastub << "{\n"
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:1: // Ship/renderer.h is a minimal IRenderer stub; Win32IDE needs the full interface in include/.
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:93: ~VulkanRenderer() override {
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:97: bool Initialize(HWND hwnd) override {
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:207: void Resize(UINT w, UINT h) override {
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:228: void Render() override {
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:342: void SetTransparency(float) override {}
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:343: void DrawText(const std::wstring&, float, float, float, uint32_t) override {}
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:344: void DrawRect(float, float, float, float, uint32_t) override {}
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:345: void BeginFrame() override {}
+D:\rawrxd-ci-bootstrap\src\win32app\VulkanRenderer.cpp:346: void EndFrame() override {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:34: // SUBAGENT CHAIN / SWARM / TODO HANDLERS (Phase 19B)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:76: strcpy_s(taskDesc, "Execute modular task sequence");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:124: strcpy_s(taskDesc, "Execute parallel task swarm");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:137: void Win32IDE::onSubAgentTodoList() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:138: LOG_INFO("onSubAgentTodoList called");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:146: std::vector<std::string> todoItems = m_agenticBridge->GetSubAgentTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:148: std::stringstream todoOutput;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:149: todoOutput << "=== SubAgent Todo List ===\n\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:150: if (todoItems.empty()) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:151: todoOutput << "(empty)\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:153: for (size_t i = 0; i < todoItems.size(); ++i) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:154: todoOutput << (i + 1) << ". " << todoItems[i] << "\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:158: appendToOutput(todoOutput.str(), "Output", OutputSeverity::Info);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:161: void Win32IDE::onSubAgentTodoClear() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:162: LOG_INFO("onSubAgentTodoClear called");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:170: if (MessageBoxA(m_hwndMain, "Clear all SubAgent todo items?", "Confirm", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:171: m_agenticBridge->ClearSubAgentTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:172: appendToOutput("🗑️ SubAgent Todo List cleared\n", "Output", OutputSeverity::Info);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:458: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:495: // TODO: add setContextWindow() to AutonomousAgenticPipelineCoordinator
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:706: m_agenticBridge->SetNoRefusal(true);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:781: if (RawrXD::Bridge::InitializeSwarmSystem(&swarmConfig) == S_OK)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:783: LOG_INFO("Agentic Swarm System (Slot 20) initialized via bridge");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:820: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:888: strcpy_s(prompt, "Analyze the current file and suggest improvements");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1094: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1122: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1317: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1499: // --- SubAgent Chain / Swarm / Todo (Phase 19B) ---
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1506: case IDM_SUBAGENT_TODO_LIST:
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1507: onSubAgentTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1509: case IDM_SUBAGENT_TODO_CLEAR:
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1510: onSubAgentTodoClear();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1584: m_agenticBridge->SetNoRefusal(!current);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1861: noRefusal = m_agenticBridge->GetNoRefusal();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1868: noRefusal = m_agent->IsNoRefusal();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1896: m_agent->SetNoRefusal(noRefusal);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1967: void Win32IDE::onAIModeNoRefusal()
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1972: current = m_agenticBridge->GetNoRefusal();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1979: m_agenticBridge->SetNoRefusal(newState);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentCommands.cpp:1981: m_agent->SetNoRefusal(newState);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:40: //   - Falls back through a priority list: local GGUF → Ollama → cloud stub.
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:155: {"manage_todo_list", {"items"}},
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:566: // Model tier priority: local GGUF > Ollama > cloud stub
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:567: static const std::vector<std::string> MODEL_PRIORITY = {"local_gguf", "ollama", "cloud_stub"};
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:605: // Cloud stub fallback
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:606: route.selectedTier = "cloud_stub";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:607: route.modelName = "stub";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:609: appendToOutput("[ModelRouter] ⚠️ No local/Ollama model available — using cloud stub", "General",
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.cpp:633: << " cloud=stub";
+
+=== BATCH 292 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentHistory.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBrowser.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBrowser.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticComposerUX.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticPlanningPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticPlanningPanel.hpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentOllamaClient.cpp
+=== BATCH 292 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentEnhancements.h:82: std::string selectedTier;   // "local_gguf" | "ollama" | "cloud_stub"
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentHistory.cpp:6: //     failure detection/correction, ghost text, plan step, todo update, and
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentHistory.cpp:50: case AgentEventType::TodoUpdated:           return "TodoUpdated";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentHistory.cpp:138: {"TodoUpdated",        AgentEventType::TodoUpdated},
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:46: // SCAFFOLD_053: AgenticBridge LoadModel and model override
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:384: // TODO: add recordLatency to PerformanceMonitor when timing infra lands
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:421: void AgenticBridge::SetNoRefusal(bool enabled)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:607: "runSubagent", "manage_todo_list", "chain",           "hexmag_swarm"};
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:734: BOOL success = CreateProcessA(NULL, const_cast<char*>(cmdLine.c_str()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:832: TerminateProcess(m_hProcess, 0);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.cpp:1207: CONFIG.applyEnvironmentOverrides();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.h:71: void SetNoRefusal(bool enabled);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.h:72: bool GetNoRefusal() const { return m_noRefusal; }
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.h:148: std::vector<std::string> GetSubAgentTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgenticBridge.h:149: void ClearSubAgentTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentOllamaClient.cpp:140: } catch (...) { m_ollamaStatus = "Exception"; }
+
+=== BATCH 293 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentStreamingBridge.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIBackend.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIReverseEngineering.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AirgappedEnterprise.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Annotations.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AsmSemantic.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutonomousAgent.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutonomousAgent.h
+=== BATCH 293 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentPanel.cpp:217: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AgentPanel.cpp:226: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIReverseEngineering.cpp:6: //   Unify every reverse-engineering subsystem (RawrCodex, RawrReverseEngine,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIReverseEngineering.cpp:350: { "strcpy",   "buffer_overflow", "high",     "Unbounded string copy — may overflow stack/heap buffer",
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIReverseEngineering.cpp:352: { "strcat",   "buffer_overflow", "high",     "Unbounded string concatenation",
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AIReverseEngineering.cpp:357: "Replace with fgets() with explicit buffer size" },
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AsmSemantic.cpp:1642: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AsmSemantic.cpp:1814: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AsmSemantic.cpp:1825: try { retCleanup = std::stoi(retArg); } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AsmSemantic.cpp:1990: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:11: //     4. Full audit runner (stub detection + menu wire check + component tests)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:17: //   features, their status, stub detection result, menu wiring, and
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:19: //   red=stub/broken).
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:463: // 12) Agentic todo pipeline
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:475: const auto baseline = mgr->getTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:476: std::vector<TodoItem> probe = baseline;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:477: TodoItem item;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:480: item.description = "Runtime todo validation";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:481: item.status = TodoItem::Status::NotStarted;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:484: mgr->setTodoList(probe);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:485: const auto after = mgr->getTodoList();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:486: ok = std::any_of(after.begin(), after.end(), [](const TodoItem& todo) { return todo.id == 900001; });
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:488: mgr->setTodoList(baseline);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:490: push("Agentic Todo Pipeline", ok, oss.str());
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:648: // Column 6: Stub?
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:650: const_cast<LPWSTR>(f.stubDetected ? L"STUB" : L"OK"));
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:661: size_t stubs = FeatureRegistry::instance().getCountByStatus(ImplStatus::Stub);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:666: L"Features: %zu  |  Complete: %zu  |  Stubs: %zu  |  Completion: %.1f%%",
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:667: total, complete, stubs, pct * 100.0f);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:695: case ImplStatus::Stub:
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:715: // Override: if stub was detected at runtime, force red text
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:716: if (f.stubDetected) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:807: { L"Stub",       50 },
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:911: SetWindowTextW(state->hwndStatusBar, L"Running stub detection...");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:914: FeatureRegistry::instance().detectStubs();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1046: void Win32IDE::initAuditSystem() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1052: // with ALL known IDM_* commands, checks menu wiring, detects stubs,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1068: // Lazy-init audit system (populates FeatureRegistry + menu wiring) on first use
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1069: if (!m_auditInitialized) initAuditSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1074: case IDM_AUDIT_DETECT_STUBS:    cmdAuditDetectStubs();    return true;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1126: // 1. Detect stubs
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1127: FeatureRegistry::instance().detectStubs();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1142: void Win32IDE::cmdAuditDetectStubs() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1143: FeatureRegistry::instance().detectStubs();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1145: size_t stubs = FeatureRegistry::instance().getCountByStatus(ImplStatus::Stub);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1150: oss << "=== Stub Detection Complete ===\n"
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1152: << "Stubs Found: " << stubs << "\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1153: if (stubs > 0) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1154: oss << "\nStub features:\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1155: for (const auto& e : FeatureRegistry::instance().getByStatus(ImplStatus::Stub)) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1156: oss << "  [STUB] " << (e.name ? e.name : "?")
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1162: // Output a non-blocking summary line — the full per-stub details are already
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1165: summary << "[Audit] Stub detection complete — total: " << total
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1166: << ", stubs: " << stubs << ". See 'Audit' tab for details.\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1168: stubs > 0 ? Win32IDE::OutputSeverity::Warning
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1284: size_t stubs = FeatureRegistry::instance().getCountByStatus(ImplStatus::Stub);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1294: L"Stubs:     %zu\n"
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AuditDashboard.cpp:1297: total, complete, partial, stubs, broken, pct * 100.0f);
+
+=== BATCH 294 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutonomousCommunicator.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutonomousDebugger.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutonomousLoop.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Autonomy.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Autonomy.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutoSave.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconInit.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconWiring.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconWiring.h
+=== BATCH 294 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Autonomy.cpp:167: "- TOOL:manage_todo_list:[{\"id\":1,\"title\":\"...\",\"status\":\"not-started\"},...] (task tracking)\n"
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Autonomy.cpp:216: "You may use runSubagent, chain, hexmag_swarm, or manage_todo_list tools.";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutoSave.cpp:194: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_AutoSave.cpp:262: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:192: // ---- Load saved configs (overrides defaults) ---------------------------
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:217: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:569: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:591: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:630: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:647: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BackendSwitcher.cpp:1075: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconInit.h:3: // Include this header from Win32IDE.h and call InitializeBeaconSystem() from onCreate().
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconInit.h:33: inline bool InitializeBeaconSystem(
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BeaconInit.h:115: inline void ShutdownBeaconSystem(
+
+=== BATCH 295 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Breadcrumbs.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BuildRunner.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CallStackSymbols.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CaretAnimation.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ChatMessageRenderer.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ChatPanel_Ollama.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ChatPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CodeLens.cpp
+=== BATCH 295 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:137: std::memcpy(execMem, code.data(), code.size());
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:195: void Win32IDE::initializeBuildSystem() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:223: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:258: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:265: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:312: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:330: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:365: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:369: lstrcpyA(newTarget, m_toolchain->getTarget().c_str());
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Build.cpp:393: if (!m_toolchain) initializeBuildSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_BuildRunner.cpp:94: BOOL ok = CreateProcessA(nullptr, cmdBuf.data(), nullptr, nullptr, TRUE,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CallStackSymbols.cpp:434: std::memcpy(&testAddr, &retAddr, sizeof(retAddr));
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ChatPanel_Ollama.cpp:322: catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:54: strcpy_s(g_localBeaconState.statusMessage, "Invalid beacon MMF handle");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:59: strcpy_s(g_localBeaconState.statusMessage, "Beacon MMF not mapped");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:105: strcpy_s(result.message, "Beacon MMF already initialized");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:113: strcpy_s(result.message, "Failed to create beacon sync mutex");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:130: strcpy_s(result.message, "Failed to create beacon MMF");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:146: strcpy_s(result.message, "Failed to map beacon MMF");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:154: strcpy_s(g_localBeaconState.statusMessage, "Beacon integration initialized");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:156: strcpy_s(result.message, "Beacon MMF initialized successfully");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:165: strcpy_s(result.message, "Beacon sync already active");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:171: strcpy_s(result.message, g_localBeaconState.statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:212: strcpy_s(result.message, "Beacon state synchronization started");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:221: strcpy_s(result.message, "Beacon sync not active");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:233: strcpy_s(result.message, "Beacon state synchronization stopped");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:246: strcpy_s(result.message, g_localBeaconState.statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:253: strcpy_s(result.message, "Failed to acquire beacon lock for state update");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:261: strcpy_s(g_localBeaconState.statusMessage, statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:280: strcpy_s(result.message, "Invalid output state pointer");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:285: strcpy_s(result.message, g_localBeaconState.statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:292: strcpy_s(result.message, "Failed to acquire beacon lock for state read");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:305: strcpy_s(result.message, "Beacon state retrieved successfully");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:327: strcpy_s(result.message, getResult.message);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:338: strcpy_s(result.message, "Beacon died while waiting for stage");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:354: strcpy_s(result.message, "Beacon health check failed");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:362: strcpy_s(result.message, getResult.message);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:383: strcpy_s(result.message, "Beacon health check passed");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:405: strcpy_s(result.message, "Beacon heartbeat restored");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:422: if (CreateProcessA(nullptr, cmdLine, nullptr, nullptr, FALSE,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:439: strcpy_s(result.message, "Beacon recovery successful - new process started");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:456: strcpy_s(result.message, "Invalid command parameters");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:461: strcpy_s(result.message, g_localBeaconState.statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:468: strcpy_s(result.message, "Failed to acquire beacon lock for command");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:475: strcpy_s(g_sharedBeaconState->statusMessage, command);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:492: strcpy_s(result.message, "Command timeout");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:501: strcpy_s(response, responseSize, g_sharedBeaconState->statusMessage);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:503: strcpy_s(result.message, "Command executed successfully");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:525: strcpy_s(result.message, initResult.message);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:532: strcpy_s(result.message, syncResult.message);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:543: strcpy_s(result.message, "Beacon never became alive during sync");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:557: strcpy_s(result.message, updateResult.message);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:561: strcpy_s(result.message, "Beacon state synchronization completed successfully");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CircularBeaconIntegration.cpp:592: strcpy_s(result.message, "Beacon integration shut down successfully");
+
+=== BATCH 296 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Collab.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ColorPicker.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CompilerPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ComponentManagers_Link.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ComponentManagers.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ConsentPrompt.cpp
+=== BATCH 296 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:2: // Win32IDE_CommandHandlers_Stubs.cpp — Stub implementations for missing handlers
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:4: // These stubs satisfy the linker requirements for the void* idePtr signatures
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:11: // Stubs for the void* idePtr signature handlers
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:14: OutputDebugStringA("[Stub] HandleTranscendenceCoordinator called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:19: OutputDebugStringA("[Stub] HandleVulkanRenderer called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:24: OutputDebugStringA("[Stub] HandleOSExplorerInterceptor called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:29: OutputDebugStringA("[Stub] HandleMCPHooks called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:34: OutputDebugStringA("[Stub] HandleIOCPFileWatcher called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:39: OutputDebugStringA("[Stub] HandleIDEDiagnosticAutoHealer called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:44: OutputDebugStringA("[Stub] HandleConsentPrompt called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:49: OutputDebugStringA("[Stub] HandleAutonomousAgent called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:54: OutputDebugStringA("[Stub] HandleChatMessageRenderer called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:59: OutputDebugStringA("[Stub] HandleToolActionStatus called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:64: OutputDebugStringA("[Stub] HandleChatPanel called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:69: OutputDebugStringA("[Stub] HandlePerfTelemetry called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:74: OutputDebugStringA("[Stub] HandleUpdateSignature called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers_Stubs.cpp:79: OutputDebugStringA("[Stub] HandlePluginSignature called\n");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CommandHandlers.cpp:13: // These are defined in Win32IDE_CommandHandlers_Stubs.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:386: // Bonus for shorter targets (tighter match)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:399: // MENU COMMAND SYSTEM (25+ Features)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:2827: // Plugin System (5200+ range — Phase 43)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:3461: instruction = "List project TODO hotspots and propose next action.";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:5541: std::vector<std::string> needles = {"SCAFFOLD", "TODO", "FIXME", "stub"};
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:5576: msg << "[LSPScaffoldAudit] SCAFFOLD=" << (int)counts["SCAFFOLD"] << " TODO=" << (int)counts["TODO"]
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:5577: << " FIXME=" << (int)counts["FIXME"] << " stub=" << (int)counts["stub"]
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:6017: query = "TODO";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:6502: query = "TODO|FIXME|HACK";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:7265: j["fallbackMentions"] = countHits("fallback") + countHits("placeholder");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:7316: j["todoMentions"] = countHits("TODO");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:7317: j["fixmeMentions"] = countHits("FIXME");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:9065: j["scaffoldMarkers"] = countHits(l, "SCAFFOLD") + countHits(l, "TODO") + countHits(l, "FIXME");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:10939: // SubAgent (Chain, Swarm, Todo List — full parity with menu)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:10942: m_commandRegistry.push_back({IDM_SUBAGENT_TODO_LIST, "SubAgent: Todo List", "", "SubAgent"});
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:10943: m_commandRegistry.push_back({IDM_SUBAGENT_TODO_CLEAR, "SubAgent: Todo Clear", "", "SubAgent"});
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:11155: // Hotpatch System (9001–9017 range — routed via handleHotpatchCommand)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:11200: m_commandRegistry.push_back({IDM_AUDIT_DETECT_STUBS, "Audit: Detect Stubs", "", "Audit"});
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12388: struct MockTool
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12396: std::vector<MockTool> mock_tools = {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12403: const uint32_t count = static_cast<uint32_t>(mock_tools.size());
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12411: if (i < mock_tools.size())
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12414: snprintf(buf, sizeof(buf), "[SMOKE]   Tool[%u]: %s (handler=0x%p)\n", i, mock_tools[i].name,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12415: mock_tools[i].handler);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12432: snprintf(buf, sizeof(buf), "[SMOKE]   Tool[%u]: %s (handler=0x%p, flags=0x%X)\n", i, mock_tools[i].name,
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:12433: mock_tools[i].handler, mock_tools[i].flags);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.cpp:13052: std::memcpy(taskDesc, fromChat.data(), n);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.h:121: // SubAgent / Chain / Swarm / Todo (4110–4119)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.h:124: #define IDM_SUBAGENT_TODO_LIST      4112
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.h:125: #define IDM_SUBAGENT_TODO_CLEAR     4113
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Commands.h:344: // ---- Plugin system (5200–5208) ---------------------------------------------
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CompilerPanel.cpp:2: // Shows real-time compiler/dumpbin output instead of stubs
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CompilerPanel.cpp:210: output << "✅ Valid PE/COFF File\\r\\n\\r\\n\";\n    output << \"FILE HEADER\\r\\n\";\n    output << \"────────────────────────────────────────────\\r\\n\";\n    output << \"Machine:              \";\n    \n    switch (ntHeaders->FileHeader.Machine) {\n        case IMAGE_FILE_MACHINE_AMD64: output << \"x64 (AMD64)\\r\\n\"; break;\n        case IMAGE_FILE_MACHINE_I386: output << \"x86 (I386)\\r\\n\"; break;\n        case IMAGE_FILE_MACHINE_ARM64: output << \"ARM64\\r\\n\"; break;\n        default: output << \"Unknown (\" << std::hex << ntHeaders->FileHeader.Machine << std::dec << \")\\r\\n\"; break;\n    }\n    \n    output << \"Sections:             \" << ntHeaders->FileHeader.NumberOfSections << \"\\r\\n\";\n    output << \"Timestamp:            \" << ntHeaders->FileHeader.TimeDateStamp << \"\\r\\n\";\n    output << \"Characteristics:      0x\" << std::hex << ntHeaders->FileHeader.Characteristics << std::dec << \"\\r\\n\\r\\n\";\n    \n    output << \"OPTIONAL HEADER\\r\\n\";\n    output << \"────────────────────────────────────────────\\r\\n\";\n    output << \"Magic:                0x\" << std::hex << ntHeaders->OptionalHeader.Magic << std::dec;\n    output << (ntHeaders->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC ? \" (PE32+)\" : \" (PE32)\") << \"\\r\\n\";\n    output << \"Entry Point:          0x\" << std::hex << ntHeaders->OptionalHeader.AddressOfEntryPoint << std::dec << \"\\r\\n\";\n    output << \"Image Base:           0x\" << std::hex << ntHeaders->OptionalHeader.ImageBase << std::dec << \"\\r\\n\";\n    output << \"Subsystem:            \";\n    \n    switch (ntHeaders->OptionalHeader.Subsystem) {\n        case IMAGE_SUBSYSTEM_WINDOWS_GUI: output << \"Windows GUI\\r\\n\"; break;\n        case IMAGE_SUBSYSTEM_WINDOWS_CUI: output << \"Console\\r\\n\"; break;\n        default: output << \"Other\\r\\n\"; break;\n    }\n    \n    output << \"\\r\\nSECTIONS\\r\\n\";\n    output << \"────────────────────────────────────────────\\r\\n\";\n    \n    IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(ntHeaders);\n    for (int i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {\n        output << \"Section \" << (i + 1) << \": \";\n        output << std::string((char*)section[i].Name, 8) << \"\\r\\n\";\n        output << \"  Virtual Size:       0x\" << std::hex << section[i].Misc.VirtualSize << std::dec << \"\\r\\n\";\n        output << \"  Virtual Address:    0x\" << std::hex << section[i].VirtualAddress << std::dec << \"\\r\\n\";\n        output << \"  Raw Data Size:      0x\" << std::hex << section[i].SizeOfRawData << std::dec << \"\\r\\n\";\n        output << \"  Characteristics:    0x\" << std::hex << section[i].Characteristics << std::dec << \"\\r\\n\\r\\n\";\n    }\n    \n    delete[] fileData;\n    return output.str();\n}\n\nvoid Win32IDE::AppendTerminalText(const std::string& text) {\n    if (!m_hwndTerminal) return;\n    \n    int len = GetWindowTextLengthA(m_hwndTerminal);\n    SendMessageA(m_hwndTerminal, EM_SETSEL, len, len);\n    SendMessageA(m_hwndTerminal, EM_REPLACESEL, FALSE, (LPARAM)text.c_str());\n}\n\nstd::string Win32IDE::getCurrentFilePath() const {\n    // Return current file path (stub - implement based on your editor state)\n    if (m_currentFilePath.empty()) {\n        return \"\";"}
+
+=== BATCH 297 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ContextMentionParser.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CopilotGapPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CoreRuntimeSpine.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CrashReporter.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CruciblePanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParity.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParityBridge.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParitySystem.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DebugAndVisionFallback.cpp
+=== BATCH 297 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:303: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:337: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:381: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1148: // Apply environment variable overrides (RAWRXD_* prefix)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1149: config.applyEnvironmentOverrides();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1155: m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1578: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1785: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1812: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1820: // getResolvedOllamaModel - Returns Ollama model tag (override, loaded path, or default)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1824: if (!m_ollamaModelOverride.empty())
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1825: return m_ollamaModelOverride;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1900: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:1932: // Optional panels (keep them alive for the lifetime of the IDE; no extra stub layers).
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2249: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2263: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2279: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2293: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2304: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2316: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2331: m_agent->SetNoRefusal(true);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2334: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2346: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2358: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2378: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2388: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2398: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2408: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2419: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2433: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2443: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2464: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2492: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2502: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2510: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2518: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2528: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2538: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2548: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2562: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2579: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2589: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2599: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2609: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2619: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2629: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2639: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2649: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2659: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2667: // Initialize Phase 43: Plugin System (Native Win32 DLL loading)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2670: initPluginSystem();
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2672: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2684: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2712: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2725: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2740: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2843: // Shutdown Phase 43: Plugin System (unload all DLLs)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2881: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2966: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2973: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2981: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2988: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:2995: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3002: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3009: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3016: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3023: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3030: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3037: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Core.cpp:3044: catch (...)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParitySystem.cpp:456: CursorAnimationSystem(Win32IDE* ide)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParitySystem.cpp:544: CursorAnimationSystem* getAnimationSystem() { return m_animationSystem.get(); }
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParitySystem.cpp:564: void Win32IDE::initCursorParitySystem() {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_CursorParitySystem.cpp:626: if (!m_cursorParityManager) initCursorParitySystem();
+
+=== BATCH 298 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Debugger.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DebugWatchFormat.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DiffView.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DiskRecovery.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DragDropTabs.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DualAgentPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EditorEngine.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EmojiSupport.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EnableAllFeatures.cpp
+=== BATCH 298 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Debugger.cpp:988: const char* placeholder = (m_debuggerAttached && m_debuggerPaused)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Debugger.cpp:991: tvis.item.pszText = const_cast<char*>(placeholder);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:353: // RECREATE RENDER TARGETS (on resize)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:355: static void DecompView_RecreateTargets(DecompViewState* state) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1388: if (state) DecompView_RecreateTargets(state);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1600: if (state) DecompView_RecreateTargets(state);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1800: DecompView_RecreateTargets(state);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1890: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1927: try { vr.ssaId = std::stoi(suffix); } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DecompilerView.cpp:1991: } catch (...) {}
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DiffView.cpp:395: while (fgets(buffer, sizeof(buffer), pipe)) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DualAgentPanel.cpp:92: try { out = std::stoi(body.substr(start, pos - start)); } catch (...) { return false; }
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DualAgentPanel.cpp:322: std::memcpy(aligned.data(), context.data(), dataLen);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_DualAgentPanel.cpp:418: std::memcpy(aligned.data(), data.data(), dataLen);
+
+=== BATCH 299 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EnterpriseStressTests.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExecutionGovernor.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\win32ide_extension_command_fallback.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExtensionMarketplace.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExtensionsPanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExtensionToggles.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureDetector.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence_Handler.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp
+=== BATCH 299 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EnterpriseStressTests.cpp:79: return probeFilesystem(workerId);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_EnterpriseStressTests.cpp:105: bool probeFilesystem(int workerId) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExtensionsPanel.cpp:273: // Install by ID — search extensions dir or marketplace stub
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_ExtensionToggles.cpp:282: } catch (...) { return; }
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:439: strategy.temperatureOverride = 0.3f;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:476: strategy.temperatureOverride = 0.5f;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:655: // Apply temperature override if strategy calls for it
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:661: if (strategy.temperatureOverride >= 0.0f) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:663: m_inferenceConfig.temperature = strategy.temperatureOverride;
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:972: if (suggested.temperatureOverride >= 0.0f) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:973: oss << "Temperature override: " << std::fixed << std::setprecision(1)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FailureIntelligence.cpp:974: << suggested.temperatureOverride << "\r\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:22: // SCAFFOLD_330: Feature manifest and STUB description
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:116: Partial,     // Has code but incomplete/stub parts
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:118: Stub,        // Registered; implementation deferred (build variant or optional module)
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:127: case FeatureStatus::Stub: return "STUB";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:138: case FeatureStatus::Stub: return "📌";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:208: static bool testThemeSystem(void* idePtr) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:767: {"subagent.todoList", "Agent Todo List", "Track agent task progress (TodoItem)",
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1057: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1096: md << "| IDE Variant | REAL | PARTIAL | FACADE | STUB | MISSING | Coverage |\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1104: int stub = countByStatus(FeatureStatus::Stub, v);
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1110: << " | " << stub << " | " << missing << " | " << pct << "% |\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1131: md << "- 🔶 PARTIAL — Has code but incomplete/some stubs\n";
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FeatureManifest.cpp:1133: md << "- 📌 STUB — Feature registered; implementation deferred (build variant or optional module)\n";
+
+=== BATCH 300 FILES ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FileIcons.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FileMenu.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FileOps.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FlagshipFeatures.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FlightRecorder.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FuzzySearch.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Fwd.h
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_GameEnginePanel.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_Gauntlet.cpp
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_GhostText.cpp
+=== BATCH 300 HITS ===
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FileOps.cpp:75: } catch (...) {
+D:\rawrxd-ci-bootstrap\src\win32app\Win32IDE_FuzzySearch.cpp:78: // Bonus for shorter targets (tighter match)

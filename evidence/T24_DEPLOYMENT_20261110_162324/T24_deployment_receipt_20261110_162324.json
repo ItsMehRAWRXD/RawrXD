@@ -1,0 +1,25 @@
+{
+    "files_extracted":  0,
+    "cold_launch_pid":  null,
+    "missing_dependencies":  [
+
+                             ],
+    "ide_exe_sha256":  null,
+    "extraction_ok":  false,
+    "package_sha256":  null,
+    "timestamp_utc":  "2026-11-10T21:23:24.3187508Z",
+    "package_path":  "F:\\rawrxd\\dist\\RawrXD-14.7.3-Windows-x64.zip",
+    "schema":  "RAWRXD_T24_DEPLOYMENT_VERIFICATION_001",
+    "cold_launch_exit_code":  null,
+    "ide_exe_path":  null,
+    "ide_exe_found":  false,
+    "smoke_test_ok":  false,
+    "dependency_manifest":  null,
+    "extract_to":  "F:\\rawrxd\\deploy_test",
+    "package_exists":  false,
+    "pass":  false,
+    "errors":  [
+                   "Deployment package not found: F:\\rawrxd\\dist\\RawrXD-14.7.3-Windows-x64.zip"
+               ],
+    "cold_launch_ok":  false
+}

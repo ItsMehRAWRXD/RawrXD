@@ -1,0 +1,5 @@
+---LEGACY_BINS_NOT_PACKAGE---
+F:\rawrxd\dist\RawrXD-IDE-v7.4.0-win64\RawrXD-Win32IDE.exe
+F:\rawrxd\release\RawrXD-OMEGA1-v1.0.0-20260728_232635\bin\RawrXD-Win32IDE.exe
+F:\rawrxd\release\RawrXD-OMEGA1-v1.0.0-20260728_232759\bin\RawrXD-Win32IDE.exe
+F:\rawrxd\release\RawrXD-v15.0.0\bin\RawrXD-Win32IDE.exe

@@ -1,0 +1,20 @@
+﻿STRATA_DOWNLOAD_STOP_RECEIPT
+TIMESTAMP=2026-11-10T08:19:17-05:00
+SCOPE=strata/qwen36 under F:\rawrxd\external\strata and %LOCALAPPDATA%\Strata
+SEARCH=Get-CimInstance Win32_Process + Get-Process name match (strata|curl|aria2|bitsadmin) + cmdline match (strata|qwen36|UD-Q4|external\strata|Local\Strata)
+TASKLIST=curl.exe/aria2c.exe/strata.exe/bitsadmin.exe = no matching tasks
+BITS_USER=Get-BitsTransfer empty (no user BITS jobs)
+BITS_ALLUSERS=ACCESS_DENIED (0x80070005) — not elevated; no evidence of strata/qwen36 BITS job from user scope
+MATCHING_PIDS=(none)
+ACTIONS=none (no live download process to stop)
+STOP_CONFIRMED=1
+STOP_MODE=VACUOUS_NOT_RUNNING
+EXIT_CODES=N/A (no Stop-Process issued)
+PRESERVE=1
+FILES_DELETED=0
+OLLAMA_UNTOUCHED=1
+ISSUE49_UNCHANGED=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NOTE=partial UD-Q4_K_XL.gguf.part LastWriteTime was recent (11/10/2026 08:16:31) but size stable across recheck; no writer process observed at stop time

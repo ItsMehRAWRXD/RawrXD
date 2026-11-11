@@ -1,0 +1,8 @@
+﻿{
+  "args": "{\"dir\":\"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture\"}",
+  "denied": false,
+  "exit_code": 8,
+  "ok": false,
+  "output": "Test project F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/build\n    Start 1: off_by_one\nTest not available without configuration.  (Missing \"-C <config>\"?)\n1/1 Test #1: off_by_one .......................***Not Run   0.00 sec\n\n0% tests passed, 1 tests failed out of 1\n\nTotal Test time (real) =   0.02 sec\n\nThe following tests FAILED:\n\t  1 - off_by_one (Not Run)\nErrors while running CTest\n",
+  "tool": "run_tests"
+}

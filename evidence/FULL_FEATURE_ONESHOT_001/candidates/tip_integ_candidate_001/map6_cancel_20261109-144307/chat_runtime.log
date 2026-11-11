@@ -1,0 +1,37 @@
+SESSION_OPEN session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307 pid=3196
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000003B0A86 session=1 pane=copilot_sidebar session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+SESSION_OPEN session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307 pid=3196
+DISPATCH_ID id=1 bytes=138 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=138 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=llama3.2:3b session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+request_started request_id=1 model=llama3.2:3b session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+cancel_requested request_id=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+BACKEND_REQUEST_END request_id=1 cancel=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000003B0A86 session=1 pane=copilot_sidebar session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+DISPATCH_ID id=2 bytes=80 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=80 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=2 pane=copilot_sidebar session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+BACKEND_REQUEST_START request_id=2 dispatch_id=2 model=llama3.2:3b session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+request_started request_id=2 model=llama3.2:3b session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=5 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=5 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+RESPONSE_START request_id=2 session=1 dispatch_id=2 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=1 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=4 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=4 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=4 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=4 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=4 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=4 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=0 response_bytes=1 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=0 response_bytes=1 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+BACKEND_REQUEST_END request_id=2 success=1 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+callback request_id=2 complete=1 response_bytes=0 stop=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+ui_update request_id=2 rendered=1 complete=1 response_bytes=0 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+TRANSCRIPT_INSERT role=assistant count=1 session=1 request_id=2 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307
+RESPONSE_END request_id=2 session=1 bytes=19 session_id=integ_map6_20261109-144307 run_id=integ_map6_run_20261109-144307

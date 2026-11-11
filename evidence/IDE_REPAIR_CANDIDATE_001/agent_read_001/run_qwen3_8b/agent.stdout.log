@@ -1,0 +1,17 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=128
+[ollama step 1] result=#include <cstdio>\nint add(int a, int b) { return a - b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n
+[ollama step 2] response_bytes=150
+[ollama step 2] TOOL=write exit=0 valid=1 observation=40
+[ollama step 2] result=write committed; build and test verified
+[ollama step 3] response_bytes=11
+[ollama step 3] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 3] result=verified completion
+OLLAMA_AGENT_MODEL qwen3:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 1a43ed1e463ba61a50c0a3ceb76a3e868d3700b65c7d5202799ccb86eab0cafe
+OLLAMA_AGENT_AFTER_SHA256 eff63ef0d19e70b29c6a17b972009055daaf4b5e88329820c4e1ec97f05551e2
+OLLAMA_AGENT_VERDICT PASS

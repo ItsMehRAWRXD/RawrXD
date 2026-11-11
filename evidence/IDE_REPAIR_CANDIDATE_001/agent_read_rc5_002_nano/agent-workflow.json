@@ -1,0 +1,17 @@
+﻿{
+    "tested_utc":  "2026-11-10T07:32:10.9329630Z",
+    "scope":  "Packaged agent subprocess; GUI dispatch requires separate evidence.",
+    "ide_sha256":  "089B9C72923B7C4A04658B216C375FBEA7AA5BB5F0C05E720F75D17514A4AB8A",
+    "agent_sha256":  "F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316",
+    "model":  "nemotron-3-nano:4b",
+    "process_id":  26660,
+    "process_exit":  null,
+    "timed_out":  false,
+    "source_changed":  false,
+    "source_after_sha256":  "1A43ED1E463BA61A50C0A3CEB76A3E868D3700B65C7D5202799CCB86EAB0CAFE",
+    "independent_run_exit":  -1,
+    "independent_run_output":  "",
+    "verdict":  "FAIL",
+    "stdout":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\agent_read_rc5_002_nano\\agent.stdout.log",
+    "stderr":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\agent_read_rc5_002_nano\\agent.stderr.log"
+}
