@@ -204,7 +204,8 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
 }
 
 bool Deep2Engine::forwardLayerGpuResident(
-    uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit) {
+    uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit,
+    bool ownRecording) {
     (void)uploadEntry;
     (void)downloadExit;
     // Each early return reports a distinct step so a failure names the exact
@@ -257,8 +258,24 @@ bool Deep2Engine::forwardLayerGpuResident(
     const float* ffnNorm = ensureF32(lw.ffnNorm, vulkanWeightF32_);
     if (!ffnNorm) return reject("reject: ensureF32 ffnNorm failed");
 
+    // Norm vectors are immutable model weights.  UploadNormWeight used to
+    // stage them into the scratch arena and wait for a transfer on every
+    // layer and token (two queue submissions per layer).  Resolve through the
+    // backend resident F32 cache instead: the first use uploads once, while
+    // subsequent fused forwards reuse the device-local buffer without a
+    // transfer fence.  Do this before BeginFusedLayer because a cache miss may
+    // submit its one-time upload command.
+    DeviceBuf attnNormDevice{};
+    DeviceBuf ffnNormDevice{};
+    if (!gpu->ResolveResidentF32(attnNormDevice, attnNorm,
+                                 weightKey(lw.attnNorm), hidden))
+        return reject("reject: resolve resident attnNorm failed");
+    if (!gpu->ResolveResidentF32(ffnNormDevice, ffnNorm,
+                                 weightKey(lw.ffnNorm), hidden))
+        return reject("reject: resolve resident ffnNorm failed");
+
     auto& counters = gpuFwd_;
-    if (!gpu->BeginFusedLayer()) {
+    if (ownRecording && !gpu->BeginFusedLayer()) {
         gpuForwardTrace("reject: BeginFusedLayer failed");
         return false;
     }
@@ -278,12 +295,11 @@ bool Deep2Engine::forwardLayerGpuResident(
                 (unsigned long long)counters.ffnResidualOps);
             std::fflush(stderr);
         }
-        (void)gpu->EndFusedLayer();
+        if (ownRecording) (void)gpu->EndFusedLayer();
         return false;
     };
 
-    if (!gpu->UploadNormWeight(gpu->ArenaFfnW(), attnNorm, hidden) ||
-        !gpu->DispatchRmsNorm(gpu->ArenaHidden(), gpu->ArenaFfnW(),
+    if (!gpu->DispatchRmsNorm(gpu->ArenaHidden(), attnNormDevice,
                               gpu->ArenaNormed(), hidden, modelWeights.normEps))
         return fail();
     ++counters.rmsNormOps;
@@ -363,8 +379,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.oProjOps;
     ++counters.residualOps;
 
-    if (!gpu->UploadNormWeight(gpu->ArenaFfnW(), ffnNorm, hidden) ||
-        !gpu->DispatchRmsNorm(gpu->ArenaResidual(), gpu->ArenaFfnW(),
+    if (!gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
                               gpu->ArenaNormed(), hidden, modelWeights.normEps) ||
         !gemv(lw.wGate, gpu->ArenaNormed(), gpu->ArenaGate(), intermediate, hidden) ||
         !gemv(lw.wUp, gpu->ArenaNormed(), gpu->ArenaUp(), intermediate, hidden) ||
@@ -378,7 +393,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.ffnActOps;
     ++counters.ffnResidualOps;
 
-    if (!gpu->EndFusedLayer()) return false;
+    if (ownRecording && !gpu->EndFusedLayer()) return false;
     ++counters.forwardLayers;
     if (slot < 8) ++counters.forwardSlot[slot];
     GpuTransfer_RecordFwdLayerExec(1);
@@ -410,8 +425,24 @@ bool Deep2Engine::forwardGpuContiguousRange(
         return false;
     }
     ++gpuFwd_.hostSyncBoundaries;
+    // Record the complete token's layer graph into one command buffer.  The
+    // old path opened/submitted/waited a fused command buffer for every layer,
+    // turning one token into N queue fences.  The device-resident operands and
+    // per-dispatch barriers already provide ordering within a recording, so a
+    // single terminal fence is both safe and substantially cheaper.
+    if (!gpu->BeginFusedLayer()) {
+        gpuForwardTrace("reject: contiguousRange BeginFusedLayer");
+        return false;
+    }
     for (uint32_t layer = lo; layer <= hi; ++layer) {
-        if (!forwardLayerGpuResident(layer, slot, false, false)) return false;
+        if (!forwardLayerGpuResident(layer, slot, false, false, false)) {
+            (void)gpu->EndFusedLayer();
+            return false;
+        }
+    }
+    if (!gpu->EndFusedLayer()) {
+        gpuForwardTrace("reject: contiguousRange EndFusedLayer");
+        return false;
     }
     if (!gpu->DownloadHidden(hostOut, static_cast<uint32_t>(modelWeights.hiddenDim))) {
         gpuForwardTrace("reject: contiguousRange DownloadHidden");
@@ -443,8 +474,15 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         if (lo > hi || hi >= modelWeights.layers.size()) return false;
         Gpu* current = getVulkanComputeSlot(slot);
         if (!current) return false;
+        if (!current->BeginFusedLayer()) return false;
         for (uint32_t layer = lo; layer <= hi; ++layer) {
-            if (!forwardLayerGpuResident(layer, slot, false, false)) return false;
+            if (!forwardLayerGpuResident(layer, slot, false, false, false)) {
+                (void)current->EndFusedLayer();
+                return false;
+            }
+        }
+        if (!current->EndFusedLayer()) {
+            return false;
         }
         if (slot + 1 < multiGpuLayerPlan_.gpuSlotCount) {
             Gpu* next = getVulkanComputeSlot(slot + 1);

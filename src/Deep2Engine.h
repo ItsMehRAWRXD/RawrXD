@@ -570,7 +570,8 @@ namespace Deep2
         bool isRealGpuForward() const;
         bool ensureGpuForwardArena(unsigned slot);
         bool forwardLayerGpuResident(uint32_t layer, unsigned slot,
-                                     bool uploadEntry, bool downloadExit);
+                                     bool uploadEntry, bool downloadExit,
+                                     bool ownRecording = true);
         bool forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
                                        const float *hostIn, float *hostOut);
         bool forwardGpuMultiMap(const float *hostIn, float *hostOut);

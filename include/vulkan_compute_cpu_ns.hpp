@@ -133,6 +133,11 @@ public:
     bool UploadBuf(DeviceBuf& b, const float* host, uint32_t n);
     bool DownloadBuf(DeviceBuf& b, float* host, uint32_t n);
     bool UploadNormWeight(DeviceBuf& dst, const float* src, uint32_t n);
+    // Resolve a dequantized F32 weight through the backend's resident cache.
+    // Unlike UploadNormWeight this performs at most one transfer per logical
+    // weight and returns the stable device-local buffer for fused dispatch.
+    bool ResolveResidentF32(DeviceBuf& dst, const float* src,
+                            uint64_t key, uint32_t n);
     bool CopyArenaHiddenTo(VulkanCompute& dst, uint32_t n);
     bool EnsureHostIo(size_t actIn, size_t actOut);
 

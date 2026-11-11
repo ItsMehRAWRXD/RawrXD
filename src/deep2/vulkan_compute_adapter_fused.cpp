@@ -652,6 +652,18 @@ bool VulkanCompute::UploadNormWeight(DeviceBuf& dst, const float* src, uint32_t 
     return true;
 }
 
+bool VulkanCompute::ResolveResidentF32(DeviceBuf& dst, const float* src,
+                                        uint64_t key, uint32_t n) {
+    if (backend_ == nullptr || src == nullptr || n == 0 || key == 0)
+        return false;
+    Deep2::VulkanCompute::DeviceBuf* resolved =
+        backend_->ResolveResidentF32(src, key, n);
+    if (resolved == nullptr) return false;
+    dst = FromBackend(*resolved);
+    return dst.buffer != VK_NULL_HANDLE && dst.bytes >=
+           static_cast<size_t>(n) * sizeof(float);
+}
+
 bool VulkanCompute::CopyArenaHiddenTo(VulkanCompute& dst, uint32_t n) {
     if (backend_ == nullptr || dst.backend_ == nullptr) return false;
     if (n == 0) return false;
